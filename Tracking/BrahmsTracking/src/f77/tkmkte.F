@@ -1,0 +1,437 @@
+*  
+* $Id: tkmkte.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+*  
+* $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/06/18 10:05:35  gaede
+* Initial local version
+*
+* Revision 1.1  2005/06/13 16:14:19  aplin
+* *** empty log message ***
+*
+* Revision 1.2  2004/07/22 15:21:02  aplin
+* added tkfunc1.inc
+*
+* Revision 1.1.1.1  2003/05/23 13:17:51  hvogt
+* Brahms V308
+*
+*  
+      SUBROUTINE TKMKTE(IDDET,N,LIST1,LIST2,REF,IERR)
+**********************************************************************
+*
+*     subroutine TKMKTE
+*
+*     create TE from list of hits
+*
+*     input:  IDDET  - detector ID of resulting TE
+*             N      - number of constituent hits
+*             LIST1()- array with identifiers of hits
+*             LIST2()- array with subdetector IDs of hits
+*             REF    - reference track parameters in TANAGRA format.
+*                      only used if REF(1).NE.0.0
+*     output: IERR   - 0 if successful
+*
+*     Kristian Harder, October 1999
+*
+**********************************************************************
+      IMPLICIT NONE
+#include "include/bkgmode.inc"
+#include "include/tkconst.inc"
+#include "include/fkparm.inc"
+#include "include/fkcons.inc"
+#include "include/fktkx.inc"
+#include "include/tkbank.inc"
+#include "include/tkffread.inc"
+#include "include/fkdebug.inc"
+c#include "gcbank.inc"
+#include "include/tpcdims.inc"
+#include "include/detnums.inc"
+      REAL PI,TWOPI
+#include "include/fkpipar.inc"
+
+C.....max number of hits per track
+      INTEGER NHTMAX
+      PARAMETER (NHTMAX=500)
+
+      INTEGER K,ID,IERR1,IERR2,ITSREF(MXTS)
+      INTEGER IDDET,N,N2,LIST1(*),LIST2(*),IERR,SUBMOD,INDEX
+      INTEGER I,J,IMPNT,NOUT,IDOU(NHTMAX),IFLTE(NHTMAX),IERX(NEXSMX)
+      INTEGER DELDET,NTRY,TKNUMB,ILOC,IDTE(NTEMX)
+      REAL    POS(3),COV(3),PHI,REF(*),RTSREF(MXTS),PARAM(6)
+      INTEGER ITELOC(MXTE,NHTMAX),ITKLOC(MXTK),ITEFIT(MXTE)
+      REAL    RTELOC(MXTE,NHTMAX),RTKLOC(MXTK),RTEFIT(MXTE)
+      EQUIVALENCE (ITELOC,RTELOC)
+      EQUIVALENCE (ITKLOC,RTKLOC)
+      EQUIVALENCE (ITEFIT,RTEFIT)
+      EQUIVALENCE (ITSREF,RTSREF)
+      REAL    HIT(MXHT)
+      INTEGER IHIT(MXHT)
+      EQUIVALENCE (HIT,IHIT)
+      INTEGER ILIST(NHTMAX),LIST3(NHTMAX)
+      REAL    RLIST(NHTMAX),ZLIST(NHTMAX)
+      LOGICAL FIRST
+      DATA    FIRST /.TRUE./
+      SAVE    FIRST
+
+      real    rmax,rmin,zmax,zmin,pmax,pmin
+      integer hid
+      data    hid /100000/
+      save    hid
+
+      INTEGER IMTRK
+      PARAMETER (IMTRK=0      ! cylinder coordinates bit will be added when used
+     >                +4+8+16 ! 3 coordinates of reference point measured
+     >                 +32+64 ! covariance matrix for r and rphi
+     >               +128+256 ! track angles theta, phi measured
+     >                   +512)! 1/p measured
+
+#include "include/tkfunc1.inc"
+#include "include/tkfunc.inc"
+
+C.....check range
+      IERR=0
+      IF (N.GT.NHTMAX) THEN
+         WRITE(6,*) 'TKMKTE: too many hits. increase NHTMAX to ',N
+         N=NHTMAX
+      END IF
+      IF (N.LT.3) THEN
+         WRITE(6,*) 'TKMKTE: too few hits'
+         IERR=-2
+         GOTO 999
+      END IF
+
+
+C.....sort hits according to increasing r
+      J=0
+      DO I=1,N
+         CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IERR)
+      IF (IERR.NE.0) THEN
+         WRITE(6,*) 'TKMKTE: ERROR READING HIT.'
+ccc         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
+ccc     >        ' of ',TKNUMB('HIT',LIST2(I))
+ccc         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
+      ELSE
+         J=J+1
+         RLIST(J)=SQRT(HIT(1)**2+HIT(2)**2)
+         ZLIST(J)=HIT(3)
+      END IF
+      END DO
+      N=J
+      CALL SORTZV(RLIST,ILIST,N,1,0,0)
+      DO I=1,N
+        LIST3(I)=LIST1(ILIST(I))
+      END DO
+      CALL UCOPY(LIST3,LIST1,N)
+      DO I=1,N
+        LIST3(I)=LIST2(ILIST(I))
+      END DO
+      CALL UCOPY(LIST3,LIST2,N)
+
+C.....search for more than one hit in same pad row. In that case we have a
+C     curler, which will in most cases screw up delfit. remove the hit with
+C     larger |z|. (Only for TPC. Skip otherwise.)
+      IF (IDDET.NE.ID_TPC) GOTO 101
+      J=1
+      LIST3(J)=1
+      DO I=2,N
+        IF (ABS(RLIST(ILIST(I))-RLIST(ILIST(LIST3(J))))
+     >                      .GT.0.7*TPCPADR) THEN
+          J=J+1
+          LIST3(J)=I
+        ELSE
+          IF (ABS(ZLIST(ILIST(I))).LT.ABS(ZLIST(ILIST(LIST3(J))))) THEN
+            LIST3(J)=I
+          END IF
+        END IF
+      END DO
+      DO I=1,J
+        LIST1(I)=LIST1(LIST3(I))
+        LIST2(I)=LIST2(LIST3(I))
+      END DO
+      IF (J.LT.N.AND.TKSTDBG.GT.0) THEN
+        WRITE(6,*) 'TKMKTE: found a curling track. deleted ',N-J,
+     >             ' hits out of ',N
+      END IF
+      N=J
+ 101  CONTINUE
+
+C.....fill all associated hits into local TE structure for TK2FIT
+      ILOC=0
+      DO I=1,N
+
+C.......read hit
+        CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IERR)
+
+C.......calculate position and covariance matrix for desired detector type
+
+        IF (IHIT(9).EQ.3) THEN
+           
+          ! cylindrical or conical detector. convert hit pos to cyl. coordinates
+          POS(1)=SQRT(HIT(1)**2+HIT(2)**2)
+          POS(2)=ATAN2(HIT(2),HIT(1))
+          IF (POS(2).LT.0.0) POS(2)=POS(2)+2.*PI
+          POS(2)=POS(2)*POS(1)
+          POS(3)=HIT(3)
+          
+          COV(1)=HIT(10)**2
+          COV(2)=0.0
+          COV(3)=HIT(11)**2
+          IMPNT=1     ! cylinder coordinates
+     >        +4+8+16 ! 3 coordinates of reference point measured
+     >        +32+64  ! covariance matrix for r and rphi
+        ELSE
+          ! forward detector (planar)
+          POS(1)=HIT(1)
+          POS(2)=HIT(2)
+          POS(3)=HIT(3)
+          PHI=ATAN2(POS(2),POS(1))
+          COV(1)= COS(PHI)**2*HIT(11)**2+SIN(PHI)**2*HIT(10)**2
+          COV(2)= SIN(PHI)*COS(PHI)*(HIT(11)**2-HIT(10)**2)
+          COV(3)= SIN(PHI)**2*HIT(11)**2+COS(PHI)**2*HIT(10)**2
+          IMPNT= 0     ! cartesian coordinates
+     >         +4+8+16 ! 3 coordinates of reference point measured
+     >         +32+64  ! covariance matrix for x and y
+        END IF
+
+C.......save in local TE array
+        ILOC=ILOC+1
+        ITELOC( 1,ILOC)=DELDET(LIST2(I)) ! module identifier
+        ITELOC( 2,ILOC)=0     ! submodule id
+        ITELOC( 3,ILOC)=0     ! reserved; but must be zero
+        ITELOC( 4,ILOC)=IMPNT ! measurement code
+        ITELOC( 5,ILOC)=20    ! pointer to mass info
+        ITELOC( 6,ILOC)=3     ! unknown charge
+        ITELOC( 7,ILOC)=0       ! no degrees of freedom
+        RTELOC( 8,ILOC)=0.0   ! chi^2 of the fit
+        RTELOC( 9,ILOC)=0.1   ! length of track element
+        RTELOC(10,ILOC)=POS(1) ! r or x
+        RTELOC(11,ILOC)=POS(2) ! r*phi or y
+        RTELOC(12,ILOC)=POS(3) ! z
+        RTELOC(13,ILOC)=0.0   ! theta angle
+        RTELOC(14,ILOC)=0.0   ! phi angle
+        RTELOC(15,ILOC)=0.0   ! 1/p at reference point
+        RTELOC(16,ILOC)=0.0   ! dE/dx or something else
+        RTELOC(17,ILOC)=COV(1) ! cov. matrix
+        RTELOC(18,ILOC)=COV(2) ! cov. matrix
+        RTELOC(19,ILOC)=COV(3) ! cov. matrix
+        RTELOC(20,ILOC)=0.0   ! mass information
+
+      END DO
+
+C.....reference trajectory
+      
+ 100  IF (REF(1).EQ.0.0) THEN
+C       create one using FKREF
+CSJAWRT
+c      write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
+        CALL FKREF(ILOC,RTELOC,RTSREF,ITSREF)
+      ELSE
+C       use parameters given by calling function
+        CALL VZERO(ITSREF,MXTS)
+        ITSREF(3)=1+2+8
+        CALL UCOPY(REF,RTSREF(17),6)
+      END IF
+
+CSAJWRT      
+c      do i=1, MXTS
+c      write(*,*) "RTSREF(",i,") = ", RTSREF(i) 
+c      end do 
+
+CSAJWRT
+c      do i=1, MXTE
+c      write(*,*) "RTELOC(",i,1,") = ", RTELOC(i,1) 
+c      end do 
+
+
+C.....track fit
+      IF (ILOC.GT.NTEMX) THEN
+         IF (TKSTDBG.GT.0) THEN
+            WRITE(6,*) 'TKMKTE: INTERNAL ERROR. NTEMX=',NTEMX,
+     >                 ' MUST BE SET TO AT LEAST ',ILOC
+         END IF
+         ILOC=NTEMX
+      END IF
+      DO I=1,ILOC
+        IDTE(I)=I
+      END DO
+      CALL FK3TRK(3,ILOC,IDTE,RTELOC,RTSREF,RTKLOC,
+     >            NOUT,IDOU,IERR1,IERR2,IFLTE,IERX)
+      IERR=IERR1+10*IERR2
+
+C.....debugging: compare reference trajectory, fit result and true parameters
+cccIF (REF(1).NE.0.0.AND.TKSTDBG.GT.1) THEN
+ccc  CALL VZERO(PARAM,6)
+ccc  IF (TKMCTR(1,IHIT(6))**2+TKMCTR(2,IHIT(6))**2.GT.0.0) THEN
+ccc    PARAM(4)=ATAN2(SQRT(TKMCTR(1,IHIT(6))**2
+ccc         +TKMCTR(2,IHIT(6))**2),TKMCTR(3,IHIT(6)))
+ccc    IF (PARAM(4).LT.0.0) PARAM(4)=PARAM(4)+2.*PI
+ccc    PARAM(5)=ATAN2(TKMCTR(2,IHIT(6)),TKMCTR(1,IHIT(6)))
+ccc    IF (PARAM(5).LT.0.0) PARAM(5)=PARAM(5)+2.*PI
+ccc    PARAM(6)=1./SQRT(TKMCTR(1,IHIT(6))**2+TKMCTR(2,IHIT(6))**2
+ccc         +TKMCTR(3,IHIT(6))**2)
+ccc  END IF
+ccc  WRITE(6,'(A,6F10.4)') 'TK: true params : ',(PARAM(I),I=1,6)
+ccc  WRITE(6,'(A,6F10.4)') 'TK: ref traj    : ',(RTSREF(I),I=17,22)
+ccc  IF (IERR.EQ.0) THEN
+ccc    WRITE(6,'(A,6F10.4)')'TK: fit result  : ',(RTKLOC(I),I=17,22)
+ccc    WRITE(6,'(A,6F10.4)') 'TK: proj result : ',(DATX(I,1),I=1,6)
+ccc  ELSE
+ccc    WRITE(6,'(A,6F10.4)') 'TK: error codes : ',IERR1,IERR2
+ccc  END IF
+ccc  WRITE(6,'(A)') 'TK: ------------------------------------------'
+cccEND IF
+
+C.....checks
+      IF (IERR.NE.0) THEN
+        IF (TKSTDBG.GT.0) THEN
+          WRITE(6,*) 'TKMKTE: track fit failed with error ',IERR
+        ENDIF
+C----------------------
+c        zmin=999.0
+c        zmax=-999.0
+c        rmin=999.0
+c        rmax=-999.0
+c        pmin=999.0
+c        pmax=-999.0
+c        do i=1,n
+c          if (rteloc(10,i).lt.rmin) rmin=rteloc(10,i)
+c          if (rteloc(10,i).gt.rmax) rmax=rteloc(10,i)
+c          if (rteloc(12,i).lt.zmin) zmin=rteloc(12,i)
+c          if (rteloc(12,i).gt.zmax) zmax=rteloc(12,i)
+c          if (rteloc(11,i)/rteloc(10,i).lt.pmin)
+c     >         pmin=rteloc(11,i)/rteloc(10,i)
+c          if (rteloc(11,i)/rteloc(10,i).gt.pmax)
+c     >         pmax=rteloc(11,i)/rteloc(10,i)
+c        end do
+c        call hbook2(hid,'r vs. phi',100,pmin,pmax,100,rmin,rmax,0.0)
+c        call hbook2(hid+1,'r vs. z',100,zmin,zmax,100,rmin,rmax,0.0)
+c        do i=1,n
+c          call hf2(hid,rteloc(11,i)/rteloc(10,i),rteloc(10,i),1.0)
+c          call hf2(hid+1,rteloc(12,i),rteloc(10,i),1.0)
+c        end do
+c        hid=hid+10
+C----------------------
+        ILOC=NINT(0.7*ILOC)
+        IF ((ILOC.GT.N/3).AND.(ILOC.GE.3)) THEN
+           IF (TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: fit failed. retry.'
+           GOTO 100
+        END IF
+           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
+        IF (TKSTDBG.GT.0) THEN
+           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
+ccc           WRITE(6,*) '  track properties of last hit: '
+ccc           PMAX=SQRT(TKMCTR(1,IHIT(6))**2+TKMCTR(2,IHIT(6))**2
+ccc     >          +TKMCTR(3,IHIT(6))**2)
+ccc           WRITE(6,*) '    momentum: ',PMAX
+ccc           IF (PMAX.GT.PFPCUT) WRITE(6,*) '    TKMKTE: good p failed'
+ccc           WRITE(6,*) '    theta   : ',ATAN2(SQRT(TKMCTR(1,IHIT(6))**2
+ccc     >          +TKMCTR(2,IHIT(6))**2),TKMCTR(3,IHIT(6)))
+        END IF
+        GOTO 999
+      END IF
+
+      IF (RTKLOC(17).EQ.0.0) THEN
+        STOP 'TKMKTE: reference point at r=0.0 from FK3TRK. Fail.'
+      END IF
+
+      if (RTKLOC(20).lt.0. .or. RTKLOC(20).gt.pi .or.
+     1    RTKLOC(21).lt.0. .or. RTKLOC(21).gt.2*pi .or.
+     1    RTKLOC(10).lt.0.) then
+        if (TKSTDBG.gt.0) then
+          print *,'WARNING in TKMKTE: fitted theta/phi/length is off'
+          print *,'TS dump: ',(ITKLOC(k),k=1,8),(RTKLOC(k),k=9,22)
+          print *,'Drop it !'
+        endif
+        GOTO 999
+      endif
+
+      IF (NOUT.GT.NHMAX) THEN
+        WRITE(6,*) 'TKMKTE: IDOU ARRAY BOUNDARY VIOLATION. CRASH.'
+        STOP
+      END IF
+
+      IF (NOUT.GT.0.AND.TKSTDBG.GT.0) THEN
+        WRITE(6,*) 'TKMKTE: WARNING - track fit rejected ',NOUT,
+     >             ' out of ',N,' hits.'
+      END IF
+
+C.....get submodule code
+      SUBMOD=0
+      DO I=1,N
+        IF (IFLTE(I).EQ.0) THEN
+          IF (LIST2(I)-IDDET.GE.1) THEN
+            SUBMOD=IOR(SUBMOD,2**(LIST2(I)-IDDET-1))
+          ELSE
+            SUBMOD=1
+          END IF
+        END IF
+      END DO
+
+C.....create TE structure
+      ITEFIT( 1)=IDDET          ! subdetector ID
+      ITEFIT( 2)=SUBMOD         ! submodule code
+      ITEFIT( 3)=0              ! reserved; must be zero
+      ITEFIT( 4)=IMTRK+IAND(ITKLOC(3),1) ! data descriptor/measurement code
+      ITEFIT( 5)=32             ! pointer to the mass information
+      ITEFIT( 6)=ITKLOC(6)      ! charge
+      ITEFIT( 7)=ITKLOC(8)      ! number of degrees of freedom
+      RTEFIT( 8)=RTKLOC(9)      ! chi^2
+      RTEFIT( 9)=RTKLOC(10)     ! length of track element
+      RTEFIT(10)=RTKLOC(17)     ! x or R     )
+      RTEFIT(11)=RTKLOC(18)     ! y or R*phi ) of the TE reference point
+      RTEFIT(12)=RTKLOC(19)     ! z          )
+      RTEFIT(13)=RTKLOC(20)     ! theta angle
+      RTEFIT(14)=RTKLOC(21)     ! phi angle
+      RTEFIT(15)=RTKLOC(22)     ! 1/p at reference point
+      RTEFIT(16)=    0.0        ! dE/dx measurement (not yet...)
+      ! covariance matrix
+      CALL UCOPY(RTKLOC(23),RTEFIT(17),15)
+
+C.....update hit lists
+      N2=0
+      DO I=1,N
+        IF (IFLTE(I).EQ.0) THEN
+          N2=N2+1
+          LIST1(N2)=LIST1(I)
+          LIST2(N2)=LIST2(I)
+        END IF
+      END DO
+
+C.....store TE
+      CALL TKSTOR('TE',INDEX,ITEFIT,N2,LIST1,LIST2,IERR)
+
+
+
+      IF (IERR.NE.0) THEN
+        WRITE(6,*) 'TKMKTE: TKSTOR FAILED.'
+        CALL TKVETO(1)
+        GOTO 999
+      END IF
+
+C.....debug information
+      IF (TKSTDBG.GT.1) THEN
+        WRITE(6,*) 'TKMKTE: last TE stored at index ',INDEX
+      END IF
+
+C.....before returning, fill histograms with tracks
+ 999  IF (TKSTHST.GT.0) THEN
+c        CALL HCDIR('//PAWC/TRACKING/TKSTEER',' ')
+        IF (FIRST) THEN
+          FIRST=.FALSE.
+c          CALL HBOOK2(1,'good tracks',100,-160.,160.,100,-160.,160.,0.)
+c          CALL HBOOK2(2,'bad tracks', 100,-160.,160.,100,-160.,160.,0.)
+        END IF
+        IF (IERR.EQ.0) THEN
+          ID=1
+        ELSE
+          ID=2
+        END IF
+        DO I=1,ILOC
+c          CALL HF2(ID,RTELOC(10,I)*COS(RTELOC(11,I)/RTELOC(10,I)),
+c     >         RTELOC(10,I)*SIN(RTELOC(11,I)/RTELOC(10,I)),1.0)
+        END DO
+      END IF
+
+      RETURN
+      END
+
+

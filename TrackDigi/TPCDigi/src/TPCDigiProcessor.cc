@@ -22,6 +22,13 @@
 #include "voxel.h"
 #include "tpc.h"
 
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/TPCParameters.h>
+#include <gear/PadRowLayout2D.h>
+//
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
@@ -91,6 +98,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     //    cout << "number of SimHits = " << n_sim_hits << endl;
     // Assume initialy that there is no merging 
     
+    //
+    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+
+
   
     for(int i=0; i< n_sim_hits; i++){
       
@@ -103,8 +114,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos = (double*) SimTHit->getPosition(); 
       de_dx = SimTHit->getdEdx();
 
-      // FIXME: need this cast because of a bug in LCIO
-      mcp = const_cast<MCParticle*> (SimTHit->getMCParticle()) ;      
+      mcp = SimTHit->getMCParticle() ;
 
       //      std::cout << "x position for this hit is " << pos[0] << std::endl; 
       //      std::cout << "y position for this hit is " << pos[1] << std::endl; 
@@ -112,18 +122,24 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //      std::cout << "de/dx for this hit is " << de_dx << std::endl; 
       //      std::cout << "MCParticle PID for this hit is " << mcp->getPDG() << std::endl; 
       //      std::cout << "x =  " << x << std::endl; 
-      
-      //  SMEARING 
-      
-      float tpc_rphi_res = the_tpc->gettpc_rphi_res(pos[2]);
-      
-      RandomNumberGenerator RandomNumber;
 
-      float randrp = the_tpc->getTpcRphiResMax() * (*(RandomNumber.Gauss(1.0)));
-      float randz = the_tpc->getTpcZRes() * (*(RandomNumber.Gauss(1.0)));
+      //  SMEARING
+
+
+      double tpcRPhiResMax = gearTPC.getDoubleVal("tpcRPhiResMax");
+      double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
+      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+
+       RandomNumberGenerator RandomNumber;
+
+      //      float randrp = the_tpc->getTpcRphiResMax() * (*(RandomNumber.Gauss(1.0)));
+      //      float randz = the_tpc->getTpcZRes() * (*(RandomNumber.Gauss(1.0)));
+      double randrp = tpcRPhiRes * (*(RandomNumber.Gauss(1.0)));
+      double randz = tpcZRes * (*(RandomNumber.Gauss(1.0)));
 
       // Make sure that the radius is equal to a pad radius
       // Get current hit radius
+
       double rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
       //
@@ -149,9 +165,26 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //get phi of current hit
       float phi = atan2(pos[1],pos[0]);
       if (phi<0.) phi=phi+twopi;
-      
+
+
       //get row index of current hit
-      int irow_hit = (int)((rad-the_tpc->getInnerRadius())/the_tpc->getPadRPitch());
+      
+      //      int irow_hit = (int)((rad-the_tpc->getInnerRadius())/the_tpc->getPadRPitch());
+
+      // modified to ues GEAR
+
+      const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+
+      const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+
+      double gearRMin = planeExt[0] ;
+      double gearRMax = planeExt[1] ;
+
+      // this needs to be looked at within the context of GEAR i.e. getPadNumber()
+      int irow_hit = (int)((rad- ( gearRMin ))/the_tpc->getPadRPitch());
+
+
+      //
 
        if(irow_hit<0.) {
 	cout << "row index of hit less than zero : irow = " << irow_hit << endl;

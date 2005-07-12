@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "TPCDigiProcessor.h"
 #include <iostream>
 
@@ -130,7 +131,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 
-       RandomNumberGenerator RandomNumber;
+      RandomNumberGenerator RandomNumber;
 
       //      float randrp = the_tpc->getTpcRphiResMax() * (*(RandomNumber.Gauss(1.0)));
       //      float randz = the_tpc->getTpcZRes() * (*(RandomNumber.Gauss(1.0)));
@@ -186,7 +187,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       //
 
-       if(irow_hit<0.) {
+      if(irow_hit<0.) {
 	cout << "row index of hit less than zero : irow = " << irow_hit << endl;
 	cout << "rad = " << rad << endl; 
 	cout << "the_tpc->getInnerRadius() = " << the_tpc->getInnerRadius() << endl; 
@@ -250,19 +251,19 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       //      cout << "row = " << j << "  row_hits.size() = " << row_hits.size() << endl;
 
-//       if(row_hits.size()==1){
-//       //store hit variables
-//       TrackerHitImpl* trkHit = new TrackerHitImpl ;
-//       double pos[3] = {row_hits[0]->getX(),row_hits[0]->getY(),row_hits[0]->getZ()}; 
-//       trkHit->setPosition(pos);
-//       trkHit->setdEdx(row_hits[0]->getdEdx());
-//       trkHit->setType( 500 );
+      //       if(row_hits.size()==1){
+      //       //store hit variables
+      //       TrackerHitImpl* trkHit = new TrackerHitImpl ;
+      //       double pos[3] = {row_hits[0]->getX(),row_hits[0]->getY(),row_hits[0]->getZ()}; 
+      //       trkHit->setPosition(pos);
+      //       trkHit->setdEdx(row_hits[0]->getdEdx());
+      //       trkHit->setType( 500 );
       
-//       // 	  push back the SimTHit for this TrackerHit
-//       trkHit->rawHits().push_back( the_tpc->getSimTrackerHit(row_hits[0]) );
+      //       // 	  push back the SimTHit for this TrackerHit
+      //       trkHit->rawHits().push_back( the_tpc->getSimTrackerHit(row_hits[0]) );
 
-//       trkhitVec->addElement( trkHit ); 
-//       }
+      //       trkhitVec->addElement( trkHit ); 
+      //       }
 
       for (int i = 0; i<row_hits.size(); i++){
 	
@@ -299,8 +300,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 	}
 
 	// FIXME:SJA: 
-// 	At this point the double hits have been identified and at present they are not added to the
-// 	tracker hit collection. What should be done with them will be decided later.
+	// 	At this point the double hits have been identified and at present they are not added to the
+	// 	tracker hit collection. What should be done with them will be decided later.
 
 	if(row_hits[i]->getNumberOfAdjacent()==0){
 	  //store hit variables
@@ -310,7 +311,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 	  trkHit->setdEdx(row_hits[i]->getdEdx());
 	  trkHit->setType( 500 );
 	  
-// 	  push back the SimTHit for this TrackerHit
+	  // 	  push back the SimTHit for this TrackerHit
 	  trkHit->rawHits().push_back( the_tpc->getSimTrackerHit(row_hits[i]) );
 
 	  trkhitVec->addElement( trkHit ); 

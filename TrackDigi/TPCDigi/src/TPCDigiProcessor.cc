@@ -174,44 +174,66 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       // modified to ues GEAR
 
+      
+
       const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+
+      int padIndex = padLayout.getNearestPad(rad,phi);
+
+      //      std::cout << "padIndex = " << padIndex << std::endl;
 
       const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
 
       double gearRMin = planeExt[0] ;
       double gearRMax = planeExt[1] ;
 
-      // this needs to be looked at within the context of GEAR i.e. getPadNumber()
-      int irow_hit = (int)((rad- ( gearRMin ))/the_tpc->getPadRPitch());
+      if(fabs(pos[2])>gearTPC.getMaxDriftLength()) pos[2] = (fabs(pos[2])/pos[2])*gearTPC.getMaxDriftLength();
 
+      if(rad>gearRMax){
+	pos[0] = gearRMax*cos(phi);
+	pos[1] = gearRMax*sin(phi);
+	cout << "Radius is greater than TPC RMax " << endl;
+	cout << "rad = " << rad << endl; 
+	cout << "the tpc OuterRadius = " << gearRMax << endl; 
+      }
+
+      if(rad<gearRMin){
+	pos[0] = gearRMin*cos(phi);
+	pos[1] = gearRMin*sin(phi);
+	cout << "Radius is less than TPC RMin" << endl;
+	cout << "rad = " << rad << endl; 
+	cout << "the tpc InnerRadius = " << gearRMin << endl; 
+      }
+	 
+      int iRowHit = padLayout.getRowNumber(padIndex);
 
       //
 
-      if(irow_hit<0.) {
-	cout << "row index of hit less than zero : irow = " << irow_hit << endl;
+      if(iRowHit<0.) {
+	cout << "row index of hit less than zero : irow = " << iRowHit << endl;
 	cout << "rad = " << rad << endl; 
 	cout << "the_tpc->getInnerRadius() = " << the_tpc->getInnerRadius() << endl; 
 	cout << "the_tpc->getPadRPitch() = " << the_tpc->getPadRPitch() << endl; 
 
-	irow_hit = 0;
+	iRowHit = 0;
 
       }
 
-      if(irow_hit>the_tpc->getNumberOfRows()-1){
-	cout << "row index of hit greater than number of pad rows: irow = " << irow_hit << endl;
+      if(iRowHit>the_tpc->getNumberOfRows()-1){
+	cout << "row index of hit greater than number of pad rows: irow = " << iRowHit << endl;
 	cout << "rad = " << rad << endl; 
 	cout << "the_tpc->getInnerRadius() = " << the_tpc->getInnerRadius() << endl; 
 	cout << "the_tpc->getPadRPitch() = " << the_tpc->getPadRPitch() << endl; 
 
-	irow_hit = the_tpc->getNumberOfRows()-1;
+	iRowHit = the_tpc->getNumberOfRows()-1;
       }
 
       //get row radius needed to calculate the number of pixels in row
-      //      float row_radius = twopi*((the_tpc->getPadRPitch()/2.)+(float)irow_hit*the_tpc->getPadRPitch());
+      //      float row_radius = twopi*((the_tpc->getPadRPitch()/2.)+(float)iRowHit*the_tpc->getPadRPitch());
       //      int number_of_pixels_in_row = int(row_radius / the_tpc->getPixelPhiWidth());
 
-      //      cout << "about to get number of pixels for row = " << irow_hit << endl;
-      int number_of_pixels_in_row = the_tpc->getNumberOfPhiSegments(irow_hit);
+      //      cout << "about to get number of pixels for row = " << iRowHit << endl;
+      int number_of_pixels_in_row = the_tpc->getNumberOfPhiSegments(iRowHit);
       //      cout << "got number of pixels rows" << endl;
 
       //get phi index of current hit
@@ -225,13 +247,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       if(iz_hit>the_tpc->getNumberOfTimeSlices()) iz_hit=the_tpc->getNumberOfTimeSlices();
 
       
-      Voxel_tpc * a_tpc_voxel = new Voxel_tpc(irow_hit,iphi_hit,iz_hit, pos, de_dx);
+      Voxel_tpc * a_tpc_voxel = new Voxel_tpc(iRowHit,iphi_hit,iz_hit, pos, de_dx);
       
-      the_tpc->putRowHit(irow_hit, a_tpc_voxel);
+      the_tpc->putRowHit(iRowHit, a_tpc_voxel);
       
       the_tpc->putSimTrackerHit(a_tpc_voxel , SimTHit);
 
-      //      cout << "a voxel hit "<< i << " has been added to row " << irow_hit << endl;  
+      //      cout << "a voxel hit "<< i << " has been added to row " << iRowHit << endl;  
 
     }    
 
@@ -265,11 +287,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //       trkhitVec->addElement( trkHit ); 
       //       }
 
-      for (int i = 0; i<row_hits.size(); i++){
+      for (unsigned int i = 0; i<row_hits.size(); i++){
 	
 	//	cout << "got the row hits i = " << i << "  row_hits.size() = " << row_hits.size() << endl;
 	
-	for (int k = i+1; k<row_hits.size(); k++){
+	for (unsigned int k = i+1; k<row_hits.size(); k++){
 
 	  //	  if(row_hits[i]->getPhiIndex() > row_hits[k]->getPhiIndex()){
 	  //	    cout << "phi index of hit ["<<i<<"] = " << row_hits[i]->getPhiIndex() << endl; 
@@ -353,7 +375,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       vector <Voxel_tpc *> current_row = the_tpc->getRowHits(j);
       
-      for (int i = 0; i<current_row.size(); i++){
+      for (unsigned int i = 0; i<current_row.size(); i++){
 	
 	delete current_row[i];
       }

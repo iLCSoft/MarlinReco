@@ -207,7 +207,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 	 
       int iRowHit = padLayout.getRowNumber(padIndex);
 
-      //
 
       if(iRowHit<0.) {
 	cout << "row index of hit less than zero : irow = " << iRowHit << endl;

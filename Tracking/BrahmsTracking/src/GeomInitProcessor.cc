@@ -54,7 +54,7 @@ void GeomInitProcessor::processEvent( LCEvent * evt ) {
     
   // carefull here the last two values are the pixel sizes
   //  the_tpc = new Tpc(tpc_outerAR,tpc_innerAR,tpc_length,tpc_padrows,tpc_pitch,tpc_PixRPhi,tpc_PixZ);
-  the_tpc = new Tpc(tpcacro,tpcacri,zdrift,nrtpc,tpcpadr,tpc_rphi_res_max,tpc_z_res);
+  the_tpc = new Tpc(tpcacro,tpcacri,zdrift,nrtpc,tpcpadr,pix_rp,pix_z,tpc_rphi_res_max,tpc_z_res);
   
   
   _nEvt ++ ;

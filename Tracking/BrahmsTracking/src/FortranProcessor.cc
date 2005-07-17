@@ -16,6 +16,7 @@
 #include <IMPL/LCFlagImpl.h>
 
 #include <cfortran.h>
+
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
@@ -23,7 +24,12 @@
 #include"marlin_tpcgeom.h"
 #include"constants.h"
 
-
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/TPCParameters.h>
+#include <gear/PadRowLayout2D.h>
+//
 
 PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
 #define TPCRUN() CCALLSFFUN0(TPCRUN,tpcrun)
@@ -31,7 +37,6 @@ PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
   // FIXME:SJA: the namespace should be used explicitly
 using namespace lcio ;
 using namespace marlin ;
-using namespace tpcgeom;
 using namespace constants;
 
 int writetpccpp(float c, int a, int b); 
@@ -111,6 +116,9 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
   
   LCCollection* THcol = evt->getCollection( _colName ) ;
 
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+
+
   if( THcol != 0 ){
 
     LCCollectionVec* TPC_TrackVec = new LCCollectionVec( LCIO::TRACK )  ;
@@ -128,7 +136,6 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       
       TrackerHit* THit = dynamic_cast<TrackerHit*>( THcol->getElementAt( i ) ) ;
       
-      int    cellId;
       double *pos;
       float  de_dx;
       float  time;
@@ -144,12 +151,14 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       float z = 0.1*pos[2];
       
       // convert de/dx from GeV (LCIO) to number of electrons 
+      
+      double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
+      de_dx = de_dx/tpcIonisationPotential;
 
-      de_dx = de_dx/ionisation_potential;
+      double tpcRPhiResMax = 0.1 * gearTPC.getDoubleVal("tpcRPhiResMax");
+      double tpcRPhiRes = 0.1 * tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
+      double tpcZRes = 0.1 * gearTPC.getDoubleVal("tpcZRes");
 
-      float Rz   = 0.1*the_tpc->getTpcZRes();
-      float Rrphi = 0.1*the_tpc->gettpc_rphi_res(pos[2]);
-      float tpc_halfL = 0.1*the_tpc->getHalfLength();
 
       // Brahms resolution code for TPC = 3 REF tkhtpc.F
       int ICODE = 3;
@@ -157,10 +166,10 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 
       int mctrack = 0;
       
-      TkHitBank->add_hit(x,y,z,de_dx,SUBID,mctrack,0,0,ICODE,Rrphi,Rz);
+      TkHitBank->add_hit(x,y,z,de_dx,SUBID,mctrack,0,0,ICODE,tpcRPhiRes,tpcZRes);
 
 
-      TPCHitBank->add_hit(x,y,z,de_dx,SUBID,Rrphi,Rz,mctrack);
+      TPCHitBank->add_hit(x,y,z,de_dx,SUBID,tpcRPhiRes,tpcZRes,mctrack);
 
     } 
     
@@ -168,7 +177,11 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
     CNTPC.ntphits = TPCHitBank->size();
  
 
-   int error = TPCRUN();
+    int err = TPCRUN();
+
+
+    std::cout << "TPCRUN returns:" << err << std::endl;
+    if(err!=0) std::cout << "have you set the ionisation potential correctly in the gear xml file" << std::endl;    
     
     for(int te=0; te<TkTeBank->size();te++){
 
@@ -254,12 +267,12 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 
       hits = TkTeBank->getHitlist(te);
 
-      for(int tehit=0; tehit<hits->size();tehit++){
+      for(unsigned int tehit=0; tehit<hits->size();tehit++){
 	TrackerHit* THit = dynamic_cast<TrackerHit*>( THcol->getElementAt( hits->at(tehit) ) ) ;
 
 	TPC_Track->addHit(THit);
 
-	for(int j=0; j<THit->getRawHits().size(); j++){ 
+	for(unsigned int j=0; j<THit->getRawHits().size(); j++){ 
 	  
 	  SimTrackerHit * STHit =dynamic_cast<SimTrackerHit*>(THit->getRawHits().at(j));
 	  MCParticle * mcp = dynamic_cast<MCParticle*>(STHit->getMCParticle()); 
@@ -267,7 +280,7 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 	  
 	  bool found = false;
 	  
-	  for(int k=0; k<MCPointers.size();k++)
+	  for(unsigned int k=0; k<MCPointers.size();k++)
 	    {
 	      if(mcp==MCPointers[k]){
 		found=true;
@@ -281,7 +294,7 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 	}
       }
       
-      for(int k=0; k<MCPointers.size();k++){
+      for(unsigned int k=0; k<MCPointers.size();k++){
 
 	MCParticle * mcp = MCPointers[k];
 	

@@ -3,7 +3,7 @@
 # Example GNUmakefile to build an Application with Marlin
 #
 # @author Frank Gaede
-# @version $Id: GNUmakefile,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+# @version $Id: GNUmakefile,v 1.2 2005-07-17 10:58:26 aplin Exp $
 #
 ##########################################################
 
@@ -42,9 +42,9 @@ endif
 
 
 #----------  BrahmsTracking needs to compile some f77 files ----------
-#brahms object files
+#brahms object files. Note: "-Wno-globals" used to stop endless warnings when using cernlib funcitons remove this if you feel uneasy about ignoring these warnings
 ./f77/%.o: ./f77/%.F
-	$(FC) -g -o $@ -ff2c -c $? $(FORTRANINCLUDES)
+	$(FC) -g -Wno-globals -o $@ -ff2c -c $? $(FORTRANINCLUDES)
 
 FOBJS = $(patsubst %.F,%.o, $(wildcard f77/*.F) )
 # FOBJS also added to objects below

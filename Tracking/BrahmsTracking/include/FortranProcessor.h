@@ -58,9 +58,10 @@ class FortranProcessor : public Processor {
   
  protected:
 
-  /** Input collection name.
+  /** Input collections name.
    */
-  std::string _colName ;
+  std::string _colNameTPC ;
+  std::string _colNameVTX ;
 
   int _nRun ;
   int _nEvt ;

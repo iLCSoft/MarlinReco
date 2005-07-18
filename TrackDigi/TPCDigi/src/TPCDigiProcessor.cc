@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <cmath>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -35,6 +36,7 @@
 using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
+using namespace std ;
 
 TPCDigiProcessor aTPCDigiProcessor ;
 
@@ -86,7 +88,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
   
-  if(firstEvent==true) std::cout << "TPCDigiProcessor called for first event" << std::endl;
+  if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;
 
   firstEvent = false ;
   
@@ -125,12 +127,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       mcp = SimTHit->getMCParticle() ;
 
-      //      std::cout << "x position for this hit is " << pos[0] << std::endl; 
-      //      std::cout << "y position for this hit is " << pos[1] << std::endl; 
-      //      std::cout << "z position for this hit is " << pos[2] << std::endl; 
-      //      std::cout << "de/dx for this hit is " << de_dx << std::endl; 
-      //      std::cout << "MCParticle PID for this hit is " << mcp->getPDG() << std::endl; 
-      //      std::cout << "x =  " << x << std::endl; 
+      //      cout << "x position for this hit is " << pos[0] << endl; 
+      //      cout << "y position for this hit is " << pos[1] << endl; 
+      //      cout << "z position for this hit is " << pos[2] << endl; 
+      //      cout << "de/dx for this hit is " << de_dx << endl; 
+      //      cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
+      //      cout << "x =  " << x << endl; 
 
       //  SMEARING
 
@@ -151,9 +153,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
       //
-      //      std::cout << "x position before smearing " << pos[0] << std::endl;     
-      //      std::cout << "y position before smearing " << pos[1] << std::endl;     
-      //      std::cout << "z position before smearing " << pos[2] << std::endl;     
+      //      cout << "x position before smearing " << pos[0] << endl;     
+      //      cout << "y position before smearing " << pos[1] << endl;     
+      //      cout << "z position before smearing " << pos[2] << endl;     
       //
 
       pos[0] = pos[0] - randrp * pos[1]/rad;
@@ -161,9 +163,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos[2] = pos[2] + randz;
       
       //
-      //      std::cout << "x position after smearing " << pos[0] << std::endl;     
-      //      std::cout << "y position after smearing " << pos[1] << std::endl;     
-      //      std::cout << "z position after smearing " << pos[2] << std::endl;     
+      //      cout << "x position after smearing " << pos[0] << endl;     
+      //      cout << "y position after smearing " << pos[1] << endl;     
+      //      cout << "z position after smearing " << pos[2] << endl;     
       //
       
       // At this point hits are mearly smeared now they must be digitised to trackerhits
@@ -183,7 +185,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       int padIndex = padLayout.getNearestPad(rad,phi);
 
-      //      std::cout << "padIndex = " << padIndex << std::endl;
+      //      cout << "padIndex = " << padIndex << endl;
 
       const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
 
@@ -376,9 +378,9 @@ void TPCDigiProcessor::check( LCEvent * evt )
 void TPCDigiProcessor::end()
 { 
   
-  //   std::cout << "TPCDigiProcessor::end()  " << name() 
+  //   cout << "TPCDigiProcessor::end()  " << name() 
   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-  // 	    << std::endl ;
+  // 	    << endl ;
   
 }
 

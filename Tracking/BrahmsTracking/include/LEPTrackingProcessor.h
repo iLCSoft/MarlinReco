@@ -1,5 +1,5 @@
-#ifndef FortranProcessor_h
-#define FortranProcessor_h 1
+#ifndef LEPTrackingProcessor_h
+#define LEPTrackingProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -25,14 +25,14 @@ using namespace marlin ;
 * the common geometry API becomes available.
 * @author S. Aplin, DESY    
 */
-class FortranProcessor : public Processor {
+class LEPTrackingProcessor : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new FortranProcessor ; }
+  virtual Processor*  newProcessor() { return new LEPTrackingProcessor ; }
   
   
-  FortranProcessor() ;
+  LEPTrackingProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.

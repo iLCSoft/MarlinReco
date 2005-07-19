@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-#include "FortranProcessor.h"
+#include "LEPTrackingProcessor.h"
 #include <iostream>
 
 #ifdef MARLIN_USE_AIDA
@@ -34,6 +34,9 @@
 
 PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
 #define TPCRUN() CCALLSFFUN0(TPCRUN,tpcrun)
+
+// PROTOCCALLSFFUN0(INT,TKTREV,tktrev)
+// #define TKTREV() CCALLSFFUN0(TKTREV,tktrev)
 
   // FIXME:SJA: the namespace should be used explicitly
 using namespace lcio ;
@@ -73,9 +76,9 @@ FCALLSCFUN17(INT,tkmktecpp,TKMKTECPP,tkmktecpp, INT , INT ,INT ,INT ,INT ,INT ,I
 
 FCALLSCFUN2(INT,addhittktecpp,ADDHITTKTECPP,addhittktecpp, INT, INT)
 
-FortranProcessor aFortranProcessor ;
+LEPTrackingProcessor aLEPTrackingProcessor ;
 
-FortranProcessor::FortranProcessor() : Processor("FortranProcessor") {
+LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor") {
   
   // modify processor description
   _description = "Produces Track collection from TPC TrackerHit collections using LEP tracking algorithms" ;
@@ -95,7 +98,7 @@ FortranProcessor::FortranProcessor() : Processor("FortranProcessor") {
 }
 
 
-void FortranProcessor::init() { 
+void LEPTrackingProcessor::init() { 
 
   // usually a good idea to
   printParameters() ;
@@ -105,19 +108,19 @@ void FortranProcessor::init() {
   
 }
 
-void FortranProcessor::processRunHeader( LCRunHeader* run) { 
+void LEPTrackingProcessor::processRunHeader( LCRunHeader* run) { 
 
   _nRun++ ;
 } 
 
-void FortranProcessor::processEvent( LCEvent * evt ) { 
+void LEPTrackingProcessor::processEvent( LCEvent * evt ) { 
 
   static bool firstEvent = true ;
     
   // this gets called for every event 
   // usually the working horse ...
 
-  if(firstEvent==true) std::cout << "FortranProcessor called for first event" << std::endl;
+  if(firstEvent==true) std::cout << "LEPTrackingProcessor called for first event" << std::endl;
 
   firstEvent = false ;
   
@@ -224,11 +227,12 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 
     //_____________________________________________________________________
 
-    int err = TPCRUN();
+//     int errTKTREV = TKTREV(); 
+    int errTPCRUN = TPCRUN();
 
 
-    std::cout << "TPCRUN returns:" << err << std::endl;
-    if(err!=0) std::cout << "have you set the ionisation potential correctly in the gear xml file" << std::endl;    
+    std::cout << "TPCRUN returns:" << errTPCRUN << std::endl;
+    if(errTPCRUN!=0) std::cout << "have you set the ionisation potential correctly in the gear xml file" << std::endl;    
     
     for(int te=0; te<TkTeBank->size();te++){
 
@@ -417,14 +421,14 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void FortranProcessor::check( LCEvent * evt ) { 
+void LEPTrackingProcessor::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 
-void FortranProcessor::end(){ 
+void LEPTrackingProcessor::end(){ 
   
-//   std::cout << "FortranProcessor::end()  " << name() 
+//   std::cout << "LEPTrackingProcessor::end()  " << name() 
 // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 // 	    << std::endl ;
 

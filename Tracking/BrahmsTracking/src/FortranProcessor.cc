@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "FortranProcessor.h"
 #include <iostream>
 
@@ -16,6 +17,7 @@
 #include <IMPL/LCFlagImpl.h>
 
 #include <cfortran.h>
+
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
@@ -23,7 +25,12 @@
 #include"marlin_tpcgeom.h"
 #include"constants.h"
 
-
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/TPCParameters.h>
+#include <gear/PadRowLayout2D.h>
+//
 
 PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
 #define TPCRUN() CCALLSFFUN0(TPCRUN,tpcrun)
@@ -31,7 +38,6 @@ PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
   // FIXME:SJA: the namespace should be used explicitly
 using namespace lcio ;
 using namespace marlin ;
-using namespace tpcgeom;
 using namespace constants;
 
 int writetpccpp(float c, int a, int b); 
@@ -76,10 +82,16 @@ FortranProcessor::FortranProcessor() : Processor("FortranProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the TrackerHit collection"  ,
-			      _colName ,
+  registerProcessorParameter( "TPCTrackerHitCollectionName" , 
+			      "Name of the TPC TrackerHit collection"  ,
+			      _colNameTPC ,
 			      std::string("TPCTrackerHits") ) ;
+
+  registerProcessorParameter( "VTXTrackerHitCollectionName" , 
+			      "Name of the VTX TrackerHit collection"  ,
+			      _colNameVTX ,
+			      std::string("VTXTrackerHits") ) ;
+
 }
 
 
@@ -109,34 +121,36 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 
   firstEvent = false ;
   
-  LCCollection* THcol = evt->getCollection( _colName ) ;
+  LCCollection* tpcTHcol = evt->getCollection( _colNameTPC ) ;
+  LCCollection* vtxTHcol = evt->getCollection( _colNameVTX ) ;
+  
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
 
-  if( THcol != 0 ){
 
-    LCCollectionVec* TPC_TrackVec = new LCCollectionVec( LCIO::TRACK )  ;
+  if( tpcTHcol != 0 ){
+
+    LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
     // if we want to point back to the hits we need to set the flag
     LCFlagImpl trkFlag(0) ;
     trkFlag.setBit( LCIO::TRBIT_HITS ) ;
-    TPC_TrackVec->setFlag( trkFlag.getFlag()  ) ;
+    tpcTrackVec->setFlag( trkFlag.getFlag()  ) ;
 
-    LCCollectionVec* LCRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
+    LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
 
-    int n_hits = THcol->getNumberOfElements()  ;   
-    
-    
-    for(int i=0; i< n_hits; i++){
+    int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
+        
+    for(int i=0; i< nTPCHits; i++){
       
-      TrackerHit* THit = dynamic_cast<TrackerHit*>( THcol->getElementAt( i ) ) ;
+      TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
       
-      int    cellId;
       double *pos;
       float  de_dx;
       float  time;
   
-      //      cellId = 	THit->getCellID();
-      pos = (double*) THit->getPosition(); 
-      de_dx = THit->getdEdx();
-      time = THit->getTime();
+      //      cellId = 	trkHitTPC->getCellID();
+      pos = (double*) trkHitTPC->getPosition(); 
+      de_dx = trkHitTPC->getdEdx();
+      time = trkHitTPC->getTime();
       
       // convert to cm needed for BRAHMS(GEANT)
       float x = 0.1*pos[0];
@@ -144,72 +158,118 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       float z = 0.1*pos[2];
       
       // convert de/dx from GeV (LCIO) to number of electrons 
+      
+      double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
+      de_dx = de_dx/tpcIonisationPotential;
 
-      de_dx = de_dx/ionisation_potential;
+      double tpcRPhiResMax = 0.1 * gearTPC.getDoubleVal("tpcRPhiResMax");
+      double tpcRPhiRes = 0.1 * tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
+      double tpcZRes = 0.1 * gearTPC.getDoubleVal("tpcZRes");
 
-      float Rz   = 0.1*the_tpc->getTpcZRes();
-      float Rrphi = 0.1*the_tpc->gettpc_rphi_res(pos[2]);
-      float tpc_halfL = 0.1*the_tpc->getHalfLength();
 
       // Brahms resolution code for TPC = 3 REF tkhtpc.F
-      int ICODE = 3;
-      int SUBID = 500;
+      int icode = 3;
+      int subid = 500;
 
       int mctrack = 0;
       
-      TkHitBank->add_hit(x,y,z,de_dx,SUBID,mctrack,0,0,ICODE,Rrphi,Rz);
+      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
 
 
-      TPCHitBank->add_hit(x,y,z,de_dx,SUBID,Rrphi,Rz,mctrack);
+      TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
 
     } 
     
     cout << "the number of tpc hits sent to brahms = " << TPCHitBank->size() << endl;
     CNTPC.ntphits = TPCHitBank->size();
  
+    //_____________________________________________________________________
 
-   int error = TPCRUN();
+    int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
+    
+    for(int i=0; i< nVTXHits; i++){
+      
+      TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
+      
+      double *pos;
+      float  de_dx;
+      float  time;
+  
+      //      cellId = 	trkHitVTX->getCellID();
+      pos = (double*) trkHitVTX->getPosition(); 
+      de_dx = trkHitVTX->getdEdx() ;
+      time = trkHitVTX->getTime() ;
+      
+      // convert to cm needed for BRAHMS(GEANT)
+      float x = 0.1*pos[0] ;
+      float y = 0.1*pos[1] ;
+      float z = 0.1*pos[2] ;
+      
+      
+      // Brahms resolution code for VTX = 3 REF tkhtpc.F
+
+      int subid = trkHitVTX->getType() ;
+      
+      // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
+      float vtxRes = 0.0007 ;
+      int resCode = 3 ;
+      
+      int mctrack = 0 ;
+      
+      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
+
+
+
+    }
+
+    //_____________________________________________________________________
+
+    int err = TPCRUN();
+
+
+    std::cout << "TPCRUN returns:" << err << std::endl;
+    if(err!=0) std::cout << "have you set the ionisation potential correctly in the gear xml file" << std::endl;    
     
     for(int te=0; te<TkTeBank->size();te++){
 
-      TrackImpl* TPC_Track = new TrackImpl ; 
+      TrackImpl* tpcTrack = new TrackImpl ; 
 
-      double ref_r = 10.*TkTeBank->getCoord1_of_ref_point(te);
-      double ref_phi =TkTeBank->getCoord2_of_ref_point(te)/TkTeBank->getCoord1_of_ref_point(te);
-      double ref_z = 10.*TkTeBank->getCoord3_of_ref_point(te);
+      const double ref_r = 10.*TkTeBank->getCoord1_of_ref_point(te);
+      const double ref_phi =TkTeBank->getCoord2_of_ref_point(te)/TkTeBank->getCoord1_of_ref_point(te);
+      const double ref_z = 10.*TkTeBank->getCoord3_of_ref_point(te);
 
       //FIXME:SJA: B-field hard coded needs to redeemed
       // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
       // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
 
-      double consb = (2.99792458*4.)/(10*1000.);    // divide by 1000 m->mm
+      const double consb = (2.99792458*4.)/(10*1000.);    // divide by 1000 m->mm
 
       // computation of D0 and Z0 taken from fkrtpe.F in Brahms
        
       // x0 and y0 of ref point 
-      double x0 = ref_r*cos(ref_phi);
-      double y0 = ref_r*sin(ref_phi);
+      const double x0 = ref_r*cos(ref_phi);
+      const double y0 = ref_r*sin(ref_phi);
       
       // signed track radius
-      double trk_radius = sin(TkTeBank->getTheta(te))/(consb*TkTeBank->getInvp(te));
+      const double trkRadius = sin(TkTeBank->getTheta(te))/(consb*TkTeBank->getInvp(te));
 
       //      cout << "TkTeBank->getInvp(te) " << TkTeBank->getInvp(te) << endl;
-      //      cout << " trk_radius = " << trk_radius << endl;
+      //      cout << " trkRadius = " << trkRadius << endl;
       
       // center of circumference
-      double xc = x0 - trk_radius * sin(TkTeBank->getPhi(te));
-      double yc = y0 + trk_radius * cos(TkTeBank->getPhi(te));
+      const double xc = x0 - trkRadius * sin(TkTeBank->getPhi(te));
+      const double yc = y0 + trkRadius * cos(TkTeBank->getPhi(te));
       
       // sign of geometric curvature: anti-clockwise == postive
-      double geom_curvature = fabs(TkTeBank->getInvp(te))/TkTeBank->getInvp(te);
+      const double geom_curvature = fabs(TkTeBank->getInvp(te))/TkTeBank->getInvp(te);
 
       //      cout << "geom_curvature = " << geom_curvature << endl;
       
-      double xc2 = xc * xc;
-      double yc2 = yc * yc;
+      const double xc2 = xc * xc;
+      const double yc2 = yc * yc;
       
       // Set D0
-      TPC_Track->setD0( trk_radius - geom_curvature * sqrt(xc2+yc2));
+      tpcTrack->setD0( trkRadius - geom_curvature * sqrt(xc2+yc2));
  
       // Phi at D0
       double phiatD0 = atan2(yc,xc)+(twopi/2.)+geom_curvature*(twopi/4.);
@@ -220,84 +280,84 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       //      cout << "phi at D0 = " << phiatD0 << endl;
  
       // difference between phi at ref and D0 
-      double dphi = fmod((phiatD0 - TkTeBank->getPhi(te) +  twopi + (twopi/2.) ) , twopi ) - (twopi/2.);
+      const double dphi = fmod((phiatD0 - TkTeBank->getPhi(te) +  twopi + (twopi/2.) ) , twopi ) - (twopi/2.);
       
       //      cout << "dphi at D0 = " << dphi << endl;
 
       // signed length of arc
-      double larc = trk_radius * dphi;
+      const double larc = trkRadius * dphi;
 
       // Set Z0
-      TPC_Track->setZ0(ref_z+(1/(tan(TkTeBank->getTheta(te)))*larc)); 
+      tpcTrack->setZ0(ref_z+(1/(tan(TkTeBank->getTheta(te)))*larc)); 
       
-      //      cout << " D0 = " << trk_radius - geom_curvature * sqrt(xc2+yc2) << endl;
+      //      cout << " D0 = " << trkRadius - geom_curvature * sqrt(xc2+yc2) << endl;
       //      cout << " Z0 = " << ref_z+1/(tan(TkTeBank->getTheta(te)))*larc  << endl;
 
       //FIXME: SJA: phi is set at PCA not ref this should be resolved
-      //      TPC_Track->setPhi(TkTeBank->getPhi(te));
-      TPC_Track->setPhi(phiatD0);
+      //      tpcTrack->setPhi(TkTeBank->getPhi(te));
+      tpcTrack->setPhi(phiatD0);
 
       // tan lambda and curvature remain unchanged as the track is only extrapolated
       // set negative as 1/p is signed with geometric curvature clockwise negative
-      TPC_Track->setOmega((-consb*TkTeBank->getInvp(te))/sin(TkTeBank->getTheta(te)));
-      TPC_Track->setTanLambda(tan((twopi/4.)-TkTeBank->getTheta(te)));
+      tpcTrack->setOmega((-consb*TkTeBank->getInvp(te))/sin(TkTeBank->getTheta(te)));
+      tpcTrack->setTanLambda(tan((twopi/4.)-TkTeBank->getTheta(te)));
 
-      TPC_Track->setIsReferencePointPCA(false);
-      TPC_Track->setChi2(TkTeBank->getChi2(te));
-      TPC_Track->setNdf(TkTeBank->getNdf(te));
-      TPC_Track->setdEdx(TkTeBank->getDe_dx(te));
+      tpcTrack->setIsReferencePointPCA(false);
+      tpcTrack->setChi2(TkTeBank->getChi2(te));
+      tpcTrack->setNdf(TkTeBank->getNdf(te));
+      tpcTrack->setdEdx(TkTeBank->getDe_dx(te));
      
 
       const vector <int> * hits;
-      vector<MCParticle*> MCPointers;
-      vector<int> MChits;
+      vector<MCParticle*> mcPointers;
+      vector<int> mcHits;
 
       hits = TkTeBank->getHitlist(te);
 
-      for(int tehit=0; tehit<hits->size();tehit++){
-	TrackerHit* THit = dynamic_cast<TrackerHit*>( THcol->getElementAt( hits->at(tehit) ) ) ;
+      for(unsigned int tehit=0; tehit<hits->size();tehit++){
+	TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( hits->at(tehit) ) ) ;
 
-	TPC_Track->addHit(THit);
+	tpcTrack->addHit(trkHitTPC);
 
-	for(int j=0; j<THit->getRawHits().size(); j++){ 
+	for(unsigned int j=0; j<trkHitTPC->getRawHits().size(); j++){ 
 	  
-	  SimTrackerHit * STHit =dynamic_cast<SimTrackerHit*>(THit->getRawHits().at(j));
-	  MCParticle * mcp = dynamic_cast<MCParticle*>(STHit->getMCParticle()); 
+	  SimTrackerHit * simTrkHitTPC =dynamic_cast<SimTrackerHit*>(trkHitTPC->getRawHits().at(j));
+	  MCParticle * mcp = dynamic_cast<MCParticle*>(simTrkHitTPC->getMCParticle()); 
 	  if(mcp == NULL) cout << "mc particle pointer = null" << endl; 
 	  
 	  bool found = false;
 	  
-	  for(int k=0; k<MCPointers.size();k++)
+	  for(unsigned int k=0; k<mcPointers.size();k++)
 	    {
-	      if(mcp==MCPointers[k]){
+	      if(mcp==mcPointers[k]){
 		found=true;
-		MChits[k]++;
+		mcHits[k]++;
 	      }
 	    }
 	  if(!found){
-	    MCPointers.push_back(mcp);
-	    MChits.push_back(1);
+	    mcPointers.push_back(mcp);
+	    mcHits.push_back(1);
 	  }
 	}
       }
       
-      for(int k=0; k<MCPointers.size();k++){
+      for(unsigned int k=0; k<mcPointers.size();k++){
 
-	MCParticle * mcp = MCPointers[k];
+	MCParticle * mcp = mcPointers[k];
 	
-	LCRelationImpl* LCRel = new LCRelationImpl;
-	LCRel->setFrom (TPC_Track);
-	LCRel->setTo (mcp);
-	float weight = MChits[k]/TPC_Track->getTrackerHits().size();
-	LCRel->setWeight(weight);
+	LCRelationImpl* lcRel = new LCRelationImpl;
+	lcRel->setFrom (tpcTrack);
+	lcRel->setTo (mcp);
+	float weight = mcHits[k]/tpcTrack->getTrackerHits().size();
+	lcRel->setWeight(weight);
 	
-	LCRelVec->addElement( LCRel );
+	lcRelVec->addElement( lcRel );
       }
             
       //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
       
 
-      TPC_TrackVec->addElement( TPC_Track );
+      tpcTrackVec->addElement( tpcTrack );
 
       
 //      std::cout << "TkTeBank->getSubdetector_ID(te) = " << TkTeBank->getSubdetector_ID(te) << std::endl;
@@ -342,11 +402,11 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
 //     IntVec typeValues ;
 //     typeNames.push_back( LCIO::TRACK ) ;
 //     typeValues.push_back( 1 ) ;
-//     TPC_TrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
-//     TPC_TrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
+//     tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
+//     tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
     
-    evt->addCollection( TPC_TrackVec , "TPC_Tracks") ;
-    evt->addCollection( LCRelVec , "MC_Track_Relations") ;
+    evt->addCollection( tpcTrackVec , "TPCTracks") ;
+    evt->addCollection( lcRelVec , "MCTrackRelations") ;
     
 
   }

@@ -34,10 +34,15 @@ TrackProcessor::TrackProcessor() : Processor("TrackProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the Track collection"  ,
-			      _colName ,
-			      std::string("TPC_Tracks") ) ;
+  registerProcessorParameter( "TPCTrackCollectionName" , 
+			      "Name of the TPC Track collection"  ,
+			      _tpcTrackColName ,
+			      std::string("TPCTracks") ) ;
+
+  registerProcessorParameter( "MCTrackRelationsCollectionName" , 
+			      "Name of the MCTrackRelations collection"  ,
+			      _mcTrackRelColName ,
+			      std::string("MCTrackRelations") ) ;
 
 #ifdef MARLIN_USE_ROOT
    registerProcessorParameter( "ROOTFile" ,
@@ -115,8 +120,8 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 
 #endif
 
-  LCCollection* Tcol = evt->getCollection( _colName ) ;
-  LCCollection* LCRcol = evt->getCollection(  "MC_Track_Relations" ) ;
+  LCCollection* Tcol = evt->getCollection( _tpcTrackColName ) ;
+  LCCollection* LCRcol = evt->getCollection( _mcTrackRelColName ) ;
   
   if( Tcol != 0 ){
 

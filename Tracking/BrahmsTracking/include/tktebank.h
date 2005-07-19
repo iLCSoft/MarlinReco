@@ -6,7 +6,6 @@
 #include<vector>
 #include <cfortran.h>
 
-using namespace std;
 
 
 
@@ -89,7 +88,8 @@ class Tk_Te_Bank
   float getCovmatrix13(int te){return te_bank[te].covmatrix13;};
   float getCovmatrix14(int te){return te_bank[te].covmatrix14;};
   float getCovmatrix15(int te){return te_bank[te].covmatrix15;};
-  const vector<int> * getHitlist(int te){return &te_bank[te].hitlist;};
+
+  const std::vector<int> * getHitlist(int te){return &te_bank[te].hitlist;};
 
  private:
 
@@ -127,11 +127,11 @@ struct tk_te
   float covmatrix14;
   float covmatrix15;
 
-  vector <int> hitlist;
+  std::vector <int> hitlist;
 
 };
 
- vector <tk_te> te_bank;
+ std::vector <tk_te> te_bank;
 
 
 };

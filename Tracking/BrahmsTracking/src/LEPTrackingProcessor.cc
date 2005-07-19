@@ -1,6 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "LEPTrackingProcessor.h"
 #include <iostream>
+#include <string>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -8,6 +9,7 @@
 #include <AIDA/ICloud1D.h>
 //#include <AIDA/IHistogram1D.h>
 #endif
+
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 #include <EVENT/MCParticle.h>
@@ -32,21 +34,27 @@
 #include <gear/PadRowLayout2D.h>
 //
 
-PROTOCCALLSFFUN0(INT,TPCRUN,tpcrun)
-#define TPCRUN() CCALLSFFUN0(TPCRUN,tpcrun)
-
-// PROTOCCALLSFFUN0(INT,TKTREV,tktrev)
-// #define TKTREV() CCALLSFFUN0(TKTREV,tktrev)
+PROTOCCALLSFFUN0(INT,TKTREV,tktrev)
+#define TKTREV() CCALLSFFUN0(TKTREV,tktrev)
 
   // FIXME:SJA: the namespace should be used explicitly
 using namespace lcio ;
 using namespace marlin ;
-using namespace constants;
+using namespace constants ;
+using namespace std ; 
+
+int subdetfirsthitindex(string subdet);
+
+FCALLSCFUN1(INT,subdetfirsthitindex,SUBDETFIRSTHITINDEX,subdetfirsthitindex, STRING)
+
+int numofsubdethits(string subdet);
+
+FCALLSCFUN1(INT,numofsubdethits,NUMOFSUBDETHITS,numofsubdethits, STRING)
 
 int writetpccpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetpccpp,WRITETPCCPP,writetpccpp, FLOAT, INT, INT)
-
+      
 float readtpchitscpp(int a, int b); 
 
 FCALLSCFUN2(FLOAT,readtpchitscpp,READTPCHITSCPP,readtpchitscpp, INT, INT)
@@ -120,7 +128,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   // this gets called for every event 
   // usually the working horse ...
 
-  if(firstEvent==true) std::cout << "LEPTrackingProcessor called for first event" << std::endl;
+  if(firstEvent==true) cout << "LEPTrackingProcessor called for first event" << endl;
 
   firstEvent = false ;
   
@@ -141,7 +149,9 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
 
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
-        
+    
+    TkHitBank->setFirstHitIndex("TPC"); 
+    
     for(int i=0; i< nTPCHits; i++){
       
       TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
@@ -176,20 +186,26 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
       int mctrack = 0;
       
+
       TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
+      
 
 
       TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
 
     } 
+
+    TkHitBank->setLastHitIndex("TPC"); 
     
-    cout << "the number of tpc hits sent to brahms = " << TPCHitBank->size() << endl;
-    CNTPC.ntphits = TPCHitBank->size();
+    //    cout << "the number of tpc hits sent to brahms = " << TPCHitBank->size() << endl;
+    //    CNTPC.ntphits = TPCHitBank->size();
  
     //_____________________________________________________________________
 
     int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
     
+    TkHitBank->setFirstHitIndex("VTX"); 
+
     for(int i=0; i< nVTXHits; i++){
       
       TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
@@ -221,18 +237,25 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       
       TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
 
-
-
     }
-
+    
+    TkHitBank->setLastHitIndex("VTX"); 
+    
     //_____________________________________________________________________
 
-//     int errTKTREV = TKTREV(); 
-    int errTPCRUN = TPCRUN();
+    int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
+    int vtxsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("VTX")) ;
 
+    cout << "the first hit for the TPC has id " << tpcsubid << endl ;
+    cout << "the first hit for the vtx has id " << vtxsubid << endl ;
 
-    std::cout << "TPCRUN returns:" << errTPCRUN << std::endl;
-    if(errTPCRUN!=0) std::cout << "have you set the ionisation potential correctly in the gear xml file" << std::endl;    
+    cout << "1 the number of VTX hits = " << nVTXHits << endl;
+    cout << "2 the number of VTX hits = " << TkHitBank->getNumOfSubDetHits("VTX") << endl;
+
+    int errTKTREV = TKTREV(); 
+
+    //    cout << "TPCRUN returns:" << errTPCRUN << endl;
+    //    if(errTPCRUN!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
     
     for(int te=0; te<TkTeBank->size();te++){
 
@@ -364,36 +387,36 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       tpcTrackVec->addElement( tpcTrack );
 
       
-//      std::cout << "TkTeBank->getSubdetector_ID(te) = " << TkTeBank->getSubdetector_ID(te) << std::endl;
-//      std::cout << "TkTeBank->getSubmodule(te) = " << TkTeBank->getSubmodule(te) << std::endl;
-//      std::cout << "TkTeBank->getUnused(te) = " << TkTeBank->getUnused(te) << std::endl;
-//      std::cout << "TkTeBank->getMeasurement_code(te) = " << TkTeBank->getMeasurement_code(te) << std::endl;
-//      std::cout << "TkTeBank->getPointer_to_end_of_TE(te) = " << TkTeBank->getPointer_to_end_of_TE(te) << std::endl;
-//      std::cout << "TkTeBank->getNdf(te) = " << TkTeBank->getNdf(te) << std::endl;
-//      std::cout << "TkTeBank->getChi2(te) = " << TkTeBank->getChi2(te) << std::endl;
-//      std::cout << "TkTeBank->getLength(te) = " << TkTeBank->getLength(te) << std::endl;
-//      std::cout << "TkTeBank->getCoord1_of_ref_point(te) = " << TkTeBank->getCoord1_of_ref_point(te) << std::endl;
-//      std::cout << "TkTeBank->getCoord2_of_ref_point(te) = " << TkTeBank->getCoord2_of_ref_point(te) << std::endl;
-//      std::cout << "TkTeBank->getCoord3_of_ref_point(te) = " << TkTeBank->getCoord3_of_ref_point(te) << std::endl;
-//      std::cout << "TkTeBank->getTheta(te) = " << TkTeBank->getTheta(te) << std::endl;
-//      std::cout << "TkTeBank->getPhi(te) = " << TkTeBank->getPhi(te) << std::endl;
-//      std::cout << "TkTeBank->getInvp(te) = " << TkTeBank->getInvp(te) << std::endl;
-//      std::cout << "TkTeBank->getDe_dx(te) = " << TkTeBank->getDe_dx(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix1(te) = " << TkTeBank->getCovmatrix1(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix2(te) = " << TkTeBank->getCovmatrix2(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix3(te) = " << TkTeBank->getCovmatrix3(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix4(te) = " << TkTeBank->getCovmatrix4(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix5(te) = " << TkTeBank->getCovmatrix5(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix6(te) = " << TkTeBank->getCovmatrix6(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix7(te) = " << TkTeBank->getCovmatrix7(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix8(te) = " << TkTeBank->getCovmatrix8(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix9(te) = " << TkTeBank->getCovmatrix9(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix0(te) = " << TkTeBank->getCovmatrix10(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix1(te) = " << TkTeBank->getCovmatrix11(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix2(te) = " << TkTeBank->getCovmatrix12(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix3(te) = " << TkTeBank->getCovmatrix13(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix4(te) = " << TkTeBank->getCovmatrix14(te) << std::endl;
-//      std::cout << "TkTeBank->getCovmatrix5(te) = " << TkTeBank->getCovmatrix15(te) << std::endl;
+//      cout << "TkTeBank->getSubdetector_ID(te) = " << TkTeBank->getSubdetector_ID(te) << endl;
+//      cout << "TkTeBank->getSubmodule(te) = " << TkTeBank->getSubmodule(te) << endl;
+//      cout << "TkTeBank->getUnused(te) = " << TkTeBank->getUnused(te) << endl;
+//      cout << "TkTeBank->getMeasurement_code(te) = " << TkTeBank->getMeasurement_code(te) << endl;
+//      cout << "TkTeBank->getPointer_to_end_of_TE(te) = " << TkTeBank->getPointer_to_end_of_TE(te) << endl;
+//      cout << "TkTeBank->getNdf(te) = " << TkTeBank->getNdf(te) << endl;
+//      cout << "TkTeBank->getChi2(te) = " << TkTeBank->getChi2(te) << endl;
+//      cout << "TkTeBank->getLength(te) = " << TkTeBank->getLength(te) << endl;
+//      cout << "TkTeBank->getCoord1_of_ref_point(te) = " << TkTeBank->getCoord1_of_ref_point(te) << endl;
+//      cout << "TkTeBank->getCoord2_of_ref_point(te) = " << TkTeBank->getCoord2_of_ref_point(te) << endl;
+//      cout << "TkTeBank->getCoord3_of_ref_point(te) = " << TkTeBank->getCoord3_of_ref_point(te) << endl;
+//      cout << "TkTeBank->getTheta(te) = " << TkTeBank->getTheta(te) << endl;
+//      cout << "TkTeBank->getPhi(te) = " << TkTeBank->getPhi(te) << endl;
+//      cout << "TkTeBank->getInvp(te) = " << TkTeBank->getInvp(te) << endl;
+//      cout << "TkTeBank->getDe_dx(te) = " << TkTeBank->getDe_dx(te) << endl;
+//      cout << "TkTeBank->getCovmatrix1(te) = " << TkTeBank->getCovmatrix1(te) << endl;
+//      cout << "TkTeBank->getCovmatrix2(te) = " << TkTeBank->getCovmatrix2(te) << endl;
+//      cout << "TkTeBank->getCovmatrix3(te) = " << TkTeBank->getCovmatrix3(te) << endl;
+//      cout << "TkTeBank->getCovmatrix4(te) = " << TkTeBank->getCovmatrix4(te) << endl;
+//      cout << "TkTeBank->getCovmatrix5(te) = " << TkTeBank->getCovmatrix5(te) << endl;
+//      cout << "TkTeBank->getCovmatrix6(te) = " << TkTeBank->getCovmatrix6(te) << endl;
+//      cout << "TkTeBank->getCovmatrix7(te) = " << TkTeBank->getCovmatrix7(te) << endl;
+//      cout << "TkTeBank->getCovmatrix8(te) = " << TkTeBank->getCovmatrix8(te) << endl;
+//      cout << "TkTeBank->getCovmatrix9(te) = " << TkTeBank->getCovmatrix9(te) << endl;
+//      cout << "TkTeBank->getCovmatrix0(te) = " << TkTeBank->getCovmatrix10(te) << endl;
+//      cout << "TkTeBank->getCovmatrix1(te) = " << TkTeBank->getCovmatrix11(te) << endl;
+//      cout << "TkTeBank->getCovmatrix2(te) = " << TkTeBank->getCovmatrix12(te) << endl;
+//      cout << "TkTeBank->getCovmatrix3(te) = " << TkTeBank->getCovmatrix13(te) << endl;
+//      cout << "TkTeBank->getCovmatrix4(te) = " << TkTeBank->getCovmatrix14(te) << endl;
+//      cout << "TkTeBank->getCovmatrix5(te) = " << TkTeBank->getCovmatrix15(te) << endl;
 //
     }
 

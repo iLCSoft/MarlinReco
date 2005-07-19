@@ -3,10 +3,9 @@
 #define Tk_Hit_Bank_h 1
 
 #include<vector>
-#include <cfortran.h>
-
-using namespace std;
-
+#include<cfortran.h>
+#include<map>
+#include<string>
 
 
 class Tk_Hit_Bank
@@ -17,7 +16,7 @@ class Tk_Hit_Bank
   ~Tk_Hit_Bank();
   void add_hit(float, float, float, float, int, int, int, int, int, float, float);
   //void add_hit(float, float, float, float, int, float, float, int);
-  void remove_hit(int);
+  //  void remove_hit(int);
   void setX(float X, int hit){hit_bank[hit].x = X;};
   void setY(float Y, int hit){hit_bank[hit].y = Y;};
   void setZ(float Z, int hit){hit_bank[hit].z = Z;};
@@ -46,6 +45,15 @@ class Tk_Hit_Bank
   float getResolution2(int i){return  hit_bank[i].resolution_2;};
 
 
+  // These methods have no protection against using the wrong key e.g. tpc instead of TPC ...
+  void setFirstHitIndex(std::string subdet){firstHitEntry[subdet]=hit_bank.size();};
+  unsigned int getFirstHitIndex(std::string subdet){return firstHitEntry[subdet];}; 
+
+  void setLastHitIndex(std::string subdet){lastHitEntry[subdet]=hit_bank.size()-1;};
+  unsigned int getLastHitIndex(std::string subdet){return lastHitEntry[subdet];}; 
+
+  int getNumOfSubDetHits(std::string subdet){return 1 + lastHitEntry[subdet] - firstHitEntry[subdet];};
+
  private:
 
 struct tk_hit 
@@ -64,8 +72,12 @@ struct tk_hit
 
 };
 
- vector <tk_hit> hit_bank;
-
+ std::vector <tk_hit> hit_bank;
+ 
+ // stores the postion of the first hit from a subdetector
+ std::map <const std::string , unsigned int> firstHitEntry;
+ // stores the postion of the last hit from a subdetector
+ std::map <const std::string , unsigned int> lastHitEntry;
 
 };
 

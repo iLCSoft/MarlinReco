@@ -10,7 +10,7 @@
 
 using namespace lcio ;
 using namespace marlin ;
-
+using namespace std ;
 
 VTXDigiProcessor aVTXDigiProcessor ;
 
@@ -59,6 +59,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       
       SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
+      const int celId = SimTHit->getCellID() ;
+
       const double *pos ;
       pos =  SimTHit->getPosition() ;  
 
@@ -75,7 +77,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       trkHit->setPosition( const_cast<double *>( pos ) ) ;
 
       trkHit->setdEdx( de_dx ) ;
-      trkHit->setType( 100 ) ;
+      trkHit->setType( 100+celId ) ;
       
       // 	  push back the SimTHit for this TrackerHit
       trkHit->rawHits().push_back( SimTHit ) ;

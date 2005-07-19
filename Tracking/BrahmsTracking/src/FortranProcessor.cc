@@ -208,7 +208,7 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       
       // Brahms resolution code for VTX = 3 REF tkhtpc.F
 
-      int subid = 100 ;
+      int subid = trkHitVTX->getType() ;
       
       // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
       float vtxRes = 0.0007 ;
@@ -216,7 +216,7 @@ void FortranProcessor::processEvent( LCEvent * evt ) {
       
       int mctrack = 0 ;
       
-      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes);
+      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
 
 
 

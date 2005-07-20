@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 //stl exception handler
 #include<stdexcept>
 
@@ -50,7 +51,17 @@ void Tk_Hit_Bank::add_hit(float X, float Y, float Z, float E, int SubID,  int Tr
 //  hit_bank.erase(hit_bank.begin()+hit);
 //}
 
-float readtkhitscpp(int attribute, int hit)
+int subdetfirsthitindex(string subdet)
+{
+  return TkHitBank->getFirstHitIndex( subdet )+1;
+}
+
+int numofsubdethits(string subdet)
+{
+  return TkHitBank->getNumOfSubDetHits( subdet );
+}
+
+float rreadtkhitscpp(int attribute, int hit)
 {
 
   if(hit>TkHitBank->size()) return 0.;
@@ -101,6 +112,62 @@ float readtkhitscpp(int attribute, int hit)
   case 11: 
     //    std::cout << "getResolution2 = " << TkHitBank->getResolution2(hit) << std::endl;
     return TkHitBank->getResolution2(hit);
+    break;
+  default: 
+    throw runtime_error("hit attribute not valid");
+  } 
+}
+int ireadtkhitscpp(int attribute, int hit)
+{
+
+  if(hit>TkHitBank->size()) return 0;
+
+  hit = hit - 1;
+
+  switch (attribute) {
+  case 1: 
+    //    std::cout << "getX = " << TkHitBank->getX(hit) << std::endl;
+    return (int)TkHitBank->getX(hit);
+    break;
+  case 2: 
+    //    std::cout << "getY = " << TkHitBank->getY(hit) << std::endl;
+    return (int)TkHitBank->getY(hit);
+     break;
+  case 3: 
+    //    std::cout << "getZ = " << TkHitBank->getZ(hit) << std::endl;
+    return (int)TkHitBank->getZ(hit);
+    break;
+  case 4: 
+    //    std::cout << "getEnergy = " << TkHitBank->getEnergy(hit) << std::endl;
+    return (int)TkHitBank->getEnergy(hit);
+    break;
+  case 5: 
+    //    std::cout << "getSubdetectorID = " << TkHitBank->getSubdetectorID(hit) << std::endl;
+    return (int)(TkHitBank->getSubdetectorID(hit));
+    break;
+  case 6: 
+    //    std::cout << "getTrackID = " << TkHitBank->getTrackID(hit)<< std::endl;
+    return (int)TkHitBank->getTrackID(hit);
+    break;
+  case 7: 
+    //    std::cout << "getPntToFirstExclusion = " << TkHitBank->getPntToFirstExclusion(hit) << std::endl;
+    return (int)TkHitBank->getPntToFirstExclusion(hit);
+    break;
+  case 8: 
+    //    std::cout << "TkHitBank->getNExclusion = " << TkHitBank->getNExclusion(hit)<< std::endl;
+    return (int)TkHitBank->getNExclusion(hit);
+    break;
+  case 9: 
+    //    std::cout << "getResolutionCode = " << TkHitBank->getResolutionCode(hit) << std::endl;
+    return (int)TkHitBank->getResolutionCode(hit);
+    break;
+  case 10: 
+    //    std::cout << "getResolution1 = " << TkHitBank->getResolution1(hit)<< std::endl;
+    return (int)TkHitBank->getResolution1(hit);
+    break;
+  case 11: 
+    //    std::cout << "getResolution2 = " << TkHitBank->getResolution2(hit) << std::endl;
+    return (int)TkHitBank->getResolution2(hit);
     break;
   default: 
     throw runtime_error("hit attribute not valid");

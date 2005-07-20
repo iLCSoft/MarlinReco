@@ -1,9 +1,12 @@
 
 
 *     
-* $Id: tpcrun.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcrun.F,v 1.2 2005-07-19 17:02:02 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -75,49 +78,19 @@ c --- hit information array given back by TKREAD
 
       EXTERNAL TKNUMB
 
+      EXTERNAL numofsubdethits
+      INTEGER  numofsubdethits
+
 c-----------------------------------------------------------
 
 
 #include "include/tpcfunc.inc"
 
       p_flag = 0
+c --- get the number of hits in TPC      
+      NTPHITS=numofsubdethits("TPC")
 
-
-CCC FIXME: the TPC will be intialised here with the correct geometric and physical constants
-CCC        this should be done in a more apropriate plays for instance by filling the common 
-CCC        block tpcdims on the MARLIN side
-
-      CALL TKINIT
-      CALL TPCGEOM
-      CALL TKSETR
-CCC FIXME: SJA: the database of materials is set up in SETMAT for the TPC only all other systems are
-CCC             commented out.
-      CALL SETMAT
-
-
-C.....init CHGTRAK common block (still needed in BRAHMS)
-c MVL       added also into BRINI in GUTREV
-       DO I=1,NMAXCHT
-          NTKHITS(I)=0
-       END DO
-
-
-C.....init MC track, TE,TS, and TK arrays
-      TKNTRK=0
-      NTE=0
-      NTS=0
-      NTK=0
-
-C.....init exclusion list
-      NEXCL=0
-      EXCLERR=0
-
-C.....init hit bank index and sub-indices for subdetector IDs
-      NTKHIT=0
-      DO I=1,3000
-        IHPOINT(I)=0
-        IHNUMB(I)=0
-      END DO
+ 
 
 C FIXME: SJA: As we only have TPC hit here and they have been filled 
 C     from the marlin side the starting point in the bank for the tpc
@@ -132,18 +105,6 @@ C     in FortranProcessor.cc
       NTKHIT = ntphits
       IHNUMB(500) = ntphits
 
-C.....init TE hit list index
-      NHITTE=0
-
-C.....init TS and TK list-of-contained-TE indices
-      NTSTEL=0
-      NTKTEL=0
-
-C.....clear event veto
-      CALL TKVETO(0)
-
-
-      CALL TKHTPC
 
 CCC
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #ifndef TPCDigiProcessor_h
 #define TPCDigiProcessor_h 1
 
@@ -12,14 +13,14 @@ using namespace marlin ;
 
 
 /**  Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. 
-* Double hits are identified but are currently not added to the collection. This may be change 
-* at a later date when criteria for their seperation is defined. The resolutions are defined in 
-* marlin_tpcgeom.h  
-* @author S. Aplin, DESY
-*/
+ * Double hits are identified but are currently not added to the collection. This may be change 
+ * at a later date when criteria for their seperation is defined. The resolutions are defined in 
+ * marlin_tpcgeom.h  
+ * @author S. Aplin, DESY
+ */
 class TPCDigiProcessor : public Processor {
   
- public:
+public:
   
   virtual Processor*  newProcessor() { return new TPCDigiProcessor ; }
   
@@ -48,7 +49,7 @@ class TPCDigiProcessor : public Processor {
   virtual void end() ;
   
   
- protected:
+protected:
 
   /** Input collection name.
    */

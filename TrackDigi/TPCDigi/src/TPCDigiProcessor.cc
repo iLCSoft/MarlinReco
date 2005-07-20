@@ -1,5 +1,9 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "TPCDigiProcessor.h"
 #include <iostream>
+#include <vector>
+#include <map>
+#include <cmath>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -20,11 +24,19 @@
 #include "random.h"
 #include "constants.h"
 #include "voxel.h"
-#include "tpc.h"
+//#include "tpc.h"
+
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/TPCParameters.h>
+#include <gear/PadRowLayout2D.h>
+//
 
 using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
+using namespace std ;
 
 TPCDigiProcessor aTPCDigiProcessor ;
 
@@ -76,7 +88,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
   
-  if(firstEvent==true) std::cout << "TPCDigiProcessor called for first event" << std::endl;
+  if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;
 
   firstEvent = false ;
   
@@ -91,6 +103,16 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     //    cout << "number of SimHits = " << n_sim_hits << endl;
     // Assume initialy that there is no merging 
     
+    //
+    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+    const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+
+    vector< vector <Voxel_tpc *> > tpcRowHits;
+
+    // set size of row_hits to hold (n_rows) vectors
+    tpcRowHits.resize(padLayout.getNRows());
+
+    map< Voxel_tpc *,SimTrackerHit *> tpcHitMap;
   
     for(int i=0; i< n_sim_hits; i++){
       
@@ -103,33 +125,37 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos = (double*) SimTHit->getPosition(); 
       de_dx = SimTHit->getdEdx();
 
-      // FIXME: need this cast because of a bug in LCIO
-      mcp = const_cast<MCParticle*> (SimTHit->getMCParticle()) ;      
+      mcp = SimTHit->getMCParticle() ;
 
-      //      std::cout << "x position for this hit is " << pos[0] << std::endl; 
-      //      std::cout << "y position for this hit is " << pos[1] << std::endl; 
-      //      std::cout << "z position for this hit is " << pos[2] << std::endl; 
-      //      std::cout << "de/dx for this hit is " << de_dx << std::endl; 
-      //      std::cout << "MCParticle PID for this hit is " << mcp->getPDG() << std::endl; 
-      //      std::cout << "x =  " << x << std::endl; 
-      
-      //  SMEARING 
-      
-      float tpc_rphi_res = the_tpc->gettpc_rphi_res(pos[2]);
-      
+      //      cout << "x position for this hit is " << pos[0] << endl; 
+      //      cout << "y position for this hit is " << pos[1] << endl; 
+      //      cout << "z position for this hit is " << pos[2] << endl; 
+      //      cout << "de/dx for this hit is " << de_dx << endl; 
+      //      cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
+      //      cout << "x =  " << x << endl; 
+
+      //  SMEARING
+
+
+      double tpcRPhiResMax = gearTPC.getDoubleVal("tpcRPhiResMax");
+      double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
+      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+
       RandomNumberGenerator RandomNumber;
+      // FIXME: SJA: The random number generator should be done using CLHEP or GSL
 
-      float randrp = the_tpc->getTpcRphiResMax() * (*(RandomNumber.Gauss(1.0)));
-      float randz = the_tpc->getTpcZRes() * (*(RandomNumber.Gauss(1.0)));
+      double randrp = tpcRPhiRes * (*(RandomNumber.Gauss(1.0)));
+      double randz = tpcZRes * (*(RandomNumber.Gauss(1.0)));
 
       // Make sure that the radius is equal to a pad radius
       // Get current hit radius
+
       double rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
       //
-      //      std::cout << "x position before smearing " << pos[0] << std::endl;     
-      //      std::cout << "y position before smearing " << pos[1] << std::endl;     
-      //      std::cout << "z position before smearing " << pos[2] << std::endl;     
+      //      cout << "x position before smearing " << pos[0] << endl;     
+      //      cout << "y position before smearing " << pos[1] << endl;     
+      //      cout << "z position before smearing " << pos[2] << endl;     
       //
 
       pos[0] = pos[0] - randrp * pos[1]/rad;
@@ -137,9 +163,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos[2] = pos[2] + randz;
       
       //
-      //      std::cout << "x position after smearing " << pos[0] << std::endl;     
-      //      std::cout << "y position after smearing " << pos[1] << std::endl;     
-      //      std::cout << "z position after smearing " << pos[2] << std::endl;     
+      //      cout << "x position after smearing " << pos[0] << endl;     
+      //      cout << "y position after smearing " << pos[1] << endl;     
+      //      cout << "z position after smearing " << pos[2] << endl;     
       //
       
       // At this point hits are mearly smeared now they must be digitised to trackerhits
@@ -149,158 +175,171 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //get phi of current hit
       float phi = atan2(pos[1],pos[0]);
       if (phi<0.) phi=phi+twopi;
-      
+
+
       //get row index of current hit
-      int irow_hit = (int)((rad-the_tpc->getInnerRadius())/the_tpc->getPadRPitch());
+      
+      // modified to ues GEAR
 
-       if(irow_hit<0.) {
-	cout << "row index of hit less than zero : irow = " << irow_hit << endl;
-	cout << "rad = " << rad << endl; 
-	cout << "the_tpc->getInnerRadius() = " << the_tpc->getInnerRadius() << endl; 
-	cout << "the_tpc->getPadRPitch() = " << the_tpc->getPadRPitch() << endl; 
 
-	irow_hit = 0;
 
+      int padIndex = padLayout.getNearestPad(rad,phi);
+
+      //      cout << "padIndex = " << padIndex << endl;
+
+      const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+
+      double gearRMin = planeExt[0] ;
+      double gearRMax = planeExt[1] ;
+
+      if(fabs(pos[2])>gearTPC.getMaxDriftLength()) pos[2] = (fabs(pos[2])/pos[2])*gearTPC.getMaxDriftLength();
+
+      if(rad>gearRMax){
+        pos[0] = gearRMax*cos(phi);
+        pos[1] = gearRMax*sin(phi);
+        cout << "Radius is greater than TPC RMax " << endl;
+        cout << "rad = " << rad << endl; 
+        cout << "the tpc OuterRadius = " << gearRMax << endl; 
       }
 
-      if(irow_hit>the_tpc->getNumberOfRows()-1){
-	cout << "row index of hit greater than number of pad rows: irow = " << irow_hit << endl;
-	cout << "rad = " << rad << endl; 
-	cout << "the_tpc->getInnerRadius() = " << the_tpc->getInnerRadius() << endl; 
-	cout << "the_tpc->getPadRPitch() = " << the_tpc->getPadRPitch() << endl; 
-
-	irow_hit = the_tpc->getNumberOfRows()-1;
+      if(rad<gearRMin){
+        pos[0] = gearRMin*cos(phi);
+        pos[1] = gearRMin*sin(phi);
+        cout << "Radius is less than TPC RMin" << endl;
+        cout << "rad = " << rad << endl; 
+        cout << "the tpc InnerRadius = " << gearRMin << endl; 
       }
+      
+      int iRowHit = padLayout.getRowNumber(padIndex);
 
-      //get row radius needed to calculate the number of pixels in row
-      //      float row_radius = twopi*((the_tpc->getPadRPitch()/2.)+(float)irow_hit*the_tpc->getPadRPitch());
-      //      int number_of_pixels_in_row = int(row_radius / the_tpc->getPixelPhiWidth());
 
-      //      cout << "about to get number of pixels for row = " << irow_hit << endl;
-      int number_of_pixels_in_row = the_tpc->getNumberOfPhiSegments(irow_hit);
-      //      cout << "got number of pixels rows" << endl;
+//       cout << "padLayout.getPadWidth(0) = " <<padLayout.getPadWidth(0) << endl;  
+//       cout << "padLayout.getPadWidth(padIndex) = " <<padLayout.getPadWidth(padIndex) << endl;  
+//       cout << "padLayout.getPadHeight(0) = " <<padLayout.getPadHeight(0) << endl;  
+//       cout << "padLayout.getPadHeight(padIndex) = " <<padLayout.getPadHeight(padIndex) << endl;  
+
+      gear::Point2D padCoord = padLayout.getPadCenter(padIndex);
 
       //get phi index of current hit
-      int iphi_hit = (int)((number_of_pixels_in_row * phi) / twopi);
+
+      int iPhiHit = padLayout.getPadNumber(padIndex);
+
+      int NumberOfTimeSlices =  (int) ((2.0 * gearTPC.getMaxDriftLength()) / gearTPC.getDoubleVal("tpcPixZ"));
 
       //get z index of current hit
-      int iz_hit = (int)((float)(the_tpc->getNumberOfTimeSlices())*
-			 ((the_tpc->getHalfLength()+pos[2])/(2.*the_tpc->getHalfLength())));
-      
-      if(iz_hit<0) iz_hit=0;
-      if(iz_hit>the_tpc->getNumberOfTimeSlices()) iz_hit=the_tpc->getNumberOfTimeSlices();
+
+      int iZHit = (int) ( (float) NumberOfTimeSlices * 
+                         ( gearTPC.getMaxDriftLength() + pos[2] ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
+
+
+      if(iZHit<0) iZHit=0;
+      if(iZHit>NumberOfTimeSlices) iZHit=NumberOfTimeSlices;
 
       
-      Voxel_tpc * a_tpc_voxel = new Voxel_tpc(irow_hit,iphi_hit,iz_hit, pos, de_dx);
-      
-      the_tpc->putRowHit(irow_hit, a_tpc_voxel);
-      
-      the_tpc->putSimTrackerHit(a_tpc_voxel , SimTHit);
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, pos, de_dx);
 
-      //      cout << "a voxel hit "<< i << " has been added to row " << irow_hit << endl;  
+      tpcRowHits.at(iRowHit).push_back(atpcVoxel);
+      
+      tpcHitMap[atpcVoxel] = SimTHit; 
+
+
+      //      cout << "a voxel hit "<< i << " has been added to row " << iRowHit << endl;  
 
     }    
 
     cout << "finished looping over simhits" << endl;
-
     // Add background hits here
     
     vector <Voxel_tpc *> row_hits;
+
     
     //      cout << "get the row hits" << endl;
     
-    for (int j = 0; j<the_tpc->getNumberOfRows(); j++){
+    for (int i = 0; i<padLayout.getNRows(); ++i){
       
-      row_hits = the_tpc->getRowHits(j);
+      row_hits = tpcRowHits[i];
 
       //      sort(row_hits.begin(), row_hits.end(), compare_phi );
 
-      //      cout << "row = " << j << "  row_hits.size() = " << row_hits.size() << endl;
+//       cout << "row = " << i << "  row_hits.size() = " << row_hits.size() << endl;
 
-//       if(row_hits.size()==1){
-//       //store hit variables
-//       TrackerHitImpl* trkHit = new TrackerHitImpl ;
-//       double pos[3] = {row_hits[0]->getX(),row_hits[0]->getY(),row_hits[0]->getZ()}; 
-//       trkHit->setPosition(pos);
-//       trkHit->setdEdx(row_hits[0]->getdEdx());
-//       trkHit->setType( 500 );
-      
-//       // 	  push back the SimTHit for this TrackerHit
-//       trkHit->rawHits().push_back( the_tpc->getSimTrackerHit(row_hits[0]) );
+      for (unsigned int j = 0; j<row_hits.size(); ++j){
+        
+        //        cout << "got the row hit j = " << j << "  row_hits.size() = " << row_hits.size() << endl;
+        
+        for (unsigned int k = j+1; k<row_hits.size(); k++){
 
-//       trkhitVec->addElement( trkHit ); 
-//       }
+          //          cout << "got the row hits k = " << k << endl;
+          
+          if(row_hits[j]->getPhiIndex() > row_hits[k]->getPhiIndex()){
+            //            cout << "phi index of hit ["<<j<<"] = " << row_hits[j]->getPhiIndex() << endl; 
+            //            cout << "phi index of hit ["<<k<<"] = " << row_hits[k]->getPhiIndex() << endl; 
+          }
+          
 
-      for (int i = 0; i<row_hits.size(); i++){
-	
-	//	cout << "got the row hits i = " << i << "  row_hits.size() = " << row_hits.size() << endl;
-	
-	for (int k = i+1; k<row_hits.size(); k++){
+          
+          if(abs(row_hits[j]->getZIndex()-row_hits[k]->getZIndex())<=1){
 
-	  //	  if(row_hits[i]->getPhiIndex() > row_hits[k]->getPhiIndex()){
-	  //	    cout << "phi index of hit ["<<i<<"] = " << row_hits[i]->getPhiIndex() << endl; 
-	  //	    cout << "phi index of hit ["<<k<<"] = " << row_hits[k]->getPhiIndex() << endl; 
-	  //	  }
+              if(abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())<=1||abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())==(int)padLayout.getPadsInRow(i).size()){
 
-	  //	  cout << "got the row hits k = " << k << endl;
-	  
-	  if(abs(row_hits[i]->getZIndex()-row_hits[k]->getZIndex())<=1){
-	    if(abs(row_hits[i]->getPhiIndex()-row_hits[k]->getPhiIndex())<=1||abs(row_hits[i]->getPhiIndex()-row_hits[k]->getPhiIndex())==the_tpc->getNumberOfPhiSegments(j)){
+              
+//                 cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
+//                 cout << "double hit candidate found in row: " << i <<  endl;
 
-	      
-	      //	      cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
-	      //	      cout << "double hit candidate found in row: " << j <<  endl;
-	      
-	      if(fabs(row_hits[i]->getZ()-row_hits[k]->getZ())<the_tpc->getTimeWidth()){
-		if((((row_hits[i]->getX()-row_hits[k]->getX())*(row_hits[i]->getX()-row_hits[k]->getX()))
-		    +((row_hits[i]->getY()-row_hits[k]->getY())*(row_hits[i]->getY()-row_hits[k]->getY())))
-		   <the_tpc->getPixelPhiWidth()*the_tpc->getPixelPhiWidth()){
-		  
-		  cout << "double hit found in row: " << j <<  endl;
-		  row_hits[i]->setAdjacent(row_hits[k]);
-		  row_hits[k]->setAdjacent(row_hits[i]);
-		}		  
-	      }
-	    }
-	  }
-	}
+//                 cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
+//                 cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
+//                 cout << "gearTPC.getDoubleVal(tpcPixZ)" << gearTPC.getDoubleVal("tpcPixZ") << endl;
 
-	// FIXME:SJA: 
-// 	At this point the double hits have been identified and at present they are not added to the
-// 	tracker hit collection. What should be done with them will be decided later.
+//                 cout << "row_hits dX^2 + dY^2 " << 
+//                   ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
+//                       ( row_hits[j]->getX() - row_hits[k]->getX() ) ) +
+//                     ( ( row_hits[j]->getY() - row_hits[k]->getY() ) * 
+//                       ( row_hits[j]->getY() - row_hits[k]->getY() ) ) )
+//                      << endl;
+//                 cout << "padLayout.getPadWidth(0)^2 " << padLayout.getPadWidth(0) * padLayout.getPadWidth(0)
+//                      << endl;
+                
 
-	if(row_hits[i]->getNumberOfAdjacent()==0){
-	  //store hit variables
-	  TrackerHitImpl* trkHit = new TrackerHitImpl ;
-	  double pos[3] = {row_hits[i]->getX(),row_hits[i]->getY(),row_hits[i]->getZ()}; 
-	  trkHit->setPosition(pos);
-	  trkHit->setdEdx(row_hits[i]->getdEdx());
-	  trkHit->setType( 500 );
-	  
-// 	  push back the SimTHit for this TrackerHit
-	  trkHit->rawHits().push_back( the_tpc->getSimTrackerHit(row_hits[i]) );
+                if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < gearTPC.getDoubleVal("tpcPixZ") ) {
 
-	  trkhitVec->addElement( trkHit ); 
+                  if((((row_hits[j]->getX()-row_hits[k]->getX())*(row_hits[j]->getX()-row_hits[k]->getX()))
+                      +((row_hits[j]->getY()-row_hits[k]->getY())*(row_hits[j]->getY()-row_hits[k]->getY())))
+//                      <  padLayout.getPadWidth(0) *  padLayout.getPadWidth(0) ){
+// FIXME: SJA: the function getPadWidth does not return 2.2mm as set in gear_ldc.xml so use hard coded number for now
+                     <  2.2 *  2.2 ){
 
-	}
+
+                    cout << "double hit found in row: " << i <<  endl;
+                    row_hits[j]->setAdjacent(row_hits[k]);
+                    row_hits[k]->setAdjacent(row_hits[j]);
+                  }		  
+                }
+              }
+          }
+        }
+        
+        // FIXME:SJA: 
+        // 	At this point the double hits have been identified and at present they are not added to the
+        // 	tracker hit collection. What should be done with them will be decided later.
+        
+        if(row_hits[j]->getNumberOfAdjacent()==0){
+          //store hit variables
+          TrackerHitImpl* trkHit = new TrackerHitImpl ;
+          double pos[3] = {row_hits[j]->getX(),row_hits[j]->getY(),row_hits[j]->getZ()}; 
+          trkHit->setPosition(pos);
+          trkHit->setdEdx(row_hits[j]->getdEdx());
+          trkHit->setType( 500 );
+          
+          // 	  push back the SimTHit for this TrackerHit
+          trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );
+          trkhitVec->addElement( trkHit ); 
+
+        }
       }
     }
     
     cout << "finished row hits" << endl;
     
-    //    for (int j = 0; j<the_tpc->getNumberOfRows(); j++){
-      
-    //      cout << "row number = " << j << endl;
-
-    //      row_hits = the_tpc->getRowHits(j);
-      
-    //      for (int i = 0; i<row_hits.size(); i++){
-	
-    //	cout << "number of adjacents = " << row_hits[i]->getNumberOfAdjacent() << endl;	  
-
-    //      }
-    //    }
-
     // set the parameters to decode the type information in the collection
     // for the time being this has to be done manually
     // in the future we should provide a more convenient mechanism to 
@@ -315,13 +354,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     evt->addCollection( trkhitVec , "TPCTrackerHits") ;
     
     
-    for (int j = 0; j<the_tpc->getNumberOfRows(); j++){
+    for (int i = 0; i<padLayout.getNRows(); ++i){
       
-      vector <Voxel_tpc *> current_row = the_tpc->getRowHits(j);
+      vector <Voxel_tpc *> current_row = tpcRowHits[i];
       
-      for (int i = 0; i<current_row.size(); i++){
-	
-	delete current_row[i];
+      for (unsigned int j = 0; j<current_row.size(); ++j){
+        
+        delete current_row[j];
       }
     }    
   }
@@ -339,9 +378,9 @@ void TPCDigiProcessor::check( LCEvent * evt )
 void TPCDigiProcessor::end()
 { 
   
-  //   std::cout << "TPCDigiProcessor::end()  " << name() 
+  //   cout << "TPCDigiProcessor::end()  " << name() 
   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-  // 	    << std::endl ;
+  // 	    << endl ;
   
 }
 

@@ -63,26 +63,45 @@ int writetkhitcpp(float c, int a, int b);
 
 FCALLSCFUN3(INT,writetkhitcpp,WRITETKHITCPP,writetkhitcpp, FLOAT, INT, INT)
 
-float readtkhitscpp(int a, int b); 
+int ireadtkhitscpp(int a, int b); 
 
-FCALLSCFUN2(FLOAT,readtkhitscpp,READTKHITSCPP,readtkhitscpp, INT, INT)
+FCALLSCFUN2(INT,ireadtkhitscpp,IREADTKHITSCPP,ireadtkhitscpp, INT, INT)
+
+float rreadtkhitscpp(int a, int b); 
+
+FCALLSCFUN2(FLOAT,rreadtkhitscpp,RREADTKHITSCPP,rreadtkhitscpp, INT, INT)
 
 int writetktecpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetktecpp,WRITETKTECPP,writetktecpp, FLOAT, INT, INT)
 
-float readtktecpp(int a, int b); 
+float rreadtktecpp(int a, int b); 
 
-FCALLSCFUN2(FLOAT,readtktecpp,READTKTECPP,readtktecpp, INT, INT)
+FCALLSCFUN2(FLOAT,rreadtktecpp,RREADTKTECPP,rreadtktecpp, INT, INT)
+
+int ireadtktecpp(int a, int b); 
+
+FCALLSCFUN2(INT,ireadtktecpp,IREADTKTECPP,ireadtktecpp, INT, INT)
 
 int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov[15]);
   
 
 FCALLSCFUN17(INT,tkmktecpp,TKMKTECPP,tkmktecpp, INT , INT ,INT ,INT ,INT ,INT ,INT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOATV)
 
-  int addhittktecpp(int a, int b); 
+int addhittktecpp(int a, int b); 
 
 FCALLSCFUN2(INT,addhittktecpp,ADDHITTKTECPP,addhittktecpp, INT, INT)
+
+int readtkteitedatcpp(int a, int b); 
+
+FCALLSCFUN2(INT,readtkteitedatcpp,READTKTEITEDATCPP,readtkteitedatcpp, INT, INT)
+
+int writetkteitedatcpp(int c, int a, int b);
+
+FCALLSCFUN3(INT,writetkteitedatcpp,WRITETKTEITEDATCPP,writetkteitedatcpp, INT, INT, INT)
+
+
+  // end of cfortran.h definitions
 
 LEPTrackingProcessor aLEPTrackingProcessor ;
 
@@ -254,8 +273,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
     int errTKTREV = TKTREV(); 
 
-    //    cout << "TPCRUN returns:" << errTPCRUN << endl;
-    //    if(errTPCRUN!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
+    cout << "TKTREV returns:" << errTKTREV << endl;
+    if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
     
     for(int te=0; te<TkTeBank->size();te++){
 

@@ -1,7 +1,10 @@
 *
-* $Id: tkfunc1.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tkfunc1.inc,v 1.2 2005-07-20 17:46:38 aplin Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -26,9 +29,11 @@
 * SJA ahit and property used for the C++ interface
       INTEGER ATTRIBUTE, AHIT
 * SJA stfreadtkhits will be used as the statement function agrument
-      REAL STFREADTKHITS
+      REAL RSTFREADTKHITS
+      INTEGER ISTFREADTKHITS
 
 * SJA ate used for the C++ interface
       INTEGER ATE
 * SJA stfreadtkhits will be used as the statement function agrument
-      REAL STFREADTKTE
+      REAL RSTFREADTKTE
+      INTEGER ISTFREADTKTE

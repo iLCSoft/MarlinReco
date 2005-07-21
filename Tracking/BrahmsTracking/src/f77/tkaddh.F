@@ -1,7 +1,12 @@
 *  
-* $Id: tkaddh.F,v 1.1 2005-07-20 17:46:38 aplin Exp $
+* $Id: tkaddh.F,v 1.2 2005-07-21 16:37:00 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
 * Revision 1.2  2004/07/22 15:16:03  aplin
 * added tkfunc1.inc
 *
@@ -49,9 +54,9 @@ C.........mark all constituent hits as used in this TE
 
 C     this needs to be uncommented after ITEDAT included in the C++/F77 interface
 
-c          DO J=ITEDAT(1,I),ITEDAT(1,I)+ITEDAT(2,I)-1
-c            IUSED(IHITTE(J))=I
-c          END DO
+           DO J=ITEDAT(1,I),ITEDAT(1,I)+ITEDAT(2,I)-1
+              IUSED(IHITTE(J))=I
+           END DO
 
         END IF
       END DO
@@ -123,7 +128,7 @@ C...........save in local TE array
             RTELOC(20)=0.0      ! mass information
 
 C...........store as TE
-c            CALL TKSTOR('TE',INDEX,RTELOC,1,I,0,IERR)
+            CALL TKSTOR('TE',INDEX,RTELOC,1,I,0,IERR)
             IF (IERR.NE.0) THEN
               WRITE(6,*) 'TKADDH: HIT NOT STORED AS TE.'
               CALL TKVETO(1)

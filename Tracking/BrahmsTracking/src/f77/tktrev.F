@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.1 2005-07-19 17:02:02 aplin Exp $
+* $Id: tktrev.F,v 1.2 2005-07-21 16:37:00 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2005/07/19 17:02:02  aplin
+* Removed using namespace from .h files. Commented out remove hit from tkbank, as well as adding methods to give information about the number and positions of subdetector hit collections with in the bank structure. Common block CNTPC no longer needed so commented out in tpchitbank.h, and else where it was accessed. Added protocalls for cfortran.h for the new tkbank methods. Replaced TPCRUN as the main tracking steering routine by TKTREV which itself calls TPCRUN.
+*
 * Revision 1.2  2004/07/22 15:21:03  aplin
 * added tkfunc1.inc
 *
@@ -166,7 +169,7 @@ c        CALL SIPATR
 
 c ---   also add hit TEs for all silicon detectors
 
-c        CALL TKADDH
+        CALL TKADDH
 
 c        CALL HCDIR('//PAWC',' ')
 c      END IF
@@ -222,7 +225,7 @@ c      TIME_TKMKEX =TIME_TKMKEX+(TEND-TSTART)
       TSTART     =TEND
 
 C.....combine TEs to TSs (ambiguous full track candidates) using DELSEARCH.
-c      CALL FSFSTR
+      CALL FSFSTR
 
       CALL TIMEX(TEND)
 c      TIME_FSFSTR=TIME_FSFSTR+(TEND-TSTART)

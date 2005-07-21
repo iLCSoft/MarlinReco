@@ -1,9 +1,12 @@
 
 
 *     
-* $Id: tpcrun.F,v 1.2 2005-07-19 17:02:02 aplin Exp $
+* $Id: tpcrun.F,v 1.3 2005-07-21 16:37:00 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/19 17:02:02  aplin
+* Removed using namespace from .h files. Commented out remove hit from tkbank, as well as adding methods to give information about the number and positions of subdetector hit collections with in the bank structure. Common block CNTPC no longer needed so commented out in tpchitbank.h, and else where it was accessed. Added protocalls for cfortran.h for the new tkbank methods. Replaced TPCRUN as the main tracking steering routine by TKTREV which itself calls TPCRUN.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -18,7 +21,7 @@
 *
 *  
 
-      INTEGER FUNCTION TPCRUN()
+      SUBROUTINE TPCRUN(IER)
 
 C****************************************************************************
 c* Version number: 1.0      Date of last modification  03.10.99             *
@@ -112,12 +115,10 @@ c --- get number of hits in TPC
 CCC SJA the number of hits is set from the MARLIN side
 CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
       IF(NTPHITS.GT.NTPMAX)THEN
+        IER = 1
         WRITE(*,*)'TPCRUN: Too many hits - increase NTPMAX'
-C     return error code 1
-        TPCRUN = 1
-        RETURN
-C        CALL TKVETO(1)
-C        GOTO 999
+        CALL TKVETO(1)
+        GOTO 999
       ENDIF
 
 c FIXME: SJA: the number of hits in the tpc is stored in tkghit.f 
@@ -202,7 +203,7 @@ c --- link up any broken tracks:
 c --- transfer track candidates to TK banks
       CALL TPCSAV
 
-      TPCRUN = 0
+ 
 
  999  RETURN
       END

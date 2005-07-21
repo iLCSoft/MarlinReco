@@ -462,7 +462,7 @@ int addhittktecpp(int hit, int te)
   return 0;
 }
 
-int writetkteitedatcpp(int value, int attribute, int te){
+int writetkitedatcpp(int value, int attribute, int te){
   te = te - 1;
   
   switch (attribute) {
@@ -493,7 +493,7 @@ int writetkteitedatcpp(int value, int attribute, int te){
 
 }
 
-int readtkteitedatcpp(int attribute, int te)
+int readtkitedatcpp(int attribute, int te)
 {
 
   te = te - 1;
@@ -516,7 +516,9 @@ int readtkteitedatcpp(int attribute, int te)
   case 5: 
     return TkTeBank->gettrackNo(te);
     break;
-  default: 
+  default:
+    std::cout << "attribute = " << attribute << std::endl ;
+    std::cout << "te = " << te << std::endl ;
     throw runtime_error("te attribute not valid");
   } 
 

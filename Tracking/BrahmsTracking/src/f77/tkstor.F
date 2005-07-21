@@ -1,7 +1,12 @@
 *  
-* $Id: tkstor.F,v 1.2 2005-07-20 17:46:38 aplin Exp $
+* $Id: tkstor.F,v 1.3 2005-07-21 16:37:00 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -73,8 +78,10 @@ c#include "gcbank.inc"
       integer addhittktecpp
       external addhittktecpp
 
-      integer writetkteitedatcpp
-      external writetkteitedatcpp
+      integer writetkitedatcpp
+      external writetkitedatcpp
+
+      integer atest
 
 #include "include/tkfunc1.inc"
 #include "include/tkfunc.inc"
@@ -142,6 +149,7 @@ c       CALL UCOPY(DATA,Q(LBRTE+MXTE*(INDEX-1)+1),MXTE)
      +        cov)
 
 
+
 c --- copy hit list and transform it into linear format if necessary
         DO I=1,N
            IF (LIST2(I).EQ.0) THEN
@@ -150,7 +158,6 @@ c --- copy hit list and transform it into linear format if necessary
            ELSE IF (LIST2(I).GT.0.AND.LIST2(I).LE.3000) THEN
                                 ! index relative to subdet. position -> transform index
 
-c     This should be replaced by the implementation as it is in BRAHMS
               try = addhittktecpp(LIST1(I)+IHPOINT(LIST2(I))-1,INDEX)
 
               IHITTE(NHITTE+I)=LIST1(I)+IHPOINT(LIST2(I))-1
@@ -161,11 +168,15 @@ c     This should be replaced by the implementation as it is in BRAHMS
            END IF
         END DO
 
-        try = writetkteitedatcpp(NHITTE+1,1,INDEX)
-        try = writetkteitedatcpp(N,2,INDEX)
-        try = writetkteitedatcpp(0,3,INDEX)
-        try = writetkteitedatcpp(0,4,INDEX)
+        try = writetkitedatcpp(NHITTE+1,1,INDEX)
+        try = writetkitedatcpp(N,2,INDEX)
+        try = writetkitedatcpp(0,3,INDEX)
+        try = writetkitedatcpp(0,4,INDEX)
 
+        RVAL(1) = DATA(1)
+
+c         write(*,*) "TE added for: " , IVAL(1) ,
+c     +       " with num of hits = ", ITEDAT(2, INDEX)
 
 ccc**        ITEDAT(1,INDEX)=NHITTE+1
 ccc**        ITEDAT(2,INDEX)=N

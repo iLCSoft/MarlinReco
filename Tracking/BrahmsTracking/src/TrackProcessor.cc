@@ -150,8 +150,6 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 	  const LCObjectVec& LCRelVec = nav->getRelatedToObjects(track); 
 	  const FloatVec& LCRelWeightsVec = nav->getRelatedToWeights(track);
 	  
-	  
-	  
 	  int greatestweight=0;
 	  float oldweight=0;
 	  
@@ -160,8 +158,10 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 	    if( LCRelWeightsVec[j] > oldweight) greatestweight=j;
 	    
 	  }
-	  
+
+	  //	  cout << "About to get the MCParticle " << endl ;
 	  MCParticle* mcp = dynamic_cast<MCParticle*>(LCRelVec.at(greatestweight));	  
+	  //	  cout << "Got the MCParticle " << endl ;
 
 // 	  const float * mom;
 // LCIO v01-05 needs double !

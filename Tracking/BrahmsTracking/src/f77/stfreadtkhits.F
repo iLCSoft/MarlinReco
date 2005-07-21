@@ -17,7 +17,7 @@ c      write(*,*) "RSTFREADTKHITS = " , RSTFREADTKHITS
       external ireadtkhitscpp 
       INTEGER ireadtkhitscpp
 
-      ISTFREADTKHITS = ireadtkhitscpp(ATTRIBUTE,AHIT)
+       ISTFREADTKHITS = ireadtkhitscpp(ATTRIBUTE,AHIT)
 c      write(*,*) "ISTFREADTKHITS = " , ISTFREADTKHITS 
 
       RETURN

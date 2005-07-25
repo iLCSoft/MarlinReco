@@ -294,19 +294,20 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       
         // computation of D0 and Z0 taken from fkrtpe.F in Brahms
        
-        // x0 and y0 of ref point 
-        const double x0 = ref_r*cos(ref_phi);
-        const double y0 = ref_r*sin(ref_phi);
+        // xref and yref of ref point 
+        const double xref = ref_r*cos(ref_phi);
+        const double yref = ref_r*sin(ref_phi);
       
-        // signed track radius
-        const double trkRadius = sin(TkTeBank->getTheta(te))/(consb*TkTeBank->getInvp(te));
+        // signed track radius. Sign of ( consb*TkTeBank->getInvp(te) ) inverted as the sign returned by 
+        // BRAHMS is the geometric curvature
+        const double trkRadius = sin ( TkTeBank->getTheta(te) ) / - ( consb*TkTeBank->getInvp(te) ) ;
 
         //      cout << "TkTeBank->getInvp(te) " << TkTeBank->getInvp(te) << endl;
         //      cout << " trkRadius = " << trkRadius << endl;
       
         // center of circumference
-        const double xc = x0 - trkRadius * sin(TkTeBank->getPhi(te));
-        const double yc = y0 + trkRadius * cos(TkTeBank->getPhi(te));
+        const double xc = xref + trkRadius * sin(TkTeBank->getPhi(te));
+        const double yc = yref - trkRadius * cos(TkTeBank->getPhi(te));
       
         // sign of geometric curvature: anti-clockwise == postive
         const double geom_curvature = fabs(TkTeBank->getInvp(te))/TkTeBank->getInvp(te);
@@ -317,7 +318,9 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         const double yc2 = yc * yc;
       
         // Set D0
-        tpcTrack->setD0( trkRadius - geom_curvature * sqrt(xc2+yc2));
+        // here the sign of the geometric curvature is inverted as in the LCIO track
+        // parameterisation the curvature is signed with the charge of the particle
+        tpcTrack->setD0( -1.*geom_curvature * (trkRadius - sqrt(xc2+yc2)));
  
         // Phi at D0
         double phiatD0 = atan2(yc,xc)+(twopi/2.)+geom_curvature*(twopi/4.);

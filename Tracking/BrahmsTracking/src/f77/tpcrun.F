@@ -1,9 +1,25 @@
 
 
 *     
-* $Id: tpcrun.F,v 1.3 2005-07-21 16:37:00 aplin Exp $
+* $Id: tpcrun.F,v 1.4 2005-07-26 17:56:21 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/21 16:37:00  aplin
+* The itedat bank has been added with read and write interface.
+*
+* TKADDH has now been added so that the silicon hits are included as
+* TE's.
+*
+* Added FSFSTR from delsearch to steer the creation of
+* TS's
+*
+* The following include files need to be added for FSFSTR
+* include/fsfdebug.inc
+* include/fsfreject.inc
+* include/fsfflags.inc
+*
+* FSFSTR is now called by TKTREV although all action is commented out.
+*
 * Revision 1.2  2005/07/19 17:02:02  aplin
 * Removed using namespace from .h files. Commented out remove hit from tkbank, as well as adding methods to give information about the number and positions of subdetector hit collections with in the bank structure. Common block CNTPC no longer needed so commented out in tpchitbank.h, and else where it was accessed. Added protocalls for cfortran.h for the new tkbank methods. Replaced TPCRUN as the main tracking steering routine by TKTREV which itself calls TPCRUN.
 *
@@ -90,29 +106,12 @@ c-----------------------------------------------------------
 #include "include/tpcfunc.inc"
 
       p_flag = 0
+
 c --- get the number of hits in TPC      
+CCC SJA the number of hits is set from the MARLIN side
+
       NTPHITS=numofsubdethits("TPC")
 
- 
-
-C FIXME: SJA: As we only have TPC hit here and they have been filled 
-C     from the marlin side the starting point in the bank for the tpc
-C     hits in the TKBANK is the first hit i.e. IHPOINT(500)=1
-
-      IHPOINT(500)=1
-
-C FIXME: SJA: And also the number of hits is only the same as the 
-C     number of hits in the TPC ntphits which is set in marlin 
-C     in FortranProcessor.cc
-
-      NTKHIT = ntphits
-      IHNUMB(500) = ntphits
-
-
-CCC
-
-c --- get number of hits in TPC
-CCC SJA the number of hits is set from the MARLIN side
 CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
       IF(NTPHITS.GT.NTPMAX)THEN
         IER = 1
@@ -120,11 +119,6 @@ CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
         CALL TKVETO(1)
         GOTO 999
       ENDIF
-
-c FIXME: SJA: the number of hits in the tpc is stored in tkghit.f 
-c      but as this is not called and we only have tpc hits here set 
-c      IHNUMB(500) to bank size
-      IHNUMB(500)=NTPHITS
 
 CCC SJA the hits are filled on the MARLIN side
 Cc --- read hits from TK banks and store them locally
@@ -141,7 +135,7 @@ C        Q(LBRTP1 + 7*(I-1)+1+7) = HIT(11)          ! z resolution
 C        ITPTRA(I)               = IHIT(6)          ! MC track number
 C      END DO
 C
-
+     
 
 c --- assign hits to pixels and add noise
 c      CALL TPCDIGI(ITPTRA,ITPDGT,IER)

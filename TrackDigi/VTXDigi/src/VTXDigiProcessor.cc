@@ -47,52 +47,58 @@ void VTXDigiProcessor::processRunHeader( LCRunHeader* run) {
 
 void VTXDigiProcessor::processEvent( LCEvent * evt ) { 
 
-  LCCollection* STHcol = evt->getCollection( _colName ) ;
+  try{
+
+    LCCollection* STHcol = evt->getCollection( _colName ) ;
   
-  if( STHcol != 0 ){    
+    if( STHcol != 0 ){    
     
-    LCCollectionVec* trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
+      LCCollectionVec* trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
 
-    int nSimHits = STHcol->getNumberOfElements()  ;
+      int nSimHits = STHcol->getNumberOfElements()  ;
 
-    for(int i=0; i< nSimHits; i++){
+      for(int i=0; i< nSimHits; i++){
       
-      SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
+        SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
-      const int celId = SimTHit->getCellID() ;
+        const int celId = SimTHit->getCellID() ;
 
-      const double *pos ;
-      pos =  SimTHit->getPosition() ;  
+        const double *pos ;
+        pos =  SimTHit->getPosition() ;  
 
-      float de_dx ;
-      de_dx = SimTHit->getdEdx() ;
+        float de_dx ;
+        de_dx = SimTHit->getdEdx() ;
 
-      MCParticle *mcp ;
-      mcp = SimTHit->getMCParticle() ;
+        MCParticle *mcp ;
+        mcp = SimTHit->getMCParticle() ;
 
-      //store hit variables
-      TrackerHitImpl* trkHit = new TrackerHitImpl ;
+        //store hit variables
+        TrackerHitImpl* trkHit = new TrackerHitImpl ;
 
-      //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
-      trkHit->setPosition( const_cast<double *>( pos ) ) ;
+        //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
+        trkHit->setPosition( const_cast<double *>( pos ) ) ;
 
-      trkHit->setdEdx( de_dx ) ;
-      trkHit->setType( 100+celId ) ;
+        trkHit->setdEdx( de_dx ) ;
+        trkHit->setType( 100+celId ) ;
       
-      // 	  push back the SimTHit for this TrackerHit
-      trkHit->rawHits().push_back( SimTHit ) ;
-      trkhitVec->addElement( trkHit ) ; 
+        // 	  push back the SimTHit for this TrackerHit
+        trkHit->rawHits().push_back( SimTHit ) ;
+        trkhitVec->addElement( trkHit ) ; 
       
 
+      }
+      evt->addCollection( trkhitVec , "VTXTrackerHits") ;
     }
-    evt->addCollection( trkhitVec , "VTXTrackerHits") ;
   }
+  catch(DataNotAvailableException &e){
+  }
+  
   _nEvt ++ ;
 }
 
 
 
-void VTXDigiProcessor::check( LCEvent * evt ) { 
+  void VTXDigiProcessor::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

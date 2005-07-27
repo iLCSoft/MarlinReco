@@ -51,6 +51,8 @@ class Sphere: public Processor {
   /** Input collection name.
    */
   std::string _colName ;
+  /** Name of the parameter to store egenvalues of sphericity tensor
+   */
   std::string _dumpobjectname;
   float _r;
   int _nRun ;

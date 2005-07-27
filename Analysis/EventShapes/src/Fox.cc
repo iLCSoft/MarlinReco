@@ -20,7 +20,6 @@
 #include "IMPL/ReconstructedParticleImpl.h" 
 #include "IMPL/ParticleIDImpl.h" 
 #include "IMPL/LCFlagImpl.h" 
-#include "MCTree.h"
 #include "IMPL/LCRelationImpl.h"
 
 

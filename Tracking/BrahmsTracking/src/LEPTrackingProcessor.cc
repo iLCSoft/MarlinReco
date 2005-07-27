@@ -40,7 +40,7 @@ PROTOCCALLSFFUN0(INT,TKTREV,tktrev)
 #define TKTREV() CCALLSFFUN0(TKTREV,tktrev)
 
   // FIXME:SJA: the namespace should be used explicitly
-using namespace lcio ;
+  using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
 using namespace std ; 
@@ -49,63 +49,63 @@ int subdetfirsthitindex(string subdet);
 
 FCALLSCFUN1(INT,subdetfirsthitindex,SUBDETFIRSTHITINDEX,subdetfirsthitindex, STRING)
 
-int numofsubdethits(string subdet);
+  int numofsubdethits(string subdet);
 
 FCALLSCFUN1(INT,numofsubdethits,NUMOFSUBDETHITS,numofsubdethits, STRING)
 
-int writetpccpp(float c, int a, int b); 
+  int writetpccpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetpccpp,WRITETPCCPP,writetpccpp, FLOAT, INT, INT)
       
-float readtpchitscpp(int a, int b); 
+  float readtpchitscpp(int a, int b); 
 
 FCALLSCFUN2(FLOAT,readtpchitscpp,READTPCHITSCPP,readtpchitscpp, INT, INT)
 
-int writetkhitcpp(float c, int a, int b); 
+  int writetkhitcpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetkhitcpp,WRITETKHITCPP,writetkhitcpp, FLOAT, INT, INT)
 
-int ireadtkhitscpp(int a, int b); 
+  int ireadtkhitscpp(int a, int b); 
 
 FCALLSCFUN2(INT,ireadtkhitscpp,IREADTKHITSCPP,ireadtkhitscpp, INT, INT)
 
-float rreadtkhitscpp(int a, int b); 
+  float rreadtkhitscpp(int a, int b); 
 
 FCALLSCFUN2(FLOAT,rreadtkhitscpp,RREADTKHITSCPP,rreadtkhitscpp, INT, INT)
 
-int writetktecpp(float c, int a, int b); 
+  int writetktecpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetktecpp,WRITETKTECPP,writetktecpp, FLOAT, INT, INT)
 
-float rreadtktecpp(int a, int b); 
+  float rreadtktecpp(int a, int b); 
 
 FCALLSCFUN2(FLOAT,rreadtktecpp,RREADTKTECPP,rreadtktecpp, INT, INT)
 
-int ireadtktecpp(int a, int b); 
+  int ireadtktecpp(int a, int b); 
 
 FCALLSCFUN2(INT,ireadtktecpp,IREADTKTECPP,ireadtktecpp, INT, INT)
 
-int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov[15]);
+  int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov[15]);
   
 
 FCALLSCFUN17(INT,tkmktecpp,TKMKTECPP,tkmktecpp, INT , INT ,INT ,INT ,INT ,INT ,INT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOATV)
 
-int addhittktecpp(int a, int b); 
+  int addhittktecpp(int a, int b); 
 
 FCALLSCFUN2(INT,addhittktecpp,ADDHITTKTECPP,addhittktecpp, INT, INT)
 
-int readtkitedatcpp(int a, int b); 
+  int readtkitedatcpp(int a, int b); 
 
 FCALLSCFUN2(INT,readtkitedatcpp,READTKITEDATCPP,readtkitedatcpp, INT, INT)
 
-int writetkitedatcpp(int c, int a, int b);
+  int writetkitedatcpp(int c, int a, int b);
 
 FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, INT)
 
 
   // end of cfortran.h definitions
 
-LEPTrackingProcessor aLEPTrackingProcessor ;
+  LEPTrackingProcessor aLEPTrackingProcessor ;
 
 LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor") {
   
@@ -115,14 +115,14 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
   // register steering parameters: name, description, class-variable, default value
 
   registerProcessorParameter( "TPCTrackerHitCollectionName" , 
-			      "Name of the TPC TrackerHit collection"  ,
-			      _colNameTPC ,
-			      std::string("TPCTrackerHits") ) ;
+                              "Name of the TPC TrackerHit collection"  ,
+                              _colNameTPC ,
+                              std::string("TPCTrackerHits") ) ;
 
   registerProcessorParameter( "VTXTrackerHitCollectionName" , 
-			      "Name of the VTX TrackerHit collection"  ,
-			      _colNameVTX ,
-			      std::string("VTXTrackerHits") ) ;
+                              "Name of the VTX TrackerHit collection"  ,
+                              _colNameVTX ,
+                              std::string("VTXTrackerHits") ) ;
 
 }
 
@@ -152,15 +152,30 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   if(firstEvent==true) cout << "LEPTrackingProcessor called for first event" << endl;
 
   firstEvent = false ;
+
+
+  LCCollection* tpcTHcol;
+
+  try{
+    tpcTHcol = evt->getCollection( _colNameTPC ) ;
+  }
+  catch(DataNotAvailableException &e){
+  }
   
-  LCCollection* tpcTHcol = evt->getCollection( _colNameTPC ) ;
-  LCCollection* vtxTHcol = evt->getCollection( _colNameVTX ) ;
+
+  LCCollection* vtxTHcol;
+  try{
+    vtxTHcol = evt->getCollection( _colNameVTX ) ;
+  }
+  catch(DataNotAvailableException &e){
+  }
+  
   
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
 
-
+  
   if( tpcTHcol != 0 ){
-
+    
     LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
     // if we want to point back to the hits we need to set the flag
     LCFlagImpl trkFlag(0) ;
@@ -223,44 +238,44 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
  
     //_____________________________________________________________________
 
-     int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
+    int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
   
-     TkHitBank->setFirstHitIndex("VTX"); 
+    TkHitBank->setFirstHitIndex("VTX"); 
 
-     for(int i=0; i< nVTXHits; i++){
+    for(int i=0; i< nVTXHits; i++){
     
-       TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
+      TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
     
-       double *pos;
-       float  de_dx;
-       float  time;
+      double *pos;
+      float  de_dx;
+      float  time;
 
-       //      cellId = 	trkHitVTX->getCellID();
-       pos = (double*) trkHitVTX->getPosition(); 
-       de_dx = trkHitVTX->getdEdx() ;
-       time = trkHitVTX->getTime() ;
+      //      cellId = 	trkHitVTX->getCellID();
+      pos = (double*) trkHitVTX->getPosition(); 
+      de_dx = trkHitVTX->getdEdx() ;
+      time = trkHitVTX->getTime() ;
     
-       // convert to cm needed for BRAHMS(GEANT)
-       float x = 0.1*pos[0] ;
-       float y = 0.1*pos[1] ;
-       float z = 0.1*pos[2] ;
+      // convert to cm needed for BRAHMS(GEANT)
+      float x = 0.1*pos[0] ;
+      float y = 0.1*pos[1] ;
+      float z = 0.1*pos[2] ;
     
     
-       // Brahms resolution code for VTX = 3 REF tkhtpc.F
+      // Brahms resolution code for VTX = 3 REF tkhtpc.F
 
-       int subid = trkHitVTX->getType() ;
+      int subid = trkHitVTX->getType() ;
     
-       // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
-       float vtxRes = 0.0007 ;
-       int resCode = 3 ;
+      // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
+      float vtxRes = 0.0007 ;
+      int resCode = 3 ;
     
-       int mctrack = 0 ;
+      int mctrack = 0 ;
     
-       TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
+      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
 
-     }
+    }
   
-     TkHitBank->setLastHitIndex("VTX"); 
+    TkHitBank->setLastHitIndex("VTX"); 
     
     //_____________________________________________________________________
 
@@ -273,9 +288,12 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     int errTKTREV = TKTREV(); 
 
     cout << "TKTREV returns:" << errTKTREV << endl;
-    if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
+
     
+    if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
+    cout << "number of TE's = " << TkTeBank->size() << endl ;
     for(int te=0; te<TkTeBank->size();te++){
+
 
       if( TkTeBank->getSubdetector_ID(te)==500 ) {
 
@@ -285,8 +303,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         const double ref_phi =TkTeBank->getCoord2_of_ref_point(te)/TkTeBank->getCoord1_of_ref_point(te);
         const double ref_z = 10.*TkTeBank->getCoord3_of_ref_point(te);
 
-//         cout << "ref_r = " << ref_r << endl;
-//         cout << "ref_phi = " << ref_phi << endl;
+        //         cout << "ref_r = " << ref_r << endl;
+        //         cout << "ref_phi = " << ref_phi << endl;
       
         //FIXME:SJA: B-field hard coded needs to redeemed
         // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
@@ -309,53 +327,55 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         const double xref = ref_r*cos(ref_phi) ;
         const double yref = ref_r*sin(ref_phi) ;
       
-//         cout << "xref = "<< xref << endl;
-//         cout << "yref = "<< yref << endl;
+        //         cout << "xref = "<< xref << endl;
+        //         cout << "yref = "<< yref << endl;
 
         // signed track radius. Sign of ( consb*TkTeBank->getInvp(te) ) inverted as the sign returned by 
         // BRAHMS is the geometric curvature
         //        const double trkRadius = sin ( TkTeBank->getTheta(te) ) / - ( consb*TkTeBank->getInvp(te) ) ;
         const double trkRadius = 1. / omega ;
 
-//         cout << "trkRadius = " << trkRadius << endl;
-//         cout << "phi = " << TkTeBank->getPhi(te) << endl;
+        //        cout << "trkRadius = " << trkRadius << endl;
+        //         cout << "phi = " << TkTeBank->getPhi(te) << endl;
 
         // center of circumference
         const double xc = xref + trkRadius * sin(TkTeBank->getPhi(te)) ;
         const double yc = yref - trkRadius * cos(TkTeBank->getPhi(te)) ;
 
-//         cout << "xc = " << xc << endl ;
-//         cout << "yc = " << yc << endl ;
+        //         cout << "xc = " << xc << endl ;
+        //         cout << "yc = " << yc << endl ;
       
-        const double phiOfPCA = atan2 (yc,xc) ;
-
-//         cout << "phiOfPCA = " << phiOfPCA << endl ;
-
         int charge; 
         if(TkTeBank->getInvp(te) < 0.) charge = 1 ;
         else charge = -1 ;
 
-//         cout << "charge = " << charge << endl ;
-      
         const double xc2 = xc * xc ; 
         const double yc2 = yc * yc ;
       
-        const double DCA = fabs(charge*trkRadius - sqrt( xc2+yc2 )) ;
-
-        const double x0 = DCA * cos( phiOfPCA ) ;
-        const double y0 = DCA * sin( phiOfPCA ) ;
-
-        const double d0 = y0 * cos( TkTeBank->getPhi(te) )  - x0 * sin( TkTeBank->getPhi(te) ) ;
-
-        tpcTrack->setD0( d0 ) ;
+        const double DCA = ( sqrt( xc2+yc2 ) - charge*trkRadius ) ;
+        
+        double phiOfPCA = atan2 (yc,xc) ;
  
+
+        if (DCA<0.) phiOfPCA = phiOfPCA + twopi/2. ;
+
+
+        const double x0 = fabs( DCA ) * cos( phiOfPCA ) ;
+        const double y0 = fabs( DCA ) * sin( phiOfPCA ) ;
+
         // Phi at D0
-        double phiatd0 = atan2(yc,xc)+(twopi/2.)-charge*(twopi/4.) ;
+        double phiatd0 = phiOfPCA +(twopi/2.)-charge*( fabs(DCA)/DCA ) * (twopi/4.) ;
         if (phiatd0<0.) phiatd0 = phiatd0 + twopi ;
         if (phiatd0>twopi) phiatd0 = phiatd0 - twopi ;
-        
-        //      cout << "phi at ref = " << ref_phi << endl;
-        //      cout << "phi at d0 = " << phiatd0 << endl;
+
+        //FIXME: SJA: phi is set at PCA not ref this should be resolved
+        //      tpcTrack->setPhi(TkTeBank->getPhi(te));
+
+        tpcTrack->setPhi(phiatd0) ;
+
+        const double d0 = y0 * cos( phiatd0 )  - x0 * sin( phiatd0 ) ;
+
+        tpcTrack->setD0( d0 ) ;
  
         // difference between phi at ref and d0 
         const double dphi = fmod((phiatd0 - TkTeBank->getPhi(te) +  
@@ -367,19 +387,15 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         const double larc = trkRadius * dphi ;
 
         // Set Z0
-        tpcTrack->setZ0(ref_z+(1/(tan(TkTeBank->getTheta(te)))*larc)) ; 
-      
+        double z0 = ref_z-larc*tanLambda;
 
-        //FIXME: SJA: phi is set at PCA not ref this should be resolved
-        //      tpcTrack->setPhi(TkTeBank->getPhi(te));
+        tpcTrack->setZ0( z0 ) ; 
 
-        tpcTrack->setPhi(phiatd0) ;
 
         tpcTrack->setIsReferencePointPCA(false) ;
         tpcTrack->setChi2(TkTeBank->getChi2(te)) ;
         tpcTrack->setNdf(TkTeBank->getNdf(te)) ;
         tpcTrack->setdEdx(TkTeBank->getDe_dx(te)) ;
-     
 
         const vector <int> * hits ;
         vector<MCParticle*> mcPointers ;
@@ -418,13 +434,14 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         for(unsigned int k=0; k<mcPointers.size();k++){
 
           MCParticle * mcp = mcPointers[k];
-	
+
           LCRelationImpl* lcRel = new LCRelationImpl;
           lcRel->setFrom (tpcTrack);
           lcRel->setTo (mcp);
           float weight = mcHits[k]/tpcTrack->getTrackerHits().size();
           lcRel->setWeight(weight);
         
+
           lcRelVec->addElement( lcRel );
         }
       
@@ -478,13 +495,16 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     //     typeValues.push_back( 1 ) ;
     //     tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
     //     tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
-    
+
     evt->addCollection( tpcTrackVec , "TPCTracks") ;
     evt->addCollection( lcRelVec , "MCTrackRelations") ;
     
 
   }
   
+
+
+
   _nEvt ++ ;
   
 }
@@ -498,9 +518,9 @@ void LEPTrackingProcessor::check( LCEvent * evt ) {
 
 void LEPTrackingProcessor::end(){ 
   
-//   std::cout << "LEPTrackingProcessor::end()  " << name() 
-// 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-// 	    << std::endl ;
+  //   std::cout << "LEPTrackingProcessor::end()  " << name() 
+  // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
+  // 	    << std::endl ;
 
 }
 

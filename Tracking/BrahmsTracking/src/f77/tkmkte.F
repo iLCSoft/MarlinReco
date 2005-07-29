@@ -1,7 +1,12 @@
 *  
-* $Id: tkmkte.F,v 1.2 2005-07-20 17:46:38 aplin Exp $
+* $Id: tkmkte.F,v 1.3 2005-07-29 15:06:17 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -109,9 +114,9 @@ C.....sort hits according to increasing r
          CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IHIT,IERR)
       IF (IERR.NE.0) THEN
          WRITE(6,*) 'TKMKTE: ERROR READING HIT.'
-ccc         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
-ccc     >        ' of ',TKNUMB('HIT',LIST2(I))
-ccc         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
+         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
+     >        ' of ',TKNUMB('HIT',LIST2(I))
+         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
       ELSE
          J=J+1
          RLIST(J)=SQRT(HIT(1)**2+HIT(2)**2)

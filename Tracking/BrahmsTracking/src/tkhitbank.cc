@@ -51,6 +51,10 @@ void Tk_Hit_Bank::add_hit(float X, float Y, float Z, float E, int SubID,  int Tr
 //  hit_bank.erase(hit_bank.begin()+hit);
 //}
 
+
+
+
+
 int subdetfirsthitindex(string subdet)
 {
   return TkHitBank->getFirstHitIndex( subdet )+1;
@@ -231,3 +235,4 @@ int writetkhitcpp(float value, int attribute, int hit)
   } 
 
 }
+

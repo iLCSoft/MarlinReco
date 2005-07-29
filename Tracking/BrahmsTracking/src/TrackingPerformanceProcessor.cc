@@ -21,7 +21,10 @@
 #include"marlin_tpcgeom.h"
 #include"constants.h"
 
+#include "HelixClass.h"
+
 using namespace constants;
+using namespace std;
 
 TrackingPerformanceProcessor aTrackingPerformanceProcessor ;
 
@@ -33,7 +36,7 @@ TrackingPerformanceProcessor::TrackingPerformanceProcessor() : Processor("Tracki
   registerProcessorParameter( "CollectionName" ,
 			      "Name of the MC collection" ,
 			      _colName ,
-			      std::string("MC") ) ;
+			      std::string("MCParticle") ) ;
 
 }
 
@@ -101,10 +104,10 @@ void TrackingPerformanceProcessor::processEvent( LCEvent * evt )
   firstEvent = false ;
   
   LCCollection* MCcol = evt->getCollection( _colName ) ;
-  LCCollection* STHcol = evt->getCollection( "tpc03_TPC" ) ;
-  LCCollection* LCRcol = evt->getCollection(  "MC_Track_Relations" ) ;
+  LCCollection* STHcol = evt->getCollection( "tpc04_TPC" ) ;
+  LCCollection* LCRcol = evt->getCollection(  "MCTrackRelations" ) ;
   LCRelationNavigator* nav = new LCRelationNavigator(LCRcol);
-  LCCollection* Tcol = evt->getCollection( "TPC_Tracks" ) ;
+  LCCollection* Tcol = evt->getCollection( "TPCTracks" ) ;
 
   std::map <const MCParticle* , int > mc_hit_map;
 
@@ -181,11 +184,11 @@ void TrackingPerformanceProcessor::processEvent( LCEvent * evt )
 	  //--------------------------------------------------
 	  // tracking analysis
 	  //	  std::cout << "the number of hits for this MC particle " << i << " is " << mc_hit_map[mcparticle] << std::endl;
-	  
-	  if(!mcparticle->isCreatedInSimulation())
-	    {
-	      
-	      const double * mom;
+
+	  //	  if(!mcparticle->isCreatedInSimulation()){	  
+	  if (1) {		      
+
+	    const double * mom;
 	      mom = mcparticle->getMomentum();
 	      
 	      double mc_p = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+ mom[2]*mom[2]);	      
@@ -243,15 +246,57 @@ void TrackingPerformanceProcessor::processEvent( LCEvent * evt )
 
 		    //		  std::cout << "the number of hits for this MCParticle is " << mc_hit_map[mcparticle] << std::endl;
 		    //		  std::cout << "the numebr of tracks for this MCParticle is " << LCRelVec.size() << std::endl;
-		    if (!daughter_in_tpc) {
-		      
- 		      if(LCRelVec.size() == 1){ // LCRelVec.size() == 1
-			 
+
+		    //		    if (!daughter_in_tpc) {
+		    if (1) {		      
+
+		      if(LCRelVec.size() == 1){ // LCRelVec.size() == 1
+		      //		      if (1) {		      
+		
+			// test for d0
+
+			float vertex[3];
+			float momentum[3];
+			
+			for (int i=0; i<3; ++i) {
+			  vertex[i]   = (float)mcparticle->getVertex()[i];
+			  momentum[i] = (float)mcparticle->getMomentum()[i];
+			}
+			
+			float charge = mcparticle->getCharge();
+			// Magnetic field in Tesla
+			float B = 4.0 ;
+			
+			HelixClass * helix = new HelixClass();
+			helix->Initialize_VP(vertex, momentum, charge, B);
+			
+			float d0 = helix->getD0();
+			float z0 = helix->getZ0();
+			float phi = helix->getPhi0();
+			if (phi<0.) phi = phi + 2*3.1415926535898 ;
+			float omega = helix->getOmega();
+			float tanLambda = helix->getTanLambda();
+			
+			cout << "d0 from MC = " << d0 ;
+			cout << "  Z0 from MC = " << z0 ;
+			cout << "  omega from MC = " << omega ;
+			cout << "  tanLamda from MC = " << tanLambda ;
+			cout << "  phi0 from MC = " << phi << endl;   
+			//end of test for d0
+			
+			
 			// 	    // transformation from 1/p to 1/R = CONSB * (1/p) / sin(theta)
 			// 	    // CONSB is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
 			
 			double CONSB = (2.99792458*4.)/(10*1000.);    // divide by 1000 m->mm
 			Track* track = dynamic_cast<Track*>( LCRelVec.at(0) );
+
+			cout << "d0 from LEP = " << track->getD0() ;
+			cout << "  Z0 from LEP = " << track->getZ0() ;
+			cout << "  omega from LEP = " << track->getOmega() ;
+			cout << "  tanLamda from LEP = " << track->getTanLambda() ;
+			cout << "  phi0 from LEP = " << track->getPhi() << endl;   
+			cout << endl;
 			
 			double pt = fabs(1/(track->getOmega()/CONSB));
 			

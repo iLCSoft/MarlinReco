@@ -1,9 +1,13 @@
 
 
 *     
-* $Id: tpcrun.F,v 1.4 2005-07-26 17:56:21 aplin Exp $
+* $Id: tpcrun.F,v 1.5 2005-07-29 15:06:17 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/07/26 17:56:21  aplin
+* Removed unecessary initialisation of hit arrays which is now done in
+* tktrev. Corrected (finaly) the calculation of d0 in LEPTrackingProcessor.
+*
 * Revision 1.3  2005/07/21 16:37:00  aplin
 * The itedat bank has been added with read and write interface.
 *
@@ -63,7 +67,7 @@ C
 C#include "include/my_tcha.inc"
 C#include "include/my_ttcc.inc"
 C#include "include/my_t1ft.inc"
-C#include "include/my_tgft.inc"
+
 C
 C#include "bkgmode.inc"
 C#include "gcbank.inc"
@@ -82,6 +86,7 @@ C
 #include "include/chgtrak.inc"
 #include "include/tkconst.inc" 
 #include "include/tkbank.inc"
+#include "include/my_tgft.inc"
 
       INTEGER ITPTRA(NTPMAX)
       INTEGER ITPDGT(NTPCOMX)
@@ -106,6 +111,9 @@ c-----------------------------------------------------------
 #include "include/tpcfunc.inc"
 
       p_flag = 0
+
+c     Initialise the number of tracks found to 0
+      NTGFT = 0
 
 c --- get the number of hits in TPC      
 CCC SJA the number of hits is set from the MARLIN side

@@ -1,7 +1,12 @@
 *  
-* $Id: tkread.F,v 1.2 2005-07-20 17:46:38 aplin Exp $
+* $Id: tkread.F,v 1.3 2005-07-29 15:06:17 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -96,6 +101,7 @@ ccc          DATA(MM) = TKMCTR(MM,INDEX)
             MAXN=-1
          END IF
          IF (INDEX.LT.1.OR.INDEX.GT.MAXN) THEN
+            WRITE(*,*) "TKREAD: The index index is out of range"
             IERR=1
             GOTO 999
          END IF
@@ -148,8 +154,9 @@ c         WRITE(*,*) "1ST DATA(8) = ",IDATA(81)
 c         WRITE(*,*) "1ST DATA(9) = ",IDATA(9)
 
          DATA(10) = RTKHIT(10,INDEXT)
+c         WRITE(*,*) "1ST DATA(10) = ",IDATA(10)
          DATA(11) = RTKHIT(11,INDEXT)
-
+c         WRITE(*,*) "1ST DATA(11) = ",IDATA(11)
 
       ELSE
         WRITE(6,*) 'TKREAD: called with wrong argument'

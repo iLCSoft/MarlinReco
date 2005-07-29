@@ -1,7 +1,10 @@
 *  
-* $Id: tpcsav.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcsav.F,v 1.2 2005-07-29 15:06:17 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -77,7 +80,7 @@ C(KH)  NHITS=MY_JTGTN1(ITK)+MY_JTGTNR(ITK)
          IF (.NOT.SKIP) THEN
            I2=I2+1
            LIST1(I2)=HITLNK(MY_TGCLT(MY_JTGTIO(ITK)+I))
-           LIST2(I2)=ID_TPC
+          LIST2(I2)=ID_TPC
          END IF
        END DO
 
@@ -97,12 +100,12 @@ c ---  transform track fit results into DELPHI track parameters as reference
        REF(6)=MY_JTGFIR(ITK)/FCT/BFIELD*SIN(REF(4))  ! signed 1/p
 
 CSJAWRT
-c       write(*,*) "r_ref = ",REF(1) 
-c       write(*,*) "r_ref*phi_ref = ",REF(2) 
-c       write(*,*) "z_ref = ",REF(3) 
-c       write(*,*) "theta = ", REF(4) 
-c       write(*,*) "phi0  = ",REF(5) 
-c       write(*,*) "momentum = " , 1/REF(6)
+       write(*,*) "r_ref = ",REF(1) 
+       write(*,*) "r_ref*phi_ref = ",REF(2) 
+       write(*,*) "z_ref = ",REF(3) 
+       write(*,*) "theta = ", REF(4) 
+       write(*,*) "phi0  = ",REF(5) 
+       write(*,*) "momentum = " , 1/REF(6)
 
 c ---  final fit and track storage
        CALL TKMKTE(ID_TPC,I2,LIST1,LIST2,REF,IERR)

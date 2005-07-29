@@ -154,7 +154,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   firstEvent = false ;
 
 
-  LCCollection* tpcTHcol;
+  LCCollection* tpcTHcol = 0 ;
 
   try{
     tpcTHcol = evt->getCollection( _colNameTPC ) ;
@@ -163,7 +163,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   }
   
 
-  LCCollection* vtxTHcol;
+  LCCollection* vtxTHcol = 0 ;
   try{
     vtxTHcol = evt->getCollection( _colNameVTX ) ;
   }
@@ -238,53 +238,60 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
  
     //_____________________________________________________________________
 
-    int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
-  
-    TkHitBank->setFirstHitIndex("VTX"); 
+    if( vtxTHcol != 0 ) { 
 
-    for(int i=0; i< nVTXHits; i++){
+      int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
+      
+      TkHitBank->setFirstHitIndex("VTX"); 
+      
+      for(int i=0; i< nVTXHits; i++){
+        
+        TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
     
-      TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
-    
-      double *pos;
-      float  de_dx;
-      float  time;
-
-      //      cellId = 	trkHitVTX->getCellID();
-      pos = (double*) trkHitVTX->getPosition(); 
-      de_dx = trkHitVTX->getdEdx() ;
-      time = trkHitVTX->getTime() ;
-    
-      // convert to cm needed for BRAHMS(GEANT)
-      float x = 0.1*pos[0] ;
-      float y = 0.1*pos[1] ;
-      float z = 0.1*pos[2] ;
-    
-    
-      // Brahms resolution code for VTX = 3 REF tkhtpc.F
-
-      int subid = trkHitVTX->getType() ;
-    
-      // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
-      float vtxRes = 0.0007 ;
-      int resCode = 3 ;
-    
-      int mctrack = 0 ;
-    
-      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
-
+        double *pos;
+        float  de_dx;
+        float  time;
+        
+        //      cellId = 	trkHitVTX->getCellID();
+        pos = (double*) trkHitVTX->getPosition(); 
+        de_dx = trkHitVTX->getdEdx() ;
+        time = trkHitVTX->getTime() ;
+        
+        // convert to cm needed for BRAHMS(GEANT)
+        float x = 0.1*pos[0] ;
+        float y = 0.1*pos[1] ;
+        float z = 0.1*pos[2] ;
+        
+        
+        // Brahms resolution code for VTX = 3 REF tkhtpc.F
+        
+        int subid = trkHitVTX->getType() ;
+        
+        // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
+        float vtxRes = 0.0007 ;
+        int resCode = 3 ;
+        
+        int mctrack = 0 ;
+        
+        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
+        
+      }
+      
+      TkHitBank->setLastHitIndex("VTX"); 
+      
     }
-  
-    TkHitBank->setLastHitIndex("VTX"); 
+      //_____________________________________________________________________
+      
+    if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
+      int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
+      cout << "the first hit for the TPC has id " << tpcsubid << endl ;
+    }
+
+    if(TkHitBank->getNumOfSubDetHits("VTX") > 0) {
+      int vtxsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("VTX")) ;
+      cout << "the first hit for the vtx has id " << vtxsubid << endl ;
+    }
     
-    //_____________________________________________________________________
-
-    int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
-    int vtxsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("VTX")) ;
-
-    cout << "the first hit for the TPC has id " << tpcsubid << endl ;
-    cout << "the first hit for the vtx has id " << vtxsubid << endl ;
-
     int errTKTREV = TKTREV(); 
 
     cout << "TKTREV returns:" << errTKTREV << endl;
@@ -316,7 +323,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         // set negative as 1/p is signed with geometric curvature clockwise negative
 
         const double omega = ( -consb*TkTeBank->getInvp(te) )/ sin( TkTeBank->getTheta(te) ) ;
-        const  double tanLambda = tan( (twopi/4.) - TkTeBank->getTheta(te) ) ;
+        const double tanLambda = tan( (twopi/4.) - TkTeBank->getTheta(te) ) ;
 
         tpcTrack->setOmega( omega ) ;
         tpcTrack->setTanLambda( tanLambda ) ;      
@@ -326,73 +333,73 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         // xref and yref of ref point 
         const double xref = ref_r*cos(ref_phi) ;
         const double yref = ref_r*sin(ref_phi) ;
-      
-        //         cout << "xref = "<< xref << endl;
-        //         cout << "yref = "<< yref << endl;
-
-        // signed track radius. Sign of ( consb*TkTeBank->getInvp(te) ) inverted as the sign returned by 
-        // BRAHMS is the geometric curvature
-        //        const double trkRadius = sin ( TkTeBank->getTheta(te) ) / - ( consb*TkTeBank->getInvp(te) ) ;
+        const double zref = ref_z ; 
         const double trkRadius = 1. / omega ;
 
-        //        cout << "trkRadius = " << trkRadius << endl;
-        //         cout << "phi = " << TkTeBank->getPhi(te) << endl;
+
+        ////////////////////////////////
 
         // center of circumference
-        const double xc = xref + trkRadius * sin(TkTeBank->getPhi(te)) ;
-        const double yc = yref - trkRadius * cos(TkTeBank->getPhi(te)) ;
-
-        //         cout << "xc = " << xc << endl ;
-        //         cout << "yc = " << yc << endl ;
-      
-        int charge; 
-        if(TkTeBank->getInvp(te) < 0.) charge = 1 ;
-        else charge = -1 ;
-
+        const double xc = xref + trkRadius * sin( TkTeBank->getPhi(te) ) ;
+        const double yc = yref - trkRadius * cos( TkTeBank->getPhi(te) ) ;
+        
         const double xc2 = xc * xc ; 
         const double yc2 = yc * yc ;
-      
-        const double DCA = ( sqrt( xc2+yc2 ) - charge*trkRadius ) ;
+        
+        const double DCA = ( sqrt( xc2+yc2 ) - fabs(trkRadius) ) ;
         
         double phiOfPCA = atan2 (yc,xc) ;
- 
-
+        
         if (DCA<0.) phiOfPCA = phiOfPCA + twopi/2. ;
-
-
+        
+        if ( phiOfPCA < -twopi/2. ) phiOfPCA = twopi + phiOfPCA ;
+        else if ( phiOfPCA > twopi/2. ) phiOfPCA = phiOfPCA = twopi + phiOfPCA ;   
+        
         const double x0 = fabs( DCA ) * cos( phiOfPCA ) ;
         const double y0 = fabs( DCA ) * sin( phiOfPCA ) ;
-
-        // Phi at D0
-        double phiatd0 = phiOfPCA +(twopi/2.)-charge*( fabs(DCA)/DCA ) * (twopi/4.) ;
-        if (phiatd0<0.) phiatd0 = phiatd0 + twopi ;
-        if (phiatd0>twopi) phiatd0 = phiatd0 - twopi ;
-
-        //FIXME: SJA: phi is set at PCA not ref this should be resolved
-        //      tpcTrack->setPhi(TkTeBank->getPhi(te));
-
-        tpcTrack->setPhi(phiatd0) ;
-
-        const double d0 = y0 * cos( phiatd0 )  - x0 * sin( phiatd0 ) ;
-
-        tpcTrack->setD0( d0 ) ;
- 
-        // difference between phi at ref and d0 
-        const double dphi = fmod((phiatd0 - TkTeBank->getPhi(te) +  
-                                  twopi + (twopi/2.) ) , twopi ) - (twopi/2.) ;
         
-        //      cout << "dphi at d0 = " << dphi << endl ;
+        double phi = phiOfPCA + twopi/2. - ( fabs(omega)/omega ) * ( fabs(DCA)/DCA ) * (twopi/4.) ;
+        
+        if (phi<-twopi/2.) phi =  twopi + phi ;
+        else if (phi>twopi/2.)  phi = -twopi + phi ;
+        
+        const double d0 = y0 * cos( phi )  - x0 * sin( phi ) ;
+        
+        const double alpha = - omega * ( xref - x0 ) * cos( phi ) - omega * ( yref - y0 ) * sin( phi ) ;
+        const double beta = 1.0 - omega * ( xref - x0 ) * sin( phi ) + omega * ( yref - y0 ) * cos( phi ) ;
+        
+        double dphi = atan2( alpha,beta ) ;
+        
+        double larc =  - dphi/ omega ;
+        
+        if (larc < 0. ) {
+          if ( dphi < 0.0 ) dphi = dphi + twopi ;
+          else dphi = dphi - twopi ;
+          larc =  - dphi/ omega ;
+        }
+        
+        double z0 = zref - larc * tanLambda ;
 
-        // signed length of arc
-        const double larc = trkRadius * dphi ;
+        float refPoint[3] ;
+        
+        refPoint[0] = x0 ;
+        refPoint[1] = y0 ;
+        refPoint[2] = z0 ;
 
-        // Set Z0
-        double z0 = ref_z-larc*tanLambda;
+        tpcTrack->setPhi( phi ) ;       
+        tpcTrack->setD0( d0 ) ;
+        tpcTrack->setZ0( z0 ) ;       
+        tpcTrack->setReferencePoint( refPoint ) ;
 
-        tpcTrack->setZ0( z0 ) ; 
+//         std::cout << "calc value of omega = " << omega;
+//         std::cout << " calc value of phi = " << phi;
+//         std::cout << " calc value of d0 = " << d0;
+//         std::cout << " calc value of z0 = " << z0;
+//         std::cout << " calc value of tanLambda = " << tanLambda<< std::endl;
 
+        ////////////////////////////////
 
-        tpcTrack->setIsReferencePointPCA(false) ;
+        tpcTrack->setIsReferencePointPCA(true) ;
         tpcTrack->setChi2(TkTeBank->getChi2(te)) ;
         tpcTrack->setNdf(TkTeBank->getNdf(te)) ;
         tpcTrack->setdEdx(TkTeBank->getDe_dx(te)) ;

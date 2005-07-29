@@ -1,7 +1,23 @@
 *  
-* $Id: tktrev.F,v 1.2 2005-07-21 16:37:00 aplin Exp $
+* $Id: tktrev.F,v 1.3 2005-07-29 13:04:28 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/21 16:37:00  aplin
+* The itedat bank has been added with read and write interface.
+*
+* TKADDH has now been added so that the silicon hits are included as
+* TE's.
+*
+* Added FSFSTR from delsearch to steer the creation of
+* TS's
+*
+* The following include files need to be added for FSFSTR
+* include/fsfdebug.inc
+* include/fsfreject.inc
+* include/fsfflags.inc
+*
+* FSFSTR is now called by TKTREV although all action is commented out.
+*
 * Revision 1.1  2005/07/19 17:02:02  aplin
 * Removed using namespace from .h files. Commented out remove hit from tkbank, as well as adding methods to give information about the number and positions of subdetector hit collections with in the bank structure. Common block CNTPC no longer needed so commented out in tpchitbank.h, and else where it was accessed. Added protocalls for cfortran.h for the new tkbank methods. Replaced TPCRUN as the main tracking steering routine by TKTREV which itself calls TPCRUN.
 *
@@ -91,14 +107,17 @@ C.....init hit bank index and sub-indices for subdetector IDs
         IHNUMB(I)=0
       END DO
 
-      IHPOINT(ID_TPC) = subdetfirsthitindex("TPC")
       IHNUMB(ID_TPC)  = numofsubdethits("TPC")
+
+      IF(IHNUMB(ID_TPC).gt.0) IHPOINT(ID_TPC)=subdetfirsthitindex("TPC")
       
       write(*,*) "IHNUMB(ID_TPC)  = " , IHNUMB(ID_TPC) 
       write(*,*) "IHPOINT(ID_TPC) = " , IHPOINT(ID_TPC)
 
-      IHPOINT(ID_VTX) = subdetfirsthitindex("VTX")
+
       IHNUMB(ID_VTX)  = numofsubdethits("VTX")
+
+      IF(IHNUMB(ID_VTX).gt.0) IHPOINT(ID_VTX)=subdetfirsthitindex("VTX")
       
       write(*,*) "IHNUMB(ID_VTX)  = " , IHNUMB(ID_VTX) 
       write(*,*) "IHPOINT(ID_VTX) = " , IHPOINT(ID_VTX)

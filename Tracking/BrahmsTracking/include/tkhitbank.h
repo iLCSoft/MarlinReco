@@ -6,7 +6,8 @@
 #include<cfortran.h>
 #include<map>
 #include<string>
-
+//stl exception handler
+#include<stdexcept>
 
 class Tk_Hit_Bank
 {
@@ -45,14 +46,30 @@ class Tk_Hit_Bank
   float getResolution2(int i){return  hit_bank[i].resolution_2;};
 
 
+  //  omega>0 ? +1 : -1;
+
   // These methods have no protection against using the wrong key e.g. tpc instead of TPC ...
-  void setFirstHitIndex(std::string subdet){firstHitEntry[subdet]=hit_bank.size();};
-  unsigned int getFirstHitIndex(std::string subdet){return firstHitEntry[subdet];}; 
 
-  void setLastHitIndex(std::string subdet){lastHitEntry[subdet]=hit_bank.size()-1;};
-  unsigned int getLastHitIndex(std::string subdet){return lastHitEntry[subdet];}; 
+  void setFirstHitIndex(std::string subdet)
+    { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {firstHitEntry[subdet]=hit_bank.size();}
+    else { throw std::runtime_error("subdetector does not exit") ;}};
 
-  int getNumOfSubDetHits(std::string subdet){return 1 + lastHitEntry[subdet] - firstHitEntry[subdet];};
+  unsigned int getFirstHitIndex(std::string subdet)
+    { if(firstHitEntry.find(subdet) != firstHitEntry.end()) {return firstHitEntry[subdet];}
+    else { throw std::runtime_error("subdetector does not exit") ;}}; 
+  
+  void setLastHitIndex(std::string subdet)
+   { if(lastHitEntry.find(subdet) == lastHitEntry.end()) {lastHitEntry[subdet]=hit_bank.size()-1;}
+    else { throw std::runtime_error("subdetector does not exit") ;}};
+
+  unsigned int getLastHitIndex(std::string subdet)
+  { if(lastHitEntry.find(subdet) != lastHitEntry.end()) {return  lastHitEntry[subdet];}
+  else { throw std::runtime_error("subdetector does not exit") ;}};  
+  
+  int getNumOfSubDetHits(std::string subdet)
+    { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {return 0;} 
+    else {return 1 + lastHitEntry[subdet] - firstHitEntry[subdet];}};
+  
 
  private:
 

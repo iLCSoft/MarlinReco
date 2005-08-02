@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.3 2005-07-29 13:04:28 aplin Exp $
+* $Id: tktrev.F,v 1.4 2005-08-02 10:33:15 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/29 13:04:28  aplin
+* protected expection for now hits in a subsystem
+*
 * Revision 1.2  2005/07/21 16:37:00  aplin
 * The itedat bank has been added with read and write interface.
 *
@@ -78,11 +81,14 @@ C.....Initalise TKTREV as error this will only be set to 0 if TKTREV exits norma
       TKTREV = 1
 
       CALL TKINIT
+      CALL VTXGEOM
       CALL TPCGEOM
-      CALL TKSETR
+
 CCC FIXME: SJA: the database of materials is set up in SETMAT for the TPC only all other systems are
 CCC             commented out.
       CALL SETMAT
+
+      CALL TKSETR
 
 C.....init CHGTRAK common block (still needed in BRAHMS)
 c MVL       added also into BRINI in GUTREV

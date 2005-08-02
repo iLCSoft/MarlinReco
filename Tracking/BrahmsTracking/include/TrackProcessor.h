@@ -64,8 +64,8 @@ class TrackProcessor : public Processor {
 
   /** Input collection name.
    */
-  std::string _colName ;
-
+  std::string _tpcTrackColName ;
+  std::string _mcTrackRelColName ;
   int _nRun ;
   int _nEvt ;
 } ;

@@ -272,6 +272,9 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 
     }
 
+    std::cout << "Total number of hits " << NOfHits << std::endl;
+
+
 // Reading Track collection
     if (_use_track != 0) {
 	for (unsigned int i(0); i < _trackCollections.size(); ++i) {
@@ -306,9 +309,15 @@ float TrackwiseClustering::findResolutionParameter(CaloHitExtended * fromHit, Ca
 	dir += dirvec[i]*dirvec[i];
 	product += xdistvec[i]*dirvec[i]; 
     }
+
     xdist = sqrt(xdist);
     dir = sqrt(dir);
-    product=product/(xdist*dir);
+    product=product/fmax(1.0e-6,(xdist*dir));
+
+    if (product > 1.) {
+      product = 0.999*fabs(product)/product;
+    }
+
     float angle = acos(product);
     
     return xdist*angle;
@@ -316,8 +325,8 @@ float TrackwiseClustering::findResolutionParameter(CaloHitExtended * fromHit, Ca
 }
 
 float TrackwiseClustering::CalculateGenericDistance(CaloHitExtended *calohit, int itype) {
-    float xDistance(0.);
-    float rDistance(0.);
+    float xDistance =0.0;
+    float rDistance =0.0;
     
     for (int i(0); i < 3; ++i) {
 	float x = calohit->getCalorimeterHit()->getPosition()[i];
@@ -475,10 +484,10 @@ void TrackwiseClustering::CreateClusterCollection(LCEvent * evt, ClusterExtended
 	    clucol->addElement(cluster);
 
 	    delete shape;
-	    delete xhit;
-	    delete yhit;
-	    delete zhit;
-	    delete ahit;
+	    delete[] xhit;
+	    delete[] yhit;
+	    delete[] zhit;
+	    delete[] ahit;
 
 	}
 
@@ -524,16 +533,16 @@ void TrackwiseClustering::GlobalSorting() {
 
     int _NGLAYERS = 1000;
 
-    float inverse = _NGLAYERS/(_xmax_in_distance - _xmin_in_distance);
+    float inverse = ((float)_NGLAYERS)/(_xmax_in_distance - _xmin_in_distance);
 
     _allSuperClusters.clear();
 
-    for (int i(0); i < _NGLAYERS; ++i) {
+    for (int i=0; i < _NGLAYERS; ++i) {
 	ClusterExtended * cluster = new ClusterExtended();
 	_allSuperClusters.push_back(cluster);
     }
 
-    for (unsigned int i(0); i < _allHits.size(); ++i) {
+    for (unsigned int i = 0; i < _allHits.size(); ++i) {
 	CaloHitExtended * calohit = _allHits[i];
 	float distToIP = calohit->getGenericDistance();
 	int index = (int)((distToIP - _xmin_in_distance) * inverse) ;
@@ -579,6 +588,11 @@ void TrackwiseClustering::GlobalClustering() {
 	int ifound = 0;
 	int idTo = CaloHitTo->getType();
 
+	//	std::cout << ihitTo 
+	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[0] 
+	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[1] 
+	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[2] << std::endl;
+
 	float r_step = _stepTrackBack[idTo];
 	float r_min  = r_step;
 	float r_dist = _distanceTrackBack[idTo]; 
@@ -602,6 +616,9 @@ void TrackwiseClustering::GlobalClustering() {
 	    float YRes = findResolutionParameter(CaloHitFrom, CaloHitTo);
 	    if (YRes < 0.)
 		std::cout << "Resolution parameter < 0" << std::endl; 
+
+	    if (ihitTo == 3)
+	      std::cout << " Strange hit " << YRes << std::endl;
 
 
 	    if (YRes < YResMin) {

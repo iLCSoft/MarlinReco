@@ -5,6 +5,9 @@
 #include "lcio.h"
 #include <string>
 #include <vector>
+#include "HelixClass.h"
+#include <EVENT/CalorimeterHit.h>
+#include <EVENT/MCParticle.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -48,12 +51,19 @@ class ClusterCheater : public Processor {
 
   int _nRun ;
   int _nEvt ;
-
   int _ifBrahms;
+
+  float _proximityCut;
+  float _bField;
+  int _minimal_hits;
 
   std::string _trueClustCollection;
   std::vector<std::string> _caloCollections;
   std::string _relCollection;
+
+  float DistanceToChargeParticle(HelixClass * helix, CalorimeterHit * hit);
+  float DistanceToNeutralParticle(MCParticle * par, CalorimeterHit * hit);
+  HelixClass* AssignHelixToMCP( MCParticle * par);
 
 } ;
 

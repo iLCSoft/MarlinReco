@@ -13,7 +13,7 @@ using namespace std;
 
 namespace JAMMA
 {
-class JAMMA::Eigenvalue
+class Eigenvalue
 {
  private:
 

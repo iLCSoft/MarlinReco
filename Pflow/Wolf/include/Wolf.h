@@ -81,11 +81,15 @@ class Wolf : public Processor {
   // (look at TrackwiseClustering Processor)
   float _zofendcap;
   float _rofbarrel;
-
+  float _phiofbarrel;
+  int _nSymmetry;
 
   float _distTrackToCluster;
   float _fractionEM;
   float _bField;
+
+  float _rPhiCut;
+  float _zCut;
 
   ClusterExtendedVec _clusterVec;
   TrackExtendedVec   _trackVec;

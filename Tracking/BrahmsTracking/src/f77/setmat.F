@@ -1,7 +1,10 @@
 *  
-* $Id: setmat.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: setmat.F,v 1.2 2005-08-02 10:21:38 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -66,12 +69,15 @@ c#include "flag.inc"
 *
 *     magnetic field
 *
+CCC FIXME: SET BFIELD HERE
+      BFIELD = 40.0
+
       consb = bfield*fct
 
       ncmat = 0
       npmat = 0
       nexs  = 0
-ccc* beam pipe
+* beam pipe
 ccc      if (lvxdp) then
 ccc         ncmat         = ncmat+1
 ccc         rcmat(ncmat)  = bpp0(1)
@@ -558,22 +564,22 @@ ccc         rzsurf(nexs)  = zpmat(npmat)
 ccc         zrmin(nexs)   = rpmin(npmat)
 ccc         zrmax(nexs)   = rpmax(npmat)
 ccc      endif
-ccc      IF ( printout .eq. 1 ) then
-ccc         print*
-ccc         print '('' material cylinders for track fit'')'
-ccc         print '('' Nr    radius     z-min     z-max    X0     Eloss'')'
-ccc         do i=1,ncmat
-ccc            print '(i3,3f10.2,2f8.5)',
-ccc     $           i,rcmat(i),zcmin(i),zcmax(i),xrlc(i),xelosc(i)
-ccc         enddo
-ccc         print*
-ccc         print '('' material planes for track fit'')'
-ccc         print '('' Nr       z       r-min     r-max    X0     Eloss'')'
-ccc         do i=1,npmat
-ccc            print '(i3,3f10.2,2f8.5)',
-ccc     $           i,zpmat(i),rpmin(i),rpmax(i),xrlp(i),xelosp(i)
-ccc         enddo
-ccc      endif
+c      IF ( printout .eq. 1 ) then
+         print*
+         print '('' material cylinders for track fit'')'
+         print '('' Nr    radius     z-min     z-max    X0     Eloss'')'
+         do i=1,ncmat
+            print '(i3,3f10.2,2f8.5)',
+     $           i,rcmat(i),zcmin(i),zcmax(i),xrlc(i),xelosc(i)
+         enddo
+         print*
+         print '('' material planes for track fit'')'
+         print '('' Nr       z       r-min     r-max    X0     Eloss'')'
+         do i=1,npmat
+            print '(i3,3f10.2,2f8.5)',
+     $           i,zpmat(i),rpmin(i),rpmax(i),xrlp(i),xelosp(i)
+         enddo
+c      endif
 *                                    chisquare probability cut values, |
 *                                    indices = (forward, barrel):      |
 *                                    total chisquare of the track fit  |

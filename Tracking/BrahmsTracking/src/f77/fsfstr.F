@@ -1,7 +1,23 @@
 *  
-* $Id: fsfstr.F,v 1.1 2005-07-21 16:37:00 aplin Exp $
+* $Id: fsfstr.F,v 1.2 2005-08-02 10:19:51 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2005/07/21 16:37:00  aplin
+* The itedat bank has been added with read and write interface.
+*
+* TKADDH has now been added so that the silicon hits are included as
+* TE's.
+*
+* Added FSFSTR from delsearch to steer the creation of
+* TS's
+*
+* The following include files need to be added for FSFSTR
+* include/fsfdebug.inc
+* include/fsfreject.inc
+* include/fsfflags.inc
+*
+* FSFSTR is now called by TKTREV although all action is commented out.
+*
 * Revision 1.1.1.1  2003/05/23 13:17:53  hvogt
 * Brahms V308
 *
@@ -34,19 +50,19 @@ C +cde,UXCEVT.
       parameter (none=4711) !Must be different from all possible methods for
                             !pairing
 
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR:   starting new event'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA
-CSJAc --- copy beam spot into primary vertex for this event
-CSJA      call fsfprivtx
-CSJA
-CSJAc --- Read event data from TKBANK to local arrays
-CSJA      call fsfinp
-CSJAc
-CSJAc --- Analyse event :
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR:   starting new event'
+        write(6,*) '****************************************'
+      endif
+
+c --- copy beam spot into primary vertex for this event
+      call fsfprivtx
+
+c --- Read event data from TKBANK to local arrays
+c      call fsfinp
+
+c --- Analyse event :
 CSJAc
 CSJA
 CSJAc --- list some information about the TE input  -KH-

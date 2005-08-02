@@ -1,7 +1,10 @@
 *  
-* $Id: tflnk2.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tflnk2.F,v 1.2 2005-07-29 15:06:17 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -129,6 +132,8 @@ c      LOGICAL LNEW,LTHCND(3)
       SAVE
 
 C-------------------------------------------------------------------------
+
+
 
       IF(FIRST) THEN
         FIRST=.FALSE.
@@ -658,6 +663,7 @@ c          IW(ITGTL+JTGTN1)=NTPC
           ITGTL=NT
           MY_JTGTIO(ITGTL)=NCL
           MY_JTGTN1(ITGTL)=NTPC
+
 C GAB:
 c          NRT1=ITABL(KT1TL,I1,JTGTNR)
 c          NRT2=ITABL(KT1TL,I2,JTGTNR)

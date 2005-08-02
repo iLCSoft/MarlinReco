@@ -49,12 +49,17 @@ class TrackCheater : public Processor {
   int _nRun ;
   int _nEvt ;
 
+  int _fitTrueTrack;
+  int _minimal_hits;
+  float _chi2Cut;
+
   std::string _trueTracksCollection;
   std::vector<std::string> _trackerHitCollections;
   std::string _relCollection;
  
   float _bField;
   float _eCut;
+  float _hitToHelixCut;
  
 } ;
 

@@ -58,6 +58,9 @@ void Tk_Te_Bank::add_te(int subid,int submod,int unused,int MesrCode,int PnteTE,
 
   te_bank.push_back(ate);
 
+  unsigned int size = itedat_bank.size() ;
+  itedat_bank.resize(size+1) ;
+
 }
 
 // due to the fact that the bank will be accessed by integer value of the te number this is probaly dangerous
@@ -100,7 +103,7 @@ int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int 
   return 0;
 }
 
-float readtktecpp(int attribute, int te)
+float rreadtktecpp(int attribute, int te)
 {
 
   te = te - 1;
@@ -206,8 +209,114 @@ float readtktecpp(int attribute, int te)
   } 
 }
 
-int writetktecpp(float value, int attribute, int te)
+int ireadtktecpp(int attribute, int te)
 {
+
+  te = te - 1;
+
+  if(te>TkTeBank->size()) return 0;
+
+  switch (attribute) {
+  case 1: 
+    return (int)TkTeBank->getSubdetector_ID(te);
+    break;
+  case 2: 
+    return (int)TkTeBank->getSubmodule(te);
+     break;
+  case 3: 
+    return (int)TkTeBank->getUnused(te);
+    break;
+  case 4: 
+    return (int)TkTeBank->getMeasurement_code(te);
+    break;
+  case 5: 
+    return (int)TkTeBank->getPointer_to_end_of_TE(te);
+    break;
+  case 6: 
+    return (int)TkTeBank->getCharge(te);
+    break;
+  case 7: 
+    return (int)TkTeBank->getNdf(te);
+    break;
+  case 8: 
+    return (int)TkTeBank->getChi2(te);
+    break;
+  case 9: 
+    return (int)TkTeBank->getLength(te);
+    break;
+  case 10: 
+    return (int)TkTeBank->getCoord1_of_ref_point(te);
+    break;
+  case 11: 
+    return (int)TkTeBank->getCoord2_of_ref_point(te);
+    break;
+  case 12: 
+    return (int)TkTeBank->getCoord3_of_ref_point(te);
+    break;
+  case 13: 
+    return (int)TkTeBank->getTheta(te);
+    break;
+  case 14: 
+    return (int)TkTeBank->getPhi(te);
+    break;
+  case 15: 
+    return (int)TkTeBank->getInvp(te);
+    break;
+  case 16: 
+    return (int)TkTeBank->getDe_dx(te);
+    break;
+  case 17: 
+    return (int)TkTeBank->getCovmatrix1(te);
+    break;
+  case 18: 
+    return (int)TkTeBank->getCovmatrix2(te);
+    break;
+  case 19: 
+    return (int)TkTeBank->getCovmatrix3(te);
+    break;
+  case 20: 
+    return (int)TkTeBank->getCovmatrix4(te);
+    break;
+  case 21: 
+    return (int)TkTeBank->getCovmatrix5(te);
+    break;
+  case 22: 
+    return (int)TkTeBank->getCovmatrix6(te);
+    break;
+  case 23: 
+    return (int)TkTeBank->getCovmatrix7(te);
+    break;
+  case 24: 
+    return (int)TkTeBank->getCovmatrix8(te);
+    break;
+  case 25: 
+    return (int)TkTeBank->getCovmatrix9(te);
+    break;
+  case 26: 
+    return (int)TkTeBank->getCovmatrix10(te);
+    break;
+  case 27: 
+    return (int)TkTeBank->getCovmatrix11(te);
+    break;
+  case 28: 
+    return (int)TkTeBank->getCovmatrix12(te);
+    break;
+  case 29: 
+    return (int)TkTeBank->getCovmatrix13(te);
+    break;
+  case 30: 
+    return (int)TkTeBank->getCovmatrix14(te);
+    break;
+  case 31: 
+    return (int)TkTeBank->getCovmatrix15(te);
+    break;
+  default: 
+    throw runtime_error("te attribute not valid");
+  } 
+}
+
+
+int writetktecpp(float value, int attribute, int te){
 
   if(te>TkTeBank->size()) return 1;
 
@@ -351,4 +460,66 @@ int addhittktecpp(int hit, int te)
 
   TkTeBank->addHit(hit,te);
   return 0;
+}
+
+int writetkitedatcpp(int value, int attribute, int te){
+  te = te - 1;
+  
+  switch (attribute) {
+  case 1: 
+    TkTeBank->setPosOfFirstHitInHitList(value,te);
+    return 0;
+    break;
+  case 2: 
+    TkTeBank->setNumOfHits(value,te);
+    return 0;
+    break;
+  case 3: 
+    TkTeBank->setPointrToFirstExclusion(value,te);
+    return 0;
+    break;
+  case 4: 
+    TkTeBank->setNumOfExclusions(value,te);
+    return 0;
+    break;
+  case 5: 
+    TkTeBank->setTrackNo(value,te);
+    return 0;
+    break;
+  default: 
+    std::cout << "attribute = " << attribute <<  std::endl;
+    throw runtime_error("writetkteitedatcpp: te attribute not valid");
+  } 
+
+}
+
+int readtkitedatcpp(int attribute, int te)
+{
+
+  te = te - 1;
+
+  if(te>TkTeBank->size()) return 0;
+
+  switch (attribute) {
+  case 1: 
+    return TkTeBank->getPosOfFirstHitInHitList(te);
+    break;
+  case 2: 
+    return TkTeBank->getNumOfHits(te);
+    break;
+  case 3: 
+    return TkTeBank->getPointrToFirstExclusion(te);
+    break;
+  case 4: 
+    return TkTeBank->getNumOfExclusions(te);
+    break;
+  case 5: 
+    return TkTeBank->gettrackNo(te);
+    break;
+  default:
+    std::cout << "attribute = " << attribute << std::endl ;
+    std::cout << "te = " << te << std::endl ;
+    throw runtime_error("te attribute not valid");
+  } 
+
 }

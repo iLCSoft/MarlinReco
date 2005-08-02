@@ -3,9 +3,9 @@
 # Example GNUmakefile to build an Application with Marlin
 #
 # @author Frank Gaede
-# @version $Id: GNUmakefile,v 1.2 2005-07-17 10:58:26 aplin Exp $
+# @version $Id: GNUmakefile,v 1.1 2005-07-18 15:35:14 aplin Exp $
 #
-##########################################################
+###########################################################
 
 # requires path to MARLIN and Marlin v00-09 or higher
 # can be called from top level makefile
@@ -17,37 +17,20 @@
 
 
 # name of the program/library
-PROGNAME = BrahmsTracking
+PROGNAME = VTXDigi
 
 
 #----  additional user include/libraries
 #-- optionally can be specified in the to level GNUmakefile of $MARLIN
 
-ifndef FORTRANINCLUDES
-FORTRANINCLUDES = -I$(MARLIN)/packages/MarlinUtil/include/
-endif
-
 ifndef USERINCLUDES
- USERINCLUDES  =  -I $(MARLIN)/packages/MarlinUtil/include
- USERINCLUDES +=  -Df2cFortran
- #USERINCLUDES = `root-config --cflags`
+ USERINCLUDES = -I $(MARLIN)/packages/MarlinCommon/include
 endif
 
 ifndef USERLIBS
- USERLIBS = -L -I $(MARLIN)/packages/MarlinUtil/lib -lMarlinUtil
- USERLIBS += -lg2c
- USERLIBS +=  -L /opt/products/cernlib/pro/lib/ -lmathlib -lkernlib 
- #USERLIBS = `root-config --libs`
+ USERLIBS = 
 endif
 
-
-#----------  BrahmsTracking needs to compile some f77 files ----------
-#brahms object files. Note: "-Wno-globals" used to stop endless warnings when using cernlib funcitons remove this if you feel uneasy about ignoring these warnings
-./f77/%.o: ./f77/%.F
-	$(FC) -g -Wno-globals -o $@ -ff2c -c $? $(FORTRANINCLUDES)
-
-FOBJS = $(patsubst %.F,%.o, $(wildcard f77/*.F) )
-# FOBJS also added to objects below
 
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile
@@ -93,9 +76,8 @@ $(BINDIR)/$(PROGNAME): $(INSTALL)/lib$(PROGNAME).a
 	mkdir -p $(BINDIR)
 	$(CXX) -o $(BINDIR)/$(PROGNAME) $(CPPFLAGS) $(MARLIN)/src/Marlin.cc $(LIBS) 
 
-objects = $(patsubst %.cc,%.o, $(wildcard *.cc)  )
-objects += $(FOBJS)
 
+objects = $(patsubst %.cc,%.o, $(wildcard *.cc)  )
 
 $(INSTALL)/lib$(PROGNAME).a: $(objects)
 	mkdir -p $(INSTALL)
@@ -105,7 +87,7 @@ lib: $(INSTALL)/lib$(PROGNAME).a
 
 
 clean:
-	rm -f *.o $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME) $(FOBJS)
+	rm -f *.o $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME)
 
 doc:
 	cd $(BASEDIR)/doc ; doxygen ;

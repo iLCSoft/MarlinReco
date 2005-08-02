@@ -1,3 +1,4 @@
+#include<math.h>
 //Romans class to produce random numbers
 class RandomNumberGenerator {
 private:

@@ -1,5 +1,6 @@
-#ifndef MyProcessor_h
-#define MyProcessor_h 1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+#ifndef VTXDigiProcessor_h
+#define VTXDigiProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -10,19 +11,18 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** Processor that calculates sphericity,aplanarity, C and D event parametres
- *   for detail explanation look
- *   <li> <a href="www.desy.de/~aplin/KP_spher.pdf">documentation</a></li>
- * @author P.K , DESY
+
+/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
+ *  it creates a histogram (cloud) of the MCParticle energies.
  */
-class Sphere: public Processor {
+class VTXDigiProcessor : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new Sphere ; }
+  virtual Processor*  newProcessor() { return new VTXDigiProcessor ; }
   
   
-   Sphere() ;
+  VTXDigiProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -51,10 +51,7 @@ class Sphere: public Processor {
   /** Input collection name.
    */
   std::string _colName ;
-  /** Name of the parameter to store egenvalues of sphericity tensor
-   */
-  std::string _dumpobjectname;
-  float _r;
+
   int _nRun ;
   int _nEvt ;
 } ;

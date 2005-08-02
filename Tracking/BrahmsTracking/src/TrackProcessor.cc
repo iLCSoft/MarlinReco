@@ -34,10 +34,15 @@ TrackProcessor::TrackProcessor() : Processor("TrackProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the Track collection"  ,
-			      _colName ,
-			      std::string("TPC_Tracks") ) ;
+  registerProcessorParameter( "TPCTrackCollectionName" , 
+			      "Name of the TPC Track collection"  ,
+			      _tpcTrackColName ,
+			      std::string("TPCTracks") ) ;
+
+  registerProcessorParameter( "MCTrackRelationsCollectionName" , 
+			      "Name of the MCTrackRelations collection"  ,
+			      _mcTrackRelColName ,
+			      std::string("MCTrackRelations") ) ;
 
 #ifdef MARLIN_USE_ROOT
    registerProcessorParameter( "ROOTFile" ,
@@ -115,8 +120,8 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 
 #endif
 
-  LCCollection* Tcol = evt->getCollection( _colName ) ;
-  LCCollection* LCRcol = evt->getCollection(  "MC_Track_Relations" ) ;
+  LCCollection* Tcol = evt->getCollection( _tpcTrackColName ) ;
+  LCCollection* LCRcol = evt->getCollection( _mcTrackRelColName ) ;
   
   if( Tcol != 0 ){
 
@@ -145,8 +150,6 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 	  const LCObjectVec& LCRelVec = nav->getRelatedToObjects(track); 
 	  const FloatVec& LCRelWeightsVec = nav->getRelatedToWeights(track);
 	  
-	  
-	  
 	  int greatestweight=0;
 	  float oldweight=0;
 	  
@@ -155,8 +158,10 @@ void TrackProcessor::processEvent( LCEvent * evt ) {
 	    if( LCRelWeightsVec[j] > oldweight) greatestweight=j;
 	    
 	  }
-	  
+
+	  //	  cout << "About to get the MCParticle " << endl ;
 	  MCParticle* mcp = dynamic_cast<MCParticle*>(LCRelVec.at(greatestweight));	  
+	  //	  cout << "Got the MCParticle " << endl ;
 
 // 	  const float * mom;
 // LCIO v01-05 needs double !

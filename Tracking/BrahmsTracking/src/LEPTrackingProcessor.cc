@@ -211,9 +211,9 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
       de_dx = de_dx/tpcIonisationPotential;
 
-      double tpcRPhiResMax = 0.1 * gearTPC.getDoubleVal("tpcRPhiResMax");
-      double tpcRPhiRes = 0.1 * tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
-      double tpcZRes = 0.1 * gearTPC.getDoubleVal("tpcZRes");
+      double tpcRPhiResMax = (gearTPC.getDoubleVal("tpcRPhiResMax"));
+      double tpcRPhiRes = 0.1 * (tpcRPhiResMax - fabs(pos[2])/gearTPC.getMaxDriftLength()*0.01);
+      double tpcZRes = 0.1 * (gearTPC.getDoubleVal("tpcZRes"));
 
 
       // Brahms resolution code for TPC = 3 REF tkhtpc.F

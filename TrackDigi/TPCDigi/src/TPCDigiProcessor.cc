@@ -138,7 +138,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 
       double tpcRPhiResMax = gearTPC.getDoubleVal("tpcRPhiResMax");
-      double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.10;
+      double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.010;
       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 
       RandomNumberGenerator RandomNumber;

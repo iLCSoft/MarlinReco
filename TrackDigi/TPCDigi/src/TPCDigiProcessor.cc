@@ -92,7 +92,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
   firstEvent = false ;
   
-  LCCollection* STHcol = evt->getCollection( _colName ) ;
+
+  LCCollection* STHcol = 0 ;
+  try{
+    STHcol = evt->getCollection( _colName ) ;
+  }
+  catch(DataNotAvailableException &e){
+  }
   
   if( STHcol != 0 ){
   

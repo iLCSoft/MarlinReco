@@ -47,9 +47,13 @@ void VTXDigiProcessor::processRunHeader( LCRunHeader* run) {
 
 void VTXDigiProcessor::processEvent( LCEvent * evt ) { 
 
+  LCCollection* STHcol = 0 ;
   try{
+    STHcol = evt->getCollection( _colName ) ;
+  }
+  catch(DataNotAvailableException &e){
+  }
 
-    LCCollection* STHcol = evt->getCollection( _colName ) ;
   
     if( STHcol != 0 ){    
     
@@ -89,10 +93,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       }
       evt->addCollection( trkhitVec , "VTXTrackerHits") ;
     }
-  }
-  catch(DataNotAvailableException &e){
-  }
-  
+    
   _nEvt ++ ;
 }
 

@@ -1,14 +1,14 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
 ** This file is part of the MarlinReco Project.
-** Forming part of the SubPackage: BrahmsTracking.
+** Forming part of the SubPackage: SatoruJetFinder.
 **
 ** For the latest version download from Web CVS:
-** www.blah.de
+** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.2 2005-08-02 18:43:53 samson Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.3 2005-08-03 15:22:55 samson Exp $
 **
-** $Log: not supported by cvs2svn $
+**
 */ 
 
 #include "SatoruJetFinderProcessor.h"

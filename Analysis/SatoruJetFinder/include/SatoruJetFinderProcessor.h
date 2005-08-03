@@ -1,16 +1,13 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
 ** This file is part of the MarlinReco Project.
-** Forming part of the SubPackage: BrahmsTracking.
+** Forming part of the SubPackage: SatoruJetFinder.
 **
 ** For the latest version download from Web CVS:
-** www.blah.de
+** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.3 2005-08-03 13:47:54 samson Exp $
+** $Id: SatoruJetFinderProcessor.h,v 1.4 2005-08-03 15:22:55 samson Exp $
 **
-** $Log: not supported by cvs2svn $
-** Revision 1.2  2005/08/02 18:43:53  samson
-** Made the processor Marlin v00-09 compliant
 **
 */ 
 
@@ -64,42 +61,43 @@ namespace marlin
 
 
   /**
-   * \verbatim
-   * A                                                                                
-   * universal jetfinder module devellopped by Satoru Yamashita                       
-   *                                                                                  
-   * steering cards:                                                                  
-   * 1) Allways to specify:                                                           
-   *                                                                                  
-   * InputCollection  (e.g. energy flow object )of type reconstructed particle        
-   * OutputCollection (e.g. jets )of type reconstructed particle                      
-   * Mode                                                                             
+   * A universal jetfinder module developed by Satoru Yamashita 
+   *
+   * This processor is a wrapper to the multi algorithm jet finder 
+   * code written by Satoru Yamashita for the OPAL collaboratoin.
+   * For further details concerning this fortran code read the 
+   * OPAL Technical Note TN579.
+   *                                                                               
+   * Steering file parameters:\n               
+   * Allways to specify:\n
+   * \b InputCollection  (e.g. energy flow object )of type reconstructed particle        
+   * \b OutputCollection (e.g. jets )of type reconstructed particle                      
+   * \b Mode                                                                             
    *                                                                                  
    * At the moment 5 modes are implemented:                                             
-   *                                                                                  
-   *                                                                                  
-   * DurhamNjet:                                                                      
+   *
+   * \b DurhamNjet:                                                                      
    * durham jetfinding with a fixed number of jets to be specify                      
    * with                                                                             
    * NJetRequested                                                                    
    *                                                                                  
-   * DurhamYCut:                                                                      
+   * \b DurhamYCut:                                                                      
    * durham jetfinding with a fixed ycut to be specify with                           
    * YCut                                                                             
    *                                                                                  
-   * ConeBlanka                                                                       
+   * \b ConeBlanka                                                                       
    * cone jet finder with cone threshold energy of 0.7 GeV and                        
    * R =0.2                                                                           
    *                                                                                  
-   * Saturo                                                                           
+   * \b Saturo                                                                           
    * first durham jetfinding, afterwards reassignment of the                          
    * objects to the jet axes found in this first iteration                            
    * with the jade sceme                                                              
    * number of jets to be specify with                                                
    * NJetRequested                                                                    
    *                                                                                  
-   * Manual everything to be set by hand:                                             
-   *                                                                                  
+   * \b Manual everything to be set by hand:                                      
+   * \verbatim                                                                               
    * GlobalMode  (=MD below)                                                          
    * NJetRequested  (=NJETRQ)                                                         
    * Threshold      (= THRESH)                                                        
@@ -211,6 +209,9 @@ namespace marlin
    *                                                                                  
    *                                                                                    
    * \endverbatim
+   *
+   * @author Satoru Yamashita (original fortran code), Thorsten Kuhl, J&ouml;rgen Samson
+   * @version $Id: SatoruJetFinderProcessor.h,v 1.4 2005-08-03 15:22:55 samson Exp $
    */
   class SatoruJetFinderProcessor : public Processor {
 

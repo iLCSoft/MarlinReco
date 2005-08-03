@@ -80,10 +80,10 @@ void Tk_Te_Bank::add_te(int subid,int submod,int unused,int MesrCode,int PnteTE,
 //  return 0;
 //}
 
-int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov[15])
+int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float* cov)
 {
 
-  float cov1 = cov[0];
+  float cov1 = cov[0]; 
   float cov2 = cov[1];
   float cov3 = cov[2];
   float cov4 = cov[3];
@@ -98,6 +98,14 @@ int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int 
   float cov13 = cov[12];
   float cov14 = cov[13];
   float cov15 = cov[14];
+
+//   cout << "cov1 = " << cov1 << endl; 
+//   cout << "cov2 = " << cov2 << endl; 
+//   cout << "cov3 = " << cov3 << endl; 
+//   cout << "cov4 = " << cov4 << endl; 
+//   cout << "cov5 = " << cov5 << endl; 
+//   cout << "cov6 = " << cov6 << endl; 
+//   cout << "cov15 = " << cov15 << endl; 
 
   TkTeBank->add_te(subid, submod, unused, MesrCode, PnteTE, Q, ndf, chi2, L, cord1, cord2, cord3, theta, phi, invp, dedx, cov1, cov2, cov3, cov4, cov5, cov6, cov7, cov8, cov9, cov10, cov11, cov12, cov13, cov14, cov15);
   return 0;
@@ -448,6 +456,7 @@ int writetktecpp(float value, int attribute, int te){
     return 0;
     break;
   default: 
+    cout << "attribute = " << attribute << endl;  
     throw runtime_error("te attribute not valid");
   } 
   

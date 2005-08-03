@@ -19,8 +19,9 @@ class Tk_Te_Bank
 
   void remove_te(int) ;
 
-  int tkmktecpp(int,int,int,int,int,int,int,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float) ;
+  //  int tkmktecpp(int,int,int,int,int,int,int,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float) ;
 
+  int tkmktecpp(int,int,int,int,int,int,int,float,float,float,float,float,float,float,float,float,float *) ;
 
   void   setSubdetector_ID(int subid, int te){te_bank[te].subdetector_ID = subid ; } ;
   void   setSubmodule(int submod, int te){te_bank[te].submodule = submod ; } ;

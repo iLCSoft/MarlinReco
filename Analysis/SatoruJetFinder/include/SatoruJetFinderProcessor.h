@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.2 2005-08-02 18:43:53 samson Exp $
+** $Id: SatoruJetFinderProcessor.h,v 1.3 2005-08-03 13:47:54 samson Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.2  2005/08/02 18:43:53  samson
+** Made the processor Marlin v00-09 compliant
+**
 */ 
 
 #ifndef SatoruJetFinderProcessor_h
@@ -61,151 +64,153 @@ namespace marlin
 
 
   /**
-   * A                                                                                \n
-   * universal jetfinder module devellopped by Satoru Yamashita                       \n
-   *                                                                                  \n
-   * steering cards:                                                                  \n
-   * 1) Allways to specify:                                                           \n
-   *                                                                                  \n
-   * InputCollection  (e.g. energy flow object )of type reconstructed particle        \n
-   * OutputCollection (e.g. jets )of type reconstructed particle                      \n
-   * Mode                                                                             \n
-   *                                                                                  \n
-   * At the moment 5 modes are implemented:                                           \n  
-   *                                                                                  \n
-   *                                                                                  \n
-   * DurhamNjet:                                                                      \n
-   * durham jetfinding with a fixed number of jets to be specify                      \n
-   * with                                                                             \n
-   * NJetRequested                                                                    \n
-   *                                                                                  \n
-   * DurhamYCut:                                                                      \n
-   * durham jetfinding with a fixed ycut to be specify with                           \n
-   * YCut                                                                             \n
-   *                                                                                  \n
-   * ConeBlanka                                                                       \n
-   * cone jet finder with cone threshold energy of 0.7 GeV and                        \n
-   * R =0.2                                                                           \n
-   *                                                                                  \n
-   * Saturo                                                                           \n
-   * first durham jetfinding, afterwards reassignment of the                          \n
-   * objects to the jet axes found in this first iteration                            \n
-   * with the jade sceme                                                              \n
-   * number of jets to be specify with                                                \n
-   * NJetRequested                                                                    \n
-   *                                                                                  \n
-   * Manual everything to be set by hand:                                             \n
-   *                                                                                  \n
-   * GlobalMode  (=MD below)                                                          \n
-   * NJetRequested  (=NJETRQ)                                                         \n
-   * Threshold      (= THRESH)                                                        \n
-   * PrimaryJetFindingMode (=IMODE)                                                   \n
-   * YCut           (=YCUTS)                                                          \n
-   * MerginMode     (=IEXAM)                                                          \n
-   * MergingThreshold (=FRAC)                                                         \n
-   * SecondJetFindingMode (=IEXAM4)                                                   \n
-   *                                                                                  \n
-   * Description                                                                      \n
-   * Inputs:                                                                          \n
-   *   MD      ; mode (see below)                                                     \n
-   *   NJETRQ  : fixed number of jets ; =0 variable -- use YCUT etc...                \n
-   *   THRESH  : threshold (GeV) for the primary jet finding                          \n
-   *   IMODE   : Kernel Jet finding mode                                              \n
-   *      1- 6 : YKERN                                                                \n
-   *       IF(IMODE.EQ.1) THEN                                                        \n
-   *          CM = 'JADE E0'                                                          \n
-   *        ELSEIF(IMODE.EQ.2) THEN                                                   \n
-   *          CM = 'JADE P '                                                          \n
-   *        ELSEIF(IMODE.EQ.3) THEN                                                   \n
-   *          CM = 'JADE P0'                                                          \n
-   *        ELSEIF(IMODE.EQ.4) THEN                                                   \n
-   *          CM = 'JADE E '                                                          \n
-   *        ELSEIF(IMODE.EQ.5) THEN                                                   \n
-   *          CM = 'DURHAM '                                                          \n
-   *        ELSEIF(IMODE.EQ.6) THEN                                                   \n
-   *          CM = 'GENEVA '                                                          \n
-   *        ELSE                                                                      \n
-   *          WRITE(6,281) IMODE                                                      \n
-   * 281      FORMAT(/,' ### YKERN: IMODE =',I3,' INVALID; SET TO 1 ###')             \n
-   *          IMODE = 1                                                               \n
-   *          CM = 'JADE E0'                                                          \n
-   *        ENDIF                                                                     \n
-   *                                                                                  \n
-   *                                                                                  \n
-   *                                                                                  \n
-   *         7 : cambridge                                                            \n
-   *      9-11 : LUCLUS                                                               \n
-   *        12 : cone                                                                 \n
-   *   YCUTS   : (1) ycut or xcut or Cone Radius (2) EPS                              \n
-   *   IEXAM   : Particle re-association method 1-6                                   \n
-   *            EXAM(1) = THETA                                                       \n
-   *            EXAM(2) = PART(4)*PJSTMP(4,J)-PART(1)*PJSTMP(1,J)                     \n
-   *     +                -PART(2)*PJSTMP(2,J)-PART(3)*PJSTMP(3,J)                    \n
-   *            EXAM(3) = DURHAM                                                      \n
-   *            EXAM(4) = E0JADE                                                      \n
-   *            EXAM(5) = Geneva Scheme                                               \n
-   *            EXAM(6) = EJADE   ! it makes too bad cross talk                       \n
-   *                                                                                  \n
-   *   FRAC    : core rate                                                            \n
-   *   IEXAM4  : Jet merge method 1-8                                                 \n
-   *            EXAM(1,N) = PL(4,I)*PL(4,J)                                           \n
-   *            EXAM(2,N) = PL(4,I)*PL(4,J)-PL(1,I)*PL(1,J)                           \n
-   *     +           -PL(2,I)*PL(2,J)-PL(3,I)*PL(3,J)                                 \n
-   *            EXAM(3,N) = DURHAM(I,J)                                               \n
-   *            EXAM(4,N) = E0JADE(I,J)                                               \n
-   *            EXAM(5,N) = EJADE(I,J)                                                \n
-   *            EXAM(6,N) = ANGLE(I,J)                                                \n
-   *            EXAM(7,N) = ECOS(I,J)                                                 \n
-   *            EXAM(8,N) = PL(6,I)*PL(6,J)                                           \n
-   *   NPAR    : Number of "particles"                                                \n
-   *   IDIM    : first dimension of PPAR array                                        \n
-   *   PPAR    : Particle Momenta                                                     \n
-   *   MXJET   : Maximum Number of Jets (buffer size for PJETS = MXJETS*JDIM)         \n
-   *   JDIM    : first dimension of PJETS array                                       \n
-   *                                                                                  \n
-   * Outputs:                                                                         \n
-   *   NJET    : Number of Jets                                                       \n
-   *   IASS    : Jet assosiation for "particle"s                                      \n
-   *   PJETS   : Jet momenta                                                          \n
-   *   Y34     : YHI (sometimes not filled)                                           \n
-   *   Y45     : YLO (sometimes not filled)                                           \n
-   *   IERR    : Error flag  0==All O.K.                                              \n
-   *     -9999: abnormal error                                                        \n
-   *      -999: boundary error                                                        \n
-   *       -99: input mismatch                                                        \n
-   *      Others : error from various internal calls                                  \n
-   * ==========================================================================       \n
-   *   MD                                                                             \n
-   * There are 11 variations                                                          \n
-   * MD   Name      : Final NJ    : 1st process  : 2nd process : 3rd process          \n
-   * 0a. Traditional: variable    :  fixed Ycuts :     -       :   -                  \n
-   * 0b. Traditional: fixed Njets :  fixed Njets :     -       :   -                  \n
-   * 0c. Just Merge : fixed Njets :  fixed Ycuts : do merge    :   -                  \n
-   * 1a. LMODE1     : variable    :  fixed Ycuts : do SYJETF1  :   -                  \n
-   * 1b. LMODE1     : fixed final :  fixed Ycuts : do SYJETF1  : do merge             \n
-   * 1c. LMODE1     : fixed final :  fixed Njets : do SYJETF1  :   -                  \n
-   * 1d. LMODE1     : fixed final :  fixed Ycuts : do merge    : do SYJETF1           \n
-   * 2a. LMODE2     : variable    :  fixed Ycuts : do SYJETF2  :   -                  \n
-   * 2b. LMODE2     : fixed final :  fixed Ycuts : do SYJETF2  : do merge             \n
-   * 2c. LMODE2     : fixed final :  fixed Njets : do SYJETF2  :   -                  \n
-   * 2d. LMODE2     : fixed final :  fixed Ycuts : do merge    : do SYJETF2           \n
-   * ===========================================================================      \n
-   *  MD & NJETRQ &  IMODE  & YCUTS & IEXAM &  Frac   &  IEXAM4 &     ISYMOD          \n
-   *  0a &   -    &   1-12  &  > 0  &   -   &   -     &     -   &        1            \n
-   *  0b &  > 0   &   1-12  &   -   &   -   &   -     &     -   &        2            \n
-   *  0c &  > 0   &   1-12  &  > 0  &   -   &   -     &    1-8  &        3            \n
-   *  1a &   -    &   1-12  &  > 0  &  1-6  & 0.0-1.0 &     -   &       11            \n
-   *  1b &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       12            \n
-   *  1c &  > 0   &   1-12  &   -   &  1-6  & 0.0-1.0 &     -   &       13            \n
-   *  1d &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       14            \n
-   *  2a &   -    &   1-12  &  > 0  &  1-6  & 0.0-1.0 &     -   &       21            \n
-   *  2b &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       22            \n
-   *  2c &  > 0   &   1-12  &   -   &  1-6  & 0.0-1.0 &     -   &       23            \n
-   *  2d &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       24            \n
-   * ===========================================================================      \n
-   *                                                                                  \n
-   *                                                                                  \n
-   *                                                                                  \n  
+   * \verbatim
+   * A                                                                                
+   * universal jetfinder module devellopped by Satoru Yamashita                       
+   *                                                                                  
+   * steering cards:                                                                  
+   * 1) Allways to specify:                                                           
+   *                                                                                  
+   * InputCollection  (e.g. energy flow object )of type reconstructed particle        
+   * OutputCollection (e.g. jets )of type reconstructed particle                      
+   * Mode                                                                             
+   *                                                                                  
+   * At the moment 5 modes are implemented:                                             
+   *                                                                                  
+   *                                                                                  
+   * DurhamNjet:                                                                      
+   * durham jetfinding with a fixed number of jets to be specify                      
+   * with                                                                             
+   * NJetRequested                                                                    
+   *                                                                                  
+   * DurhamYCut:                                                                      
+   * durham jetfinding with a fixed ycut to be specify with                           
+   * YCut                                                                             
+   *                                                                                  
+   * ConeBlanka                                                                       
+   * cone jet finder with cone threshold energy of 0.7 GeV and                        
+   * R =0.2                                                                           
+   *                                                                                  
+   * Saturo                                                                           
+   * first durham jetfinding, afterwards reassignment of the                          
+   * objects to the jet axes found in this first iteration                            
+   * with the jade sceme                                                              
+   * number of jets to be specify with                                                
+   * NJetRequested                                                                    
+   *                                                                                  
+   * Manual everything to be set by hand:                                             
+   *                                                                                  
+   * GlobalMode  (=MD below)                                                          
+   * NJetRequested  (=NJETRQ)                                                         
+   * Threshold      (= THRESH)                                                        
+   * PrimaryJetFindingMode (=IMODE)                                                   
+   * YCut           (=YCUTS)                                                          
+   * MerginMode     (=IEXAM)                                                          
+   * MergingThreshold (=FRAC)                                                         
+   * SecondJetFindingMode (=IEXAM4)                                                   
+   *                                                                                  
+   * Description                                                                      
+   * Inputs:                                                                          
+   *   MD      ; mode (see below)                                                     
+   *   NJETRQ  : fixed number of jets ; =0 variable -- use YCUT etc...                
+   *   THRESH  : threshold (GeV) for the primary jet finding                          
+   *   IMODE   : Kernel Jet finding mode                                              
+   *      1- 6 : YKERN                                                                
+   *       IF(IMODE.EQ.1) THEN                                                        
+   *          CM = 'JADE E0'                                                          
+   *        ELSEIF(IMODE.EQ.2) THEN                                                   
+   *          CM = 'JADE P '                                                          
+   *        ELSEIF(IMODE.EQ.3) THEN                                                   
+   *          CM = 'JADE P0'                                                          
+   *        ELSEIF(IMODE.EQ.4) THEN                                                   
+   *          CM = 'JADE E '                                                          
+   *        ELSEIF(IMODE.EQ.5) THEN                                                   
+   *          CM = 'DURHAM '                                                          
+   *        ELSEIF(IMODE.EQ.6) THEN                                                   
+   *          CM = 'GENEVA '                                                          
+   *        ELSE                                                                      
+   *          WRITE(6,281) IMODE                                                      
+   * 281      FORMAT(/,' ### YKERN: IMODE =',I3,' INVALID; SET TO 1 ###')             
+   *          IMODE = 1                                                               
+   *          CM = 'JADE E0'                                                          
+   *        ENDIF                                                                     
+   *                                                                                  
+   *                                                                                  
+   *                                                                                  
+   *         7 : cambridge                                                            
+   *      9-11 : LUCLUS                                                               
+   *        12 : cone                                                                 
+   *   YCUTS   : (1) ycut or xcut or Cone Radius (2) EPS                              
+   *   IEXAM   : Particle re-association method 1-6                                   
+   *            EXAM(1) = THETA                                                       
+   *            EXAM(2) = PART(4)*PJSTMP(4,J)-PART(1)*PJSTMP(1,J)                     
+   *     +                -PART(2)*PJSTMP(2,J)-PART(3)*PJSTMP(3,J)                    
+   *            EXAM(3) = DURHAM                                                      
+   *            EXAM(4) = E0JADE                                                      
+   *            EXAM(5) = Geneva Scheme                                               
+   *            EXAM(6) = EJADE   ! it makes too bad cross talk                       
+   *                                                                                  
+   *   FRAC    : core rate                                                            
+   *   IEXAM4  : Jet merge method 1-8                                                 
+   *            EXAM(1,N) = PL(4,I)*PL(4,J)                                           
+   *            EXAM(2,N) = PL(4,I)*PL(4,J)-PL(1,I)*PL(1,J)                           
+   *     +           -PL(2,I)*PL(2,J)-PL(3,I)*PL(3,J)                                 
+   *            EXAM(3,N) = DURHAM(I,J)                                               
+   *            EXAM(4,N) = E0JADE(I,J)                                               
+   *            EXAM(5,N) = EJADE(I,J)                                                
+   *            EXAM(6,N) = ANGLE(I,J)                                                
+   *            EXAM(7,N) = ECOS(I,J)                                                 
+   *            EXAM(8,N) = PL(6,I)*PL(6,J)                                           
+   *   NPAR    : Number of "particles"                                                
+   *   IDIM    : first dimension of PPAR array                                        
+   *   PPAR    : Particle Momenta                                                     
+   *   MXJET   : Maximum Number of Jets (buffer size for PJETS = MXJETS*JDIM)         
+   *   JDIM    : first dimension of PJETS array                                       
+   *                                                                                  
+   * Outputs:                                                                         
+   *   NJET    : Number of Jets                                                       
+   *   IASS    : Jet assosiation for "particle"s                                      
+   *   PJETS   : Jet momenta                                                          
+   *   Y34     : YHI (sometimes not filled)                                           
+   *   Y45     : YLO (sometimes not filled)                                           
+   *   IERR    : Error flag  0==All O.K.                                              
+   *     -9999: abnormal error                                                        
+   *      -999: boundary error                                                        
+   *       -99: input mismatch                                                        
+   *      Others : error from various internal calls                                  
+   * ==========================================================================       
+   *   MD                                                                             
+   * There are 11 variations                                                          
+   * MD   Name      : Final NJ    : 1st process  : 2nd process : 3rd process          
+   * 0a. Traditional: variable    :  fixed Ycuts :     -       :   -                  
+   * 0b. Traditional: fixed Njets :  fixed Njets :     -       :   -                  
+   * 0c. Just Merge : fixed Njets :  fixed Ycuts : do merge    :   -                  
+   * 1a. LMODE1     : variable    :  fixed Ycuts : do SYJETF1  :   -                  
+   * 1b. LMODE1     : fixed final :  fixed Ycuts : do SYJETF1  : do merge             
+   * 1c. LMODE1     : fixed final :  fixed Njets : do SYJETF1  :   -                  
+   * 1d. LMODE1     : fixed final :  fixed Ycuts : do merge    : do SYJETF1           
+   * 2a. LMODE2     : variable    :  fixed Ycuts : do SYJETF2  :   -                  
+   * 2b. LMODE2     : fixed final :  fixed Ycuts : do SYJETF2  : do merge             
+   * 2c. LMODE2     : fixed final :  fixed Njets : do SYJETF2  :   -                  
+   * 2d. LMODE2     : fixed final :  fixed Ycuts : do merge    : do SYJETF2           
+   * ===========================================================================      
+   *  MD & NJETRQ &  IMODE  & YCUTS & IEXAM &  Frac   &  IEXAM4 &     ISYMOD          
+   *  0a &   -    &   1-12  &  > 0  &   -   &   -     &     -   &        1            
+   *  0b &  > 0   &   1-12  &   -   &   -   &   -     &     -   &        2            
+   *  0c &  > 0   &   1-12  &  > 0  &   -   &   -     &    1-8  &        3            
+   *  1a &   -    &   1-12  &  > 0  &  1-6  & 0.0-1.0 &     -   &       11            
+   *  1b &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       12            
+   *  1c &  > 0   &   1-12  &   -   &  1-6  & 0.0-1.0 &     -   &       13            
+   *  1d &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       14            
+   *  2a &   -    &   1-12  &  > 0  &  1-6  & 0.0-1.0 &     -   &       21            
+   *  2b &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       22            
+   *  2c &  > 0   &   1-12  &   -   &  1-6  & 0.0-1.0 &     -   &       23            
+   *  2d &  > 0   &   1-12  &  > 0  &  1-6  & 0.0-1.0 &    1-8  &       24            
+   * ===========================================================================      
+   *                                                                                  
+   *                                                                                  
+   *                                                                                    
+   * \endverbatim
    */
   class SatoruJetFinderProcessor : public Processor {
 

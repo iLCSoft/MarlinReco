@@ -1,4 +1,15 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* 
+** This file is part of the MarlinReco Project.
+** Forming part of the SubPackage: BrahmsTracking.
+**
+** For the latest version download from Web CVS:
+** www.blah.de
+**
+** $Id: LEPTrackingProcessor.cc,v 1.10 2005-08-03 19:05:24 aplin Exp $
+**
+** $Log: not supported by cvs2svn $ 
+*/
 #include "LEPTrackingProcessor.h"
 #include <iostream>
 #include <string>
@@ -85,7 +96,7 @@ FCALLSCFUN2(FLOAT,rreadtktecpp,RREADTKTECPP,rreadtktecpp, INT, INT)
 
 FCALLSCFUN2(INT,ireadtktecpp,IREADTKTECPP,ireadtktecpp, INT, INT)
 
-  int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov[15]);
+  int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float* cov);
   
 
 FCALLSCFUN17(INT,tkmktecpp,TKMKTECPP,tkmktecpp, INT , INT ,INT ,INT ,INT ,INT ,INT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOATV)
@@ -124,6 +135,15 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                               _colNameVTX ,
                               std::string("VTXTrackerHits") ) ;
 
+  registerProcessorParameter( "TPCTrackCollectionName" , 
+                              "Name of the TPC Track collection"  ,
+                              _colNameTPCTracks ,
+                              std::string("TPCTracks") ) ;
+
+  registerProcessorParameter( "MCTrackRelCollectionName" , 
+                              "Name of the TPC Track MC Relation collection"  ,
+                              _colNameMCTracksRel ,
+                              std::string("MCTracksRel") ) ;
 }
 
 
@@ -503,8 +523,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     //     tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
     //     tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
 
-    evt->addCollection( tpcTrackVec , "TPCTracks") ;
-    evt->addCollection( lcRelVec , "MCTrackRelations") ;
+    evt->addCollection( tpcTrackVec , _colNameTPCTracks) ;
+    evt->addCollection( lcRelVec , _colNameMCTracksRel) ;
     
 
   }

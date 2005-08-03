@@ -162,7 +162,20 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
    registerProcessorParameter( "ResolutionToMerge",
 			       "Resolution To Merge Halo Hits",
 			       _resolutionToMerge,
-			       (float)300.);
+			       (float)400.);
+
+
+   registerProcessorParameter( "WeightForResolution",
+			       "Weight For Resolution",
+			       _weightForReso,
+			       (float)1.0);
+
+   registerProcessorParameter( "WeightForDistance",
+			       "Weight For Distance",
+			       _weightForDist,
+			       (float)1.0);
+
+
 
 }
 
@@ -271,8 +284,6 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 	catch(DataNotAvailableException &e) {};
 
     }
-
-    std::cout << "Total number of hits " << NOfHits << std::endl;
 
 
 // Reading Track collection
@@ -507,20 +518,32 @@ void TrackwiseClustering::DisplayClusters(ClusterExtendedVec clusterVec) {
     cout << "Number of clusters : " << nclust << endl;
     int ntot(0);
     int ninbig(0);
+
+    float totenergy = 0.0;
+    float energyinbig = 0.0;
     for (int iclust(0); iclust < nclust; ++iclust) {
 	ClusterExtended * Cl = clusterVec[iclust];
 	CaloHitExtendedVec calohitvec = Cl->getCaloHitExtendedVec();
 	int nhcl = calohitvec.size();
 	ntot += nhcl;
+	float ene=0.0;
+	for (int i=0; i<nhcl; ++i) {
+	  ene += calohitvec[i]->getCalorimeterHit()->getEnergy();
+	}
+	totenergy += ene;
 	if (nhcl > _nhit_minimal) {
 	    cout << "Cluster  " << iclust << " Number of hits = " << nhcl << endl;
 	    ninbig += nhcl;
+	    energyinbig += ene;
 	}
 
     }
 
+    float fraction = energyinbig/totenergy;
     cout << endl;
     cout << "Hits in big clusters     : " << ninbig << endl;
+    cout << "Total energy : " << totenergy << std::endl;
+    cout << "Fraction in big clusters : " << fraction << std::endl;
     cout << "Sumcheck: number of hits : " <<  ntot << endl;
 
 
@@ -588,17 +611,13 @@ void TrackwiseClustering::GlobalClustering() {
 	int ifound = 0;
 	int idTo = CaloHitTo->getType();
 
-	//	std::cout << ihitTo 
-	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[0] 
-	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[1] 
-	//  << " " << CaloHitTo->getCalorimeterHit()->getPosition()[2] << std::endl;
-
 	float r_step = _stepTrackBack[idTo];
 	float r_min  = r_step;
 	float r_dist = _distanceTrackBack[idTo]; 
 
 	float YResMin = 1.0e+10;
 	float YResCut = _resolutionParameter[idTo];
+	float YDistMin = 1.0e+10;
 
 	while (ihitFrom >=0) {
 
@@ -612,19 +631,30 @@ void TrackwiseClustering::GlobalClustering() {
 
 	    if (dist_in_generic > r_dist)
 		break;
+	    
+	    float pos1[3];
+	    float pos2[3];
+	    for (int iposi=0; iposi<3; ++iposi) {
+	      pos1[iposi] = 
+		(float)CaloHitTo->getCalorimeterHit()->getPosition()[iposi];
+	      pos2[iposi] = 
+		(float)CaloHitFrom->getCalorimeterHit()->getPosition()[iposi];
+	    }
 
+	    float XDist = DistanceBetweenPoints(pos1,pos2);
 	    float YRes = findResolutionParameter(CaloHitFrom, CaloHitTo);
 	    if (YRes < 0.)
 		std::cout << "Resolution parameter < 0" << std::endl; 
 
-	    if (ihitTo == 3)
-	      std::cout << " Strange hit " << YRes << std::endl;
 
+	    float YDist = 1 + _weightForReso*YRes + _weightForDist*XDist;
 
-	    if (YRes < YResMin) {
-		YResMin = YRes;
-		CaloHitTo->setCaloHitFrom(CaloHitFrom);
-		CaloHitTo->setYresFrom(YRes);		
+	    bool proxCriterion = YDist < YDistMin;
+	    if (proxCriterion && YRes < YResCut) {
+	      YResMin = YRes;
+	      YDistMin = YDist;
+	      CaloHitTo->setCaloHitFrom(CaloHitFrom);
+	      CaloHitTo->setYresFrom(YRes);		
 	    }
 
 

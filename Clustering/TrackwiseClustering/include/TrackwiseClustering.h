@@ -14,9 +14,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** TrackwiseClustering Processor <br>
- *  Author : A.Raspereza   <br>
- *  VERY PRELIMINARY Version <br>
+/** === TrackwiseClustering Processor === <br>
  *  Processor performs clustering of calorimeter hits. <br>
  *  No information on reconstructed tracks is used <br>
  *  in the clustering algorithm <br>
@@ -26,8 +24,38 @@ using namespace marlin ;
  *  These are specified with Processor Parameters <br>
  *  ECALCollections and HcalCollections. <br>
  *  TrackwiseClustering produces collection of Clusters <br>
- *  The name of collection is specified with <br>
+ *  The name of the collection is specified with <br>
  *  Processor Parameter ClusterCollection. <br>
+ *  The dependence of clustering procedure on the detector<br>
+ *  geometry is minimized. An user has to provide only the following <br>
+ *  geometry related parameters through the processor <br>
+ *  parameters <br>
+ *  ZOfEndcap - +/- z coordinates of ECAL endcaps front face (in mm) <br>
+ *              (for TESLA detector ZOfEndcap = 2820, default value); <br>
+ *  ROfBarrel - radius of ECAL barrel <br>
+ *              (for TESLA detector ROfBarrel = 1700, default value); <br>
+ *  NFoldSymmetry - N-fold symmetry of the barrel; <br>
+ *                  (for TESLA detector NFoldSymmetry=8, default value); <br>
+ *  GlobalPhi - phi offset of barrel stave w.r.t. x-axis<br>
+ *              (for TESLA detector GlobalPhi = 0.0, default value); <br>
+ *  Clustering procedure is steered with the following processor <br>
+ *  parameters : <br>
+ *  DistanceForDirection, DistanceToTrackSeed, DistanceTrackBack, <br>
+ *  StepTrackBack, ResolutionParameter, DistanceMergeForward, <br>
+ *  NToDefineSP, NScanToMergeForward, TypeOfGenericDistance, <br>
+ *  MinimalHitsInCluster, MaximalHitsToMerge, UseTracking, <br>
+ *  DoMerging, ResolutionToMerge, WeightForResolution, WeightForDistance. <br>
+ *  The meaning of these parameters as well as the overall <br>
+ *  clustering procedure are described in <br> 
+ *  <a href="http://www.desy.de/~rasp/PFlowInMarlin.ps.gz">
+ *     http://www.desy.de/~rasp/PFlowInMarlin.ps.gz</a> <br>
+ *  Please note, that the parameters steering clustering are <br>
+ *  optimised for the TESLA detector on hadronic events <br>
+ *  at Z pole (sqrts=91.2 GeV). <br>
+ *  Printout of information on reconstructed clusters is <br>
+ *  activated if processor parameter DisplayClusterInfo is set to 1. <br>
+ *  @author A. Raspereza (DESY) <br>
+ *  @version $ld: $ <br>
  */
 class TrackwiseClustering : public Processor {
   
@@ -35,11 +63,13 @@ class TrackwiseClustering : public Processor {
   
   virtual Processor*  newProcessor() { return new TrackwiseClustering ; }
   
-  /** Constructor
+  /** 
+   * Constructor
    */  
   TrackwiseClustering() ;
   
-  /** Method initialising Processor
+  /** 
+   * Method initialising Processor
    */
   virtual void init() ;
   
@@ -47,11 +77,11 @@ class TrackwiseClustering : public Processor {
    */
   virtual void processRunHeader( LCRunHeader* run ) ;
   
-  /** Event processor. Called for evergy event
+  /** Event processor. Called for every event
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  /** Performs check at the end of evergy event   
+  /** Performs check at the end of every event   
    */
   virtual void check( LCEvent * evt ) ; 
   
@@ -127,6 +157,9 @@ class TrackwiseClustering : public Processor {
   int _nsymmetry;
   // Theta of ENDCAP = atan(_rofbarrel/_zofendcap)
   float _thetaofendcap;
+
+  float _weightForReso;
+  float _weightForDist;
 
   int _nRun;
   int _nEvent;

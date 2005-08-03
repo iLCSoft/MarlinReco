@@ -67,11 +67,23 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
         const int celId = SimTHit->getCellID() ;
 
-        const double *pos ;
+         const double *pos ;
         pos =  SimTHit->getPosition() ;  
+        
+        double xSmear = 0.0 ;
+        double ySmear = 0.0 ;
+        double zSmear = 0.0 ;
+
+        double newPos[3] ;
+        newPos[0] = pos[0] + xSmear;
+        newPos[1] = pos[1] + ySmear;
+        newPos[2] = pos[2] + zSmear;        
 
         float de_dx ;
+        float dedxSmear = 0.0 ;
         de_dx = SimTHit->getdEdx() ;
+
+        de_dx = de_dx + dedxSmear ; 
 
         MCParticle *mcp ;
         mcp = SimTHit->getMCParticle() ;
@@ -80,7 +92,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
         TrackerHitImpl* trkHit = new TrackerHitImpl ;
 
         //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
-        trkHit->setPosition( const_cast<double *>( pos ) ) ;
+        trkHit->setPosition( newPos ) ;
 
         trkHit->setdEdx( de_dx ) ;
         trkHit->setType( 100+celId ) ;

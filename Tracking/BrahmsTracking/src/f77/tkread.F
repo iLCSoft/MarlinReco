@@ -1,7 +1,10 @@
 *  
-* $Id: tkread.F,v 1.3 2005-07-29 15:06:17 aplin Exp $
+* $Id: tkread.F,v 1.4 2005-08-03 19:12:01 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
 * Revision 1.2  2005/07/20 17:46:38  aplin
 * The itedat bank has been added with read and write interface. Though
 * only the write function is used (tkstor). The read will have to be
@@ -57,8 +60,10 @@ c#include "gcbank.inc"
       EQUIVALENCE (RMARINTF,IMARINTF)
 
       CHARACTER*3 CHTYPE
+
 #include "include/tkfunc1.inc"
 #include "include/tkfunc.inc"
+
       IERR=0
 
       IF (CHTYPE(1:2).EQ.'TE') THEN
@@ -66,9 +71,42 @@ c#include "gcbank.inc"
           IERR=1
           GOTO 999
         END IF
-C(KH)   CALL UCOPY(RTE(1,INDEX),DATA,MXTE)
+
+        
+c        CALL UCOPY(RTE(1,INDEX),DATA,MXTE)
+c        CALL UCOPY(ITE(1,INDEX),IDATA,MXTE)
+
+        IDATA(1) = ITE(1,INDEX)
+        IDATA(2) = ITE(2,INDEX)
+        IDATA(3) = ITE(3,INDEX)
+        IDATA(4) = ITE(4,INDEX)
+        IDATA(5) = ITE(5,INDEX)
+        IDATA(6) = ITE(6,INDEX)
+        IDATA(7) = ITE(7,INDEX)
+        DATA(8) = RTE(8,INDEX)
+        DATA(9) = RTE(9,INDEX)
+        DATA(10) = RTE(10,INDEX)
+        DATA(11) = RTE(11,INDEX)
+        DATA(12) = RTE(12,INDEX)
+        DATA(13) = RTE(13,INDEX)
+        DATA(14) = RTE(14,INDEX)
+        DATA(15) = RTE(15,INDEX)
+        DATA(16) = RTE(16,INDEX)
+        DATA(17) = RTE(17,INDEX)
+
+        DO MM=18,31
+           DATA(MM) = RTE(MM,INDEX)
+        END DO
+
+
+c        write(*,*) "DATA(10) = " , DATA(10)
+c        write(*,*) "DATA(11) = " , DATA(11)
+c        write(*,*) "DATA(12) = " , DATA(12)
+
+        
 C FIXME: SJA: zebra commented out
 c        CALL UCOPY(Q(LBRTE+MXTE*(INDEX-1)+1),DATA,MXTE)
+        
       ELSE IF (CHTYPE(1:2).EQ.'TS') THEN
         IF (INDEX.LT.1.OR.INDEX.GT.NTS) THEN
           IERR=1
@@ -110,7 +148,9 @@ ccc          DATA(MM) = TKMCTR(MM,INDEX)
          ELSE
             INDEXT=INDEX
          END IF
-*     *        CALL UCOPY(RTKHIT(1,INDEXT),DATA,MXHT)
+         
+c         CALL UCOPY(RTKHIT(1,INDEXT),DATA,MXHT)
+c         CALL UCOPY(ITKHIT(1,INDEXT),IDATA,MXHT)
 
 c         DO MM=1,MXHT
 c            DATA(MM) = RTKHIT(MM,INDEXT)

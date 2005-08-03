@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.4 2005-08-02 10:33:15 aplin Exp $
+* $Id: tktrev.F,v 1.5 2005-08-03 19:14:06 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/08/02 10:33:15  aplin
+* included setup of VTX geometry
+*
 * Revision 1.3  2005/07/29 13:04:28  aplin
 * protected expection for now hits in a subsystem
 *
@@ -250,7 +253,7 @@ c      TIME_TKMKEX =TIME_TKMKEX+(TEND-TSTART)
       TSTART     =TEND
 
 C.....combine TEs to TSs (ambiguous full track candidates) using DELSEARCH.
-      CALL FSFSTR
+c      CALL FSFSTR
 
       CALL TIMEX(TEND)
 c      TIME_FSFSTR=TIME_FSFSTR+(TEND-TSTART)

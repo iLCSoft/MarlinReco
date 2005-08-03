@@ -6,13 +6,17 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.10 2005-08-03 19:05:24 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.11 2005-08-03 21:31:09 aplin Exp $
 **
-** $Log: not supported by cvs2svn $ 
+** $Log: not supported by cvs2svn $
+** Revision 1.10  2005/08/03 19:05:24  aplin
+** corrected erroneous function declaration of tkmktecpp, by using float * instead of numerous floats and added output collection names as steering parametes
+** 
 */
 #include "LEPTrackingProcessor.h"
 #include <iostream>
 #include <string>
+#include<stdexcept>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -25,16 +29,18 @@
 #include <IMPL/LCCollectionVec.h>
 #include <EVENT/MCParticle.h>
 #include <EVENT/Track.h>
+#include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackImpl.h>
 #include <IMPL/LCRelationImpl.h>
 #include <IMPL/LCFlagImpl.h>
+
 
 #include <cfortran.h>
 
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
-#include"tpc.h"
+#include"tkmcbank.h"
 #include"marlin_tpcgeom.h"
 #include"constants.h"
 
@@ -173,6 +179,12 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
   firstEvent = false ;
 
+
+  // create bank structure
+  TkMCBank = new Tk_MC_Bank;
+  TPCHitBank = new TPC_Hit_Bank;  
+  TkHitBank = new Tk_Hit_Bank;  
+  TkTeBank = new Tk_Te_Bank;  
 
   LCCollection* tpcTHcol = 0 ;
 
@@ -530,7 +542,10 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   }
   
 
-
+  delete TkMCBank;
+  delete TPCHitBank;
+  delete TkHitBank;
+  delete TkTeBank;
 
   _nEvt ++ ;
   

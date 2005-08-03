@@ -83,8 +83,8 @@ BrahmsCaloDigi::BrahmsCaloDigi() : Processor("BrahmsCaloDigi") {
 
 
   std::vector<float> calibrEcal;
-  calibrEcal.push_back(1.);
-  calibrEcal.push_back(1.);
+  calibrEcal.push_back(31.3);
+  calibrEcal.push_back(83.0);
 
 
   registerProcessorParameter("CalibrECAL" , 
@@ -94,7 +94,7 @@ BrahmsCaloDigi::BrahmsCaloDigi() : Processor("BrahmsCaloDigi") {
   
 
   std::vector<float> calibrHcal;
-  calibrHcal.push_back(1.);
+  calibrHcal.push_back(27.3);
 
   registerProcessorParameter("CalibrHCAL" , 
 			     "Calibration coefficients for HCAL" ,

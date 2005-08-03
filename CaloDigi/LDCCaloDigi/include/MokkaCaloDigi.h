@@ -9,11 +9,54 @@
 using namespace lcio ;
 using namespace marlin ;
 
-
-
-/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
- * @author P.K , DESY
+/** === MokkaCaloDigi Processor === <br>
+ *  Calorimeter digitizer Processor for LCIO <br>
+ *  files produced by Mokka. <br>
+ *  Takes SimCalorimeterHit Collections and <br>
+ *  produces CalorimeterHit Collections. <br>
+ *  Simulated energy depositions in active <br>
+ *  layers of calorimeters are <br>
+ *  converted into physical energy. This is done <br>
+ *  taking into account sampling fractions of <br>
+ *  ECAL and HCAL. <br>
+ *  User has to specify ECAL and HCAL SimCalorimeterHit <br>
+ *  collections with processor parameters <br>
+ *  HCALCollections and ECALCollections. <br>
+ *  The names of the output CalorimeterHit Collections <br>
+ *  are specified with processor parameters <br>
+ *  NewECALCollName and NewHCALCollName. <br>
+ *  Processor performs merging of neighboring virtual cells <br>
+ *  in calorimeters into a larger cells. <br>
+ *  Transverse cell size (in mm) is specified with processor <br>
+ *  parameter NewHCALCellSize and should be multiple of 10 <br>
+ *  as virtual cell size used in Mokka is 10x10 mm2. <br>
+ *  Conversion factors for ECAL and HCAL <br>
+ *  are specified via processor parameters  <br>
+ *  CalibrECAL and CalibrHCAL. <br>
+ *  It should be noted that ECAL and HCAL may consist <br>
+ *  of several sections with different sampling fractions. <br>
+ *  To handle this situation, calibration coefficients for <br>
+ *  ECAL and HCAL are passed as arrays of floats with each element <br>
+ *  in this array corresponding to certain section with <br>
+ *  a given sampling fraction. <br>
+ *  List of layer numbers terminating each section are given through <br>
+ *  processor parameters ECALLayers and HCALLayers <br>
+ *  There is an option to perform digitization of <br> 
+ *  both ECAL and HCAL in a digital mode. <br>
+ *  Digital digitization is activated by  <br>
+ *  setting processor parameters <br>
+ *  IfDigitalEcal / IfDigitalHcal to 1. <br>
+ *  In this case CalibrECAL / CalibrHCAL will  <br>
+ *  convert the number of hits into physical energy. <br>
+ *  Thresholds on hit energies in ECAL and HCAL <br>
+ *  are set with processor parameters <br>
+ *  ECALThreshold and HCALThreshold.  <br>
+ *  Relations between CalorimeterHits and SimCalorimeterHits <br>
+ *  are held in the corresponding relation collection. <br>
+ *  The name of this relation collection is specified <br>
+ *  via processor parameter RelationOutputCollection. <br> 
+ *  @authors A. Raspereza and P. Krstonosic (DESY) <br>
+ *  @version $ld: $ <br>
  */
 class MokkaCaloDigi : public Processor {
   

@@ -15,7 +15,7 @@ using namespace marlin ;
 /**  Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. 
  * Double hits are identified but are currently not added to the collection. This may be change 
  * at a later date when criteria for their seperation is defined. The resolutions are defined in 
- * marlin_tpcgeom.h  
+ * the GEAR stearing file.  
  * @author S. Aplin, DESY
  */
 class TPCDigiProcessor : public Processor {

@@ -11,9 +11,8 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-
-/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
+/**  Produces VTX TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
+ * @author S. Aplin, DESY
  */
 class VTXDigiProcessor : public Processor {
   

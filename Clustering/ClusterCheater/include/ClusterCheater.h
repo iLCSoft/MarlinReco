@@ -13,8 +13,42 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
+/** === Cluster Cheater === <br>
+ *  This processor constructs true clusters, where a true <br>
+ *  cluster is considered to comprise all hits attrubuted to <br>
+ *  the same generator particle entering calorimeter. <br>
+ *  Hits produced by back-scattered particles are assigned <br>
+ *  to the primary which initiated this back-scattered particle. <br>
+ *  Processor requires CalorimeterHit collections to be <br>
+ *  specified with processor parameter CaloCollections. <br>
+ *  Processor produces collection of clusters with the name <br>
+ *  TrueClusters. Furthermore collection of MCParticle-to-Cluster <br>
+ *  relations is stored in an LCIO event object. The name of <br>
+ *  of the relation collection is TrueClusterToMCP. <br>
+ *  In order to perform construction of true clusters <br>
+ *  collection of relations between SimCalorimeterHits and CalorimeterHits <br>
+ *  is required. The name of this collection is specified with <br>
+ *  processor parameter RelCollection. <br> 
+ *  To avoid collecting distant hits produced by neutrons or backscattered <br>
+ *  particles, a proximity criteria is introduced in terms <br>
+ *  of particle-to-hit distance cut. This is specified <br>
+ *  via processor parameter ProximityCut. <br>
+ *  Hit is assigned to the cluster produced by neutral particle if <br>
+ *  the following condition is fulfilled <br>
+ *  D{hit-to-Vertex}*Alpha < ProximityCut <br>.
+ *  D{hit-to-IP} is the distance of the hit to the point <br>
+ *  where neutral particle has been produced, and Alpha is the <br>
+ *  angle between particle momentum vector and vector connecting <br>
+ *  particle vertex and the hit. <br>
+ *  For charged particles, the distance from the hit to <br>
+ *  the helix associated with particle trajectory should 
+ *  should not exceed ProximityCut. Clusters with the <br>
+ *  number of hits less than predefined value (specified <br>
+ *  with processor parameter MinimalHits) are not considered. <br>
+ *  Magnetic field (in TESLA) is specified with processor <br>
+ *  parameter MagneticField. <br>
+ *    @author A. Raspereza (DESY)<br>
+ *    @version $ld: $<br>
  */
 class ClusterCheater : public Processor {
   
@@ -24,9 +58,8 @@ class ClusterCheater : public Processor {
   
   
   ClusterCheater() ;
-  
-  /** Called at the begin of the job before anything is read.
-   * Use to initialize the processor, e.g. book histograms.
+
+  /** Initialization
    */
   virtual void init() ;
   

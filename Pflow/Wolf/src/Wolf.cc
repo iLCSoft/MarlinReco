@@ -18,6 +18,12 @@
 #include <UTIL/LCRelationNavigator.h>
 #include <math.h>
 
+// GEAR include files
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/CalorimeterParameters.h>
+
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -43,27 +49,6 @@ Wolf::Wolf() : Processor("Wolf") {
 			     "Particle Collection Name",
 			     _particleCollection,
 			     std::string("RecoParticles"));
-
-  registerProcessorParameter( "ZOfEndcap" ,
-			      "Z coordinate of Endcap" ,
-			      _zofendcap,
-			      (float)2820.);
-    
-  registerProcessorParameter( "ROfBarrel" , 
-			      "Radius of Barrel" , 
-			      _rofbarrel,
-			      (float)1700.);
-
-
-  registerProcessorParameter( "NSymmetry" , 
-			      "N Fold Symmetry",
-			      _nSymmetry,
-			      (int)8);
-
-  registerProcessorParameter( "GlobalPhi" , 
-			      "Global Phi angle" ,
-			      _phiofbarrel,
-			      (float)0.);
 
   registerProcessorParameter( "DistanceTrackToCluster" ,
 			      "Distance from Track Seed to Cluster",
@@ -112,13 +97,15 @@ Wolf::Wolf() : Processor("Wolf") {
 			      _mergeClusters,
 			      (int)1); 
 
-
+  registerProcessorParameter( "BField",
+			      "Magnetic field",
+			      _bField,
+			      (float)4.0);
 
 }
 
 void Wolf::init() {
 
-  _bField = 4.0;
   _nRun = -1;
   _nEvt = 0;
 
@@ -135,8 +122,7 @@ void Wolf::processEvent( LCEvent * evt ) {
   initialiseEvent( evt );  
   ClusterTrackMatching();
   if (_mergeClusters == 1) 
-    MergeClustersToTracks();
-  
+    MergeClustersToTracks();  
   createPartCollection( evt );
   CleanUp();
   _nEvt++;
@@ -154,6 +140,16 @@ void Wolf::initialiseEvent( LCEvent * evt ) {
   _clusterVec.clear();
   _trackVec.clear();
 
+
+  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
+
+  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+
+  _rofbarrel = (float)pEcalBarrel.getExtent()[0];
+  _phiofbarrel = (float)pEcalBarrel.getPhi0();
+  _nSymmetry = pEcalBarrel.getSymmetryOrder();
+  _zofendcap = (float)pEcalEndcap.getExtent()[2];
+  
 
   // Reading Track collection
   try {
@@ -548,20 +544,20 @@ void Wolf::MergeClustersToTracks() {
 	    rOut = sqrt(rOut);
 
 	    float Time = helix->getDistanceToPoint(xPoint,xDist);
-	    if (xDist[2] < 500.)
-	      std::cout << "Here we are " << iTrk 
-			<< " " << totMom   
-			<< " " << clstEnergy 
-			<< " " << clusterOut->getEnergy() 
-			<< " " << xDist[2] 
-			<< " " << Time << std::endl;
+	    // if (xDist[2] < 500.)
+	    //	      std::cout << "Here we are " << iTrk 
+	    //		<< " " << totMom   
+	    //		<< " " << clstEnergy 
+	    //		<< " " << clusterOut->getEnergy() 
+	    //		<< " " << xDist[2] 
+	    //		<< " " << Time << std::endl;
 	    float ee = clusterOut->getEnergy() + clstEnergy;
 	    bool match = (ee - totMom) < 1.5*_hcalReso*sqrt(totMom);
 	    match = match && (xDist[2] < _distMergeCut);
 	    match = match && (Time > 0.0);
 	    match = match && (rOut - rIn > 0.0);
 	    if (match) {
-	      std::cout << "Merging happened" << std::endl; 
+	      // std::cout << "Merging happened" << std::endl; 
 	      track->addCluster(clusterAR);
 	      clusterAR->addTrackExtended(track);
 	    }

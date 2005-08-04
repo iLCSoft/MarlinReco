@@ -42,17 +42,22 @@ using namespace marlin ;
  *  of the ReconstructedParticle Collection. <br>
  *  Name of this collection is specified <br>
  *  with Processor Parameter ParticleCollection. <br> 
+ *  Processor needs the following calorimeter geometry <br>
+ *  parameters : radius of ECAL barrel <br>
+ *  n-fold symmetry of barrel <n = 8 for TESLA> <br>
+ *  phi offset of the barrel stave w.r.t. <br>
+ *  x-axis (0 for TESLA detector) <br>
+ *  and +/- z coordinate of front face of ECAL endcaps <br> 
+ *  All these parameters are passed to processor via <br>
+ *  GEAR XML file <br>
+ *  Magnetic field (in units of Tesla) must be specified <br>
+ *  with processor parameter BField <br>
  *  <br>
  *  <br>
  *  Processor has the following parameters : <br>
  *    - TrackCollection : name of the Track collection <br>
  *    - ClusterCollection : name of the Cluster collection <br>
  *    - ParticleCollection : name of ReconstructedParticle collection <br>
- *    - ZOfEndcap : +/- z coordinate of ECAL endcaps front face <br>
- *    - ROfBarrel : radius of Ecal barrel <br>
- *    - NSymmetry : degree of symmetry of barrel (8 for TESLA detector) <br>
- *    - GlobalPhi : phi offset of the barrel stave w.r.t. <br>
- *      x-axis (0.0 for TESLA detector) <br>
  *    - DistanceTrackToCluster : cut on distance between track <br>
  *      intersection point with inner boundary of calorimeter <br>
  *      and nearest calorimeter hit in a given cluster. <br>

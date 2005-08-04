@@ -1,7 +1,16 @@
 *  
-* $Id: trslnk.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: trslnk.F,v 1.4 2005-08-04 11:18:31 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/08/04 11:09:41  aplin
+* added comment
+*
+* Revision 1.2  2005/08/04 11:08:42  aplin
+* drop event for to many link, a more ellegant solution is needed
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -43,7 +52,7 @@ C!  Output:
 C!      - NLK       /I      No of valid links found
 C!      - IER       /I      Error code =0 for good return
 C!                          Set to 1 if BOS runs out of space
-C!
+C!                          Set to -1 if 
 C!  Called by TRKFND
 C!
 C!  Description:
@@ -426,9 +435,17 @@ c                  RW(KLNK +13) = CHI2Z
 C GAB:
                   NLNK = NLNK + 1
 C(KH)-------begin
+c FIXME: SJA: drop event for to many link, 
+c a more ellegant solution is needed   
+                  
                   IF (NLNK.GT.NMAXLNK) THEN
-                    WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL'
-                    CALL TKVETO(1)
+                    WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL' 
+                    WRITE(6,*) 'THIS IS FATAL UNTIL A BETTER' 
+                    WRITE(6,*) 'METHOD IS FOUND FOR CURLERS'
+                    WRITE(6,*) 'EVENT DROPPED'
+                    CALL TKVETO(1) 
+                    IER = 1
+                    GO TO 999
                     NLNK=NLNK-1
                   END IF
 C(KH)-------end

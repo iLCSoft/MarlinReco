@@ -71,10 +71,10 @@ struct TPC_hit
 extern TPC_Hit_Bank * TPCHitBank;
 
 // Common Block used to store the number of hits in the hit bank
-typedef struct { int ntphits; } CNTPC_DEF;
-#define  CNTPC COMMON_BLOCK( CNTPC,cntpc)
-COMMON_BLOCK_DEF(CNTPC_DEF,CNTPC);
-extern CNTPC_DEF CNTPC;
+//typedef struct { int ntphits; } CNTPC_DEF;
+//#define  CNTPC COMMON_BLOCK( CNTPC,cntpc)
+//COMMON_BLOCK_DEF(CNTPC_DEF,CNTPC);
+//extern CNTPC_DEF CNTPC;
 
 
 #endif

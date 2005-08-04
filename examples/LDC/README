@@ -1,0 +1,17 @@
+This directory contains an example XML steering file and GEAR XML file for the LDC concept study detector needed for MarlinReco;
+
+steer_ldc.xml
+
+gear_ldc.xml  
+
+It also contains an example GNUmakefile which can be used in to build MarlinReco under the DESY Linux 5 computing environment. This would need to be modified for other computing environments.
+
+GNUmakefile_desy
+
+It also contains an example LCIO file containing 5 single muon events generated with Mokka model D12scint.
+
+muon.lcio
+
+The above four files must be copied to your $MARLIN directory.
+
+ 

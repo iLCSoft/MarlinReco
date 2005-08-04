@@ -88,12 +88,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
 
-    int skipToEvent = 0;
-    if(_nEvt<skipToEvent) {
-      cout << "skipping event " << _nEvt << endl;
-     ++_nEvt;
-      return;
-    }
+//     int skipToEvent = 0;
+//     if(_nEvt<skipToEvent) {
+//       cout << "skipping event " << _nEvt << endl;
+//      ++_nEvt;
+//       return;
+//     }
 
   
   if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;

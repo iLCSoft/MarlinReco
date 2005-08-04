@@ -1,7 +1,10 @@
 *  
-* $Id: trslnk.F,v 1.2 2005-08-04 11:08:42 aplin Exp $
+* $Id: trslnk.F,v 1.3 2005-08-04 11:09:41 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/04 11:08:42  aplin
+* drop event for to many link, a more ellegant solution is needed
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -429,7 +432,7 @@ c                  RW(KLNK +13) = CHI2Z
 C GAB:
                   NLNK = NLNK + 1
 C(KH)-------begin
-                  IF (NLNK.GT.NMAXLNK) THEN
+c FIXME: SJA: drop event for to many link, a more ellegant solution is needed                  IF (NLNK.GT.NMAXLNK) THEN
                     WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL' 
                     WRITE(6,*) 'THIS IS FATAL UNTIL A BETTER' 
                     WRITE(6,*) 'METHOD IS FOUND FOR CURLERS'

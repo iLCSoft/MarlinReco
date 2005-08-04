@@ -1,7 +1,10 @@
 *  
-* $Id: fsfstr.F,v 1.2 2005-08-02 10:19:51 aplin Exp $
+* $Id: fsfstr.F,v 1.3 2005-08-04 12:54:51 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/02 10:19:51  aplin
+* corrected debug output
+*
 * Revision 1.1  2005/07/21 16:37:00  aplin
 * The itedat bank has been added with read and write interface.
 *
@@ -60,356 +63,357 @@ c --- copy beam spot into primary vertex for this event
       call fsfprivtx
 
 c --- Read event data from TKBANK to local arrays
-c      call fsfinp
+      call fsfinp
 
 c --- Analyse event :
-CSJAc
-CSJA
-CSJAc --- list some information about the TE input  -KH-
-CSJA      if (fsfdbg.gt.1) then
-CSJA        write(6,*) '-----------------------------'
-CSJA        do i=1,detmax
-CSJA          do nid=1,teindexused(i)
-CSJA            write(6,*) 'FSFSTR: TE ',nid,' of ',detname(i),': label ',
-CSJA     >                 telabl(nid,i)
-CSJA          end do
-CSJA        end do
-CSJA        write(6,*) '-----------------------------'
-CSJA      end if
-CSJA
-CSJA --- set method. 0=no matching, 1=real matching, -1=matching using MC info
-CSJA --- no matching is default
-CSJA      call vzero(method,detmax)
-CSJA
-CSJA      if (.not.mcmerge) then
-CSJA        if(fsfdbg.gt.0)then
-CSJA          print*,'FSFSTR: normal extrapolations for making pairs'
-CSJA        endif
-CSJA        imethod=1
-CSJA        data_labl = FLAG_DATA
-CSJA      else
-CSJA        if(fsfdbg.gt.0)then
-CSJA          print*,'FSFSTR: used labels for making pairs'
-CSJA        endif
-CSJA        imethod=-1
-CSJA        data_labl = FLAG_LABL
-CSJA      endif
-CSJA
-CSJAc --- never extrapolate onto strings
-CSJA      method(i_SCAN1)=0
-CSJA      method(i_SCAN2)=0
-CSJA      method(i_SCAN3)=0
-CSJA      method(i_SCAN4)=0
-CSJA
-CSJA
-CSJAc --- ---------------------------------------
-CSJAc --- --- barrel search starting from VTX ---
-CSJAc --- ---------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_FTD) =0
-CSJA      method(i_ITC) =0
-CSJA      method(i_SIT1)=0
-CSJA      method(i_SIT2)=0
-CSJA      method(i_TPC) =imethod
-CSJA      method(i_FCH) =imethod
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- perform extrapolation
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: Barrel Track Search from VTX'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA      method(i_VTX) = none      ! this is the pivot
-CSJA      call fsfana3 (i_VTX,method,
-CSJA     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+FLAG_USEUSED+
-CSJA     2     FLAG_CUT100)
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_VTX) = TIME(i_VTX)+(TEND-TSTART)
-CSJA      TSTART      = TEND
-CSJA
-CSJAc --- remove duplicate and sub-TS
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- list of TS as found up to now
-CSJA      if (fsfdbg.gt.1) call fsftsdump
-CSJA
-CSJAc --- ---------------------------------------
-CSJAc --- --- barrel search starting from TPC ---
-CSJAc --- ---------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_VTX) =imethod
-CSJA      method(i_FTD) =0
-CSJA      method(i_ITC) =0
-CSJA      method(i_SIT1)=0
-CSJA      method(i_SIT2)=0
-CSJA      method(i_FCH)=imethod
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- perform extrapolation
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: Barrel Track Search from TPC'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA      method(i_TPC) = none      ! this is the pivot
-CSJA      call fsfana3 (i_TPC,method,
-CSJACC     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+FLAG_USEUSED+
-CSJA     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+
-CSJA     2     FLAG_CUT100)
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_TPC) = TIME(i_TPC)+(TEND-TSTART)
-CSJA      TSTART      = TEND
-CSJA
-CSJAc --- remove duplicate and sub-TS
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- list of TS as found up to now
-CSJA      if (fsfdbg.gt.1) call fsftsdump
-CSJA
-CSJAc --- -------------------------------------------------------
-CSJAc --- --- now cleanup and iterate searches in SIT,TPC,FCH ---
-CSJAc --- -------------------------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_VTX) =0
-CSJA      method(i_FTD) =0
-CSJA      method(i_ITC) =0
-CSJA      method(i_SIT1)=imethod
-CSJA      method(i_SIT2)=imethod
-CSJA      method(i_TPC) =imethod
-CSJA      method(i_FCH) =imethod
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- now start new search to find all TEs not yet found before
-CSJA      data_labl = FLAG_DATA
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: STRING extrapolation to SIT/FCH '
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA
-CSJAc --- now create new pseudo TEs from all TS we have found.
-CSJA      call fsfrest(i_SCAN1)
-CSJA
-CSJA      method(i_SCAN1) = none  ! this is the pivot
-CSJA      call fsfana3 (i_SCAN1,method,
-CSJA     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
-CSJA     2                FLAG_CUT100)
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_SCAN1) = TIME(i_SCAN1)+(TEND-TSTART)
-CSJA      TSTART        = TEND
-CSJA
-CSJAc --- remove double and sub-strings.
-CSJA      if(fsfdbg.gt.0)then
-CSJA        print*,'FSFSTR: remove substrings'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- ----------------------------------------------------------
-CSJAc --- --- now cleanup and iterate searches in FTD, outer VTX ---
-CSJAc --- ----------------------------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_VTX) =0
-CSJA      method(i_VTX1)=0
-CSJA      method(i_VTX2)=0
-CSJA      method(i_VTX3)=imethod
-CSJA      method(i_VTX4)=imethod
-CSJA      method(i_VTX5)=imethod
-CSJA      method(i_FTD) =0
-CSJA      method(i_FTD1)=imethod
-CSJA      method(i_FTD2)=imethod
-CSJA      method(i_FTD3)=imethod
-CSJA      method(i_FTD4)=imethod
-CSJA      method(i_FTD5)=imethod
-CSJA      method(i_FTD6)=imethod
-CSJA      method(i_FTD7)=imethod
-CSJA      method(i_ITC) =0
-CSJA      method(i_SIT1)=0
-CSJA      method(i_SIT2)=0
-CSJA      method(i_TPC) =0
-CSJA      method(i_FCH)=0
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- now start new search to find all TEs not yet found before
-CSJA      data_labl = FLAG_DATA
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '********************************************'
-CSJA        print*,'FSFSTR: STRING extrapolation to FTD/outer VTX'
-CSJA        write(6,*) '********************************************'
-CSJA      endif
-CSJA
-CSJAc --- now create new pseudo TEs from all TS we have found.
-CSJA      call fsfrest(i_SCAN2)
-CSJA
-CSJA      method(i_SCAN2) = none  ! this is the pivot
-CSJA      call fsfana3 (i_SCAN2,method,
-CSJA     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
-CSJA     2                FLAG_CUT100)
-CSJA      method(i_SCAN2) = 0
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_SCAN2) = TIME(i_SCAN2)+(TEND-TSTART)
-CSJA      TSTART        = TEND
-CSJA
-CSJAc --- remove double and sub-strings.
-CSJA      if(fsfdbg.gt.0)then
-CSJA        print*,'FSFSTR: remove substrings'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- -----------------------------------------------------
-CSJAc --- --- now cleanup and iterate searches in inner VTX ---
-CSJAc --- -----------------------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_VTX2)=imethod
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- now start new search to find all TEs not yet found before
-CSJA      data_labl = FLAG_DATA
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '*****************************************'
-CSJA        print*,'FSFSTR: STRING extrapolation to inner VTX'
-CSJA        write(6,*) '*****************************************'
-CSJA      endif
-CSJA
-CSJAc --- now create new pseudo TEs from all TS we have found.
-CSJA      call fsfrest(i_SCAN3)
-CSJA
-CSJA      method(i_SCAN3) = none  ! this is the pivot
-CSJA      call fsfana3 (i_SCAN3,method,
-CSJA     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
-CSJA     2                FLAG_CUT100)
-CSJA      method(i_SCAN3) = 0
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_SCAN3) = TIME(i_SCAN3)+(TEND-TSTART)
-CSJA      TSTART        = TEND
-CSJA
-CSJAc --- remove double and sub-strings.
-CSJA      if(fsfdbg.gt.0)then
-CSJA        print*,'FSFSTR: remove substrings'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- -----------------------------------------------------
-CSJAc --- --- now cleanup and iterate searches in inner VTX ---
-CSJAc --- -----------------------------------------------------
-CSJA
-CSJA      call vzero(method,detmax)
-CSJAc --- set extrapolation methods
-CSJA      method(i_VTX1)=imethod
-CSJA
-CSJAc --- init timing
-CSJA      CALL TIMEX(TSTART)
-CSJA
-CSJAc --- now start new search to find all TEs not yet found before
-CSJA      data_labl = FLAG_DATA
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '*****************************************'
-CSJA        print*,'FSFSTR: STRING extrapolation to inner VTX'
-CSJA        write(6,*) '*****************************************'
-CSJA      endif
-CSJA
-CSJAc --- now create new pseudo TEs from all TS we have found.
-CSJA      call fsfrest(i_SCAN4)
-CSJA
-CSJA      method(i_SCAN4) = none  ! this is the pivot
-CSJA      call fsfana3 (i_SCAN4,method,
-CSJA     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
-CSJA     2                FLAG_CUT100)
-CSJA      method(i_SCAN4) = 0
-CSJA
-CSJAc --- read timing
-CSJA      CALL TIMEX(TEND)
-CSJA      TIME(i_SCAN4) = TIME(i_SCAN4)+(TEND-TSTART)
-CSJA      TSTART        = TEND
-CSJA
-CSJAc --- remove double and sub-strings.
-CSJA      if(fsfdbg.gt.0)then
-CSJA        print*,'FSFSTR: remove substrings'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- ----------------------------------------
-CSJAc --- --- refit without error scalings     ---
-CSJAc --- ----------------------------------------
-CSJA
-CSJAc --- final fit without any error scaling
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: refit without error scaling to clean up'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA      call fsfrefit
-CSJA
-CSJAc --- now do the real test for funny TS
-CSJA      if(fsfdbg.gt.0)then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: remove double and test funny TS in list'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- ----------------------------------------
-CSJAc --- --- now remove funny TS combinations ---
-CSJAc --- ----------------------------------------
-CSJA
-CSJA      do i = 1,tsindexused
-CSJA        if(tsindex(i).ne.0)then
-CSJA          call fsftts(tsindex(i),badcomb,badsingle)
-CSJA          if(tsindex(i).eq.0)then
-CSJA            if(fsfdbg.gt.0)then
-CSJA              print*,'FSFSTR: funny TS not given !'
-CSJA            endif
-CSJA          endif
-CSJA        endif
-CSJA      enddo
-CSJAc --- remove double and sub-strings.
-CSJA      if(fsfdbg.gt.0)then
-CSJA        print*,'FSFSTR: remove substrings'
-CSJA      endif
-CSJA      call fsfnsub(FLAG_DBL+FLAG_SUB)
-CSJA
-CSJAc --- ----------------------------------------
-CSJAc --- --- save final TS candidates         ---
-CSJAc --- ----------------------------------------
-CSJA
-CSJAc --- Save all the TS and make TK of what we have made.
-CSJA      call fsfsts(FLAG_GIVESINGLTE)
-CSJA
-CSJA      if(fsfdbg.gt.0) then
-CSJA        write(6,*) '****************************************'
-CSJA        print*,'FSFSTR: event done !'
-CSJA        write(6,*) '****************************************'
-CSJA      endif
+c
+
+c --- list some information about the TE input  -KH-
+      if (fsfdbg.gt.1) then
+        write(6,*) '-----------------------------'
+        do i=1,detmax
+          do nid=1,teindexused(i)
+            write(6,*) 'FSFSTR: TE ',nid,' of ',detname(i),': label ',
+     >                 telabl(nid,i)
+          end do
+        end do
+        write(6,*) '-----------------------------'
+      end if
+
+c --- set method. 0=no matching, 1=real matching, -1=matching using MC info
+c --- no matching is default
+      call vzero(method,detmax)
+
+      if (.not.mcmerge) then
+        if(fsfdbg.gt.0)then
+          print*,'FSFSTR: normal extrapolations for making pairs'
+        endif
+        imethod=1
+        data_labl = FLAG_DATA
+      else
+        if(fsfdbg.gt.0)then
+          print*,'FSFSTR: used labels for making pairs'
+        endif
+        imethod=-1
+        data_labl = FLAG_LABL
+      endif
+
+c --- never extrapolate onto strings
+      method(i_SCAN1)=0
+      method(i_SCAN2)=0
+      method(i_SCAN3)=0
+      method(i_SCAN4)=0
+
+
+c --- ---------------------------------------
+c --- --- barrel search starting from VTX ---
+c --- ---------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_FTD) =0
+      method(i_ITC) =0
+      method(i_SIT1)=0
+      method(i_SIT2)=0
+      method(i_TPC) =imethod
+      method(i_FCH) =imethod
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- perform extrapolation
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: Barrel Track Search from VTX'
+        write(6,*) '****************************************'
+      endif
+      method(i_VTX) = none      ! this is the pivot
+      call fsfana3 (i_VTX,method,
+     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+FLAG_USEUSED+
+     2     FLAG_CUT100)
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_VTX) = TIME(i_VTX)+(TEND-TSTART)
+      TSTART      = TEND
+
+c --- remove duplicate and sub-TS
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- list of TS as found up to now
+      if (fsfdbg.gt.1) call fsftsdump
+
+c --- ---------------------------------------
+c --- --- barrel search starting from TPC ---
+c --- ---------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_VTX) =imethod
+      method(i_FTD) =0
+      method(i_ITC) =0
+      method(i_SIT1)=0
+      method(i_SIT2)=0
+      method(i_FCH)=imethod
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- perform extrapolation
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: Barrel Track Search from TPC'
+        write(6,*) '****************************************'
+      endif
+      method(i_TPC) = none      ! this is the pivot
+      call fsfana3 (i_TPC,method,
+CC     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+FLAG_USEUSED+
+     1     data_labl+FLAG_GIVESINGLTE+FLAG_NOPLINV+
+     2     FLAG_CUT100)
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_TPC) = TIME(i_TPC)+(TEND-TSTART)
+      TSTART      = TEND
+
+c --- remove duplicate and sub-TS
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- list of TS as found up to now
+      if (fsfdbg.gt.1) call fsftsdump
+      call fsftsdump
+
+c --- -------------------------------------------------------
+c --- --- now cleanup and iterate searches in SIT,TPC,FCH ---
+c --- -------------------------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_VTX) =0
+      method(i_FTD) =0
+      method(i_ITC) =0
+      method(i_SIT1)=imethod
+      method(i_SIT2)=imethod
+      method(i_TPC) =imethod
+      method(i_FCH) =imethod
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- now start new search to find all TEs not yet found before
+      data_labl = FLAG_DATA
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: STRING extrapolation to SIT/FCH '
+        write(6,*) '****************************************'
+      endif
+
+c --- now create new pseudo TEs from all TS we have found.
+      call fsfrest(i_SCAN1)
+
+      method(i_SCAN1) = none  ! this is the pivot
+      call fsfana3 (i_SCAN1,method,
+     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
+     2                FLAG_CUT100)
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_SCAN1) = TIME(i_SCAN1)+(TEND-TSTART)
+      TSTART        = TEND
+
+c --- remove double and sub-strings.
+      if(fsfdbg.gt.0)then
+        print*,'FSFSTR: remove substrings'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- ----------------------------------------------------------
+c --- --- now cleanup and iterate searches in FTD, outer VTX ---
+c --- ----------------------------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_VTX) =0
+      method(i_VTX1)=0
+      method(i_VTX2)=0
+      method(i_VTX3)=imethod
+      method(i_VTX4)=imethod
+      method(i_VTX5)=imethod
+      method(i_FTD) =0
+      method(i_FTD1)=imethod
+      method(i_FTD2)=imethod
+      method(i_FTD3)=imethod
+      method(i_FTD4)=imethod
+      method(i_FTD5)=imethod
+      method(i_FTD6)=imethod
+      method(i_FTD7)=imethod
+      method(i_ITC) =0
+      method(i_SIT1)=0
+      method(i_SIT2)=0
+      method(i_TPC) =0
+      method(i_FCH)=0
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- now start new search to find all TEs not yet found before
+      data_labl = FLAG_DATA
+      if(fsfdbg.gt.0)then
+        write(6,*) '********************************************'
+        print*,'FSFSTR: STRING extrapolation to FTD/outer VTX'
+        write(6,*) '********************************************'
+      endif
+
+c --- now create new pseudo TEs from all TS we have found.
+      call fsfrest(i_SCAN2)
+
+      method(i_SCAN2) = none  ! this is the pivot
+      call fsfana3 (i_SCAN2,method,
+     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
+     2                FLAG_CUT100)
+      method(i_SCAN2) = 0
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_SCAN2) = TIME(i_SCAN2)+(TEND-TSTART)
+      TSTART        = TEND
+
+c --- remove double and sub-strings.
+      if(fsfdbg.gt.0)then
+        print*,'FSFSTR: remove substrings'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- -----------------------------------------------------
+c --- --- now cleanup and iterate searches in inner VTX ---
+c --- -----------------------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_VTX2)=imethod
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- now start new search to find all TEs not yet found before
+      data_labl = FLAG_DATA
+      if(fsfdbg.gt.0)then
+        write(6,*) '*****************************************'
+        print*,'FSFSTR: STRING extrapolation to inner VTX'
+        write(6,*) '*****************************************'
+      endif
+
+c --- now create new pseudo TEs from all TS we have found.
+      call fsfrest(i_SCAN3)
+
+      method(i_SCAN3) = none  ! this is the pivot
+      call fsfana3 (i_SCAN3,method,
+     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
+     2                FLAG_CUT100)
+      method(i_SCAN3) = 0
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_SCAN3) = TIME(i_SCAN3)+(TEND-TSTART)
+      TSTART        = TEND
+
+c --- remove double and sub-strings.
+      if(fsfdbg.gt.0)then
+        print*,'FSFSTR: remove substrings'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- -----------------------------------------------------
+c --- --- now cleanup and iterate searches in inner VTX ---
+c --- -----------------------------------------------------
+
+      call vzero(method,detmax)
+c --- set extrapolation methods
+      method(i_VTX1)=imethod
+
+c --- init timing
+      CALL TIMEX(TSTART)
+
+c --- now start new search to find all TEs not yet found before
+      data_labl = FLAG_DATA
+      if(fsfdbg.gt.0)then
+        write(6,*) '*****************************************'
+        print*,'FSFSTR: STRING extrapolation to inner VTX'
+        write(6,*) '*****************************************'
+      endif
+
+c --- now create new pseudo TEs from all TS we have found.
+      call fsfrest(i_SCAN4)
+
+      method(i_SCAN4) = none  ! this is the pivot
+      call fsfana3 (i_SCAN4,method,
+     1                data_labl+FLAG_SCANDET+FLAG_NOPLINV+
+     2                FLAG_CUT100)
+      method(i_SCAN4) = 0
+
+c --- read timing
+      CALL TIMEX(TEND)
+      TIME(i_SCAN4) = TIME(i_SCAN4)+(TEND-TSTART)
+      TSTART        = TEND
+
+c --- remove double and sub-strings.
+      if(fsfdbg.gt.0)then
+        print*,'FSFSTR: remove substrings'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- ----------------------------------------
+c --- --- refit without error scalings     ---
+c --- ----------------------------------------
+
+c --- final fit without any error scaling
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: refit without error scaling to clean up'
+        write(6,*) '****************************************'
+      endif
+      call fsfrefit
+
+c --- now do the real test for funny TS
+      if(fsfdbg.gt.0)then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: remove double and test funny TS in list'
+        write(6,*) '****************************************'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- ----------------------------------------
+c --- --- now remove funny TS combinations ---
+c --- ----------------------------------------
+
+      do i = 1,tsindexused
+        if(tsindex(i).ne.0)then
+          call fsftts(tsindex(i),badcomb,badsingle)
+          if(tsindex(i).eq.0)then
+            if(fsfdbg.gt.0)then
+              print*,'FSFSTR: funny TS not given !'
+            endif
+          endif
+        endif
+      enddo
+c --- remove double and sub-strings.
+      if(fsfdbg.gt.0)then
+        print*,'FSFSTR: remove substrings'
+      endif
+      call fsfnsub(FLAG_DBL+FLAG_SUB)
+
+c --- ----------------------------------------
+c --- --- save final TS candidates         ---
+c --- ----------------------------------------
+
+c --- Save all the TS and make TK of what we have made.
+c      call fsfsts(FLAG_GIVESINGLTE)
+
+      if(fsfdbg.gt.0) then
+        write(6,*) '****************************************'
+        print*,'FSFSTR: event done !'
+        write(6,*) '****************************************'
+      endif
       return
       END
 

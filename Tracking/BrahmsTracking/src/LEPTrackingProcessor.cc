@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.11 2005-08-03 21:31:09 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.12 2005-08-04 12:54:51 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.11  2005/08/03 21:31:09  aplin
+** tk*bank structures initialisation move here from BrahmsInitProcessor and BrahmEndProcessor
+**
 ** Revision 1.10  2005/08/03 19:05:24  aplin
 ** corrected erroneous function declaration of tkmktecpp, by using float * instead of numerous floats and added output collection names as steering parametes
 ** 
@@ -174,6 +177,12 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     
   // this gets called for every event 
   // usually the working horse ...
+  
+//   int skipToEvent = 3 ;
+//   if(_nEvt<skipToEvent) {
+//     ++_nEvt;
+//     return;
+//   }
 
   if(firstEvent==true) cout << "LEPTrackingProcessor called for first event" << endl;
 

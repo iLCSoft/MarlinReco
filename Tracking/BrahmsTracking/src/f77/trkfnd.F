@@ -1,7 +1,10 @@
 *  
-* $Id: trkfnd.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: trkfnd.F,v 1.2 2005-08-04 12:54:51 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -231,8 +234,7 @@ c GAB:
           NLNKS=NLNK
 
          IF(NLNKS.GT.NMAXLNK)THEN
-c          WRITE(*,*)'TRKFND: NLNKS too big;tracks may be lost ievent=',
-c     &    IEVENT
+          WRITE(*,*)'TRKFND: NLNKS too big;tracks may be lost'
           CALL TKVETO(1)
          ENDIF
          IF (NLNKS.GE.1) THEN

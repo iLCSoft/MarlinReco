@@ -27,18 +27,15 @@ using namespace marlin ;
  *  The name of the collection is specified with <br>
  *  Processor Parameter ClusterCollection. <br>
  *  The dependence of clustering procedure on the detector<br>
- *  geometry is minimized. An user has to provide only the following <br>
- *  geometry related parameters through the processor <br>
- *  parameters <br>
- *  ZOfEndcap - +/- z coordinates of ECAL endcaps front face (in mm) <br>
- *              (for TESLA detector ZOfEndcap = 2820, default value); <br>
- *  ROfBarrel - radius of ECAL barrel <br>
- *              (for TESLA detector ROfBarrel = 1700, default value); <br>
- *  NFoldSymmetry - N-fold symmetry of the barrel; <br>
- *                  (for TESLA detector NFoldSymmetry=8, default value); <br>
- *  GlobalPhi - phi offset of barrel stave w.r.t. x-axis<br>
- *              (for TESLA detector GlobalPhi = 0.0, default value); <br>
- *  Clustering procedure is steered with the following processor <br>
+ *  geometry is minimized. 
+ *  Processor needs the following calorimeter geometry <br>
+ *  parameters : radius of ECAL barrel <br>
+ *  n-fold symmetry of barrel <n = 8 for TESLA> <br>
+ *  phi offset of the barrel stave w.r.t. <br>
+ *  x-axis (0 for TESLA detector) <br>
+ *  and +/- z coordinate of front face of ECAL endcaps <br> 
+ *  All these parameters are passed to processor via <br>
+ *  GEAR XML file <br>
  *  parameters : <br>
  *  DistanceForDirection, DistanceToTrackSeed, DistanceTrackBack, <br>
  *  StepTrackBack, ResolutionParameter, DistanceMergeForward, <br>

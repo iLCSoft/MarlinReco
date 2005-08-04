@@ -8,6 +8,10 @@
 #include <iostream>
 #include <fstream>
 #include "ClusterShapes.h"
+// GEAR include files
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/CalorimeterParameters.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -114,26 +118,6 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 				 std::string("ClustersAR"));
 
     
-    registerProcessorParameter( "ZOfEndcap" ,
-                                "Z coordinate of Endcap" ,
-				_zofendcap,
-				(float)2820.);
-    
-    registerProcessorParameter( "ROfBarrel" , 
-                                "Radius of Barrel" , 
-				_rofbarrel,
-				(float)1700.);
-				
-    registerProcessorParameter( "GlobalPhi" , 
-				"Global Phi angle" ,
-				_phiofbarrel,
-				(float)0.);
-
-    registerProcessorParameter( "NFoldSymmetry" ,
-				"Global N-fold Symmetry" , 
-				_nsymmetry, 
-				8);
-    
    registerProcessorParameter( "MinimalHitsInCluster" ,
 			       "Minimal allowed hits in cluster" , 
 				_nhit_minimal, 
@@ -181,13 +165,6 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 
 void TrackwiseClustering::init() {
 
-    _const_pi    = acos(-1.);
-    _const_2pi = 2.0*_const_pi;
-    _const_pi_n  = _const_pi/float(_nsymmetry);
-    _const_2pi_n = 2.0*_const_pi/float(_nsymmetry);
-
-    _thetaofendcap = (float)atan((double)(_rofbarrel/_zofendcap));
-
     _nRun = -1;
 
 }
@@ -229,6 +206,21 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
     int Total(0);
 
     int NOfHits(0);
+
+  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
+
+  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+
+  _rofbarrel = (float)pEcalBarrel.getExtent()[0];
+  _phiofbarrel = (float)pEcalBarrel.getPhi0();
+  _nsymmetry = pEcalBarrel.getSymmetryOrder();
+  _zofendcap = (float)pEcalEndcap.getExtent()[2];
+  _const_pi    = acos(-1.);
+  _const_2pi = 2.0*_const_pi;
+  _const_pi_n  = _const_pi/float(_nsymmetry);
+  _const_2pi_n = 2.0*_const_pi/float(_nsymmetry);
+  _thetaofendcap = (float)atan((double)(_rofbarrel/_zofendcap));
+
 
     
     _xmin_in_distance = 1.0e+10;

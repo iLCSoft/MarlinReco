@@ -48,7 +48,7 @@ using namespace marlin ;
  *  Magnetic field (in TESLA) is specified with processor <br>
  *  parameter MagneticField. <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $ld: $<br>
+ *    @version $Id: ClusterCheater.h,v 1.4 2005-08-07 16:22:39 gaede Exp $<br>
  */
 class ClusterCheater : public Processor {
   

@@ -52,7 +52,7 @@ using namespace marlin ;
  *  Printout of information on reconstructed clusters is <br>
  *  activated if processor parameter DisplayClusterInfo is set to 1. <br>
  *  @author A. Raspereza (DESY) <br>
- *  @version $ld: $ <br>
+ *  @version $Id: TrackwiseClustering.h,v 1.4 2005-08-07 16:22:39 gaede Exp $ <br>
  */
 class TrackwiseClustering : public Processor {
   

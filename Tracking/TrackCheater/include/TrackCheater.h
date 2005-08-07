@@ -38,7 +38,7 @@ using namespace marlin ;
  *  to define track parameters. Only tracks with energy greater than <br>
  *  certain threshold, defined with processor parameter ECut, are retained. <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $ld: $<br>
+ *    @version $Id: TrackCheater.h,v 1.4 2005-08-07 16:22:39 gaede Exp $<br>
  */
 class TrackCheater : public Processor {
   

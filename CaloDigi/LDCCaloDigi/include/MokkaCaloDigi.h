@@ -56,7 +56,7 @@ using namespace marlin ;
  *  The name of this relation collection is specified <br>
  *  via processor parameter RelationOutputCollection. <br> 
  *  @authors A. Raspereza and P. Krstonosic (DESY) <br>
- *  @version $ld: $ <br>
+ *  @version $Id: MokkaCaloDigi.h,v 1.3 2005-08-07 16:22:39 gaede Exp $ <br>
  */
 class MokkaCaloDigi : public Processor {
   

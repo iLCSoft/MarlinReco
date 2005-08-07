@@ -89,7 +89,7 @@ using namespace marlin ;
  *    <a href="http://www.desy.de/~rasp/PFlowInMarlin.ps.gz">
  *     http://www.desy.de/~rasp/PFlowInMarlin.ps.gz</a> <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $ld: $<br>
+ *    @version $Id: Wolf.h,v 1.5 2005-08-07 16:22:39 gaede Exp $<br>
  */
 class Wolf : public Processor {
   

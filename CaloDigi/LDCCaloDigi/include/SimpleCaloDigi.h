@@ -51,7 +51,7 @@ using namespace marlin ;
  *  The name of this relation collection is specified <br>
  *  via processor parameter RelationOutputCollection. <br> 
  *  @author A. Raspereza (DESY) <br>
- *  @version $ld: $ <br>
+ *  @version $Id: SimpleCaloDigi.h,v 1.3 2005-08-07 16:22:39 gaede Exp $ <br>
  */
 class SimpleCaloDigi : public Processor {
   

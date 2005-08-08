@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.12 2005-08-04 12:54:51 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.13 2005-08-08 07:09:13 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.12  2005/08/04 12:54:51  aplin
+** *** empty log message ***
+**
 ** Revision 1.11  2005/08/03 21:31:09  aplin
 ** tk*bank structures initialisation move here from BrahmsInitProcessor and BrahmEndProcessor
 **
@@ -44,7 +47,7 @@
 #include"tkhitbank.h"
 #include"tktebank.h"
 #include"tkmcbank.h"
-#include"marlin_tpcgeom.h"
+//#include"marlin_tpcgeom.h"
 #include"constants.h"
 
 // STUFF needed for GEAR
@@ -121,6 +124,37 @@ FCALLSCFUN2(INT,readtkitedatcpp,READTKITEDATCPP,readtkitedatcpp, INT, INT)
   int writetkitedatcpp(int c, int a, int b);
 
 FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, INT)
+
+
+  // definition of gettpcgeom done here it just sends the geomtertry into to tpcgeom.F
+  int gettpcgeom(float* innerrad, float* outerrad, int* npadrows, 
+                  float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres){
+
+  //  try{
+
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+  const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+  
+  *innerrad = 0.1 * float( planeExt[0] ) ;
+  *outerrad = 0.1 *float( planeExt[1] ) ;
+  *npadrows = padLayout.getNRows() ;
+  *maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
+  *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
+  *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
+  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResMax")) ;  
+  *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
+
+  //  }
+//  catch() {return 1} ;
+
+  return 0;
+}
+
+FCALLSCFUN8(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT, 
+            PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT )
+
+
 
 
   // end of cfortran.h definitions

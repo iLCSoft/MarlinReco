@@ -1,8 +1,11 @@
 
 *  
-* $Id: trkfnd.F,v 1.3 2005-08-04 13:17:48 aplin Exp $
+* $Id: trkfnd.F,v 1.4 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/08/04 13:17:48  aplin
+* added more info to error message on too many links
+*
 * Revision 1.2  2005/08/04 12:54:51  aplin
 * *** empty log message ***
 *
@@ -84,8 +87,8 @@ c#include "include/gcflag.inc"
 #include "include/tchajj.inc"
 #include "include/tpwork.inc"
 #include "include/trfdct.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tchain.inc"
 #include "include/tcbins.inc"
 #include "include/my_jndb.inc"

@@ -1,7 +1,10 @@
 *  
-* $Id: trslnk.F,v 1.4 2005-08-04 11:18:31 aplin Exp $
+* $Id: trslnk.F,v 1.5 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/08/04 11:18:31  aplin
+* corrected comment
+*
 * Revision 1.3  2005/08/04 11:09:41  aplin
 * added comment
 *
@@ -69,8 +72,8 @@ C!---------------------------------------------------------------------
 C
 #include "include/fndparms.inc"
 #include "include/alcons.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/trfdct.inc"
 #include "include/tcbins.inc"
 #include "include/tpco.inc"

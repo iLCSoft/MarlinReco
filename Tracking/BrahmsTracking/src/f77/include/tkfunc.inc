@@ -1,7 +1,15 @@
 *  
-* $Id: tkfunc.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tkfunc.inc,v 1.3 2005-07-21 16:37:00 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -29,8 +37,10 @@
 
 cSJA	use cpp fortan interface STFREADTKHITS
 
-      RTKHIT(ATTRIBUTE,AHIT) = STFREADTKHITS(ATTRIBUTE,AHIT)	
+      RTKHIT(ATTRIBUTE,AHIT) = RSTFREADTKHITS(ATTRIBUTE,AHIT)	
+      ITKHIT(ATTRIBUTE,AHIT) = ISTFREADTKHITS(ATTRIBUTE,AHIT)	
 
+	
 c      RTKHIT(IOFFSET,IHITOFFSET) =
 c     &  Q(LBRHITS1 + MXHT*(IHITOFFSET-1)+IOFFSET)
 c      ITKHIT(IOFFSET,IHITOFFSET) =
@@ -45,7 +55,10 @@ c     &  IQ(LBRMC1 + 11*(IHITOFFSET-1)+IOFFSET)
 
 cSJA	use cpp fortan interface STFREADTKTE
 
-      RTE(IOFFSET,IHITOFFSET) = STFREADTKTE(ATTRIBUTE,ATE)
+      RTE(ATTRIBUTE,ATE) = RSTFREADTKTE(ATTRIBUTE,ATE)
+      ITE(ATTRIBUTE,ATE) = ISTFREADTKTE(ATTRIBUTE,ATE)
+
+      ITEDAT(ATTRIBUTE,ATE) = STFREADTKITEDAT(ATTRIBUTE,ATE)	 
 
 *     TE bank
 c      RTE(IOFFSET,IHITOFFSET) =

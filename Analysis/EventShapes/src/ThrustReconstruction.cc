@@ -38,7 +38,7 @@ ThrustReconstruction::ThrustReconstruction()
 
   registerProcessorParameter( "typeOfThrustFinder" ,
       "Type of thrust reconstruction algorithm to be used:\n#\t1 : Tasso algorithm\n#\t2 : JetSet algorithm"  ,
-      _typeOfThrustFinder , 1 ) ;
+      _typeOfThrustFinder , 2 ) ;
 
 }
 
@@ -429,7 +429,7 @@ int ThrustReconstruction::JetsetThrust(){
 double ThrustReconstruction::sign(double a, double b) 
 {
   if ( b < 0 ) 
-    { return -abs(a); } else { return abs(a); }
+    { return -fabs(a); } else { return fabs(a); }
 }
 //______________________________________________________________
 double ThrustReconstruction::min(double a, double b) 

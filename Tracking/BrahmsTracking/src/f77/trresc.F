@@ -1,7 +1,10 @@
 *  
-* $Id: trresc.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: trresc.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -37,8 +40,8 @@ C!  Called by TRKFND
 C!
 C----------------------------------------------------------------*
 #include "include/fndparms.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tchain.inc"
       INTEGER I,N1,N2,NC
       SAVE

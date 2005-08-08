@@ -1,8 +1,11 @@
 
 *  
-* $Id: tpcgeom.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcgeom.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -35,7 +38,23 @@ C#include "maskdims.inc"
 #include "include/tpcdims.inc"
 #include "include/tpcres.inc"
 #include "include/coildims.inc"
-#include "marlin_tpcgeom.h"
+c#include "marlin_tpcgeom.h"
+
+      REAL INNERRAD, OUTERRAD, MAXDRIFT, TPCPIXZ, IONPOTEN 
+      REAL TPCRPRES, TPCZRES
+      
+      INTEGER NPADROWS
+
+      INTEGER TRY
+      INTEGER gettpcgeom
+      external gettpcgeom
+
+
+
+C CALL wrapper function to get tpc parameters from GEAR
+      TRY = gettpcgeom(INNERRAD, OUTERRAD, NPADROWS, MAXDRIFT, TPCPIXZ, 
+     +     IONPOTEN, TPCRPRES, TPCZRES)
+
 
 C----------------------------------------------------------------------
 c TPC Dimensions:
@@ -64,7 +83,7 @@ C Outer Radius
       RTPCOUT=TPCACRO + 6.4
       
 c     z-half-length of TPC:
-      TPCHLFZ=273.
+      TPCHLFZ = MAXDRIFT + 23.
 
 C Maximum drift length:
       ZDRIFT=MAXDRIFT
@@ -99,6 +118,7 @@ C For simple studies, use a general r-phi resolution and z-resolution (cm^2):
       TPRPSQ=TPRP**2
       TPZSQ=TPZ**2
       TPRRSQ=TPCRRS**2
+
 
   999 RETURN
       END

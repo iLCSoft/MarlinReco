@@ -50,7 +50,7 @@ MokkaCaloDigi aMokkaCaloDigi ;
 MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
   
   // modify processor description
-  _description = "genging test" ;
+  _description = "Mokka digitizer..." ;
   
 
   // register steering parameters: name, description, class-variable, default value
@@ -84,6 +84,7 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
 			     "name for the new collection "  ,
 			      _newCollNameHCAL ,
 			      std::string("HCAL")) ;
+
   registerProcessorParameter( "NewECALCollName" , 
 			      "name for the new collection "  ,
 			      _newCollNameECAL ,
@@ -97,11 +98,11 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
   registerProcessorParameter("HCALThreshold" , 
 			     "Threshold for HCAL Hits in GeV" ,
 			     _thresholdHcal,
-			     (float)0.25e-6);
+			     (float)4.0e-4);
 
   std::vector<int> ecalLayers;
   ecalLayers.push_back(30);
-  ecalLayers.push_back(40);
+  ecalLayers.push_back(100);
 
 
   registerProcessorParameter("ECALLayers" , 
@@ -121,8 +122,8 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
 
 
   std::vector<float> calibrEcal;
-  calibrEcal.push_back(1.);
-  calibrEcal.push_back(1.);
+  calibrEcal.push_back(31.3);
+  calibrEcal.push_back(83.0);
 
 
   registerProcessorParameter("CalibrECAL" , 
@@ -132,7 +133,7 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
   
 
   std::vector<float> calibrHcal;
-  calibrHcal.push_back(1.);
+  calibrHcal.push_back(27.3);
 
   registerProcessorParameter("CalibrHCAL" , 
 			     "Calibration coefficients for HCAL" ,
@@ -700,23 +701,7 @@ void MokkaCaloDigi::processEvent( LCEvent * evt ) {
 
   evt->addCollection(ecalcol, _newCollNameECAL.c_str());
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-_nEvt ++ ;
+  _nEvt ++ ;
 
 } // end of event processor 
 

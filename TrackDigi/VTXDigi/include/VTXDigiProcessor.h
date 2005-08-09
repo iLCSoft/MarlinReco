@@ -1,31 +1,27 @@
-#ifndef TrackProcessor_h
-#define TrackProcessor_h 1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+#ifndef VTXDigiProcessor_h
+#define VTXDigiProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
 
-#ifdef MARLIN_USE_ROOT
-#include <TROOT.h>
-#include <TFile.h>
-#include <TH1.h>
-#endif
 
 using namespace lcio ;
 using namespace marlin ;
 
-/** Plots the error on the inverse of the momentum for tracks reconstructed in the TPC.
-* @author S. Aplin, DESY
-*/
 
-class TrackProcessor : public Processor {
+/**  Produces VTX TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
+ * @author S. Aplin, DESY
+ */
+class VTXDigiProcessor : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new TrackProcessor ; }
+  virtual Processor*  newProcessor() { return new VTXDigiProcessor ; }
   
   
-  TrackProcessor() ;
+  VTXDigiProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -48,18 +44,7 @@ class TrackProcessor : public Processor {
    */
   virtual void end() ;
   
- private:
-
-  std::string _incol,_rootfilename;
-  std::string _roothistname;
-  int _rootnbins;
-  float _roothistlow,_roothisthigh;  
-
-#ifdef MARLIN_USE_ROOT
-  TH1F *_massHisto;
-  TFile *_histoFile;
-#endif
- 
+  
  protected:
 
   /** Input collection name.

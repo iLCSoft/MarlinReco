@@ -1,5 +1,6 @@
 #include "MokkaCaloDigi.h"
 #include <iostream>
+#include <cmath>
 #include <vector>
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>

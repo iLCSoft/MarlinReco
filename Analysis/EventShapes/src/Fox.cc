@@ -1,5 +1,6 @@
 #include "Fox.h"
 #include <iostream>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <sstream>

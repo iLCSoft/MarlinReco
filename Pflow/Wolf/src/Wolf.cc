@@ -38,7 +38,7 @@ Wolf::Wolf() : Processor("Wolf") {
   registerProcessorParameter("TrackCollection",
 			     "Track Collection Name",
 			     _trackCollection,
-			     std::string("TPC_Tracks"));
+			     std::string("TPCTracks"));
 
   registerProcessorParameter("ClusterCollection",
 			     "Cluster Collection Name",
@@ -423,6 +423,16 @@ void  Wolf::defineIntersection( TrackExtended * track) {
 	seed[1] = point[1];
 	seed[2] = point[2];      
       }
+    }
+  }
+  else {
+    float point[3];
+    float tt = helix->getPointOnCircle(_rofbarrel,ref,point);
+    if (tt < time_min) {
+      time_min = tt;
+      seed[0] = point[0];
+      seed[1] = point[1];
+      seed[2] = point[2];
     }
   }
 

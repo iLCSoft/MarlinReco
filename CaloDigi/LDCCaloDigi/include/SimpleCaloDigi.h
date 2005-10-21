@@ -1,3 +1,4 @@
+
 #ifndef DIGITIZERAR_H
 #define DIGITIZERAR_H 1
 
@@ -38,7 +39,7 @@ using namespace marlin ;
  *  processor parameters ECALLayers and HCALLayers <br>
  *  There is an option to perform digitization of <br> 
  *  both ECAL and HCAL in a digital mode. <br>
- *  Digital digitization is activated by  <br>
+ *  Digital mode is activated by  <br>
  *  setting processor parameters <br>
  *  IfDigitalEcal / IfDigitalHcal to 1. <br>
  *  In this case CalibrECAL / CalibrHCAL will  <br>
@@ -50,8 +51,19 @@ using namespace marlin ;
  *  are held in the corresponding relation collection. <br>
  *  The name of this relation collection is specified <br>
  *  via processor parameter RelationOutputCollection. <br> 
+ *  <h4>Input collections and prerequisites</h4>
+ *  SimCalorimeterHit collections <br>
+ *  <h4>Output</h4>
+ *  CalorimeterHit collections for ECal and HCal. <br>
+ *  Collection of relations <br>
+ *  between CalorimeterHits and SimCalorimeterHits. <br> 
+ *  For ECal Calorimeter hits the variable type is set to 0, <br>
+ *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
- *  @version $Id: SimpleCaloDigi.h,v 1.3 2005-08-07 16:22:39 gaede Exp $ <br>
+ *  @version $Id: SimpleCaloDigi.h,v 1.4 2005-10-21 06:58:15 rasp Exp $ <br>
+=======
+ *  @version $Id: SimpleCaloDigi.h,v 1.4 2005-10-21 06:58:15 rasp Exp $ <br>
+>>>>>>> 1.3
  */
 class SimpleCaloDigi : public Processor {
   

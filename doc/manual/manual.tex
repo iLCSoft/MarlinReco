@@ -1,0 +1,31 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{a4,cite}
+\usepackage{umlaut}
+\usepackage[german,english]{babel}
+\usepackage[dvips]{graphicx}
+\usepackage{psfrag}
+\usepackage{epsfig}
+\usepackage[dvips]{hyperref}
+\usepackage{ifpdf}
+\ifpdf
+\usepackage{thumbpdf}
+\usepackage[pdftex]{hyperref}
+\hypersetup{bookmarks=true,
+        bookmarksopen=true,
+        filecolor=red,
+        colorlinks=true,
+        citecolor=red}
+\fi
+
+
+\input defs.tex
+\parindent0cm
+\parskip8pt plus2pt minus2pt
+\sloppy
+\usepackage{html}
+\begin{document}
+ \input manual_document.tex
+\end{document}
+
+

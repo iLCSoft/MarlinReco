@@ -181,7 +181,7 @@ This library is under current development, so it will evolve in the future.
 
 \subsection{AIDA}
 
-\subsection{Other Libraries}
+\subsection{Other Libraries} \label{sec:otherlibs}
 
 Marlin~\cite{ref_marlin} and some of the MarlinReco processors depend on the
 ``Class Library for High Energy Physics'' (CLHEP)~\cite{ref_clhep}. 
@@ -930,11 +930,13 @@ in a way that you can skip the appropriate subsections.
 \subsection{System Requirements}
 
 LCIO, Gear, Marlin, MarlinUtil and MarlinReco have been 
-developed under (SuSE) Linux and tested with gcc3.2 on Linux. 
+developed under (SuSE) Linux and tested with gcc3.3 on Linux. 
 As the ``-ansi'' switch is used during compilation
 it should be fairly easy to 
 port the packages to other platforms with an ANSI compliant \CPP{} compiler.
 The build scripts used also require that gmake/make is installed.
+In Addition GSL~\cite{ref_gsl}, CLHEP~\cite{ref_clhep} and 
+CERNLIB~\cite{ref_cernlib} are used (see also Section~\ref{sec:otherlibs})l
 
 In order to build LCIO you need to have a Java VM (version 1.4 or
 higher) installed on your platform. This is true even if you only want

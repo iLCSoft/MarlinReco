@@ -1,12 +1,6 @@
-%\begin{center}
-%{\large \bf
-%MarlinReco \\ ----- \\ 
-%a Marlin based Reconstruction Package for the ILC}
-%\end{center}
-
-\title{ \huge{MarlinReco} \\ A Marlin based Reconstruction Package for the ILC }
-\author{T.Kr\"amer et.al., DESY}
-
+\title{\huge{\bf MarlinReco}\\
+             A Marlin based Reconstruction Package for the ILC}
+\author{T.~Kr\"amer et.al., DESY}
 \maketitle
 
 \begin{abstract}
@@ -22,14 +16,14 @@ to invoke MarlinReco and influence its behaviour using the steering file.
 Finally you learn how to write own processors so that many 
 scientist from the HEP community can contribute to this Project.  
 \end{abstract}
-
 \newpage
 \tableofcontents
 \newpage
 
 \section{Introduction}
 
-The 1~TeV electron positron collider ILC is the next big project proposed by
+The international linear collider (ILC)~\cite{ref_ilchome} --
+a 1~TeV electron positron machine -- is the next big project proposed by
 the high energy physics community. The detectors for this collider will be
 precision experiments with highly granular calorimetry and excellent tracking
 capabilities. The detector development and optimisation heavily depend on 
@@ -219,7 +213,7 @@ clusters from the simulated data. This section is meant to give a short
 introduction to the different processors currently available. More detailed 
 information, especially about the usage of the modules and their 
 steering parameters can be obtained in the API documentation, which can be
-build together with MarlinReco. 
+build together with MarlinReco using Doxygen~\cite{ref_doxygen}. 
 
 \subsubsection{Digitisation}
 
@@ -951,9 +945,8 @@ If histograms should be produced, the JAIDA~\cite{ref_jaida} and
 AIDA\_JNI~\cite{ref_aidajni} packages have 
 to be installed on the system. 
 
-The headerfiles are commented using the Doxygen syntax. if you wish to 
-generate a browsable API documentation Doxygen 
-(\htmladdnormallink{http://www.doxygen.org/}{http://www.doxygen.org/})
+The headerfiles are commented using the Doxygen~\cite{ref_doxygen} syntax. 
+if you wish to generate a browsable API documentation Doxygen 
 has to be available.
 
 If you wish to check out the sources of Gear, Marlin, MarlinReco
@@ -1281,6 +1274,12 @@ JAIDA homepage:\\
 \bibitem{ref_aidajni}
 AIDA-JNI homepage:\\
 \htmladdnormallink{http://java.freehep.org/aidajni}{http://java.freehep.org/aidajni}
+\bibitem{ref_doxygen}
+Doxygen homepage:\\
+\htmladdnormallink{http://www.doxygen.org}{http://www.doxygen.org}
+\bibitem{ref_ilchome}
+international linear collider (ILC) homepage:\\
+\htmladdnormallink{http://www.linearcollider.org}{http://www.linearcollider.org}
 \end{thebibliography}
 
 % hyperlink: \htmladdnormallink{}{}

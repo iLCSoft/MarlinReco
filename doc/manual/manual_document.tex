@@ -1049,6 +1049,7 @@ cd $LCSoft/packages
 cvs co MarlinReco 
 cvs co MarlinUtil 
 cvs co CEDViewer 
+cvs co CED 
 \end{verbatim}
 
 \subsection{Building the Packages}
@@ -1191,6 +1192,27 @@ gmake
 This will create the MarlinReco executable {\tt \$LCSoft/Marlin/binMarlin}. 
 Simultaneous to MarlinReco also the MarlinUtil library and the CEDviewer is 
 build. 
+
+\subsubsection*{Glced}
+
+To get graphical output of CED on the screen the server program {\tt glced}
+has to be build: 
+
+\begin{verbatim} 
+cd $LCSoft/packages/CED
+gmake
+\end{verbatim}
+
+You need X to run {\tt glced} and the environment variable 
+{\tt DISPLAY} has to point to a accessible display. Before starting
+MarlinReco with event display type:
+
+\begin{verbatim}
+$LCSoft/packages/CED/glced
+\end{verbatim}
+
+More information can be obtained from the README file located in the 
+CED directory. 
 
 \section{Further Information}
 Documentation

@@ -28,6 +28,7 @@ the high energy physics community. The detectors for this collider will be
 precision experiments with highly granular calorimetry and excellent tracking
 capabilities. The detector development and optimisation heavily depend on 
 sophisticated simulation and reconstruction software.
+
 MarlinReco is a software package for the reconstruction of events using 
 (simulated) raw data of an ILC detector. The different reconstruction 
 algorithms i.e. 
@@ -59,20 +60,23 @@ MS Windows XP.
 In order to keep the software light weight and easy to use, 
 it is tried to keep the dependencies as moderate as possible.
 Nevertheless some packages have to be available on your system to run  
-MarlinReco.
+MarlinReco. This section is meant to give an overview. More detailed 
+information can be obtained from the project homepages, where user manuals or 
+Application Programming Interface (API) documentations are available.
 
 \subsection{LCIO}
 
-LCIO is a persistency framework and data model that has been adopted as a
-standard by the international ILC community. It defines an abstract event
-data model with hits, tracks, clusters etc. and a concrete file format to
-store the data. The LCIO API (Application Programming Interface)
+Linear Collider I/O (LCIO)~\cite{ref_lcio,ref_lciohome} is a persistency framework and data model 
+that has been adopted as a standard by the international ILC community. 
+It defines an abstract event data model with hits, tracks, clusters etc. and 
+a concrete file format to store the data. The LCIO API 
 has been implemented in a way that makes the user code
 independent of the concrete file format. So the file format could be exchanged
 without breaking any existing user code if the need arose in the future.
 
-While LCIO defines in principle the complete event data model for ILC studies,
-often users will need to store additional data together with the event data.
+In principle LCIO defines the complete event data model for ILC studies.
+Nevertheless users often need to store additional information together with 
+the event data.
 This is possible with the help of an abstract interface called
 {\em LCGenericObject} which holds arbitrary numbers of the simple types
 {\em int, float} and {\em double}. Through this interface virtually any data
@@ -81,7 +85,7 @@ can be stored in LCIO files.
 \subsection{Marlin}
 
 Marlin ({\bf M}odular {\bf A}nalysis and {\bf R}econstruction for the
-{\bf LIN}ear collider) is a simple and generic
+{\bf LIN}ear collider)~\cite{ref_marlin} is a simple and generic
 \CPP application framework for the analysis of LCIO data that provides a
 platform for the distributed development of new reconstruction
 algorithms. Marlin supports the implementation of different tasks in individual
@@ -106,7 +110,7 @@ container of the data seen by the {\em Processors}.
 \label{fig_marlin}
 \end{figure}
 
- Marlin applications are entirely configured through XML steering files.
+Marlin applications are entirely configured through XML steering files.
 The XML files hold arbitrary named parameters - defined
 either for a particular processor, a group of processors or globally. The
 steering files also define the order in which the
@@ -130,7 +134,7 @@ distribution in space whereas for the reconstruction mostly a higher
 level description of the subdetector's characteristics is needed.
 Depending on the particular reconstruction algorithm a hand full of
 parameters might suffice to describe a full subdetector, e.g. the main
-calorimeters - 
+calorimeters.  
 This description is certainly a lot less than what is needed for the
 computation of the detailed detector response with GEANT4~\cite{ref_geant4}. 
 Of course the required parameters could be defined in the Marlin steering 

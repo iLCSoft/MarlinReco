@@ -398,7 +398,7 @@ Every Marlin executable is
 able to print a sample steering file to standard out. Type
 
 \begin{verbatim}
-$LCSoft/bin/Marlin -x > exampleSteeringFile.xml
+$LCSoft/Marlin/bin/Marlin -x > exampleSteeringFile.xml
 \end{verbatim}
 
 to get an 
@@ -529,12 +529,13 @@ ln -s $LCSoft/packages/MarlinReco/examples/LDC/muons.slcio
 
 Add the following 
 line to the {\tt global} section to read the events from 
-the file {\tt muons.slcio}:
+the file {\tt muons.slcio}
 
 \begin{verbatim}
-<parameter name=\"LCIOInputFiles\"> muons.slcio </parameter>
+<parameter name="LCIOInputFiles"> muons.slcio </parameter>
 \end{verbatim}
 
+replacing the original line with the {\tt LCIOInputFiles} parameter.
 To read the whole file set {\tt MaxRecordNumber} to 0. In addition the 
 reconstruction needs to know the detector geometry. 
 For the ``Large Detector Concept'' this information is stored
@@ -555,7 +556,7 @@ The file is made available to
 MarlinReco also in the {\tt global} section by:
 
 \begin{verbatim}
-<parameter name="GearXMLFile"> ../gear/gear\_ldc.xml </parameter>
+<parameter name="GearXMLFile"> gear_ldc.xml </parameter>
 \end{verbatim}
 
 Change the {\tt execute} section to call the appropriate processors in the
@@ -581,7 +582,7 @@ parameter:
 
 \begin{verbatim}
 cd $LCSoft/Marlin
-bin/Marlin exampleJob.xml
+bin/Marlin exampleSteeringFile.xml
 \end{verbatim}
 
 Be sure that you are in the right directory, otherwise the relative
@@ -593,7 +594,7 @@ After the program has finished, there is an additional file
 events. The contents of this file can be examined using the program
 
 \begin{verbatim}
-$LCIO/bin/dumpevent file run eventt
+$LCIO/bin/dumpevent file run event
 \end{verbatim}
 
 Here the Parameter {\tt file} is the name of the LCIO file from which the 
@@ -1132,7 +1133,7 @@ ln -s $LCSoft//packages/MarlinUtil
 
 A few variables have to be set depending on your development
 environment. For user convenience there already exists a script
-{\tt MarlinRecoEnv.sh} in the MarlinReco subdirectory, where you can change 
+{\tt env.sh} in the MarlinReco subdirectory, where you can change 
 the paths as needed. The meaning of the variables together with the 
 default values for the DESY computing environment are given here.
 
@@ -1166,7 +1167,7 @@ replace the {\tt env.sh} script shipped with Marlin:
 
 \begin{verbatim}
 cd $LCSoft/Marlin 
-cp \$LCSoft/Marlin/packages/MarlinReco/MarlinRecoEnv.sh env.sh
+cp $LCSoft/Marlin/packages/MarlinReco/env.sh env.sh
 \end{verbatim}
 
 Source it to setup the environment:
@@ -1184,7 +1185,7 @@ available to the Marlin top level makefile replace the dummy file
 {\tt userlib.gmk}:
 
 \begin{verbatim}
-mv userlibMarlinReco.gmk userlib.gmk
+mv userlib.gmk.MarlinReco userlib.gmk
 \end{verbatim}
 
 To build MarlinReco type in the Marlin directory:

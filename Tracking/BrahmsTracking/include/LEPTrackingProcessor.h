@@ -84,7 +84,10 @@ class LEPTrackingProcessor : public Processor {
    */
   std::string _colNameTPC ;
   std::string _colNameVTX ;
+  std::string _colNameSIT ;
   std::string _colNameTPCTracks ;
+  std::string _colNameTracks ;
+  std::string _colNameMCTPCTracksRel ;
   std::string _colNameMCTracksRel ;
 
   int _nRun ;

@@ -1,8 +1,11 @@
 
 *  
-* $Id: trkfnd.F,v 1.4 2005-08-08 07:09:13 aplin Exp $
+* $Id: trkfnd.F,v 1.5 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
 * Revision 1.3  2005/08/04 13:17:48  aplin
 * added more info to error message on too many links
 *
@@ -453,7 +456,7 @@ C
   999 CONTINUE
 
 C     SJAWRT
-      write(*,*) "finished trkfnd" 
+c      write(*,*) "finished trkfnd" 
 C
       RETURN
       END

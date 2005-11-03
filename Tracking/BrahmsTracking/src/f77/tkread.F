@@ -1,7 +1,10 @@
 *  
-* $Id: tkread.F,v 1.4 2005-08-03 19:12:01 aplin Exp $
+* $Id: tkread.F,v 1.5 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/08/03 19:12:01  aplin
+* included TE reading functionality
+*
 * Revision 1.3  2005/07/29 15:06:17  aplin
 * Initialised number of tracks found to 0 in tpcrun.
 *
@@ -113,12 +116,14 @@ c        CALL UCOPY(Q(LBRTE+MXTE*(INDEX-1)+1),DATA,MXTE)
           GOTO 999
         END IF
         CALL UCOPY(RTS(1,INDEX),DATA,MXTS)
+
       ELSE IF (CHTYPE(1:2).EQ.'TK') THEN
         IF (INDEX.LT.1.OR.INDEX.GT.NTK) THEN
           IERR=1
           GOTO 999
         END IF
         CALL UCOPY(RTK(1,INDEX),DATA,MXTK)
+
       ELSE IF (CHTYPE(1:3).EQ.'MCT') THEN
         IF (INDEX.LT.1.OR.INDEX.GT.TKNTRK) THEN
           IERR=1

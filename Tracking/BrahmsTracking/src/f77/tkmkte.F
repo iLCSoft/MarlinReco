@@ -1,7 +1,10 @@
 *  
-* $Id: tkmkte.F,v 1.3 2005-07-29 15:06:17 aplin Exp $
+* $Id: tkmkte.F,v 1.4 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
 * Revision 1.2  2005/07/20 17:46:38  aplin
 * The itedat bank has been added with read and write interface. Though
 * only the write function is used (tkstor). The read will have to be
@@ -324,7 +327,6 @@ C----------------------
            IF (TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: fit failed. retry.'
            GOTO 100
         END IF
-           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
         IF (TKSTDBG.GT.0) THEN
            WRITE(6,*) 'TKMKTE: fit failed. no retry.'
 ccc           WRITE(6,*) '  track properties of last hit: '

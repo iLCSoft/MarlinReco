@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.5 2005-08-03 19:14:06 aplin Exp $
+* $Id: tktrev.F,v 1.6 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2005/08/03 19:14:06  aplin
+* removed the combining of TEs to TSs for now
+*
 * Revision 1.4  2005/08/02 10:33:15  aplin
 * included setup of VTX geometry
 *
@@ -59,16 +62,33 @@ C#include "include/gcbank.inc"
 #include "include/chgtrak.inc"
 C#include "include/brtime.inc"
 #include "include/tknoisepar.inc"
-      INTEGER I,J,IERROR,IKINE
+      INTEGER I,J,K,L,IERROR,IKINE, try, ierr
       REAL TSTART,TEND
-#include "include/tkfunc1.inc"
-#include "include/tkfunc.inc"
+
+      REAL cov(15)
 
       EXTERNAL numofsubdethits
       INTEGER  numofsubdethits
       EXTERNAL subdetfirsthitindex
       INTEGER  subdetfirsthitindex
 
+      INTEGER IDATA(37)
+      REAL RDATA(37)
+
+      EQUIVALENCE(IDATA,RDATA)
+
+      integer tkmktkcpp
+      external tkmktkcpp
+
+      integer addtetktkcpp
+      external addtetktkcpp
+
+      integer writetkitkdatcpp
+      external writetkitkdatcpp
+
+#include "include/tkfunc1.inc"
+#include "include/tkfunc.inc"
+ 
 C====================================================================
 
 
@@ -120,18 +140,27 @@ C.....init hit bank index and sub-indices for subdetector IDs
 
       IF(IHNUMB(ID_TPC).gt.0) IHPOINT(ID_TPC)=subdetfirsthitindex("TPC")
       
-      write(*,*) "IHNUMB(ID_TPC)  = " , IHNUMB(ID_TPC) 
-      write(*,*) "IHPOINT(ID_TPC) = " , IHPOINT(ID_TPC)
+      if(TKSTDBG.gt.0) write(*,*) "IHNUMB(ID_TPC)  = " , IHNUMB(ID_TPC) 
+      if(TKSTDBG.gt.0) write(*,*) "IHPOINT(ID_TPC) = " , IHPOINT(ID_TPC)
 
 
       IHNUMB(ID_VTX)  = numofsubdethits("VTX")
 
       IF(IHNUMB(ID_VTX).gt.0) IHPOINT(ID_VTX)=subdetfirsthitindex("VTX")
       
-      write(*,*) "IHNUMB(ID_VTX)  = " , IHNUMB(ID_VTX) 
-      write(*,*) "IHPOINT(ID_VTX) = " , IHPOINT(ID_VTX)
+      if(TKSTDBG.gt.0) write(*,*) "IHNUMB(ID_VTX)  = " , IHNUMB(ID_VTX) 
+      if(TKSTDBG.gt.0) write(*,*) "IHPOINT(ID_VTX) = " , IHPOINT(ID_VTX)
 
       NTKHIT = IHNUMB(ID_TPC) + IHNUMB(ID_VTX)
+
+      IHNUMB(ID_SIT)  = numofsubdethits("SIT")
+
+      IF(IHNUMB(ID_SIT).gt.0) IHPOINT(ID_SIT)=subdetfirsthitindex("SIT")
+      
+      if(TKSTDBG.gt.0) write(*,*) "IHNUMB(ID_SIT)  = " , IHNUMB(ID_SIT) 
+      if(TKSTDBG.gt.0) write(*,*) "IHPOINT(ID_SIT) = " , IHPOINT(ID_SIT)
+
+      NTKHIT = IHNUMB(ID_TPC) + IHNUMB(ID_VTX) + IHNUMB(ID_SIT)
 
 C.....init TE hit list index
       NHITTE=0
@@ -212,6 +241,11 @@ c ---   dummy patrec
 c        CALL LP_TPC
 c      ELSE
 c ---   GAB's ALEPH-style TPC pattern recognition
+      write(*,*) "---------------------"
+      write(*,*) "About to start TPCRUN"
+      write(*,*) "---------------------"
+
+
         CALL TPCRUN(IERROR)
 C....  adjust size of hit banks in patrec
 c        CALL TKPUSH_TPC(1)
@@ -253,14 +287,19 @@ c      TIME_TKMKEX =TIME_TKMKEX+(TEND-TSTART)
       TSTART     =TEND
 
 C.....combine TEs to TSs (ambiguous full track candidates) using DELSEARCH.
-c      CALL FSFSTR
+
+      write(*,*) "---------------------"
+      write(*,*) "About to start TPCRUN"
+      write(*,*) "---------------------"
+
+      CALL FSFSTR
 
       CALL TIMEX(TEND)
 c      TIME_FSFSTR=TIME_FSFSTR+(TEND-TSTART)
       TSTART     =TEND
 
 C.....all TSs are now put into the ambiguity processor
-c      CALL TKAMBI
+      CALL TKAMBI
 
       CALL TIMEX(TEND)
 c      TIME_TKAMBI=TIME_TKAMBI+(TEND-TSTART)
@@ -275,11 +314,39 @@ c        CALL TKVETO(1)
 c      END IF
 
 C.....performance analysis
-c      IF (ITKPERF.GT.0) CALL TKPERF
+      IF (ITKPERF.GT.0) CALL TKPERF
 
       CALL TIMEX(TEND)
 c      TIME_TKPERF =TIME_TKPERF+(TEND-TSTART)
       TSTART     =TEND
+
+CSJA Send Full TK tracks over to LEPTracking
+
+      do k=1, NTK
+
+         CALL TKREAD('TK',0,k,RDATA,IDATA,IERR)
+
+         do l=1, 15
+            cov(l) = (RDATA(l+22))
+c      write(*,*) "TDATA(",l+22,") = " , RDATA(l+22)
+c      write(*,*) "cov(",l,") = " , cov(l)
+         enddo
+        
+         try = tkmktkcpp(RDATA(1),RDATA(2),RDATA(3),RDATA(4),
+     +    RDATA(5),RDATA(6),RDATA(7),RDATA(8),RDATA(9),
+     +    RDATA(10),RDATA(11),RDATA(12),RDATA(13),RDATA(14),
+     +    RDATA(15),RDATA(16),RDATA(17),RDATA(18),RDATA(19),
+     +    RDATA(20),RDATA(21),RDATA(22),cov)     
+
+         try = writetkitkdatcpp(ITKDAT(1,k),1,k)
+         try = writetkitkdatcpp(ITKDAT(2,k),2,k)
+         try = writetkitkdatcpp(ITKDAT(3,k),3,k)
+
+         do l=1,ITKDAT(2,k)
+         try = addtetktkcpp(ITKTEL(ITKDAT(1,k)+l-1),k)      
+         enddo
+
+      enddo
 
 C.....fill common block for calorimeter interface/energy flow
 C  MVL        Comment this to work with ideal TPC

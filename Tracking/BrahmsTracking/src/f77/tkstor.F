@@ -1,7 +1,10 @@
 *  
-* $Id: tkstor.F,v 1.4 2005-08-03 19:13:13 aplin Exp $
+* $Id: tkstor.F,v 1.5 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2005/08/03 19:13:13  aplin
+* corrected index of array when copying covariance matrix
+*
 * Revision 1.3  2005/07/21 16:37:00  aplin
 * The itedat bank has been added with read and write interface.
 *
@@ -88,14 +91,26 @@ c#include "gcbank.inc"
       integer writetktecpp
       external writetktecpp  
 
+      integer writetktkcpp
+      external writetktkcpp  
+
       integer tkmktecpp
       external tkmktecpp
       
+      integer tkmktkcpp
+      external tkmktkcpp
+
       integer addhittktecpp
       external addhittktecpp
 
+      integer addtetktkcpp
+      external addtetktkcpp
+
       integer writetkitedatcpp
       external writetkitedatcpp
+
+      integer writetkitkdatcpp
+      external writetkitkdatcpp
 
       integer atest
 
@@ -157,7 +172,7 @@ c       CALL UCOPY(DATA,Q(LBRTE+MXTE*(INDEX-1)+1),MXTE)
 
       do i=1, 15
          cov(i) = DATA(i+16)
-c         write(*,*) "DATA(",i,") = " , DATA(i)
+c         write(*,*) "DATA(",i+16") = " , DATA(i+16)
 c         write(*,*) "cov(",i,") = " , cov(i)
       enddo
 
@@ -176,6 +191,9 @@ c --- copy hit list and transform it into linear format if necessary
         DO I=1,N
            IF (LIST2(I).EQ.0) THEN
                                 ! already linear format. copy without any index transformation
+
+              try = addhittktecpp(LIST1(I),INDEX)
+
               IHITTE(NHITTE+I)=LIST1(I)
            ELSE IF (LIST2(I).GT.0.AND.LIST2(I).LE.3000) THEN
                                 ! index relative to subdet. position -> transform index
@@ -272,27 +290,30 @@ ccc     >                                    RTE(12,INDEX),ITE(1,INDEX),
 ccc     >                                    IAND(ITE(1,INDEX),1)
 ccc        END IF
 ccc
-ccc      ELSE IF (CHTYPE.EQ.'TS') THEN
-ccc
-cccc --- check range
-ccc        IF (NTS.GE.NTSMX) THEN
-ccc          IERR=1
-ccc          GOTO 999
-ccc        END IF
-ccc        IF (N.LT.0.OR.N+NTSTEL.GT.NTSMX) THEN
-ccc          IERR=2
-ccc          GOTO 999
-ccc        END IF
-cccc --- copy TS data
-ccc        NTS=NTS+1
-ccc        INDEX=NTS
-ccc        CALL UCOPY(DATA,RTS(1,INDEX),MXTS)
-ccc        CALL UCOPY(LIST1,ITSTEL(NTSTEL+1),N)
-ccc        ITSDAT(1,INDEX)=NTSTEL+1
-ccc        ITSDAT(2,INDEX)=N
-ccc        ITSDAT(3,INDEX)=0
-ccc        ITSDAT(4,INDEX)=0
-ccc        NTSTEL=NTSTEL+N
+
+
+      ELSE IF (CHTYPE.EQ.'TS') THEN
+
+c --- check range
+        IF (NTS.GE.NTSMX) THEN
+          IERR=1
+          GOTO 999
+        END IF
+        IF (N.LT.0.OR.N+NTSTEL.GT.NTSMX) THEN
+          IERR=2
+          GOTO 999
+        END IF
+c --- copy TS data
+        NTS=NTS+1
+        INDEX=NTS
+        CALL UCOPY(DATA,RTS(1,INDEX),MXTS)
+        CALL UCOPY(LIST1,ITSTEL(NTSTEL+1),N)
+        ITSDAT(1,INDEX)=NTSTEL+1
+        ITSDAT(2,INDEX)=N
+        ITSDAT(3,INDEX)=0
+        ITSDAT(4,INDEX)=0
+        NTSTEL=NTSTEL+N
+
 cccc --- calculate TS label
 ccc        NTSHIT=0
 ccc        NTSTRK=0
@@ -348,33 +369,51 @@ ccc          END IF
 ccc        END DO
 ccc        IF (NFVTX.GT.NTVTX) ITSDAT(5,INDEX)=ISIGN(ITSDAT(5,INDEX),-1)
 ccc
-ccc        ! debug info
-ccc        IF (TKSTDBG.GT.1) THEN
-ccc          WRITE(6,*) 'TKSTOR: TS consists of the following tracks:'
-ccc          DO I=1,NTSTRK
-ccc            WRITE(6,*) '      ',ITSTRK(I),' (',NTSTKH(I),' HITS)'
-ccc          END DO
-ccc        END IF
-ccc
-ccc      ELSE IF (CHTYPE.EQ.'TK') THEN
-ccc
-cccc --- check range
-ccc        IF (NTK.GE.NTKMX) THEN
-ccc          IERR=1
-ccc          GOTO 999
-ccc        END IF
-ccc        IF (N.LT.0.OR.N+NTKTEL.GT.NTKMX) THEN
-ccc          IERR=2
-ccc          GOTO 999
-ccc        END IF
-cccc --- copy TK data
-ccc        NTK=NTK+1
-ccc        INDEX=NTK
-ccc        CALL UCOPY(DATA,RTK(1,INDEX),MXTK)
-ccc        CALL UCOPY(LIST1,ITKTEL(NTKTEL+1),N)
-ccc        ITKDAT(1,INDEX)=NTKTEL+1
-ccc        ITKDAT(2,INDEX)=N
-ccc        NTKTEL=NTKTEL+N
+        ! debug info
+        IF (TKSTDBG.GT.1) THEN
+          WRITE(6,*) 'TKSTOR: TS consists of the following tracks:'
+          DO I=1,NTSTRK
+            WRITE(6,*) '      ',ITSTRK(I),' (',NTSTKH(I),' HITS)'
+          END DO
+        END IF
+
+
+
+      ELSE IF (CHTYPE.EQ.'TK') THEN
+
+
+c --- check range
+        IF (NTK.GE.NTKMX) THEN
+          IERR=1
+          GOTO 999
+        END IF
+        IF (N.LT.0.OR.N+NTKTEL.GT.NTKMX) THEN
+          IERR=2
+          GOTO 999
+        END IF
+c --- copy TK data
+        NTK=NTK+1
+        INDEX=NTK
+        CALL UCOPY(DATA,RTK(1,INDEX),MXTK)
+        CALL UCOPY(LIST1,ITKTEL(NTKTEL+1),N)
+        ITKDAT(1,INDEX)=NTKTEL+1
+        ITKDAT(2,INDEX)=N
+        NTKTEL=NTKTEL+N
+
+c       do i=1, 15
+c          cov(i) = DATA(i+16)
+c       enddo
+
+c        write(*,*) "about to write a tk to LEPTRACKING"
+
+c        try = tkmktkcpp(DATA(1),DATA(2),DATA(3),DATA(4),
+c     +       DATA(5),DATA(6),DATA(7),DATA(8),DATA(9),DATA(10),
+c     +       DATA(11),DATA(12),DATA(13),DATA(14),DATA(15),DATA(16),
+c     +       DATA(17),DATA(18),DATA(19),DATA(20),DATA(21),DATA(22),
+c     +       cov)
+
+
+
 cccc --- calculate TK label
 ccc        NTSHIT=0
 ccc        NTSTRK=0

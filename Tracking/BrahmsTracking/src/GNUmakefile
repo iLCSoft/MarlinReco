@@ -3,7 +3,7 @@
 # Example GNUmakefile to build an Application with Marlin
 #
 # @author Frank Gaede
-# @version $Id: GNUmakefile,v 1.2 2005-07-17 10:58:26 aplin Exp $
+# @version $Id: GNUmakefile,v 1.3 2005-11-03 15:16:14 aplin Exp $
 #
 ##########################################################
 
@@ -48,6 +48,10 @@ endif
 
 FOBJS = $(patsubst %.F,%.o, $(wildcard f77/*.F) )
 # FOBJS also added to objects below
+
+./C/%.o: ./C/%.C
+	$(CC) -g -ansi -pedantic -o $@ -c $?
+COBJS = $(patsubst %.c,%.o, $(wildcard C/*.c) )
 
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile
@@ -95,6 +99,9 @@ $(BINDIR)/$(PROGNAME): $(INSTALL)/lib$(PROGNAME).a
 
 objects = $(patsubst %.cc,%.o, $(wildcard *.cc)  )
 objects += $(FOBJS)
+objects += $(COBJS)
+
+
 
 
 $(INSTALL)/lib$(PROGNAME).a: $(objects)
@@ -105,7 +112,7 @@ lib: $(INSTALL)/lib$(PROGNAME).a
 
 
 clean:
-	rm -f *.o $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME) $(FOBJS)
+	rm -f *.o $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME) $(FOBJS) $(COBJS)
 
 doc:
 	cd $(BASEDIR)/doc ; doxygen ;

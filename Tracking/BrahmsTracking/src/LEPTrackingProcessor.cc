@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.14 2005-09-19 15:32:48 samson Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.15 2005-11-03 15:16:14 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
 ** Revision 1.13  2005/08/08 07:09:13  aplin
@@ -26,7 +26,6 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <cmath>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -50,6 +49,7 @@
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
+#include"tktkbank.h"
 #include"tkmcbank.h"
 //#include"marlin_tpcgeom.h"
 #include"constants.h"
@@ -100,30 +100,58 @@ FCALLSCFUN2(INT,ireadtkhitscpp,IREADTKHITSCPP,ireadtkhitscpp, INT, INT)
 
 FCALLSCFUN2(FLOAT,rreadtkhitscpp,RREADTKHITSCPP,rreadtkhitscpp, INT, INT)
 
+
+  int writetktkcpp(float c, int a, int b); 
+
+FCALLSCFUN3(INT,writetktkcpp,WRITETKTKCPP,writetktkcpp, FLOAT, INT, INT)
+
   int writetktecpp(float c, int a, int b); 
 
 FCALLSCFUN3(INT,writetktecpp,WRITETKTECPP,writetktecpp, FLOAT, INT, INT)
+
+  float rreadtktkcpp(int a, int b);
+
+FCALLSCFUN2(FLOAT,rreadtktkcpp,RREADTKTKCPP,rreadtktkcpp, INT, INT)
 
   float rreadtktecpp(int a, int b); 
 
 FCALLSCFUN2(FLOAT,rreadtktecpp,RREADTKTECPP,rreadtktecpp, INT, INT)
 
+  int ireadtktkcpp(int a, int b); 
+
+FCALLSCFUN2(INT,ireadtktkcpp,IREADTKTKCPP,ireadtktkcpp, INT, INT)
+
   int ireadtktecpp(int a, int b); 
 
 FCALLSCFUN2(INT,ireadtktecpp,IREADTKTECPP,ireadtktecpp, INT, INT)
 
-  int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float* cov);
+  int tkmktkcpp(int modid,int subdetbits,int MesrCode,int tracktype, int numtes,int Charge,int unused,int ndf,float chi2,float L,float xstart, float ystart, float zstart, float xend, float yend, float zend, float cord1,float cord2,float cord3,float theta,float phi,float invp,float* cov);
+
+FCALLSCFUN23(INT,tkmktkcpp,TKMKTKCPP,tkmktkcpp, INT , INT ,INT ,INT ,INT ,INT ,INT ,INT, FLOAT, FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT, FLOAT, FLOAT, FLOATV)
   
+  int tkmktecpp(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float* cov);
 
 FCALLSCFUN17(INT,tkmktecpp,TKMKTECPP,tkmktecpp, INT , INT ,INT ,INT ,INT ,INT ,INT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOAT ,FLOATV)
+
+  int addtetktkcpp(int a , int b);  
+
+FCALLSCFUN2(INT,addtetktkcpp,ADDTETKTKCPP,addtetktkcpp, INT, INT)
 
   int addhittktecpp(int a, int b); 
 
 FCALLSCFUN2(INT,addhittktecpp,ADDHITTKTECPP,addhittktecpp, INT, INT)
 
+  int readtkitkdatcpp(int a, int b);
+
+FCALLSCFUN2(INT,readtkitkdatcpp,READTKITKDATCPP,readtkitkdatcpp, INT, INT)
+
   int readtkitedatcpp(int a, int b); 
 
 FCALLSCFUN2(INT,readtkitedatcpp,READTKITEDATCPP,readtkitedatcpp, INT, INT)
+
+  int writetkitkdatcpp(int c, int a, int b);
+
+FCALLSCFUN3(INT,writetkitkdatcpp,WRITETKITKDATCPP,writetkitkdatcpp, INT, INT, INT)
 
   int writetkitedatcpp(int c, int a, int b);
 
@@ -182,10 +210,25 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                               _colNameVTX ,
                               std::string("VTXTrackerHits") ) ;
 
+  registerProcessorParameter( "SITTrackerHitCollectionName" , 
+                              "Name of the SIT TrackerHit collection"  ,
+                              _colNameSIT ,
+                              std::string("SITTrackerHits") ) ;
+
   registerProcessorParameter( "TPCTrackCollectionName" , 
                               "Name of the TPC Track collection"  ,
                               _colNameTPCTracks ,
                               std::string("TPCTracks") ) ;
+
+  registerProcessorParameter( "TrackCollectionName" , 
+                              "Name of the Track collection"  ,
+                              _colNameTracks ,
+                              std::string("Tracks") ) ;
+
+  registerProcessorParameter( "MCTPCTrackRelCollectionName" , 
+                              "Name of the TPC Track MC Relation collection"  ,
+                              _colNameMCTPCTracksRel ,
+                              std::string("MCTPCTracksRel") ) ;
 
   registerProcessorParameter( "MCTrackRelCollectionName" , 
                               "Name of the TPC Track MC Relation collection"  ,
@@ -232,6 +275,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   TPCHitBank = new TPC_Hit_Bank;  
   TkHitBank = new Tk_Hit_Bank;  
   TkTeBank = new Tk_Te_Bank;  
+  TkTkBank = new Tk_Tk_Bank;  
+
 
   LCCollection* tpcTHcol = 0 ;
 
@@ -249,6 +294,12 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   catch(DataNotAvailableException &e){
   }
   
+  LCCollection* sitTHcol = 0 ;
+  try{
+    sitTHcol = evt->getCollection( _colNameSIT ) ;
+  }
+  catch(DataNotAvailableException &e){
+  }
   
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
 
@@ -256,12 +307,16 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   if( tpcTHcol != 0 ){
     
     LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
+    LCCollectionVec* TrackVec = new LCCollectionVec( LCIO::TRACK )  ;
+
     // if we want to point back to the hits we need to set the flag
     LCFlagImpl trkFlag(0) ;
     trkFlag.setBit( LCIO::TRBIT_HITS ) ;
     tpcTrackVec->setFlag( trkFlag.getFlag()  ) ;
+    TrackVec->setFlag( trkFlag.getFlag()  ) ;
 
     LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
+    LCCollectionVec* tpclcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
 
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
     
@@ -358,7 +413,54 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       
       TkHitBank->setLastHitIndex("VTX"); 
       
+      
     }
+    
+    if( sitTHcol != 0 ) { 
+
+      int nSITHits = sitTHcol->getNumberOfElements()  ;   
+      
+      TkHitBank->setFirstHitIndex("SIT"); 
+      
+      for(int i=0; i< nSITHits; i++){
+        
+        TrackerHit* trkHitSIT = dynamic_cast<TrackerHit*>( sitTHcol->getElementAt( i ) ) ;
+        
+        double *pos;
+        float  de_dx;
+        float  time;
+        
+        //      cellId = 	trkHitSIT->getCellID();
+        pos = (double*) trkHitSIT->getPosition(); 
+        de_dx = trkHitSIT->getdEdx() ;
+        time = trkHitSIT->getTime() ;
+        
+        // convert to cm needed for BRAHMS(GEANT)
+        float x = 0.1*pos[0] ;
+        float y = 0.1*pos[1] ;
+        float z = 0.1*pos[2] ;
+        
+        
+        // Brahms resolution code for SIT = 3 REF tkhtpc.F
+        
+        int subid = trkHitSIT->getType() ;
+        
+        // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
+        float sitRPhiRes = 0.01 ;
+        float sitZRes = 0.05 ;
+        int resCode = 3 ;
+        
+        int mctrack = 0 ;
+        
+        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,sitRPhiRes,sitZRes) ;
+        
+      }
+      
+      TkHitBank->setLastHitIndex("SIT"); 
+      
+    }
+        
+      
       //_____________________________________________________________________
       
     if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
@@ -371,6 +473,11 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       cout << "the first hit for the vtx has id " << vtxsubid << endl ;
     }
     
+    if(TkHitBank->getNumOfSubDetHits("SIT") > 0) {
+      int sitsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("SIT")) ;
+      cout << "the first hit for the sit has id " << sitsubid << endl ;
+    }
+    
     int errTKTREV = TKTREV(); 
 
     cout << "TKTREV returns:" << errTKTREV << endl;
@@ -378,6 +485,11 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     
     if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
     cout << "number of TE's = " << TkTeBank->size() << endl ;
+
+    cout << "number of TK's = " << TkTkBank->size() << endl ;
+
+
+
     for(int te=0; te<TkTeBank->size();te++){
 
 
@@ -489,6 +601,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
         hits = TkTeBank->getHitlist(te) ;
 
+        //        std::cout << "the number of the hits on TE = " << hits->size() << std::endl;
+
         for(unsigned int tehit=0; tehit<hits->size();tehit++){
 
           TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( hits->at(tehit) ) ) ;
@@ -499,7 +613,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
           
             SimTrackerHit * simTrkHitTPC =dynamic_cast<SimTrackerHit*>(trkHitTPC->getRawHits().at(j)) ;
             MCParticle * mcp = dynamic_cast<MCParticle*>(simTrkHitTPC->getMCParticle()) ; 
-            if(mcp == NULL) cout << "mc particle pointer = null" << endl ; 
+
+            //            if(mcp == NULL) cout << "mc particle pointer = null" << endl ; 
           
             bool found = false;
           
@@ -521,14 +636,14 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
           MCParticle * mcp = mcPointers[k];
 
-          LCRelationImpl* lcRel = new LCRelationImpl;
-          lcRel->setFrom (tpcTrack);
-          lcRel->setTo (mcp);
+          LCRelationImpl* tpclcRel = new LCRelationImpl;
+          tpclcRel->setFrom (tpcTrack);
+          tpclcRel->setTo (mcp);
           float weight = mcHits[k]/tpcTrack->getTrackerHits().size();
-          lcRel->setWeight(weight);
+          tpclcRel->setWeight(weight);
         
 
-          lcRelVec->addElement( lcRel );
+          tpclcRelVec->addElement( tpclcRel );
         }
       
         //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
@@ -582,17 +697,243 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     //     tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
     //     tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
 
+    //    evt->addCollection( tpcTrackVec , _colNameTPCTracks) ;
+    //    evt->addCollection( lcRelVec , _colNameMCTracksRel) ;
+
+
+  //******************************
+  // try here for TK's
+
+    
+    for(int tk=0; tk<TkTkBank->size();tk++){
+
+      TrackImpl* Track = new TrackImpl ; 
+        
+      const double ref_r = 10.*TkTkBank->getCoord1_of_ref_point(tk);
+      const double ref_phi =TkTkBank->getCoord2_of_ref_point(tk)/TkTkBank->getCoord1_of_ref_point(tk);
+      const double ref_z = 10.*TkTkBank->getCoord3_of_ref_point(tk);
+      
+      //         cout << "ref_r = " << ref_r << endl;
+      //         cout << "ref_phi = " << ref_phi << endl;
+      
+      //FIXME:SJA: B-field hard coded needs to redeemed
+      // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
+      // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
+      
+      const double consb = (2.99792458*4.)/(10*1000.) ;     // divide by 1000 m->mm
+      
+      // tan lambda and curvature remain unchanged as the track is only extrapolated
+      // set negative as 1/p is signed with geometric curvature clockwise negative
+      
+      const double omega = ( -consb*TkTkBank->getInvp(tk) )/ sin( TkTkBank->getTheta(tk) ) ;
+      const double tanLambda = tan( (twopi/4.) - TkTkBank->getTheta(tk) ) ;
+      
+      Track->setOmega( omega ) ;
+      Track->setTanLambda( tanLambda ) ;      
+      
+      // computation of D0 and Z0 taken from fkrtpe.F in Brahms
+      
+      // xref and yref of ref point 
+      const double xref = ref_r*cos(ref_phi) ;
+      const double yref = ref_r*sin(ref_phi) ;
+      const double zref = ref_z ; 
+      const double trkRadius = 1. / omega ;
+      
+      
+      ////////////////////////////////
+      
+      // center of circumference
+      const double xc = xref + trkRadius * sin( TkTkBank->getPhi(tk) ) ;
+      const double yc = yref - trkRadius * cos( TkTkBank->getPhi(tk) ) ;
+      
+      const double xc2 = xc * xc ; 
+      const double yc2 = yc * yc ;
+      
+      const double DCA = ( sqrt( xc2+yc2 ) - fabs(trkRadius) ) ;
+      
+      double phiOfPCA = atan2 (yc,xc) ;
+      
+      if (DCA<0.) phiOfPCA = phiOfPCA + twopi/2. ;
+      
+      if ( phiOfPCA < -twopi/2. ) phiOfPCA = twopi + phiOfPCA ;
+      else if ( phiOfPCA > twopi/2. ) phiOfPCA = phiOfPCA = twopi + phiOfPCA ;   
+      
+      const double x0 = fabs( DCA ) * cos( phiOfPCA ) ;
+      const double y0 = fabs( DCA ) * sin( phiOfPCA ) ;
+      
+      double phi = phiOfPCA + twopi/2. - ( fabs(omega)/omega ) * ( fabs(DCA)/DCA ) * (twopi/4.) ;
+      
+      if (phi<-twopi/2.) phi =  twopi + phi ;
+      else if (phi>twopi/2.)  phi = -twopi + phi ;
+      
+      const double d0 = y0 * cos( phi )  - x0 * sin( phi ) ;
+      
+      const double alpha = - omega * ( xref - x0 ) * cos( phi ) - omega * ( yref - y0 ) * sin( phi ) ;
+      const double beta = 1.0 - omega * ( xref - x0 ) * sin( phi ) + omega * ( yref - y0 ) * cos( phi ) ;
+      
+      double dphi = atan2( alpha,beta ) ;
+      
+      double larc =  - dphi/ omega ;
+      
+      if (larc < 0. ) {
+        if ( dphi < 0.0 ) dphi = dphi + twopi ;
+        else dphi = dphi - twopi ;
+        larc =  - dphi/ omega ;
+      }
+      
+      double z0 = zref - larc * tanLambda ;
+      
+      float refPoint[3] ;
+      
+      refPoint[0] = x0 ;
+      refPoint[1] = y0 ;
+      refPoint[2] = z0 ;
+      
+      Track->setPhi( phi ) ;       
+      Track->setD0( d0 ) ;
+      Track->setZ0( z0 ) ;       
+      Track->setReferencePoint( refPoint ) ;
+      
+      //                 std::cout << "calc value of omega = " << omega;
+      //                 std::cout << " calc value of phi = " << phi;
+      //                 std::cout << " calc value of d0 = " << d0;
+      //                 std::cout << " calc value of z0 = " << z0;
+      //                 std::cout << " calc value of tanLambda = " << tanLambda<< std::endl;
+      //
+      ////////////////////////////////
+      
+      Track->setIsReferencePointPCA(true) ;
+      Track->setChi2(TkTkBank->getChi2(tk)) ;
+      Track->setNdf(TkTkBank->getNdf(tk)) ;
+      //        Track->setdEdx(TkTkBank->getDe_dx(tk)) ;
+      
+      const vector <int> * hits ;
+      const vector <int> * tes ;
+      vector<MCParticle*> mcPointers ;
+      vector<int> mcHits ;
+      
+      
+      tes = TkTkBank->getTElist(tk) ;
+      
+      //      std::cout << "the number of TE's in TK " << tk << " = " << tes->size() << std::endl;   
+      
+      for(unsigned int tkte=0; tkte<tes->size();tkte++){
+        
+        
+        //        std::cout << "the number of the TE in TK = " << tes->at(tkte) << std::endl;
+        //        std::cout << "the Subdetector number of the TE in TK " << TkTeBank->getSubdetector_ID(tes->at(tkte)) << std::endl;
+        
+        hits = TkTeBank->getHitlist(tes->at(tkte)) ;
+        
+        //        std::cout << "the number of the hits on TE = " << hits->size() << std::endl;
+        
+        //          for(unsigned int tkhit=0; tkhit<hits->size();tkhit++){
+        
+        //           std::cout << "the Subdetector number of the Hit is " << TkHitBank->getSubdetectorID(hits->at(tkhit)) << std::endl; 
+        //          }
+        
+        //        }
+
+        for(unsigned int tkhit=0; tkhit<hits->size();tkhit++){
+          
+          TrackerHit* trkHit ;
+
+          if(TkHitBank->getSubdetectorID(hits->at(tkhit))==500){
+            
+            int tpchitindex = hits->at(tkhit) - TkHitBank->getFirstHitIndex("TPC") ;
+            trkHit = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( tpchitindex ) ) ;
+          }
+          
+          if(TkHitBank->getSubdetectorID(hits->at(tkhit))>99
+             && TkHitBank->getSubdetectorID(hits->at(tkhit))<106){
+           
+            int vtxhitindex = hits->at(tkhit) - TkHitBank->getFirstHitIndex("VTX") ;  
+            trkHit = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( vtxhitindex ) ) ;
+          }          
+
+          if(TkHitBank->getSubdetectorID(hits->at(tkhit))>399
+             && TkHitBank->getSubdetectorID(hits->at(tkhit))<403){
+           
+            int sithitindex = hits->at(tkhit) - TkHitBank->getFirstHitIndex("SIT") ;  
+            trkHit = dynamic_cast<TrackerHit*>( sitTHcol->getElementAt( sithitindex ) ) ;
+          }
+
+          Track->addHit(trkHit) ;
+          
+          for(unsigned int j=0; j<trkHit->getRawHits().size(); j++){ 
+            
+            SimTrackerHit * simTrkHit =dynamic_cast<SimTrackerHit*>(trkHit->getRawHits().at(j)) ;
+            MCParticle * mcp = dynamic_cast<MCParticle*>(simTrkHit->getMCParticle()) ; 
+
+            //            if(mcp == NULL) cout << "mc particle pointer = null" << endl ; 
+            
+            bool found = false;
+            
+            for(unsigned int k=0; k<mcPointers.size();k++)
+              {
+                if(mcp==mcPointers[k]){
+                  found=true;
+                  mcHits[k]++;
+                }
+              }
+            if(!found){
+              mcPointers.push_back(mcp);
+              mcHits.push_back(1);
+            }
+          }
+        }
+        
+
+        for(unsigned int k=0; k<mcPointers.size();k++){
+          
+          MCParticle * mcp = mcPointers[k];
+          
+          LCRelationImpl* lcRel = new LCRelationImpl;
+          lcRel->setFrom (Track);
+          lcRel->setTo (mcp);
+          float weight = mcHits[k]/Track->getTrackerHits().size();
+          lcRel->setWeight(weight);
+          
+          
+          lcRelVec->addElement( lcRel );
+        }
+      }
+      //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
+      
+
+      TrackVec->addElement( Track );
+
+    }
+
+    //    // set the parameters to decode the type information in the collection
+    //    // for the time being this has to be done manually
+    //    // in the future we should provide a more convenient mechanism to 
+    //    // decode this sort of meta information
+    //
+    //    //     StringVec typeNames ;
+    //    //     IntVec typeValues ;
+    //    //     typeNames.push_back( LCIO::TRACK ) ;
+    //    //     typeValues.push_back( 1 ) ;
+    //    //     TrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
+    //    //     TrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
+    //
+    
     evt->addCollection( tpcTrackVec , _colNameTPCTracks) ;
+    evt->addCollection( tpclcRelVec , _colNameMCTPCTracksRel) ;
+    evt->addCollection( TrackVec , _colNameTracks) ;
     evt->addCollection( lcRelVec , _colNameMCTracksRel) ;
     
 
   }
   
 
+  //******************************  
+
   delete TkMCBank;
   delete TPCHitBank;
   delete TkHitBank;
   delete TkTeBank;
+  delete TkTkBank;
 
   _nEvt ++ ;
   

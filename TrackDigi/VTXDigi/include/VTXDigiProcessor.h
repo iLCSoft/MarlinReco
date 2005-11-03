@@ -50,6 +50,7 @@ class VTXDigiProcessor : public Processor {
   /** Input collection name.
    */
   std::string _colName ;
+  std::string _colNameSIT ;
 
   int _nRun ;
   int _nEvt ;

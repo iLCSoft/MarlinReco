@@ -172,6 +172,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //      cout << "z position before smearing " << pos[2] << endl;     
       //
 
+      // FIXME: there seems to be a systematic shift here: 
       pos[0] = pos[0] - randrp * pos[1]/rad;
       pos[1] = pos[1] + randrp * pos[0]/rad;
       pos[2] = pos[2] + randz;
@@ -346,7 +347,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           // 	  push back the SimTHit for this TrackerHit
           trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );
+            
           trkhitVec->addElement( trkHit ); 
+
 
         }
       }

@@ -1,7 +1,13 @@
 *  
-* $Id: tpcsav.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcsav.F,v 1.3 2005-08-02 12:59:48 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -77,7 +83,7 @@ C(KH)  NHITS=MY_JTGTN1(ITK)+MY_JTGTNR(ITK)
          IF (.NOT.SKIP) THEN
            I2=I2+1
            LIST1(I2)=HITLNK(MY_TGCLT(MY_JTGTIO(ITK)+I))
-           LIST2(I2)=ID_TPC
+          LIST2(I2)=ID_TPC
          END IF
        END DO
 

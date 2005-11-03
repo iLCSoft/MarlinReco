@@ -1,7 +1,31 @@
 *  
-* $Id: tkstor.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tkstor.F,v 1.4 2005-08-03 19:13:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/21 16:37:00  aplin
+* The itedat bank has been added with read and write interface.
+*
+* TKADDH has now been added so that the silicon hits are included as
+* TE's.
+*
+* Added FSFSTR from delsearch to steer the creation of
+* TS's
+*
+* The following include files need to be added for FSFSTR
+* include/fsfdebug.inc
+* include/fsfreject.inc
+* include/fsfflags.inc
+*
+* FSFSTR is now called by TKTREV although all action is commented out.
+*
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -70,6 +94,11 @@ c#include "gcbank.inc"
       integer addhittktecpp
       external addhittktecpp
 
+      integer writetkitedatcpp
+      external writetkitedatcpp
+
+      integer atest
+
 #include "include/tkfunc1.inc"
 #include "include/tkfunc.inc"
       IERR=0
@@ -96,14 +125,7 @@ ccc      write(*,*)"DATA(",15,") = ",DATA(15),"  1/p at reference point"
 ccc      write(*,*)"DATA(",16,") = ",DATA(16),"  dE/dx (not yet)"         
 ccc
 
-      do i=17, 32
-         cov(i) = DATA(i)
-      enddo
 
-         try = tkmktecpp(DATA(1),DATA(2),DATA(3),DATA(4),
-     +        DATA(5),DATA(6),DATA(7),DATA(8),DATA(9),DATA(10),
-     +        DATA(11),DATA(12),DATA(13),DATA(14),DATA(15),DATA(16),
-     +        cov)
 
 
 
@@ -127,8 +149,27 @@ c --- check range
 c --- copy TE data
         NTE=NTE+1
         INDEX=NTE
+
+C     Replace the original creation of this TE with the C++/F77 interface
+
 C(KH)   CALL UCOPY(DATA,RTE(1,INDEX),MXTE)
 c       CALL UCOPY(DATA,Q(LBRTE+MXTE*(INDEX-1)+1),MXTE)
+
+      do i=1, 15
+         cov(i) = DATA(i+16)
+c         write(*,*) "DATA(",i,") = " , DATA(i)
+c         write(*,*) "cov(",i,") = " , cov(i)
+      enddo
+
+         try = tkmktecpp(DATA(1),DATA(2),DATA(3),DATA(4),
+     +        DATA(5),DATA(6),DATA(7),DATA(8),DATA(9),DATA(10),
+     +        DATA(11),DATA(12),DATA(13),DATA(14),DATA(15),DATA(16),
+     +        cov)
+
+c         do i=17, 32
+c         try = writetktecpp(cov(i),i,INDEX)
+c         enddo
+
 
 
 c --- copy hit list and transform it into linear format if necessary
@@ -138,7 +179,9 @@ c --- copy hit list and transform it into linear format if necessary
               IHITTE(NHITTE+I)=LIST1(I)
            ELSE IF (LIST2(I).GT.0.AND.LIST2(I).LE.3000) THEN
                                 ! index relative to subdet. position -> transform index
+
               try = addhittktecpp(LIST1(I)+IHPOINT(LIST2(I))-1,INDEX)
+
               IHITTE(NHITTE+I)=LIST1(I)+IHPOINT(LIST2(I))-1
            ELSE
                                 ! oops?
@@ -147,7 +190,15 @@ c --- copy hit list and transform it into linear format if necessary
            END IF
         END DO
 
+        try = writetkitedatcpp(NHITTE+1,1,INDEX)
+        try = writetkitedatcpp(N,2,INDEX)
+        try = writetkitedatcpp(0,3,INDEX)
+        try = writetkitedatcpp(0,4,INDEX)
 
+        RVAL(1) = DATA(1)
+
+c         write(*,*) "TE added for: " , IVAL(1) ,
+c     +       " with num of hits = ", ITEDAT(2, INDEX)
 
 ccc**        ITEDAT(1,INDEX)=NHITTE+1
 ccc**        ITEDAT(2,INDEX)=N
@@ -157,7 +208,9 @@ ccc        IQ(LBRT2+5*(INDEX-1)+1) = NHITTE + 1
 ccc        IQ(LBRT2+5*(INDEX-1)+2) = N
 ccc        IQ(LBRT2+5*(INDEX-1)+3) = 0
 ccc        IQ(LBRT2+5*(INDEX-1)+4) = 0
-ccc        NHITTE=NHITTE+N
+
+        NHITTE=NHITTE+N
+
 
 cccc --- calculate TE label
 ccc        NTSTRK=0

@@ -1,5 +1,6 @@
-#ifndef BrahmsEndProcessor_h
-#define BrahmsEndProcessor_h 1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+#ifndef FTDDigiProcessor_h
+#define FTDDigiProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -10,18 +11,17 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-
-/** Destroys the Bank structure after it is no longer needed by FortranProcessor.
-* @author S. Aplin, DESY
+/**  Produces VTX TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
+ * @author S. Aplin, DESY
  */
-class BrahmsEndProcessor : public Processor {
+class FTDDigiProcessor : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new BrahmsEndProcessor ; }
+  virtual Processor*  newProcessor() { return new FTDDigiProcessor ; }
   
   
-  BrahmsEndProcessor() ;
+  FTDDigiProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.

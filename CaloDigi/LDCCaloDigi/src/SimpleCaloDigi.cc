@@ -47,9 +47,9 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
 
   std::vector<std::string> hcalCollections;
 
-  hcalCollections.push_back(std::string("hcalFeRPC1_HcalBarrelEnd"));
-  hcalCollections.push_back(std::string("hcalFeRPC1_HcalBarrelReg"));
-  hcalCollections.push_back(std::string("hcalFeRPC1_HcalEndCaps"));
+  hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelEnd"));
+  hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelReg"));
+  hcalCollections.push_back(std::string("hcalFeScintillator_HcalEndCaps"));
 
   registerProcessorParameter("HCALCollections" , 
 			     "HCAL Collection Names" , 
@@ -80,11 +80,12 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   registerProcessorParameter("HCALThreshold" , 
 			     "Threshold for HCAL Hits in GeV" ,
 			     _thresholdHcal,
-			     (float)0.25e-6);
+			     (float)4.0e-4);
+
 
   std::vector<int> ecalLayers;
   ecalLayers.push_back(30);
-  ecalLayers.push_back(40);
+  ecalLayers.push_back(100);
 
 
   registerProcessorParameter("ECALLayers" , 
@@ -104,8 +105,8 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
 
 
   std::vector<float> calibrEcal;
-  calibrEcal.push_back(1.);
-  calibrEcal.push_back(1.);
+  calibrEcal.push_back(31.3);
+  calibrEcal.push_back(83.0);
 
 
   registerProcessorParameter("CalibrECAL" , 
@@ -115,7 +116,7 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   
 
   std::vector<float> calibrHcal;
-  calibrHcal.push_back(1.);
+  calibrHcal.push_back(27.3);
 
   registerProcessorParameter("CalibrHCAL" , 
 			     "Calibration coefficients for HCAL" ,

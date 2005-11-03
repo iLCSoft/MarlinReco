@@ -1,7 +1,10 @@
 *  
-* $Id: unmerge.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: unmerge.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -31,8 +34,8 @@ C
 #include "include/fndparms.inc"
 #include "include/alcons.inc"
 #include "include/tpco.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tpcdims.inc"
 #include "include/tpcres.inc"
 #include "include/tphtcns.inc"
@@ -133,7 +136,7 @@ c      write(*,*) "the number of hits in unmerge = " ,  NTPCO
 
       chimin=9999.
 
-      DO 5 IROW=1,LTPDRO
+      DO 5 IROW=1,NRTPC
        RAD = TPPROW(IROW)
        NBLOTS(IROW)=0
 c(KH)  memorise where to find blots for this pad row later
@@ -216,7 +219,7 @@ C gab new 7.3.00:
       DO I=1,NTPCO
         IROW=1+ INT((TPCO_RV(I)-TPCACRI)/TPCPADR )
         IF ( IROW .LE. 0 ) IROW = 1
-        IF ( IROW .GE. LTPDRO ) IROW = LTPDRO
+        IF ( IROW .GE. NRTPC ) IROW = NRTPC
 c(KH) pointer just before first blot in current pad row
         NTOTBL=IBLOTS(IROW)
         DO IBLOT=1,NBLOTS(IROW)

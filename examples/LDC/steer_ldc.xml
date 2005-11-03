@@ -1,8 +1,10 @@
-<!--##########################################
-    #                                        #
-    #     Example steering file for marlin   #
-    #                                        #
-    ##########################################-->
+<!--############################################
+    #                                          #
+    #     Example steering file for MarlinReco #
+    #                                          #
+    # T. Kraemer, DESY                         #
+    #                                          #
+    ############################################-->
 
 
 <marlin>
@@ -21,34 +23,43 @@
   <processor name="MyTrackwiseClustering"/>
 
   <processor name="MyWolf"/>
-  <processor name="MyCEDViewer"/>
-  <processor name="MyLCIOOutputProcessor"/>
+  <!--processor name="MyGenericViewer"/-->
+  <!--processor name="MyLCIOOutputProcessor"/-->
 
  </execute>
 
+
  <global>
   <parameter name="LCIOInputFiles"> muons.slcio </parameter>
-  <parameter name="MaxRecordNumber" value="5001" />  
+  <parameter name="MaxRecordNumber" value="0" />  
   <parameter name="SupressCheck" value="false" />  
   <parameter name="GearXMLFile"> gear_ldc.xml </parameter>
  </global>
 
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">aida_file </parameter>
+  <!-- type of output file xml (default) or root ( only OpenScientist)-->
+  <parameter name="FileType" type="string">xml </parameter>
+</processor>
 
  <processor name="MyCEDViewer" type="CEDViewer">
-  <!--CEDViewer: event display of LCIO objects  - based on CED by A.Zhelezov.-->
-  <!-- Use keys 0-9 to toggle on/off collections-->
-    <!--collection to be displayed ( ColName, marker type[0-2], size)-->
-      <!--parameter name="DrawCollection" type="StringVec">DrawCollection 0 3  </parameter-->
+ <!--CEDViewer: event display of LCIO objects  - based on CED by A.Zhelezov.-->
+  <!--collection to be displayed ( ColName, marker type[0-2], size)-->
+  <!--parameter name="DrawCollection" type="StringVec">DrawCollection 0 3  </parameter-->
+</processor>
 
-	<parameter name="DrawCollection" type="StringVec">MCParticle 0 1  </parameter>
-        <parameter name="DrawCollection" type="StringVec">tpc04_TPC 0 1  </parameter>
-	<parameter name="DrawCollection" type="StringVec">TPCTrackerHits 0 1  </parameter>
-	<parameter name="DrawCollection" type="StringVec">ecal02_EcalBarrel 1 2  </parameter>
-	<parameter name="DrawCollection" type="StringVec">TPCTracks 0 2  </parameter>
-	<parameter name="DrawCollection" type="StringVec">ecal02_EcalEndcap 0 2  </parameter>
-	<!--parameter name="DrawCollection" type="StringVec">hcalFeScintillator_HcalBarrelEnd 0 2  </parameter-->
-	<parameter name="DrawCollection" type="StringVec">hcalFeScintillator_HcalBarrelReg 0 2  </parameter>
-	<!--parameter name="DrawCollection" type="StringVec">hcalFeScintillator_HcalEndCaps 0 2  </parameter-->
+ <processor name="MyCalorimeterFinalStage" type="CalorimeterFinalStage">
+ <!--CalorimeterFinalStage -->
+  <!--Cluster Input Collection Name-->
+  <parameter name="ClusterInputCollection" type="string">CalorimeterStage3Clusters </parameter>
+  <!--Cluster Output Collection Name-->
+  <parameter name="ClusterOutputCollection" type="string">ClustersMagic </parameter>
+  <!--Minimal Hits in Cluster-->
+  <parameter name="MinimalHits" type="int">0 </parameter>
 </processor>
 
  <processor name="MyClusterCheater" type="ClusterCheater">
@@ -92,42 +103,41 @@
   <!--Detector Model-->
   <parameter name="DetectorModel" type="int">0 </parameter>
   <!--Layer for Calo Hits-->
-  <parameter name="LayerCaloHit" type="int"> 2 </parameter>
+  <parameter name="LayerCaloHit" type="int">4 </parameter>
   <!--Layer for Reco Clusters-->
-  <parameter name="LayerClusters" type="int"> 3 </parameter>
+  <parameter name="LayerClusters" type="int">6 </parameter>
   <!--Layer for Reco Particles-->
-  <parameter name="LayerReco" type="int"> 4 </parameter>
+  <parameter name="LayerReco" type="int">7 </parameter>
   <!--Layer for Sim Calo Hits-->
-  <parameter name="LayerSimCaloHit" type="int"> 1 </parameter>
+  <parameter name="LayerSimCaloHit" type="int">2 </parameter>
   <!--Layer for Sim Tracker Hits-->
-  <parameter name="LayerSimTrackerHit" type="int"> 1 </parameter>
+  <parameter name="LayerSimTrackerHit" type="int">1 </parameter>
   <!--Layer for Tracker Hits-->
-  <parameter name="LayerTrackerHit" type="int"> 2 </parameter>
+  <parameter name="LayerTrackerHit" type="int">3 </parameter>
   <!--Layer for Tracks-->
-  <parameter name="LayerTracks" type="int"> 3 </parameter>
+  <parameter name="LayerTracks" type="int">5 </parameter>
   <!--Layer for True Clusters-->
-  <parameter name="LayerTrueClusters" type="int">-1 </parameter>
+  <parameter name="LayerTrueClusters" type="int">9 </parameter>
   <!--Layer for True Tracks-->
-  <parameter name="LayerTrueTracks" type="int">-1 </parameter>
+  <parameter name="LayerTrueTracks" type="int">8 </parameter>
   <!--Magnetic Field-->
   <parameter name="MagneticField" type="float">4 </parameter>
   <!--Particle Collection Name-->
   <parameter name="ParticleCollection" type="string">RecoParticles </parameter>
   <!--Sim Calo Hit Collection Names-->
-
- <!--parameter name="SimCaloHitCollections" type="StringVec">ecal02_EcalBarrel ecal02_EcalEndcap hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalB\
-arrelReg hcalFeScintillator_HcalEndCaps</parameter-->
-
+  <parameter name="SimCaloHitCollections" type="StringVec"> ecal02_EcalBarrel ecal02_EcalEndcap hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps </parameter>
   <!--Sim Tracker Hit Collection Names-->
-  <parameter name="SimTrackerHitCollections" type="StringVec">tpc04_TPC  </parameter>
+  <parameter name="SimTrackerHitCollections" type="StringVec">vxd00_VXD sit00_SIT tpc04_TPC </parameter>
   <!--Track Collection Name-->
-  <parameter name="TrackCollection" type="string">TPCTracks </parameter>
+  <parameter name="TrackCollection" type="string">TPC_Tracks </parameter>
   <!--Tracker Hit Collection Names-->
   <parameter name="TrackerHitCollections" type="StringVec">TPCTrackerHits  </parameter>
   <!--True Cluster Collection Name-->
   <parameter name="TrueClusterCollection" type="string">TrueClusters </parameter>
   <!--True Track Collection Name-->
   <parameter name="TrueTrackCollection" type="string">TrueTracks </parameter>
+  <!--Wait for Keyboard before proceed-->
+  <parameter name="WaitForKeyboard" type="int">1 </parameter>
 </processor>
 
  <processor name="MyHEP_RecordProcessor" type="HEP_RecordProcessor">
@@ -143,7 +153,7 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter-->
   <!-- name of output file -->
   <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
   <!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
-  <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
+  <parameter name="LCIOWriteMode" type="string">None </parameter>
 </processor>
 
  <processor name="MyLEPTrackingProcessor" type="LEPTrackingProcessor">
@@ -171,10 +181,7 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter-->
   <!--Threshold for ECAL Hits in GeV-->
   <parameter name="ECALThreshold" type="float">1e-04 </parameter>
   <!--HCAL Collection Names-->
-  
-   <parameter name="SimCaloHitCollections" type="StringVec">ecal02_EcalBarrel ecal02_EcalEndcap hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalB\
-arrelReg hcalFeScintillator_HcalEndCaps</parameter>
-
+  <parameter name="HCALCollections" type="StringVec">hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps  </parameter>
   <!--Index of HCal Layers-->
   <parameter name="HCALLayers" type="IntVec">100  </parameter>
   <!--Threshold for HCAL Hits in GeV-->
@@ -273,6 +280,14 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter>
   <parameter name="PhotonResolution" type="FloatVec">0.01 0.1 0 1.5708  </parameter>
 </processor>
 
+ <processor name="MySimpleTimer" type="SimpleTimer">
+ <!--MARLIN Processor 'SimpleTimer', offers simple timer utilities-->
+  <!--Mode-->
+  <parameter name="Mode" type="int">0 </parameter>
+  <!--Seconds to Wait-->
+  <parameter name="SecondsToWait" type="int">0 </parameter>
+</processor>
+
  <processor name="MySphere" type="Sphere">
  <!--Sphere calculates eigenvalues of sphericity tensor-->
   <!--Name of the ReconstructedParticle collection-->
@@ -331,26 +346,6 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter>
   <parameter name="TrueTrackCollection" type="string">TrueTracks </parameter>
 </processor>
 
- <processor name="MyTrackCheckViewer" type="TrackCheckViewer">
- <!--TrackCheckViewer: event display of LCIO objects  - based on CED by A.Zhelezov.-->
-  <!--collection to be displayed ( ColName, marker type[0-2], size)-->
-  <!--parameter name="DrawCollection" type="StringVec">DrawCollection 0 3  </parameter-->
-</processor>
-
- <processor name="MyTrackProcessor" type="TrackProcessor">
- <!--Plots the delta inverse momentum of tracks reconstructed in the TPC-->
-  <!--Name of the MCTrackRelations collection-->
-  <parameter name="MCTrackRelationsCollectionName" type="string">MCTrackRelations </parameter>
-  <!--Name of the TPC Track collection-->
-  <parameter name="TPCTrackCollectionName" type="string">TPCTracks </parameter>
-</processor>
-
- <processor name="MyTrackingPerformanceProcessor" type="TrackingPerformanceProcessor">
- <!--Plots tracking performace histogrammes-->
-  <!--Name of the MC collection-->
-  <parameter name="CollectionName" type="string">MCParticle </parameter>
-</processor>
-
  <processor name="MyTrackwiseClustering" type="TrackwiseClustering">
  <!-- description not set by author -->
   <!--Cluster Collection Name -->
@@ -405,6 +400,8 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter>
 
  <processor name="MyWolf" type="Wolf">
  <!--Particle Reconstruction-->
+  <!--Magnetic field-->
+  <parameter name="BField" type="float">4 </parameter>
   <!--Cluster Collection Name-->
   <parameter name="ClusterCollection" type="string">ClustersAR </parameter>
   <!--Dist Merge Cut-->
@@ -413,30 +410,22 @@ arrelReg hcalFeScintillator_HcalEndCaps</parameter>
   <parameter name="DistanceTrackToCluster" type="float">50 </parameter>
   <!--Fraction of EM Energy-->
   <parameter name="FractionEM" type="float">0.95 </parameter>
-  <!--Global Phi angle-->
-  <parameter name="GlobalPhi" type="float">0 </parameter>
   <!--Hcal Resolution-->
   <parameter name="HcalResolution" type="float">0.5 </parameter>
   <!--Lower Momentum-->
   <parameter name="LowerMomentum" type="float">5 </parameter>
   <!--Merge Clusters-->
   <parameter name="MergeClusters" type="int">1 </parameter>
-  <!--N Fold Symmetry-->
-  <parameter name="NSymmetry" type="int">8 </parameter>
   <!--Native Track Fitter-->
   <parameter name="NativeTrackFitter" type="int">0 </parameter>
   <!--Particle Collection Name-->
   <parameter name="ParticleCollection" type="string">RecoParticles </parameter>
-  <!--Radius of Barrel-->
-  <parameter name="ROfBarrel" type="float">1700 </parameter>
   <!--Cut on D0 for tracks-->
   <parameter name="RPhiCut" type="float">50 </parameter>
   <!--Track Collection Name-->
   <parameter name="TrackCollection" type="string">TPCTracks </parameter>
   <!--Cut on Z0 for tracks-->
   <parameter name="ZCut" type="float">50 </parameter>
-  <!--Z coordinate of Endcap-->
-  <parameter name="ZOfEndcap" type="float">2820 </parameter>
 </processor>
 
 

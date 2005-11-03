@@ -185,6 +185,23 @@ This library is under current development, so it will evolve in the future.
 
 \subsection{AIDA}
 
+Using MarlinReco to reconstruct HEP events and in a later stage even to
+analyse real data, requires a interface to histograming packages. 
+For this task we utilise the Abstract Interfaces for Data Analysis
+(AIDA)~\cite{ref_aida}. It offers a standard set of interfaces for creating 
+and manipulating histograms, n-tuples and related data analysis objects.
+Two versions of the AIDA interfaces exist, one for Java and
+one for C++. The two interfaces are as identical as the underlying
+languages will permit. Currently a Java implementation -- 
+JAIDA~\cite{ref_jaida} -- is available which also can be accessed from C++ 
+via AIDA-JNI~\cite{ref_aidajni} (Java Native Interface). 
+MarlinReco uses AIDA-JNI to enable the production of check plots. 
+AIDA compliant applications\footnote{ 
+      JAS3~\cite{ref_jas}, The PI project in LCG-AA~\cite{ref_pi} and 
+      Open Scientist~\cite{ref_OS}} 
+allow to access, process or analyse the information
+stored through the AIDA interface. 
+
 \subsection{Other Libraries} \label{sec:otherlibs}
 
 Marlin~\cite{ref_marlin} and some of the MarlinReco processors depend on the
@@ -538,7 +555,7 @@ the file {\tt muons.slcio}
 replacing the original line with the {\tt LCIOInputFiles} parameter.
 To read the whole file set {\tt MaxRecordNumber} to 0. In addition the 
 reconstruction needs to know the detector geometry. 
-For the ``Large Detector Concept'' this information is stored
+For the ``Large Detector Concept'' (LDC) this information is stored
 in the file
 
 \begin{verbatim}
@@ -627,7 +644,7 @@ are replaced by {\tt MyTrackCheater} and {\tt MyClusterCheater}:
 </execute>
 \end{verbatim}
 
-\subsection{CEDViewer to Visualise Events}
+\subsection{C Event Display to Visualise Events}
 
 Even though the {\tt dumpevent} program from the LCIO package prints out
 very detailed information about all objects of an event
@@ -656,28 +673,73 @@ different ways: to show the events of a existing LCIO file,
 to display the events after the reconstruction or to visualise the 
 different reconstruction steps done by separate processors. 
 
-To use CED in a MarlinReco job, edit the steering file {\tt exampleJob.xml}
+To use CED in a MarlinReco job, edit the steering file {\tt exampleSteeringFile.xml}
 which you created following the instructions of the last section. 
 Add the line 
 
 \begin{verbatim}
-<processor name=''MyCEDViewer''/>
+<processor name="MyGenericViewer"/>
 \end{verbatim}
 
 as the second last processor (before the {\tt MyLCIOOutputProcessor})
-in the {\tt execute} section. In the section 
+in the {\tt execute} section. Including cheater processors and the
+real reconstruction algorithms in the steering file allows a comparison 
+between both methods. Your {\tt execute} section then should look like
+this:
+
+\begin{verbatim} 
+ <execute>
+  <processor name="MyVTXDigiProcessor"/>
+  <processor name="MyFTDDigiProcessor"/>
+  <processor name="MySimpleCaloDigi"/>
+  <processor name="MyTPCDigiProcessor"/>
+  <processor name="MyTrackCheater"/>
+  <processor name="MyLEPTrackingProcessor"/>
+  <processor name="MyClusterCheater"/>
+  <processor name="MyTrackwiseClustering"/>
+  <processor name="MyWolf"/>
+  <processor name="MyGenericViewer"/>
+  <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+\end{verbatim}
+
+In the section 
 where the parameters are handed over to {\tt MyGenericViewer} 
 (processor of type {\em GenericViewer}) one has to specify the 
-names of the collections to display. In addition a one digit number 
-{\tt 0, 1, ... 9} can be assigned to each specified collection 
-in order to toggle displaying it. 
+names of the collections to display. To view the example from the LCIO file 
+({\tt muons.slcio}) from above, the names of two collection have to be
+modified. Do this by replacing the corresponding lines with:
+
+\begin{verbatim}
+<parameter name="SimCaloHitCollections" type="StringVec"> ecal02_EcalBarrel ecal02_EcalEndcap hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps </parameter>
+<parameter name="SimTrackerHitCollections" type="StringVec">vxd00_VXD sit00_SIT tpc04_TPC </parameter>
+\end{verbatim}
+
+To enable to toggle (on/off) displaying the contents from the 
+specified collections, a one digit number {\tt 0, 1, ... 9} can be assigned 
+to each collection. This can be done by replacing the corresponding 
+lines of parameters with 
+
+\begin{verbatim}
+<parameter name="LayerSimTrackerHit" type="int">1 </parameter>
+<parameter name="LayerSimCaloHit" type="int">2 </parameter>
+<parameter name="LayerTrackerHit" type="int">3 </parameter>
+<parameter name="LayerCaloHit" type="int">4 </parameter>
+<parameter name="LayerTracks" type="int">5 </parameter>
+<parameter name="LayerClusters" type="int">6 </parameter>
+<parameter name="LayerReco" type="int">7 </parameter>
+<parameter name="LayerTrueTracks" type="int">8 </parameter>
+<parameter name="LayerTrueClusters" type="int">9 </parameter>
+\end{verbatim}
+
+in the XML steering file.
 
 Before running MarlinReco you have to launch the {\tt glced} program:
 
 \begin{verbatim}
 cd $LCSoft/Marlin
 $LCSoft/glced/glced
-bin/Marlin exampleJob.xml
+bin/Marlin exampleSteeringFile.xml
 \end{verbatim}
 
 Now the event is displayed after finishing the reconstruction of 
@@ -1302,6 +1364,15 @@ JAIDA homepage:\\
 \bibitem{ref_aidajni}
 AIDA-JNI homepage:\\
 \htmladdnormallink{http://java.freehep.org/aidajni}{http://java.freehep.org/aidajni}
+\bibitem{ref_jas}
+JAS3 homepage:\\
+\htmladdnormallink{http://jas.freehep.org/jas3}{http://jas.freehep.org/jas3}
+\bibitem{ref_pi}
+Homepage of the PI project:\\
+\htmladdnormallink{http://cern.ch/pi/}{http://cern.ch/pi/}
+\bibitem{ref_OS}
+Open Scientist homepage:\\
+\htmladdnormallink{http://www.lal.in2p3.fr/OpenScientist/}{http://www.lal.in2p3.fr/OpenScientist/}
 \bibitem{ref_ccvssh}
 CCVSSH homepage:\\
 \htmladdnormallink{http://ccvssh.sourceforge.net}{http://ccvssh.sourceforge.net}

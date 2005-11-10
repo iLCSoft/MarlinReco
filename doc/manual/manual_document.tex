@@ -815,7 +815,9 @@ To set up a new package you can execute the following commands:
 \begin{verbatim}
 cd $LCSoft/packages
 mkdir MyPackage
-cd MyPackage
+cd $LCSoft/Marlin/packages
+ln -s $LCSoft/packages/MyPackage
+cd $LCSoft/packages/MyPackage
 mkdir include
 mkdir src
 mkdir lib

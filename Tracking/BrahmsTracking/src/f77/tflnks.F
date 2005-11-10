@@ -1,7 +1,10 @@
 *  
-* $Id: tflnks.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tflnks.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -59,8 +62,8 @@ C
 #include "include/alcons.inc"
 #include "include/tpco.inc"
 #include "include/tchajj.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tpgeop.inc"
 #include "include/my_ttrc.inc"
 #include "include/my_tcha.inc"
@@ -187,13 +190,13 @@ c(kh)   IOUT1 = 2**(LTPDRO-96)
 c(kh)   IOUT2 = 2**(LTPDRO-96-1)
 c(kh)   IOUT3 = 2**(LTPDRO-96-2)
 c(kh)   IOUT4 = 2**(LTPDRO-96-3)
-        IOUT1 = 2**(LTPDRO-(LTPDRO/32)*32)
-        IOUT2 = 2**(LTPDRO-(LTPDRO/32)*32-1)
-        IOUT3 = 2**(LTPDRO-(LTPDRO/32)*32-2)
-        IOUT4 = 2**(LTPDRO-(LTPDRO/32)*32-3)
+        IOUT1 = 2**(NRTPC-(NRTPC/32)*32)
+        IOUT2 = 2**(NRTPC-(NRTPC/32)*32-1)
+        IOUT3 = 2**(NRTPC-(NRTPC/32)*32-2)
+        IOUT4 = 2**(NRTPC-(NRTPC/32)*32-3)
         IF15  = 2**15 - 1
 c(kh)   IL06  = (2**7-1) * (2**(LTPDRO-96-6))
-        IL06  = (2**7-1) * (2**(LTPDRO-(LTPDRO/32)*32-6))
+        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
 
         FLOAT2=2.D0**32
         FLOAT3=2.D0**64
@@ -285,7 +288,7 @@ c      DO 20 I=1,LROWS(KTCHA)
 
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
 
         NHITS = IAND(ITPTES,IOUT1)/IOUT1 +IAND(ITPTES,IOUT2)/IOUT2
      1         +IAND(ITPTES,IOUT3)/IOUT3 +IAND(ITPTES,IOUT4)/IOUT4
@@ -1271,7 +1274,7 @@ c        IF (ABS(RTABL(KTCHA,I,JTCHIR)).GT.OCUT)      GO TO 410
         IF (ABS(MY_JTCHIR(I)).GT.OCUT)      GO TO 410
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
         ISEL  = 0
         ISEL  = IAND(ITPTES,IF15)
         IF (ISEL.NE.0)                               GO TO 410
@@ -1303,7 +1306,7 @@ c        IF (ABS(RTABL(KTCHA,I,JTCHIR)).GT.OCUT)       GO TO 420
         IF (ABS(MY_JTCHIR(I)).GT.OCUT)       GO TO 420
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
         ISEL  = 0
         ISEL  = IAND(ITPTES,IL06)
         IF (ISEL.NE.0)                                GO TO 420

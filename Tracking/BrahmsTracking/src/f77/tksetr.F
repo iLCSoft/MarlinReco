@@ -1,7 +1,13 @@
 *  
-* $Id: tksetr.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tksetr.F,v 1.3 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/02 10:32:02  aplin
+* removed initialisation of BFIELD from here
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -34,8 +40,7 @@
       CHARACTER*20 CHDET(3)
       DATA CHDET  /'Silicon Detectors','TPC','FCH'/
 
-CCC FIXME: SET BFIELD HERE
-      BFIELD = 40.0
+
 
 C.....check pattern recognition flags
       DO I=1,3
@@ -95,9 +100,9 @@ C.....initialise the TPC patrec
       IF (IPATRC(2).EQ.1) CALL TPCSET
 
 C.....setup for noise hits
-      WRITE(6,*) '========================================'
+c      WRITE(6,*) '========================================'
       IF (TNNBX.EQ.0) THEN
-        WRITE(6,*) 'NO PAIR BACKGROUND IN TRACKING DETECTORS'
+c        WRITE(6,*) 'NO PAIR BACKGROUND IN TRACKING DETECTORS'
       ELSE
         WRITE(6,*) 'BACKGROUND SIMULATION ACTIVE.'
         IF (LVXDC) WRITE(6,*) 'CCD VTX INTEGRATES OVER ',TNNBX,' BX'
@@ -226,7 +231,7 @@ C.....setup for noise hits
            STOP 'TKNOISE: EXTREMELY STRANGE FFREAD SETUP...'
         END IF
       END IF
-      WRITE(6,*) '========================================'
+c      WRITE(6,*) '========================================'
       WRITE(6,*)
 
   999 RETURN

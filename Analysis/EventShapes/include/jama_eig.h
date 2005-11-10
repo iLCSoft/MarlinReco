@@ -13,7 +13,7 @@ using namespace std;
 
 namespace JAMMA
 {
-class JAMMA::Eigenvalue
+class Eigenvalue
 {
  private:
 
@@ -186,7 +186,7 @@ class JAMMA::Eigenvalue
    
                float g = d[l];
                float p = (d[l+1] - g) / (2.0 * e[l]);
-               float r = hypot(p,1.0);
+               float r = sqrt( p*p + 1 ); //hypot(p,1.0);
                if (p < 0) {
                   r = -r;
                }
@@ -214,7 +214,7 @@ class JAMMA::Eigenvalue
                   s2 = s;
                   g = c * e[i];
                   h = c * p;
-                  r = hypot(p,e[i]);
+                  r = sqrt( p*p + e[i]*e[i] ); //hypot(p,e[i]);
                   e[i+1] = s * r;
                   s = e[i] / r;
                   c = p / r;

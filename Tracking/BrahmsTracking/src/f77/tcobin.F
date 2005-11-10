@@ -1,7 +1,13 @@
 *  
-* $Id: tcobin.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tcobin.F,v 1.3 2005-08-09 10:27:50 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -43,8 +49,8 @@ c
 #include "include/tpco.inc"
 c#include "gcflag.inc"
 #include "include/alcons.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 
 #include "include/tcbins.inc"
 #include "include/tpcdims.inc"
@@ -113,7 +119,7 @@ C GAB:
       IBLAST=1
       CALL VZERO(IBNPTR,LMXBIN*NRTPC)
 
-      DO IROW=1,LTPDRO
+      DO IROW=1,NRTPC
        MY_JTCRNC(IROW)=0
        DO IHIT=1,NMAXROW
         IHITROW(IROW,IHIT)=0
@@ -122,23 +128,27 @@ C GAB:
 
       NC=0
       DO IHIT=1,NTPCO
-c GAB: allow for hits to be removed by a merge-finder:
-       IF(.NOT.LBLOT(IHIT))THEN
-        RHIT=TPCO_RV(IHIT)
-        IROW=1+INT((RHIT-TPCACRI)/TPCPADR)
-        IF (IROW.LT.1) IROW=1
-        IF (IROW.GT.NRTPC) IROW=NRTPC
-C GAB:
-        IF(IROW.GE.MINROW)THEN
-         MY_JTCRNC(IROW)=MY_JTCRNC(IROW)+1
-         IF(MY_JTCRNC(IROW).LE.NMAXROW)THEN
-          IHITROW(IROW,MY_JTCRNC(IROW))=IHIT
-         ELSE
-c          WRITE(*,*)'TPCOBIN: NMAXROW too small for EVENT:',IEVENT
-          CALL TKVETO(1)
+c     GAB: allow for hits to be removed by a merge-finder:
+         IF(.NOT.LBLOT(IHIT))THEN
+            RHIT=TPCO_RV(IHIT)
+            IROW=1+INT((RHIT-TPCACRI)/TPCPADR)
+            IF (IROW.LT.1) IROW=1
+            IF (IROW.GT.NRTPC) IROW=NRTPC
+C     GAB:
+            IF(IROW.GE.MINROW)THEN
+               MY_JTCRNC(IROW)=MY_JTCRNC(IROW)+1
+               IF(MY_JTCRNC(IROW).LE.NMAXROW)THEN
+                  IHITROW(IROW,MY_JTCRNC(IROW))=IHIT
+               ELSE
+                  WRITE(*,*)'TPCOBIN: NMAXROW too small ',
+     &        'This is FATAL: TPC Tracking in event Skipped  !',                   
+     &        'Increase NMAXROW in my_tcrl.inc and recomplile'
+                  CALL TKVETO(1)
+                  IER = 1
+                  GO TO 999
+               ENDIF
+            ENDIF
          ENDIF
-        ENDIF
-       ENDIF
       ENDDO
 
 C GAB:
@@ -181,9 +191,12 @@ C
 
 C GAB:
           IF(IBLAST.GT.NTPCOMX)THEN
-           WRITE(*,*)'TCOBIN: NTPCOMX too small. ', iblast
+           WRITE(*,*)'TCOBIN: NTPCOMX too small. ', iblast,
+     &        'This is FATAL: Tracking in event Skipped !'
            CALL TKVETO(1)
            IBLAST=IBLAST-1
+           IER = 1
+           GO TO 999
           ENDIF
 
           IBN2= IXWRAP(2*(INT((PHI/TCBINW)+0.5)+NMXWRP)+1)
@@ -207,10 +220,12 @@ C GAB:
 C GAB:
           IF(IBLAST.GT.NTPCOMX)THEN
            WRITE(*,*)'TCOBIN: NTPCOMX = ',iblast,' too small.',
-     &        'This is FATAL        !'
+     &        'This is FATAL: Tracking in event Skipped !'
            CALL TKVETO(1)
            IBLAST=IBLAST-1
-          ENDIF
+           IER = 1
+           GO TO 999
+        ENDIF
 
   800   CONTINUE
   900 CONTINUE

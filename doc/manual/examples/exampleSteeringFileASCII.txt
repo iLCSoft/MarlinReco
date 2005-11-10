@@ -1,0 +1,996 @@
+  ##########################################
+  #                                        #
+  #     Example steering file for marlin   #
+  #                                        #
+  ##########################################
+
+.begin Global  ---------------------------------------
+   LCIOInputFiles simjob.slcio 
+
+  # the active processors that are called in the given order
+   ActiveProcessors MyAIDAProcessor
+   ActiveProcessors MyTestProcessor
+   ActiveProcessors MyLCIOOutputProcessor
+
+  # limit the number of processed records (run+evt):
+   MaxRecordNumber 5001
+
+  # don't call the check method of the processors if "true"
+   SupressCheck false
+.end   -----------------------------------------------
+
+
+.begin MyAIDAProcessor
+ProcessorType AIDAProcessor
+#---Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor
+
+#	 compression of output file 0: false >0: true (default) 
+#	 type:  [int]
+#	 default: 1
+	Compress   1
+
+
+#	 filename without extension
+#	 type:  [string]
+#	 default: aida_file
+	FileName   aida_file
+
+
+#	 type of output file xml (default) or root ( only OpenScientist)
+#	 type:  [string]
+#	 default: xml
+	FileType   xml
+
+.end -------------------------------------------------
+
+.begin MyCEDViewer
+ProcessorType CEDViewer
+#---CEDViewer: event display of LCIO objects  - based on CED by A.Zhelezov.
+
+#	collection to be displayed ( ColName, marker type[0-2], size)
+#	 type:  [StringVec]
+#	 example: 
+#	DrawCollection   DrawCollection 0 3 
+
+.end -------------------------------------------------
+
+.begin MyCalorimeterFinalStage
+ProcessorType CalorimeterFinalStage
+#---CalorimeterFinalStage 
+
+#	Cluster Input Collection Name
+#	 type:  [string]
+#	 default: CalorimeterStage3Clusters
+	ClusterInputCollection   CalorimeterStage3Clusters
+
+
+#	Cluster Output Collection Name
+#	 type:  [string]
+#	 default: ClustersMagic
+	ClusterOutputCollection   ClustersMagic
+
+
+#	Minimal Hits in Cluster
+#	 type:  [int]
+#	 default: 0
+	MinimalHits   0
+
+.end -------------------------------------------------
+
+.begin MyClusterCheater
+ProcessorType ClusterCheater
+#---Creates true clusters...
+
+#	Calorimeter Collection Names
+#	 type:  [StringVec]
+#	 default: ECAL HCAL 
+	CaloCollections   ECAL HCAL 
+
+
+#	Magnetic Field
+#	 type:  [float]
+#	 default: 4
+	MagneticField   4
+
+
+#	Minimal Hits in Cluster
+#	 type:  [int]
+#	 default: 10
+	MinimalHits   10
+
+
+#	Hit To Cluster Proximity Cut
+#	 type:  [float]
+#	 default: 1200
+	ProximityCut   1200
+
+
+#	SimCaloHit to CaloHit Relations Collection Name
+#	 type:  [string]
+#	 default: RelationCaloHit
+	RelCollection   RelationCaloHit
+
+
+#	Trace Whole Shower Tree
+#	 type:  [int]
+#	 default: 1
+	TraceWholeShower   1
+
+
+#	Collection of True Clusters
+#	 type:  [string]
+#	 default: TrueClusters
+	TrueClusterCollection   TrueClusters
+
+.end -------------------------------------------------
+
+.begin MyFTDDigiProcessor
+ProcessorType FTDDigiProcessor
+#---FTDDigiProcessor should create FTD TrackerHits from SimTrackerHits
+
+#	Name of the SimTrackerHit collection
+#	 type:  [string]
+#	 default: ftd01_FTD
+	CollectionName   ftd01_FTD
+
+.end -------------------------------------------------
+
+.begin MyFox
+ProcessorType Fox
+#---Fox calculates Fox-Wolfram moments
+
+#	Numbers of the moments that are to be calculate 0-th is calculate by default
+#	 type:  [IntVec]
+#	 default: 
+	CalculateFoxWolframMoments   
+
+
+#	Name of the ReconstructedParticle collection
+#	 type:  [string]
+#	 default: RecoParticles
+	NameOfReconstructedParticlesCollection   RecoParticles
+
+.end -------------------------------------------------
+
+.begin MyGenericViewer
+ProcessorType GenericViewer
+#---Drawing Utility
+
+#	Calo Hit Collection Names
+#	 type:  [StringVec]
+#	 default: ECAL HCAL 
+	CaloHitCollections   ECAL HCAL 
+
+
+#	Cluster Collection Name
+#	 type:  [string]
+#	 default: ClustersAR
+	ClusterCollection   ClustersAR
+
+
+#	Detector Model
+#	 type:  [int]
+#	 default: 0
+	DetectorModel   0
+
+
+#	Layer for Calo Hits
+#	 type:  [int]
+#	 default: -1
+	LayerCaloHit   -1
+
+
+#	Layer for Reco Clusters
+#	 type:  [int]
+#	 default: -1
+	LayerClusters   -1
+
+
+#	Layer for Reco Particles
+#	 type:  [int]
+#	 default: 9
+	LayerReco   9
+
+
+#	Layer for Sim Calo Hits
+#	 type:  [int]
+#	 default: -1
+	LayerSimCaloHit   -1
+
+
+#	Layer for Sim Tracker Hits
+#	 type:  [int]
+#	 default: -1
+	LayerSimTrackerHit   -1
+
+
+#	Layer for Tracker Hits
+#	 type:  [int]
+#	 default: -1
+	LayerTrackerHit   -1
+
+
+#	Layer for Tracks
+#	 type:  [int]
+#	 default: -1
+	LayerTracks   -1
+
+
+#	Layer for True Clusters
+#	 type:  [int]
+#	 default: -1
+	LayerTrueClusters   -1
+
+
+#	Layer for True Tracks
+#	 type:  [int]
+#	 default: -1
+	LayerTrueTracks   -1
+
+
+#	Magnetic Field
+#	 type:  [float]
+#	 default: 4
+	MagneticField   4
+
+
+#	Particle Collection Name
+#	 type:  [string]
+#	 default: RecoParticles
+	ParticleCollection   RecoParticles
+
+
+#	Sim Calo Hit Collection Names
+#	 type:  [StringVec]
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps 
+	SimCaloHitCollections   ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps 
+
+
+#	Sim Tracker Hit Collection Names
+#	 type:  [StringVec]
+#	 default: tpc03_TPC 
+	SimTrackerHitCollections   tpc03_TPC 
+
+
+#	Track Collection Name
+#	 type:  [string]
+#	 default: TPC_Tracks
+	TrackCollection   TPC_Tracks
+
+
+#	Tracker Hit Collection Names
+#	 type:  [StringVec]
+#	 default: TPCTrackerHits 
+	TrackerHitCollections   TPCTrackerHits 
+
+
+#	True Cluster Collection Name
+#	 type:  [string]
+#	 default: TrueClusters
+	TrueClusterCollection   TrueClusters
+
+
+#	True Track Collection Name
+#	 type:  [string]
+#	 default: TrueTracks
+	TrueTrackCollection   TrueTracks
+
+.end -------------------------------------------------
+
+.begin MyHEP_RecordProcessor
+ProcessorType HEP_RecordProcessor
+#---HEP record balance and drawing
+.end -------------------------------------------------
+
+.begin MyLCIOOutputProcessor
+ProcessorType LCIOOutputProcessor
+#---Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.
+
+#	drops the named collections from the event
+#	 type:  [StringVec]
+#	 example: 
+#	DropCollectionNames   TPCHits HCalHits 
+
+
+#	drops all collections of the given type from the event
+#	 type:  [StringVec]
+#	 example: 
+#	DropCollectionTypes   SimTrackerHit SimCalorimeterHit 
+
+
+#	 name of output file 
+#	 type:  [string]
+#	 default: outputfile.slcio
+	LCIOOutputFile   outputfile.slcio
+
+
+#	write mode for output file:  WRITE_APPEND or WRITE_NEW
+#	 type:  [string]
+#	 default: None
+	LCIOWriteMode   None
+
+.end -------------------------------------------------
+
+.begin MyLEPTrackingProcessor
+ProcessorType LEPTrackingProcessor
+#---Produces Track collection from TPC TrackerHit collections using LEP tracking algorithms
+
+#	Name of the TPC Track MC Relation collection
+#	 type:  [string]
+#	 default: MCTracksRel
+	MCTrackRelCollectionName   MCTracksRel
+
+
+#	Name of the TPC Track collection
+#	 type:  [string]
+#	 default: TPCTracks
+	TPCTrackCollectionName   TPCTracks
+
+
+#	Name of the TPC TrackerHit collection
+#	 type:  [string]
+#	 default: TPCTrackerHits
+	TPCTrackerHitCollectionName   TPCTrackerHits
+
+
+#	Name of the VTX TrackerHit collection
+#	 type:  [string]
+#	 default: VTXTrackerHits
+	VTXTrackerHitCollectionName   VTXTrackerHits
+
+.end -------------------------------------------------
+
+.begin MyMokkaCaloDigi
+ProcessorType MokkaCaloDigi
+#---Mokka digitizer...
+
+#	Calibration coefficients for ECAL
+#	 type:  [FloatVec]
+#	 default: 31.3 83 
+	CalibrECAL   31.3 83 
+
+
+#	Calibration coefficients for HCAL
+#	 type:  [FloatVec]
+#	 default: 27.3 
+	CalibrHCAL   27.3 
+
+
+#	ECAL Collection Names
+#	 type:  [StringVec]
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap 
+	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap 
+
+
+#	Index of ECal Layers
+#	 type:  [IntVec]
+#	 default: 30 100 
+	ECALLayers   30 100 
+
+
+#	Threshold for ECAL Hits in GeV
+#	 type:  [float]
+#	 default: 1e-04
+	ECALThreshold   1e-04
+
+
+#	HCAL Collection Names
+#	 type:  [StringVec]
+#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+
+
+#	Index of HCal Layers
+#	 type:  [IntVec]
+#	 default: 100 
+	HCALLayers   100 
+
+
+#	Threshold for HCAL Hits in GeV
+#	 type:  [float]
+#	 default: 0.0004
+	HCALThreshold   0.0004
+
+
+#	Digital Ecal
+#	 type:  [int]
+#	 default: 0
+	IfDigitalEcal   0
+
+
+#	Digital Hcal
+#	 type:  [int]
+#	 default: 0
+	IfDigitalHcal   0
+
+
+#	name for the new collection 
+#	 type:  [string]
+#	 default: ECAL
+	NewECALCollName   ECAL
+
+
+#	size of the new cell (integer) 
+#	 type:  [int]
+#	 default: 3
+	NewHCALCellSize   3
+
+
+#	name for the new collection 
+#	 type:  [string]
+#	 default: HCAL
+	NewHCALCollName   HCAL
+
+.end -------------------------------------------------
+
+.begin MySatoruJetFinderProcessor
+ProcessorType SatoruJetFinderProcessor
+#---A multi algorithm jet finder
+
+#	Set debug level
+#	 type:  [int]
+#	 example: 
+#	Debug   0
+
+
+#	mode for manual alogorithm selection, see documentation for details
+#	 type:  [string]
+#	 example: 
+#	GlobalMode   0A
+
+
+#	Collection of reconstructed particles
+#	 type:  [string]
+#	 default: Unset
+	InputCollection   Unset
+
+
+#	Merging mode, if mode is "manual"
+#	 type:  [int]
+#	 example: 
+#	MergingMode   0
+
+
+#	Merging threshold, if mode is "manual"
+#	 type:  [float]
+#	 example: 
+#	MergingThreshold   0
+
+
+#	Select predefined algorithms for jet finding(or "manual")
+#	 type:  [string]
+#	 default: manual
+	Mode   manual
+
+
+#	Force everything to N jets(if supported by current mode)
+#	 type:  [int]
+#	 example: 
+#	NJetRequested   4
+
+
+#	Name of collection with the found jets
+#	 type:  [string]
+#	 default: Unset
+	OutputCollection   Unset
+
+
+#	Primary jet finding mode, if mode is "manual"
+#	 type:  [int]
+#	 example: 
+#	PrimaryJetFindingMode   0
+
+
+#	Secong jet finding mode, if mode is "manual"
+#	 type:  [int]
+#	 example: 
+#	SecondJetFindingMode   0
+
+
+#	Threshold, if mode is "manual"
+#	 type:  [float]
+#	 example: 
+#	Threshold   0
+
+
+#	YCut for jet finding algorithm(if supported by current mode)
+#	 type:  [float]
+#	 example: 
+#	YCut   0
+
+.end -------------------------------------------------
+
+.begin MySelectReconstructedParticle
+ProcessorType SelectReconstructedParticle
+#---SelectReconstructedParticle: Selects particles from all reconstructed particles to be used for the thrust finder
+
+#	Minimum momentum a particle has to have to be used for the thrust calculation
+#	 type:  [float]
+#	 default: 0
+	MinimumMomentum   0
+
+
+#	Collection of reconstructed particles to chose from
+#	 type:  [string]
+#	 default: ReconstructedParticle
+	inputCollectionName   ReconstructedParticle
+
+
+#	Collection of selected reconstructed particles
+#	 type:  [string]
+#	 default: SelectedReconstructedParticle
+	outputCollectionName   SelectedReconstructedParticle
+
+.end -------------------------------------------------
+
+.begin MySimpleCaloDigi
+ProcessorType SimpleCaloDigi
+#---Performs simple digitization of sim calo hits...
+
+#	Calibration coefficients for ECAL
+#	 type:  [FloatVec]
+#	 default: 31.3 83 
+	CalibrECAL   31.3 83 
+
+
+#	Calibration coefficients for HCAL
+#	 type:  [FloatVec]
+#	 default: 27.3 
+	CalibrHCAL   27.3 
+
+
+#	ECAL Collection Names
+#	 type:  [StringVec]
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap 
+	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap 
+
+
+#	Index of ECal Layers
+#	 type:  [IntVec]
+#	 default: 30 100 
+	ECALLayers   30 100 
+
+
+#	ECAL Collection of real Hits
+#	 type:  [string]
+#	 default: ECAL
+	ECALOutputCollection   ECAL
+
+
+#	Threshold for ECAL Hits in GeV
+#	 type:  [float]
+#	 default: 1e-04
+	ECALThreshold   1e-04
+
+
+#	HCAL Collection Names
+#	 type:  [StringVec]
+#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+
+
+#	Index of HCal Layers
+#	 type:  [IntVec]
+#	 default: 100 
+	HCALLayers   100 
+
+
+#	HCAL Collection of real Hits
+#	 type:  [string]
+#	 default: HCAL
+	HCALOutputCollection   HCAL
+
+
+#	Threshold for HCAL Hits in GeV
+#	 type:  [float]
+#	 default: 0.0004
+	HCALThreshold   0.0004
+
+
+#	Digital Ecal
+#	 type:  [int]
+#	 default: 0
+	IfDigitalEcal   0
+
+
+#	Digital Hcal
+#	 type:  [int]
+#	 default: 0
+	IfDigitalHcal   0
+
+
+#	CaloHit Relation Collection
+#	 type:  [string]
+#	 default: RelationCaloHit
+	RelationOutputCollection   RelationCaloHit
+
+.end -------------------------------------------------
+
+.begin MySimpleFastMCProcessor
+ProcessorType SimpleFastMCProcessor
+#---SimpleFastMCProcessor creates ReconstrcutedParticles from MCParticles according to the resolution given in the steering file.
+
+#	Resolution of charged particles in polar angle range:  d(1/P)  th_min  th_max
+#	 type:  [FloatVec]
+#	 default: 5e-05 0 1.5708 
+	ChargedResolution   5e-05 0 1.5708 
+
+
+#	Name of the MCParticle input collection
+#	 type:  [string]
+#	 default: MCParticle
+	InputCollectionName   MCParticle
+
+
+#	No reconstructed particles are produced for smaller momenta (in [GeV])
+#	 type:  [float]
+#	 default: 0.001
+	MomentumCut   0.001
+
+
+#	Resolution dE/E=A+B/sqrt(E/GeV) of neutral hadrons in polar angle range: A  B th_min  th_max
+#	 type:  [FloatVec]
+#	 default: 0.04 0.5 0 1.5708 
+	NeutralHadronResolution   0.04 0.5 0 1.5708 
+
+
+#	Resolution dE/E=A+B/sqrt(E/GeV) of photons in polar angle range: A  B th_min  th_max
+#	 type:  [FloatVec]
+#	 default: 0.01 0.1 0 1.5708 
+	PhotonResolution   0.01 0.1 0 1.5708 
+
+.end -------------------------------------------------
+
+.begin MySphere
+ProcessorType Sphere
+#---Sphere calculates eigenvalues of sphericity tensor
+
+#	Name of the ReconstructedParticle collection
+#	 type:  [string]
+#	 default: RecontructedParticle
+	CollectionName   RecontructedParticle
+
+
+#	name of parameter to store the results 
+#	 type:  [string]
+#	 default: sphericity_tensor_eigenvalues
+	eigenvalues_parameter_name   sphericity_tensor_eigenvalues
+
+
+#	 exponent in sphericity tensor use 2.0 for classical 1.0 for C,D
+#	 type:  [float]
+#	 default: 2
+	r_value   2
+
+.end -------------------------------------------------
+
+.begin MyStdHepReader
+ProcessorType StdHepReader
+#---Reads StdHep files as input and creates LCIO events with MCParticle collections. Make sure to not specify any LCIOInputFiles in the steering in order to read StdHep files.
+
+#	input file
+#	 type:  [string]
+#	 default: input.stdhep
+	StdHepFileName   input.stdhep
+
+.end -------------------------------------------------
+
+.begin MyTPCDigiProcessor
+ProcessorType TPCDigiProcessor
+#---Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z
+
+#	Name of the SimTrackerHit collection
+#	 type:  [string]
+#	 default: tpc04_TPC
+	CollectionName   tpc04_TPC
+
+.end -------------------------------------------------
+
+.begin MyTestProcessor
+ProcessorType TestProcessor
+#---Simple processor to test the marlin application. Prints run and event number.
+.end -------------------------------------------------
+
+.begin MyThrustReconstruction
+ProcessorType ThrustReconstruction
+#---Calculates thrust axis and thrust value of event using different algorithms
+
+#	Name of collection of reconstructed particles used for thrust reconstruction
+#	 type:  [string]
+#	 default: SelectedReconstructedParticle
+	inputCollectionName   SelectedReconstructedParticle
+
+
+#	Type of thrust reconstruction algorithm to be used:
+#	1 : Tasso algorithm
+#	2 : JetSet algorithm
+#	 type:  [int]
+#	 default: 2
+	typeOfThrustFinder   2
+
+.end -------------------------------------------------
+
+.begin MyTrackCheater
+ProcessorType TrackCheater
+#---Creates true tracks...
+
+#	Magnetic Field
+#	 type:  [float]
+#	 default: 4
+	BField   4
+
+
+#	Cut On Fit Chi2
+#	 type:  [float]
+#	 default: 30
+	Chi2Cut   30
+
+
+#	Energy Cut
+#	 type:  [float]
+#	 default: 0.2
+	ECut   0.2
+
+
+#	Flag to Fit True Track
+#	 type:  [int]
+#	 default: 1
+	FitTrueTrack   1
+
+
+#	Cut on distance from hit to helix
+#	 type:  [float]
+#	 default: 50
+	HitToHelixDist   50
+
+
+#	Cut on distance from hit to helix used in fit
+#	 type:  [float]
+#	 default: 15
+	HitToHelixInFit   15
+
+
+#	Minimal Hits in Track Cluster
+#	 type:  [int]
+#	 default: 4
+	MinimalHits   4
+
+
+#	Tracker Hit Collection Names
+#	 type:  [StringVec]
+#	 default: TPCTrackerHits TPCTrackerHits 
+	TrackerHitCollections   TPCTrackerHits TPCTrackerHits 
+
+
+#	Collection of True Clusters
+#	 type:  [string]
+#	 default: TrueTracks
+	TrueTrackCollection   TrueTracks
+
+.end -------------------------------------------------
+
+.begin MyTrackwiseClustering
+ProcessorType TrackwiseClustering
+#--- description not set by author 
+
+#	Cluster Collection Name 
+#	 type:  [string]
+#	 default: ClustersAR
+	ClusterCollection   ClustersAR
+
+
+#	Display Info on Clusters
+#	 type:  [int]
+#	 default: 0
+	DisplayClusterInfo   0
+
+
+#	Distance to Define Direction
+#	 type:  [float]
+#	 default: 25
+	DistanceForDirection   25
+
+
+#	Distance To Merge Forward
+#	 type:  [FloatVec]
+#	 default: 50 100 
+	DistanceMergeForward   50 100 
+
+
+#	Distance to Track Seed
+#	 type:  [float]
+#	 default: 25
+	DistanceToTrackSeed   25
+
+
+#	Distance to Track Back 
+#	 type:  [FloatVec]
+#	 default: 100 500 
+	DistanceTrackBack   100 500 
+
+
+#	Do Merging
+#	 type:  [int]
+#	 default: 1
+	DoMerging   1
+
+
+#	Ecal Collection Names 
+#	 type:  [StringVec]
+#	 default: ECAL 
+	EcalCollections   ECAL 
+
+
+#	Hcal Collection Names 
+#	 type:  [StringVec]
+#	 default: HCAL 
+	HcalCollections   HCAL 
+
+
+#	Maximal Hits To Merge
+#	 type:  [int]
+#	 default: 50
+	MaximalHitsToMerge   50
+
+
+#	Minimal allowed hits in cluster
+#	 type:  [int]
+#	 default: 10
+	MinimalHitsInCluster   10
+
+
+#	N hits scan to merge forward 
+#	 type:  [int]
+#	 default: 10
+	NScanToMergeForward   10
+
+
+#	N hits to define SP 
+#	 type:  [int]
+#	 default: 5
+	NToDefineSP   5
+
+
+#	Resolution Parameter 
+#	 type:  [FloatVec]
+#	 default: 20 80 
+	ResolutionParameter   20 80 
+
+
+#	Resolution To Merge Halo Hits
+#	 type:  [float]
+#	 default: 400
+	ResolutionToMerge   400
+
+
+#	Step to Track Back 
+#	 type:  [FloatVec]
+#	 default: 10 100 
+	StepTrackBack   10 100 
+
+
+#	Track Collection Names 
+#	 type:  [StringVec]
+#	 default: Track 
+	TrackCollections   Track 
+
+
+#	Type of Generic Distance 
+#	 type:  [int]
+#	 default: 0
+	TypeOfGenericDistance   0
+
+
+#	Use tracks to seed clusters
+#	 type:  [int]
+#	 default: 0
+	UseTracking   0
+
+
+#	Weight For Distance
+#	 type:  [float]
+#	 default: 1
+	WeightForDistance   1
+
+
+#	Weight For Resolution
+#	 type:  [float]
+#	 default: 1
+	WeightForResolution   1
+
+.end -------------------------------------------------
+
+.begin MyVTXDigiProcessor
+ProcessorType VTXDigiProcessor
+#---VTXDigiProcessor should create VTX TrackerHits from SimTrackerHits
+
+#	Name of the SimTrackerHit collection
+#	 type:  [string]
+#	 default: vxd00_VXD
+	CollectionName   vxd00_VXD
+
+.end -------------------------------------------------
+
+.begin MyWolf
+ProcessorType Wolf
+#---Particle Reconstruction
+
+#	Magnetic field
+#	 type:  [float]
+#	 default: 4
+	BField   4
+
+
+#	Cluster Collection Name
+#	 type:  [string]
+#	 default: ClustersAR
+	ClusterCollection   ClustersAR
+
+
+#	Dist Merge Cut
+#	 type:  [float]
+#	 default: 150
+	DistMergeCut   150
+
+
+#	Distance from Track Seed to Cluster
+#	 type:  [float]
+#	 default: 50
+	DistanceTrackToCluster   50
+
+
+#	Fraction of EM Energy
+#	 type:  [float]
+#	 default: 0.95
+	FractionEM   0.95
+
+
+#	Hcal Resolution
+#	 type:  [float]
+#	 default: 0.5
+	HcalResolution   0.5
+
+
+#	Lower Momentum
+#	 type:  [float]
+#	 default: 5
+	LowerMomentum   5
+
+
+#	Merge Clusters
+#	 type:  [int]
+#	 default: 1
+	MergeClusters   1
+
+
+#	Native Track Fitter
+#	 type:  [int]
+#	 default: 0
+	NativeTrackFitter   0
+
+
+#	Particle Collection Name
+#	 type:  [string]
+#	 default: RecoParticles
+	ParticleCollection   RecoParticles
+
+
+#	Cut on D0 for tracks
+#	 type:  [float]
+#	 default: 50
+	RPhiCut   50
+
+
+#	Track Collection Name
+#	 type:  [string]
+#	 default: TPC_Tracks
+	TrackCollection   TPC_Tracks
+
+
+#	Cut on Z0 for tracks
+#	 type:  [float]
+#	 default: 50
+	ZCut   50
+
+.end -------------------------------------------------
+

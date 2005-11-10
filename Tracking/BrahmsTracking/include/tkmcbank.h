@@ -4,8 +4,6 @@
 #include<vector>
 #include <cfortran.h>
 
-using namespace std;
-
 
 
 class Tk_MC_Bank
@@ -60,7 +58,7 @@ struct tk_mc
   int hepevt_num;
 };
 
- vector <tk_mc> mc_bank;
+ std::vector <tk_mc> mc_bank;
 
 
 };

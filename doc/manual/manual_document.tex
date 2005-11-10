@@ -4,7 +4,7 @@
 \maketitle
 
 \begin{abstract}
-This document is meant to serve as a comprehensive manual to help 
+This document serves as a comprehensive manual to help 
 users getting started with the Marlin based reconstruction software MarlinReco
 for the international linear collider (ILC). 
 After a short review of the underlying packages 
@@ -22,23 +22,18 @@ scientist from the HEP community can contribute to this Project.
 
 \section{Introduction}
 
-The international linear collider (ILC)~\cite{ref_ilchome} --
-a 1~TeV electron positron machine -- is the next big project proposed by
-the high energy physics community. The detectors for this collider will be
-precision experiments with highly granular calorimetry and excellent tracking
-capabilities. The detector development and optimisation heavily depend on 
-sophisticated simulation and reconstruction software.
-
-MarlinReco is a software package for the reconstruction of events using 
-(simulated) raw data of an ILC detector. The different reconstruction 
+The software package MarlinReco serves as an event reconstruction, 
+used to support the detector development and optimisation at  
+the proposed international linear collider (ILC)~\cite{ref_ilchome}. 
+The different reconstruction 
 algorithms i.e. 
 track finding or cluster reconstruction are implemented in separate modules 
 called processors. To improve the modularity, algorithms 
 common to more processors are separated and implemented in a dedicated 
 utility section. In the phase of the detector development as well as
-during data taking the detector may change more or less. In order to adopt 
+during data taking the detector may change. In order to adopt 
 the reconstruction to the modified detector layout, the processors are 
-developed to be independent of the detector geometry as fare as that is 
+developed to be independent of the detector geometry as far as that is 
 possible. The actual geometry of the detector is then provided to the 
 processors using a geometry interface. 
 This structure not only allows the interchange of different
@@ -72,7 +67,7 @@ It defines an abstract event data model with hits, tracks, clusters etc. and
 a concrete file format to store the data. The LCIO API 
 has been implemented in a way that makes the user code
 independent of the concrete file format. So the file format could be exchanged
-without breaking any existing user code if the need arose in the future.
+without breaking any existing user code if the need will arises. 
 
 In principle LCIO defines the complete event data model for ILC studies.
 Nevertheless users often need to store additional information together with 
@@ -89,10 +84,10 @@ Marlin ({\bf M}odular {\bf A}nalysis and {\bf R}econstruction for the
 \CPP application framework for the analysis of LCIO data that provides a
 platform for the distributed development of new reconstruction
 algorithms. Marlin supports the implementation of different tasks in individual
-modules, where tasks can be as simple as creating and filling one
+modules, where tasks can be as simple as creating and filling 
 histograms or as complex as track finding and fitting
 in the central tracker. As modules serve dedicated subclasses of
-the class {\em Processor}.
+the class {\em Processor},
 Marlin uses LCIO also as its transient data model, i.e.
 the LCIO event class serves as a container of the data that is
 {\em shipped} from module to module as shown schematically in 
@@ -124,7 +119,7 @@ simple fast smearing algorithms or conditions data handler.
 \subsection{Gear}
 
 One important ingredient for reconstruction software is the geometrical
-description of the detector which is been used to record the events. 
+description of the detector which is used to record the events. 
 Gear~\cite{ref_gear} is a geometry description toolkit for ILC reconstruction software, 
 defining an abstract interface for the description of an ILC detector.
 This description is different from the geometry description needed for the 
@@ -186,7 +181,7 @@ This library is under current development, so it will evolve in the future.
 \subsection{AIDA}
 
 Using MarlinReco to reconstruct HEP events and in a later stage even to
-analyse real data, requires a interface to histograming packages. 
+analyse real data requires a interface to histograming packages. 
 For this task we utilise the Abstract Interfaces for Data Analysis
 (AIDA)~\cite{ref_aida}. It offers a standard set of interfaces for creating 
 and manipulating histograms, n-tuples and related data analysis objects.
@@ -269,15 +264,19 @@ smearing exist.
 The TPC tracking produces {\em Tracks} from TPC {\em TrackerHits} using LEP 
 tracking algorithms taken from the Fortran based reconstruction program 
 Brahms~\cite{ref_brahms}. 
-They do not contain the DELPHI ambiguity resolver yet.
+The LEPTracking processor now includes full unambiguous central tracking during
+which track strings are created through to full {\em Track} candidates (TK's) 
+which have passed the Delphi Ambiguity resolver fxambi. 
+
 Currently only the TPC pattern recognition and fitting is implemented, though 
 plans to incorporate vertex hits into tracks exist.
 
-The final track fitting is done using a Kalman filter. At present both, 
-the magnetic field and the material description of the TPC is hard coded into 
-the Fortran and C++ code.
+The final track fitting is done using a Kalman filter. Presently
+the VTX and SIT resolutions are hard coded in {\em LEPTrackingProcessor}. 
+Both, 
+the magnetic field and the material description of
+the VTX detector and SIT, as for the TPC, is hard coded in setmat. 
 This will be improved as soon as Gear~\cite{ref_gear} becomes more evolved.
-% ### DAS SOLL S.Aplin nochmal nachpruefen...
 
 {\bf Available processors:} 
 \begin{itemize}
@@ -1020,7 +1019,7 @@ If histograms should be produced, the JAIDA~\cite{ref_jaida} and
 AIDA\_JNI~\cite{ref_aidajni} packages have 
 to be installed on the system. 
 
-The headerfiles are commented using the Doxygen~\cite{ref_doxygen} syntax. 
+The header files are commented using the Doxygen~\cite{ref_doxygen} syntax. 
 if you wish to generate a browsable API documentation Doxygen 
 has to be available.
 
@@ -1063,8 +1062,7 @@ cvs co -d v01-05 -r v01-05 lcio
 
 Also for Marlin you can get a recent copy of the sources from the CVS 
 repository via anonymous checkout.
-Set the {\tt CVSROOT} and {\tt CVS\_RSH} variables, e.~g. on a Linux platform 
-running bash:
+Set the {\tt CVSROOT} and {\tt CVS\_RSH} variables, e.~g. on a Linux platform: 
 
 \begin{verbatim}
 export CVS_RSH=ccvssh 
@@ -1102,7 +1100,7 @@ cvs co gear
 
 \subsubsection*{MarlinUtil, MarlinReco and the CEDViewer}
 
-The recent version of the source code of Both packages can be 
+The recent version of the source code of both packages can be 
 obtained from the CVS repository via anonymous checkout.
 Set the environment variables and start the authentification: 
 
@@ -1133,20 +1131,18 @@ A few variables have to be set depending on your development
 environment (modify as appropriate):
 
 \begin{verbatim}
-export LCIO=/lcio/v01-05 
+export LCIO=$LCSoft/lcio/v01-05 
 export PATH=$LCIO/tools:$LCIO/bin:$PATH 
 export JDK_HOME=/usr/lib/j2sdk
 \end{verbatim}
 
 To build the Java and \CPP{} versions you have to be in the LCIO subdirectory:
 
-Enter the LCIO subdirectory:
-
 \begin{verbatim}
-cd $LCIO 
+cd $LCSoft/lcio/v01-05
 \end{verbatim}
 
-Use the following command To build the Java and \CPP{} versions:
+Use the following command to build the Java and \CPP{} versions:
 
 \begin{verbatim}
 ant aid cpp f77 
@@ -1194,9 +1190,9 @@ Marlin's {\tt packages} directory:
 
 \begin{verbatim} 
 cd $LCSoft/Marlin/packages
-ln -s $LCSoft//packages/CEDViewer
-ln -s $LCSoft//packages/MarlinReco
-ln -s $LCSoft//packages/MarlinUtil
+ln -s $LCSoft/packages/CEDViewer
+ln -s $LCSoft/packages/MarlinReco
+ln -s $LCSoft/packages/MarlinUtil
 \end{verbatim}
 
 A few variables have to be set depending on your development

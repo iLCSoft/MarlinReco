@@ -12,7 +12,18 @@
 #include <map>
 #include <vector>
 #include <math.h>
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include "gear/GEAR.h"
+//#include "gear/TPCParameters.h"
+//#include "gear/PadRowLayout2D.h"
+#include "gear/CalorimeterParameters.h"
 
+#define MASK_K (unsigned int) 0x3F000000
+#define SHIFT_K 24
+#define SHIFT_M 0
+#define MASK_M (unsigned int) 0x00000007
+using namespace std ;
 using namespace lcio ;
 using namespace marlin ;
 using namespace UTIL;
@@ -31,7 +42,10 @@ ClusterCheater::ClusterCheater() : Processor("ClusterCheater") {
 			     "Collection of True Clusters",
 			     _trueClustCollection ,
 			     std::string("TrueClusters"));
-
+ registerProcessorParameter("TrueClusterToMCPCollection",
+			     "Relation Collection Cluster to MCP",
+			     _trueClustToMCP,
+			     std::string("TrueClusterToMCP"));
   std::vector<std::string> caloCollections;
 
   caloCollections.push_back(std::string("ECAL"));
@@ -48,26 +62,7 @@ ClusterCheater::ClusterCheater() : Processor("ClusterCheater") {
 			     _relCollection ,
 			     std::string("RelationCaloHit"));
 
-  registerProcessorParameter("TraceWholeShower",
-			     "Trace Whole Shower Tree",
-			     _ifBrahms,
-			     (int)1);
-
-  registerProcessorParameter("ProximityCut",
-			     "Hit To Cluster Proximity Cut",
-			     _proximityCut,
-			     (float)1200.);
-
-  registerProcessorParameter("MinimalHits",
-			     "Minimal Hits in Cluster",
-			     _minimal_hits,
-			     (int)10);
-
-  registerProcessorParameter("MagneticField",
-			     "Magnetic Field",
-			     _bField,
-			     (float)4.0);
-    
+ 
 
 }
 
@@ -83,201 +78,178 @@ void ClusterCheater::processRunHeader( LCRunHeader* run) {
 } 
 
 void ClusterCheater::processEvent( LCEvent * evt ) { 
-    const LCCollection * relcol ;
+ 
 
-    map_MCP_Clust _mcp_clust;
-    map_MCP_Helix _mcp_helix;
+  float totalUnrecoverableOverlapEcal1max=0.0;
+  float totalUnrecoverableOverlapEcal2max=0.0;
+  float totalUnrecoverableOverlapHcalmax=0.0;
+  float totalUnrecoverableOverlapEcal1min=0.0;
+  float totalUnrecoverableOverlapEcal2min=0.0;
+  float totalUnrecoverableOverlapHcalmin=0.0;
+  float noPointerEcal=0.0;
+  float noPointerHcal=0.0;
+
+ typedef std::map <MCParticle*,ClusterImpl*> mapMCP2Clust;
     
-    try {
-	relcol = evt->getCollection(_relCollection.c_str());	
-    }
-    catch(DataNotAvailableException &e){
-	std::cout << "Cluster Cheater : " 
-		  << "No relation exist " 
-		  << "between Sim and Calo hit" << std::endl; 	
-	std::cout << "Cluster Cheater : Quitting program" << std::endl; 
-	exit(1);
-    }
+   mapMCP2Clust p2clust;
 
-    LCRelationNavigator navigate(relcol); 
+  for (unsigned int i=0 ; i < _caloCollections.size(); ++i) 
+    {    
 
-    for (unsigned int i(0) ; i < _caloCollections.size(); ++i) {    
-	try {
-	    LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
-	    int nelem = col->getNumberOfElements();
-	    for (int i(0); i < nelem; ++i) {
-		CalorimeterHit * hit = 
-		  dynamic_cast<CalorimeterHit*>(col->getElementAt(i));
-		LCObjectVec objectVec = navigate.getRelatedToObjects(hit);
+      cout<<"name ="<<_caloCollections[i]<<endl;
+       const LCCollection * relcol ;
+       relcol = evt->getCollection("RelationCaloHit");
+	 LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
+          unsigned int nhits = col->getNumberOfElements();
+  
+     
+      double gearRMax = Global::GEAR->getEcalBarrelParameters().getExtent()[0];
+    
+      double zmax= Global::GEAR->getEcalEndcapParameters().getExtent()[2];
+   
+ LCRelationNavigator navigate(relcol); 
+
+	    for (unsigned int j=0; j < nhits; ++j) 
+             {
+	   CalorimeterHit * calhit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j));
+	LCObjectVec objectVec = navigate.getRelatedToObjects(calhit);
 		if (objectVec.size() > 0) {
-		    SimCalorimeterHit * shit = 
-		      dynamic_cast<SimCalorimeterHit*>(objectVec[0]);
-		    if (shit->getNMCParticles() > 0) {
-			MCParticle * par = shit->getParticleCont(0);
-			if (par != NULL ) {
-			  if (_ifBrahms == 1) {			    
-			    bool swi = par->isCreatedInSimulation();
-			    if (swi) {
-			    }
-			    else {
-			      if (_mcp_clust[par] == NULL) {
-				ClusterImpl * cluster = new ClusterImpl();
-				_mcp_clust[par] = cluster;
-				float charge = par->getCharge();
-				float Dist;
-				if (fabs(charge)>0.5) {
-				  HelixClass * helix = AssignHelixToMCP(par);
-				  _mcp_helix[par] = helix;
-				  Dist = DistanceToChargeParticle(helix,hit);
-				}
-				else {
-				  Dist = DistanceToNeutralParticle(par,hit);
-				}
-				if (Dist < _proximityCut)
-				  cluster->addHit(hit,(float)1.0);
-			      }
-			      else {
-				ClusterImpl * cluster = _mcp_clust[par];
-				float charge = par->getCharge();
-				float Dist;
-				if (fabs(charge)>0.5) {
-				  HelixClass * helix = _mcp_helix[par];
-				  Dist = DistanceToChargeParticle(helix,hit);
-				}
-				else {
-				  Dist = DistanceToNeutralParticle(par,hit);
-				}
-				if (Dist < _proximityCut)
-				  cluster->addHit(hit,(float)1.0);
-			      }
-			    }
-			  }
-			  else {
-			    bool loop = 1;
-			    while (loop) {
-			      int nparents = par->getNumberOfParents();
-			      bool _isDecayedInTracker = 0;
-			      MCParticle * parent ;
-			      if (nparents != 0) {
-				parent = par->getParent(0);
-				_isDecayedInTracker = 
-				  parent->isDecayedInTracker();
-			      }
-			      if (nparents == 0 || _isDecayedInTracker ) {
-				if (_mcp_clust[par] == NULL) {
-				  ClusterImpl * cluster = new ClusterImpl();
-				  _mcp_clust[par] = cluster;
-				  float charge = par->getCharge();
-				  float Dist;
-				  if (fabs(charge)>0.5) {
-				    HelixClass * helix = AssignHelixToMCP(par);
-				    _mcp_helix[par] = helix;
-				    Dist = DistanceToChargeParticle(helix,hit);
-				  }
-				  else {
-				    Dist = DistanceToNeutralParticle(par,hit);
-				  }
-				  if (Dist < _proximityCut)
-				    cluster->addHit(hit,(float)1.0);
-				}
-				else {
-				  ClusterImpl * cluster = _mcp_clust[par];
-				  float charge = par->getCharge();
-				  float Dist;
-				  if (fabs(charge)>0.5) {
-				    HelixClass * helix = _mcp_helix[par];
-				    Dist = DistanceToChargeParticle(helix,hit);
-				  }
-				  else {
-				    Dist = DistanceToNeutralParticle(par,hit);
-				  }
-				  if (Dist < _proximityCut)
-				    cluster->addHit(hit,(float)1.0);
-				}
-				loop = 0;
-				break;
-			      }
-			    par = parent;
-			    } 
-			  }
-			}
-			else {
-			  std::cout << "Hit is lost !!!!! " << std::endl;
-			}
-		    }
-		    else {
-		      std::cout << "Hit is lost !!!!! " << std::endl;
-		    }
-		}
-		else {
-		  std::cout << "Hit is lost !!!!! " << std::endl;
-		}
-	    }	
-	}
-	catch(DataNotAvailableException &e){ 
-	}
-    }
+          
+           SimCalorimeterHit * simhit=dynamic_cast<SimCalorimeterHit*>( objectVec[0]);
+	   unsigned int ncontrib=simhit->getNMCContributions();
+	   int cellid=calhit->getCellID0();
+           int layer=(cellid & MASK_K) >> SHIFT_K;  
+	   int module=(cellid & MASK_M) >> SHIFT_M;  
+	   if ( ncontrib>1)
+	     {   // so there is an overlap  
+	       float maxmix=0.0;
+               unsigned int ttmax=0;
+               unsigned int ttmin=0;
+	       float minmix=simhit->getEnergyCont(0);
+	       for ( unsigned int tt=0 ; tt<ncontrib ; ++tt)
+		 {
+		   if (simhit->getEnergyCont(tt)> maxmix)
+		     {
+		       maxmix=simhit->getEnergyCont(tt);
+		       ttmax=tt;
+		     }
+                   if (simhit->getEnergyCont(tt)< minmix)
+		     {
+		       minmix=simhit->getEnergyCont(tt);
+		       ttmin=tt;
+		     }
+		 }
+                 MCParticle * par =simhit->getParticleCont(ttmax);
+		 if ( par !=NULL)
+		     {
 
-    LCCollectionVec * clscol = new LCCollectionVec(LCIO::CLUSTER);
-    LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
+                      first_jump:
+		     
+		       if (p2clust[par] == NULL) 
+			 {
+                           
+			   float x=par->getVertex()[0];
+			   float y=par->getVertex()[1];
+			   float z=par->getVertex()[2];
+			   float radius=sqrt(x*x+y*y);
+        	
+			 if( (radius<gearRMax && fabs(z)<zmax) ) 
+			     {
+                	       ClusterImpl * cluster = new ClusterImpl();
+			       p2clust[par]=cluster;
+			       cluster->addHit(calhit,(float)1.0);
+			     }else{
+			        par=par->getParents()[0];
+				goto first_jump;
+  			     }
+			 }else{
+			      ClusterImpl * cluster = p2clust[par];
+			      cluster->addHit(calhit,(float)1.0);
+		         }         
+	            
+                     }else{// par !=0
+		        noPointerEcal+=simhit->getEnergyCont(ttmax);
+ 
+		     }//par !=0    
 
-    map_MCP_Clust::iterator pos;
-    for (pos = _mcp_clust.begin(); pos != _mcp_clust.end(); ++pos) {
+                        totalUnrecoverableOverlapEcal1max+=maxmix;
+		        totalUnrecoverableOverlapEcal1min+=minmix;
+	      }else{ // contributions
+                    MCParticle * par =simhit->getParticleCont(0);
+		 if ( par !=NULL)
+		     {
+
+                       second_jump:
+		    
+		       if (p2clust[par] == NULL) 
+			 {
+                           
+			   float x=par->getVertex()[0];
+			   float y=par->getVertex()[1];
+			   float z=par->getVertex()[2];
+			   float radius=sqrt(x*x+y*y);
+        
+		        if( (radius<gearRMax && fabs(z)<zmax) ) 
+			     {
+                	       ClusterImpl * cluster = new ClusterImpl();
+			       p2clust[par]=cluster;
+			       cluster->addHit(calhit,(float)1.0);
+			     }else{
+			        par=par->getParents()[0];
+				goto second_jump;
+  			     }
+			 }else{
+			      ClusterImpl * cluster = p2clust[par];
+			      cluster->addHit(calhit,(float)1.0);
+		         }         
+	            
+                     }else{// par !=0
+		       
+			noPointerEcal+=simhit->getEnergyCont(0);
+		     }//par !=0    
+                    	           
+	          }// ncontribution
+		}
+	     }// over nhits
+       
+    }   
+
+    		
+  LCCollectionVec * clscol = new LCCollectionVec(LCIO::CLUSTER);
+  LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
+
+    mapMCP2Clust::iterator pos;
+
+    for (pos = p2clust.begin(); pos != p2clust.end(); ++pos) 
+    {
       MCParticle * mcp = pos->first;
+   
       ClusterImpl * cluster = pos->second;
-      if (fabs(mcp->getCharge()) > 0.5) {
-	HelixClass * helix = _mcp_helix[mcp];
-	delete helix;
-      }
+      
+      if(cluster != NULL){
       CalorimeterHitVec calohitvec = cluster->getCalorimeterHits();
       int nhcl = (int)calohitvec.size();
-      if (nhcl > _minimal_hits) {
-	float * xhit = new float[nhcl];
-	float * yhit = new float[nhcl];
-	float * zhit = new float[nhcl];
-	float * ahit = new float[nhcl];
+    
 	float totene = 0.0;
 	float totecal = 0.0;
 	float tothcal = 0.0;
-	for (int ihit(0); ihit < nhcl; ++ihit) {
-	  CalorimeterHit * calhit = calohitvec[ihit];
-	  xhit[ihit] = calhit->getPosition()[0];
-	  yhit[ihit] = calhit->getPosition()[1];
-	  zhit[ihit] = calhit->getPosition()[2];
-	  ahit[ihit] = calhit->getEnergy();
-	  totene += ahit[ihit];
-	  if (calhit->getType() == 0) {
-	    totecal += ahit[ihit];
-	  }
-	  else {
-	    tothcal += ahit[ihit];
-	  }		
-	}	
-	ClusterShapes * shape 
-	  = new ClusterShapes(nhcl,ahit,xhit,yhit,zhit);	    
+	for (int i=0; i< nhcl; ++i) 
+	  {
+	  CalorimeterHit * calhit = calohitvec[i];
+	  totene +=  calhit->getEnergy();	
+	  }	
 	cluster->setEnergy(totene);
-	cluster->subdetectorEnergies().resize(2);
-	cluster->subdetectorEnergies()[0] = totecal;
-	cluster->subdetectorEnergies()[1] = tothcal;	    
-	cluster->setPosition(shape->getCentreOfGravity());
-	float PhiCluster = 
-	  atan2(shape->getEigenVecInertia()[1],
-		shape->getEigenVecInertia()[0]);
-	float ThetaCluster = acos(shape->getEigenVecInertia()[2]);
-	cluster->setIPhi(PhiCluster);
-	cluster->setITheta(ThetaCluster);	    
 	clscol->addElement(cluster);
-	delete shape;
-	delete[] xhit;
-	delete[] yhit;
-	delete[] zhit;
-	delete[] ahit;	      
+   
 	LCRelationImpl * rel = new LCRelationImpl(cluster,mcp,(float)1.0);
-	relationcol->addElement( rel );
-      }
+	relationcol->addElement( rel ); 
+
+     }   
     }
-    evt->addCollection(clscol,"TrueClusters");
-    evt->addCollection(relationcol,"TrueClusterToMCP");
+    evt->addCollection(clscol,_trueClustCollection.c_str());
+    evt->addCollection(relationcol,_trueClustToMCP.c_str());
+
+
     _nEvt++;
     
 }
@@ -287,58 +259,3 @@ void ClusterCheater::check( LCEvent * evt ) { }
   
 void ClusterCheater::end(){ } 
 
-float ClusterCheater::DistanceToChargeParticle(HelixClass * helix, 
-					       CalorimeterHit * hit) {
-  float Distance[3];
-  float pos[3];
-  for (int i=0; i<3; ++i)
-    pos[i]=(float)hit->getPosition()[i];    
-  float Time = helix->getDistanceToPoint(pos,Distance);
-
-  float Dist = 1.0e+20;
-  if (Time > 0.0)
-    Dist = Distance[2];
-  return Dist;
-}
-
-
-float ClusterCheater::DistanceToNeutralParticle(MCParticle * par, 
-						CalorimeterHit * hit) {
-  float distance[3];
-  float momentum[3];
-  float absDistance = 0.0;
-  float absMomentum = 0.0;
-  float product = 0.0;
-  for (int i=0; i<3; ++i) {
-    distance[i] = (float)hit->getPosition()[i]-(float)par->getVertex()[i];
-    momentum[i] = (float)par->getMomentum()[i];
-    product += distance[i]*momentum[i];
-    absDistance += distance[i]*distance[i];
-    absMomentum += momentum[i]*momentum[i];
-  }
-  absDistance = sqrt(absDistance);
-  absMomentum = sqrt(absMomentum);
-  float cosAngle = product/fmax(1.0e-30,absDistance*absMomentum);
-  if (cosAngle > 1.0) 
-    cosAngle = 0.999999;  
-  if (cosAngle < -1.0)
-    cosAngle = -0.999999;
-  float angle = acos(cosAngle);
-  return absDistance*angle;
-
-}
-
-
-HelixClass*  ClusterCheater::AssignHelixToMCP( MCParticle * par) {
-  HelixClass * helix = new HelixClass();
-  float vertex[3];
-  float momentum[3];
-  for (int i=0; i<3; ++i) {
-    vertex[i] = (float)par->getVertex()[i];
-    momentum[i] = (float)par->getMomentum()[i];
-  }
-  float charge = par->getCharge();
-  helix->Initialize_VP(vertex,momentum,charge,_bField);
-  return helix;
-
-}

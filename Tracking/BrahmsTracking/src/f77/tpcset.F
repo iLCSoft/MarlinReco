@@ -1,7 +1,10 @@
 *  
-* $Id: tpcset.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcset.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -31,8 +34,8 @@ c****************************************************************************
 #include "include/alcons.inc"
 #include "include/coildims.inc"
 #include "include/rconds.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tpccon.inc"
 #include "include/tpcdims.inc"
 #include "include/tpgeop.inc"
@@ -58,7 +61,7 @@ c Enter the tpc row radii
       write(*,*) "TPCPADR = " , TPCPADR
 
       TPPROW(1)=TPCACRI+0.5*TPCPADR
-      DO I=2,LTPDRO
+      DO I=2,NRTPC
        TPPROW(I)=TPPROW(1)+(I-1)*TPCPADR
       ENDDO
 

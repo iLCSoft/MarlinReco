@@ -11,7 +11,7 @@ using namespace std;
 TPC_Hit_Bank * TPCHitBank;
 
 // Declaration of Common Block used to store the number of hits in the hit bank defined in TPChitbank.h
-CNTPC_DEF CNTPC;
+//CNTPC_DEF CNTPC;
 
 TPC_Hit_Bank::TPC_Hit_Bank()
 {

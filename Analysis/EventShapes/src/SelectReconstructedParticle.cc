@@ -1,5 +1,6 @@
 #include "SelectReconstructedParticle.h"
 #include <iostream>
+#include <cmath>
 
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCIO.h>

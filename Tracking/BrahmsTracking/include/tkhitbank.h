@@ -3,11 +3,11 @@
 #define Tk_Hit_Bank_h 1
 
 #include<vector>
-#include <cfortran.h>
-
-using namespace std;
-
-
+#include<cfortran.h>
+#include<map>
+#include<string>
+//stl exception handler
+#include<stdexcept>
 
 class Tk_Hit_Bank
 {
@@ -17,7 +17,7 @@ class Tk_Hit_Bank
   ~Tk_Hit_Bank();
   void add_hit(float, float, float, float, int, int, int, int, int, float, float);
   //void add_hit(float, float, float, float, int, float, float, int);
-  void remove_hit(int);
+  //  void remove_hit(int);
   void setX(float X, int hit){hit_bank[hit].x = X;};
   void setY(float Y, int hit){hit_bank[hit].y = Y;};
   void setZ(float Z, int hit){hit_bank[hit].z = Z;};
@@ -46,6 +46,31 @@ class Tk_Hit_Bank
   float getResolution2(int i){return  hit_bank[i].resolution_2;};
 
 
+  //  omega>0 ? +1 : -1;
+
+  // These methods have no protection against using the wrong key e.g. tpc instead of TPC ...
+
+  void setFirstHitIndex(std::string subdet)
+    { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {firstHitEntry[subdet]=hit_bank.size();}
+    else { throw std::runtime_error("subdetector does not exit") ;}};
+
+  unsigned int getFirstHitIndex(std::string subdet)
+    { if(firstHitEntry.find(subdet) != firstHitEntry.end()) {return firstHitEntry[subdet];}
+    else { throw std::runtime_error("subdetector does not exit") ;}}; 
+  
+  void setLastHitIndex(std::string subdet)
+   { if(lastHitEntry.find(subdet) == lastHitEntry.end()) {lastHitEntry[subdet]=hit_bank.size()-1;}
+    else { throw std::runtime_error("subdetector does not exit") ;}};
+
+  unsigned int getLastHitIndex(std::string subdet)
+  { if(lastHitEntry.find(subdet) != lastHitEntry.end()) {return  lastHitEntry[subdet];}
+  else { throw std::runtime_error("subdetector does not exit") ;}};  
+  
+  int getNumOfSubDetHits(std::string subdet)
+    { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {return 0;} 
+    else {return 1 + lastHitEntry[subdet] - firstHitEntry[subdet];}};
+  
+
  private:
 
 struct tk_hit 
@@ -64,8 +89,12 @@ struct tk_hit
 
 };
 
- vector <tk_hit> hit_bank;
-
+ std::vector <tk_hit> hit_bank;
+ 
+ // stores the postion of the first hit from a subdetector
+ std::map <const std::string , unsigned int> firstHitEntry;
+ // stores the postion of the last hit from a subdetector
+ std::map <const std::string , unsigned int> lastHitEntry;
 
 };
 

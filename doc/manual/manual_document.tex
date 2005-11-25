@@ -998,7 +998,7 @@ runs and events processed.
 
 This section is supposed to help you to install all packages which are 
 necessary to run MarlinReco. Probably some of the required software is 
-already installed on your computer. The installation guide is written 
+already available on your computer. The installation guide is written 
 in a way that you can skip the appropriate subsections. 
 
 \subsection{System Requirements}
@@ -1032,6 +1032,10 @@ The ccvssh package works as a bridge to remote CVS
 pservers using SSL tunnelling.  
 
 \subsection{Getting the Sources}
+
+Please make sure, that you download the recent tagged versions of the 
+different packages (LCIO v01-05, Gear v00-02, Marlin v00-09-02, 
+MarlinReco v00-01, MarlinUtil v00-01, CED v00-01 and CEDViewer v00-01). 
 
 Create a directory in which you can download all sources and install 
 the packages:
@@ -1082,7 +1086,7 @@ prompted to enter your password. Then checkout the latest version:
 
 \begin{verbatim}
 cd $LCSoft
-cvs co Marlin
+cvs co -r v00-09-02 Marlin
 \end{verbatim}
 
 \subsubsection*{Gear}
@@ -1097,7 +1101,7 @@ export CVS_RSH=ccvssh
 export CVSROOT=:ext:anonymous@cvssrv.ifh.de:/gear
 ccvssh login
 cd $LCSoft
-cvs co gear
+cvs co -r v00-02 gear
 \end{verbatim}
 
 \subsubsection*{MarlinUtil, MarlinReco and the CEDViewer}
@@ -1119,10 +1123,10 @@ Then checkout the latest version:
 \begin{verbatim}
 mkdir $LCSoft/packages 
 cd $LCSoft/packages 
-cvs co MarlinReco 
-cvs co MarlinUtil 
-cvs co CEDViewer 
-cvs co CED 
+cvs co -r v00-01 MarlinReco 
+cvs co -r v00-01 MarlinUtil 
+cvs co -r v00-01 CEDViewer 
+cvs co -r v00-01 CED 
 \end{verbatim}
 
 \subsection{Building the Packages}

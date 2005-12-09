@@ -201,8 +201,8 @@ stored through the AIDA interface.
 
 Marlin~\cite{ref_marlin} and some of the MarlinReco processors depend on the
 ``Class Library for High Energy Physics'' (CLHEP)~\cite{ref_clhep}. 
-It is recommended to use the version 1.8.2. Version 2.0 and higher use a 
-own CLHEP namespace. This has not jet implemented in Marlin, therefore those
+It is recommended to use a version below 2.0. Version 2.0 and higher use a 
+own CLHEP namespace. This has not jet been implemented in Marlin, therefore those
 CLHEP releases are not compatible to Marlin. This choice has been 
 made to use the same CLHEP version for the Reconstruction and simulation 
 (GEANT~4~\cite{ref_geant4}). In addition the ``GNU Scientific Library'' 
@@ -739,19 +739,25 @@ lines of parameters with
 
 in the XML steering file.
 
-Before running MarlinReco you have to launch the {\tt glced} program:
+To enable the display you have to launch the CED server manually
+by starting the {\tt glced} program in a separate window/shell:
+
+\begin{verbatim}
+$LCSoft/glced/glced &
+\end{verbatim}
+
+If you now run MarlinReco by typing
 
 \begin{verbatim}
 cd $LCSoft/Marlin
-$LCSoft/glced/glced
 bin/Marlin exampleSteeringFile.xml
 \end{verbatim}
 
-Now the event is displayed after finishing the reconstruction of 
+the event is displayed after finishing the reconstruction of 
 tracks, clusters and particle flow objects in the window panel activated by 
-the CED program {\tt glced}.
+the {\tt glced} program.
 
-To manipulate the event display you can either using the mouse or 
+To manipulate the event display you can either use the mouse or 
 certain key commands. Controlling will work if the mouse is placed
 inside the CED window. 
 
@@ -1214,7 +1220,7 @@ default values for the DESY computing environment are given here.
       Include debug information in output (1 = on). 
       Comment out this line for production code. 
 \item {\tt export CLHEP=/opt/products/CLHEP/1.8.2} \\ 
-      Path to the CLHEP package. Be sure to use version 1.8.2. 
+      Path to the CLHEP package. Be sure to use a version below 2.0. 
       There will be problems with later versions due to the useage of 
       namespaces.
 \item {\tt export GSL\_HOME=/afs/desy.de/group/it/ilcsoft/gsl/1.6} \\

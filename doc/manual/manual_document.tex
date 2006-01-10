@@ -900,7 +900,6 @@ class MyProcessor : public Processor {
 \begin{verbatim}
 #include "MyProcessor.h"
 #include <iostream>
-
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
 
@@ -916,17 +915,14 @@ MyProcessor::MyProcessor() : Processor("MyProcessor") {
                               _colName ,
                               std::string("MCParticle") ) ;
 }
-
 void MyProcessor::init() { 
   printParameters() ;
   _nRun = 0 ;
   _nEvt = 0 ;
 }
-
 void MyProcessor::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
 } 
-
 void MyProcessor::processEvent( LCEvent * evt ) { 
   _nEvt ++ ;
   LCCollection* inParVec = evt->getCollection(_colname) ;
@@ -934,12 +930,10 @@ void MyProcessor::processEvent( LCEvent * evt ) {
             << inParVec->getNumberOfElements() 
             << " Monte Carlo particles" << std::endl;
 }
-
 void MyProcessor::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots 
   // in reconstruction processor
 }
-
 void MyProcessor::end(){ 
    std::cout << "MyProcessor::end()  " << name() 
             << " processed " << _nEvt << " events in " << _nRun << " runs "

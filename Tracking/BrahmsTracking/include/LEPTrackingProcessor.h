@@ -32,6 +32,8 @@ using namespace marlin ;
 *
 * Z0 is the z coordinate of the PCA in the R-Phi plane.
 *
+* For the relations, the weighs are calculated as the percentage of hits that a given MC particle contributes to the reconstucted track's hit collection
+*
 * At present the covariance matrix is not filled.
 *
 *

@@ -99,7 +99,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;
 
   firstEvent = false ;
-  
 
   LCCollection* STHcol = 0 ;
   try{
@@ -297,23 +296,23 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
               if(abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())<=1||abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())==(int)padLayout.getPadsInRow(i).size()){
 
-              
-//                 cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
-//                 cout << "double hit candidate found in row: " << i <<  endl;
+                /*              
+                 cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
+                 cout << "double hit candidate found in row: " << i <<  endl;
 
-//                 cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
-//                 cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
-//                 cout << "gearTPC.getDoubleVal(tpcPixZ)" << gearTPC.getDoubleVal("tpcPixZ") << endl;
+                 cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
+                 cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
+                 cout << "gearTPC.getDoubleVal(tpcPixZ)" << gearTPC.getDoubleVal("tpcPixZ") << endl;
 
-//                 cout << "row_hits dX^2 + dY^2 " << 
-//                   ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
-//                       ( row_hits[j]->getX() - row_hits[k]->getX() ) ) +
-//                     ( ( row_hits[j]->getY() - row_hits[k]->getY() ) * 
-//                       ( row_hits[j]->getY() - row_hits[k]->getY() ) ) )
-//                      << endl;
-//                 cout << "padLayout.getPadWidth(0)^2 " << padLayout.getPadWidth(0) * padLayout.getPadWidth(0)
-//                      << endl;
-                
+                 cout << "row_hits dX^2 + dY^2 " << 
+                   ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
+                       ( row_hits[j]->getX() - row_hits[k]->getX() ) ) +
+                     ( ( row_hits[j]->getY() - row_hits[k]->getY() ) * 
+                       ( row_hits[j]->getY() - row_hits[k]->getY() ) ) )
+                      << endl;
+                 cout << "padLayout.getPadWidth(0)^2 " << padLayout.getPadWidth(0) * padLayout.getPadWidth(0)
+                      << endl;
+                */
 
                 if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < gearTPC.getDoubleVal("tpcPixZ") ) {
 
@@ -324,7 +323,33 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
                      <  2.2 *  2.2 ){
 
 
-                    cout << "double hit found in row: " << i <<  endl;
+                    SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];
+                    SimTrackerHit* Hit2 = tpcHitMap[row_hits[k]];
+
+
+                    /*
+                    
+                    cout << "double hit found in row: " << i 
+                         << "    MCP1 : " << Hit1->getMCParticle()->id() 
+                         << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
+                         << "Energy : " << Hit1->getMCParticle()->getEnergy() << "     " 
+                         << "MCP2 : " << Hit2->getMCParticle()->id() 
+                         << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
+                         << "Energy : " << Hit2->getMCParticle()->getEnergy()
+                         << endl;
+                    */
+
+
+                    /*
+                    float xd = (float)row_hits[j]->getX();
+                    float yd = (float)row_hits[j]->getY();
+                    float zd = (float)row_hits[j]->getZ();
+	    
+                    float xd2 = (float)row_hits[k]->getX();
+                    float yd2 = (float)row_hits[k]->getY();
+                    float zd2 = (float)row_hits[k]->getZ();
+                    */
+
                     row_hits[j]->setAdjacent(row_hits[k]);
                     row_hits[k]->setAdjacent(row_hits[j]);
                   }		  
@@ -345,11 +370,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           trkHit->setdEdx(row_hits[j]->getdEdx());
           trkHit->setType( 500 );
           
-          // 	  push back the SimTHit for this TrackerHit
-          trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );
+          if(pos[0]*pos[0]+pos[1]*pos[1]>0.0 * 0.0){
+            // 	  push back the SimTHit for this TrackerHit
+            trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );
             
-          trkhitVec->addElement( trkHit ); 
-
+            
+            trkhitVec->addElement( trkHit ); 
+          }
 
         }
       }
@@ -382,6 +409,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }    
   }
   _nEvt++;
+  
 }
 
 
@@ -400,4 +428,3 @@ void TPCDigiProcessor::end()
   // 	    << endl ;
   
 }
-

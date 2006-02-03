@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.16 2005-12-06 15:26:23 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.17 2006-02-03 15:09:11 owendt Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.16  2005/12/06 15:26:23  aplin
+** corrected erroneous definition of MC Track Relation weight
+**
 ** Revision 1.15  2005/11/03 15:16:14  aplin
 ** Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
 **
@@ -642,8 +645,10 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
           LCRelationImpl* tpclcRel = new LCRelationImpl;
           tpclcRel->setFrom (tpcTrack);
           tpclcRel->setTo (mcp);
-          //          float weight = mcHits[k]/tpcTrack->getTrackerHits().size();
-          float weight = (float)(tpcTrack->getTrackerHits().size())/(float)mcHits[k];
+          float weight = (float)(mcHits[k])/(float)(tpcTrack->getTrackerHits().size());
+          //float weight = (float)(tpcTrack->getTrackerHits().size())/(float)mcHits[k];
+
+
           tpclcRel->setWeight(weight);
         
 
@@ -886,26 +891,39 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
             }
           }
         }
-        
-
-        for(unsigned int k=0; k<mcPointers.size();k++){
-          
-          MCParticle * mcp = mcPointers[k];
-          
-          LCRelationImpl* lcRel = new LCRelationImpl;
-          lcRel->setFrom (Track);
-          lcRel->setTo (mcp);
-          //          float weight = mcHits[k]/Track->getTrackerHits().size();
-          float weight = (float)(Track->getTrackerHits().size())/(float)mcHits[k];
-          lcRel->setWeight(weight);
-          
-          
-          lcRelVec->addElement( lcRel );
-        }
       }
-      //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
+
+      for(unsigned int k=0; k<mcPointers.size();k++){
+        
+        MCParticle * mcp = mcPointers[k];
+        
+        LCRelationImpl* lcRel = new LCRelationImpl;
+        lcRel->setFrom (Track);
+        lcRel->setTo (mcp);
+        float weight = (float)(mcHits[k])/(float)(Track->getTrackerHits().size());
+        //float weight = (float)(Track->getTrackerHits().size())/(float)mcHits[k];
+        
+        std::cout << "TkTkBank->size() : " << TkTkBank->size() << " Track : " << tk 
+                  << "  # MCs : " << mcPointers.size() 
+                  << "  actual : " << k << "  # TrackerHits : " 
+                  << Track->getTrackerHits().size();
+        std::cout << "   mcHits[" << k << "] = " << mcHits[k];
+        std::cout << "   LEPTR WEIGHT: " 
+                  << weight << "  mcp-> " << mcp->getPDG() << " energy = " << mcp->getEnergy() << std::endl;
+        
+        
+        
+        lcRel->setWeight(weight);
+        
+        
+        lcRelVec->addElement( lcRel );
+      }
       
 
+        
+      //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
+      
+      
       TrackVec->addElement( Track );
 
     }

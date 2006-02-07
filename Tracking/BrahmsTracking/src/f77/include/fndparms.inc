@@ -1,7 +1,10 @@
 *  
-* $Id: fndparms.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fndparms.inc,v 1.2 2006-02-07 10:54:08 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -13,5 +16,7 @@
 *
 *  
       INTEGER NTPMAX,MAXCND,NTPCOMX
-      PARAMETER(NTPMAX=30000,MAXCND=30000,NTPCOMX=50000)
+*      PARAMETER(NTPMAX=30000,MAXCND=30000,NTPCOMX=50000)
+      PARAMETER(NTPMAX=120000,MAXCND=100000,NTPCOMX=150000)
+
 

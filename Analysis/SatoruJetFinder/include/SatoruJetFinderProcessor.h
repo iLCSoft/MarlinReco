@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.4 2005-08-03 15:22:55 samson Exp $
+** $Id: SatoruJetFinderProcessor.h,v 1.5 2006-02-07 13:56:37 samson Exp $
 **
 **
 */ 
@@ -67,6 +67,13 @@ namespace marlin
    * code written by Satoru Yamashita for the OPAL collaboratoin.
    * For further details concerning this fortran code read the 
    * OPAL Technical Note TN579.
+   *
+   * To compile this processor, you need a FORTRAN77 compiler like g77
+   * and you have to link against the CERNLIB. If you use the MARLIN package
+   * mechanism you have to add the following two lines to the 'userlib.gmk' 
+   * file in the MARLIN directory:
+   * USERLIBS += -lg2c
+   * USERLIBS += -L /opt/products/cernlib/pro/lib/ -lmathlib -lkernlib
    *                                                                               
    * Steering file parameters:\n               
    * Allways to specify:\n
@@ -211,7 +218,7 @@ namespace marlin
    * \endverbatim
    *
    * @author Satoru Yamashita (original fortran code), Thorsten Kuhl, J&ouml;rgen Samson
-   * @version $Id: SatoruJetFinderProcessor.h,v 1.4 2005-08-03 15:22:55 samson Exp $
+   * @version $Id: SatoruJetFinderProcessor.h,v 1.5 2006-02-07 13:56:37 samson Exp $
    */
   class SatoruJetFinderProcessor : public Processor {
 

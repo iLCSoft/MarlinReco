@@ -6,9 +6,13 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.17 2006-02-03 15:09:11 owendt Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.18 2006-02-09 18:00:41 owendt Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.17  2006/02/03 15:09:11  owendt
+** i) Corrected bug in calculation of weights, relocated brace.
+** ii) Weights are now calculated as the percentage of hits that a given MC particle contributes to the reconstructed track's hit collection.
+**
 ** Revision 1.16  2005/12/06 15:26:23  aplin
 ** corrected erroneous definition of MC Track Relation weight
 **
@@ -903,6 +907,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         float weight = (float)(mcHits[k])/(float)(Track->getTrackerHits().size());
         //float weight = (float)(Track->getTrackerHits().size())/(float)mcHits[k];
         
+        // debug
+        /*
         std::cout << "TkTkBank->size() : " << TkTkBank->size() << " Track : " << tk 
                   << "  # MCs : " << mcPointers.size() 
                   << "  actual : " << k << "  # TrackerHits : " 
@@ -910,7 +916,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         std::cout << "   mcHits[" << k << "] = " << mcHits[k];
         std::cout << "   LEPTR WEIGHT: " 
                   << weight << "  mcp-> " << mcp->getPDG() << " energy = " << mcp->getEnergy() << std::endl;
-        
+        */
         
         
         lcRel->setWeight(weight);

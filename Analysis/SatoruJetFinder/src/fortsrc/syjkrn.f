@@ -130,7 +130,6 @@ CDECK  ID>, SYJKRN.
       INTEGER IMODE0
       INTEGER ISYMOD
 
-*      write(*,*) 'MD ',MD
 *-----Initialysation for outputs
       IERR = -9999
       NJET = 0
@@ -154,7 +153,7 @@ CDECK  ID>, SYJKRN.
       IF(MD(1:2).EQ.'2b'.OR.MD(1:2).EQ.'2B') ISYMOD = 22
       IF(MD(1:2).EQ.'2c'.OR.MD(1:2).EQ.'2C') ISYMOD = 23
       IF(MD(1:2).EQ.'2d'.OR.MD(1:2).EQ.'2D') ISYMOD = 24
-      write(*,*)'symode selected: ',ISYMOD
+*      write(*,*)'symode selected: ',ISYMOD
 *
       IF(ISYMOD.EQ.0) THEN
          WRITE(*,'(A,A)')'unknown MODE detected:'//MD(1:2)
@@ -287,7 +286,8 @@ CDECK  ID>, SYJKRN.
             PPAR0(5,I)=SQRT(MAX(0.0,PPAR0(5,I)))
          ENDIF
       ENDDO
-      IF(MOD(IMODE0,100).EQ.12) THEN
+*      IF(MOD(IMODE0,100).EQ.12) THEN
+      IF (IMODE.EQ.12) THEN    ! bugfix JS
          YCUT = 0.0
          R0   = YCUTS(1)
          EPS0 = YCUTS(2)

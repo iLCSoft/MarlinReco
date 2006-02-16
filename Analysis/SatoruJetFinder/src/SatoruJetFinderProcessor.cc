@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.3 2005-08-03 15:22:55 samson Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.4 2006-02-16 17:24:49 samson Exp $
 **
 **
 */ 
@@ -67,6 +67,15 @@ namespace marlin
                                "(if supported by current mode)",
                                _yCutParam, (float) 0.);
 
+    registerOptionalParameter( "RCone",
+                               "Half cone opening angle for cone jet finding "
+                               "algorithm with variable number of jet",
+                               _rConeParam, (float) 0.7);
+    registerOptionalParameter( "EpsCone",
+                               "Jet energycut for cone jet finding algorithm "
+                               "with variable number of jets",
+                               _epsConeParam, (float) 7);
+
 
     // steering parameters for manual mode
     registerOptionalParameter( "GlobalMode",
@@ -109,7 +118,7 @@ namespace marlin
 
     transform(_jetFindingMode.begin(),_jetFindingMode.end(),
               _jetFindingMode.begin(),( int (*)(int) ) std::tolower );
-    cout << "!!!!!!mode!!!!!" << _jetFindingMode << endl;
+    cout << "jet finding mode:" << _jetFindingMode << endl;
 
  
     //Fixme! catch wrong mode names
@@ -142,6 +151,14 @@ namespace marlin
     }else{        
       // fixme: check whether values are set?
       _yCut[0]=_yCutParam;
+
+      // different meaning for _yCut[] in cone mode
+      if ( _primaryJetFindingMode == MD::CONE )
+        {
+          _yCut[0]=_rConeParam;
+          _yCut[1]=_epsConeParam;
+        }
+      
     }
   
   }
@@ -213,7 +230,7 @@ namespace marlin
     int MaximalNumberOfJets=20;
     float YMinus,YPlus;
     int IError;
-    int GlobalModusLenght=_globalMode.length()-1;
+    int GlobalModusLength=_globalMode.length();
 
     syjkrn_(_globalMode.c_str(),
             _nJetRequested,_threshold,
@@ -225,7 +242,7 @@ namespace marlin
             MaximalNumberOfJets,
             _jetsWorkArray.NumberOfJets,_partonsWorkArray.PointerParticleToJets,
             DimensionOfOutputArray,_jetsWorkArray.Momentum,
-            YMinus,YPlus,IError,GlobalModusLenght);
+            YMinus,YPlus,IError,GlobalModusLength);
   };
 
   void SatoruJetFinderProcessor::getJets(LCEvent * evt,LCCollection* JetsCol){

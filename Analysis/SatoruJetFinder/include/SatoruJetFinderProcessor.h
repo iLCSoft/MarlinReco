@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.5 2006-02-07 13:56:37 samson Exp $
+** $Id: SatoruJetFinderProcessor.h,v 1.6 2006-02-16 17:24:49 samson Exp $
 **
 **
 */ 
@@ -218,7 +218,7 @@ namespace marlin
    * \endverbatim
    *
    * @author Satoru Yamashita (original fortran code), Thorsten Kuhl, J&ouml;rgen Samson
-   * @version $Id: SatoruJetFinderProcessor.h,v 1.5 2006-02-07 13:56:37 samson Exp $
+   * @version $Id: SatoruJetFinderProcessor.h,v 1.6 2006-02-16 17:24:49 samson Exp $
    */
   class SatoruJetFinderProcessor : public Processor {
 
@@ -263,6 +263,8 @@ namespace marlin
     float _threshold;
     int _primaryJetFindingMode;
     float _yCutParam;
+    float _rConeParam;
+    float _epsConeParam;
     float _yCut[2];
     int _mergingMode;
     float _mergingThreshold;
@@ -277,6 +279,24 @@ namespace marlin
     void writePartons();
     void writeJets();
     void writeParameters();
+
+    // true constants for mode selection
+    struct MD 
+    {
+      const static int JADE_E0   = 1;
+      const static int JADE_P    = 2;
+      const static int JADE_P0   = 3;
+      const static int JADE_E    = 4;
+      const static int DURHAM    = 5;
+      const static int GENEVA    = 6;
+      const static int CAMBRIDGE = 7;
+      const static int LUCLUS_1  = 8;
+      const static int LUCLUS_2  = 9;
+      const static int LUCLUS_3  = 10;
+      const static int LUCLUS_4  = 11;
+      const static int CONE      = 12;
+    };
+
   } ;
 
 

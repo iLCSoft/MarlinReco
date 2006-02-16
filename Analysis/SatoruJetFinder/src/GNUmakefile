@@ -31,6 +31,11 @@ else
 endif
 
 
+ifdef MARLINDEBUG
+ FFLAGS = -g 
+endif
+
+
 USERINCLUDES =
 #USERLIBS = -L $(BASEDIR)/lib/ -L/cern/pro/lib -lpacklib -lmathlib -lkernlib -lnsl -lg2c
 

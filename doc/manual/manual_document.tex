@@ -1,0 +1,1405 @@
+\title{\huge{\bf MarlinReco}\\
+             A Marlin based Reconstruction Package for the ILC}
+\author{T.~Kr\"amer et.al., DESY}
+\maketitle
+
+\begin{abstract}
+This document serves as a comprehensive manual to help 
+users getting started with the Marlin based reconstruction software MarlinReco
+for the international linear collider (ILC). 
+After a short review of the underlying packages 
+(LCIO, Gear, Marlin, MarlinUtil) and a summary of required libraries,
+a introduction to the features of MarlinReco is given. 
+Furthermore a detailed description helps to install MarlinReco  
+together with all underlying packages. It is also explained how
+to invoke MarlinReco and influence its behaviour using the steering file.
+Finally you learn how to write own processors so that many 
+scientist from the HEP community can contribute to this Project.  
+\end{abstract}
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+The software package MarlinReco serves as an event reconstruction, 
+used to support the detector development and optimisation at  
+the proposed international linear collider (ILC)~\cite{ref_ilchome}. 
+The different reconstruction 
+algorithms i.e. 
+track finding or cluster reconstruction are implemented in separate modules 
+called processors. To improve the modularity, algorithms 
+common to more processors are separated and implemented in a dedicated 
+utility section. In the phase of the detector development as well as
+during data taking the detector may change. In order to adopt 
+the reconstruction to the modified detector layout, the processors are 
+developed to be independent of the detector geometry as far as that is 
+possible. The actual geometry of the detector is then provided to the 
+processors using a geometry interface. 
+This structure not only allows the interchange of different
+reconstruction methods for a specific component of the detector, it also opens
+the possibility to use the same reconstruction for different 
+detector concepts. A high level of modularity ensures the
+extendibility of the package and supports distributed development.
+
+MarlinReco mainly depends on the analysis and reconstruction 
+software framework Marlin~\cite{ref_marlin} and on the data and persistency 
+model LCIO~\cite{ref_lcio,ref_lciohome}.
+
+The Software is portable so that it can be used on a wide range of 
+different UNIX systems. With some effort it also can be installed under
+MS Windows XP.  
+
+\section{Dependency on other Packages}
+
+In order to keep the software light weight and easy to use, 
+it is tried to keep the dependencies as moderate as possible.
+Nevertheless some packages have to be available on your system to run  
+MarlinReco. This section is meant to give an overview. More detailed 
+information can be obtained from the project homepages, where user manuals or 
+Application Programming Interface (API) documentations are available.
+
+\subsection{LCIO}
+
+Linear Collider I/O (LCIO)~\cite{ref_lcio,ref_lciohome} is a persistency framework and data model 
+that has been adopted as a standard by the international ILC community. 
+It defines an abstract event data model with hits, tracks, clusters etc. and 
+a concrete file format to store the data. The LCIO API 
+has been implemented in a way that makes the user code
+independent of the concrete file format. So the file format could be exchanged
+without breaking any existing user code if the need will arises. 
+
+In principle LCIO defines the complete event data model for ILC studies.
+Nevertheless users often need to store additional information together with 
+the event data.
+This is possible with the help of an abstract interface called
+{\em LCGenericObject} which holds arbitrary numbers of the simple types
+{\em int, float} and {\em double}. Through this interface virtually any data
+can be stored in LCIO files.
+
+\subsection{Marlin}
+
+Marlin ({\bf M}odular {\bf A}nalysis and {\bf R}econstruction for the
+{\bf LIN}ear collider)~\cite{ref_marlin} is a simple and generic
+\CPP application framework for the analysis of LCIO data that provides a
+platform for the distributed development of new reconstruction
+algorithms. Marlin supports the implementation of different tasks in individual
+modules, where tasks can be as simple as creating and filling 
+histograms or as complex as track finding and fitting
+in the central tracker. As modules serve dedicated subclasses of
+the class {\em Processor},
+Marlin uses LCIO also as its transient data model, i.e.
+the LCIO event class serves as a container of the data that is
+{\em shipped} from module to module as shown schematically in 
+fig.~\ref{fig_marlin}. 
+
+\begin{figure}[htb]
+%\vspace{3mm}
+\centering
+\includegraphics*[width=65mm,angle=0]{marlin.eps}
+\caption{
+Schematic overview of the modular structure of Marlin. LCIO is used as the 
+transient data model where the LCIO event serves as a
+container of the data seen by the {\em Processors}.
+}
+\label{fig_marlin}
+\end{figure}
+
+Marlin applications are entirely configured through XML steering files.
+The XML files hold arbitrary named parameters - defined
+either for a particular processor, a group of processors or globally. The
+steering files also define the order in which the
+processors are called as well as optionally logical conditions assigned to
+some processors that are evaluated at runtime. 
+
+Marlin is released with a number of processors implementing some core
+functionality such as creating histograms,
+simple fast smearing algorithms or conditions data handler.
+
+\subsection{Gear}
+
+One important ingredient for reconstruction software is the geometrical
+description of the detector which is used to record the events. 
+Gear~\cite{ref_gear} is a geometry description toolkit for ILC reconstruction software, 
+defining an abstract interface for the description of an ILC detector.
+This description is different from the geometry description needed for the 
+detailed simulation of the detector response, though of course related. For the
+simulation one needs very detailed knowledge of the material
+distribution in space whereas for the reconstruction mostly a higher
+level description of the subdetector's characteristics is needed.
+Depending on the particular reconstruction algorithm a hand full of
+parameters might suffice to describe a full subdetector, e.g. the main
+calorimeters.  
+This description is certainly a lot less than what is needed for the
+computation of the detailed detector response with GEANT4~\cite{ref_geant4}. 
+Of course the required parameters could be defined in the Marlin steering 
+file. However this procedure is error prone and tedious as the parameters 
+usually have to be extracted manually 
+from some other source, typically the full simulation
+program that has been used. 
+The aim of Gear is now to provide the interface to a 
+global source of information for the reconstruction view of the
+detector geometry.
+
+A first implementation uses XML files for the definition of the
+subdetector's geometry parameters in Gear. The user code however only applies 
+the abstract interface and is thus independent from the XML-file
+implementation.
+
+Currently under development is an
+implementation for the abstract interface to generic material
+properties in space, like the material's density at a given point or
+the integrated B-field along a (straight) path between two points.
+
+The decoupling of the geometrical 
+information of the detector from the reconstruction is the only way to get
+algorithms being independent of a specific detector model. 
+
+\subsection{MarlinUtil}
+
+The MarlinUtil package is a library with commonly used classes and functions. 
+All these classes and functions can be accessed from any processors in 
+Marlin by simply binding in this package. The content of the library can be 
+roughly divided into four sets:
+
+\begin{enumerate}
+\item Extension Classes for Tracker- and Calorimeter Hit classes. 
+      They expand the functionality of the corresponding, native LCIO classes.
+      Moreover there is a class for grouping track segments.
+\item Cluster Shape and Helix classes. These classes provide analysis 
+      functionality for clusters of calorimeter hits, such as calculating 
+      centre of gravity as well as fits of cluster shapes and simple helixes.
+\item CED classes. These are intrinsic classes needed for the handling of the 
+      C Event Display (CED).
+\item Miscellaneous classes, such as classes for printing the Monte Carlo 
+      particle tree of a LCIO file to the standard output and headers with 
+      math and physics constants.
+\end{enumerate}
+
+This library is under current development, so it will evolve in the future.
+
+\subsection{AIDA}
+
+Using MarlinReco to reconstruct HEP events and in a later stage even to
+analyse real data requires a interface to histograming packages. 
+For this task we utilise the Abstract Interfaces for Data Analysis
+(AIDA)~\cite{ref_aida}. It offers a standard set of interfaces for creating 
+and manipulating histograms, n-tuples and related data analysis objects.
+Two versions of the AIDA interfaces exist, one for Java and
+one for C++. The two interfaces are as identical as the underlying
+languages will permit. Currently a Java implementation -- 
+JAIDA~\cite{ref_jaida} -- is available which also can be accessed from C++ 
+via AIDA-JNI~\cite{ref_aidajni} (Java Native Interface). 
+MarlinReco uses AIDA-JNI to enable the production of check plots. 
+AIDA compliant applications\footnote{ 
+      JAS3~\cite{ref_jas}, The PI project in LCG-AA~\cite{ref_pi} and 
+      Open Scientist~\cite{ref_OS}} 
+allow to access, process or analyse the information
+stored through the AIDA interface. 
+
+\subsection{Other Libraries} \label{sec:otherlibs}
+
+Marlin~\cite{ref_marlin} and some of the MarlinReco processors depend on the
+``Class Library for High Energy Physics'' (CLHEP)~\cite{ref_clhep}. 
+It is recommended to use a version below 2.0. Version 2.0 and higher use a 
+own CLHEP namespace. This has not jet been implemented in Marlin, therefore those
+CLHEP releases are not compatible to Marlin. This choice has been 
+made to use the same CLHEP version for the Reconstruction and simulation 
+(GEANT~4~\cite{ref_geant4}). In addition the ``GNU Scientific Library'' 
+(GSL)~\cite{ref_gsl} is required. 
+
+The TPC reconstruction algorithms are taken from former LEP experiments.  
+they are coded in FORTRAN~77 and depend on the ``CERN Program Library'' 
+(CERNLIB)~\cite{ref_cernlib}. 
+
+\section{MarlinReco}
+
+In this section an introduction to the MarlinReco software and the
+visualisation of (reconstructed) events using the 
+CED (C Event Display) program is given. Furthermore it is explained how to 
+run a MarlinReco job to do reconstruction. The last subsection 
+contains a short tutorial that shows you how to write your own Marlin 
+processor. 
+
+\subsection{Reconstruction Algorithms}
+
+The heart of the reconstruction package are the Marlin processors
+which hold the different modules of algorithms to get tracks and 
+clusters from the simulated data. This section is meant to give a short 
+introduction to the different processors currently available. More detailed 
+information, especially about the usage of the modules and their 
+steering parameters can be obtained in the API documentation, which can be
+build together with MarlinReco using Doxygen~\cite{ref_doxygen}. 
+
+\subsubsection{Digitisation}
+
+There are digitisation algorithms available for the TPC and the 
+calorimeters. 
+The TPC digitisation converts a 
+{\em SimTrackerHit} to a {\em TrackerHit} by smearing in $r-\phi$ and $z$ 
+direction.
+
+The calorimeter digitiser processor 
+takes a {\em SimCalorimeterHit} and produces a {\em CalorimeterHit}. 
+The simulated energy depositions in the active 
+layers of the calorimeters are converted into physical energy. 
+This is done by taking into account the sampling fractions of 
+the electromagnetic and hadronic calorimeters (ECAL, HCAL). 
+
+For the vertex detector and
+the forward tracking system only dummy processors that do not apply any 
+smearing exist.
+
+{\bf Available processors:} 
+\begin{itemize}
+\item {\em FTDDigiProcessor}
+\item {\em TPCDigiProcessor}
+\item {\em VTXDigiProcessor}
+\item {\em MokkaCaloDigi} 
+\item {\em SimpleCaloDigi}
+\end{itemize}
+
+\subsubsection{TPC Tracking}
+
+The TPC tracking produces {\em Tracks} from TPC {\em TrackerHits} using LEP 
+tracking algorithms taken from the Fortran based reconstruction program 
+Brahms~\cite{ref_brahms}. 
+The LEPTracking processor now includes full unambiguous central tracking during
+which track strings are created through to full {\em Track} candidates (TK's) 
+which have passed the Delphi Ambiguity resolver fxambi. 
+
+Currently only the TPC pattern recognition and fitting is implemented, though 
+plans to incorporate vertex hits into tracks exist.
+
+The final track fitting is done using a Kalman filter. Presently
+the VTX and SIT resolutions are hard coded in {\em LEPTrackingProcessor}. 
+Both, 
+the magnetic field and the material description of
+the VTX detector and SIT, as for the TPC, is hard coded in setmat. 
+This will be improved as soon as Gear~\cite{ref_gear} becomes more evolved.
+
+{\bf Available processors:} 
+\begin{itemize}
+\item {\em LEPTrackingProcessor}
+\end{itemize}
+
+\subsubsection{Clustering Algorithm}
+
+The processor performs clustering of calorimeter hits without
+using information about reconstructed tracks. 
+The dependence of the clustering procedure on the detector
+geometry is minimised. Only the follwoing quanteties are used: 
+\begin{itemize}
+\item radius of the ECAL barrel 
+\item n-fold symmetry of barrel (n = 8 for TESLA)
+\item $\phi$ offset of the barrel stave w.r.t. the x-axis 
+      (0 for TESLA detector) 
+\item $\pm z$ coordinate of front face of ECAL endcaps 
+\end{itemize}
+These parameters are taken from the Gear~\cite{ref_gear} XML file.
+
+{\bf Available processors:} 
+\begin{itemize}
+\item {\em TrackwiseClustering}
+\end{itemize}
+
+\subsubsection{Particle Flow Algorithm}
+
+The algorithm matches {\em Clusters} to {\em Tracks}, reconstructs particles 
+and performs
+particle identification on the basis of the energy fraction deposited 
+in the ECAL. If this fraction is greater than a predefined threshold, 
+the particle is regarded to be a photon or electron depending on 
+whether a track is matched to the cluster.
+Likewise muons and neutral and charged hadrons are identified. 
+
+The algorithm depends on the same geometrical quantities as the 
+{\em TrackwiseClustering} processor. In addition it considers the
+magnetic field.
+
+{\bf Available processor:} 
+\begin{itemize}
+\item {\em Wolf}
+\end{itemize}
+
+\subsubsection{Cheaters}
+
+Cheater processors construct tracks or clusters by combining hits, produced 
+by the full detector simulation with Monte Carlo information.
+These processors can be used to benchmark and test existing algorithms
+or as replacement for yet to be written parts of the reconstruction.
+
+At the moment there are two cheaters available:
+
+{\bf Track Cheater:} \\
+It constructs true tracks by comprising all the {\em TrackerHits} attributable
+to the same (Monte Carlo) particle. If a track has more than a given number of
+hits and if the particle producing it carries at least a certain 
+energy it is considered. The Monte Carlo information 
+(momentum and vertex) is used to define the track parameters
+$d_0, z_0, \phi, \tan\lambda$ and $\omega$.
+Optional a fit can be performed to the {\em TrackerHits} assigned to a track
+to extract the track parameters. 
+
+{\bf Cluster Cheater:} \\
+This processor constructs true clusters, where a true cluster comprises all 
+hits attributed to the same generator particle entering 
+the calorimeter. Hits produced by back-scattered particles are assigned to the 
+primary which initiated this back-scattered particle. 
+Clusters are considered only if they have at least a predefined number of 
+hits. 
+To avoid collecting remote hits produced by neutrons or backscattered 
+particles, a proximity criterion is introduced in terms 
+of a particle-to-hit distance cut. A hit is assigned to the cluster 
+produced by a neutral particle if 
+the following condition is fulfilled: 
+$$
+D\{\textrm{hit-to-vertex}\} \cdot \alpha < \textrm{ProximityCut}
+$$
+$D\{$hit-to-vertex$\}$ is the distance of the hit to the point 
+where the neutral particle has been produced, and $\alpha$ is the 
+angle between the particle momentum vector and the vector connecting 
+the particle vertex and the hit. 
+For charged particles, the distance from the hit to 
+the helix associated with the particle trajectory should
+not exceed the proximity cut. 
+
+{\bf Available processors:} 
+\begin{itemize}
+\item {\em TrackCheater}
+\item {\em ClusterCheater}
+\end{itemize}
+
+\subsubsection{Event Shape Variables}
+
+There are several processors to calculate different event shape variables:
+
+\begin{itemize}
+\item Calculation of the thrust axis and thrust value for each event using two
+      different algorithms:
+      The Tasso algorithm calculates only the principle thrust value and axis.
+      Jetset algorithm calculates the principle thrust value and axis
+      as well as the major and minor thrust value and axis.   
+\item Calculation of the sphericity and aplanarity. 
+\item A universal jet finder module originally developed by Satoru Yamashita for
+   OPAL.
+\end{itemize}
+
+{\bf Available processor:} 
+\begin{itemize}
+\item {\em ThrustReconstruction}
+\item {\em Sphere}
+\item {\em SatoruJetFinderProcessor}
+\end{itemize}
+
+\subsection{Structure of a MarlinReco Steering File}
+
+Building MarlinReco with the top level makefile automatically produces a
+Marlin executable in the directory {\tt \$LCSoft/Marlin/bin} named 
+{\tt Marlin}
+({\tt \$LCSoft} is the path to the directory where MarlinReco is installed as
+explained in section~\ref{sec:install}).
+It includes all processors and is linked statically against all 
+libraries needed (Marlin, Gear, CLHEP, GSL ...) except the shared libraries
+provided by the linux system. 
+
+A Marlin job is fully configured by its steering file. 
+Therefore, it is a good starting point to understand how to configure a 
+MarlinReco application. 
+In principle there exist two formats of the Marlin steering file: 
+ASCII and XML. The older ASCII steering files are somewhat restricted in their 
+functionality and are only kept for downward compatibility. For that reason 
+we recommend to use XML steering files and only discuss those. 
+Every Marlin executable is
+able to print a sample steering file to standard out. Type
+
+\begin{verbatim}
+$LCSoft/Marlin/bin/Marlin -x > exampleSteeringFile.xml
+\end{verbatim}
+
+to get an 
+\htmladdnormallink{example steering file in the XML format}{../manual/examples/exampleSteeringFileXML.txt}. You can inspect this files using your favourite
+text editor (emacs, pico, vi ...). 
+
+Every steering file starts with {\tt <marlin>} and ends with 
+{\tt </marlin>}. (To include a comment at any point of the file use the 
+{\tt <!-- ... -->} tag.) 
+Inside the file is divided into three types of sections:
+
+{\bf Execute Section:} \\
+In this section the names of the processors which are to be 
+executed are listed using the keyword {\tt processor}. 
+The order of the processor names in the XML-file in this section controls the 
+order of executing the processors. A typical {\tt execute} section 
+could look like this:
+
+\begin{verbatim}
+<execute>
+   <processor name="MyAIDAProcessor"/>
+   <processor name="MyTestProcessor"/>
+   <processor name="MyLCIOOutputProcessor"/>
+</execute>
+\end{verbatim}
+
+It specifies three processors which are called in the order
+(1) MyAIDAProcessor, (2) MyTestProcessor, (3) MyLCIOOutputProcessor.
+
+{\bf Global Section:} \\
+Here all the global settings are made: 
+\begin{itemize}
+\item Specification of the LCIO input files 
+      (including paths) which contain the event data
+\item The number of events which are to be processed
+\item Turn on/off check routines to produce control plots etc. 
+\end{itemize}
+A typical {\tt global} section could look like this:
+
+\begin{verbatim}
+<global>
+   <parameter name="LCIOInputFiles"> simjob.slcio </parameter>
+   <parameter name="MaxRecordNumber" value="5001" />
+   <parameter name="SupressCheck" value="false" />
+</global>
+\end{verbatim}
+
+{\bf Processor Section:} \\
+This section contains several blocks named {\tt processor}. Every block 
+configures a certain processor and gives it a unique name. These 
+names are used in the {\tt execute} section to call the processor. 
+Here one processor can be configured more than once using different 
+names as identifier. In this way a processor can be called several 
+times with different parameters. This can be useful to 
+optimise cuts or to use the same algorithm for different input collections. 
+Steering parameters of processors can be of type {\em string},  
+{\em int} or {\em float}. 
+A typical {\tt processor} section can look like this:
+
+\begin{verbatim} 
+<processor name="MyClusterCheater" type="ClusterCheater">
+ <!--Creates true clusters...-->
+  <!--Calorimeter Collection Names-->
+  <parameter name="CaloCollections" type="StringVec">ECAL HCAL  </parameter>
+  <!--Magnetic Field-->
+  <parameter name="MagneticField" type="float">4 </parameter>
+  <!--Minimal Hits in Cluster-->
+  <parameter name="MinimalHits" type="int">10 </parameter>
+  <!--Hit To Cluster Proximity Cut-->
+  <parameter name="ProximityCut" type="float">1200 </parameter>
+  <!--SimCaloHit to CaloHit Relations Collection Name-->
+  <parameter name="RelCollection" type="string">RelationCaloHit </parameter>
+  <!--Trace Whole Shower Tree-->
+  <parameter name="TraceWholeShower" type="int">1 </parameter>
+  <!--Collection of True Clusters-->
+  <parameter name="TrueClusterCollection" type="string">TrueClusters </parameter>
+</processor>
+\end{verbatim}
+
+This section describes the configuration of the processor of type
+{\em ClusterCheater}. It can be called in the {\tt execute} section 
+using the name {\tt MyClusterCheater}:
+
+\begin{verbatim}
+<execute>
+   . . .
+   <processor name="MyClusterCheater"/>
+   . . .
+</execute>
+\end{verbatim}
+
+In the definition of a parameter not only its name and value is 
+specified but also the type of the expected input(s).
+
+\subsection{Running a MarlinReco Job}
+
+There are several options to run the reconstruction software. One can
+either use ``cheater'' processors to construct tracks and clusters or
+perform realistic tracking and clustering. In the first case tracks
+and clusters are considered to comprise all tracker hits or
+calorimeter hits attributable to the same Monte Carlo particle. In the
+latter case, realistic reconstruction is performed by using LEP
+tracking code and dedicated calorimeter
+clustering algorithm developed by the DESY group. Additionally, it is
+possible to use a combination of ``cheater-'' and realistic tracking- or
+calorimeter-clustering processors. 
+
+At this point the information from the previous subsection should be sufficient
+for you to edit the file {\tt exampleSteeringFile.xml} to get a 
+\htmladdnormallink{new steering file}{../../examples/LDC/steer_ldc.xml}.
+The already modified steering file can be found at:
+
+\begin{verbatim}
+$LCSoft/packages/MarlinReco/examples/LDC/steer_ldc.xml
+\end{verbatim}
+
+This than can be used to run MarlinReco performing realistic tracking and 
+clustering to produce meaningful results. 
+
+In the {\tt global} section you have to change the name of the 
+LCIO input file. For a first try you can use the file 
+
+\begin{verbatim}
+$LCSoft/packages/MarlinReco/examples/LDC/muons.slcio
+\end{verbatim}
+
+with single muon events. Place a symbolic link to this file in the 
+Marlin Directory:
+
+\begin{verbatim}
+cd $LCSoft/Marlin
+ln -s $LCSoft/packages/MarlinReco/examples/LDC/muons.slcio
+\end{verbatim} 
+
+Add the following 
+line to the {\tt global} section to read the events from 
+the file {\tt muons.slcio}
+
+\begin{verbatim}
+<parameter name="LCIOInputFiles"> muons.slcio </parameter>
+\end{verbatim}
+
+replacing the original line with the {\tt LCIOInputFiles} parameter.
+To read the whole file set {\tt MaxRecordNumber} to 0. In addition the 
+reconstruction needs to know the detector geometry. 
+For the ``Large Detector Concept'' (LDC) this information is stored
+in the file
+
+\begin{verbatim}
+$LCSoft/packages/MarlinReco/examples/LDC/gear_ldc.xml  
+\end{verbatim}
+
+Place a symbolic link to this file in the Marlin directory:
+
+\begin{verbatim}
+cd $LCSoft/Marlin
+ln -s $LCSoft/packages/MarlinReco/examples/LDC/gear_ldc.xml
+\end{verbatim}
+
+The file is made available to 
+MarlinReco also in the {\tt global} section by:
+
+\begin{verbatim}
+<parameter name="GearXMLFile"> gear_ldc.xml </parameter>
+\end{verbatim}
+
+Change the {\tt execute} section to call the appropriate processors in the
+right order:
+
+\begin{verbatim}
+<execute>
+   <processor name="MyTPCDigiProcessor"/>
+   <processor name="MyVTXDigiProcessor"/>
+   <processor name="MyFTDDigiProcessor"/>
+   <processor name="MySimpleCaloDigi"/>
+   <processor name="MyLEPTrackingProcessor"/>
+   <processor name="MyTrackwiseClustering"/>
+   <processor name="MyWolf"/>
+   <processor name="MyLCIOOutputProcessor"/>
+</execute>
+\end{verbatim}
+
+At this stage non of the steering parameter specific to any 
+processor has to be changed. Now the Marlin executable can be invoked. 
+The name of the steering file to be used is handed over as the first 
+parameter:
+
+\begin{verbatim}
+cd $LCSoft/Marlin
+bin/Marlin exampleSteeringFile.xml
+\end{verbatim}
+
+Be sure that you are in the right directory, otherwise the relative
+paths to the LCIO file containing the events and the Gear XML file do
+not work. 
+
+After the program has finished, there is an additional file 
+{\tt outputfile.slcio} in the current directory, holding the reconstructed 
+events. The contents of this file can be examined using the program
+
+\begin{verbatim}
+$LCIO/bin/dumpevent file run event
+\end{verbatim}
+
+Here the Parameter {\tt file} is the name of the LCIO file from which the 
+events are read,
+{\tt run} and {\tt event} the run and event number of the event to be dumped.
+The {\tt dumpevent} program prints the contents of all objects to 
+the standard output device.  
+
+To use ``cheater'' processors to construct tracks and clusters,
+you have to modify the {\tt execute} section of the steering file. 
+The processors {\tt MyLEPTrackingProcessor} and {\tt MyTrackwiseClustering}
+are replaced by {\tt MyTrackCheater} and {\tt MyClusterCheater}:
+
+\begin{verbatim}
+<execute>
+  <!--processor name="MyAIDAProcessor"/-->
+  <processor name="MyVTXDigiProcessor"/>
+  <processor name="MyFTDDigiProcessor"/>
+  <processor name="MySimpleCaloDigi"/>
+  <processor name="MyTPCDigiProcessor"/>
+
+  <processor name="MyTrackCheater"/>
+  <!--processor name="MyLEPTrackingProcessor"/-->
+
+  <processor name="MyClusterCheater"/>
+  <!--processor name="MyTrackwiseClustering"/-->
+
+  <processor name="MyWolf"/>
+  <processor name="MyLCIOOutputProcessor"/>
+</execute>
+\end{verbatim}
+
+\subsection{C Event Display to Visualise Events}
+
+Even though the {\tt dumpevent} program from the LCIO package prints out
+very detailed information about all objects of an event
+this is not satisfactory. Usually a more qualitative and 
+visual approach is required, especially in the early 
+stages of algorithm development. Here the C Event Display (CED) can be 
+employed to get a graphical view of an event. Inside a 
+wire-frame sketch of the detector\footnote{
+      Available models: LDC (Mokka program~\cite{ref_mokka}), 
+      SiD (SLIC program~\cite{ref_slic}) and 
+      GLD (Jupiter program~\cite{ref_jupiter})}, 
+simulated hits ({\em SimCaloHit}, {\em SimTrackerHit}), reconstructed hits 
+({\em CaloHit}, {\em TrackerHit}), Monte Carlo objects 
+({\em TrueTrack}, {\em TrueCluster}) and reconstructed objects 
+({\em Track}, {\em Cluster}, {\em ReconstructedParticle}) are shown. 
+
+The CED is set up as a client server application consisting of two 
+parts: 
+\begin{itemize}
+\item the program {\tt glced} which displays the event on the screen and 
+\item the Marlin processor {\em GenericViewer}, which selects the collections 
+      to be displayed.
+\end{itemize}
+This structure allows to run a Marlin job with event display in three
+different ways: to show the events of a existing LCIO file, 
+to display the events after the reconstruction or to visualise the 
+different reconstruction steps done by separate processors. 
+
+To use CED in a MarlinReco job, edit the steering file {\tt exampleSteeringFile.xml}
+which you created following the instructions of the last section. 
+Add the line 
+
+\begin{verbatim}
+<processor name="MyGenericViewer"/>
+\end{verbatim}
+
+as the second last processor (before the {\tt MyLCIOOutputProcessor})
+in the {\tt execute} section. Including cheater processors and the
+real reconstruction algorithms in the steering file allows a comparison 
+between both methods. Your {\tt execute} section then should look like
+this:
+
+\begin{verbatim} 
+ <execute>
+  <processor name="MyVTXDigiProcessor"/>
+  <processor name="MyFTDDigiProcessor"/>
+  <processor name="MySimpleCaloDigi"/>
+  <processor name="MyTPCDigiProcessor"/>
+  <processor name="MyTrackCheater"/>
+  <processor name="MyLEPTrackingProcessor"/>
+  <processor name="MyClusterCheater"/>
+  <processor name="MyTrackwiseClustering"/>
+  <processor name="MyWolf"/>
+  <processor name="MyGenericViewer"/>
+  <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+\end{verbatim}
+
+In the section 
+where the parameters are handed over to {\tt MyGenericViewer} 
+(processor of type {\em GenericViewer}) one has to specify the 
+names of the collections to display. To view the example from the LCIO file 
+({\tt muons.slcio}) from above, the names of two collection have to be
+modified. Do this by replacing the corresponding lines with:
+
+\begin{verbatim}
+<parameter name="SimCaloHitCollections" type="StringVec"> ecal02_EcalBarrel ecal02_EcalEndcap hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps </parameter>
+<parameter name="SimTrackerHitCollections" type="StringVec">vxd00_VXD sit00_SIT tpc04_TPC </parameter>
+\end{verbatim}
+
+To enable to toggle (on/off) displaying the contents from the 
+specified collections, a one digit number {\tt 0, 1, ... 9} can be assigned 
+to each collection. This can be done by replacing the corresponding 
+lines of parameters with 
+
+\begin{verbatim}
+<parameter name="LayerSimTrackerHit" type="int">1 </parameter>
+<parameter name="LayerSimCaloHit" type="int">2 </parameter>
+<parameter name="LayerTrackerHit" type="int">3 </parameter>
+<parameter name="LayerCaloHit" type="int">4 </parameter>
+<parameter name="LayerTracks" type="int">5 </parameter>
+<parameter name="LayerClusters" type="int">6 </parameter>
+<parameter name="LayerReco" type="int">7 </parameter>
+<parameter name="LayerTrueTracks" type="int">8 </parameter>
+<parameter name="LayerTrueClusters" type="int">9 </parameter>
+\end{verbatim}
+
+in the XML steering file.
+
+To enable the display you have to launch the CED server manually
+by starting the {\tt glced} program in a separate window/shell:
+
+\begin{verbatim}
+$LCSoft/glced/glced &
+\end{verbatim}
+
+If you now run MarlinReco by typing
+
+\begin{verbatim}
+cd $LCSoft/Marlin
+bin/Marlin exampleSteeringFile.xml
+\end{verbatim}
+
+the event is displayed after finishing the reconstruction of 
+tracks, clusters and particle flow objects in the window panel activated by 
+the {\tt glced} program.
+
+To manipulate the event display you can either use the mouse or 
+certain key commands. Controlling will work if the mouse is placed
+inside the CED window. 
+
+\begin{itemize}
+\item {\em\bf Using the mouse} \\ 
+      Hold a mouse button pressed while moving the mouse to 
+      manipulate the display. The following functions are available: 
+
+      \begin{center}
+      \begin{tabular}{ll}
+      left mouse button   & rotate \\
+      middle mouse button & translate (pan)\\
+      right mouse button  & zoom \\
+      \end{tabular}
+      \end{center}
+\item {\em\bf Using keyboard commands} \\
+      \begin{tabular}{ll}
+      {\tt ESC} & stop and exit {\tt glced} \\
+      {\tt f}   & front view. Projection of all points on the $xy$-plane.\\
+      {\tt s}   & side view. Projection of all points on the $yz$-plane. \\
+      {\tt c}   & centre view. A new origin for a rotation and zoom \\ 
+                & is set to the current position of the mouse cursor.\\
+      {\tt r}   & redisplay in some initial projection. \\
+      {\tt 0, 1, ...} & toggle layers. The assignment of the layers \\
+                      & is done in the steering file \\
+      \end{tabular}
+\end{itemize}
+
+After an event is displayed, the system waits until the user hits a key
+to continue. Please note, that since the event display is realised as a
+Marlin processor, the reconstruction is also stopped as long as the computer
+waits for the user entry to continue.
+
+\subsection{Writing your own Marlin Processor}
+
+Unless you want to add an processor to an existing package you should add a 
+new package if you develop new processors to carry out reconstruction or
+analysis tasks. All additional packages are expected to live in the 
+{\tt \$MARLIN/packages} directory.
+To decouple Marlin form the additional processors, the subdirectories holding 
+these processors are linked using symbolic links to Marlin's {\tt packages} 
+directory. The actual source code is placed in an individual 
+subdirectory - for example {\tt MyPackage} - in {\tt \$LCSoft/packages}
+and have the structure:
+
+\begin{verbatim}
+    $LCSoft/packages/MyPackage/include
+                             ./src/
+                             ./src/GNUmakefile
+                             ./lib
+\end{verbatim}
+
+The {\tt GNUmakefile} has a target 'lib', that creates a library
+
+\begin{verbatim}
+$LCSoft/packages/MyPackage/lib/libMyPackage.a
+\end{verbatim}
+
+To set up a new package you can execute the following commands: 
+
+\begin{verbatim}
+cd $LCSoft/packages
+mkdir MyPackage
+cd $LCSoft/Marlin/packages
+ln -s $LCSoft/packages/MyPackage
+cd $LCSoft/packages/MyPackage
+mkdir include
+mkdir src
+mkdir lib
+cd src
+cp $LCSoft/Marlin/examples/mymarlin/GNUmakefile .
+\end{verbatim}
+
+Edit the {\tt GNUmakefile} to assign the name of your package 
+(in this case {\tt MyPackage}) to the variable {\tt PROGNAME}.
+
+Lets assume we want to write a processor with the name 
+{\em MyProcessor}.
+Each Marlin processor inherits from the class {\em Processor} and has to have
+at least the following methods implemented:
+
+\begin{itemize}
+\item {\tt virtual Processor*  newProcessor()} \\
+      Returns a pointer to a object of type {\em MyProcessor},
+      needed for internal processor management.
+\item {\tt MyProcessor()} \\
+      Constructor of the class.
+\item {\tt virtual void init()} \\
+      Called at the begin of the job before anything is read.
+      Use to initialise the processor, e.g. book histograms.
+\item {\tt virtual void processRunHeader( LCRunHeader* run )} \\
+      Called for every run.
+\item {\tt virtual void processEvent( LCEvent * evt )} \\
+      Called for every event - the working horse.
+\item {\tt virtual void check( LCEvent * evt )} \\
+      Called for each event after processing to produce checks or plots. 
+\item {\tt virtual void end()} \\
+      Called after data processing for clean up.
+\end{itemize}
+
+\begin{figure}
+\begin{verbatim}
+#ifndef MyProcessor_h
+#define MyProcessor_h 1
+
+#include "marlin/Processor.h"
+#include "lcio.h"
+#include <string>
+
+using namespace lcio ;
+using namespace marlin ;
+
+class MyProcessor : public Processor {
+  
+ public:
+  
+  virtual Processor*  newProcessor() { return new MyProcessor ; }
+  MyProcessor() ;
+  virtual void init() ;
+  virtual void processRunHeader( LCRunHeader* run ) ;
+  virtual void processEvent( LCEvent * evt ) ; 
+  virtual void check( LCEvent * evt ) ; 
+  virtual void end() ;
+  
+ protected:
+
+  std::string _colName ;
+  int _nRun ;
+  int _nEvt ;
+} ;
+
+#endif
+\end{verbatim}
+\caption{\label{fig:myprocessor_h}
+\em Header file of defining the class {\em MyProcessor}.
+}
+\end{figure}
+
+\begin{figure}
+\begin{verbatim}
+#include "MyProcessor.h"
+#include <iostream>
+#include <EVENT/LCCollection.h>
+#include <EVENT/MCParticle.h>
+
+using namespace lcio ;
+using namespace marlin ;
+
+MyProcessor aMyProcessor ;
+
+MyProcessor::MyProcessor() : Processor("MyProcessor") {
+  _description = "MyProcessor does whatever it does ..." ;
+  registerProcessorParameter( "CollectionName" , 
+                              "Name of the MCParticle collection"  ,
+                              _colName ,
+                              std::string("MCParticle") ) ;
+}
+void MyProcessor::init() { 
+  printParameters() ;
+  _nRun = 0 ;
+  _nEvt = 0 ;
+}
+void MyProcessor::processRunHeader( LCRunHeader* run) { 
+  _nRun++ ;
+} 
+void MyProcessor::processEvent( LCEvent * evt ) { 
+  _nEvt ++ ;
+  LCCollection* inParVec = evt->getCollection(_colname) ;
+  std::cout << "Event no. " << _nEvt << " has " 
+            << inParVec->getNumberOfElements() 
+            << " Monte Carlo particles" << std::endl;
+}
+void MyProcessor::check( LCEvent * evt ) { 
+  // nothing to check here - could be used to fill checkplots 
+  // in reconstruction processor
+}
+void MyProcessor::end(){ 
+   std::cout << "MyProcessor::end()  " << name() 
+            << " processed " << _nEvt << " events in " << _nRun << " runs "
+            << std::endl ;
+}
+\end{verbatim}
+\caption{\label{fig:myprocessor_cc}
+\em Implementation of the class {\em MyProcessor}.
+}
+\end{figure}
+
+Figures~\ref{fig:myprocessor_h} and \ref{fig:myprocessor_cc}
+show a very simple example for a processor which counts the number of runs and
+events in a LCIO file. In addition it prints for each event the number of 
+Monte Carlo particles. The collection name of the Monte Carlo particles 
+can be given to the processor via a steering parameter. The default setting is
+{\tt MCParticle}. The two include statements in the header file
+
+\begin{verbatim}
+#include "marlin/Processor.h"
+#include "lcio.h"
+\end{verbatim}
+
+are mandatory because the class inherits from the Marlin class
+{\em Processor}. Furthermore Marlin uses LCIO also as the internal data model 
+and thus every processor needs to know about it. 
+Besides the methods already described above, there are three variables 
+declared which are used to count the number of runs and events in the
+LCIO file ({\tt \_nRun}, {\tt \_nEvt}) and hold the collection name of 
+Monte Carlo particles ({\tt \_colName}). 
+
+Of course the implementation file has to include the corresponding 
+header file. All additional include directives include header files
+which are required by the user. The line
+
+\begin{verbatim}
+MyProcessor aMyProcessor ;
+\end{verbatim}
+
+registers the processor {\tt MyProcessor} at the Marlin framework.
+In the initialisation part of the constructor of 
+{\tt MyProcessor} the constructor of {\tt Processor} is called with the
+name of the processor. A short description of the processor is 
+stored in the string {\tt \_description}. The function call to
+{\tt registerProcessorParameter()} allows to register a processor parameter
+which can be set in the steering file. Together with the name of the 
+processor parameter a short description, a default value and a variable
+that holds the value of the parameter is specified. 
+
+In the function {\tt init()} the processor parameters and their 
+values as used in the program are printed to the standard output and 
+some parameters are initialised. While 
+{\tt processRunHeader()} is only used to count the number of runs,
+{\tt processEvent()} is used to print the number of Monte Carlo particles for 
+each event and count the number of events found in the LCIO file.
+Since no checks are performed {\tt check()} is empty.
+At the end of data processing {\tt end()} prints the total number of 
+runs and events processed. 
+
+% ######
+\section{Installation Guide} \label{sec:install}
+
+This section is supposed to help you to install all packages which are 
+necessary to run MarlinReco. Probably some of the required software is 
+already available on your computer. The installation guide is written 
+in a way that you can skip the appropriate subsections. 
+
+\subsection{System Requirements}
+
+LCIO, Gear, Marlin, MarlinUtil and MarlinReco have been 
+developed under (SuSE) Linux and tested with gcc3.3 on Linux. 
+As the ``-ansi'' switch is used during compilation
+it should be fairly easy to 
+port the packages to other platforms with an ANSI compliant \CPP{} compiler.
+The build scripts used also require that gmake/make is installed.
+In Addition GSL~\cite{ref_gsl}, CLHEP~\cite{ref_clhep} and 
+CERNLIB~\cite{ref_cernlib} are used (see also Section~\ref{sec:otherlibs}).
+
+In order to build LCIO you need to have a Java VM (version 1.4 or
+higher) installed on your platform. This is true even if you only want
+to install the \CPP{} version as the API-files are generated from an
+abstract description for Java and \CPP{} using the AID~\cite{ref_aid} tool.
+
+If histograms should be produced, the JAIDA~\cite{ref_jaida} and 
+AIDA\_JNI~\cite{ref_aidajni} packages have 
+to be installed on the system. 
+
+The header files are commented using the Doxygen~\cite{ref_doxygen} syntax. 
+if you wish to generate a browsable API documentation Doxygen 
+has to be available.
+
+If you wish to check out the sources of Gear, Marlin, MarlinReco
+and MarlinUtil directly from the CVS repositories you need
+ccvssh~\cite{ref_ccvssh}.
+The ccvssh package works as a bridge to remote CVS
+pservers using SSL tunnelling.  
+
+\subsection{Getting the Sources}
+
+Please make sure, that you download the recent tagged versions of the 
+different packages (LCIO v01-05, Gear v00-02, Marlin v00-09-02, 
+MarlinReco v00-01, MarlinUtil v00-01, CED v00-01 and CEDViewer v00-01). 
+
+Create a directory in which you can download all sources and install 
+the packages:
+
+\begin{verbatim}
+mkdir ilcsoft 
+export LCSoft=$PWD/ilcsoft
+cd $LCSoft
+\end{verbatim}
+
+\subsubsection*{LCIO}
+
+If LCIO is not yet installed at your site you can get a recent copy
+of the sources from the CVS repository via anonymous checkout.
+Set the CVSROOT variable, e.~g. on a Linux platform running bash:
+
+\begin{verbatim}
+export CVSROOT=:pserver:anonymous@cvs.freehep.org:/cvs/lcio
+\end{verbatim}
+
+Then checkout a released version, e.~g.:
+
+\begin{verbatim}
+mkdir $LCSoft/lcio 
+cd $LCSoft/lcio 
+cvs co -d v01-05 -r v01-05 lcio 
+\end{verbatim}
+
+\subsubsection*{Marlin}
+
+Also for Marlin you can get a recent copy of the sources from the CVS 
+repository via anonymous checkout.
+Set the {\tt CVSROOT} and {\tt CVS\_RSH} variables, e.~g. on a Linux platform: 
+
+\begin{verbatim}
+export CVS_RSH=ccvssh 
+export CVSROOT=:ext:anonymous@cvssrv.ifh.de:/marlin
+\end{verbatim}
+
+Start the authentification:
+
+\begin{verbatim}
+ccvssh login
+\end{verbatim}
+
+Since ``anonymous'' does not have a password, just hit return when you are
+prompted to enter your password. Then checkout the latest version:
+
+\begin{verbatim}
+cd $LCSoft
+cvs co -r v00-09-02 Marlin
+\end{verbatim}
+
+\subsubsection*{Gear}
+
+You can get the recent sources from the CVS repository via anonymous checkout.
+After setting the required environment variables checkout:
+
+\begin{verbatim}
+unset CVS_RSH
+unset CVSROOT
+export CVS_RSH=ccvssh
+export CVSROOT=:ext:anonymous@cvssrv.ifh.de:/gear
+ccvssh login
+cd $LCSoft
+cvs co -r v00-02 gear
+\end{verbatim}
+
+\subsubsection*{MarlinUtil, MarlinReco and the CEDViewer}
+
+The recent version of the source code of both packages can be 
+obtained from the CVS repository via anonymous checkout.
+Set the environment variables and start the authentification: 
+
+\begin{verbatim}
+unset CVS_RSH
+unset CVSROOT
+export CVS_RSH=ccvssh 
+export CVSROOT=:ext:anonymous@cvssrv.ifh.de:/marlinreco
+ccvssh login
+\end{verbatim}
+
+Then checkout the latest version: 
+
+\begin{verbatim}
+mkdir $LCSoft/packages 
+cd $LCSoft/packages 
+cvs co -r v00-01 MarlinReco 
+cvs co -r v00-01 MarlinUtil 
+cvs co -r v00-01 CEDViewer 
+cvs co -r v00-01 CED 
+\end{verbatim}
+
+\subsection{Building the Packages}
+
+\subsubsection*{LCIO}
+
+A few variables have to be set depending on your development
+environment (modify as appropriate):
+
+\begin{verbatim}
+export LCIO=$LCSoft/lcio/v01-05 
+export PATH=$LCIO/tools:$LCIO/bin:$PATH 
+export JDK_HOME=/usr/lib/j2sdk
+\end{verbatim}
+
+To build the Java and \CPP{} versions you have to be in the LCIO subdirectory:
+
+\begin{verbatim}
+cd $LCSoft/lcio/v01-05
+\end{verbatim}
+
+Use the following command to build the Java and \CPP{} versions:
+
+\begin{verbatim}
+ant aid cpp f77 
+\end{verbatim}
+
+\subsubsection*{Gear}
+
+Enter the Gear subdirectory:
+
+\begin{verbatim}
+cd $LCSoft/gear
+\end{verbatim}
+
+The environment variables needed for compilation and linking are in the file 
+{\tt env.sh}. Open this file and adopt the line 
+
+\begin{verbatim}
+export JDK_HOME=/opt/products/java/1.4.2
+\end{verbatim}
+
+to point to the Java Development Kit of your system.
+Make the settings available to your shell by sourcing the script:
+
+\begin{verbatim}
+. ./env.sh 
+\end{verbatim}
+
+To build Gear as well as the API documentation
+issue the following commands:
+
+\begin{verbatim}
+ant aid.generate 
+ant cpp 
+ant cpp.doc 
+\end{verbatim}
+
+\subsubsection*{MarlinReco}
+
+The top level makefile of the Marlin package is designed in a way that it
+builds Marlin together with MarlinReco, MarlinUtil and the CEDViewer. 
+This works only if MarlinReco, MarlinUtil and CEDViewer are moved to the 
+{\tt packages} subdirectory of Marlin. To decouple Marlin form the
+other packages their subdirectories are linked using symbolic links to  
+Marlin's {\tt packages} directory:
+
+\begin{verbatim} 
+cd $LCSoft/Marlin/packages
+ln -s $LCSoft/packages/CEDViewer
+ln -s $LCSoft/packages/MarlinReco
+ln -s $LCSoft/packages/MarlinUtil
+\end{verbatim}
+
+A few variables have to be set depending on your development
+environment. For user convenience there already exists a script
+{\tt env.sh} in the MarlinReco subdirectory, where you can change 
+the paths as needed. The meaning of the variables together with the 
+default values for the DESY computing environment are given here.
+
+\begin{itemize}
+\item {\tt export LCIO=/opt/products/lcio/1.5} \\
+      Path to the LCIO package directory.
+\item {\tt export MARLINDEBUG=1} \\
+      Include debug information in output (1 = on). 
+      Comment out this line for production code. 
+\item {\tt export CLHEP=/opt/products/CLHEP/1.8.2} \\ 
+      Path to the CLHEP package. Be sure to use a version below 2.0. 
+      There will be problems with later versions due to the useage of 
+      namespaces.
+\item {\tt export GSL\_HOME=/afs/desy.de/group/it/ilcsoft/gsl/1.6} \\
+      Path to the ``GNU Scientific Library'' (GSL).
+\item {\tt export CERNLIB\_HOME=/opt/products/cernlib/pro/lib} \\
+      Path to the ``CERN programming library'' (CERNLIB).
+\item {\tt export MARLIN\_USE\_AIDA=1} \\
+      This option enables Marlin to produce histograms using the 
+      the AIDA~\cite{ref_aida} interface. 
+\item {\tt export JDK\_HOME=/opt/products/java/1.4.2} \\
+      Path to the Java Development Kit. 
+\item {\tt export JAIDA\_HOME=/opt/products/JAIDA/3.2.3} \\
+      Java implementation of the AIDA interface.
+\item {\tt export AIDAJNI\_HOME=/opt/products/AIDAJNI/3.2.3} \\
+      Java Native Interface to access JAIDA from \CPP{}. 
+\end{itemize}
+
+Edit the script as needed and copy it to the Marlin directory to
+replace the {\tt env.sh} script shipped with Marlin:
+
+\begin{verbatim}
+cd $LCSoft/Marlin 
+cp $LCSoft/Marlin/packages/MarlinReco/env.sh env.sh
+\end{verbatim}
+
+Source it to setup the environment:
+
+\begin{verbatim}
+. env.sh 
+\end{verbatim}
+
+In addition the ``env.sh'' script of MarlinReco produces the file 
+{\tt userlibMarlinReco.gmk} containing some additional paths 
+to include and library directories which are necessary to build 
+MarlinReco. Edit this file, if you need to add 
+more include and library paths for own processors. To make the settings 
+available to the Marlin top level makefile replace the dummy file 
+{\tt userlib.gmk}:
+
+\begin{verbatim}
+mv userlib.gmk.MarlinReco userlib.gmk
+\end{verbatim}
+
+To build MarlinReco type in the Marlin directory:
+
+\begin{verbatim}
+gmake
+\end{verbatim}
+
+This will create the MarlinReco executable {\tt \$LCSoft/Marlin/binMarlin}. 
+Simultaneous to MarlinReco also the MarlinUtil library and the CEDviewer is 
+build. 
+
+\subsubsection*{Glced}
+
+To get graphical output of CED on the screen the server program {\tt glced}
+has to be build: 
+
+\begin{verbatim} 
+cd $LCSoft/packages/CED
+gmake
+\end{verbatim}
+
+You need X to run {\tt glced} and the environment variable 
+{\tt DISPLAY} has to point to a accessible display. Before starting
+MarlinReco with event display type:
+
+\begin{verbatim}
+$LCSoft/packages/CED/glced
+\end{verbatim}
+
+More information can be obtained from the README file located in the 
+CED directory. 
+
+\section{Further Information}
+
+We like to point both, users and developers to our software portal at
+\htmladdnormallink{http://ilcsoft.desy.de}{http://ilcsoft.desy.de}.
+There one can find more information about the packages mentioned in this 
+tutorial, in particular the API documentations. 
+
+% -----------------------------------------------------------------------------
+\begin{thebibliography}{99}
+\bibitem{ref_gear}
+see: \htmladdnormallink{http://ilcsoft.desy.de/gear}{http://ilcsoft.desy.de/gear}
+\bibitem{ref_marlin}
+see: \htmladdnormallink{http://ilcsoft.desy.de/marlin}{http://ilcsoft.desy.de/marlin}
+\bibitem{ref_lciohome}
+see: \htmladdnormallink{http://lcio.desy.de}{http://lcio.desy.de}
+\bibitem{ref_lcio}{F.~Gaede, T.~Behnke, N.~Graf, T.~Johnson
+{\em CHEP03 March24-28, 2003 La Jolla, USA},
+TUKT001, 
+\htmladdnormallink{\em arXiv:physics/0306114}
+                  {http://arxiv.org/pdf/physics/0306114} }.
+\bibitem{ref_tdr}
+  T.~Behnke {\it et al.}, (ed.), ``Tesla TDR, Pt.~4'',
+%T.~.~(.~Behnke, S.~.~(.~Bertolucci, R.~D.~.~Heuer and R.~.~(.~Settles,
+%``TESLA: The superconducting electron positron linear collider with an
+%integrated X-ray laser laboratory. Technical design report.  Pt. 4: A
+%detector for TESLA,''
+\htmladdnormallink{\em DESY-01-011}
+                  {http://www.slac.stanford.edu/spires/find/hep/www?r=desy-01-011} 
+%\href{http://www.slac.stanford.edu/spires/find/hep/www?r=desy-01-011}{SPIRES
+% entry}
+\bibitem{ref_geant4}
+S.~Agostinelli {\it et al.}  [GEANT4 Collaboration],
+%``GEANT4: A simulation toolkit,''
+Nucl.\ Instrum.\ Meth.\ A {\bf 506} (2003) 250.
+\bibitem{ref_jupiter}
+T.~Aso, K.~Hoshina, K.~Fujii and A.~Miyamoto,
+%``JUPITER GEANT4 based detector simulator for JLC,''
+\htmladdnormallink{\em SPIRES entry}
+                  {http://www.slac.stanford.edu/spires/find/hep/www?irn=6067883} 
+%\href{http://www.slac.stanford.edu/spires/find/hep/www?irn=6067883}{SPIRES
+% entry}
+%{\it Prepared for International Workshop on Linear Colliders (LCWS 2002),
+% Jeju Island, Korea, 26-30 Aug 2002}
+{\it Prepared for LCWS 2002, Jeju Island, Korea, 26-30 Aug 2002}
+\bibitem{ref_slic}
+J.~McCormick,
+%``Full Detector Simulation Using Slic And Lcdd,''
+\htmladdnormallink{\em SLAC-PUB-11418}
+                  {http://www.slac.stanford.edu/spires/find/hep/www?r=slac-pub-11418} 
+%\href{http://www.slac.stanford.edu/spires/find/hep/www?r=slac-pub-11418}
+% {SPIRES entry}
+%{\it Contributed to 2005 International Linear Collider Workshop (LCWS 2005),
+% Stanford, California, 18-22 Mar 2005}
+{\it Contributed to LCWS 2005, Stanford, California, 18-22 Mar 2005}
+\bibitem{ref_mokka}
+%Mokka Homepage: \\
+%\verb#http://polywww.in2p3.fr/geant4/tesla/www/mokka/# \\
+%\verb# ... mokka.html#
+  P.~Mora de Freitas and H.~Videau, LC-TOOL-2003-010
+\htmladdnormallink{\em SPIRES entry}
+                  {http://www.slac.stanford.edu/spires/find/hep/www?r=lc-tool-2003-010} 
+%\href{http://www.slac.stanford.edu/spires/find/hep/www?r=lc-tool-2003-010}
+% {SPIRES entry}
+{\it Prepared for LCWS 2002, Jeju Island, Korea, 26-30 Aug 2002}
+\bibitem{ref_brahms}
+  T.~Behnke {\it et al.}, LC-TOOL-2001-005,
+see: \htmladdnormallink{http://www-flc.desy.de/lcnotes}{http://www-flc.desy.de/lcnotes}
+%\href{http://www.slac.stanford.edu/spires/find/hep/www?irn=4787218}{SPIRES
+% entry}
+%{\it Prepared for 5th International Linear Collider Workshop (LCWS 2000),
+% Fermilab, Batavia, Illinois, 24-28 Oct 2000}
+\bibitem{ref_aid}
+AID Homepage:\\  
+\htmladdnormallink{http://java.freehep.org/aid/index.html}{http://java.freehep.org/aid/index.html}
+%
+\bibitem{ref_gsl}
+GSL homepage: \\
+\htmladdnormallink{http://www.gnu.org/software/gsl/}{http://www.gnu.org/software/gsl/}.
+\bibitem{ref_cernlib}
+CERNLIB homepage: \\
+\htmladdnormallink{http://cern.ch/cernlib/}{http://cern.ch/cernlib/}
+\bibitem{ref_clhep}
+CLHEP homepage: \\
+\htmladdnormallink{http://wwwasd.web.cern.ch/wwwasd/lhc++/clhep/}{http://wwwasd.web.cern.ch/wwwasd/lhc++/clhep/}
+\bibitem{ref_aida}
+AIDA homepage: \\
+\htmladdnormallink{http://aida.freehep.org}{http://aida.freehep.org}
+\bibitem{ref_jaida}
+JAIDA homepage:\\
+\htmladdnormallink{http://java.freehep.org/jaida}{http://java.freehep.org/jaida}
+\bibitem{ref_aidajni}
+AIDA-JNI homepage:\\
+\htmladdnormallink{http://java.freehep.org/aidajni}{http://java.freehep.org/aidajni}
+\bibitem{ref_jas}
+JAS3 homepage:\\
+\htmladdnormallink{http://jas.freehep.org/jas3}{http://jas.freehep.org/jas3}
+\bibitem{ref_pi}
+Homepage of the PI project:\\
+\htmladdnormallink{http://cern.ch/pi/}{http://cern.ch/pi/}
+\bibitem{ref_OS}
+Open Scientist homepage:\\
+\htmladdnormallink{http://www.lal.in2p3.fr/OpenScientist/}{http://www.lal.in2p3.fr/OpenScientist/}
+\bibitem{ref_ccvssh}
+CCVSSH homepage:\\
+\htmladdnormallink{http://ccvssh.sourceforge.net}{http://ccvssh.sourceforge.net}
+\bibitem{ref_doxygen}
+Doxygen homepage:\\
+\htmladdnormallink{http://www.doxygen.org}{http://www.doxygen.org}
+\bibitem{ref_ilchome}
+international linear collider (ILC) homepage:\\
+\htmladdnormallink{http://www.linearcollider.org}{http://www.linearcollider.org}
+\end{thebibliography}
+
+% hyperlink: \htmladdnormallink{}{}

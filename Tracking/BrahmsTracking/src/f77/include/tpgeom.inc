@@ -1,7 +1,10 @@
 *  
-* $Id: tpgeom.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpgeom.inc,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:36  gaede
 * Initial local version
 *
@@ -15,7 +18,7 @@
       INTEGER LTPDRO, LTTROW, LTSROW, LTWIRE, LTSTYP, LTSLOT, LTCORN,
      +        LTSECT, LTTPAD, LMXPDR, LTTSRW
 c(kh) PARAMETER (LTPDRO=118,LTTROW=19,LTSROW=12,LTWIRE=200,LTSTYP=3,
-      PARAMETER (LTPDRO=200,LTTROW=19,LTSROW=12,LTWIRE=200,LTSTYP=3,
+      PARAMETER (LTPDRO=224,LTTROW=19,LTSROW=12,LTWIRE=200,LTSTYP=3,
      +           LTSLOT=12,LTCORN=6,LTSECT=LTSLOT*LTSTYP,LTTPAD=4,
      +           LMXPDR=150,LTTSRW=11)
       INTEGER NTSECT, NTPCRN, ITPTYP, ITPSEC, IENDTP

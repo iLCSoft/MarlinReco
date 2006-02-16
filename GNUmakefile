@@ -33,11 +33,12 @@ $(subdirs):
 	@echo "*************************************"
 	$(MAKE) -C $@/src lib
 	@mkdir -p build
-	@cp $@/lib/lib*.a build
+	@cp $@/lib/lib$(notdir $@).a build
 
 
 clean:
 	for dir in $(subdirs); do \
 	   $(MAKE) -C $$dir/src clean; \
 	done
+	rm -f lib/lib*.a
 

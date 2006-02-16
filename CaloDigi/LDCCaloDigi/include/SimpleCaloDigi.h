@@ -1,3 +1,4 @@
+
 #ifndef DIGITIZERAR_H
 #define DIGITIZERAR_H 1
 
@@ -10,8 +11,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** SimpleCaloDigi Processor <br>
- *  Author : A.Raspereza  <br>
+/** === SimpleCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
  *  Takes SimCalorimeterHit Collections and <br>
  *  produces CalorimeterHit Collections. <br>
@@ -29,9 +29,17 @@ using namespace marlin ;
  *  Conversion factors for ECAL and HCAL <br>
  *  are specified via processor parameters  <br>
  *  CalibrECAL and CalibrHCAL. <br>
+ *  It should be noted that ECAL and HCAL may consist <br>
+ *  of several sections with different sampling fractions. <br>
+ *  To handle this situation, calibration coefficients for <br>
+ *  ECAL and HCAL are passed as arrays of floats with each element <br>
+ *  in this array corresponding to certain section with <br>
+ *  a given sampling fraction. <br>
+ *  List of layer numbers terminating each section are given through <br>
+ *  processor parameters ECALLayers and HCALLayers <br>
  *  There is an option to perform digitization of <br> 
- *  both ECAL and HCAL in the digital mode. <br>
- *  Digital digitization is switched on by  <br>
+ *  both ECAL and HCAL in a digital mode. <br>
+ *  Digital mode is activated by  <br>
  *  setting processor parameters <br>
  *  IfDigitalEcal / IfDigitalHcal to 1. <br>
  *  In this case CalibrECAL / CalibrHCAL will  <br>
@@ -39,6 +47,23 @@ using namespace marlin ;
  *  Thresholds on hit energies in ECAL and HCAL <br>
  *  are set with processor parameters <br>
  *  ECALThreshold and HCALThreshold.  <br>
+ *  Relations between CalorimeterHits and SimCalorimeterHits <br>
+ *  are held in the corresponding relation collection. <br>
+ *  The name of this relation collection is specified <br>
+ *  via processor parameter RelationOutputCollection. <br> 
+ *  <h4>Input collections and prerequisites</h4>
+ *  SimCalorimeterHit collections <br>
+ *  <h4>Output</h4>
+ *  CalorimeterHit collections for ECal and HCal. <br>
+ *  Collection of relations <br>
+ *  between CalorimeterHits and SimCalorimeterHits. <br> 
+ *  For ECal Calorimeter hits the variable type is set to 0, <br>
+ *  whereas for HCal Calorimeter hits the type is set to 1 <br>
+ *  @author A. Raspereza (DESY) <br>
+ *  @version $Id: SimpleCaloDigi.h,v 1.4 2005-10-21 06:58:15 rasp Exp $ <br>
+=======
+ *  @version $Id: SimpleCaloDigi.h,v 1.4 2005-10-21 06:58:15 rasp Exp $ <br>
+>>>>>>> 1.3
  */
 class SimpleCaloDigi : public Processor {
   

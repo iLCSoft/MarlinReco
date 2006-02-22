@@ -14,9 +14,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** TrackwiseClustering Processor <br>
- *  Author : A.Raspereza   <br>
- *  VERY PRELIMINARY Version <br>
+/** === TrackwiseClustering Processor === <br>
  *  Processor performs clustering of calorimeter hits. <br>
  *  No information on reconstructed tracks is used <br>
  *  in the clustering algorithm <br>
@@ -26,20 +24,51 @@ using namespace marlin ;
  *  These are specified with Processor Parameters <br>
  *  ECALCollections and HcalCollections. <br>
  *  TrackwiseClustering produces collection of Clusters <br>
- *  The name of collection is specified with <br>
+ *  The name of the collection is specified with <br>
  *  Processor Parameter ClusterCollection. <br>
+ *  The dependence of clustering procedure on the detector<br>
+ *  geometry is minimized. 
+ *  Processor needs the following calorimeter geometry <br>
+ *  parameters : radius of ECAL barrel <br>
+ *  n-fold symmetry of barrel <n = 8 for TESLA> <br>
+ *  phi offset of the barrel stave w.r.t. <br>
+ *  x-axis (0 for TESLA detector) <br>
+ *  and +/- z coordinate of front face of ECAL endcaps <br> 
+ *  All these parameters are passed to processor via <br>
+ *  GEAR XML file <br>
+ *  parameters : <br>
+ *  DistanceForDirection, DistanceToTrackSeed, DistanceTrackBack, <br>
+ *  StepTrackBack, ResolutionParameter, DistanceMergeForward, <br>
+ *  NToDefineSP, NScanToMergeForward, TypeOfGenericDistance, <br>
+ *  MinimalHitsInCluster, MaximalHitsToMerge, UseTracking, <br>
+ *  DoMerging, ResolutionToMerge, WeightForResolution, WeightForDistance. <br>
+ *  The meaning of these parameters as well as the overall <br>
+ *  clustering procedure are described in <br> 
+ *  <a href="http://www.desy.de/~rasp/Raspereza_pfa.pdf">
+ *     http://www.desy.de/~rasp/Raspereza_pfa.pdf</a> <br>
+ *  Please note, that the parameters steering clustering are <br>
+ *  optimised for the TESLA detector on hadronic events <br>
+ *  at Z pole (sqrts=91.2 GeV). <br>
+ *  Printout of information on reconstructed clusters is <br>
+ *  activated if processor parameter DisplayClusterInfo is set to 1. <br>
+ *  @author A. Raspereza (DESY) <br>
+ *  @version $Id: TrackwiseClustering.h,v 1.5 2006-02-22 12:19:21 owendt Exp $ <br>
  */
+
+
 class TrackwiseClustering : public Processor {
   
  public:
   
   virtual Processor*  newProcessor() { return new TrackwiseClustering ; }
   
-  /** Constructor
+  /** 
+   * Constructor
    */  
   TrackwiseClustering() ;
   
-  /** Method initialising Processor
+  /** 
+   * Method initialising Processor
    */
   virtual void init() ;
   
@@ -47,11 +76,11 @@ class TrackwiseClustering : public Processor {
    */
   virtual void processRunHeader( LCRunHeader* run ) ;
   
-  /** Event processor. Called for evergy event
+  /** Event processor. Called for every event
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  /** Performs check at the end of evergy event   
+  /** Performs check at the end of every event   
    */
   virtual void check( LCEvent * evt ) ; 
   
@@ -82,6 +111,7 @@ class TrackwiseClustering : public Processor {
   int _typeOfGenericDistance;
   int _use_track;
   int _doMerging;
+  int _doMergingForward;
   int _displayClusters;
   int _NDefineSP;
   int _nScanToMergeForward;
@@ -128,6 +158,9 @@ class TrackwiseClustering : public Processor {
   // Theta of ENDCAP = atan(_rofbarrel/_zofendcap)
   float _thetaofendcap;
 
+  float _weightForReso;
+  float _weightForDist;
+
   int _nRun;
   int _nEvent;
 
@@ -139,10 +172,12 @@ class TrackwiseClustering : public Processor {
   float _xmax_in_distance;
   float _xmin_in_distance;
 
+  float _bField;
+
 
   void initialiseEvent( LCEvent * evt );
   float findResolutionParameter(CaloHitExtended * fromHit, CaloHitExtended * toHit);
-  float CalculateGenericDistance(CaloHitExtended * calohit, int itype); 
+  void CalculateGenericDistance(CaloHitExtended * calohit, float * dist); 
   void BubbleSort(CaloHitExtendedVec & input);  
   float DistanceBetweenPoints(float * x1, float * x2);
   void DisplayClusters(ClusterExtendedVec clusterVec);
@@ -151,6 +186,9 @@ class TrackwiseClustering : public Processor {
   void CreateClusterCollection(LCEvent * evt, ClusterExtendedVec clusterVec);
   void mergeForward();
   void mergeLowMultiplicity();
+  void calculateProperties(ClusterExtended * Cl);
+  void propertiesForAll();
+  void MergeTrackSegments(); 
   void CleanUp();
 
 

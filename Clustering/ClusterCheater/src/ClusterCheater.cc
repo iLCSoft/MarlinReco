@@ -2,22 +2,34 @@
 #include <EVENT/LCObject.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/SimCalorimeterHit.h>
-#include <EVENT/CalorimeterHit.h>
-#include <EVENT/MCParticle.h>
 #include <IMPL/ClusterImpl.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCRelationImpl.h>
 #include <UTIL/LCTOOLS.h>
 #include <UTIL/LCRelationNavigator.h>
 #include <iostream>
+#include "ClusterShapes.h"
 #include <map>
 #include <vector>
+#include <math.h>
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include "gear/GEAR.h"
+//#include "gear/TPCParameters.h"
+//#include "gear/PadRowLayout2D.h"
+#include "gear/CalorimeterParameters.h"
 
+#define MASK_K (unsigned int) 0x3F000000
+#define SHIFT_K 24
+#define SHIFT_M 0
+#define MASK_M (unsigned int) 0x00000007
+using namespace std ;
 using namespace lcio ;
 using namespace marlin ;
 using namespace UTIL;
 
 typedef std::map <MCParticle*,ClusterImpl*> map_MCP_Clust;
+typedef std::map <MCParticle*,HelixClass*> map_MCP_Helix;
 
 ClusterCheater aClusterCheater ;
 
@@ -25,43 +37,38 @@ ClusterCheater aClusterCheater ;
 ClusterCheater::ClusterCheater() : Processor("ClusterCheater") {
 
   _description = "Creates true clusters..." ;
-  
-
 
   registerProcessorParameter("TrueClusterCollection",
 			     "Collection of True Clusters",
 			     _trueClustCollection ,
 			     std::string("TrueClusters"));
-
+ registerProcessorParameter("TrueClusterToMCPCollection",
+			     "Relation Collection Cluster to MCP",
+			     _trueClustToMCP,
+			     std::string("TrueClusterToMCP"));
   std::vector<std::string> caloCollections;
 
   caloCollections.push_back(std::string("ECAL"));
   caloCollections.push_back(std::string("HCAL"));
   
 
-  registerProcessorParameter("ECALCollection",
-			     "ECAL Collection Name",
+  registerProcessorParameter("CaloCollections",
+			     "Calorimeter Collection Names",
 			     _caloCollections ,
 			     caloCollections);
 
   registerProcessorParameter("RelCollection",
-			     "Relation Collection Name",
+			     "SimCaloHit to CaloHit Relations Collection Name",
 			     _relCollection ,
 			     std::string("RelationCaloHit"));
 
-  registerProcessorParameter("IfBrahms",
-			     "If Brahms",
-			     _ifBrahms,
-			     (int)1);
+ 
 
 }
 
 void ClusterCheater::init() {
     _nRun = -1;
     _nEvt = 0;
-
-
-
 }
 
 
@@ -71,107 +78,184 @@ void ClusterCheater::processRunHeader( LCRunHeader* run) {
 } 
 
 void ClusterCheater::processEvent( LCEvent * evt ) { 
-    const LCCollection * relcol ;
+ 
 
-    map_MCP_Clust _mcp_clust;
+  float totalUnrecoverableOverlapEcal1max=0.0;
+  float totalUnrecoverableOverlapEcal2max=0.0;
+  float totalUnrecoverableOverlapHcalmax=0.0;
+  float totalUnrecoverableOverlapEcal1min=0.0;
+  float totalUnrecoverableOverlapEcal2min=0.0;
+  float totalUnrecoverableOverlapHcalmin=0.0;
+  float noPointerEcal=0.0;
+  float noPointerHcal=0.0;
+
+ typedef std::map <MCParticle*,ClusterImpl*> mapMCP2Clust;
     
-    try {
-	relcol = evt->getCollection(_relCollection.c_str());	
-    }
-    catch(DataNotAvailableException &e){
-	std::cout << "No relation exist between Sim and Calo hit" << std::endl; 	std::cout << "Quitting program" << std::endl; 
-	exit(1);
-    }
+   mapMCP2Clust p2clust;
 
-    LCRelationNavigator navigate(relcol); 
+  for (unsigned int i=0 ; i < _caloCollections.size(); ++i) 
+    {    
 
-    LCCollectionVec * clscol = new LCCollectionVec(LCIO::CLUSTER);
+      cout<<"name ="<<_caloCollections[i]<<endl;
+       const LCCollection * relcol ;
+       relcol = evt->getCollection("RelationCaloHit");
+	 LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
+          unsigned int nhits = col->getNumberOfElements();
+  
+     
+      double gearRMax = Global::GEAR->getEcalBarrelParameters().getExtent()[0];
+    
+      double zmax= Global::GEAR->getEcalEndcapParameters().getExtent()[2];
+   
+ LCRelationNavigator navigate(relcol); 
 
-    for (unsigned int i(0) ; i < _caloCollections.size(); ++i) {    
-	try {
-	    LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
-	    int nelem = col->getNumberOfElements();
-	    for (int i(0); i < nelem; ++i) {
-		CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(i));
-		LCObjectVec objectVec = navigate.getRelatedToObjects(hit);
+	    for (unsigned int j=0; j < nhits; ++j) 
+             {
+	   CalorimeterHit * calhit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j));
+	LCObjectVec objectVec = navigate.getRelatedToObjects(calhit);
 		if (objectVec.size() > 0) {
-		    SimCalorimeterHit * shit = dynamic_cast<SimCalorimeterHit*>(objectVec[0]);		    
-		    if (shit->getNMCParticles() > 0) {
-			MCParticle * par = shit->getParticleCont(0);
-			
-			if (par != NULL ) {
+          
+           SimCalorimeterHit * simhit=dynamic_cast<SimCalorimeterHit*>( objectVec[0]);
+	   unsigned int ncontrib=simhit->getNMCContributions();
+	   int cellid=calhit->getCellID0();
+           int layer=(cellid & MASK_K) >> SHIFT_K;  
+	   int module=(cellid & MASK_M) >> SHIFT_M;  
+	   if ( ncontrib>1)
+	     {   // so there is an overlap  
+	       float maxmix=0.0;
+               unsigned int ttmax=0;
+               unsigned int ttmin=0;
+	       float minmix=simhit->getEnergyCont(0);
+	       for ( unsigned int tt=0 ; tt<ncontrib ; ++tt)
+		 {
+		   if (simhit->getEnergyCont(tt)> maxmix)
+		     {
+		       maxmix=simhit->getEnergyCont(tt);
+		       ttmax=tt;
+		     }
+                   if (simhit->getEnergyCont(tt)< minmix)
+		     {
+		       minmix=simhit->getEnergyCont(tt);
+		       ttmin=tt;
+		     }
+		 }
+                 MCParticle * par =simhit->getParticleCont(ttmax);
+		 if ( par !=NULL)
+		     {
 
-			  if (_ifBrahms == 1) {
-			    bool swi = par->isCreatedInSimulation();
-			    if (swi) {
-			    }
-			    else {
-			      if (_mcp_clust[par] == NULL) {
-				ClusterImpl * cluster = new ClusterImpl();
-				clscol->addElement(cluster);
-				_mcp_clust[par] = cluster;
-				cluster->addHit(hit,(float)1.0);
-			      }
-			      else {
-				ClusterImpl * cluster = _mcp_clust[par];
-				cluster->addHit(hit,(float)1.0);
-			      }
-			    }
-			  }
-			  else {
-			
-			    bool loop = 1;
-			    while (loop) {
-			      int nparents = par->getNumberOfParents();
-			      bool _isDecayedInTracker = 0;
-			      MCParticle * parent ;
-			      if (nparents != 0) {
-				parent = par->getParent(0);
-				_isDecayedInTracker = parent->isDecayedInTracker();
-			      }
-			      if (nparents == 0 || _isDecayedInTracker ) {
-				if (_mcp_clust[par] == NULL) {
-				  ClusterImpl * cluster = new ClusterImpl();
-				  clscol->addElement(cluster);
-				  _mcp_clust[par] = cluster;
-				  cluster->addHit(hit,(float)1.0);
-				}
-				else {
-				  ClusterImpl * cluster = _mcp_clust[par];
-				  cluster->addHit(hit,(float)1.0);
-				}
-				loop = 0;
-				break;
-			      }
-			    par = parent;
-			    } 
-			  }
-			}
-		    }
+                      first_jump:
+		     
+		       if (p2clust[par] == NULL) 
+			 {
+                           
+			   float x=par->getVertex()[0];
+			   float y=par->getVertex()[1];
+			   float z=par->getVertex()[2];
+			   float radius=sqrt(x*x+y*y);
+        	
+			 if( (radius<gearRMax && fabs(z)<zmax) ) 
+			     {
+                	       ClusterImpl * cluster = new ClusterImpl();
+			       p2clust[par]=cluster;
+			       cluster->addHit(calhit,(float)1.0);
+			     }else{
+			        par=par->getParents()[0];
+				goto first_jump;
+  			     }
+			 }else{
+			      ClusterImpl * cluster = p2clust[par];
+			      cluster->addHit(calhit,(float)1.0);
+		         }         
+	            
+                     }else{// par !=0
+		        noPointerEcal+=simhit->getEnergyCont(ttmax);
+ 
+		     }//par !=0    
+
+                        totalUnrecoverableOverlapEcal1max+=maxmix;
+		        totalUnrecoverableOverlapEcal1min+=minmix;
+	      }else{ // contributions
+                    MCParticle * par =simhit->getParticleCont(0);
+		 if ( par !=NULL)
+		     {
+
+                       second_jump:
+		    
+		       if (p2clust[par] == NULL) 
+			 {
+                           
+			   float x=par->getVertex()[0];
+			   float y=par->getVertex()[1];
+			   float z=par->getVertex()[2];
+			   float radius=sqrt(x*x+y*y);
+        
+		        if( (radius<gearRMax && fabs(z)<zmax) ) 
+			     {
+                	       ClusterImpl * cluster = new ClusterImpl();
+			       p2clust[par]=cluster;
+			       cluster->addHit(calhit,(float)1.0);
+			     }else{
+			        par=par->getParents()[0];
+				goto second_jump;
+  			     }
+			 }else{
+			      ClusterImpl * cluster = p2clust[par];
+			      cluster->addHit(calhit,(float)1.0);
+		         }         
+	            
+                     }else{// par !=0
+		       
+			noPointerEcal+=simhit->getEnergyCont(0);
+		     }//par !=0    
+                    	           
+	          }// ncontribution
 		}
-	    }	
-	}
-	catch(DataNotAvailableException &e){ 
-	}
-    }
-    evt->addCollection(clscol,"TrueClusters");
+	     }// over nhits
+       
+    }   
 
-    LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
+    		
+  LCCollectionVec * clscol = new LCCollectionVec(LCIO::CLUSTER);
+  LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
 
-    map_MCP_Clust::iterator pos;
-    for (pos = _mcp_clust.begin(); pos != _mcp_clust.end(); ++pos) {
-	MCParticle * mcp = pos->first;
-	ClusterImpl * cluster = pos->second;
+    mapMCP2Clust::iterator pos;
+
+    for (pos = p2clust.begin(); pos != p2clust.end(); ++pos) 
+    {
+      MCParticle * mcp = pos->first;
+   
+      ClusterImpl * cluster = pos->second;
+      
+      if(cluster != NULL){
+      CalorimeterHitVec calohitvec = cluster->getCalorimeterHits();
+      int nhcl = (int)calohitvec.size();
+    
+	float totene = 0.0;
+	float totecal = 0.0;
+	float tothcal = 0.0;
+	for (int i=0; i< nhcl; ++i) 
+	  {
+	  CalorimeterHit * calhit = calohitvec[i];
+	  totene +=  calhit->getEnergy();	
+	  }	
+	cluster->setEnergy(totene);
+	clscol->addElement(cluster);
+   
 	LCRelationImpl * rel = new LCRelationImpl(cluster,mcp,(float)1.0);
-	relationcol->addElement( rel );
+	relationcol->addElement( rel ); 
+
+     }   
     }
-    evt->addCollection(relationcol,"TrueClusterToMCP");
+    evt->addCollection(clscol,_trueClustCollection.c_str());
+    evt->addCollection(relationcol,_trueClustToMCP.c_str());
 
-  _nEvt++;
 
+    _nEvt++;
+    
 }
 
 
 void ClusterCheater::check( LCEvent * evt ) { }
   
 void ClusterCheater::end(){ } 
+

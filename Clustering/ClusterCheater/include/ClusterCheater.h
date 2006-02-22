@@ -1,17 +1,24 @@
-#ifndef FORMTRUECLUSTERSAR_H
-#define FORMTRUECLUSTERSAR_H 1
+#ifndef FORMTRUECLUSTERSKP_H
+#define FORMTRUECLUSTERSKP_H 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
 #include <vector>
+#include "HelixClass.h"
+#include <EVENT/CalorimeterHit.h>
+#include <EVENT/MCParticle.h>
 
 using namespace lcio ;
 using namespace marlin ;
 
 
-/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
+/** Cluster Cheater <br>
+ *  This processor constructs true clusters.<br>
+ *  All the hits are collected. <br>
+ *  Uses gear to get inner radius and z of ecal. <br>
+ *    @author P. Krstonosic (DESY)<br>
+ *    @version $ld: $<br>
  */
 class ClusterCheater : public Processor {
   
@@ -21,9 +28,8 @@ class ClusterCheater : public Processor {
   
   
   ClusterCheater() ;
-  
-  /** Called at the begin of the job before anything is read.
-   * Use to initialize the processor, e.g. book histograms.
+
+  /** Initialization
    */
   virtual void init() ;
   
@@ -49,11 +55,12 @@ class ClusterCheater : public Processor {
   int _nRun ;
   int _nEvt ;
 
-  int _ifBrahms;
 
   std::string _trueClustCollection;
   std::vector<std::string> _caloCollections;
   std::string _relCollection;
+  std::string _trueClustToMCP;
+
 
 } ;
 

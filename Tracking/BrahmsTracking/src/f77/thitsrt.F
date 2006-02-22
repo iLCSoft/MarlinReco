@@ -1,7 +1,16 @@
 *  
-* $Id: thitsrt.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: thitsrt.F,v 1.4 2006-02-07 10:50:57 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/11/03 15:16:14  aplin
+* Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
+*
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -41,8 +50,8 @@ c****************************************************************************
 #include "include/tpco.inc"
 #include "include/tphtcns.inc"
 c#include "include/geantrk.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tpcfunc2.inc"
 
       LOGICAL LUNSORT(NTPCOMX)
@@ -54,7 +63,9 @@ c#include "include/tpgeom.inc"
       PARAMETER(NMAXRW=LTPDRO)
 ccc      PARAMETER(NMXHTRW=300)
 * increase by a factor of 2 (Mokka input)
-      PARAMETER(NMXHTRW=600)
+ccc      PARAMETER(NMXHTRW=600)
+* increase again by a factor of 2 because of the relase of the energy cut in Mokka
+      PARAMETER(NMXHTRW=1200)
       INTEGER NINROW(NMAXRW),IHITRW(NMAXRW,NMXHTRW),NSORTED
 
       REAL ZRES2_PIX
@@ -190,7 +201,7 @@ c     IGNTRK(NTPCO)=ITPTRA(ISORT)
       ENDDO
       
 C     SJAWRT
-      write(*,*) "the number of hits at end of thitsrt = " ,  NTPCO     
+c      write(*,*) "the number of hits at end of thitsrt = " ,  NTPCO     
 
 
       RETURN

@@ -8,6 +8,11 @@
 #include <iostream>
 #include <fstream>
 #include "ClusterShapes.h"
+// GEAR include files
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/CalorimeterParameters.h>
+#include "random.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -18,17 +23,23 @@ TrackwiseClustering aTrackwiseClustering;
 
 TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 
-    registerProcessorParameter( "DistanceForDirection", 
+
+  _description = "Performs clustering in a track-wise manner..." ;
+
+
+     // Not used  
+     registerProcessorParameter( "DistanceForDirection", 
 				"Distance to Define Direction", 
 				_distanceToDefineDirection,
-				(float)25.);
-
+				(float)5.);
+     // Not used
      registerProcessorParameter( "DistanceToTrackSeed", 
 				"Distance to Track Seed", 
 				_distanceToTrackSeed,
 				(float)25.);    
 
 
+     // RCutMax
     std::vector<float>  distanceTrackBack;
     distanceTrackBack.push_back(100.);
     distanceTrackBack.push_back(500.);
@@ -38,6 +49,8 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 				_distanceTrackBack,
 				 distanceTrackBack); 
 
+
+    // RCut
     std::vector<float>  stepTrackBack;
     stepTrackBack.push_back(10.0);
     stepTrackBack.push_back(100.0);
@@ -47,6 +60,7 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 				_stepTrackBack,
 				 stepTrackBack); 
 
+    // SCut (merging parameter cut)
     std::vector<float>  resolutionParameter;
     resolutionParameter.push_back(20.0);
     resolutionParameter.push_back(80.0);
@@ -114,26 +128,6 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 				 std::string("ClustersAR"));
 
     
-    registerProcessorParameter( "ZOfEndcap" ,
-                                "Z coordinate of Endcap" ,
-				_zofendcap,
-				(float)2820.);
-    
-    registerProcessorParameter( "ROfBarrel" , 
-                                "Radius of Barrel" , 
-				_rofbarrel,
-				(float)1700.);
-				
-    registerProcessorParameter( "GlobalPhi" , 
-				"Global Phi angle" ,
-				_phiofbarrel,
-				(float)0.);
-
-    registerProcessorParameter( "NFoldSymmetry" ,
-				"Global N-fold Symmetry" , 
-				_nsymmetry, 
-				8);
-    
    registerProcessorParameter( "MinimalHitsInCluster" ,
 			       "Minimal allowed hits in cluster" , 
 				_nhit_minimal, 
@@ -149,9 +143,14 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
 				_use_tracks, 
 				0);
 
-   registerProcessorParameter( "DoMerging" , 
-			       "Do Merging", 
+   registerProcessorParameter( "DoMergingLowMultiplicity" , 
+			       "merging low multiplicity clusters?", 
 			       _doMerging,
+			       1);
+
+   registerProcessorParameter( "DoMergingForward" , 
+			       "merging clusters forward-wise?", 
+			       _doMergingForward,
 			       1);
 
    registerProcessorParameter( "DisplayClusterInfo",
@@ -162,18 +161,28 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
    registerProcessorParameter( "ResolutionToMerge",
 			       "Resolution To Merge Halo Hits",
 			       _resolutionToMerge,
-			       (float)300.);
+			       (float)400.);
+
+
+   registerProcessorParameter( "WeightForResolution",
+			       "Weight For Resolution",
+			       _weightForReso,
+			       (float)1.0);
+
+   registerProcessorParameter( "WeightForDistance",
+			       "Weight For Distance",
+			       _weightForDist,
+			       (float)1.0);
+
+
+   registerProcessorParameter( "BField",
+			       "Magnetic Field (in TESLA)",
+			       _bField,
+			       float(4.0));
 
 }
 
 void TrackwiseClustering::init() {
-
-    _const_pi    = acos(-1.);
-    _const_2pi = 2.0*_const_pi;
-    _const_pi_n  = _const_pi/float(_nsymmetry);
-    _const_2pi_n = 2.0*_const_pi/float(_nsymmetry);
-
-    _thetaofendcap = (float)atan((double)(_rofbarrel/_zofendcap));
 
     _nRun = -1;
 
@@ -195,10 +204,19 @@ void TrackwiseClustering::processEvent( LCEvent * evt ) {
     initialiseEvent( evt );
     GlobalSorting();
     GlobalClustering();
-    if (_doMerging == 1) {
+    //    propertiesForAll();
+
+    if (_doMergingForward == 1) {    
+      //      MergeTrackSegments();
       mergeForward();
+    }
+
+    if (_doMerging == 1) {
       mergeLowMultiplicity();
     }
+
+    //    propertiesForAll();
+
     if (_displayClusters == 1)
       DisplayClusters(_allClusters);
     CreateClusterCollection(evt,_allClusters);
@@ -217,6 +235,21 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 
     int NOfHits(0);
 
+  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
+
+  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+
+  _rofbarrel = (float)pEcalBarrel.getExtent()[0];
+  _phiofbarrel = (float)pEcalBarrel.getPhi0();
+  _nsymmetry = pEcalBarrel.getSymmetryOrder();
+  _zofendcap = (float)pEcalEndcap.getExtent()[2];
+  _const_pi    = acos(-1.);
+  _const_2pi = 2.0*_const_pi;
+  _const_pi_n  = _const_pi/float(_nsymmetry);
+  _const_2pi_n = 2.0*_const_pi/float(_nsymmetry);
+  _thetaofendcap = (float)atan((double)(_rofbarrel/_zofendcap));
+
+
     
     _xmin_in_distance = 1.0e+10;
     _xmax_in_distance = -1.0e+10;
@@ -232,12 +265,18 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 		for (int j(0); j < nelem; ++j) {
 		    CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j));
 		    CaloHitExtended *calohit = new CaloHitExtended(hit,0);
-		    float dist = CalculateGenericDistance(calohit, _typeOfGenericDistance);
-		    calohit->setGenericDistance(dist);
-		    if (dist < _xmin_in_distance) 
-			_xmin_in_distance = dist;
-		    if (dist > _xmax_in_distance) 
-			_xmax_in_distance = dist;		
+		    float dist[2];
+		    CalculateGenericDistance(calohit, dist);		    
+		    if (_typeOfGenericDistance == 0) 
+		      calohit->setGenericDistance(dist[0]);
+		    else 
+		      calohit->setGenericDistance(dist[1]);
+		    calohit->setDistanceToCalo(dist[1]);
+		    float distance = calohit->getGenericDistance();
+		    if (distance < _xmin_in_distance) 
+			_xmin_in_distance = distance;
+		    if (distance > _xmax_in_distance) 
+			_xmax_in_distance = distance;		
 		    _allHits.push_back(calohit);
 		    NOfHits++;
 		}
@@ -257,12 +296,18 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 		for (int j(0); j < nelem; ++j) {
 		    CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j));
 		    CaloHitExtended * calohit = new CaloHitExtended(hit,1);
-		    float dist = CalculateGenericDistance(calohit, _typeOfGenericDistance);
-		    calohit->setGenericDistance(dist);
-		    if (dist < _xmin_in_distance) 
-			_xmin_in_distance = dist;
-		    if (dist > _xmax_in_distance) 
-			_xmax_in_distance = dist;
+		    float  dist[2] ;
+		    CalculateGenericDistance(calohit,dist);
+		    if (_typeOfGenericDistance == 0)
+		      calohit->setGenericDistance(dist[0]);
+		    else 
+		      calohit->setGenericDistance(dist[1]);
+		    calohit->setDistanceToCalo(dist[1]);
+		    float distance = calohit->getGenericDistance();
+		    if (distance < _xmin_in_distance) 
+			_xmin_in_distance = distance;
+		    if (distance > _xmax_in_distance) 
+			_xmax_in_distance = distance;
 		    _allHits.push_back(calohit);
 		    NOfHits++;
 		}
@@ -271,6 +316,7 @@ void TrackwiseClustering::initialiseEvent( LCEvent * evt ) {
 	catch(DataNotAvailableException &e) {};
 
     }
+
 
 // Reading Track collection
     if (_use_track != 0) {
@@ -306,59 +352,64 @@ float TrackwiseClustering::findResolutionParameter(CaloHitExtended * fromHit, Ca
 	dir += dirvec[i]*dirvec[i];
 	product += xdistvec[i]*dirvec[i]; 
     }
+
     xdist = sqrt(xdist);
     dir = sqrt(dir);
-    product=product/(xdist*dir);
+    product=product/fmax(1.0e-6,(xdist*dir));
+
+    if (product > 1.) {
+      product = 0.999999;
+    }
+    if (product < -1.) {
+      product = -0.999999;
+    }
+
     float angle = acos(product);
     
     return xdist*angle;
  
 }
 
-float TrackwiseClustering::CalculateGenericDistance(CaloHitExtended *calohit, int itype) {
-    float xDistance(0.);
-    float rDistance(0.);
-    
+void TrackwiseClustering::CalculateGenericDistance(CaloHitExtended *calohit, float * dist) {
+    float xDistance =0.0;
+    float rDistance =0.0;
+
     for (int i(0); i < 3; ++i) {
 	float x = calohit->getCalorimeterHit()->getPosition()[i];
 	rDistance += x*x; 	
     }
     rDistance = sqrt(rDistance);
     
-    if (itype == 0) {
-	xDistance = rDistance;
+    float x = calohit->getCalorimeterHit()->getPosition()[0];
+    float y = calohit->getCalorimeterHit()->getPosition()[1];
+    float z = calohit->getCalorimeterHit()->getPosition()[2];
+    float phi = atan2(y,x) - _phiofbarrel + _const_pi_n;
+    int nZone = (int)(phi/_const_2pi_n);
+    if (phi < 0.)
+      phi = phi + _const_2pi;
+    phi = phi - nZone * _const_2pi_n - _const_pi_n;
+    float radius = sqrt(x*x + y*y);
+    float rdist = radius * cos(phi) - _rofbarrel;
+    float zdist = fabs(z) - _zofendcap;
+    if (rdist > 0 && zdist < 0) {
+      xDistance = rdist;
+    }
+    else if (rdist < 0 && zdist > 0 ) {
+      xDistance = zdist;
     }
     else {
-	float x = calohit->getCalorimeterHit()->getPosition()[0];
-	float y = calohit->getCalorimeterHit()->getPosition()[1];
-	float z = calohit->getCalorimeterHit()->getPosition()[2];
-	float phi = atan2(y,x) - _phiofbarrel + _const_pi_n;
-	int nZone = (int)(phi/_const_2pi_n);
-	if (phi < 0.)
-	    phi = phi + _const_2pi;
-	phi = phi - nZone * _const_2pi_n - _const_pi_n;
-	float radius = sqrt(x*x + y*y);
-	float rdist = radius * cos(phi) - _rofbarrel;
-	float zdist = fabs(z) - _zofendcap;
-	if (rdist > 0 && zdist < 0) {
-	    xDistance = rdist;
-	}
-	else if (rdist < 0 && zdist > 0 ) {
-	    xDistance = zdist;
-	}
-	else {
-	    float theta = (float)atan((float)(rdist/zdist));
-	    if (theta > _thetaofendcap) {
-		xDistance = rdist;
-	    }
-	    else {
-		xDistance = zdist;
-	    }
+      float theta = (float)atan((float)(rdist/zdist));
+      if (theta > _thetaofendcap) {
+	xDistance = rdist;
+      }
+      else {
+	xDistance = zdist;
+      }
 
-	}
-	xDistance = xDistance + 1.0e-10*rDistance ;
     }
-    return xDistance;
+    xDistance = xDistance + 1.0e-10*rDistance ;
+    dist[0] = rDistance;
+    dist[1] = xDistance;
 }
 
 
@@ -425,6 +476,152 @@ void TrackwiseClustering::CleanUp() {
 
 }
 
+void TrackwiseClustering::propertiesForAll() {
+  int nclusters = (int)_allClusters.size();
+  for (int i=0;i<nclusters;++i) {
+    ClusterExtended * Cl = _allClusters[i];
+    calculateProperties(Cl);
+  }
+
+}
+
+void TrackwiseClustering::calculateProperties(ClusterExtended * Cl) {
+
+  CaloHitExtendedVec calohitvec = Cl->getCaloHitExtendedVec();
+  int nhcl = (int)calohitvec.size();
+  if (nhcl > 0) {
+    float * xhit = new float[nhcl];
+    float * yhit = new float[nhcl];
+    float * zhit = new float[nhcl];
+    float * ahit = new float[nhcl];
+    float * exhit = new float[nhcl];
+    float * eyhit = new float[nhcl];
+    float * ezhit = new float[nhcl];    
+    float totene = 0.0;
+    float totecal = 0.0;
+    float tothcal = 0.0;
+    RandomNumberGenerator random;
+    float zmin = 1.0e+20;
+    float zmax = -1.0e+20;
+    int jhit = 0;
+    for (int ihit(0); ihit < nhcl; ++ihit) {
+      CalorimeterHit * calhit = 
+	calohitvec[ihit]->getCalorimeterHit();
+      if (calohitvec[ihit]->getDistanceToNearestHit() < 100.) {
+	xhit[jhit] = calhit->getPosition()[0] + random.EqualDistribution(1.0)[0];
+	yhit[jhit] = calhit->getPosition()[1] + random.EqualDistribution(1.0)[0];
+	zhit[jhit] = calhit->getPosition()[2];
+	ahit[jhit] = calhit->getEnergy();
+	exhit[jhit] = 4.0;
+	eyhit[jhit] = 4.0;
+	ezhit[jhit] = 4.0;
+	totene += ahit[jhit];
+	if (calohitvec[jhit]->getType() == 0) {
+	  totecal += ahit[jhit];
+	}
+	else {
+	  tothcal += ahit[jhit];
+	}	
+	if (zhit[jhit]<zmin )
+	  zmin = zhit[jhit];
+	if (zhit[jhit]>zmax)
+	  zmax = zhit[jhit];	
+	jhit++;
+      }	      
+    }
+    float zBeg;
+    float signPz = 1.0;
+    if (fabs(zmin)>fabs(zmax)) {
+      signPz = -1.0;
+      zBeg = zmax;
+    }
+    else {
+      zBeg = zmin;
+    }
+
+
+    ClusterShapes * shapes 
+      = new ClusterShapes(jhit,ahit,xhit,yhit,zhit);	    
+    shapes->setErrors(exhit,eyhit,ezhit);
+    float par[5];
+    float dpar[5];
+    float chi2 = 1.0e+10;
+    float distmax = 1.0e+20;
+    float x0 = 1;
+    float y0 = 1;
+    float r0 = 1;
+    float bz = 1;
+    float phi0 = 1;
+    if (jhit > 3) {
+      shapes->FitHelix(500, 0, 1, par, dpar, chi2, distmax);
+      x0 = par[0];
+      y0 = par[1];
+      r0 = par[2];
+      bz = par[3];
+      phi0 = par[4];
+    }
+    HelixClass helix;
+    helix.Initialize_BZ(x0, y0, r0, 
+			bz, phi0, _bField, signPz,
+			zBeg);
+    
+    Cl->setHelix(helix);
+    Cl->setHelixChi2R(chi2);
+    Cl->setHelixChi2Z(distmax);
+
+    float axis[3];
+    float pos[3];
+    float axisMod = 0.0;
+    float low[3];
+    float up[3];
+    for (int i=0; i<3; ++i) {
+      pos[i]  = shapes->getCentreOfGravity()[i];
+      axis[i] = shapes->getEigenVecInertia()[i];
+      axisMod += axis[i]*axis[i];
+      low[i] = Cl->getLowEdge()[i];
+      up[i]  = Cl->getUpEdge()[i];
+    }
+    axisMod = sqrt(axisMod);
+    Cl->setAxis(axis);
+    Cl->setPosition(pos);	    
+    Cl->setEccentricity(shapes->getElipsoid_eccentricity());
+
+//    Cl->setLowEdge(low);
+//    Cl->setUpEdge(up);
+    if (nhcl > 40  ) {      
+      //debug
+      /*
+	std::cout << nhcl << " " << shapes->getElipsoid_eccentricity() << std::endl;
+	std::cout << "Chi2 : " << chi2 << " DistMax = " << distmax << std::endl;
+	std::cout << "Pos : " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+	std::cout << "Low : " << low[0] << " " << low[1] << " " << low[2] << std::endl;
+	std::cout << "Up : " << up[0] << " " << up[1] << " " << up[2] << std::endl;     
+	std::cout << "Par : " << par[0] << " " << par[1] << " " << par[2] << " " << par[3] << " " << par[4] << std::endl;
+      */
+
+       float xx[3];
+       int nn = nhcl / 2;
+       xx[0] = xhit[nn];
+       xx[1] = yhit[nn];
+       xx[2] = zhit[nn];
+       float dd[3];
+       float time = helix.getDistanceToPoint(xx,dd);
+       float dist1 = dd[2];
+    }
+
+    delete shapes;
+    delete[] exhit;
+    delete[] eyhit;
+    delete[] ezhit;
+    delete[] xhit;
+    delete[] yhit;
+    delete[] zhit;
+    delete[] ahit;
+    
+  }
+
+}
+
 void TrackwiseClustering::CreateClusterCollection(LCEvent * evt, ClusterExtendedVec clusterVec) {
 
     int nclust = (int)clusterVec.size();
@@ -475,10 +672,10 @@ void TrackwiseClustering::CreateClusterCollection(LCEvent * evt, ClusterExtended
 	    clucol->addElement(cluster);
 
 	    delete shape;
-	    delete xhit;
-	    delete yhit;
-	    delete zhit;
-	    delete ahit;
+	    delete[] xhit;
+	    delete[] yhit;
+	    delete[] zhit;
+	    delete[] ahit;
 
 	}
 
@@ -498,20 +695,34 @@ void TrackwiseClustering::DisplayClusters(ClusterExtendedVec clusterVec) {
     cout << "Number of clusters : " << nclust << endl;
     int ntot(0);
     int ninbig(0);
+
+    
+
+    float totenergy = 0.0;
+    float energyinbig = 0.0;
     for (int iclust(0); iclust < nclust; ++iclust) {
 	ClusterExtended * Cl = clusterVec[iclust];
 	CaloHitExtendedVec calohitvec = Cl->getCaloHitExtendedVec();
 	int nhcl = calohitvec.size();
 	ntot += nhcl;
+	float ene=0.0;
+	for (int i=0; i<nhcl; ++i) {
+	  ene += calohitvec[i]->getCalorimeterHit()->getEnergy();
+	}
+	totenergy += ene;
 	if (nhcl > _nhit_minimal) {
 	    cout << "Cluster  " << iclust << " Number of hits = " << nhcl << endl;
 	    ninbig += nhcl;
+	    energyinbig += ene;
 	}
 
     }
 
+    float fraction = energyinbig/totenergy;
     cout << endl;
     cout << "Hits in big clusters     : " << ninbig << endl;
+    cout << "Total energy : " << totenergy << std::endl;
+    cout << "Fraction in big clusters : " << fraction << std::endl;
     cout << "Sumcheck: number of hits : " <<  ntot << endl;
 
 
@@ -524,16 +735,16 @@ void TrackwiseClustering::GlobalSorting() {
 
     int _NGLAYERS = 1000;
 
-    float inverse = _NGLAYERS/(_xmax_in_distance - _xmin_in_distance);
+    float inverse = ((float)_NGLAYERS)/(_xmax_in_distance - _xmin_in_distance);
 
     _allSuperClusters.clear();
 
-    for (int i(0); i < _NGLAYERS; ++i) {
+    for (int i=0; i < _NGLAYERS; ++i) {
 	ClusterExtended * cluster = new ClusterExtended();
 	_allSuperClusters.push_back(cluster);
     }
 
-    for (unsigned int i(0); i < _allHits.size(); ++i) {
+    for (unsigned int i = 0; i < _allHits.size(); ++i) {
 	CaloHitExtended * calohit = _allHits[i];
 	float distToIP = calohit->getGenericDistance();
 	int index = (int)((distToIP - _xmin_in_distance) * inverse) ;
@@ -585,6 +796,7 @@ void TrackwiseClustering::GlobalClustering() {
 
 	float YResMin = 1.0e+10;
 	float YResCut = _resolutionParameter[idTo];
+	float YDistMin = 1.0e+10;
 
 	while (ihitFrom >=0) {
 
@@ -598,16 +810,38 @@ void TrackwiseClustering::GlobalClustering() {
 
 	    if (dist_in_generic > r_dist)
 		break;
+	    
+	    float pos1[3];
+	    float pos2[3];
+	    for (int iposi=0; iposi<3; ++iposi) {
+	      pos1[iposi] = 
+		(float)CaloHitTo->getCalorimeterHit()->getPosition()[iposi];
+	      pos2[iposi] = 
+		(float)CaloHitFrom->getCalorimeterHit()->getPosition()[iposi];
+	    }
 
+	    float XDist = DistanceBetweenPoints(pos1,pos2);
 	    float YRes = findResolutionParameter(CaloHitFrom, CaloHitTo);
 	    if (YRes < 0.)
 		std::cout << "Resolution parameter < 0" << std::endl; 
 
 
-	    if (YRes < YResMin) {
-		YResMin = YRes;
-		CaloHitTo->setCaloHitFrom(CaloHitFrom);
-		CaloHitTo->setYresFrom(YRes);		
+	    float YDist = 1 + _weightForReso*YRes + _weightForDist*XDist;
+
+	    bool proxCriterion = YDist < YDistMin;
+
+	    if (proxCriterion) {
+	      YResMin = YRes;
+	      YDistMin = YDist;
+	      CaloHitTo->setCaloHitFrom(CaloHitFrom);
+	      CaloHitTo->setYresFrom(YRes);
+	    }
+
+	    if (proxCriterion && YRes < YResCut) {
+	      YResMin = YRes;
+	      YDistMin = YDist;
+	      CaloHitTo->setCaloHitFrom(CaloHitFrom);
+	      CaloHitTo->setYresFrom(YRes);		
 	    }
 
 
@@ -624,6 +858,14 @@ void TrackwiseClustering::GlobalClustering() {
 	    CaloHitExtendedVec calohitvec = cluster->getCaloHitExtendedVec();
 	    CaloHitTo->setClusterExtended(cluster);
 	    cluster->addCaloHitExtended(CaloHitTo);
+	    float distanceToHit = 0.0;
+	    for (int ii=0;ii<3;++ii) {
+	      float xx =  CaloHitTo->getCalorimeterHit()->getPosition()[ii]
+		-  calohit_AttachTo->getCalorimeterHit()->getPosition()[ii];
+	      distanceToHit += xx*xx;
+	    }
+	    distanceToHit = sqrt(distanceToHit);
+	    CaloHitTo->setDistanceToNearestHit(distanceToHit);
 	    float xDir[3];
 	    bool redefineSP ;
 	    float dif_in_dist = CaloHitTo->getGenericDistance() - calohit_AttachTo->getGenericDistance();	    
@@ -639,7 +881,7 @@ void TrackwiseClustering::GlobalClustering() {
 
 	    }
 
-	    if (redefineSP) {
+	    if (redefineSP ) {
 		float xx = 0.;
 		float yy = 0.;
 		float zz = 0.;
@@ -661,6 +903,7 @@ void TrackwiseClustering::GlobalClustering() {
 
 	    float dist_to_SP(0.);
 	    if (_typeOfGenericDistance == 0) {
+	      //dist_to_SP = CaloHitTo->getDistanceToCalo();
 		for (int i(0); i < 3; ++i) {
 		    float xx = CaloHitTo->getCalorimeterHit()->getPosition()[i]-cluster->getStartingPoint()[i];
 		    dist_to_SP += xx*xx;
@@ -668,7 +911,7 @@ void TrackwiseClustering::GlobalClustering() {
 		dist_to_SP = sqrt(dist_to_SP);
 	    }
 	    else {
-		dist_to_SP = dif_in_dist;
+	      dist_to_SP = dif_in_dist;
 	    }
 		
 
@@ -678,14 +921,17 @@ void TrackwiseClustering::GlobalClustering() {
 	    }
 	    else {
 		for (int i(0); i < 3; ++i) 
-		    xDir[i] = CaloHitTo->getCalorimeterHit()->getPosition()[i] - cluster->getStartingPoint()[i];		
+		    xDir[i] = CaloHitTo->getCalorimeterHit()->getPosition()[i] - cluster->getStartingPoint()[i];
 	    }
+
+	      
 
 	    CaloHitTo->setDirVec(xDir);
 	}
 	else { // Create new cluster
 	    ClusterExtended * cluster = new ClusterExtended(CaloHitTo);
 	    CaloHitTo->setClusterExtended(cluster);
+	    CaloHitTo->setDistanceToNearestHit(0.0);
 	    float xDir[3];
 	    for (int i(0); i < 3; ++i)
 		xDir[i] = CaloHitTo->getCalorimeterHit()->getPosition()[i];
@@ -701,48 +947,90 @@ void TrackwiseClustering::GlobalClustering() {
 
 void TrackwiseClustering::mergeForward() {
 
-
   int nClusters = (int)_allClusters.size();
   int nTotHits = (int)_allHits.size();
 
-  for (int iCluster = 0; iCluster < nClusters; ++iCluster) {
+  int iCluster = 0;
+
+  while (iCluster < nClusters) {
     ClusterExtended * clusterAR = _allClusters[iCluster];
     CaloHitExtendedVec hitvec = clusterAR->getCaloHitExtendedVec();
     int nHits = (int)hitvec.size();
-    int ifound(0);
+    int iforw(0);
+    int iback(0);
     CaloHitExtended * calohitAttachTo ;
     if (nHits > _nhit_minimal && nHits < _nhit_merge_forward) {
+      //      std::cout << "attempt to merge forward" << std::endl;
+      //      for (int i=1; i<nHits; ++i) {
+      //      	float vec[3];
+      //	for (int j=0;j<3;++j) 
+      //	  vec[j] = hitvec[i]->getCalorimeterHit()->getPosition()[j]-
+      //	    hitvec[0]->getCalorimeterHit()->getPosition()[j];
+      //	hitvec[i]->setDirVec(vec);
+      //      }
       int LowerBound = min(_nScanToMergeForward,nHits);
       for (int iCounterHit=0; iCounterHit < LowerBound; ++iCounterHit) {
 	CaloHitExtended * calohit = hitvec[nHits-iCounterHit-1];
 	int index = calohit->getIndex() + 1;
 	int type = calohit->getType();
 	float distance = 0.0;
+	//	std::cout << " " << index << " " << nTotHits << std::endl; 
 	while (distance < _distanceMergeForward[type] && index < nTotHits) {
 	  CaloHitExtended * calohitTo = _allHits[index];	
 	  distance = calohitTo->getGenericDistance() - calohit->getGenericDistance();
 	  ClusterExtended * cluster_dummy = calohitTo->getClusterExtended();
 	  CaloHitExtendedVec dummy = cluster_dummy->getCaloHitExtendedVec();
-	  int ndummy = (int)dummy.size();
 	  float yres = findResolutionParameter(calohit, calohitTo);
-	  bool considerHit = yres < _resolutionParameter[type]; 
-	  considerHit = considerHit && (ndummy > _nhit_minimal);
+	  bool considerHit = yres < 2.0*_resolutionParameter[type]; 
+	  //      int ndummy = (int)dummy.size();
+	  //	  considerHit = considerHit && (ndummy > _nhit_minimal);
 	  considerHit = considerHit && (cluster_dummy != clusterAR);
 	  if (considerHit) {
 	    calohitAttachTo = calohitTo;
 	    calohit->setCaloHitTo(calohitTo);
 	    calohit->setYresTo(yres);
-	    ifound = 1;
+	    iforw = 1;
 	  }
-	  if (ifound == 1)
+	  if (iforw == 1)
 	    break;
-	  ++index;
+	  index++;
 	}
-	if (ifound == 1)
+	if (iforw == 1)
 	  break;
       }
-      if (ifound == 1) {
-	std::cout << "Merging forward " << std::endl;
+      if (iforw == 0) {
+	for (int iCounterHit=0; iCounterHit < LowerBound; ++iCounterHit) {
+	  CaloHitExtended * calohit = hitvec[nHits-iCounterHit-1];
+	  int index = calohit->getIndex() - 1;
+	  int type = calohit->getType();
+	  float distance = 0.0;
+	  //	std::cout << " " << index << " " << nTotHits << std::endl; 
+	  while (distance < _stepTrackBack[type] && index >= 0) {
+	    CaloHitExtended * calohitTo = _allHits[index];	
+	    distance = - calohitTo->getGenericDistance() + calohit->getGenericDistance();
+	    ClusterExtended * cluster_dummy = calohitTo->getClusterExtended();
+	    CaloHitExtendedVec dummy = cluster_dummy->getCaloHitExtendedVec();
+	    float yres = findResolutionParameter(calohitTo, calohit);
+	    bool considerHit = yres < 2.0*_resolutionParameter[type]; 
+	    //      int ndummy = (int)dummy.size();
+	    //	  considerHit = considerHit && (ndummy > _nhit_minimal);
+	    considerHit = considerHit && (cluster_dummy != clusterAR);
+	    if (considerHit) {
+	      calohitAttachTo = calohitTo;
+	      calohit->setCaloHitTo(calohitTo);
+	      calohit->setYresTo(yres);
+	      iback = 1;
+	    }
+	    if (iback == 1)
+	      break;
+	    index--;
+	  }
+	  if (iback == 1)
+	    break;
+	}
+      }
+      if (iforw == 1) {
+	//	std::cout << "Merging forward " << std::endl;
 	ClusterExtended * clusterTo = calohitAttachTo->getClusterExtended();
 	CaloHitExtendedVec hitvecAttached = clusterTo->getCaloHitExtendedVec();
 	int nHitsAttached = (int)hitvecAttached.size();
@@ -753,7 +1041,31 @@ void TrackwiseClustering::mergeForward() {
 	}
       clusterTo->Clear();
       }
-    }    
+      if (iback == 1) {
+	//     std::cout << "Merging backward " << std::endl;
+	ClusterExtended * clusterTo = calohitAttachTo->getClusterExtended();
+	CaloHitExtendedVec hitvecAttached = clusterTo->getCaloHitExtendedVec();
+	int nHitsAttached = (int)hitvecAttached.size();
+	clusterAR->Clear();
+	for (int jHit = 0; jHit < nHitsAttached; ++jHit) {
+	  CaloHitExtended * hitToAttach = hitvecAttached[jHit];
+	  clusterAR->addCaloHitExtended( hitToAttach );
+	  hitToAttach->setClusterExtended( clusterAR );
+	}
+	for (int jHit =0; jHit < nHits; ++jHit) {
+	  CaloHitExtended * hitToAttach = hitvec[jHit];
+	  clusterAR->addCaloHitExtended( hitToAttach );
+	  hitToAttach->setClusterExtended( clusterAR );
+	}
+      clusterTo->Clear();
+      }
+      if (iforw == 0 && iback == 0) {
+	iCluster++;
+      }
+    }
+    else {
+      iCluster++;
+    }
   }
 
 
@@ -771,10 +1083,19 @@ void TrackwiseClustering::mergeLowMultiplicity() {
     int nHits = (int)hitvec.size(); 
     
     if (nHits > 0 && nHits < _nhit_minimal) {
+      //      std::cout << "attempt to merge forward" << std::endl;
+      //      for (int i=1; i<nHits; ++i) {
+      //	float vec[3];
+      //      	for (int j=0;j<3;++j) 
+      //      	  vec[j] = hitvec[i]->getCalorimeterHit()->getPosition()[j]-
+      //          hitvec[0]->getCalorimeterHit()->getPosition()[j];
+      //      	hitvec[i]->setDirVec(vec);
+      //      }
+      //  std::cout << "attempt to merge low multiplicity cluster " << iCluster << std::endl;
       CaloHitExtended * first = hitvec[0];
       CaloHitExtended * last = hitvec[nHits - 1];
       int index = last->getIndex() + 1;
-      float yres_min;
+      float yres_min = 1.0e+20;
       CaloHitExtended * hitToAttach;
       if (first->getCaloHitFrom() != NULL) {
 	yres_min = first->getYresFrom();
@@ -783,12 +1104,11 @@ void TrackwiseClustering::mergeLowMultiplicity() {
 	  hitToAttach->getClusterExtended();
 	if (cluster_dummy == clusterAR) {
 	  yres_min = 1.0e+20;
-	  std::cout << "already existing cluster" << std::endl;
 	}
       }
       else {
 	yres_min = 1.0e+20;
-      }
+      } 
       float distance = 0.0;
       int type = last->getType();
       int ifound = 0;
@@ -798,15 +1118,17 @@ void TrackwiseClustering::mergeLowMultiplicity() {
 	float yres =  findResolutionParameter(last, hitTo);
 	ClusterExtended * cluster_dummy = 
 	  hitTo->getClusterExtended();
-	if (yres < yres_min && clusterAR != cluster_dummy) {
+	if (yres < yres_min && clusterAR != cluster_dummy ){
 	  hitToAttach = hitTo;
 	  yres_min = yres;
 	  ifound = 1;
 	}
 	++index;
       }
-
+      
       if (yres_min < _resolutionToMerge) {
+	//	std::cout << "merging is done : cluster " << iCluster 
+	//                << " is merged " << std::endl;
 	if (ifound == 0) {
 	  ClusterExtended * clusterTo = hitToAttach->getClusterExtended();	  
 	  for (int jHit = 0; jHit < nHits; ++jHit){
@@ -826,21 +1148,146 @@ void TrackwiseClustering::mergeLowMultiplicity() {
 	    hh->setClusterExtended( clusterAR );
 	  }
 	  clusterTo->Clear();
-	  if (nDummy == 0)
-	    ++iCluster;
+	  if (nDummy == 0) // Just protection
+	    iCluster++;
 	}
       }
-      else {
-	
-	++iCluster;
-	
+      else {	
+	iCluster++;	
       }	
     }
     else {
-      ++iCluster;
+      iCluster++;
     }
-
   }
 
+
+}
+
+void TrackwiseClustering::MergeTrackSegments() {
+
+  int nClusters = int(_allClusters.size());
+  int iCluster = 0;
+
+  while (iCluster < nClusters) {
+    ClusterExtended * Cluster = _allClusters[iCluster];
+    float chi2ph = Cluster->getHelixChi2R();
+    float chi2z  = Cluster->getHelixChi2Z();
+    CaloHitExtendedVec hitVec = Cluster->getCaloHitExtendedVec();
+    int nHits = int(hitVec.size());
+    if (chi2ph < 3.0 && chi2z < 10.0 && nHits > 4) {
+      int ifound = 0;
+      int iforw = 0;
+      float xEnd[3];
+      float xBeg[3];
+      ClusterExtended * ClusterAttach; 
+      for (int j=0; j<3; ++j) {
+	xBeg[j] = Cluster->getLowEdge()[j];
+	xEnd[j] = Cluster->getUpEdge()[j];
+      }
+      for (int i=0; i<nClusters; ++i) {
+	ClusterExtended * ClusterTo = _allClusters[i];
+	CaloHitExtendedVec hitVecTo = ClusterTo->getCaloHitExtendedVec();
+	int nHitsTo = int(hitVecTo.size());
+	if (Cluster != ClusterTo && nHitsTo > 0) {
+	  //	  std::cout << "Condition 1 " << std::endl;
+	  float posCluster[3];
+	  float posClusterTo[3];
+	  for (int j=0;j<3;++j) {
+	    posCluster[j] = Cluster->getPosition()[j];
+	    posClusterTo[j] = ClusterTo->getPosition()[j];
+	  }
+	  float dist = DistanceBetweenPoints(posCluster,posClusterTo);
+	  if (dist < 500.) {
+	    //	    std::cout << "Condition 2 " << std::endl;
+	    for (int ihit=0;ihit<nHitsTo;++ihit) {
+	      float hpos[3];
+	      for (int j=0;j<3;++j) 
+		hpos[j] = hitVecTo[ihit]->getCalorimeterHit()->getPosition()[j];
+	      
+	      float distEnd = DistanceBetweenPoints(xEnd,hpos);
+	      float distBeg = DistanceBetweenPoints(xBeg,hpos);
+	      float distMin = distEnd ;
+	      iforw = 1;
+	      if (distBeg < distMin) {
+		iforw = 0;
+		distMin = distBeg;
+	      }
+	      float dd[3];
+	      HelixClass helix = Cluster->getHelix();
+	      float time = helix.getDistanceToPoint(hpos,dd);
+	      float dist1 = dd[2];
+	      float phi0 = helix.getPhi0();
+	      float d0 = helix.getD0();
+	      float z0 = helix.getZ0();
+	      float tanlambda = helix.getTanLambda();
+	      float omega = helix.getOmega();
+	      float B = 4.0;
+	      helix.Initialize_Canonical(phi0, -d0, z0, omega, 
+			      tanlambda, B);
+	      for (int j=0;j<3;++j) 
+		hpos[j] = hitVecTo[ihit]->getCalorimeterHit()->getPosition()[j];
+
+	      time = helix.getDistanceToPoint(hpos,dd);
+	      float dist2 = dd[2];
+	      float dist = fmin(dist1,dist2);
+	      //	      std::cout << "Check distances" << dist1 << " " << dist2 << " " << dist << std::endl;
+	      if (dist < 50.0 && distMin) {
+		ClusterAttach = ClusterTo;
+		ifound = 1;
+		break;
+	      }
+	      
+	      
+
+	    }
+	  }
+	}
+	if (ifound == 1)
+	  break;
+      }
+      if (ifound == 1) {
+	//	std::cout << "Merging Track Segment " << std::endl;
+	CaloHitExtendedVec hitVecTo = ClusterAttach->getCaloHitExtendedVec();
+	int nHitsTo = int(hitVecTo.size());
+	if (iforw == 1)
+	  for (int jHit = 0; jHit < nHitsTo; ++jHit) {
+	    CaloHitExtended * hh = hitVecTo[jHit];
+	    Cluster->addCaloHitExtended( hh );
+	    hh->setClusterExtended( Cluster );
+	  }
+	else {
+	  Cluster->Clear();
+	  for (int jHit = 0; jHit < nHitsTo; ++jHit) {
+	    CaloHitExtended * hh = hitVecTo[jHit];
+	    Cluster->addCaloHitExtended( hh );
+	    hh->setClusterExtended( Cluster );
+	  }
+	  for (int jHit = 0; jHit < nHits; ++jHit) {
+	    CaloHitExtended * hh = hitVec[jHit];
+	    Cluster->addCaloHitExtended( hh );
+	    hh->setClusterExtended( Cluster );
+	  }	  
+	}
+	ClusterAttach->Clear();
+	if (nHitsTo == 0) // Just protection
+	  iCluster++;
+	calculateProperties(Cluster);
+	//debug
+	/*
+	std::cout << "After merging " << Cluster->getHelixChi2R() << " " 
+		  << Cluster->getHelixChi2Z() << std::endl;
+	std::cout << "              " << ClusterAttach->getHelixChi2R() << " " 
+		  << ClusterAttach->getHelixChi2Z() << std::endl;
+	*/
+      }
+      else {
+	iCluster++;
+      }
+    }
+    else {
+      iCluster++;
+    }
+  }
 
 }

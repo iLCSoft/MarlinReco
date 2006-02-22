@@ -1,7 +1,18 @@
 *  
-* $Id: tkmkte.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tkmkte.F,v 1.4 2005-11-03 15:16:14 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
+* Revision 1.2  2005/07/20 17:46:38  aplin
+* The itedat bank has been added with read and write interface. Though
+* only the write function is used (tkstor). The read will have to be
+* done through a statement function.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -103,12 +114,12 @@ C.....check range
 C.....sort hits according to increasing r
       J=0
       DO I=1,N
-         CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IERR)
+         CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IHIT,IERR)
       IF (IERR.NE.0) THEN
          WRITE(6,*) 'TKMKTE: ERROR READING HIT.'
-ccc         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
-ccc     >        ' of ',TKNUMB('HIT',LIST2(I))
-ccc         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
+         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
+     >        ' of ',TKNUMB('HIT',LIST2(I))
+         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
       ELSE
          J=J+1
          RLIST(J)=SQRT(HIT(1)**2+HIT(2)**2)
@@ -159,9 +170,10 @@ C.....fill all associated hits into local TE structure for TK2FIT
       DO I=1,N
 
 C.......read hit
-        CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IERR)
+        CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IHIT,IERR)
 
 C.......calculate position and covariance matrix for desired detector type
+
 
         IF (IHIT(9).EQ.3) THEN
            
@@ -315,7 +327,6 @@ C----------------------
            IF (TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: fit failed. retry.'
            GOTO 100
         END IF
-           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
         IF (TKSTDBG.GT.0) THEN
            WRITE(6,*) 'TKMKTE: fit failed. no retry.'
 ccc           WRITE(6,*) '  track properties of last hit: '

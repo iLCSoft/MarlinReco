@@ -1,7 +1,10 @@
 *  
-* $Id: my_link.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: my_link.inc,v 1.2 2006-02-08 15:03:28 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -13,7 +16,8 @@
 *
 *  
       INTEGER NMAXLNK
-      PARAMETER(NMAXLNK=25000)
+*      PARAMETER(NMAXLNK=25000)
+      PARAMETER(NMAXLNK=50000)
       INTEGER NLNK
       REAL RLNK
       COMMON/MY_LINK/NLNK,RLNK(NMAXLNK,16)

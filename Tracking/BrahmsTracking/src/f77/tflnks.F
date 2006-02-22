@@ -1,7 +1,13 @@
 *  
-* $Id: tflnks.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tflnks.F,v 1.3 2006-02-22 12:19:21 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -59,8 +65,8 @@ C
 #include "include/alcons.inc"
 #include "include/tpco.inc"
 #include "include/tchajj.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/tpgeop.inc"
 #include "include/my_ttrc.inc"
 #include "include/my_tcha.inc"
@@ -88,8 +94,13 @@ c(KH) PARAMETER(MPT=200)
 C-----------------------------------------------------------------------
       INTEGER MCAND
       REAL EPS
-      PARAMETER(MCAND=900,EPS=0.0000001)
+C changed MCAND=900 to MCAND=1800 because of released energy cut in Mokka 5.04
+C      PARAMETER(MCAND=900,EPS=0.0000001)
+      PARAMETER(MCAND=1800,EPS=0.0000001)
 C(KH) INTEGER LILLY(LTPDRO)
+
+C changed LILLY(500) to LILLY(2000) because of released energy cut in Mokka 5.04
+C      INTEGER LILLY(500)
       INTEGER LILLY(500)
       REAL VAL(5),ERR(15)
 c GAB:
@@ -187,13 +198,13 @@ c(kh)   IOUT1 = 2**(LTPDRO-96)
 c(kh)   IOUT2 = 2**(LTPDRO-96-1)
 c(kh)   IOUT3 = 2**(LTPDRO-96-2)
 c(kh)   IOUT4 = 2**(LTPDRO-96-3)
-        IOUT1 = 2**(LTPDRO-(LTPDRO/32)*32)
-        IOUT2 = 2**(LTPDRO-(LTPDRO/32)*32-1)
-        IOUT3 = 2**(LTPDRO-(LTPDRO/32)*32-2)
-        IOUT4 = 2**(LTPDRO-(LTPDRO/32)*32-3)
+        IOUT1 = 2**(NRTPC-(NRTPC/32)*32)
+        IOUT2 = 2**(NRTPC-(NRTPC/32)*32-1)
+        IOUT3 = 2**(NRTPC-(NRTPC/32)*32-2)
+        IOUT4 = 2**(NRTPC-(NRTPC/32)*32-3)
         IF15  = 2**15 - 1
 c(kh)   IL06  = (2**7-1) * (2**(LTPDRO-96-6))
-        IL06  = (2**7-1) * (2**(LTPDRO-(LTPDRO/32)*32-6))
+        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
 
         FLOAT2=2.D0**32
         FLOAT3=2.D0**64
@@ -285,7 +296,7 @@ c      DO 20 I=1,LROWS(KTCHA)
 
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
 
         NHITS = IAND(ITPTES,IOUT1)/IOUT1 +IAND(ITPTES,IOUT2)/IOUT2
      1         +IAND(ITPTES,IOUT3)/IOUT3 +IAND(ITPTES,IOUT4)/IOUT4
@@ -483,6 +494,10 @@ C          NQU = ITABL(KTCHA,ITOP,JTCHNC)
           DO 36 IPT = 1,NQL
 C GAB:
 C            LILLY(IPT) = IW(LIST(IBOT)+IPT)
+
+C           WRITE(0,*) "LILLY(NQL+IPT)LILLY = ", (NQL+IPT)
+C           WRITE(0,*) "IBOT = " , IBOT
+C           WRITE(0,*) "MY_JTCHOF(IBOT)+IPT = " , MY_JTCHOF(IBOT)+IPT
             LILLY(IPT) = MY_TCTC(MY_JTCHOF(IBOT)+IPT)
    36     CONTINUE
 
@@ -1271,7 +1286,7 @@ c        IF (ABS(RTABL(KTCHA,I,JTCHIR)).GT.OCUT)      GO TO 410
         IF (ABS(MY_JTCHIR(I)).GT.OCUT)      GO TO 410
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
         ISEL  = 0
         ISEL  = IAND(ITPTES,IF15)
         IF (ISEL.NE.0)                               GO TO 410
@@ -1303,7 +1318,7 @@ c        IF (ABS(RTABL(KTCHA,I,JTCHIR)).GT.OCUT)       GO TO 420
         IF (ABS(MY_JTCHIR(I)).GT.OCUT)       GO TO 420
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,LTPDRO/32+1)
+        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
         ISEL  = 0
         ISEL  = IAND(ITPTES,IL06)
         IF (ISEL.NE.0)                                GO TO 420

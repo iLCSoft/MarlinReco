@@ -1,7 +1,10 @@
 *  
-* $Id: tpcdigi.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcdigi.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.2  2005/06/20 18:49:46  aplin
 * change tpc geometery so that it is read from  same header file as cpp i.e. marlin_tpcgeom.h
 *
@@ -33,8 +36,8 @@ c****************************************************************************
 #include "include/fndparms.inc"
 #include "include/tpcdims.inc"
 #include "include/alcons.inc"
-c#include "include/tpgeom.inc"
-#include "marlin_tpcgeom.h"
+#include "include/tpgeom.inc"
+c#include "marlin_tpcgeom.h"
 #include "include/detnums.inc"
 c#include "include/tpco.inc"
 #include "include/tpcres.inc"
@@ -95,10 +98,15 @@ CCC set TPC_OCC to 0.01 normally set in cardsfile
         IER=1
         RETURN
        ENDIF
-       IF(LTPDRO.NE.NRTPC)THEN
-          WRITE(*,*)' TPCDIGI: Inconsistent number of TPC padrows'
+       IF(NRTPC.GE.LTPDRO )THEN
+          WRITE(*,*)'TPCDIGI: Inconsistent number of TPC padrows'
+          WRITE(*,*)'TPCDIGI: NRTPC greater than LTPDRO'
+          WRITE(*,*)'TPCDIGI: Increase LTPDRO and run gmake clean bin'
+          WRITE(*,*)'TPCDIGI: LTPDRO = ' , LTPDRO
+          WRITE(*,*)'TPCDIGI: Presently LTPDRO limited to a maximum 
+     +         value of 224'
           IER=2
-          RETURN
+          STOP
        ENDIF
        PIX_R=TPCPADR
        PIX_RP2=PIX_RP**2
@@ -208,7 +216,7 @@ c            try = writetpccpp(TPZ,7,IHIT1)
       ENDDO
 
 c loop over all rows here
-      DO I_ROW = 1,LTPDRO
+      DO I_ROW = 1,NRTPC
 c get all hits for this row
 	N_ROW = 0
 	CALL VZERO (TPCIHIT,NTPMAX)

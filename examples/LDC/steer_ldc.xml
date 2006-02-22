@@ -23,7 +23,7 @@
   <processor name="MyTrackwiseClustering"/>
 
   <processor name="MyWolf"/>
-  <!--processor name="MyGenericViewer"/-->
+  <processor name="MyGenericViewer"/>
   <!--processor name="MyLCIOOutputProcessor"/-->
 
  </execute>

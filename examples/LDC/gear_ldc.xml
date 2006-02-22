@@ -21,6 +21,7 @@
 	<parameter name="tpcPixRP" type="double"> 1.0  </parameter>
 	<parameter name="tpcPixZ" type="double"> 1.4  </parameter>
 	<parameter name="tpcIonPotential" type="double"> 0.00000003  </parameter>
+	<parameter name="BField" type="double"> 4.0  </parameter>
 
      </detector>
 

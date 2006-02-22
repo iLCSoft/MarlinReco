@@ -169,12 +169,15 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	}
     }
 
+    // debug
+    /*
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "TrackCheater : " <<  nonAssignedHits 
 	      << " hits non pointing to MCParticle ; " 
 	      << assignedToNeutrals 
 	      << " hits assigned to neutrals " << std::endl;
+    */
 
     LCCollectionVec * trkcol = new LCCollectionVec(LCIO::TRACK);
     LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
@@ -188,11 +191,16 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	HelixClass * helix = _mcp_helix[mcp];
 	TrackerHitVec hitvec = track->getTrackerHits();
 	int nhits = (int)hitvec.size();
+
+	// debug
+	/*
 	std::cout << "Track " << itk << " Q = " << mcp->getCharge() 
 		  << " ; Px, Py, Pz = " 
 		  << "  " << mcp->getMomentum()[0]
 		  << "  " << mcp->getMomentum()[1]
 		  << "  " << mcp->getMomentum()[2] << std::endl;
+	*/
+
 	if (nhits > _minimal_hits) {
 	  nincl += nhits ;	  
 	  float Pos[3];
@@ -222,8 +230,13 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	    if (Dist[2] < _hitToHelixInFit)
 	      nHitsInFit++;
 	  }
+
+	  // debug
+	  /*
 	  std::cout << " # hits = " << nhits << " ; used in fit = "
 		    << nHitsInFit << std::endl;
+	  */
+
 	  if (_fitTrueTrack > 0 && nHitsInFit > 3) {
 	    float * xh = new float[nHitsInFit];
 	    float * yh = new float[nHitsInFit];
@@ -253,7 +266,8 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	    float distmax;
 	    shapes->FitHelix(500, 0, 1, par, dpar, chi2, distmax);
 	    if (chi2 < _chi2Cut ) {
-	      std::cout << "Successfull fit " << std::endl;
+	      //debug
+	      //std::cout << "Successfull fit " << std::endl;
 	      HelixClass * fittedHelix = new HelixClass();
 	      float x0 = par[0];
 	      float y0 = par[1];
@@ -263,12 +277,16 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	      fittedHelix->Initialize_BZ(x0,y0,r0,bz,phi0,
 					 _bField,Mom[2],
 					 Pos[2]);
+	      //debug
+	      /*
 	      std::cout << "Fitted track momentum : "
 			<< " Px, Py,Pz = "
 			<< " " << fittedHelix->getMomentum()[0]
 			<< " " << fittedHelix->getMomentum()[1]
 			<< " " << fittedHelix->getMomentum()[2]
 			<< std::endl;
+	      */
+
 	      track->setD0(fittedHelix->getD0());
 	      track->setZ0(fittedHelix->getZ0());
 	      track->setPhi(fittedHelix->getPhi0());
@@ -300,8 +318,13 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	  }
 	  catch(DataNotAvailableException &e){}
 	  trkcol->addElement( track );
+
+	  // debug
+	  /*
 	  std::cout << " D0 = " << track->getD0()
 		    << " Z0 = " << track->getZ0() << std::endl;
+	  */
+
 	  LCRelationImpl * rel = new LCRelationImpl(track,particle,(float)1.0);
 	  relationcol->addElement( rel );	  
 	}
@@ -312,11 +335,13 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	}
 	delete helix;
 	itk++;
-	std::cout << std::endl;
+
+	// debug
+	//std::cout << std::endl;
     }
 
-
-    std::cout << std::endl;
+    // debug
+    //std::cout << std::endl;
 
     evt->addCollection(trkcol,_trueTracksCollection.c_str());
     evt->addCollection(relationcol,"TrueTrackToMCP");

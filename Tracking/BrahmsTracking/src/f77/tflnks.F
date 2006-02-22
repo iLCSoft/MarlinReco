@@ -1,7 +1,10 @@
 *  
-* $Id: tflnks.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
+* $Id: tflnks.F,v 1.3 2006-02-22 12:19:21 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -91,8 +94,13 @@ c(KH) PARAMETER(MPT=200)
 C-----------------------------------------------------------------------
       INTEGER MCAND
       REAL EPS
-      PARAMETER(MCAND=900,EPS=0.0000001)
+C changed MCAND=900 to MCAND=1800 because of released energy cut in Mokka 5.04
+C      PARAMETER(MCAND=900,EPS=0.0000001)
+      PARAMETER(MCAND=1800,EPS=0.0000001)
 C(KH) INTEGER LILLY(LTPDRO)
+
+C changed LILLY(500) to LILLY(2000) because of released energy cut in Mokka 5.04
+C      INTEGER LILLY(500)
       INTEGER LILLY(500)
       REAL VAL(5),ERR(15)
 c GAB:
@@ -486,6 +494,10 @@ C          NQU = ITABL(KTCHA,ITOP,JTCHNC)
           DO 36 IPT = 1,NQL
 C GAB:
 C            LILLY(IPT) = IW(LIST(IBOT)+IPT)
+
+C           WRITE(0,*) "LILLY(NQL+IPT)LILLY = ", (NQL+IPT)
+C           WRITE(0,*) "IBOT = " , IBOT
+C           WRITE(0,*) "MY_JTCHOF(IBOT)+IPT = " , MY_JTCHOF(IBOT)+IPT
             LILLY(IPT) = MY_TCTC(MY_JTCHOF(IBOT)+IPT)
    36     CONTINUE
 

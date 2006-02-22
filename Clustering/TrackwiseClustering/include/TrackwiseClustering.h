@@ -44,16 +44,18 @@ using namespace marlin ;
  *  DoMerging, ResolutionToMerge, WeightForResolution, WeightForDistance. <br>
  *  The meaning of these parameters as well as the overall <br>
  *  clustering procedure are described in <br> 
- *  <a href="http://www.desy.de/~rasp/PFlowInMarlin.ps.gz">
- *     http://www.desy.de/~rasp/PFlowInMarlin.ps.gz</a> <br>
+ *  <a href="http://www.desy.de/~rasp/Raspereza_pfa.pdf">
+ *     http://www.desy.de/~rasp/Raspereza_pfa.pdf</a> <br>
  *  Please note, that the parameters steering clustering are <br>
  *  optimised for the TESLA detector on hadronic events <br>
  *  at Z pole (sqrts=91.2 GeV). <br>
  *  Printout of information on reconstructed clusters is <br>
  *  activated if processor parameter DisplayClusterInfo is set to 1. <br>
  *  @author A. Raspereza (DESY) <br>
- *  @version $Id: TrackwiseClustering.h,v 1.4 2005-08-07 16:22:39 gaede Exp $ <br>
+ *  @version $Id: TrackwiseClustering.h,v 1.5 2006-02-22 12:19:21 owendt Exp $ <br>
  */
+
+
 class TrackwiseClustering : public Processor {
   
  public:
@@ -109,6 +111,7 @@ class TrackwiseClustering : public Processor {
   int _typeOfGenericDistance;
   int _use_track;
   int _doMerging;
+  int _doMergingForward;
   int _displayClusters;
   int _NDefineSP;
   int _nScanToMergeForward;
@@ -169,10 +172,12 @@ class TrackwiseClustering : public Processor {
   float _xmax_in_distance;
   float _xmin_in_distance;
 
+  float _bField;
+
 
   void initialiseEvent( LCEvent * evt );
   float findResolutionParameter(CaloHitExtended * fromHit, CaloHitExtended * toHit);
-  float CalculateGenericDistance(CaloHitExtended * calohit, int itype); 
+  void CalculateGenericDistance(CaloHitExtended * calohit, float * dist); 
   void BubbleSort(CaloHitExtendedVec & input);  
   float DistanceBetweenPoints(float * x1, float * x2);
   void DisplayClusters(ClusterExtendedVec clusterVec);
@@ -181,6 +186,9 @@ class TrackwiseClustering : public Processor {
   void CreateClusterCollection(LCEvent * evt, ClusterExtendedVec clusterVec);
   void mergeForward();
   void mergeLowMultiplicity();
+  void calculateProperties(ClusterExtended * Cl);
+  void propertiesForAll();
+  void MergeTrackSegments(); 
   void CleanUp();
 
 

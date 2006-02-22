@@ -21,8 +21,10 @@
 // GEAR include files
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
+#include <gear/TPCParameters.h>
 #include <gear/CalorimeterParameters.h>
 
+#include "MarlinCED.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -97,10 +99,10 @@ Wolf::Wolf() : Processor("Wolf") {
 			      _mergeClusters,
 			      (int)1); 
 
-  registerProcessorParameter( "BField",
-			      "Magnetic field",
-			      _bField,
-			      (float)4.0);
+  registerProcessorParameter( "NHitsInFit",
+			      "Hits used in extrapolation",
+			      _nHitsInFit,
+			      (int)40);
 
 }
 
@@ -108,6 +110,9 @@ void Wolf::init() {
 
   _nRun = -1;
   _nEvt = 0;
+
+  MarlinCED::init(this) ;
+
 
 }
 
@@ -118,6 +123,11 @@ void Wolf::processRunHeader( LCRunHeader* run) {
 } 
 
 void Wolf::processEvent( LCEvent * evt ) { 
+
+  MarlinCED::newEvent( this, 0 ) ;
+
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  _bField = float(gearTPC.getDoubleVal("BField"));
 
   initialiseEvent( evt );  
   ClusterTrackMatching();
@@ -177,7 +187,8 @@ void Wolf::initialiseEvent( LCEvent * evt ) {
   }
   catch( DataNotAvailableException &e){}
 
-
+  std::cout << "End Of Wolf " << std::endl;
+  std::cout << std::endl;
 }
 
 void Wolf::createPartCollection( LCEvent * evt) {
@@ -191,21 +202,12 @@ void Wolf::createPartCollection( LCEvent * evt) {
     for (int i=0; i < nTracks; ++i) {
       TrackExtended * trackAR = _trackVec[i];
       Track * track = trackAR->getTrack();
-      float d0, z0, omega, phi0, tanlambda;
-      if (_trackFitter == 0 ) {
-	d0 = track->getD0();
-	z0 = track->getZ0();
-	omega = track->getOmega();
-	phi0  = track->getPhi();
-	tanlambda = track->getTanLambda();
-      }
-      else {
-	d0 = trackAR->getD0();
-	z0 = trackAR->getZ0();
-	omega = trackAR->getOmega();
-	phi0  = trackAR->getPhi();
-	tanlambda = trackAR->getTanLambda();	
-      }
+      float d0, z0, omega, phi0, tanlambda;      
+      d0 = track->getD0();
+      z0 = track->getZ0();
+      omega = track->getOmega();
+      phi0  = track->getPhi();
+      tanlambda = track->getTanLambda();
 
       if (fabs(d0) < _rPhiCut && fabs(z0) < _zCut) {      
 	HelixClass * helix = new HelixClass();
@@ -317,13 +319,19 @@ void  Wolf::defineIntersection( TrackExtended * track) {
   float seed[3];
 
   float phi0, z0, d0, omega, tanlambda, signPz;
+  phi0  = track->getTrack()->getPhi();
+  d0    = track->getTrack()->getD0();
+  omega = track->getTrack()->getOmega();
+  z0    = track->getTrack()->getZ0();
+  tanlambda = track->getTrack()->getTanLambda();
+  helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);  
+
+  float pX = helix->getMomentum()[0];
+  float pY = helix->getMomentum()[1];
+  float pZ = helix->getMomentum()[2];
+
 
   if (_trackFitter == 0) {
-    phi0  = track->getTrack()->getPhi();
-    d0    = track->getTrack()->getD0();
-    omega = track->getTrack()->getOmega();
-    z0    = track->getTrack()->getZ0();
-    tanlambda = track->getTrack()->getTanLambda();
     helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);  
     ref[0] = d0*sin(phi0);
     ref[1] = -d0*cos(phi0);
@@ -332,21 +340,14 @@ void  Wolf::defineIntersection( TrackExtended * track) {
   }
   else {
     int nhits = (int)hitvec.size();
-    float * xh = new float[nhits];
-    float * yh = new float[nhits];
-    float * zh = new float[nhits];
-    float * ah = new float[nhits];    
     float zmin = 1.0e+10;
     float zmax = -1.0e+10;
     for (int ihit=0; ihit < nhits; ++ihit) {
-      xh[ihit] = (float)hitvec[ihit]->getPosition()[0];
-      yh[ihit] = (float)hitvec[ihit]->getPosition()[1];
-      zh[ihit] = (float)hitvec[ihit]->getPosition()[2];
-      ah[ihit] = 0.0;
-      if (zh[ihit] < zmin) 
-	zmin = zh[ihit];
-      if (zh[ihit] > zmax)
-	zmax = zh[ihit];
+      float zz = float(hitvec[ihit]->getPosition()[2]);
+      if (zz < zmin) 
+	zmin = zz;
+      if (zz > zmax)
+	zmax = zz;
     }
     float zBegin, zEnd;
     if (fabs(zmin)<fabs(zmax)) {
@@ -357,8 +358,39 @@ void  Wolf::defineIntersection( TrackExtended * track) {
       zBegin = zmax;
       zEnd   = zmin;
     }
+    int nhitsFit;
+    if (nhits > _nHitsInFit) {      
+      for (int iz = 0 ; iz < nhits-1; iz++)
+	for (int jz = 0; jz < nhits-iz-1; jz++)
+	{
+	  TrackerHit * one = hitvec[jz];
+	  TrackerHit * two = hitvec[jz+1];
+	  float dist1 = fabs(float(one->getPosition()[2])-zEnd);
+	  float dist2 = fabs(float(two->getPosition()[2])-zEnd);
+	  if(dist1 > dist2)
+	    {
+	      TrackerHit * Temp = hitvec[jz];
+	      hitvec[jz] = hitvec[jz+1];
+	      hitvec[jz+1] = Temp;
+	    }
+	}
+      nhitsFit = _nHitsInFit;
+    }
+    else {
+      nhitsFit = nhits;
+    }
+    float * xh = new float[nhitsFit];
+    float * yh = new float[nhitsFit];
+    float * zh = new float[nhitsFit];
+    float * ah = new float[nhitsFit]; 
+    for (int i=0; i<nhitsFit; ++i) {
+      ah[i] = 0;
+      xh[i] = float(hitvec[i]->getPosition()[0]);
+      yh[i] = float(hitvec[i]->getPosition()[1]);
+      zh[i] = float(hitvec[i]->getPosition()[2]);
+    }      
     signPz = zEnd - zBegin;		  
-    ClusterShapes * shapes = new ClusterShapes(nhits,ah,xh,yh,zh);
+    ClusterShapes * shapes = new ClusterShapes(nhitsFit,ah,xh,yh,zh);
     float par[5];
     float dpar[5];
     float chi2;
@@ -371,12 +403,21 @@ void  Wolf::defineIntersection( TrackExtended * track) {
     float phiH = par[4]; 
     helix->Initialize_BZ(x0, y0, r0, 
 			 bz, phiH, _bField,signPz,
-			 zBegin);        
-    d0    = helix->getD0();
-    phi0  = helix->getPhi0();
-    z0    = helix->getZ0();
-    omega = helix->getOmega();
-    tanlambda = helix->getTanLambda();
+			 zBegin);
+//     std::cout << std::endl;
+//     std::cout << chi2 << std::endl;
+//     std::cout << zBegin << " " << zEnd << std::endl;
+//     std::cout << pX << " " << pY << " " << pZ << std::endl;
+//     std::cout << d0 << " " << phi0 << " " << z0 << " " 
+// 	      << omega << " " << tanlambda << std::endl;
+//     d0    = helix->getD0();
+//     phi0  = helix->getPhi0();
+//     z0    = helix->getZ0();
+//     omega = helix->getOmega();
+//     tanlambda = helix->getTanLambda();
+//     std::cout << d0 << " " << phi0 << " " << z0 << " " 
+// 	      << omega << " " << tanlambda << std::endl;
+
     ref[0] = d0*sin(phi0);
     ref[1] = -d0*cos(phi0);
     ref[2] = z0;
@@ -438,6 +479,8 @@ void  Wolf::defineIntersection( TrackExtended * track) {
 
   delete helix;
   track->setSeedPosition(seed);
+  ced_hit(seed[0],seed[1],seed[2],0,4,0xFFFFFF);
+
 }
 
 
@@ -500,14 +543,16 @@ void Wolf::MergeClustersToTracks() {
 
   int nTracks = (int)_trackVec.size();
   int nClusters = (int)_clusterVec.size();
+  int iTrk = 0;
 
-  for (int iTrk = 0; iTrk < nTracks; ++iTrk) {
+  while (iTrk < nTracks) {
+    //    std::cout << iTrk << std::endl;
     TrackExtended * track = _trackVec[iTrk];    
-    float d0 = track->getD0();
-    float z0 = track->getZ0();
-    float phi0 = track->getPhi();
-    float omega = track->getOmega();
-    float tanlambda = track->getTanLambda();
+    float d0 = track->getTrack()->getD0();
+    float z0 = track->getTrack()->getZ0();
+    float phi0 = track->getTrack()->getPhi();
+    float omega = track->getTrack()->getOmega();
+    float tanlambda = track->getTrack()->getTanLambda();
     HelixClass * helix = new HelixClass();
     helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);;
     float totMom = 0.0;
@@ -520,60 +565,90 @@ void Wolf::MergeClustersToTracks() {
       float clstEnergy = 0.0;
       ClusterExtended * clusterExt = NULL;
       Cluster * clusterIn = NULL; 
+      float rIn = 0.0;
+      float xCentre[3] = {0.0,0.0,0.0};
       if (nClst > 0) {
-	clusterExt = clusterVec[0];
-	clusterIn = clusterExt->getCluster();
-	clstEnergy = clusterIn->getEnergy();
+	for (int iCLS = 0; iCLS<nClst; ++iCLS) {
+	  clusterExt = clusterVec[iCLS];
+	  clusterIn = clusterExt->getCluster();
+	  float energ = fmax(1.0e-20,clusterIn->getEnergy());
+	  clstEnergy += energ;
+	  for (int comp=0;comp<3;++comp)
+	    xCentre[comp] += clusterIn->getPosition()[comp]*clusterIn->getEnergy();
+	}
+	for (int comp=0;comp<3;++comp) {
+	  xCentre[comp] = xCentre[comp]/clstEnergy;
+	  rIn = rIn + xCentre[comp]*xCentre[comp];
+	}
+	rIn = sqrt(rIn);
       }
-      float pMinusE = totMom - clstEnergy;
-      if (pMinusE > 3.0*_hcalReso*sqrt(totMom)) {
+      float pMinusE = totMom - clstEnergy;      
+      if (pMinusE > 0.0) {
+	ClusterExtended * clusterToAttach = NULL;
+	float minDist = 1.0e+20;
 	for (int iCluster = 0; iCluster < nClusters; iCluster++) {	  
 	  ClusterExtended * clusterAR = _clusterVec[iCluster]; 
 	    TrackExtendedVec trkvec = clusterAR->getTrackExtendedVec();
 	  int nTrk = (int)trkvec.size();
-	  if (nTrk == 0 && clusterAR != clusterExt) {
-	    Cluster * clusterOut = clusterAR->getCluster();
-	    
-	    float xPoint[3];
-	    float xDist[3];
-	    float xClst[3];
-	    float rOut = 0;
-	    float rIn = 0;
-	    for (int j=0; j<3; ++j) {
-	      xPoint[j] = (float)clusterOut->getPosition()[j];
-	      if (clusterIn != NULL) {
-		xClst[j] = (float)clusterIn->getPosition()[j];
+	  if (nTrk == 0 ) {
+	    int noExist = 1;
+	    for (int iCL=0;iCL<nClst;++iCL) {
+	      if (clusterVec[iCL] == clusterAR) {
+		noExist = 0;
+		break;
 	      }
-	      else {
-		xClst[j] = 0.0;
-	      }
-	      rOut += xPoint[j]*xPoint[j];
-	      rIn  += xClst[j]*xClst[j];
 	    }
-	    rIn = sqrt(rIn);
-	    rOut = sqrt(rOut);
-
-	    float Time = helix->getDistanceToPoint(xPoint,xDist);
-	    // if (xDist[2] < 500.)
-	    //	      std::cout << "Here we are " << iTrk 
-	    //		<< " " << totMom   
-	    //		<< " " << clstEnergy 
-	    //		<< " " << clusterOut->getEnergy() 
-	    //		<< " " << xDist[2] 
-	    //		<< " " << Time << std::endl;
-	    float ee = clusterOut->getEnergy() + clstEnergy;
-	    bool match = (ee - totMom) < 1.5*_hcalReso*sqrt(totMom);
-	    match = match && (xDist[2] < _distMergeCut);
-	    match = match && (Time > 0.0);
-	    match = match && (rOut - rIn > 0.0);
-	    if (match) {
-	      // std::cout << "Merging happened" << std::endl; 
-	      track->addCluster(clusterAR);
-	      clusterAR->addTrackExtended(track);
+	    if (noExist) {
+	      Cluster * clusterOut = clusterAR->getCluster();	    
+	      float xPoint[3];
+	      float xDist[3];
+	      float rOut = 0;
+	      for (int j=0; j<3; ++j) {
+		xPoint[j] = (float)clusterOut->getPosition()[j];
+		rOut += xPoint[j]*xPoint[j];
+	      }
+	      rOut = sqrt(rOut);
+	      float Time = helix->getDistanceToPoint(xPoint,xDist);
+// 	      if (xDist[2] < 500.)
+// 		std::cout << "Here we are : Track = " << iTrk 
+// 			  << " Mom =  " << totMom   
+// 			  << " Object energy = " << clstEnergy 
+// 			  << " Cluster energy = " << clusterOut->getEnergy() 
+// 			  << " Distance = " << xDist[2] 
+// 			  << " Merge dist = " << _distMergeCut
+// 			  << " Rin =  " << rIn
+// 			  << " Rout = " << rOut
+// 			  << " Time = " << Time << std::endl;
+	      float ee = clusterOut->getEnergy() + clstEnergy;
+	      bool match = (ee - totMom) < 3.0*_hcalReso*sqrt(totMom);
+	      match = match && (xDist[2] < _distMergeCut);
+	      match = match && (Time > 0.0);
+	      match = match && (rOut - rIn > 0.0);	    
+	      if (match) {	
+		if (xDist[2] < minDist) {
+// 		  std::cout << "Found" << std::endl;
+		  clusterToAttach = clusterAR;
+		  minDist = xDist[2];
+		}
+	      }
 	    }
 	  }
 	}
+	if (clusterToAttach != NULL) {
+	  clusterToAttach->addTrackExtended(track);
+	  track->addCluster(clusterToAttach);
+// 	  std::cout << "Attached " << std::endl;
+	}
+	else{
+	  iTrk++;
+	}
       }
+      else {
+	iTrk++;
+      }
+    }
+    else {
+      iTrk++;
     }
     delete helix;
   }

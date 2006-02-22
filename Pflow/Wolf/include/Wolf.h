@@ -1,3 +1,4 @@
+
 #ifndef RECOPARTICLESAR_H
 #define RECOPARTICLESAR_H 1
 
@@ -86,10 +87,10 @@ using namespace marlin ;
  *      centre-of-gravity to helix for the cluster-to-track merging procedure <br>
  *      applied when Ptrk - Ecluster > 3.0*HcalResolution*sqrt(Ptrk) <br>
  *    A more detailed description of the algorithm can be found at <br>
- *    <a href="http://www.desy.de/~rasp/PFlowInMarlin.ps.gz">
- *     http://www.desy.de/~rasp/PFlowInMarlin.ps.gz</a> <br>
+ *    <a href="http://www.desy.de/~rasp/Raspereza_pfa.pdf">
+ *     http://www.desy.de/~rasp/Raspereza_pfa.pdf</a> <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $Id: Wolf.h,v 1.5 2005-08-07 16:22:39 gaede Exp $<br>
+ *    @version $Id: Wolf.h,v 1.6 2006-02-22 12:19:21 owendt Exp $<br>
  */
 class Wolf : public Processor {
   
@@ -141,6 +142,7 @@ class Wolf : public Processor {
   float _hcalReso;
   float _distMergeCut;
   int _mergeClusters;
+  int _nHitsInFit;
 
   ClusterExtendedVec _clusterVec;
   TrackExtendedVec   _trackVec;

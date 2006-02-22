@@ -1,7 +1,10 @@
-#ifndef MyProcessor_h
-#define MyProcessor_h 1
+#ifndef MokkaCaloDigi1_h
+#define MokkaCaloDigi1_h 1
 
 #include "marlin/Processor.h"
+#include "EVENT/SimCalorimeterHit.h"
+#include "IMPL/CalorimeterHitImpl.h"
+#include "IMPL/LCCollectionVec.h"
 #include "lcio.h"
 #include <string>
 
@@ -27,7 +30,8 @@ using namespace marlin ;
  *  NewECALCollName and NewHCALCollName. <br>
  *  Processor performs merging of neighboring virtual cells <br>
  *  in calorimeters into a larger cells. <br>
- *  Transverse cell size (in mm) is specified with processor <br>
+ *  Processor is meant to perform digitization of <br>
+ *  calorimeter hits for an arbitrary detector geometry <br>
  *  parameter NewHCALCellSize and should be multiple of 10 <br>
  *  as virtual cell size used in Mokka is 10x10 mm2. <br>
  *  Conversion factors for ECAL and HCAL <br>
@@ -56,8 +60,15 @@ using namespace marlin ;
  *  The name of this relation collection is specified <br>
  *  via processor parameter RelationOutputCollection. <br> 
  *  @authors A. Raspereza and P. Krstonosic (DESY) <br>
- *  @version $Id: MokkaCaloDigi.h,v 1.3 2005-08-07 16:22:39 gaede Exp $ <br>
+ *  @version $Id: MokkaCaloDigi.h,v 1.4 2006-02-22 12:19:21 owendt Exp $ <br>
  */
+
+struct MyHit {
+  CalorimeterHitImpl * hit;
+  std::vector<SimCalorimeterHit*> simHits;
+};
+
+
 class MokkaCaloDigi : public Processor {
   
  public:
@@ -87,19 +98,20 @@ class MokkaCaloDigi : public Processor {
   /** Called after data processing for clean up.
    */
   virtual void end() ;
-  
-  
+
+
+  MyHit * ProcessHitInBarrel(SimCalorimeterHit * hit);
+  MyHit * ProcessHitInEndcap(SimCalorimeterHit * hit);
+
  protected:
 
-  /** Input collection name.
-   */
   std::vector<std::string>  _ecalCollections  ;
   std::vector<std::string>  _hcalCollections  ;
-  std:: string _newCollNameHCAL;
-  std:: string _newCollNameECAL;
+  std::string _newCollNameHCAL;
+  std::string _newCollNameECAL;
+  std::string _relationCollName;
   int _nRun ;
   int _nEvt ;
-  int cell_size;
 
   float _thresholdEcal;
   float _thresholdHcal;
@@ -107,12 +119,41 @@ class MokkaCaloDigi : public Processor {
   int _digitalEcal;
   int _digitalHcal;
 
-
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<float> _calibrCoeffHcal;
-
   std::vector<int> _ecalLayers;
   std::vector<int> _hcalLayers;
+  std::vector<float> _calibrCoeffEcal;
+  std::vector<float> _calibrCoeffHcal;
+  float * _endBarrelChamberLength;
+  float * _barrelLateralWidth;
+  float * _barrelOffsetMaxX;
+  float * _endBarrelOffsetMaxZ;
+  float _regularBarrelOffsetMaxZ;
+  float _lateralPlateThickness;
+  float _modulesGap;
+  float _innerHcalRadius;
+  int _numberOfHcalLayers;
+  int _nStaves;
+  int _nModules;
+  int _cellScaleX;
+  int _cellScaleZ;
+  float _newCellSizeX;
+  float _newCellSizeZ;
+  float _hcalLayerThickness;
+  float _hcalAbsorberThickness;
+  float _hcalSensitiveThickness;
+  float _virtualCellSizeX;
+  float _virtualCellSizeZ;
+  float _regularBarrelModuleLength;
+  float _regularBarrelChamberLength;
+  float _deltaPhi;
+  std::vector< std::vector<MyHit*> > _calorimeterHitVec;
+  LCCollectionVec * _relationCollection;
+  int _startIEndcap;
+  int _startJEndcap;
+  float _startXEndcap;
+  float _startZEndcap;
+
+
 
 } ;
 

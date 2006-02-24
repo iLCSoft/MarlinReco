@@ -1,7 +1,10 @@
 *  
-* $Id: tflnks.F,v 1.3 2006-02-22 12:19:21 owendt Exp $
+* $Id: tflnks.F,v 1.4 2006-02-24 16:36:55 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2006/02/22 12:19:21  owendt
+* merged new non-cvs versions of reco code (O.Wendt/F.Gaede)
+*
 * Revision 1.2  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -144,6 +147,7 @@ c#include "include/gcbank.inc"
 #include "include/tpcfunc2.inc"
 
 #include "include/tpcfunc.inc"
+
 
 C-----> track parameters from 'TCHA'  follow now:
       OME(JJ)  = MY_JTCHIR(JJ)

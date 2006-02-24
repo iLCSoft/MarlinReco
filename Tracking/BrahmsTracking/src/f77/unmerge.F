@@ -1,7 +1,10 @@
 *  
-* $Id: unmerge.F,v 1.4 2006-02-07 10:52:07 owendt Exp $
+* $Id: unmerge.F,v 1.5 2006-02-24 16:36:55 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2006/02/07 10:52:07  owendt
+* changed NMAXBL from 4000 to 10000 to ensure stable tracking with Mokka 5.04
+*
 * Revision 1.3  2005/11/03 15:16:14  aplin
 * Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
 *
@@ -108,7 +111,7 @@ C---------------------------------------------------------------------------
        TWSG_RP=2.*TPRP
        TWSG_Z=2.*TPZ
        PIX_RP2=PIX_RP**2
-       MINMRG=60
+       MINMRG=120
        BLOTTER=1.0
        BLOTTER2=BLOTTER**2
        NCMIN=20

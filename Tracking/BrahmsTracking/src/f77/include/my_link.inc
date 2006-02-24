@@ -1,7 +1,10 @@
 *  
-* $Id: my_link.inc,v 1.2 2006-02-08 15:03:28 owendt Exp $
+* $Id: my_link.inc,v 1.3 2006-02-24 16:36:55 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2006/02/08 15:03:28  owendt
+* changed parameter NMAXLNK from 25000 to 50000
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -16,8 +19,8 @@
 *
 *  
       INTEGER NMAXLNK
-*      PARAMETER(NMAXLNK=25000)
-      PARAMETER(NMAXLNK=50000)
+      PARAMETER(NMAXLNK=25000)
+*      PARAMETER(NMAXLNK=100000)
       INTEGER NLNK
       REAL RLNK
       COMMON/MY_LINK/NLNK,RLNK(NMAXLNK,16)

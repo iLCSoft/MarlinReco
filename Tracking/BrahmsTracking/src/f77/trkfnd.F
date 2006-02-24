@@ -1,8 +1,11 @@
 
 *  
-* $Id: trkfnd.F,v 1.5 2005-11-03 15:16:14 aplin Exp $
+* $Id: trkfnd.F,v 1.6 2006-02-24 16:36:55 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2005/11/03 15:16:14  aplin
+* Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
+*
 * Revision 1.4  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -109,7 +112,7 @@ C GAB:
       INTEGER KK,ILINK,NHITS,IC,IPTBW,IPTFW
 
       DATA NDCHA/800/, NXCHA/200/
-      DATA NWCHC/1/,NWCXY/2/,MNLNK/4/
+      DATA NWCHC/1/,NWCXY/2/,MNLNK/7/
       DATA NWLNK/16/, NDLNK/300/
       LOGICAL LFRST
       DATA LFRST/.TRUE./
@@ -175,6 +178,8 @@ C GAB:
       ELSE
        MINROW=4
       ENDIF
+
+      write(*,*) "MINROW = ", MINROW
 
       DO 30 IROW=NRTPC, MINROW, -1
 
@@ -321,23 +326,29 @@ c            write(*,*) "number of hits in the chain = " , NHCHAI
 
 C
             IF (NHCHAI.GE.MNLNK) CALL TRPROJ
+            
+               MY_NCHAIN=MY_NCHAIN+1
+               MY_JTCHIR(MY_NCHAIN)=1./PCHAIN(1)
+               MY_JTCHTL(MY_NCHAIN)=PCHAIN(JTCHTL)
+               MY_JTCHP0(MY_NCHAIN)=PCHAIN(JTCHP0)
+               MY_JTCHD0(MY_NCHAIN)=PCHAIN(JTCHD0)
+               MY_JTCHZ0(MY_NCHAIN)=PCHAIN(JTCHZ0)
+               MY_JTCHLC(MY_NCHAIN)=PCHAIN(JTCHLC)
+               MY_JTCHC1(MY_NCHAIN)=PCHAIN(JTCHC1)
+               MY_JTCHC2(MY_NCHAIN)=PCHAIN(JTCHC2)
+               DO J=1,15
+                  MY_JTCHER(MY_NCHAIN,J)=PCHAIN(8+J)
+               ENDDO
+               
+               write(10,100) ABS(PCHAIN(1)), NHCHAI
+               
+ 100           FORMAT(F10.3,I6)
+               
+               DO J=1,7
+                  MY_JTCHPI(MY_NCHAIN,J)=0
+               ENDDO
+               
 
-             MY_NCHAIN=MY_NCHAIN+1
-             MY_JTCHIR(MY_NCHAIN)=1./PCHAIN(1)
-             MY_JTCHTL(MY_NCHAIN)=PCHAIN(JTCHTL)
-             MY_JTCHP0(MY_NCHAIN)=PCHAIN(JTCHP0)
-             MY_JTCHD0(MY_NCHAIN)=PCHAIN(JTCHD0)
-             MY_JTCHZ0(MY_NCHAIN)=PCHAIN(JTCHZ0)
-             MY_JTCHLC(MY_NCHAIN)=PCHAIN(JTCHLC)
-             MY_JTCHC1(MY_NCHAIN)=PCHAIN(JTCHC1)
-             MY_JTCHC2(MY_NCHAIN)=PCHAIN(JTCHC2)
-             DO J=1,15
-              MY_JTCHER(MY_NCHAIN,J)=PCHAIN(8+J)
-             ENDDO
-
-             DO J=1,7
-              MY_JTCHPI(MY_NCHAIN,J)=0
-             ENDDO
 C
 C   Remove associated coordinates from the phi bins, enter
 C   hits in TCTC bank and define offset in TCHA.
@@ -455,9 +466,10 @@ C
 
   999 CONTINUE
 
-C     SJAWRT
-c      write(*,*) "finished trkfnd" 
-C
+
+C      SJAWRT
+c      write(*,*) "finished trkfnd with No. chains = ", MY_NCHAIN 
+
       RETURN
       END
 

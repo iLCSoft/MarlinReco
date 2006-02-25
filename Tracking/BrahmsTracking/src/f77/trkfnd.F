@@ -1,8 +1,14 @@
 
 *  
-* $Id: trkfnd.F,v 1.6 2006-02-24 16:36:55 aplin Exp $
+* $Id: trkfnd.F,v 1.7 2006-02-25 13:24:38 owendt Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2006/02/24 16:36:55  aplin
+* increased NMXHTRW again by a factor of 2 in thitsrt.F
+* increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
+* set the minimum radius/pad ring for inward search in first track finding to MINMRG=120 in unmerge.F
+* reduced the maximum number of links NMAXLNK to 25000
+*
 * Revision 1.5  2005/11/03 15:16:14  aplin
 * Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
 *
@@ -339,8 +345,9 @@ C
                DO J=1,15
                   MY_JTCHER(MY_NCHAIN,J)=PCHAIN(8+J)
                ENDDO
-               
-               write(10,100) ABS(PCHAIN(1)), NHCHAI
+
+C debug: write to file              
+C               write(10,100) ABS(PCHAIN(1)), NHCHAI
                
  100           FORMAT(F10.3,I6)
                

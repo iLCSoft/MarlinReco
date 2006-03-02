@@ -1,0 +1,73 @@
+<!--##########################################-->
+<!--#                                        #-->
+<!--#     Example steering file for marlin   #-->
+<!--#        Checks VTXDigiProcessor         #-->
+<!--#                                        #-->
+<!--##########################################-->
+
+
+<marlin>
+ <execute>
+   <processor name="MyVTXDigitizer"/>
+   <processor name="MyVertexTracking"/> 
+   <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+
+ <global>
+
+  <parameter name="LCIOInputFiles">  examples/top_vxd01.slcio </parameter> 
+  <parameter name="MaxRecordNumber" value="11" />  
+  <parameter name="SupressCheck" value="false" />  
+
+  </global>
+
+  <processor name="MyVertexTracking" type="VertexTracking">
+   <!--Vertex Tracking-->
+   <parameter name="Chi2WRphiTriplet" type="float"> 10</parameter>
+   <parameter name="Chi2WRphiQuartet" type="float"> 10</parameter>
+   <parameter name="Chi2WRphiSeptet" type="float"> 10</parameter>
+   <parameter name="Chi2WZTriplet" type="float"> 10</parameter>
+   <parameter name="Chi2WZQuartet" type="float"> 10</parameter>
+   <parameter name="Chi2WZSeptet" type="float"> 10 </parameter>
+   <parameter name="NDivisionsInPhi" type="int"> 60 </parameter>
+   <parameter name="NDivisionsInTheta" type="int"> 60 </parameter>   
+   <parameter name="LayerCombinations" type="IntVec">  4 3 2 4 3 1 4 2 1 3 2 1 </parameter> 
+  </processor>
+
+  <processor name="MyVTXDigitizer" type="VTXDigitizer">
+   <!--VTX Digitization-->
+   <parameter name="CollectionName" type="string"> vxd01_VXD</parameter>
+   <parameter name="Debug" type="int">0 </parameter>
+   <parameter name="PixelSizeX" type="double"> 0.025 </parameter>
+   <parameter name="PixelSizeY" type="double"> 0.025 </parameter>
+   <parameter name="LayerThickness" type="double"> 0.05 </parameter>
+   <parameter name="Threshold" type="double"> 200 </parameter>
+   <parameter name="CutOnDeltaRays" type="double"> 0.05 </parameter>
+   <parameter name="TanLorentz" type="double"> 0.8 </parameter>
+   <parameter name="ElectronicNoise" type="double"> 100 </parameter>  
+   <parameter name="ElectronsPerKeV" type="double"> 270 </parameter>  
+   <parameter name="EnergyLoss" type="double"> 370 </parameter>  
+   <parameter name="SegmentLength" type="double"> 0.005 </parameter> 
+   <parameter name="GenerateBackground" type="int"> 0 </parameter>
+   <!--Parameters for 50 um thick layer --> 
+   <parameter name="LadderRadius" type="FloatVec"> 15.3072 26.3072 38.3072 49.3072 60.3072 </parameter>
+   <parameter name="ActiveLadderOffset" type="FloatVec"> 1.46756 1.41122 2.59339 3.62327 4.46110 </parameter>
+   <!--Parameters for 450 um --> 
+   <!--parameter name="LadderRadius" type="FloatVec"> 15.5072 26.5072 38.5072 49.5072 60.5072 </parameter-->
+   <!--parameter name="ActiveLadderOffset" type="FloatVec"> 1.8676 1.8112 3.2862 4.5890 5.6922 </parameter-->
+  <!---->
+ </processor>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+ <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+  <!--drops the named collections from the event-->
+  <!--parameter name="DropCollectionNames" type="StringVec">TPCHits HCalHits  </parameter-->
+  <!--drops all collections of the given type from the event-->
+  <!--parameter name="DropCollectionTypes" type="StringVec">SimTrackerHit SimCalorimeterHit  </parameter-->
+  <!-- name of output file -->
+  <parameter name="LCIOOutputFile" type="string">output.slcio </parameter>
+  <!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
+  <parameter name="LCIOWriteMode" type="string"> WRITE_APPEND </parameter>
+</processor>
+
+</marlin>

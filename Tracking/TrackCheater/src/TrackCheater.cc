@@ -37,7 +37,6 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
   std::vector<std::string> trackerHitCollections;
 
   trackerHitCollections.push_back(std::string("TPCTrackerHits"));
-  trackerHitCollections.push_back(std::string("TPCTrackerHits"));
 
   registerProcessorParameter("TrackerHitCollections",
 			     "Tracker Hit Collection Names",

@@ -48,6 +48,10 @@
 #include "CLHEP/Random/RandPoisson.h"
 #include "CLHEP/Random/RandFlat.h"
 
+namespace CLHEP{}    // declare namespace CLHEP for backward compatibility
+using namespace CLHEP ;
+
+
 //#include "Randomize.hh"
 //#include "G4Poisson.hh"
 //#include "G4Step.hh"

@@ -10,7 +10,10 @@
 #include <CLHEP/Vector/ThreeVector.h>
 #include <CLHEP/Random/RanluxEngine.h>
 
-// using namespace CLHEP ;
+namespace CLHEP{}    // declare namespace CLHEP for backward compatibility
+using namespace CLHEP ;
+
+
 using namespace lcio ;
 using namespace marlin ;
 

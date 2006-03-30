@@ -13,7 +13,7 @@
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <IMPL/LCTOOLS.h> 
 
-// using namespace CLHEP ;
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace std ;

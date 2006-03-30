@@ -11,6 +11,10 @@
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandPoisson.h" 
 #include "CLHEP/Random/RandFlat.h"
+
+namespace CLHEP{}    // declare namespace CLHEP for backward compatibility
+using namespace CLHEP ;
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace std ;

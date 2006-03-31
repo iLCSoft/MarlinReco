@@ -1,0 +1,1455 @@
+2006-03-31 10:48  gaede
+
+	* doc/manual/manual_document.tex: added explanation for ccvssh
+
+2006-03-30 18:12  gaede
+
+	* Analysis/EventShapes/include/ThrustReconstruction.h,
+	  Analysis/EventShapes/src/ThrustReconstruction.cc,
+	  TrackDigi/VTXDigi/src/MyG4UniversalFluctuationForSi.cc,
+	  TrackDigi/VTXDigi/src/VTXDigitizer.cc: made compatibel with CLHEP
+	  1.9 and higher
+
+2006-03-24 20:42  owendt
+
+	* Tracking/TrackCheater/src/TrackCheater.cc: BugFix: Removed SECOND
+	  TPCTrackerhitCollection from default settings in TrackCheater.
+	  (Per default the TPCTrackerhitCollection was put into the vector
+	  of InputCollections TWICE)
+
+2006-03-23 15:15  aplin
+
+	* Tracking/BrahmsTracking/: include/CurlKillerProcessor.h,
+	  src/CurlKillerProcessor.cc: initial version of CurlKiller
+	  performance needs to be checked thoroughly, default values are
+	  quite aggressive but seem to give good results
+
+2006-03-02 10:31  rasp
+
+	* examples/top_vxd01.slcio: example lcio file to run vertex
+	  digitizer and vertex patrec
+
+2006-03-02 10:30  rasp
+
+	* examples/exampleVTX.xml: Example steering file to run vertex
+	  digitizer and vertex patrec
+
+2006-03-02 10:08  rasp
+
+	* Tracking/VertexTracking/src/GNUmakefile: GNUMakefile for
+	  Vertexing procesor
+
+2006-03-02 10:04  rasp
+
+	* Tracking/VertexTracking/include/VertexTracking.h: header file
+	  file vertex patrec processor
+
+2006-03-02 10:03  rasp
+
+	* Tracking/VertexTracking/src/VertexTracking.cc: New processor for
+	  patrec in the vertex detector
+
+2006-03-02 10:01  rasp
+
+	* TrackDigi/VTXDigi/include/MyG4UniversalFluctuationForSi.h: header
+	  file for landau fluctuations code
+
+2006-03-02 10:01  rasp
+
+	* TrackDigi/VTXDigi/include/VTXDigitizer.h: header file for new
+	  vertex digitizer processor
+
+2006-03-02 09:59  rasp
+
+	* TrackDigi/VTXDigi/src/MyG4UniversalFluctuationForSi.cc: File to
+	  simulate landau fluctuations
+
+2006-03-02 09:59  rasp
+
+	* TrackDigi/VTXDigi/src/VTXDigitizer.cc: New vertex digitizer
+
+2006-02-25 14:24  owendt
+
+	* Tracking/BrahmsTracking/src/f77/trkfnd.F: commented out debug
+	  outputs
+
+2006-02-24 17:36  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: tflnks.F, thitsrt.F, trkfnd.F,
+	  trslnk.F, unmerge.F, include/my_link.inc: increased NMXHTRW again
+	  by a factor of 2 in thitsrt.F increased the minimum number of
+	  hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7 set the
+	  minimum radius/pad ring for inward search in first track finding
+	  to MINMRG=120 in unmerge.F reduced the maximum number of links
+	  NMAXLNK to 25000
+
+2006-02-24 12:01  gaede
+
+	* Calibration/AbsCalibration/: include/AbsCalibr.h,
+	  include/Calibration.h, src/AbsCalibr.cc, src/Calibration.cc,
+	  src/GNUmakefile: added Vassilly's absolute calibration processor
+
+2006-02-22 16:08  owendt
+
+	* examples/LDC/: gear_ldc.xml, steer_ldc.xml: updated to use
+	  BFiekld from gear file
+
+2006-02-22 13:19  owendt
+
+	* CaloDigi/LDCCaloDigi/include/MokkaCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc,
+	  Clustering/ClusterCheater5_3/doc/Doxyfile,
+	  Clustering/ClusterCheater5_3/include/ClusterCheater5_3.h,
+	  Clustering/ClusterCheater5_3/src/ClusterCheater5_3.cc,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/include/TrackwiseClustering.h,
+	  Clustering/TrackwiseClustering/src/TrackwiseClustering.cc,
+	  Pflow/Wolf/include/Wolf.h, Pflow/Wolf/src/Wolf.cc,
+	  Tracking/BrahmsTracking/src/f77/tflnks.F,
+	  Tracking/TrackCheater/src/TrackCheater.cc: merged new non-cvs
+	  versions of reco code (O.Wendt/F.Gaede)
+
+2006-02-16 18:24  samson
+
+	* Analysis/SatoruJetFinder/: include/SatoruJetFinderProcessor.h,
+	  src/GNUmakefile, src/SatoruJetFinderProcessor.cc,
+	  src/fortsrc/syjkrn.f: Fix for the cone jetfinder
+
+2006-02-09 19:00  owendt
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: removed cout
+	  statements for debugging
+
+2006-02-08 16:03  owendt
+
+	* Tracking/BrahmsTracking/src/f77/include/my_link.inc: changed
+	  parameter NMAXLNK from 25000 to 50000
+
+2006-02-08 15:58  owendt
+
+	* Tracking/BrahmsTracking/src/f77/include/fndparms.inc: changed
+	  NTPCOMX from 150000 to 200000
+
+2006-02-07 14:56  samson
+
+	* Analysis/SatoruJetFinder/include/SatoruJetFinderProcessor.h: Add
+	  requirement of cernlib in documentation
+
+2006-02-07 11:55  owendt
+
+	* Tracking/BrahmsTracking/src/f77/include/my_tcrl.inc: changed
+	  NMAXROW from 1000 to 2000 to ensure stable tracking with Mokka
+	  5.04
+
+2006-02-07 11:54  owendt
+
+	* Tracking/BrahmsTracking/src/f77/include/fndparms.inc: changed
+	  NTPCOMX from 50000 to 150000,   NTPMAX  from 30000 to  90000 and
+	  MAXCND  from 30000 to  60000 to ensure stable tracking with
+	  Mokka 5.04
+
+2006-02-07 11:52  owendt
+
+	* Tracking/BrahmsTracking/src/f77/unmerge.F: changed NMAXBL from
+	  4000 to 10000 to ensure stable tracking with Mokka 5.04
+
+2006-02-07 11:50  owendt
+
+	* Tracking/BrahmsTracking/src/f77/thitsrt.F: changed NMXHTRW from
+	  600 to 1200 to ensure stable tracking with Mokka 5.04
+
+2006-02-03 16:15  owendt
+
+	* Tracking/BrahmsTracking/include/LEPTrackingProcessor.h: updated
+	  documentation on LCrelation Weight calculation
+
+2006-02-03 16:09  owendt
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: i) Corrected
+	  bug in calculation of weights, relocated brace.  ii) Weights are
+	  now calculated as the percentage of hits that a given MC particle
+	  contributes to the reconstructed track's hit collection.
+
+2006-02-03 16:06  owendt
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: reduced cout'age
+
+2006-02-03 16:04  owendt
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: cosmetic changes
+	  only
+
+2006-01-10 17:35  tkraemer
+
+	* doc/manual/: makedoc.sh, manual_document.tex: fixed problem with
+	  fig.3: contents was not on the HTML output
+
+2006-01-10 13:01  tkraemer
+
+	* doc/manual/manual_document.tex: added some links in the
+	  bibliography section
+
+2005-12-09 10:59  tkraemer
+
+	* doc/manual/manual_document.tex: Point user to the right CLHEP
+	  version.  Improved the description of CED: how to use the
+	  client-server construct.
+
+2005-12-06 16:26  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: corrected
+	  erroneous definition of MC Track Relation weight
+
+2005-11-25 10:39  tkraemer
+
+	* doc/manual/manual_document.tex: Advice people to only use tagged
+	  versions in the installation section.
+
+2005-11-23 14:51  samson
+
+	* GNUmakefile: Use only .../lib/lib<packagename>.a to build
+	  libMarlinReco.a
+
+2005-11-11 18:52  gaede
+
+	* Clustering/ClusterCheater/: include/ClusterCheater.h,
+	  src/ClusterCheater.cc: new version of cheater also works for new
+	  complete MCParticle list from Mokka 5.3
+
+2005-11-10 19:05  tkraemer
+
+	* doc/manual/manual_document.tex: Removed bug in "Writing your own
+	  Marlin Processor"
+
+2005-11-10 11:12  tkraemer
+
+	* doc/manual/manual_document.tex: one more typo
+
+2005-11-10 10:50  tkraemer
+
+	* doc/manual/manual_document.tex: correction of spelling errors,
+	  minor modification on introduction, adding information on
+	  Tracking processor from S.Aplin
+
+2005-11-04 11:45  tkraemer
+
+	* doc/manual/manual_document.tex: added section "Further
+	  Information"
+
+2005-11-03 16:16  aplin
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  include/tktkbank.h, src/GNUmakefile, src/LEPTrackingProcessor.cc,
+	  src/tktkbank.cc, src/C/delsolve.c, src/f77/fk3trk.F,
+	  src/f77/fkcvpr.F, src/f77/fkexmn.F, src/f77/fkmi5.F,
+	  src/f77/fsfana3.F, src/f77/fsfbeamte.F, src/f77/fsfbeta.F,
+	  src/f77/fsfcomp.F, src/f77/fsfconvrt.F, src/f77/fsfcpte.F,
+	  src/f77/fsfftdm.F, src/f77/fsfftds.F, src/f77/fsfgetlabls.F,
+	  src/f77/fsfgetspace.F, src/f77/fsfgette.F, src/f77/fsfhelix.F,
+	  src/f77/fsfinddet.F, src/f77/fsfinp.F, src/f77/fsfits.F,
+	  src/f77/fsfmkpair.F, src/f77/fsfnsub.F, src/f77/fsfp2c.F,
+	  src/f77/fsfpconst.F, src/f77/fsfpdiff.F, src/f77/fsfplcut.F,
+	  src/f77/fsfplinv.F, src/f77/fsfprintte.F, src/f77/fsfrefit.F,
+	  src/f77/fsfrest.F, src/f77/fsfshwr.F, src/f77/fsfstr.F,
+	  src/f77/fsfsts.F, src/f77/fsftec.F, src/f77/fsftlla.F,
+	  src/f77/fsftsdump.F, src/f77/fsftsexx.F, src/f77/fsftste.F,
+	  src/f77/fsftte.F, src/f77/fsftts.F, src/f77/fsfvtxm.F,
+	  src/f77/fsfvtxs.F, src/f77/fsfwte.F, src/f77/fsfwts.F,
+	  src/f77/fsfxts.F, src/f77/fsplrp.F, src/f77/fsplxy.F,
+	  src/f77/fxambi.F, src/f77/fxarec.F, src/f77/fxdump.F,
+	  src/f77/fxrefit.F, src/f77/setmat.F, src/f77/sitgeom.F,
+	  src/f77/thitsrt.F, src/f77/tk2fit.F, src/f77/tkambi.F,
+	  src/f77/tkglab.F, src/f77/tklhte.F, src/f77/tklist.F,
+	  src/f77/tklsex.F, src/f77/tkmkte.F, src/f77/tknhit.F,
+	  src/f77/tkperf.F, src/f77/tkread.F, src/f77/tksetr.F,
+	  src/f77/tkstor.F, src/f77/tktrev.F, src/f77/trkfnd.F,
+	  src/f77/unmerge.F, src/f77/vxdgeom.F,
+	  src/f77/include/allpipe.inc, src/f77/include/ccdpipe.inc,
+	  src/f77/include/exmach.inc, src/f77/include/exxgeo.inc,
+	  src/f77/include/fsfb.inc, src/f77/include/fsfbits.inc,
+	  src/f77/include/itcdims.inc, src/f77/include/maskdims.inc,
+	  src/f77/include/pixpipe.inc, src/f77/include/sitdims.inc,
+	  src/f77/include/tkperfc.inc, src/f77/include/vxdccd.inc,
+	  src/f77/include/vxdpix.inc: Added the Trackstring creation and
+	  the biulding of full Track candiates (TK's) which have passed the
+	  Delphi Ambiguity resolver fxambi. The material description of the
+	  vtx detector, as for the TPC, is hard coded in setmat. Presently
+	  the VTX and SIT resolutions are hard coded in
+	  LEPTrackingProcessor. The debug output has been reduced and can
+	  be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the
+	  delphi ambuguity resolver written in C and is contained in the
+	  directory named C. The Tk's are written back into the C++ side in
+	  tktrev. The corresponding Tk bank structure analogous to the TE
+	  bank structure has been added in tktkbank whilst the access
+	  wrapper functions are contained in LEPTracking.
+
+2005-11-03 16:05  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: added comment on
+	  concern over a suspected systematic shift of the hits during
+	  smearing
+
+2005-11-03 16:03  aplin
+
+	* TrackDigi/VTXDigi/: include/VTXDigiProcessor.h,
+	  src/VTXDigiProcessor.cc: Added the creation of SIT hits
+	  collection
+
+2005-11-03 15:43  tkraemer
+
+	* examples/LDC/steer_ldc.xml: Modify steering file to run with
+	  muon.slcio together with the C Event Display.  This version is
+	  used in the manual.
+
+2005-11-03 15:34  tkraemer
+
+	* doc/manual/manual_document.tex: add subsection about AIDA
+
+2005-11-02 17:28  tkraemer
+
+	* doc/manual/manual_document.tex: minor changes in installation
+	  section
+
+2005-11-01 17:16  tkraemer
+
+	* doc/manual/manual_document.tex: Small corrections to sections 1.
+	  and 2. (phrasing, spelling etc. )
+
+2005-11-01 14:07  tkraemer
+
+	* doc/manual/manual_document.tex: Section to explain the
+	  installation of GLCED is added.
+
+2005-11-01 10:12  tkraemer
+
+	* doc/manual/manual_document.tex: moved all html-links to home
+	  pages into bibliography.
+
+2005-10-31 09:02  tkraemer
+
+	* doc/manual/examples/: exampleSteeringFileASCII.txt,
+	  exampleSteeringFileXML.txt: Directory with example steeringfiles
+	  etc. for manual.
+
+2005-10-28 17:54  tkraemer
+
+	* env.sh: Environment script for building MarlinReco as a
+	  collection of packages together with Marlin.
+
+2005-10-28 17:49  tkraemer
+
+	* doc/manual/manual_document.tex: Add hint to GSL, CLHEP and
+	  CERNLIB to system req. section.
+
+2005-10-28 16:45  tkraemer
+
+	* doc/manual/manual_document.tex: Add two \bibitems for ILC and
+	  Doxygen.
+
+2005-10-27 17:58  tkraemer
+
+	* doc/manual/manual_document.tex: minor changes to text in
+	  abstract, put abstract on titlepage and TOC on second page
+
+2005-10-27 17:55  tkraemer
+
+	* doc/manual/makedoc.sh: H. Vogt test only - one blank line deleted
+
+2005-10-27 16:06  gaede
+
+	* doc/manual/: makedoc.sh, manual.tex, manual_document.tex: added
+	  makedoc script and brushed up title, toc, ...
+
+2005-10-27 15:31  gaede
+
+	* doc/manual/: defs.tex, manual.tex, manual_document.tex,
+	  marlin.eps: initial version of latex manual
+
+2005-10-21 08:58  rasp
+
+	* CaloDigi/LDCCaloDigi/include/SimpleCaloDigi.h: Updated
+	  documentation for SimpleCaloDigi
+
+2005-10-19 11:50  rasp
+
+	* examples/LDC/gear_ldc.xml: brought up to date (incl Hcal and
+	  cellsizes) with gear v00-02
+
+2005-10-14 18:04  rasp
+
+	* Pflow/Wolf/src/Wolf.cc: Modified default name of Track collection
+
+2005-09-19 17:32  samson
+
+	* Analysis/EventShapes/include/jama_eig.h,
+	  Analysis/EventShapes/src/Fox.cc,
+	  Analysis/EventShapes/src/SelectReconstructedParticle.cc,
+	  CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: Removed non
+	  ANSI math functions
+
+2005-08-09 12:27  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: tcobin.F, include/my_tcrl.inc:
+	  increased the maximum number of hits in one row to 1000 ( NMAXROW
+	  = 1000 in src/f77/include/my_tcrl.inc ) , and ensured the
+	  tracking is skipped in the event when this number of hits is
+	  exceeded (tcobin.F).
+
+2005-08-08 12:26  aplin
+
+	* Tracking/BrahmsTracking/include/LEPTrackingProcessor.h: Updated
+	  documentation
+
+2005-08-08 09:09  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/tcobin.F, f77/tfcand.F, f77/tfittk.F, f77/tflnks.F,
+	  f77/thitsrt.F, f77/tpcdigi.F, f77/tpcgeom.F, f77/tpcini.F,
+	  f77/tpcset.F, f77/trftch.F, f77/trkfnd.F, f77/trproj.F,
+	  f77/trresc.F, f77/trseek.F, f77/trslnk.F, f77/unmerge.F,
+	  f77/include/tpgeom.inc: Made f77 tracking code use GEAR to define
+	  the geomtery of the TPC. LTPDRO now defines the maximum number of
+	  rows is used to define the size of arrays, this is limited to 224
+	  due the use of 7 '32 bit' bit registers in trkfnd.F increased,
+	  though at present it is not likely that anybody would want more.
+	  The number of TPC padrows is defined at run time by NRTPC which
+	  should of course not exceed LTPDRO, although this is checked and
+	  the programe exits with a verbose error message. A wrapper
+	  function gettpcgeom is used to pass the GEAR TPC parameters from
+	  C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have
+	  MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as
+	  they are no longer needed.
+
+2005-08-07 18:22  gaede
+
+	* CaloDigi/LDCCaloDigi/include/MokkaCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/include/SimpleCaloDigi.h,
+	  Clustering/ClusterCheater/include/ClusterCheater.h,
+	  Clustering/TrackwiseClustering/include/TrackwiseClustering.h,
+	  Pflow/Wolf/include/Wolf.h,
+	  Tracking/TrackCheater/include/TrackCheater.h: changed ld: to Id:
+	  in headers
+
+2005-08-07 17:57  gaede
+
+	* Clustering/TrackwiseClustering/: include/CalorimeterFinalStage.h,
+	  src/CalorimeterFinalStage.cc: initital version
+
+2005-08-04 18:59  aplin
+
+	* examples/LDC/muons.slcio: write file
+
+2005-08-04 18:58  aplin
+
+	* examples/LDC/muons.slcio: wrong file
+
+2005-08-04 18:47  rasp
+
+	* CaloDigi/LDCCaloDigi/: src/BrahmsCaloDigi.cc,
+	  include/BrahmsCaloDigi.h: removed for Snowmass
+
+2005-08-04 18:38  aplin
+
+	* examples/LDC/: GNUmakefile_desy, README, gear_ldc.xml,
+	  muons.slcio, steer_ldc.xml: inital version
+
+2005-08-04 18:36  aplin
+
+	* examples_LDC/: GNUmakefile_desy, README, gear_ldc.xml,
+	  muons.slcio, steer_ldc.xml: [no log message]
+
+2005-08-04 18:26  aplin
+
+	* examples_LDC/: GNUmakefile_desy, README, gear_ldc.xml,
+	  muons.slcio, steer_ldc.xml: initial version
+
+2005-08-04 15:17  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trkfnd.F: added more info to
+	  error message on too many links
+
+2005-08-04 15:15  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: removed event skip
+
+2005-08-04 15:00  aplin
+
+	* Tracking/BrahmsTracking/src/f77/fsfstr.F: no linking of TEs and
+	  TSs at present
+
+2005-08-04 14:54  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc,
+	  Tracking/BrahmsTracking/src/f77/fsfstr.F,
+	  Tracking/BrahmsTracking/src/f77/trkfnd.F: [no log message]
+
+2005-08-04 14:44  rasp
+
+	* Clustering/TrackwiseClustering/: src/TrackwiseClustering.cc,
+	  include/TrackwiseClustering.h: new version uses gear.
+
+2005-08-04 14:43  rasp
+
+	* Pflow/Wolf/: src/Wolf.cc, include/Wolf.h: New version uses gear.
+
+2005-08-04 13:18  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trslnk.F: corrected comment
+
+2005-08-04 13:09  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trslnk.F: added comment
+
+2005-08-04 13:08  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trslnk.F: drop event for to many
+	  link, a more ellegant solution is needed
+
+2005-08-03 23:41  aplin
+
+	* TrackDigi/FTDDigi/doc/Doxyfile: inital entry
+
+2005-08-03 23:31  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: tk*bank
+	  structures initialisation move here from BrahmsInitProcessor and
+	  BrahmEndProcessor
+
+2005-08-03 23:19  aplin
+
+	* Tracking/BrahmsTracking/: include/BrahmsEndProcessor.h,
+	  include/BrahmsInitProcessor.h, src/BrahmsEndProcessor.cc,
+	  src/BrahmsInitProcessor.cc: banks structure initialisation move
+	  into LEPTrackingProcessor
+
+2005-08-03 22:00  aplin
+
+	* Tracking/BrahmsTracking/src/: GeomEndProcessor.cc,
+	  GeomInitProcessor.cc: replaced by GEAR
+
+2005-08-03 21:14  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tktrev.F: removed the combining
+	  of TEs to TSs for now
+
+2005-08-03 21:13  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tkstor.F: corrected index of
+	  array when copying covariance matrix
+
+2005-08-03 21:12  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tkread.F: included TE reading
+	  functionality
+
+2005-08-03 21:07  aplin
+
+	* Tracking/BrahmsTracking/src/f77/fkctow.F: expanded error message
+
+2005-08-03 21:06  aplin
+
+	* Tracking/BrahmsTracking/src/tktebank.cc: corrected erroneous
+	  function declaration of tkmktecpp, by using float * instead of
+	  numerous floats
+
+2005-08-03 21:05  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: corrected
+	  erroneous function declaration of tkmktecpp, by using float *
+	  instead of numerous floats and added output collection names as
+	  steering parametes
+
+2005-08-03 21:03  aplin
+
+	* Tracking/BrahmsTracking/include/tktebank.h: corrected erroneous
+	  function declaration of tkmktecpp, by using float * instead of
+	  numerous floats
+
+2005-08-03 21:01  aplin
+
+	* Tracking/BrahmsTracking/include/LEPTrackingProcessor.h: updated
+	  documentation and added output collection names as steering
+	  parametes
+
+2005-08-03 20:58  aplin
+
+	* TrackDigi/: FTDDigi/include/FTDDigiProcessor.h,
+	  TPCDigi/include/TPCDigiProcessor.h,
+	  VTXDigi/include/VTXDigiProcessor.h: updated documentation
+
+2005-08-03 20:48  aplin
+
+	* Tracking/BrahmsTracking/: src/TrackProcessor.cc,
+	  src/TrackingPerformanceProcessor.cc,
+	  include/TrackingPerformanceProcessor.h, include/TrackProcessor.h:
+	  not part of MarlinReco
+
+2005-08-03 17:22  samson
+
+	* Analysis/SatoruJetFinder/: include/SatoruJetFinderProcessor.h,
+	  src/SatoruJetFinderProcessor.cc: more changes in documentation
+
+2005-08-03 16:17  aplin
+
+	* Analysis/EventShapes/src/ThrustReconstruction.cc:
+	  ThrustReconstruction::init(): stearingparameter for
+	  Thrustreconstruction type to use JetSet Method
+	  ThrustReconstruction::sign(): abs() -> fabs()
+
+2005-08-03 15:47  samson
+
+	* Analysis/SatoruJetFinder/include/SatoruJetFinderProcessor.h:
+	  change in documentation
+
+2005-08-03 11:46  aplin
+
+	* TrackDigi/FTDDigi/: include/FTDDigiProcessor.h,
+	  src/FTDDigiProcessor.cc, src/GNUmakefile: initial version
+
+2005-08-03 11:45  rasp
+
+	* Pflow/Wolf/include/Wolf.h, Pflow/Wolf/src/Wolf.cc,
+	  Clustering/TrackwiseClustering/include/TrackwiseClustering.h,
+	  Clustering/TrackwiseClustering/src/TrackwiseClustering.cc,
+	  Tracking/TrackCheater/include/TrackCheater.h,
+	  Tracking/TrackCheater/src/TrackCheater.cc: Processor is provided
+	  with documentation.
+
+2005-08-03 11:44  rasp
+
+	* Clustering/ClusterCheater/include/ClusterCheater.h: Processor is
+	  provided with full documentation.
+
+2005-08-03 11:42  rasp
+
+	* CaloDigi/LDCCaloDigi/: include/BrahmsCaloDigi.h,
+	  include/MokkaCaloDigi.h, include/SimpleCaloDigi.h,
+	  src/BrahmsCaloDigi.cc, src/MokkaCaloDigi.cc,
+	  src/SimpleCaloDigi.cc: Processors are complemented with full
+	  documentation
+
+2005-08-03 11:41  aplin
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: added possible
+	  smearing
+
+2005-08-02 20:43  samson
+
+	* Analysis/SatoruJetFinder/: include/SatoruJetFinderProcessor.h,
+	  src/SatoruJetFinderProcessor.cc: Made the processor Marlin v00-09
+	  compliant
+
+2005-08-02 18:15  aplin
+
+	* TrackDigi/: VTXDigi/src/VTXDigiProcessor.cc,
+	  TPCDigi/src/TPCDigiProcessor.cc: protected against no collection
+
+2005-08-02 14:59  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tpcsav.F: write statements
+	  removed
+
+2005-08-02 12:33  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tktrev.F: included setup of VTX
+	  geometry
+
+2005-08-02 12:32  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tksetr.F: removed initialisation
+	  of BFIELD from here
+
+2005-08-02 12:21  aplin
+
+	* Tracking/BrahmsTracking/src/f77/setmat.F: placed initialisation
+	  of BFIELD here and corrected debug output
+
+2005-08-02 12:19  aplin
+
+	* Tracking/BrahmsTracking/src/f77/fsfstr.F: corrected debug output
+
+2005-08-02 12:05  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: corrected
+	  calculation of tpcRPhiRes
+
+2005-08-02 11:37  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: corrected calculation
+	  of tpcRPhiRes
+
+2005-08-02 11:32  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: fsfprivtx.F, vtxgeom.F,
+	  include/fmpvtx.inc, include/ipsmear.inc: intial version
+
+2005-08-01 10:17  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tknumb.F: intial version
+
+2005-07-29 17:06  aplin
+
+	* Tracking/BrahmsTracking/src/: TrackingPerformanceProcessor.cc,
+	  tkhitbank.cc, f77/tflnk2.F, f77/tkmkte.F, f77/tkread.F,
+	  f77/tpcrun.F, f77/tpcsav.F: Initialised number of tracks found to
+	  0 in tpcrun.
+
+2005-07-29 15:04  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tktrev.F: protected expection for
+	  now hits in a subsystem
+
+2005-07-29 15:01  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: Set the
+	  track parameters properly and ensured no collection exception is
+	  handled correctly
+
+2005-07-29 14:57  aplin
+
+	* Tracking/BrahmsTracking/include/tkhitbank.h: corrected C++/f77
+	  interface for counting errors for the number of hits
+
+2005-07-27 18:16  krstonos
+
+	* Analysis/EventShapes/: include/Fox.h, src/Fox.cc: first revision
+	  of fox-wolfram processor
+
+2005-07-27 16:03  aplin
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: implemented try catch
+	  method to stop excepetion when no VTX hits are present
+
+2005-07-27 15:52  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: change in
+	  track parameter calculation
+
+2005-07-27 11:34  rasp
+
+	* Tracking/TrackCheater/: include/TrackCheater.h,
+	  src/TrackCheater.cc: Extended TrackCheater
+
+2005-07-27 11:33  rasp
+
+	* Clustering/ClusterCheater/: include/ClusterCheater.h,
+	  src/ClusterCheater.cc: Extended ClusterCheater
+
+2005-07-27 11:32  rasp
+
+	* Clustering/TrackwiseClustering/src/TrackwiseClustering.cc:
+	  Modified TrackwiseClustering
+
+2005-07-27 11:20  rasp
+
+	* Pflow/Wolf/: include/Wolf.h, src/Wolf.cc: Modified PFlow
+	  implementation
+
+2005-07-27 10:49  krstonos
+
+	* Analysis/EventShapes/: include/Fox.h, include/Sphere.h,
+	  src/Fox.cc: removed for now
+
+2005-07-27 10:43  krstonos
+
+	* Analysis/EventShapes/src/Fox.cc: removed not needed things
+
+2005-07-27 10:26  krstonos
+
+	* Analysis/EventShapes/: include/Fox.h, src/Fox.cc: initial version
+	  of processor for calculation fox-wolfram moments
+
+2005-07-26 19:56  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/tpcrun.F: Removed unecessary initialisation of hit arrays
+	  which is now done in tktrev. Corrected (finaly) the calculation
+	  of d0 in LEPTrackingProcessor.
+
+2005-07-25 17:57  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: Corrected
+	  the calculation of d0 in LEPTrackingProcessor
+
+2005-07-21 18:37  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  TrackProcessor.cc, tktebank.cc, f77/fsfstr.F,
+	  f77/stfreadtkhits.F, f77/stfreadtkte.F, f77/tkaddh.F,
+	  f77/tkstor.F, f77/tktrev.F, f77/tpcrun.F,
+	  f77/include/fsfdebug.inc, f77/include/fsfflags.inc,
+	  f77/include/fsfreject.inc, f77/include/tkfunc.inc,
+	  f77/include/tkfunc1.inc: The itedat bank has been added with read
+	  and write interface.
+
+	  TKADDH has now been added so that the silicon hits are included
+	  as TE's.
+
+	  Added FSFSTR from delsearch to steer the creation of TS's
+
+	  The following include files need to be added for FSFSTR
+	  include/fsfdebug.inc include/fsfreject.inc include/fsfflags.inc
+
+	  FSFSTR is now called by TKTREV although all action is commented
+	  out.
+
+2005-07-20 19:49  aplin
+
+	* TrackDigi/VTXDigi/doc/Doxyfile: added Doxyfile file for VTXDigi
+
+2005-07-20 19:46  aplin
+
+	* Tracking/BrahmsTracking/: include/tktebank.h,
+	  src/LEPTrackingProcessor.cc, src/tkhitbank.cc, src/tktebank.cc,
+	  src/f77/stfreadtkhits.F, src/f77/stfreadtkte.F, src/f77/tkaddh.F,
+	  src/f77/tkmkte.F, src/f77/tkread.F, src/f77/tkstor.F,
+	  src/f77/include/tkfunc.inc, src/f77/include/tkfunc1.inc: The
+	  itedat bank has been added with read and write interface. Though
+	  only the write function is used (tkstor). The read will have to
+	  be done through a statement function.
+
+2005-07-20 18:03  krstonos
+
+	* Analysis/EventShapes/include/jama_eig.h: compatibility wiht gcc
+	  3.4
+
+2005-07-19 19:02  aplin
+
+	* Tracking/BrahmsTracking/: include/tkhitbank.h,
+	  include/tkmcbank.h, include/tktebank.h, include/tpchitbank.h,
+	  src/LEPTrackingProcessor.cc, src/tkhitbank.cc, src/tpchitbank.cc,
+	  src/f77/tktrev.F, src/f77/tpcrun.F: Removed using namespace from
+	  .h files. Commented out remove hit from tkbank, as well as adding
+	  methods to give information about the number and positions of
+	  subdetector hit collections with in the bank structure. Common
+	  block CNTPC no longer needed so commented out in tpchitbank.h,
+	  and else where it was accessed. Added protocalls for cfortran.h
+	  for the new tkbank methods. Replaced TPCRUN as the main tracking
+	  steering routine by TKTREV which itself calls TPCRUN.
+
+2005-07-19 11:43  aplin
+
+	* Tracking/BrahmsTracking/: include/FortranProcessor.h,
+	  include/LEPTrackingProcessor.h, src/FortranProcessor.cc,
+	  src/LEPTrackingProcessor.cc: Changed the name of FortranProcessor
+	  to LEPTrackingProccesor
+
+2005-07-19 09:01  aplin
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: included the layer
+	  number in type property
+
+2005-07-19 08:58  aplin
+
+	* Tracking/BrahmsTracking/src/FortranProcessor.cc: Corrected subid
+	  for the VTX to include the layer number
+
+2005-07-18 17:51  aplin
+
+	* TrackDigi/TPCDigi/: include/random.h, src/TPCDigiProcessor.cc:
+	  included math.h in include/random.h and, cmath and namespace std
+	  in src/TPCDigiProcessor.cc
+
+2005-07-18 17:35  aplin
+
+	* TrackDigi/VTXDigi/: include/VTXDigiProcessor.h, src/GNUmakefile,
+	  src/VTXDigiProcessor.cc: added to provide vtx hits as TrackerHit
+	  Collection. Initial version.
+
+2005-07-18 17:33  aplin
+
+	* Tracking/BrahmsTracking/: include/FortranProcessor.h,
+	  include/TrackProcessor.h, src/FortranProcessor.cc,
+	  src/TrackProcessor.cc: added vtx hits to the tkbank. included
+	  collection names as steering parameters. changed variable names
+	  to conform to coding standards
+
+2005-07-17 21:47  aplin
+
+	* Tracking/BrahmsTracking/src/: FortranProcessor.cc,
+	  GeomInitProcessor.cc: removed the dependance of external geometry
+	  processor and implemented GEAR. GeomInit was corrected as the
+	  pixel dimentions and the resolution were mixed up.
+
+2005-07-17 21:44  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: removed dependence on
+	  external geometry processors and fully implemented GEAR. Note:the
+	  function to get pad width does not appear to give sensible values
+	  so the value of 2.2mm has been hard coded until this is resolved.
+
+2005-07-17 13:04  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: clean up documentation
+
+2005-07-17 12:58  aplin
+
+	* Tracking/BrahmsTracking/src/GNUmakefile: reduced warnings
+	  produced by cerlib by compliling with -Wno-Global
+
+2005-07-13 23:11  aplin
+
+	* Tracking/BrahmsTracking/: include/TrackingPerformanceProcessor.h,
+	  src/TrackingPerformanceProcessor.cc: added
+	  TrackingPerformanceProcessor to MarlinReco. This processor has
+	  ROOT dependance which is contained within #ifdefs
+
+2005-07-12 19:12  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: made more use of GEAR
+	  though still not fully used
+
+2005-07-12 16:33  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: added emacs C++ mode lines
+
+2005-07-11 17:58  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: first implementaion
+	  using GEAR
+
+2005-07-11 17:15  aplin
+
+	* GNUmakefile, Analysis/EventShapes/doc/Doxyfile,
+	  Analysis/EventShapes/include/SelectReconstructedParticle.h,
+	  Analysis/EventShapes/include/Sphere.h,
+	  Analysis/EventShapes/include/ThrustReconstruction.h,
+	  Analysis/EventShapes/include/jama_eig.h,
+	  Analysis/EventShapes/include/tnt_math_utils.h,
+	  Analysis/EventShapes/src/GNUmakefile,
+	  Analysis/EventShapes/src/SelectReconstructedParticle.cc,
+	  Analysis/EventShapes/src/Sphere.cc,
+	  Analysis/EventShapes/src/ThrustReconstruction.cc,
+	  Analysis/SatoruJetFinder/doc/Doxyfile,
+	  Analysis/SatoruJetFinder/include/SatoruJetFinderProcessor.h,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Analysis/SatoruJetFinder/src/SatoruJetFinderProcessor.cc,
+	  Analysis/SatoruJetFinder/src/fortsrc/casso.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ckern.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/cksord.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/cyjet.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxaddv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxang3.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxcamj.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxcone.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxlcl5.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxluc5.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxmas4.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxnew.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxnorv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxolap.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxord.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxpriv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxprnt.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxroot.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsame.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsear.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsorv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxtry.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxuvec.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxzerv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/sycone.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syisrt.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf0.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf1.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf2.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjkrn.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/symrgj.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/yasso.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ykern.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ynjet.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/yyjet.f,
+	  CaloDigi/LDCCaloDigi/doc/Doxyfile,
+	  CaloDigi/LDCCaloDigi/include/BrahmsCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/include/DigiHitExtended.h,
+	  CaloDigi/LDCCaloDigi/include/MokkaCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/include/SimpleCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/src/BrahmsCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/DigiHitExtended.cc,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc,
+	  Clustering/ClusterCheater/doc/Doxyfile,
+	  Clustering/ClusterCheater/include/ClusterCheater.h,
+	  Clustering/ClusterCheater/src/ClusterCheater.cc,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/doc/Doxyfile,
+	  Clustering/TrackwiseClustering/include/TrackwiseClustering.h,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/TrackwiseClustering.cc,
+	  Pflow/Wolf/doc/Doxyfile, Pflow/Wolf/include/Wolf.h,
+	  Pflow/Wolf/src/GNUmakefile, Pflow/Wolf/src/Wolf.cc,
+	  TrackDigi/TPCDigi/doc/Doxyfile,
+	  TrackDigi/TPCDigi/include/TPCDigiProcessor.h,
+	  TrackDigi/TPCDigi/include/random.h,
+	  TrackDigi/TPCDigi/include/voxel.h,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  TrackDigi/TPCDigi/src/voxel.cc,
+	  Tracking/BrahmsTracking/doc/Doxyfile,
+	  Tracking/BrahmsTracking/include/BrahmsEndProcessor.h,
+	  Tracking/BrahmsTracking/include/BrahmsInitProcessor.h,
+	  Tracking/BrahmsTracking/include/FortranProcessor.h,
+	  Tracking/BrahmsTracking/include/GeomEndProcessor.h,
+	  Tracking/BrahmsTracking/include/GeomInitProcessor.h,
+	  Tracking/BrahmsTracking/include/TrackProcessor.h,
+	  Tracking/BrahmsTracking/include/cfortran.h,
+	  Tracking/BrahmsTracking/include/tkhitbank.h,
+	  Tracking/BrahmsTracking/include/tkmcbank.h,
+	  Tracking/BrahmsTracking/include/tktebank.h,
+	  Tracking/BrahmsTracking/include/tpchitbank.h,
+	  Tracking/BrahmsTracking/src/BrahmsEndProcessor.cc,
+	  Tracking/BrahmsTracking/src/BrahmsInitProcessor.cc,
+	  Tracking/BrahmsTracking/src/FortranProcessor.cc,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GeomEndProcessor.cc,
+	  Tracking/BrahmsTracking/src/GeomInitProcessor.cc,
+	  Tracking/BrahmsTracking/src/TrackProcessor.cc,
+	  Tracking/BrahmsTracking/src/tkhitbank.cc,
+	  Tracking/BrahmsTracking/src/tkmcbank.cc,
+	  Tracking/BrahmsTracking/src/tktebank.cc,
+	  Tracking/BrahmsTracking/src/tpchitbank.cc,
+	  Tracking/BrahmsTracking/src/f77/deldet.F,
+	  Tracking/BrahmsTracking/src/f77/delid.F,
+	  Tracking/BrahmsTracking/src/f77/fk3trk.F,
+	  Tracking/BrahmsTracking/src/f77/fkctow.F,
+	  Tracking/BrahmsTracking/src/f77/fkdch2.F,
+	  Tracking/BrahmsTracking/src/f77/fkdedx.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpco.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpv0.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpva.F,
+	  Tracking/BrahmsTracking/src/f77/fkini.F,
+	  Tracking/BrahmsTracking/src/f77/fkkalm.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi3d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi4d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi5d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmsct.F,
+	  Tracking/BrahmsTracking/src/f77/fkprcd.F,
+	  Tracking/BrahmsTracking/src/f77/fkprcw.F,
+	  Tracking/BrahmsTracking/src/f77/fkprpd.F,
+	  Tracking/BrahmsTracking/src/f77/fkprpw.F,
+	  Tracking/BrahmsTracking/src/f77/fkref.F,
+	  Tracking/BrahmsTracking/src/f77/fkspar.F,
+	  Tracking/BrahmsTracking/src/f77/fksref.F,
+	  Tracking/BrahmsTracking/src/f77/fkster.F,
+	  Tracking/BrahmsTracking/src/f77/fkstkr.F,
+	  Tracking/BrahmsTracking/src/f77/fkswch.F,
+	  Tracking/BrahmsTracking/src/f77/fktfit.F,
+	  Tracking/BrahmsTracking/src/f77/fkwgmn.F,
+	  Tracking/BrahmsTracking/src/f77/fkxcyl.F,
+	  Tracking/BrahmsTracking/src/f77/fkxdcy.F,
+	  Tracking/BrahmsTracking/src/f77/fkxdpl.F,
+	  Tracking/BrahmsTracking/src/f77/fkxpla.F,
+	  Tracking/BrahmsTracking/src/f77/fsfand.F,
+	  Tracking/BrahmsTracking/src/f77/fsfic2.F,
+	  Tracking/BrahmsTracking/src/f77/fsfini.F,
+	  Tracking/BrahmsTracking/src/f77/fsflft.F,
+	  Tracking/BrahmsTracking/src/f77/fxaini.F,
+	  Tracking/BrahmsTracking/src/f77/fxprob.F,
+	  Tracking/BrahmsTracking/src/f77/my_tmshel.F,
+	  Tracking/BrahmsTracking/src/f77/setmat.F,
+	  Tracking/BrahmsTracking/src/f77/smav.F,
+	  Tracking/BrahmsTracking/src/f77/sminv.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtkhits.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtkte.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtpchits.F,
+	  Tracking/BrahmsTracking/src/f77/tcobin.F,
+	  Tracking/BrahmsTracking/src/f77/tfcand.F,
+	  Tracking/BrahmsTracking/src/f77/tfchek.F,
+	  Tracking/BrahmsTracking/src/f77/tfithl.F,
+	  Tracking/BrahmsTracking/src/f77/tfittk.F,
+	  Tracking/BrahmsTracking/src/f77/tflnk2.F,
+	  Tracking/BrahmsTracking/src/f77/tflnks.F,
+	  Tracking/BrahmsTracking/src/f77/thitsrt.F,
+	  Tracking/BrahmsTracking/src/f77/tkhtpc.F,
+	  Tracking/BrahmsTracking/src/f77/tkinit.F,
+	  Tracking/BrahmsTracking/src/f77/tkink.F,
+	  Tracking/BrahmsTracking/src/f77/tkmkte.F,
+	  Tracking/BrahmsTracking/src/f77/tkread.F,
+	  Tracking/BrahmsTracking/src/f77/tksetr.F,
+	  Tracking/BrahmsTracking/src/f77/tkstor.F,
+	  Tracking/BrahmsTracking/src/f77/tktpcr.F,
+	  Tracking/BrahmsTracking/src/f77/tkveto.F,
+	  Tracking/BrahmsTracking/src/f77/tpcdigi.F,
+	  Tracking/BrahmsTracking/src/f77/tpcgeom.F,
+	  Tracking/BrahmsTracking/src/f77/tpcini.F,
+	  Tracking/BrahmsTracking/src/f77/tpcrun.F,
+	  Tracking/BrahmsTracking/src/f77/tpcsav.F,
+	  Tracking/BrahmsTracking/src/f77/tpcset.F,
+	  Tracking/BrahmsTracking/src/f77/trempt.F,
+	  Tracking/BrahmsTracking/src/f77/trftch.F,
+	  Tracking/BrahmsTracking/src/f77/trhlx2.F,
+	  Tracking/BrahmsTracking/src/f77/trkfnd.F,
+	  Tracking/BrahmsTracking/src/f77/trphdi.F,
+	  Tracking/BrahmsTracking/src/f77/trproj.F,
+	  Tracking/BrahmsTracking/src/f77/trresc.F,
+	  Tracking/BrahmsTracking/src/f77/trseek.F,
+	  Tracking/BrahmsTracking/src/f77/trslnk.F,
+	  Tracking/BrahmsTracking/src/f77/uctgft.F,
+	  Tracking/BrahmsTracking/src/f77/ufitms.F,
+	  Tracking/BrahmsTracking/src/f77/unmerge.F,
+	  Tracking/BrahmsTracking/src/f77/include/alcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/bkgmode.inc,
+	  Tracking/BrahmsTracking/src/f77/include/brcntl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/brlink.inc,
+	  Tracking/BrahmsTracking/src/f77/include/chgtrak.inc,
+	  Tracking/BrahmsTracking/src/f77/include/coildims.inc,
+	  Tracking/BrahmsTracking/src/f77/include/detnums.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkbdlo.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkclun.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcom.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcom_plus.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkddes.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkdebug.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkexts.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkfild.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkparm.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkpipar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkrank.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fksave.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fktkx.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fndparms.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfarrays.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfclun.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfmc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfpar1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfparams.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfpi.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfsim.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfxerrs.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fxapar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/gconst.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_jndb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_link.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1cl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1ft.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1tl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tarc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tatc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcal.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcha.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcrl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tctc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgcl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgft.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgtl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tlnk.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_ttcc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_ttrc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/patrec.inc,
+	  Tracking/BrahmsTracking/src/f77/include/rconds.inc,
+	  Tracking/BrahmsTracking/src/f77/include/rflags.inc,
+	  Tracking/BrahmsTracking/src/f77/include/strcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tarcjj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tcanwb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tcbins.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tchain.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tchajj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tflnwb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkbank.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkcnst1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkconst.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkffread.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkfunc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkfunc1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tknoisepar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tlnkjj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpccon.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcdbg.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcdims.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcfunc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcfunc2.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcirc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcmatpar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpco.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcres.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpgeom.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpgeop.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tphtcns.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tplinc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpwork.inc,
+	  Tracking/BrahmsTracking/src/f77/include/trfdct.inc,
+	  Tracking/BrahmsTracking/src/f77/include/turnon.inc,
+	  Tracking/BrahmsTracking/src/f77/include/ufitcb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/unmrg.inc,
+	  Tracking/TrackCheater/doc/Doxyfile,
+	  Tracking/TrackCheater/include/TrackCheater.h,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/TrackCheater/src/TrackCheater.cc, src/GNUmakefile:
+	  Initial revision
+
+2005-07-11 17:15  aplin
+
+	* GNUmakefile, Analysis/EventShapes/doc/Doxyfile,
+	  Analysis/EventShapes/include/SelectReconstructedParticle.h,
+	  Analysis/EventShapes/include/Sphere.h,
+	  Analysis/EventShapes/include/ThrustReconstruction.h,
+	  Analysis/EventShapes/include/jama_eig.h,
+	  Analysis/EventShapes/include/tnt_math_utils.h,
+	  Analysis/EventShapes/src/GNUmakefile,
+	  Analysis/EventShapes/src/SelectReconstructedParticle.cc,
+	  Analysis/EventShapes/src/Sphere.cc,
+	  Analysis/EventShapes/src/ThrustReconstruction.cc,
+	  Analysis/SatoruJetFinder/doc/Doxyfile,
+	  Analysis/SatoruJetFinder/include/SatoruJetFinderProcessor.h,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Analysis/SatoruJetFinder/src/SatoruJetFinderProcessor.cc,
+	  Analysis/SatoruJetFinder/src/fortsrc/casso.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ckern.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/cksord.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/cyjet.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxaddv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxang3.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxcamj.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxcone.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxlcl5.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxluc5.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxmas4.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxnew.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxnorv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxolap.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxord.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxpriv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxprnt.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxroot.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsame.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsear.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxsorv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxtry.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxuvec.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/pxzerv.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/sycone.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syisrt.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf0.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf1.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjetf2.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/syjkrn.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/symrgj.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/yasso.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ykern.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/ynjet.f,
+	  Analysis/SatoruJetFinder/src/fortsrc/yyjet.f,
+	  CaloDigi/LDCCaloDigi/doc/Doxyfile,
+	  CaloDigi/LDCCaloDigi/include/BrahmsCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/include/DigiHitExtended.h,
+	  CaloDigi/LDCCaloDigi/include/MokkaCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/include/SimpleCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/src/BrahmsCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/DigiHitExtended.cc,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc,
+	  Clustering/ClusterCheater/doc/Doxyfile,
+	  Clustering/ClusterCheater/include/ClusterCheater.h,
+	  Clustering/ClusterCheater/src/ClusterCheater.cc,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/doc/Doxyfile,
+	  Clustering/TrackwiseClustering/include/TrackwiseClustering.h,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/TrackwiseClustering.cc,
+	  Pflow/Wolf/doc/Doxyfile, Pflow/Wolf/include/Wolf.h,
+	  Pflow/Wolf/src/GNUmakefile, Pflow/Wolf/src/Wolf.cc,
+	  TrackDigi/TPCDigi/doc/Doxyfile,
+	  TrackDigi/TPCDigi/include/TPCDigiProcessor.h,
+	  TrackDigi/TPCDigi/include/random.h,
+	  TrackDigi/TPCDigi/include/voxel.h,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  TrackDigi/TPCDigi/src/voxel.cc,
+	  Tracking/BrahmsTracking/doc/Doxyfile,
+	  Tracking/BrahmsTracking/include/BrahmsEndProcessor.h,
+	  Tracking/BrahmsTracking/include/BrahmsInitProcessor.h,
+	  Tracking/BrahmsTracking/include/FortranProcessor.h,
+	  Tracking/BrahmsTracking/include/GeomEndProcessor.h,
+	  Tracking/BrahmsTracking/include/GeomInitProcessor.h,
+	  Tracking/BrahmsTracking/include/TrackProcessor.h,
+	  Tracking/BrahmsTracking/include/cfortran.h,
+	  Tracking/BrahmsTracking/include/tkhitbank.h,
+	  Tracking/BrahmsTracking/include/tkmcbank.h,
+	  Tracking/BrahmsTracking/include/tktebank.h,
+	  Tracking/BrahmsTracking/include/tpchitbank.h,
+	  Tracking/BrahmsTracking/src/BrahmsEndProcessor.cc,
+	  Tracking/BrahmsTracking/src/BrahmsInitProcessor.cc,
+	  Tracking/BrahmsTracking/src/FortranProcessor.cc,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GeomEndProcessor.cc,
+	  Tracking/BrahmsTracking/src/GeomInitProcessor.cc,
+	  Tracking/BrahmsTracking/src/TrackProcessor.cc,
+	  Tracking/BrahmsTracking/src/tkhitbank.cc,
+	  Tracking/BrahmsTracking/src/tkmcbank.cc,
+	  Tracking/BrahmsTracking/src/tktebank.cc,
+	  Tracking/BrahmsTracking/src/tpchitbank.cc,
+	  Tracking/BrahmsTracking/src/f77/deldet.F,
+	  Tracking/BrahmsTracking/src/f77/delid.F,
+	  Tracking/BrahmsTracking/src/f77/fk3trk.F,
+	  Tracking/BrahmsTracking/src/f77/fkctow.F,
+	  Tracking/BrahmsTracking/src/f77/fkdch2.F,
+	  Tracking/BrahmsTracking/src/f77/fkdedx.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpco.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpv0.F,
+	  Tracking/BrahmsTracking/src/f77/fkdpva.F,
+	  Tracking/BrahmsTracking/src/f77/fkini.F,
+	  Tracking/BrahmsTracking/src/f77/fkkalm.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi3d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi4d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmi5d.F,
+	  Tracking/BrahmsTracking/src/f77/fkmsct.F,
+	  Tracking/BrahmsTracking/src/f77/fkprcd.F,
+	  Tracking/BrahmsTracking/src/f77/fkprcw.F,
+	  Tracking/BrahmsTracking/src/f77/fkprpd.F,
+	  Tracking/BrahmsTracking/src/f77/fkprpw.F,
+	  Tracking/BrahmsTracking/src/f77/fkref.F,
+	  Tracking/BrahmsTracking/src/f77/fkspar.F,
+	  Tracking/BrahmsTracking/src/f77/fksref.F,
+	  Tracking/BrahmsTracking/src/f77/fkster.F,
+	  Tracking/BrahmsTracking/src/f77/fkstkr.F,
+	  Tracking/BrahmsTracking/src/f77/fkswch.F,
+	  Tracking/BrahmsTracking/src/f77/fktfit.F,
+	  Tracking/BrahmsTracking/src/f77/fkwgmn.F,
+	  Tracking/BrahmsTracking/src/f77/fkxcyl.F,
+	  Tracking/BrahmsTracking/src/f77/fkxdcy.F,
+	  Tracking/BrahmsTracking/src/f77/fkxdpl.F,
+	  Tracking/BrahmsTracking/src/f77/fkxpla.F,
+	  Tracking/BrahmsTracking/src/f77/fsfand.F,
+	  Tracking/BrahmsTracking/src/f77/fsfic2.F,
+	  Tracking/BrahmsTracking/src/f77/fsfini.F,
+	  Tracking/BrahmsTracking/src/f77/fsflft.F,
+	  Tracking/BrahmsTracking/src/f77/fxaini.F,
+	  Tracking/BrahmsTracking/src/f77/fxprob.F,
+	  Tracking/BrahmsTracking/src/f77/my_tmshel.F,
+	  Tracking/BrahmsTracking/src/f77/setmat.F,
+	  Tracking/BrahmsTracking/src/f77/smav.F,
+	  Tracking/BrahmsTracking/src/f77/sminv.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtkhits.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtkte.F,
+	  Tracking/BrahmsTracking/src/f77/stfreadtpchits.F,
+	  Tracking/BrahmsTracking/src/f77/tcobin.F,
+	  Tracking/BrahmsTracking/src/f77/tfcand.F,
+	  Tracking/BrahmsTracking/src/f77/tfchek.F,
+	  Tracking/BrahmsTracking/src/f77/tfithl.F,
+	  Tracking/BrahmsTracking/src/f77/tfittk.F,
+	  Tracking/BrahmsTracking/src/f77/tflnk2.F,
+	  Tracking/BrahmsTracking/src/f77/tflnks.F,
+	  Tracking/BrahmsTracking/src/f77/thitsrt.F,
+	  Tracking/BrahmsTracking/src/f77/tkhtpc.F,
+	  Tracking/BrahmsTracking/src/f77/tkinit.F,
+	  Tracking/BrahmsTracking/src/f77/tkink.F,
+	  Tracking/BrahmsTracking/src/f77/tkmkte.F,
+	  Tracking/BrahmsTracking/src/f77/tkread.F,
+	  Tracking/BrahmsTracking/src/f77/tksetr.F,
+	  Tracking/BrahmsTracking/src/f77/tkstor.F,
+	  Tracking/BrahmsTracking/src/f77/tktpcr.F,
+	  Tracking/BrahmsTracking/src/f77/tkveto.F,
+	  Tracking/BrahmsTracking/src/f77/tpcdigi.F,
+	  Tracking/BrahmsTracking/src/f77/tpcgeom.F,
+	  Tracking/BrahmsTracking/src/f77/tpcini.F,
+	  Tracking/BrahmsTracking/src/f77/tpcrun.F,
+	  Tracking/BrahmsTracking/src/f77/tpcsav.F,
+	  Tracking/BrahmsTracking/src/f77/tpcset.F,
+	  Tracking/BrahmsTracking/src/f77/trempt.F,
+	  Tracking/BrahmsTracking/src/f77/trftch.F,
+	  Tracking/BrahmsTracking/src/f77/trhlx2.F,
+	  Tracking/BrahmsTracking/src/f77/trkfnd.F,
+	  Tracking/BrahmsTracking/src/f77/trphdi.F,
+	  Tracking/BrahmsTracking/src/f77/trproj.F,
+	  Tracking/BrahmsTracking/src/f77/trresc.F,
+	  Tracking/BrahmsTracking/src/f77/trseek.F,
+	  Tracking/BrahmsTracking/src/f77/trslnk.F,
+	  Tracking/BrahmsTracking/src/f77/uctgft.F,
+	  Tracking/BrahmsTracking/src/f77/ufitms.F,
+	  Tracking/BrahmsTracking/src/f77/unmerge.F,
+	  Tracking/BrahmsTracking/src/f77/include/alcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/bkgmode.inc,
+	  Tracking/BrahmsTracking/src/f77/include/brcntl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/brlink.inc,
+	  Tracking/BrahmsTracking/src/f77/include/chgtrak.inc,
+	  Tracking/BrahmsTracking/src/f77/include/coildims.inc,
+	  Tracking/BrahmsTracking/src/f77/include/detnums.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkbdlo.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkclun.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcom.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcom_plus.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkddes.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkdebug.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkexts.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkfild.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkparm.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkpipar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fkrank.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fksave.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fktkx.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fndparms.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfarrays.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfclun.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfmc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfpar1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfparams.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfpi.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfsim.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fsfxerrs.inc,
+	  Tracking/BrahmsTracking/src/f77/include/fxapar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/gconst.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_jndb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_link.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1cl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1ft.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_t1tl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tarc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tatc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcal.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcha.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tcrl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tctc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgcl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgft.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tgtl.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_tlnk.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_ttcc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/my_ttrc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/patrec.inc,
+	  Tracking/BrahmsTracking/src/f77/include/rconds.inc,
+	  Tracking/BrahmsTracking/src/f77/include/rflags.inc,
+	  Tracking/BrahmsTracking/src/f77/include/strcons.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tarcjj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tcanwb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tcbins.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tchain.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tchajj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tflnwb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkbank.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkcnst1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkconst.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkffread.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkfunc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tkfunc1.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tknoisepar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tlnkjj.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpccon.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcdbg.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcdims.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcfunc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcfunc2.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcirc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcmatpar.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpco.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpcres.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpgeom.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpgeop.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tphtcns.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tplinc.inc,
+	  Tracking/BrahmsTracking/src/f77/include/tpwork.inc,
+	  Tracking/BrahmsTracking/src/f77/include/trfdct.inc,
+	  Tracking/BrahmsTracking/src/f77/include/turnon.inc,
+	  Tracking/BrahmsTracking/src/f77/include/ufitcb.inc,
+	  Tracking/BrahmsTracking/src/f77/include/unmrg.inc,
+	  Tracking/TrackCheater/doc/Doxyfile,
+	  Tracking/TrackCheater/include/TrackCheater.h,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/TrackCheater/src/TrackCheater.cc, src/GNUmakefile:
+	  Initial version
+

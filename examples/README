@@ -1,0 +1,28 @@
+This directory contains example steering files for MarlinReco
+package.
+
+The directory LDC contains an example XML steering file and GEAR 
+XML file for the LDC concept study detector needed for MarlinReco. 
+For detailed information see LDC/README file.
+
+Example steering XML file exampleVTX.xml is meant to illustrate 
+VertexTracking processor running only on the vertex detector hits.
+When running Marlin with this steering file, LCIO file 
+top_vxd01.slcio is proccessed. This file contains LCIO collection 
+hits produced in the vertex detector. 
+The output file output.slcio is produced which contains also 
+the collection of the reconstructed tracks in the vertex detector.
+
+Example steering XML file example_VTX_FTD.xml is used to demonstrate
+the extended functionality of the VertexTracking processor. 
+When running Marlin with this steering file, a combined tracking 
+in the vertex detector and forward tracking disks is performed. 
+Tracks are output in Track collection, named VTXTracks, and output 
+lcio file, named output.slcio, is produced. When running Marlin 
+with example_VTX_FTD.xml steering file, the LCIO file 
+top_6j_500GeV_silicon.slcio is processes. It contains LCIO collections 
+of TrackerHits both in the vertex detector and FTD.
+
+Content of the output LCIO files can be inspected with "dumpevt" utility
+from $LCIO/bin directory.
+

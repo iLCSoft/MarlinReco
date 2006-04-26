@@ -7,6 +7,8 @@
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <EVENT/MCParticle.h>
+#include "random.h"         
+#include <math.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -17,16 +19,25 @@ FTDDigiProcessor aFTDDigiProcessor ;
 
 FTDDigiProcessor::FTDDigiProcessor() : Processor("FTDDigiProcessor") {
   
-  // modify processor description
-  _description = "FTDDigiProcessor should create FTD TrackerHits from SimTrackerHits" ;
+  // processor description
+  _description = "FTDDigiProcessor creates FTD TrackerHits from SimTrackerHits" ;
   
-
   // register steering parameters: name, description, class-variable, default value
-
   registerProcessorParameter( "CollectionName" , 
 			      "Name of the SimTrackerHit collection"  ,
 			      _colName ,
 			      std::string("ftd01_FTD") ) ;
+
+  registerProcessorParameter( "PointResolution" ,
+                              "Point Resolution in FTD"  ,
+                              _pointReso ,
+                               (float)0.010) ;
+
+  registerProcessorParameter( "MomentumCutForDRays",
+                              "Momentum Cut For D Rays (GeV)",
+                              _momCut ,
+                              float(10.0));
+
 }
 
 
@@ -34,7 +45,6 @@ void FTDDigiProcessor::init() {
 
   // usually a good idea to
   printParameters() ;
-
   _nRun = 0 ;
   _nEvt = 0 ;
   
@@ -65,44 +75,57 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
       
         SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
-        const int celId = SimTHit->getCellID() ;
-
-        const double *pos ;
-        pos =  SimTHit->getPosition() ;  
         
-        double xSmear = 0.0 ;
-        double ySmear = 0.0 ;
-        double zSmear = 0.0 ;
+        if (_momCut > 0.) {
+          float mom = 0;
+          for (int i=0;i<3;++i) 
+            mom += SimTHit->getMomentum()[i]*SimTHit->getMomentum()[i];
 
-        double newPos[3] ;
-        newPos[0] = pos[0] + xSmear;
-        newPos[1] = pos[1] + ySmear;
-        newPos[2] = pos[2] + zSmear;
+          mom = sqrt(mom);
 
-        float de_dx ;
-        float dedxSmear = 0.0 ;
-        de_dx = SimTHit->getdEdx() ;
+          if (mom > _momCut) {
+    
+            const int celId = SimTHit->getCellID() ;
+          
+            const double *pos ;
+            pos =  SimTHit->getPosition() ;  
+            
+            RandomNumberGenerator RandomNumber;
+          
+            double xSmear = _pointReso*(*(RandomNumber.Gauss(1.0)));
+            double ySmear = _pointReso*(*(RandomNumber.Gauss(1.0)));
 
-        de_dx = de_dx + dedxSmear ; 
+            double newPos[3] ;
+            newPos[0] = pos[0] + xSmear;
+            newPos[1] = pos[1] + ySmear;
+            // No semaring of Z coordinate
+            // position of FTD layer is fixed along Z axis
+            newPos[2] = pos[2] ;
+          
+            float de_dx ;
+            float dedxSmear = 0.0 ;
+            de_dx = SimTHit->getdEdx() ;
+            de_dx = de_dx + dedxSmear ; 
+            MCParticle *mcp ;
+            mcp = SimTHit->getMCParticle() ;
+            
+            //store hit variables
+            TrackerHitImpl* trkHit = new TrackerHitImpl ;
 
-        MCParticle *mcp ;
-        mcp = SimTHit->getMCParticle() ;
+            //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
+            trkHit->setPosition(  newPos  ) ;
 
-        //store hit variables
-        TrackerHitImpl* trkHit = new TrackerHitImpl ;
-
-        //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
-        trkHit->setPosition(  newPos  ) ;
-
-        trkHit->setdEdx( de_dx ) ;
-        // FIXME: SJA this needs to set to FTD code
-        //        trkHit->setType( 100+celId ) ;
-      
-        // 	  push back the SimTHit for this TrackerHit
-        trkHit->rawHits().push_back( SimTHit ) ;
-        trkhitVec->addElement( trkHit ) ; 
-      
-
+            trkHit->setdEdx( de_dx ) ;
+            trkHit->setType( SimTHit->getCellID());
+            // FIXME: SJA this needs to set to FTD code
+            // trkHit->setType( 100+celId ) ;
+            float covMat[TRKHITNCOVMATRIX]={_pointReso,0.,0.,_pointReso,0.,0.};
+            trkHit->setCovMatrix(covMat);      
+            // push back the SimTHit for this TrackerHit
+            trkHit->rawHits().push_back( SimTHit ) ;
+            trkhitVec->addElement( trkHit ) ; 
+          }
+        }
       }
       evt->addCollection( trkhitVec , "FTDTrackerHits") ;
     }

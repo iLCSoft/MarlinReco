@@ -5,13 +5,13 @@
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
-
+#include <vector>
 
 using namespace lcio ;
 using namespace marlin ;
 
 
-/**  Produces VTX TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
+/**  Produces FTD TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
  * @author S. Aplin, DESY
  */
 class FTDDigiProcessor : public Processor {
@@ -53,6 +53,8 @@ class FTDDigiProcessor : public Processor {
 
   int _nRun ;
   int _nEvt ;
+  float _pointReso;
+  float _momCut;
 } ;
 
 #endif

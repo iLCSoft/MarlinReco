@@ -1,5 +1,6 @@
 #include "CurlKillerProcessor.h"
 #include <iostream>
+#include <cmath>
 
 //#include "MarlinCED.h"
 

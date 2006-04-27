@@ -20,36 +20,38 @@ using namespace std ;
  *
  *
  */
-class AbsCalibr : public Processor {
+
+namespace marlin {
+  class AbsCalibr : public Processor {
   
- public:
+  public:
   
-  virtual Processor*  newProcessor() { return new AbsCalibr ; }
-  AbsCalibr() ;
-//-----------------------------------------------------------------------
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void check( LCEvent * evt ) ; 
-  virtual void end() ;
-//-----------------------------------------------------------------------
+    virtual Processor*  newProcessor() { return new AbsCalibr ; }
+    AbsCalibr() ;
+    //-----------------------------------------------------------------------
+    virtual void init() ;
+    virtual void processRunHeader( LCRunHeader* run ) ;
+    virtual void processEvent( LCEvent * evt ) ; 
+    virtual void check( LCEvent * evt ) ; 
+    virtual void end() ;
+    //-----------------------------------------------------------------------
 
-protected:
+  protected:
 
-  int _nRun ;
-  int _nEvt ;
+    int _nRun ;
+    int _nEvt ;
 
-  enum {
-    ECAL1=0,
-    ECAL2,
-    HCAL
-  };
+    enum {
+      ECAL1=0,
+      ECAL2,
+      HCAL
+    };
 
-  vector<int> _nlayer;
-  vector<float> _coeff;
-  vector<float> _cuts;
-} ;
-
+    vector<int> _nlayer;
+    vector<float> _coeff;
+    vector<float> _cuts;
+  } ;
+} //namespace marlin
 #endif
 
 

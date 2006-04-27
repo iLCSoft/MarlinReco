@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.18 2006-02-09 18:00:41 owendt Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.19 2006-04-27 13:07:43 samson Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.18  2006/02/09 18:00:41  owendt
+** removed cout statements for debugging
+**
 ** Revision 1.17  2006/02/03 15:09:11  owendt
 ** i) Corrected bug in calculation of weights, relocated brace.
 ** ii) Weights are now calculated as the percentage of hits that a given MC particle contributes to the reconstructed track's hit collection.
@@ -36,6 +39,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <cmath>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>

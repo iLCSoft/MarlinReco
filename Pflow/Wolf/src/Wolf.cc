@@ -12,7 +12,7 @@
 #include <IMPL/LCCollectionVec.h>
 #include <iostream>
 #include "ClusterShapes.h"
-#include <ced_cli.h>
+//#include <ced_cli.h>
 #include "HelixClass.h"
 #include <UTIL/LCTOOLS.h>
 #include <UTIL/LCRelationNavigator.h>
@@ -24,7 +24,7 @@
 #include <gear/TPCParameters.h>
 #include <gear/CalorimeterParameters.h>
 
-#include "MarlinCED.h"
+//#include "MarlinCED.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -111,7 +111,7 @@ void Wolf::init() {
   _nRun = -1;
   _nEvt = 0;
 
-  MarlinCED::init(this) ;
+  //MarlinCED::init(this) ;
 
 
 }
@@ -124,7 +124,7 @@ void Wolf::processRunHeader( LCRunHeader* run) {
 
 void Wolf::processEvent( LCEvent * evt ) { 
 
-  MarlinCED::newEvent( this, 0 ) ;
+  //MarlinCED::newEvent( this, 0 ) ;
 
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   _bField = float(gearTPC.getDoubleVal("BField"));
@@ -479,7 +479,7 @@ void  Wolf::defineIntersection( TrackExtended * track) {
 
   delete helix;
   track->setSeedPosition(seed);
-  ced_hit(seed[0],seed[1],seed[2],0,4,0xFFFFFF);
+  //ced_hit(seed[0],seed[1],seed[2],0,4,0xFFFFFF);
 
 }
 
@@ -554,7 +554,7 @@ void Wolf::MergeClustersToTracks() {
     float omega = track->getTrack()->getOmega();
     float tanlambda = track->getTrack()->getTanLambda();
     HelixClass * helix = new HelixClass();
-    helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);;
+    helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);
     float totMom = 0.0;
     for (int i = 0; i < 3 ; ++i)
       totMom += helix->getMomentum()[i]*helix->getMomentum()[i];

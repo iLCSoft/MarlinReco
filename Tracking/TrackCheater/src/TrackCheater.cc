@@ -111,6 +111,8 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 		  dynamic_cast<TrackerHit*>(col->getElementAt(ielem));
 		LCObjectVec objVec =  trkHit->getRawHits();
 		int nInVec = objVec.size();
+		// FIXME: up to now there is only one raw hit per TrackerHit implemented
+		//std::cout << "n of Raw hits : " << nInVec << std::endl;
 		if (nInVec > 0 ) {
 		    SimTrackerHit * simTrkHit = 
 		      dynamic_cast<SimTrackerHit*>(objVec[0]);
@@ -169,14 +171,14 @@ void TrackCheater::processEvent( LCEvent * evt ) {
     }
 
     // debug
-    /*
+    
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "TrackCheater : " <<  nonAssignedHits 
 	      << " hits non pointing to MCParticle ; " 
 	      << assignedToNeutrals 
 	      << " hits assigned to neutrals " << std::endl;
-    */
+    
 
     LCCollectionVec * trkcol = new LCCollectionVec(LCIO::TRACK);
     LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);

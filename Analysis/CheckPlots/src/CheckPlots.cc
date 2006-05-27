@@ -839,6 +839,7 @@ void CheckPlots::fillCaloCheckPlots(LCEvent * evt) {
     // numbers per event
     static AIDA::ICloud1D* cNumberCaloHits;
     static AIDA::ICloud1D* cEnergyCaloHitsSum;
+    static AIDA::ICloud1D* cDifferenceEnergyCaloSumAndMCEnergy;
     
     // numbers per single particle
     static AIDA::ICloud1D* cEnergyCaloHits;
@@ -849,7 +850,11 @@ void CheckPlots::fillCaloCheckPlots(LCEvent * evt) {
       
       cNumberCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberCaloHits", "number of CaloHits per event", -1 );
       cEnergyCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHitsSum", "energy sum of the CaloHits per event", -1 );
-      
+      cDifferenceEnergyCaloSumAndMCEnergy = AIDAProcessor::histogramFactory(this)->createCloud1D( "DifferenceEnergyCaloSumAndMCEnergy",
+												  "difference between sum of all the CaloHit energy per event and the MC energy"
+
+												  , -1 );
+     
       cEnergyCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHits", "energy spectrum of the CaloHits per event", -1 );
       
     }
@@ -895,6 +900,13 @@ void CheckPlots::fillCaloCheckPlots(LCEvent * evt) {
 
     cNumberCaloHits->fill(numberHits);
     cEnergyCaloHitsSum->fill(energySum);
+
+    double accumulatedEnergies[20] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,};
+    MarlinUtil::getMC_Balance(evt,accumulatedEnergies);
+    float SEMC = (float)accumulatedEnergies[0];
+
+    cDifferenceEnergyCaloSumAndMCEnergy->fill(energySum-SEMC);
+
 
   }
   catch(DataNotAvailableException &e){

@@ -15,6 +15,7 @@
 #include <EVENT/TrackerHit.h>
 #include <EVENT/CalorimeterHit.h>
 
+#include <MarlinUtil.h>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -28,7 +29,7 @@ using namespace marlin ;
 
 
 /**
- *    This processor provides check plots. The plots distributed in the following different categories:
+ *    This processor provides check plots. The plots are arranged in the following different categories:
  *    <br>
  *    1. MC particle related plots <br>
  *    2. Plots related to the simulated hits in tracking and calorimeter devices <br>
@@ -45,7 +46,7 @@ using namespace marlin ;
  *
  *
  *    @author O. Wendt (DESY)
- *    @version $Id: CheckPlots.h,v 1.1 2006-05-22 13:16:44 owendt Exp $
+ *    @version $Id: CheckPlots.h,v 1.2 2006-05-27 13:58:09 owendt Exp $
  *
  */
 class CheckPlots : public Processor {

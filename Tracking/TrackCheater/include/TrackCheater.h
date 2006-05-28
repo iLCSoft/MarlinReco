@@ -38,7 +38,7 @@ using namespace marlin ;
  *  to define track parameters. Only tracks with energy greater than <br>
  *  certain threshold, defined with processor parameter ECut, are retained. <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $Id: TrackCheater.h,v 1.4 2005-08-07 16:22:39 gaede Exp $<br>
+ *    @version $Id: TrackCheater.h,v 1.5 2006-05-28 15:24:15 owendt Exp $<br>
  */
 class TrackCheater : public Processor {
   
@@ -82,8 +82,8 @@ class TrackCheater : public Processor {
 
   std::string _trueTracksCollection;
   std::vector<std::string> _trackerHitCollections;
-  std::string _relCollection;
- 
+  std::string _colNameMCTrueTracksRel;
+  
   float _bField;
   float _eCut;
   float _hitToHelixCut;

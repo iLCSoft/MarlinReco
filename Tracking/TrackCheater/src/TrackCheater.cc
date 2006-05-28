@@ -43,6 +43,11 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
 			     _trackerHitCollections ,
 			     trackerHitCollections);
 
+  registerProcessorParameter( "MCTrueTrackRelCollectionName" , 
+                              "Name of the TrueTrack MC Relation collection"  ,
+                              _colNameMCTrueTracksRel ,
+                              std::string("TrueTrackToMCP") );
+
   registerProcessorParameter("BField",
 			     "Magnetic Field",
 			     _bField ,
@@ -331,8 +336,7 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	}
 	else {
 	  nlost += nhits;
-	  std::cout << "Track is lost : "  
-		    << "# of hits = " << nhits << std::endl;
+	  // std::cout << "Track is lost : " << "# of hits = " << nhits << std::endl;
 	}
 	delete helix;
 	itk++;
@@ -344,8 +348,8 @@ void TrackCheater::processEvent( LCEvent * evt ) {
     // debug
     //std::cout << std::endl;
 
-    evt->addCollection(trkcol,_trueTracksCollection.c_str());
-    evt->addCollection(relationcol,"TrueTrackToMCP");
+    evt->addCollection(trkcol,_trueTracksCollection);
+    evt->addCollection(relationcol,_colNameMCTrueTracksRel);
 
   _nEvt++;
 

@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.19 2006-04-27 13:07:43 samson Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.20 2006-05-28 15:22:15 owendt Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.19  2006/04/27 13:07:43  samson
+** Fix minor syntax errors to achieve compatibility with gcc4
+**
 ** Revision 1.18  2006/02/09 18:00:41  owendt
 ** removed cout statements for debugging
 **
@@ -245,7 +248,7 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                               std::string("MCTPCTracksRel") ) ;
 
   registerProcessorParameter( "MCTrackRelCollectionName" , 
-                              "Name of the TPC Track MC Relation collection"  ,
+                              "Name of the Track MC Relation collection"  ,
                               _colNameMCTracksRel ,
                               std::string("MCTracksRel") ) ;
 }

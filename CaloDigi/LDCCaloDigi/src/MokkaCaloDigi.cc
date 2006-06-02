@@ -83,7 +83,7 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
   registerProcessorParameter( "RelationCollName" ,
 			      "name for collection of relations between CalorimeterHits and SimCalorimeterHits", 
 			      _relationCollName , 
-			      std::string("RelCaloHit"));
+			      std::string("RelationCaloHit"));
 
   registerProcessorParameter("ECALThreshold" , 
 			     "Threshold for ECAL Hits in GeV" ,

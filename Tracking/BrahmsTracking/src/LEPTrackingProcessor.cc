@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.20 2006-05-28 15:22:15 owendt Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.21 2006-06-28 15:29:04 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.20  2006/05/28 15:22:15  owendt
+** changed text for the explanation of a processor parameter
+**
 ** Revision 1.19  2006/04/27 13:07:43  samson
 ** Fix minor syntax errors to achieve compatibility with gcc4
 **
@@ -177,7 +180,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
 
   // definition of gettpcgeom done here it just sends the geomtertry into to tpcgeom.F
   int gettpcgeom(float* innerrad, float* outerrad, int* npadrows, 
-                  float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres){
+                  float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float* tpcbfield){
 
   //  try{
 
@@ -193,6 +196,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResMax")) ;  
   *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
+  *tpcbfield = float(gearTPC.getDoubleVal("tpcBField")) ;
 
   //  }
 //  catch() {return 1} ;
@@ -200,8 +204,8 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   return 0;
 }
 
-FCALLSCFUN8(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT, 
-            PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT )
+FCALLSCFUN9(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT, 
+            PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT )
 
 
 
@@ -525,7 +529,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
         // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-        const double consb = (2.99792458*4.)/(10*1000.) ;     // divide by 1000 m->mm
+        const double bField = gearTPC.getDoubleVal("tpcBField") ;
+        const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
 
         // tan lambda and curvature remain unchanged as the track is only extrapolated
         // set negative as 1/p is signed with geometric curvature clockwise negative
@@ -740,7 +745,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
       // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-      const double consb = (2.99792458*4.)/(10*1000.) ;     // divide by 1000 m->mm
+      const double bField = gearTPC.getDoubleVal("tpcBField") ;
+      const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
       
       // tan lambda and curvature remain unchanged as the track is only extrapolated
       // set negative as 1/p is signed with geometric curvature clockwise negative

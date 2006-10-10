@@ -7,8 +7,9 @@
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <EVENT/MCParticle.h>
-#include "random.h"         
 #include <math.h>
+
+#include <gsl/gsl_randist.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -47,6 +48,9 @@ void FTDDigiProcessor::init() {
   printParameters() ;
   _nRun = 0 ;
   _nEvt = 0 ;
+
+  //intialise random number generator 
+  r = gsl_rng_alloc(gsl_rng_ranlxs2);
   
 }
 
@@ -90,11 +94,9 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
             const double *pos ;
             pos =  SimTHit->getPosition() ;  
             
-            RandomNumberGenerator RandomNumber;
+            double xSmear = gsl_ran_gaussian(r,_pointReso);
+            double ySmear = gsl_ran_gaussian(r,_pointReso);
           
-            double xSmear = _pointReso*(*(RandomNumber.Gauss(1.0)));
-            double ySmear = _pointReso*(*(RandomNumber.Gauss(1.0)));
-
             double newPos[3] ;
             newPos[0] = pos[0] + xSmear;
             newPos[1] = pos[1] + ySmear;
@@ -141,7 +143,8 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
 
 
 void FTDDigiProcessor::end(){ 
-  
+
+  gsl_rng_free(r);  
 //   std::cout << "FTDDigiProcessor::end()  " << name() 
 // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 // 	    << std::endl ;

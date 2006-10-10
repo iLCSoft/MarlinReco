@@ -5,7 +5,7 @@
 #include <marlin/Processor.h>
 #include <lcio.h>
 #include <string>
-
+#include <gsl/gsl_rng.h>
 
 
 using namespace lcio ;
@@ -58,6 +58,9 @@ protected:
 
   int _nRun ;
   int _nEvt ;
+
+  // gsl random number generator
+  gsl_rng * r ;
 
 } ;
 

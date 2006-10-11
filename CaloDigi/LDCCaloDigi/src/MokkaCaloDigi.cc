@@ -53,37 +53,46 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
   std::vector<std::string> ecalCollections;
   ecalCollections.push_back(std::string("SEcal01_EcalEndcap"));
   ecalCollections.push_back(std::string("SEcal01_EcalBarrel"));
-  registerProcessorParameter( "ECALCollections" , 
-			      "ECAL Collection Names" ,
-			      _ecalCollections ,
-			       ecalCollections);
 
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "ECALCollections" , 
+			    "ECAL Collection Names" ,
+			    _ecalCollections ,
+			    ecalCollections);
+  
+  
   std::vector<std::string> hcalCollections;
   hcalCollections.push_back(std::string("SHcal01_HcalBarrelEnd"));
   hcalCollections.push_back(std::string("SHcal01_HcalBarrelReg"));
   hcalCollections.push_back(std::string("SHcal01_HcalEndCaps"));
-
-  registerProcessorParameter("HCALCollections" , 
-			     "HCAL Collection Names" , 
-			     _hcalCollections , 
-			     hcalCollections);
-
-  registerProcessorParameter( "NewECALCollName" , 
-			      "name for the new collection of ECAL hits"  ,
-			      _newCollNameECAL ,
-			      std::string("ECAL")) ;
-
-
-  registerProcessorParameter( "NewHCALCollName" , 
-			      "name for the new collection of HCAL hits"  ,
-			      _newCollNameHCAL ,
-			      std::string("HCAL"));
+  
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "HCALCollections" , 
+			    "HCAL Collection Names" , 
+			    _hcalCollections , 
+			    hcalCollections);
+  
+  
+  registerOutputCollection(  LCIO::CALORIMETERHIT,
+			     "NewECALCollName" , 
+			     "name for the new collection of ECAL hits"  ,
+			     _newCollNameECAL ,
+			     std::string("ECAL")) ;
+  
+  
+  registerOutputCollection(  LCIO::CALORIMETERHIT,
+			     "NewHCALCollName" , 
+			    "name for the new collection of HCAL hits"  ,
+			    _newCollNameHCAL ,
+			    std::string("HCAL"));
   
 
-  registerProcessorParameter( "RelationCollName" ,
-			      "name for collection of relations between CalorimeterHits and SimCalorimeterHits", 
-			      _relationCollName , 
-			      std::string("RelationCaloHit"));
+  registerOutputCollection(  LCIO::CALORIMETERHIT,
+			     "RelationCollName" ,
+			     "name for collection of relations between CalorimeterHits and SimCalorimeterHits", 
+			     _relationCollName , 
+			     std::string("RelationCaloHit"));
+  
 
   registerProcessorParameter("ECALThreshold" , 
 			     "Threshold for ECAL Hits in GeV" ,

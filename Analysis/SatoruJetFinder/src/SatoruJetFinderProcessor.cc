@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.4 2006-02-16 17:24:49 samson Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.5 2006-10-11 16:22:10 gaede Exp $
 **
 **
 */ 
@@ -34,14 +34,18 @@ namespace marlin
     // general steering parameters
     
     
-    registerProcessorParameter( "InputCollection",
-                                "Collection of reconstructed particles",
-                                _inputCollection,
-                                std::string("Unset") );
-    registerProcessorParameter( "OutputCollection",
-                                "Name of collection with the found jets",
-                                _outputCollection,
-                                std::string("Unset") );
+    registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+                             "InputCollection",
+                             "Collection of reconstructed particles",
+                             _inputCollection,
+                             std::string("Unset") );
+    
+    registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+                              "OutputCollection",
+                              "Name of collection with the found jets",
+                              _outputCollection,
+                              std::string("Unset") );
+
     registerOptionalParameter( "Debug",
                                "Set debug level",
                                _debug, 0 );

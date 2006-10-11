@@ -38,30 +38,36 @@ ClusterCheater::ClusterCheater() : Processor("ClusterCheater") {
 
   _description = "Creates true clusters..." ;
 
-  registerProcessorParameter("TrueClusterCollection",
-			     "Collection of True Clusters",
-			     _trueClustCollection ,
-			     std::string("TrueClusters"));
- registerProcessorParameter("TrueClusterToMCPCollection",
-			     "Relation Collection Cluster to MCP",
-			     _trueClustToMCP,
-			     std::string("TrueClusterToMCP"));
+  registerOutputCollection( LCIO::CLUSTER, 
+			    "TrueClusterCollection",
+			    "Collection of True Clusters",
+			    _trueClustCollection ,
+			    std::string("TrueClusters"));
+
+  registerOutputCollection( LCIO::LCRELATION, 
+			    "TrueClusterToMCPCollection",
+			    "Relation Collection Cluster to MCP",
+			    _trueClustToMCP,
+			    std::string("TrueClusterToMCP"));
+
   std::vector<std::string> caloCollections;
 
   caloCollections.push_back(std::string("ECAL"));
   caloCollections.push_back(std::string("HCAL"));
   
 
-  registerProcessorParameter("CaloCollections",
-			     "Calorimeter Collection Names",
-			     _caloCollections ,
-			     caloCollections);
-
-  registerProcessorParameter("RelCollection",
-			     "SimCaloHit to CaloHit Relations Collection Name",
-			     _relCollection ,
-			     std::string("RelationCaloHit"));
-
+  registerInputCollections( LCIO::CALORIMETERHIT, 
+			    "CaloCollections",
+			    "Calorimeter Collection Names",
+			    _caloCollections ,
+			    caloCollections );
+  
+  registerInputCollection( LCIO::LCRELATION, 
+			   "RelCollection",
+			   "SimCaloHit to CaloHit Relations Collection Name",
+			   _relCollection ,
+			   std::string("RelationCaloHit"));
+  
  
 
 }
@@ -98,9 +104,9 @@ void ClusterCheater::processEvent( LCEvent * evt ) {
 
       cout<<"name ="<<_caloCollections[i]<<endl;
        const LCCollection * relcol ;
-       relcol = evt->getCollection("RelationCaloHit");
-	 LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
-          unsigned int nhits = col->getNumberOfElements();
+       relcol = evt->getCollection( _relCollection );
+       LCCollection * col = evt->getCollection(_caloCollections[i].c_str());
+       unsigned int nhits = col->getNumberOfElements();
   
      
       double gearRMax = Global::GEAR->getEcalBarrelParameters().getExtent()[0];
@@ -243,7 +249,7 @@ void ClusterCheater::processEvent( LCEvent * evt ) {
    
 	LCRelationImpl * rel = new LCRelationImpl(cluster,mcp,(float)1.0);
 	relationcol->addElement( rel ); 
-
+	
      }   
     }
     evt->addCollection(clscol,_trueClustCollection.c_str());

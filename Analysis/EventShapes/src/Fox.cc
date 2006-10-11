@@ -45,11 +45,12 @@ Fox::Fox() : Processor("Fox") {
    
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "NameOfReconstructedParticlesCollection" , 
-			      "Name of the ReconstructedParticle collection"  ,
-			      _colName ,
-			      std::string("RecoParticles") ) ;
-
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+			   "NameOfReconstructedParticlesCollection" , 
+			   "Name of the ReconstructedParticle collection"  ,
+			   _colName ,
+			   std::string("RecoParticles") ) ;
+  
   vector<int> momentsToCalculate;
 
   registerProcessorParameter("CalculateFoxWolframMoments",

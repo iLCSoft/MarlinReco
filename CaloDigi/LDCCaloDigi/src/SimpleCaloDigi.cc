@@ -40,10 +40,11 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   ecalCollections.push_back(std::string("ecal02_EcalBarrel"));
   ecalCollections.push_back(std::string("ecal02_EcalEndcap"));
 
-  registerProcessorParameter( "ECALCollections" , 
-			      "ECAL Collection Names" ,
-			      _ecalCollections ,
-			       ecalCollections);
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "ECALCollections" , 
+			    "ECAL Collection Names" ,
+			    _ecalCollections ,
+			    ecalCollections);
 
   std::vector<std::string> hcalCollections;
 
@@ -51,23 +52,27 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelReg"));
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalEndCaps"));
 
-  registerProcessorParameter("HCALCollections" , 
-			     "HCAL Collection Names" , 
-			     _hcalCollections , 
-			     hcalCollections);
-
-  registerProcessorParameter("ECALOutputCollection" , 
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "HCALCollections" , 
+			    "HCAL Collection Names" , 
+			    _hcalCollections , 
+			    hcalCollections);
+  
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
+			     "ECALOutputCollection" , 
 			     "ECAL Collection of real Hits" , 
 			     _outputEcalCollection , 
 			     std::string("ECAL")) ; 
-
-  registerProcessorParameter("HCALOutputCollection" , 
+  
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
+			     "HCALOutputCollection" , 
 			     "HCAL Collection of real Hits" , 
 			     _outputHcalCollection , 
 			     std::string("HCAL")) ; 
-
   
-  registerProcessorParameter("RelationOutputCollection" , 
+  
+  registerOutputCollection( LCIO::LCRELATION, 
+			     "RelationOutputCollection" , 
 			     "CaloHit Relation Collection" , 
 			     _outputRelCollection , 
 			     std::string("RelationCaloHit")) ; 

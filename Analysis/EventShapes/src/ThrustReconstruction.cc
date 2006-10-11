@@ -31,10 +31,11 @@ ThrustReconstruction::ThrustReconstruction()
   // register steering parameters: 
   // name, description, class-variable, default value
 
-  registerProcessorParameter( "inputCollectionName" ,
-      "Name of collection of reconstructed particles used for thrust reconstruction"  ,
-      _inputCollectionName ,
-      std::string("SelectedReconstructedParticle") ) ;
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+			   "inputCollectionName" ,
+			   "Name of collection of reconstructed particles used for thrust reconstruction"  ,
+			   _inputCollectionName ,
+			   std::string("SelectedReconstructedParticle") ) ;
 
   registerProcessorParameter( "typeOfThrustFinder" ,
       "Type of thrust reconstruction algorithm to be used:\n#\t1 : Tasso algorithm\n#\t2 : JetSet algorithm"  ,

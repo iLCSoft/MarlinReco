@@ -32,14 +32,19 @@ SelectReconstructedParticle::SelectReconstructedParticle()
   // register steering parameters: 
   // name, description, class-variable, default value
 
-  registerProcessorParameter( "inputCollectionName" ,
-      "Collection of reconstructed particles to chose from"  ,
-      _inputCollectionName ,
-      std::string(LCIO::RECONSTRUCTEDPARTICLE) ) ;
-  registerProcessorParameter( "outputCollectionName" ,
-      "Collection of selected reconstructed particles"  ,
-      _outputCollectionName ,
-      std::string("SelectedReconstructedParticle") ) ;
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+			   "inputCollectionName" ,
+			   "Collection of reconstructed particles to chose from"  ,
+			   _inputCollectionName ,
+			   std::string(LCIO::RECONSTRUCTEDPARTICLE) ) ;
+
+  registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+			    "outputCollectionName" ,
+			    "Collection of selected reconstructed particles"  ,
+			    _outputCollectionName ,
+			    std::string("SelectedReconstructedParticle") ) ;
+  
+
   registerProcessorParameter(
 	"MinimumMomentum" ,
         "Minimum momentum a particle has to have to be used for the thrust calculation"  ,
@@ -83,7 +88,7 @@ void SelectReconstructedParticle::processEvent( LCEvent * evt ) {
     {
       float totparmom;
       const double *pparmom;
-      float x;
+      //      float x;
       pparmom = dynamic_cast<ReconstructedParticle*>(inParVec->getElementAt(i))->getMomentum();
 
 

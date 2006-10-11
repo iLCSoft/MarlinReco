@@ -43,11 +43,12 @@ Sphere::Sphere() : Processor("Sphere") {
    
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the ReconstructedParticle collection"  ,
-			      _colName ,
-			      std::string("RecontructedParticle") ) ;
-
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
+			   "CollectionName" , 
+			   "Name of the ReconstructedParticle collection"  ,
+			   _colName ,
+			   std::string("RecontructedParticle") ) ;
+  
   registerProcessorParameter("r_value",
                              " exponent in sphericity tensor use 2.0 for classical 1.0 for C,D",
 			     _r,

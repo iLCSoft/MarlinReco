@@ -6,13 +6,12 @@
 #include "lcio.h"
 #include <string>
 #include <vector>
-#include <gsl/gsl_rng.h>
 
 using namespace lcio ;
 using namespace marlin ;
 
 
-/**  Produces FTD TrackerHit collection from SimTrackerHit collection. At present simple gaussian smearing is applied
+/**  Produces FTD TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
  * @author S. Aplin, DESY
  */
 class FTDDigiProcessor : public Processor {
@@ -56,10 +55,6 @@ class FTDDigiProcessor : public Processor {
   int _nEvt ;
   float _pointReso;
   float _momCut;
-  
-  // gsl random number generator
-  gsl_rng * r ;
-
 } ;
 
 #endif

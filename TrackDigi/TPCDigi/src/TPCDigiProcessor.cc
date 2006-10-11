@@ -5,10 +5,6 @@
 #include <map>
 #include <cmath>
 
-#include <gsl/gsl_randist.h>
-
-
-
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
 #include <AIDA/IHistogramFactory.h>
@@ -23,8 +19,12 @@
 
 //stl exception handler
 #include <stdexcept>
+//romans random class for normal distribution
+//fixme the random number should have the default value set as 1
+#include "random.h"
 #include "constants.h"
 #include "voxel.h"
+//#include "tpc.h"
 
 // STUFF needed for GEAR
 #include <marlin/Global.h>
@@ -68,9 +68,6 @@ void TPCDigiProcessor::init()
 
   // usually a good idea to
   printParameters() ;
-
-  //intialise random number generator 
-  r = gsl_rng_alloc(gsl_rng_ranlxs2);
   
   _nRun = 0 ;
   _nEvt = 0 ;
@@ -157,10 +154,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.010;
       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 
-      
+      RandomNumberGenerator RandomNumber;
+      // FIXME: SJA: The random number generator should be done using CLHEP or GSL
 
-      double randrp = gsl_ran_gaussian(r,tpcRPhiRes);
-      double randz =  gsl_ran_gaussian(r,tpcZRes);
+      double randrp = tpcRPhiRes * (*(RandomNumber.Gauss(1.0)));
+      double randz = tpcZRes * (*(RandomNumber.Gauss(1.0)));
 
       // Make sure that the radius is equal to a pad radius
       // Get current hit radius
@@ -173,6 +171,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //      cout << "z position before smearing " << pos[2] << endl;     
       //
 
+      // FIXME: there seems to be a systematic shift here: 
       pos[0] = pos[0] - randrp * pos[1]/rad;
       pos[1] = pos[1] + randrp * pos[0]/rad;
       pos[2] = pos[2] + randz;
@@ -423,8 +422,7 @@ void TPCDigiProcessor::check( LCEvent * evt )
 
 void TPCDigiProcessor::end()
 { 
-
-  gsl_rng_free(r);
+  
   //   cout << "TPCDigiProcessor::end()  " << name() 
   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
   // 	    << endl ;

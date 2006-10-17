@@ -158,6 +158,7 @@ class VTXDigitizer : public Processor {
    */
   std::string _colName ;
   std::string _outputCollectionName;
+  std::string _colVTXRelation ;
 
   /** Run number
    */

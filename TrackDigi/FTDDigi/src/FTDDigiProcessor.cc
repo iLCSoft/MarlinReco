@@ -24,11 +24,12 @@ FTDDigiProcessor::FTDDigiProcessor() : Processor("FTDDigiProcessor") {
   _description = "FTDDigiProcessor creates FTD TrackerHits from SimTrackerHits" ;
   
   // register steering parameters: name, description, class-variable, default value
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the SimTrackerHit collection"  ,
-			      _colName ,
-			      std::string("ftd01_FTD") ) ;
-
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "CollectionName" , 
+                           "Name of the SimTrackerHit collection"  ,
+                           _colName ,
+                           std::string("ftd01_FTD") ) ;
+  
   registerProcessorParameter( "PointResolution" ,
                               "Point Resolution in FTD"  ,
                               _pointReso ,
@@ -38,6 +39,12 @@ FTDDigiProcessor::FTDDigiProcessor() : Processor("FTDDigiProcessor") {
                               "Momentum Cut For D Rays (GeV)",
                               _momCut ,
                               float(10.0));
+
+  registerOutputCollection( LCIO::TRACKERHIT,
+                            "OutputCollectionName" , 
+                            "Name of the TrackerHit output collection"  ,
+                            _outColName ,
+                            std::string("FTDTrackerHits") ) ;
 
 }
 
@@ -89,7 +96,7 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
 
           if (mom > _momCut) {
     
-            const int celId = SimTHit->getCellID() ;
+//             const int celId = SimTHit->getCellID() ;
           
             const double *pos ;
             pos =  SimTHit->getPosition() ;  
@@ -129,7 +136,7 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
           }
         }
       }
-      evt->addCollection( trkhitVec , "FTDTrackerHits") ;
+      evt->addCollection( trkhitVec ,  _outColName ) ;
     }
     
   _nEvt ++ ;

@@ -27,18 +27,21 @@ CalorimeterFinalStage::CalorimeterFinalStage() : Processor("CalorimeterFinalStag
 
   // Register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter("ClusterInputCollection", 
-			     "Cluster Input Collection Name",
-			     _clusterInput,
-			     std::string("CalorimeterStage3Clusters"));
+  registerInputCollection(LCIO::CLUSTER,
+			  "ClusterInputCollection", 
+			  "Cluster Input Collection Name",
+			  _clusterInput,
+			  std::string("CalorimeterStage3Clusters"));
+  
  
 
-  registerProcessorParameter("ClusterOutputCollection", 
-			     "Cluster Output Collection Name",
-			     _clusterOutput,
-			     std::string("ClustersMagic"));
+  registerOutputCollection(LCIO::CLUSTER,
+			   "ClusterOutputCollection", 
+			   "Cluster Output Collection Name",
+			   _clusterOutput,
+			   std::string("ClustersMagic"));
   
-
+  
   registerProcessorParameter("MinimalHits",
 			     "Minimal Hits in Cluster",
 			     _nhit_minimal,

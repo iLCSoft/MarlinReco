@@ -29,25 +29,28 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
 
   _description = "Creates true tracks..." ;
   
-  registerProcessorParameter("TrueTrackCollection",
-			     "Collection of True Clusters",
-			     _trueTracksCollection ,
-			     std::string("TrueTracks"));
-
+  registerOutputCollection( LCIO::TRACK,
+			    "TrueTrackCollection",
+			    "Collection of True Clusters",
+			    _trueTracksCollection ,
+			    std::string("TrueTracks"));
+  
   std::vector<std::string> trackerHitCollections;
-
+  
   trackerHitCollections.push_back(std::string("TPCTrackerHits"));
-
-  registerProcessorParameter("TrackerHitCollections",
-			     "Tracker Hit Collection Names",
-			     _trackerHitCollections ,
-			     trackerHitCollections);
-
-  registerProcessorParameter( "MCTrueTrackRelCollectionName" , 
-                              "Name of the TrueTrack MC Relation collection"  ,
-                              _colNameMCTrueTracksRel ,
-                              std::string("TrueTrackToMCP") );
-
+  
+  registerInputCollections( LCIO::TRACKERHIT,
+			    "TrackerHitCollections",
+			    "Tracker Hit Collection Names",
+			    _trackerHitCollections ,
+			    trackerHitCollections);
+  
+  registerOutputCollection( LCIO::LCRELATION, 
+			    "MCTrueTrackRelCollectionName" , 
+			    "Name of the TrueTrack MC Relation collection"  ,
+			    _colNameMCTrueTracksRel ,
+			    std::string("TrueTrackToMCP") );
+  
   registerProcessorParameter("BField",
 			     "Magnetic Field",
 			     _bField ,

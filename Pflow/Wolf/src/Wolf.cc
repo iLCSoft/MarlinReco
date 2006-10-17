@@ -37,21 +37,24 @@ Wolf::Wolf() : Processor("Wolf") {
 
   _description = "Particle Reconstruction" ;
   
-  registerProcessorParameter("TrackCollection",
-			     "Track Collection Name",
-			     _trackCollection,
-			     std::string("TPCTracks"));
+  registerInputCollection( LCIO::TRACK,
+			   "TrackCollection",
+			   "Track Collection Name",
+			   _trackCollection,
+			   std::string("TPCTracks"));
+  
+  registerInputCollection( LCIO::CLUSTER,
+			   "ClusterCollection",
+			   "Cluster Collection Name",
+			   _clusterCollection,
+			   std::string("ClustersAR"));
 
-  registerProcessorParameter("ClusterCollection",
-			     "Cluster Collection Name",
-			     _clusterCollection,
-			     std::string("ClustersAR"));
-
-  registerProcessorParameter("ParticleCollection",
-			     "Particle Collection Name",
-			     _particleCollection,
-			     std::string("RecoParticles"));
-
+  registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+			    "ParticleCollection",
+			    "Particle Collection Name",
+			    _particleCollection,
+			    std::string("RecoParticles"));
+  
   registerProcessorParameter( "DistanceTrackToCluster" ,
 			      "Distance from Track Seed to Cluster",
 			      _distTrackToCluster,

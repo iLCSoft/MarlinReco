@@ -100,32 +100,36 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
     std::vector<std::string> EcalCollections;
     EcalCollections.push_back(std::string("ECAL"));
     
-    registerProcessorParameter( "EcalCollections" , 
-				"Ecal Collection Names "  ,
-				_ecalCollections,
-				 EcalCollections);
+    registerInputCollections( LCIO::CALORIMETERHIT,
+			     "EcalCollections" , 
+			     "Ecal Collection Names "  ,
+			     _ecalCollections,
+			     EcalCollections);
 
     std::vector<std::string> HcalCollections;
     HcalCollections.push_back(std::string("HCAL"));
     
-    registerProcessorParameter( "HcalCollections" , 
-				"Hcal Collection Names "  ,
-				_hcalCollections,
-				 HcalCollections);
-
+    registerInputCollections( LCIO::CALORIMETERHIT,
+			     "HcalCollections" , 
+			     "Hcal Collection Names "  ,
+			     _hcalCollections,
+			     HcalCollections);
+    
     std::vector<std::string> TrackCollections;
     TrackCollections.push_back(std::string("Track"));
     
-    registerProcessorParameter( "TrackCollections" , 
-				"Track Collection Names "  ,
-				_trackCollections,
-				 TrackCollections);
-
+    registerInputCollections( LCIO::TRACK,
+			      "TrackCollections" , 
+			      "Track Collection Names "  ,
+			      _trackCollections,
+			      TrackCollections);
     
-    registerProcessorParameter( "ClusterCollection" , 
-				"Cluster Collection Name "  ,
-				_clusterCollection,
-				 std::string("ClustersAR"));
+    
+    registerOutputCollection( LCIO::CLUSTER,
+			      "ClusterCollection" , 
+			      "Cluster Collection Name "  ,
+			      _clusterCollection,
+			      std::string("ClustersAR"));
 
     
    registerProcessorParameter( "MinimalHitsInCluster" ,

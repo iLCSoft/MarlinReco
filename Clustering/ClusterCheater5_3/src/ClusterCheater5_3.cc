@@ -39,37 +39,47 @@ ClusterCheater5_3::ClusterCheater5_3() : Processor("ClusterCheater5_3") {
 
   _description = "Creates true clusters..." ;
 
-  registerProcessorParameter("TrueClusterCollection",
-			     "Collection of True Clusters",
-			     _trueClustCollection ,
-			     std::string("TrueClusters"));
-  registerProcessorParameter("TrueClusterToMCPCollection",
-			     "Relation Collection Cluster to MCP",
-			     _trueClustToMCP,
-			     std::string("TrueClusterToMCP"));
+  registerOutputCollection( LCIO::CLUSTER,
+			    "TrueClusterCollection",
+			    "Collection of True Clusters",
+			    _trueClustCollection ,
+			    std::string("TrueClusters"));
+
+  registerOutputCollection( LCIO::LCRELATION,
+			    "TrueClusterToMCPCollection",
+			    "Relation Collection Cluster to MCP",
+			    _trueClustToMCP,
+			    std::string("TrueClusterToMCP"));
+
   std::vector<std::string> caloCollections;
 
   caloCollections.push_back(std::string("ECAL"));
   caloCollections.push_back(std::string("HCAL"));
   
 
-  registerProcessorParameter("CaloCollections",
-			     "Calorimeter Collection Names",
-			     _caloCollections ,
-			     caloCollections);
+  registerInputCollections( LCIO::CALORIMETERHIT,
+			    "CaloCollections",
+			    "Calorimeter Collection Names",
+			    _caloCollections ,
+			    caloCollections);
 
-  registerProcessorParameter("RelCollection",
-			     "SimCaloHit to CaloHit Relations Collection Name",
-			     _relCollection ,
-			     std::string("RelationCaloHit"));
- registerProcessorParameter("MCParticleCollection",
-			     "Calorimeter Collection Names",
-			     _MCcollection ,
-			    std::string("MCParticle"));
+  registerInputCollection( LCIO::LCRELATION,
+			   "RelCollection",
+			   "SimCaloHit to CaloHit Relations Collection Name",
+			   _relCollection ,
+			   std::string("RelationCaloHit"));
+
+  registerInputCollection( LCIO::MCPARTICLE,
+			   "MCParticleCollection",
+			   "Calorimeter Collection Names",
+			   _MCcollection ,
+			   std::string("MCParticle"));
+
   registerProcessorParameter("CutBackscatter",
 			     "Not to connect hist from  backscatter",
 			     _backcut ,
 			     (int)1 );
+
  registerProcessorParameter("MinHitsInCluster",
 			     "Minimal number of hits in cluster",
 			     _Nmin ,

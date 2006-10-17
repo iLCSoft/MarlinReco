@@ -23,16 +23,31 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the SimTrackerHit collection"  ,
-			      _colName ,
-			      std::string("vxd00_VXD") ) ;
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "CollectionName" , 
+                           "Name of the SimTrackerHit collection"  ,
+                           _colName ,
+                           std::string("vxd00_VXD") ) ;
   
-  registerProcessorParameter( "SITCollectionName" , 
-			      "Name of the SimTrackerHit collection"  ,
-			      _colNameSIT ,
-			      std::string("sit00_SIT") ) ;
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "SITCollectionName" , 
+                           "Name of the SimTrackerHit collection"  ,
+                           _colNameSIT ,
+                           std::string("sit00_SIT") ) ;
+  
+  registerOutputCollection( LCIO::TRACKERHIT,
+                           "VTXHitCollection" , 
+                           "Name of the vxd TrackerHit output collection"  ,
+                           _outColName ,
+                           std::string("VTXTrackerHits") ) ;
 
+
+  registerOutputCollection( LCIO::TRACKERHIT,
+                            "SITHitCollection" , 
+                            "Name of the sit TrackerHit output collection"  ,
+                            _outColNameSIT ,
+                            std::string("SITTrackerHits") ) ;
+  
 }
 
 
@@ -109,7 +124,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       
 
       }
-      evt->addCollection( trkhitVec , "VTXTrackerHits") ;
+      evt->addCollection( trkhitVec , _outColName ) ;
     }
     
   try{
@@ -166,7 +181,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       
       
     }
-    evt->addCollection( trkhitVec , "SITTrackerHits") ;
+    evt->addCollection( trkhitVec , _outColNameSIT ) ;
   }
   
 

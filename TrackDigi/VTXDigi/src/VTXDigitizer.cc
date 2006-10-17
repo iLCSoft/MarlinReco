@@ -32,16 +32,23 @@ VTXDigitizer::VTXDigitizer() : Processor("VTXDigitizer") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the SimTrackerHit collection"  ,
-			      _colName ,
-			      std::string("vxd01_VXD") ) ;
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "CollectionName" , 
+                           "Name of the SimTrackerHit collection"  ,
+                           _colName ,
+                           std::string("vxd01_VXD") ) ;
 
-  registerProcessorParameter( "OutputCollectionName" , 
-			      "Name of the output TrackerHit collection"  ,
-			      _outputCollectionName ,
-			      std::string("VTXTrackerHits") ) ;
-
+  registerOutputCollection( LCIO::TRACKERHIT,
+                            "OutputCollectionName" , 
+                            "Name of the output TrackerHit collection"  ,
+                            _outputCollectionName ,
+                            std::string("VTXTrackerHits") ) ;
+  
+  registerOutputCollection( LCIO::LCRELATION,
+                            "RelationColName" , 
+                            "Name of the output VTX trackerhit relation collection"  ,
+                            _colVTXRelation ,
+                            std::string("VTXRelation") ) ;
 
   registerProcessorParameter("TanLorentz",
                              "Tangent of Lorentz Angle",
@@ -380,7 +387,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
       generateBackground( THcol );
 
     evt->addCollection(THcol,_outputCollectionName.c_str());
-    evt->addCollection(RelCol,"VTXRelation");
+    evt->addCollection(RelCol, _colVTXRelation );
     if (_produceFullPattern == 1) {
       evt->addCollection(STHLocCol,"VTXLocalSimTrackerHits");
       evt->addCollection(THLocCol,"VTXLocalTrackerHits");

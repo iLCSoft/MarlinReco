@@ -175,7 +175,8 @@ class VertexTracking : public Processor {
   std::string _VTXHitCollection;
   std::string _FTDHitCollection;
   std::string _relCollection;
-  
+  std::string _colVTXTracks ;
+
   std::vector<TrackerHitExtendedVec> _sectors;
   std::vector<TrackerHitExtendedVec> _sectorsFTD;
   

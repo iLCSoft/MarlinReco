@@ -148,18 +148,27 @@ VertexTracking::VertexTracking() : Processor("VertexTracking") {
 			     _nDivisionsInTheta,
 			     int(60));
   
-  registerProcessorParameter("VXDHitCollectionName",
-			     "VXD Hit Collection Name",
-			     _VTXHitCollection,
-			     std::string("VTXTrackerHits"));
+  registerInputCollection( LCIO::TRACKERHIT,
+			   "VXDHitCollectionName",
+			   "VXD Hit Collection Name",
+			   _VTXHitCollection,
+			   std::string("VTXTrackerHits"));
 
 
-  registerProcessorParameter("FTDHitCollectionName",
-			     "FTD Hit Collection Name",
-			     _FTDHitCollection,
-			     std::string("FTDTrackerHits"));  
-
+  registerInputCollection( LCIO::TRACKERHIT,
+			   "FTDHitCollectionName",
+			   "FTD Hit Collection Name",
+			   _FTDHitCollection,
+			   std::string("FTDTrackerHits"));  
+  
+  registerOutputCollection( LCIO::TRACK,
+			    "VTXTrackCollection",
+			    "VTX Tracks",
+			    _colVTXTracks,
+			    std::string("VTXTracks"));  
    
+
+
   registerProcessorParameter("Chi2WRphiTriplet",
 			      "Chi2WRphiTriplet",
 			      _chi2WRPhiTriplet,
@@ -394,7 +403,7 @@ void VertexTracking::processEvent( LCEvent * evt ) {
 	trkCol->addElement(trackImpl);
       }
     }        
-    evt->addCollection(trkCol,"VTXTracks");     
+    evt->addCollection(trkCol,_colVTXTracks );     
   }
   CleanUp();
 

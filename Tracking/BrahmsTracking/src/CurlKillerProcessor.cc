@@ -51,18 +51,24 @@ CurlKillerProcessor::CurlKillerProcessor() : Processor("CurlKillerProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "InputCollectionName" , 
-			      "Name of the TrackerHit collection"  ,
-			      _inputColName ,
-			      std::string("TPCTrackerHits") ) ;
-  registerProcessorParameter( "CutCollectionName" , 
-			      "Name of the cut away TrackerHit collection"  ,
-			      _cutColName ,
-			      std::string("cutTPCTrackeHits") ) ;
-  registerProcessorParameter( "RemainingCollectionName" , 
-			      "Name of the remaining TrackerHit collection"  ,
-			      _remainingColName ,
-			      std::string("remainingTPCTrackerHits") ) ;
+  registerInputCollection( LCIO::TRACKERHIT,
+			   "InputCollectionName" , 
+			   "Name of the TrackerHit collection"  ,
+			   _inputColName ,
+			   std::string("TPCTrackerHits") ) ;
+
+  registerOutputCollection( LCIO::TRACKERHIT,
+			    "CutCollectionName" , 
+			    "Name of the cut away TrackerHit collection"  ,
+			    _cutColName ,
+			    std::string("cutTPCTrackeHits") ) ;
+  
+  registerOutputCollection( LCIO::TRACKERHIT,
+			    "RemainingCollectionName" , 
+			    "Name of the remaining TrackerHit collection"  ,
+			    _remainingColName ,
+			    std::string("remainingTPCTrackerHits") ) ;
+  
   registerProcessorParameter( "BinSize" , 
 			      "Bin size in square root of pad multiples"  ,
 			      _binSize ,

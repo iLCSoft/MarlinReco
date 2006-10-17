@@ -25,16 +25,18 @@ NNClusterProcessor::NNClusterProcessor() : Processor("NNClusterProcessor") {
   StringVec colDefault ;
   colDefault.push_back("ecal" ) ;
   
-  registerProcessorParameter( "HitCollections" , 
-			      "Name of the input collections"  ,
-			      _colNames ,
-			       colDefault ) ;
-
-  registerProcessorParameter( "OutputCollection" , 
-			      "Name of the output collections"  ,
-			      _outputColName ,
-			      std::string("NNClusters" ) ) ;
-			     
+  registerInputCollections( LCIO::CALORIMETERHIT,
+			    "HitCollections" , 
+			    "Name of the input collections"  ,
+			    _colNames ,
+			    colDefault ) ;
+  
+  registerOutputCollection( LCIO::CLUSTER,
+			    "OutputCollection" , 
+			    "Name of the output collections"  ,
+			    _outputColName ,
+			    std::string("NNClusters" ) ) ;
+ 
 
   registerProcessorParameter( "DistanceCut" , 
 			      "Cut for distance between hits in mm"  ,

@@ -6,9 +6,17 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.21 2006-06-28 15:29:04 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.22 2006-10-17 12:34:19 gaede Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.21  2006/06/28 15:29:04  aplin
+** The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
+**
+** The value is passed internaly to the F77 code via the same function which passes the TPC geometry i.e. gettpcgeom(float* innerrad, float* outerrad, int* npadrows, float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float* tpcbfield). It is set in setmat.F. tpcgeom.F had to be modified as it also uses gettpcgeom, although it does not make use of the B-Field.
+**
+** Revision 1.22   gaede
+** added registerInput/OutputCollection for Marlin -c
+** 
 ** Revision 1.20  2006/05/28 15:22:15  owendt
 ** changed text for the explanation of a processor parameter
 **
@@ -221,40 +229,47 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
 
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "TPCTrackerHitCollectionName" , 
-                              "Name of the TPC TrackerHit collection"  ,
-                              _colNameTPC ,
-                              std::string("TPCTrackerHits") ) ;
+  registerInputCollection( LCIO::TRACKERHIT,
+                           "TPCTrackerHitCollectionName" , 
+                           "Name of the TPC TrackerHit collection"  ,
+                           _colNameTPC ,
+                           std::string("TPCTrackerHits") ) ;
 
-  registerProcessorParameter( "VTXTrackerHitCollectionName" , 
-                              "Name of the VTX TrackerHit collection"  ,
-                              _colNameVTX ,
-                              std::string("VTXTrackerHits") ) ;
+  registerInputCollection( LCIO::TRACKERHIT,
+                           "VTXTrackerHitCollectionName" , 
+                           "Name of the VTX TrackerHit collection"  ,
+                           _colNameVTX ,
+                           std::string("VTXTrackerHits") ) ;
+  
+  registerInputCollection( LCIO::TRACKERHIT,
+                           "SITTrackerHitCollectionName" , 
+                           "Name of the SIT TrackerHit collection"  ,
+                           _colNameSIT ,
+                           std::string("SITTrackerHits") ) ;
+  
+  registerOutputCollection( LCIO::TRACK,
+                            "TPCTrackCollectionName" , 
+                            "Name of the TPC Track collection"  ,
+                            _colNameTPCTracks ,
+                            std::string("TPCTracks") ) ;
 
-  registerProcessorParameter( "SITTrackerHitCollectionName" , 
-                              "Name of the SIT TrackerHit collection"  ,
-                              _colNameSIT ,
-                              std::string("SITTrackerHits") ) ;
-
-  registerProcessorParameter( "TPCTrackCollectionName" , 
-                              "Name of the TPC Track collection"  ,
-                              _colNameTPCTracks ,
-                              std::string("TPCTracks") ) ;
-
-  registerProcessorParameter( "TrackCollectionName" , 
-                              "Name of the Track collection"  ,
-                              _colNameTracks ,
-                              std::string("Tracks") ) ;
-
-  registerProcessorParameter( "MCTPCTrackRelCollectionName" , 
-                              "Name of the TPC Track MC Relation collection"  ,
-                              _colNameMCTPCTracksRel ,
-                              std::string("MCTPCTracksRel") ) ;
-
-  registerProcessorParameter( "MCTrackRelCollectionName" , 
-                              "Name of the Track MC Relation collection"  ,
-                              _colNameMCTracksRel ,
-                              std::string("MCTracksRel") ) ;
+  registerOutputCollection( LCIO::TRACK,
+                            "TrackCollectionName" , 
+                            "Name of the Track collection"  ,
+                            _colNameTracks ,
+                            std::string("Tracks") ) ;
+  
+  registerOutputCollection( LCIO::LCRELATION,
+                            "MCTPCTrackRelCollectionName" , 
+                            "Name of the TPC Track MC Relation collection"  ,
+                            _colNameMCTPCTracksRel ,
+                            std::string("MCTPCTracksRel") ) ;
+  
+  registerOutputCollection( LCIO::LCRELATION,
+                            "MCTrackRelCollectionName" , 
+                            "Name of the Track MC Relation collection"  ,
+                            _colNameMCTracksRel ,
+                            std::string("MCTracksRel") ) ;
 }
 
 

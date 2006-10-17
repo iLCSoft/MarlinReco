@@ -51,6 +51,7 @@ class FTDDigiProcessor : public Processor {
   /** Input collection name.
    */
   std::string _colName ;
+  std::string _outColName ;
 
   int _nRun ;
   int _nEvt ;

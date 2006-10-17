@@ -56,6 +56,13 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                            "Name of the SimTrackerHit collection"  ,
                            _colName ,
                            std::string("tpc04_TPC") ) ;
+
+  registerOutputCollection( LCIO::TRACKERHIT,
+                            "TPCTrackerHitsCol" , 
+                            "Name of the digitized TrackerHit collection"  ,
+                           _TPCTrackerHitsCol ,
+                            std::string("TPCTrackerHits") ) ;
+
 }
 
 
@@ -397,7 +404,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     trkhitVec->parameters().setValues("TrackerHitTypeNames" , typeNames ) ;
     trkhitVec->parameters().setValues("TrackerHitTypeValues" , typeValues ) ;
     
-    evt->addCollection( trkhitVec , "TPCTrackerHits") ;
+    evt->addCollection( trkhitVec , _TPCTrackerHitsCol ) ;
     
     
     for (int i = 0; i<padLayout.getNRows(); ++i){

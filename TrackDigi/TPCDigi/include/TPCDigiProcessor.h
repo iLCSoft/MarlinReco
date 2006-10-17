@@ -55,6 +55,7 @@ protected:
   /** Input collection name.
    */
   std::string _colName ;
+  std::string _TPCTrackerHitsCol ;
 
   int _nRun ;
   int _nEvt ;

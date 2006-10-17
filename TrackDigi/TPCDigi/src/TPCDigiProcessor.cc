@@ -51,10 +51,11 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
   
   // register steering parameters: name, description, class-variable, default value
 
-  registerProcessorParameter( "CollectionName" , 
-			      "Name of the SimTrackerHit collection"  ,
-			      _colName ,
-			      std::string("tpc04_TPC") ) ;
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "CollectionName" , 
+                           "Name of the SimTrackerHit collection"  ,
+                           _colName ,
+                           std::string("tpc04_TPC") ) ;
 }
 
 
@@ -70,7 +71,7 @@ void TPCDigiProcessor::init()
   printParameters() ;
 
   //intialise random number generator 
-  r = gsl_rng_alloc(gsl_rng_ranlxs2);
+  _random = gsl_rng_alloc(gsl_rng_ranlxs2);
   
   _nRun = 0 ;
   _nEvt = 0 ;
@@ -159,8 +160,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       
 
-      double randrp = gsl_ran_gaussian(r,tpcRPhiRes);
-      double randz =  gsl_ran_gaussian(r,tpcZRes);
+      double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
+      double randz =  gsl_ran_gaussian(_random,tpcZRes);
 
       // Make sure that the radius is equal to a pad radius
       // Get current hit radius
@@ -424,7 +425,7 @@ void TPCDigiProcessor::check( LCEvent * evt )
 void TPCDigiProcessor::end()
 { 
 
-  gsl_rng_free(r);
+  gsl_rng_free(_random);
   //   cout << "TPCDigiProcessor::end()  " << name() 
   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
   // 	    << endl ;

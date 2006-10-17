@@ -60,7 +60,7 @@ protected:
   int _nEvt ;
 
   // gsl random number generator
-  gsl_rng * r ;
+  gsl_rng * _random ;
 
 } ;
 

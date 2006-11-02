@@ -1,0 +1,1049 @@
+#include "MaterialDB.h"
+#include <iostream>
+
+#ifdef MARLIN_USE_AIDA
+#include <marlin/AIDAProcessor.h>
+#include <AIDA/IHistogramFactory.h>
+#include <AIDA/ICloud1D.h>
+//#include <AIDA/IHistogram1D.h>
+#endif
+
+#include <EVENT/LCCollection.h>
+#include <EVENT/MCParticle.h>
+
+#include <gear/GEAR.h>
+#include <gear/VXDParameters.h>
+#include <gear/GearParameters.h>
+#include <gear/VXDLayerLayout.h>
+#include <gear/TPCParameters.h>
+#include <gear/PadRowLayout2D.h>
+
+
+using namespace lcio ;
+using namespace marlin ;
+
+extern "C" {
+  extern struct {
+    int ncmat;
+    float rcmat[100];
+    float zcmax[100];
+    float xrlc[100];
+    int npmat;
+    float zpmat[50];
+    float rpmin[50];
+    float rpmax[50];
+    float xrlp[50];
+    float xelosc[100];
+    float xelosp[50];   
+    float zcmin[100];
+     } fkddes_; 
+}
+
+extern "C" {
+  extern struct {
+    int nconmat;
+    float z1conmat[100];
+    float z2conmat[100];
+    float r1conmat[100];
+    float r2conmat[100];
+    float xrl1con[100];
+    float xrl2con[100];
+    float xel1con[100];
+    float xel2con[100];
+     } fkddes1_; 
+}
+
+extern "C" {
+  extern struct {
+    int nexs;
+    float rzsurf[50];
+    float zrmin[50];
+    float zrmax[50];
+    int itexts[50];
+    int nexhpc;
+  } fkexts_;
+
+}
+
+extern "C" {
+  struct {
+    float consb;
+  } fkfild_;
+}
+
+
+
+
+MaterialDB aMaterialDB ;
+
+
+MaterialDB::MaterialDB() : Processor("MaterialDB") {
+  
+  // Processor description
+  _description = "Material DB builder..." ;
+
+ 
+  // ***************************** //
+  //                               //
+  // BEAM PIPE GEOMETRY PARAMETERS //
+  //                               //
+  //   based on model tube00       //
+  //                               //
+  // ***************************** //
+//   registerProcessorParameter("BeamPipeRadius",
+// 			     "Beam Pipe Radius",
+// 			     _beamPipeRadius,
+// 			     float(10.0));
+
+//   registerProcessorParameter("BeamPipeHalfZ",
+// 			     "Beam Pipe Half Z",
+// 			     _beamPipeHalfZ,
+// 			     float(61.0));
+
+//   registerProcessorParameter("BeamPipeThickness",
+// 			     "Beam Pipe Thickness",
+// 			     _beamPipe_thickness,
+// 			     float(0.5));
+
+
+  // ************************//
+  //                         //
+  // VXD GEOMETRY PARAMETERS //
+  //                         //
+  //   based on model vxd00  //
+  //                         //
+  // ************************//
+
+//   std::vector<float> layerRadius;
+//   layerRadius.push_back(15.5); 
+//   layerRadius.push_back(27.0);
+//   layerRadius.push_back(38.0);
+//   layerRadius.push_back(49.0);
+//   layerRadius.push_back(60.0);
+//   registerProcessorParameter("LayerRadii",
+// 			     "Radii of VXD layers",
+// 			     _layerRadius,
+// 			     layerRadius);
+  
+//   std::vector<float> ladder_dim_z;
+//   ladder_dim_z.push_back(50.0);
+//   ladder_dim_z.push_back(125.0);
+//   ladder_dim_z.push_back(125.0);
+//   ladder_dim_z.push_back(125.0);
+//   ladder_dim_z.push_back(125.0);
+//   registerProcessorParameter("ZLadderDimension",
+//                              "Ladder z dimension",
+//                              _ladder_dim_z,
+//                              ladder_dim_z);
+
+//   std::vector<float> ladderGaps;
+//   ladderGaps.push_back(0.0);
+//   ladderGaps.push_back(0.04);
+//   ladderGaps.push_back(0.04);
+//   ladderGaps.push_back(0.04);
+//   ladderGaps.push_back(0.04);
+//   registerProcessorParameter("LadderGaps",
+// 			     "Ladder gaps",
+// 			     _ladderGaps,
+// 			     ladderGaps);
+
+//   registerProcessorParameter("SiThickness",
+//                              "Silicon Thickness",
+//                              _si_thickness,
+//                              float(0.03744));
+
+//   registerProcessorParameter("SupportThickness",
+//                              "Support Thickness",
+//                              _support_thickness,
+//                              float (0.28224));
+
+//   registerProcessorParameter("ElectronicEndThickness",
+// 			     "Electronic End Thickness",
+// 			     _electronicEnd_thickness,
+// 			     float(0.19656));
+
+//   registerProcessorParameter("ElectronicEndLength",
+// 			     "Electronic End Length",
+// 			     _electronicEnd_length,
+// 			     float(10.0)); 
+
+//   std::vector<float> stripLine_final_z;
+//   stripLine_final_z.push_back(136);
+//   stripLine_final_z.push_back(136);
+//   stripLine_final_z.push_back(140);  
+//   stripLine_final_z.push_back(145);
+//   stripLine_final_z.push_back(150);
+//   registerProcessorParameter("StripLineFinalZ",
+// 			     "Z coordinate for Stripl line End",
+// 			     _stripLine_final_z,
+// 			     stripLine_final_z);
+
+//   registerProcessorParameter("StripLineThickness",
+// 			     "Z coordinate for Stripl line End",
+// 			     _stripLine_thickness,
+// 			     float(0.09438));
+
+//   registerProcessorParameter("StripLineBeamPipeR",
+// 			     "Radius for beam pipe ",
+// 			     _stripLine_beampipe_r,
+// 			     float(23.0));
+  
+//   registerProcessorParameter("ShellThickness",
+// 			     "Shell Thickness ",
+// 			     _shell_thickness,
+// 			     float(0.49392));
+  
+//   _VTXShell_thickness = _shell_thickness;
+
+//   registerProcessorParameter("VTXShellRadius",
+// 			     "VTX Shell Radius",
+// 			     _VTXShell_Radius,
+// 			     float(65.0));
+
+//   registerProcessorParameter("VTXShellHalfZ",
+// 			     "VTX Shell HalfZ",
+// 			     _VTXShell_HalfZ,
+// 			     float(135.0));
+  
+//   registerProcessorParameter("VTXEndPlateInnerRadius",
+// 			     "VTX Endplate Inner Radius",
+// 			     _VTXEndPlate_innerRadius,
+// 			     float(23.2));
+
+  
+
+  // ************************//
+  //                         //
+  // FTD GEOMETRY PARAMETERS //
+  //                         //
+  //   based on model ftd01  //
+  //                         //  
+  // ************************//
+
+//   std::vector<float> zFTD;
+//   zFTD.push_back(200);
+//   zFTD.push_back(320);
+//   zFTD.push_back(440);
+//   zFTD.push_back(550);
+//   zFTD.push_back(800);
+//   zFTD.push_back(1050);
+//   zFTD.push_back(1300);
+//   registerProcessorParameter("ZFTDDisk",
+// 			     "Z coordinates of FTD disks",
+// 			     _zFTD,
+// 			     zFTD);
+
+//   std::vector<float> rInFTD;
+//   rInFTD.push_back(38);
+//   rInFTD.push_back(48);
+//   rInFTD.push_back(59);
+//   rInFTD.push_back(68);
+//   rInFTD.push_back(90);
+//   rInFTD.push_back(111);
+//   rInFTD.push_back(132);
+//   registerProcessorParameter("RinFTDDisk",
+// 			     "Inner Radii of FTD disks",
+// 			     _rInFTD,
+// 			     rInFTD);
+
+//   std::vector<float> rOutFTD;
+//   rOutFTD.push_back(140);
+//   rOutFTD.push_back(140);
+//   rOutFTD.push_back(210);
+//   rOutFTD.push_back(270);
+//   rOutFTD.push_back(290);
+//   rOutFTD.push_back(290);
+//   rOutFTD.push_back(290);
+//   registerProcessorParameter("RoutFTDDisk",
+// 			     "Outer Radii of FTD disks",
+// 			     _rOutFTD,
+// 			     rOutFTD);
+
+//   registerProcessorParameter("FTDDiskThickness",
+// 			     "FTD Disk Thickness",
+// 			     _FTDdisk_thickness,
+// 			     float(0.3));
+  
+//   registerProcessorParameter("FTDInnerSupportdR",
+// 			     "Inner Support Ring dR",
+// 			     _FTD_innerSupport_dR,
+// 			     float(2));
+
+//   registerProcessorParameter("FTDOuterSupportdR",
+// 			     "Outer Support Ring dR",
+// 			     _FTD_outerSupport_dR,
+// 			     float(10));
+
+//   registerProcessorParameter("FTDInnerSupportThickness",
+// 			     "Inner Support Ring Thickness",
+// 			     _FTD_innerSupport_thickness,
+// 			     float(4));
+
+//   registerProcessorParameter("FTDOuterSupportThickness",
+// 			     "Outer Support Ring Thickness",
+// 			     _FTD_outerSupport_thickness,
+// 			     float(4));
+
+//   registerProcessorParameter("zFTDOuterCylStart",
+// 			     "z FTD Outer Cyllinder Start",
+// 			     _zFTDOuterCyllinderStart,
+// 			     float(800.));
+
+//   registerProcessorParameter("zFTDOuterCylEnd",
+// 			     "z FTD Outer Cyllinder End",
+// 			     _zFTDOuterCyllinderEnd,
+// 			     float(1300.));
+  
+//   registerProcessorParameter("zFTDInnerConeStart",
+// 			     "z FTD Inner Cone Start",
+// 			     _zFTDInnerConeStart,
+// 			     float(550.));
+
+//   registerProcessorParameter("zFTDInnerConeEnd",
+// 			     "z FTD Inner Cone End",
+// 			     _zFTDInnerConeEnd,
+// 			     float(1300.));
+  
+//   registerProcessorParameter("FTDCopperThickness",
+// 			     "FTD Copper Thickness",
+// 			     _FTD_copper_thickness,
+// 			     float(0.08));
+  
+//   registerProcessorParameter("FTDOuterCylThickness",
+// 			     "FTD Outer Cyllinder Thickness",
+// 			     _FTD_kaptonCyl_thickness,
+// 			     float(1.0));
+
+  // SIT Geometry (model sit00)
+
+//   std::vector<float> rSIT;
+//   rSIT.push_back(160.);
+//   rSIT.push_back(300.);
+//   registerProcessorParameter("SITLayerRadii",
+// 			     "SIT Layer Radii",
+// 			     _rSIT,
+// 			     rSIT);
+
+//   std::vector<float> halfZSIT;
+//   halfZSIT.push_back(380.);
+//   halfZSIT.push_back(660.);
+//   registerProcessorParameter("SITLayerHalfZ",
+// 			     "SIT Layer HalfZ",
+// 			     _halfZSIT,
+// 			     halfZSIT);
+
+//   registerProcessorParameter("SITLayerThickness",
+// 			     "SIT Layer Thickness",
+// 			     _SITLayer_thickness,
+// 			     float(0.3));
+
+
+  // ********************//
+  // Material properties //
+  //        dE/dx        //
+  // ********************//
+
+//   registerProcessorParameter("dedxBer",
+//                              "Energy loss for Be",
+//                              _dedx_ber,
+//                              float(1.85*1.59e-3));
+
+//   registerProcessorParameter("dedxSi",
+//                              "Energy loss for Si",
+//                               _dedx_si,
+//                               float(2.33*1.66e-3));
+  
+//   registerProcessorParameter("dedxSi872",
+//                              "Energy loss for Si",
+//                               _dedx_si872,
+//                               float(8.72*1.66e-3));
+ 
+//   registerProcessorParameter("dedxKapton",
+//                              "Energy loss for Kapton",
+//                               _dedx_kapton,
+//                               float(1.42*1.7e-3));
+
+//   registerProcessorParameter("dedxCopper",
+//                              "Energy loss for Copper",
+//                               _dedx_copper,
+//                               float(8.96*1.6e-3));
+
+  // ********************//
+  // Material properties //
+  //   Rad length        //
+  // ********************//
+  
+//   registerProcessorParameter("BeRadiationLength",
+//                              "Be Radiation Length",
+//                              _radlen_ber,
+//                              float(35.28));
+
+//   registerProcessorParameter("SiRadiationLength",
+//                              "Si Radiation Length",
+//                              _radlen_si,
+//                              float(9.36));
+
+//   registerProcessorParameter("Si872RadiationLength",
+//                              "Si 8.72 Radiation Length",
+//                              _radlen_si872,
+//                              float(9.36*2.33/8.72));
+
+//   registerProcessorParameter("KaptonRadiationLength",
+//                              "Kapton Radiation Length",
+//                              _radlen_kapton,
+//                              float(28.6));
+
+//   registerProcessorParameter("CopperRadiationLength",
+//                              "Copper Radiation Length",
+//                              _radlen_copper,
+//                              float(1.43));
+  
+//   registerProcessorParameter("UseGearFile",
+// 			     "Use Gear File",
+// 			     _useGearFile,
+// 			     int(1));
+  
+
+
+}
+
+
+void MaterialDB::init() { 
+
+  // usually a good idea to
+  printParameters() ;
+
+  _nRun = 0 ;
+  _nEvt = 0 ;
+  int Ncmat=0;
+  int Npmat=0;
+  int Nconmat=0;
+  int Nexs=0;
+
+  // **************************************** //
+  // ** Building Database for VTX Detector ** //
+  // **************************************** //
+
+  const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
+  const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDetMain.getVXDLayerLayout();
+  const gear::GearParameters& pVXDDet = Global::GEAR->getGearParameters("VXDInfra");
+
+  _beamPipeRadius = float(pVXDDet.getDoubleVal("BeamPipeRadius"));
+  _beamPipeHalfZ  = float(pVXDDet.getDoubleVal("BeamPipeHalfZ"));
+  _beamPipe_thickness = float(pVXDDet.getDoubleVal("BeamPipeThickness"));
+  _radlen_ber = 0.1*float(pVXDDet.getDoubleVal("BeamPipeProperties_RadLen"));
+  _dedx_ber = 10.0*float(pVXDDet.getDoubleVal("BeamPipeProperties_dEdx"));
+
+  // Berillium beam-pipe
+  
+  fkddes_.rcmat[Ncmat] = 0.1*_beamPipeRadius;
+  fkddes_.zcmin[Ncmat] = -0.1*_beamPipeHalfZ;
+  fkddes_.zcmax[Ncmat] = 0.1*_beamPipeHalfZ;
+  fkddes_.xrlc[Ncmat] = 0.1*_beamPipe_thickness/_radlen_ber;
+  fkddes_.xelosc[Ncmat] = 0.1*_beamPipe_thickness*_dedx_ber;
+
+  fkexts_.itexts[Nexs] = 0;  
+  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]-0.01 ;
+  fkexts_.zrmin[Nexs] = -1000.;
+  fkexts_.zrmax[Nexs] = 1000.;
+  Nexs++;
+  Ncmat++;
+
+  // FIXME : Introduce additional cones and tubes (Tube00.cc)
+
+
+  //  Cyllinders and cones in VXD00
+  
+  int nLayersVTX = pVXDLayerLayout.getNLayers();
+  _layerRadius.resize(nLayersVTX);
+  _ladder_dim_z.resize(nLayersVTX);
+  _ladderGaps.resize(nLayersVTX);
+  _stripLine_final_z.resize(nLayersVTX);
+
+  int nLadderGaps = int(pVXDDet.getDoubleVals("LadderGaps").size());
+  int nStripLines = int(pVXDDet.getDoubleVals("StripLineFinalZ").size());
+
+  if (nLadderGaps != nLayersVTX) {
+    std::cout << "MaterialDB Processor : vector size of LadderGaps vector ("
+	      << nLadderGaps << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
+    exit(1);
+  }
+  if (nStripLines != nLayersVTX) {
+    std::cout << "MaterialDB Processor : vector size of StripLines vector ("
+	      << nStripLines << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
+    exit(1);
+  }
+  
+
+  _dedx_si = 10.0*float(pVXDDet.getDoubleVal("ActiveLayerProperties_dEdx"));
+  _dedx_ber = 10.0*float(pVXDDet.getDoubleVal("SupportLayerProperties_dEdx"));
+  _dedx_kapton = 10.0*float(pVXDDet.getDoubleVal("StripLineProperties_dEdx"));
+  _radlen_kapton = 0.1*float(pVXDDet.getDoubleVal("StripLineProperties_RadLen"));
+  _electronicEnd_thickness = float(pVXDDet.getDoubleVal("ElectronicEndThickness"));
+  _electronicEnd_length = float(pVXDDet.getDoubleVal("ElectronicEndLength"));
+  _stripLine_thickness =  float(pVXDDet.getDoubleVal("StripLineThickness"));
+  _stripLine_beampipe_r = float(pVXDDet.getDoubleVal("StripLineBeamPipeRadius"));
+
+  if (pVXDDetMain.getShellOuterRadius()<pVXDDetMain.getShellInnerRadius()) {
+    std::cout << "Outer Shell Radius (" << pVXDDetMain.getShellOuterRadius() 
+	      << ") is smaller than inner Shell radius (" << pVXDDetMain.getShellInnerRadius()
+	      << ")" << std::endl;
+    exit(1);
+  }
+  _shell_thickness = float(pVXDDetMain.getShellOuterRadius()-pVXDDetMain.getShellInnerRadius());
+  _VTXShell_thickness = _shell_thickness;
+  _VTXShell_Radius = float(pVXDDetMain.getShellInnerRadius());
+  _VTXShell_HalfZ = float(pVXDDetMain.getShellHalfLength());
+  _VTXEndPlate_innerRadius = float(pVXDDet.getDoubleVal("VXDEndPlateInnerRadius"));
+
+  for (int i=0;i<nLayersVTX;++i) {
+    _layerRadius[i] = float(pVXDLayerLayout.getLadderDistance(i));
+    _ladder_dim_z[i] = float(pVXDLayerLayout.getLadderLength(i));
+    _support_thickness = float(pVXDLayerLayout.getLadderThickness(i));
+    _si_thickness = float(pVXDLayerLayout.getSensitiveThickness(i));
+    _radlen_ber = 0.1*float(pVXDLayerLayout.getLadderRadLength(i));
+    _radlen_si = 0.1*float(pVXDLayerLayout.getSensitiveRadLength(i));
+    _stripLine_final_z[i] = float(pVXDDet.getDoubleVals("StripLineFinalZ")[i]);
+    _ladderGaps[i] = float(pVXDDet.getDoubleVals("LadderGaps")[i]);
+    
+  }
+
+
+  for (int i=0;i<nLayersVTX;++i) {
+    // beryllium support    
+//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_support_thickness);
+//     fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+//     fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+//     fkddes_.xrlc[Ncmat] = 0.1*_support_thickness/_radlen_ber;
+//     fkddes_.xelosc[Ncmat] = 0.1*_support_thickness*_dedx_ber;
+
+    fkddes_.rcmat[Ncmat] = 0.1*_layerRadius[i];
+    fkddes_.zcmin[Ncmat] = -0.1*_ladder_dim_z[i];
+    fkddes_.zcmax[Ncmat] = 0.1*_ladder_dim_z[i];
+    fkddes_.xrlc[Ncmat] = 0.1*(_support_thickness/_radlen_ber+_si_thickness/_radlen_si);
+    fkddes_.xelosc[Ncmat] = 0.1*(_support_thickness*_dedx_ber+_si_thickness*_dedx_si);
+
+    fkexts_.itexts[Nexs] = 0;
+    fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
+    fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
+    fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+
+    Ncmat++;
+    Nexs++;
+
+      
+    // Electronic Ends;
+    // right-hand part
+    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_electronicEnd_thickness);
+    fkddes_.zcmin[Ncmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]);
+    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+_electronicEnd_length);
+    fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness*_dedx_si;
+    Ncmat++;
+      
+    // left-hand part
+    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_electronicEnd_thickness);
+    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+_electronicEnd_length);
+    fkddes_.zcmax[Ncmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]);
+    fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness*_dedx_si;
+    Ncmat++;
+
+//     // Active Silicon
+//     // right-hand part
+//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
+//     fkddes_.zcmin[Ncmat] = 0.1*_ladderGaps[i];
+//     fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+//     fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
+//     fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
+//     Ncmat++;
+
+//     // left-hand part
+//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
+//     fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+//     fkddes_.zcmax[Ncmat] = -0.1*_ladderGaps[i];
+//     fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
+//     fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
+//     Ncmat++;
+    
+//     // Strip Lines
+//     // right-hand part    
+//     fkddes1_.z1conmat[Nconmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+
+// 				    _electronicEnd_length+_shell_thickness);
+//     fkddes1_.z2conmat[Nconmat] = 0.1*_stripLine_final_z[i];
+//     fkddes1_.r1conmat[Nconmat] = 0.1*(_layerRadius[i]+0.5*_stripLine_thickness);
+//     fkddes1_.r2conmat[Nconmat] = 0.1*(_stripLine_beampipe_r+0.5*_stripLine_thickness);
+//     float dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
+//     float dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//     float alpha = atan(dR/dZ);
+//     float cosa  = fabs(cos(alpha));
+//     float dL = _stripLine_thickness*cosa;
+//     fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_kapton;
+//     fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_kapton;
+//     fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_kapton;
+//     fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
+//     Nconmat++;
+      
+//     // left-hand part    
+//     fkddes1_.z2conmat[Nconmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+
+// 				       _electronicEnd_length+_shell_thickness);
+//     fkddes1_.z1conmat[Nconmat] = -0.1*_stripLine_final_z[i];
+//     fkddes1_.r2conmat[Nconmat] = 0.1*(_layerRadius[i]+0.5*_stripLine_thickness);
+//     fkddes1_.r1conmat[Nconmat] = 0.1*(_stripLine_beampipe_r+0.5*_stripLine_thickness);
+//     dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
+//     dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//     alpha = atan(dR/dZ);
+//     cosa  = fabs(cos(alpha));
+//     dL = _stripLine_thickness*cosa;
+//     fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_kapton;
+//     fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_kapton;
+//     fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_kapton;
+//     fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
+//     Nconmat++;      
+    }
+
+  //  Outer support cyllinder for VTX
+  fkddes_.rcmat[Ncmat] = 0.1*(_VTXShell_Radius+0.5*_VTXShell_thickness);
+  fkddes_.zcmin[Ncmat] = -0.1*_VTXShell_HalfZ;
+  fkddes_.zcmax[Ncmat] = 0.1*_VTXShell_HalfZ;
+  fkddes_.xrlc[Ncmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xelosc[Ncmat] = 0.1*_VTXShell_thickness*_dedx_ber;
+  Ncmat++;
+  //  EndPlate support disk for VTX ; left part
+  fkddes_.zpmat[Npmat] = -0.1*(_VTXShell_HalfZ+0.5*_VTXShell_thickness);
+  fkddes_.rpmin[Npmat] = 0.1*_VTXEndPlate_innerRadius;
+  fkddes_.rpmax[Npmat] = 0.1*(_VTXShell_Radius+_VTXShell_thickness);
+  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xelosp[Npmat] = 0.1*_VTXShell_thickness*_dedx_ber;  
+  Npmat++;    
+  //  EndPlate support disk for VTX ; right part
+  fkddes_.zpmat[Npmat] = 0.1*(_VTXShell_HalfZ+0.5*_VTXShell_thickness);
+  fkddes_.rpmin[Npmat] = 0.1*_VTXEndPlate_innerRadius;
+  fkddes_.rpmax[Npmat] = 0.1*(_VTXShell_Radius+_VTXShell_thickness);
+  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xelosp[Npmat] = 0.1*_VTXShell_thickness*_dedx_ber;  
+  Npmat++;    
+
+
+  // **************************************** //
+  // ** Building Database for FTD Detector ** //
+  // **************************************** //
+  const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");
+
+      
+  // Planar detectors in FTD
+
+  int nLayersFTD = 0;
+  int nFTDZ = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
+  int nFTDRin = int(pFTDDet.getDoubleVals("FTDInnerRadius").size());
+  int nFTDRout = int(pFTDDet.getDoubleVals("FTDOuterRadius").size());
+  
+
+  if (nFTDZ == nFTDRin && nFTDRin == nFTDRout) {
+    nLayersFTD = nFTDZ;
+    _zFTD.resize(nLayersFTD);
+    _rInFTD.resize(nLayersFTD);
+    _rOutFTD.resize(nLayersFTD);
+  }
+  else {
+    std::cout << "Size of vectors FTDZCoordinate, FTDInnerRadius and  FTDInnerRadius are not equal --->" << std::endl;
+    std::cout << "# FTDZCoordinate : " << nFTDZ << std::endl;
+    std::cout << "# FTDInnerRadius : " << nFTDRin << std::endl;
+    std::cout << "# FTDOuterRadius : " << nFTDRout << std::endl;
+    exit(1);
+  }
+  for (int i=0;i<nLayersFTD;++i) {
+    _zFTD[i] = float(pFTDDet.getDoubleVals("FTDZCoordinate")[i]);
+    _rInFTD[i] = float(pFTDDet.getDoubleVals("FTDInnerRadius")[i]);
+    _rOutFTD[i] = float(pFTDDet.getDoubleVals("FTDOuterRadius")[i]);
+  } 
+  _FTDdisk_thickness = float(pFTDDet.getDoubleVal("FTDDiskThickness"));
+  _FTD_innerSupport_dR = float(pFTDDet.getDoubleVal("FTDInnerSupportdR"));
+  _FTD_outerSupport_dR = float(pFTDDet.getDoubleVal("FTDOuterSupportdR"));
+  _FTD_innerSupport_thickness = float(pFTDDet.getDoubleVal("FTDInnerSupportThickness"));
+  _FTD_outerSupport_thickness = float(pFTDDet.getDoubleVal("FTDOuterSupportThickness"));
+  _zFTDOuterCyllinderStart = float(pFTDDet.getDoubleVal("zFTDOuterCyllinderStart"));
+  _zFTDOuterCyllinderEnd = float(pFTDDet.getDoubleVal("zFTDOuterCyllinderEnd"));
+  _zFTDInnerConeStart = float(pFTDDet.getDoubleVal("zFTDInnerConeStart"));
+  _zFTDInnerConeEnd = float(pFTDDet.getDoubleVal("zFTDInnerConeEnd"));
+  _FTD_copper_thickness = float(pFTDDet.getDoubleVal("FTDCopperThickness"));
+  _FTD_kaptonCyl_thickness = float(pFTDDet.getDoubleVal("FTDOuterCyllinderThickness"));
+  int iLast = pFTDDet.getIntVal("LastHeavyLayer");
+  _dedx_si = 10.0*float(pFTDDet.getDoubleVal("Silicon_dEdx"));
+  _dedx_si872 = 10.0*float(pFTDDet.getDoubleVal("Silicon872_dEdx"));
+  _dedx_kapton = 10.0*float(pFTDDet.getDoubleVal("Kapton_dEdx"));
+  _dedx_copper = 10.0*float(pFTDDet.getDoubleVal("Copper_dEdx"));
+  _radlen_si = 0.1*float(pFTDDet.getDoubleVal("Silicon_RadLen"));
+  _radlen_si872 = 0.1*float(pFTDDet.getDoubleVal("Silicon872_RadLen"));
+  _radlen_kapton = 0.1*float(pFTDDet.getDoubleVal("Kapton_RadLen"));
+  _radlen_copper = 0.1*float(pFTDDet.getDoubleVal("Copper_RadLen"));
+
+  for (int i=0;i<nLayersFTD;++i) {
+    // FTD Si Disks
+    float dedx = _dedx_si;
+    float radlen  = _radlen_si;
+    if (i<iLast) {
+      dedx = _dedx_si872;
+      radlen = _radlen_si872;
+    }
+    // right-hand part
+    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*_FTDdisk_thickness/radlen;
+    fkddes_.xelosp[Npmat] = 0.1*_FTDdisk_thickness*dedx;
+
+    fkexts_.itexts[Nexs] = 1;
+    fkexts_.rzsurf[Nexs] = fkddes_.zpmat[Npmat];
+    fkexts_.zrmin[Nexs] = fkddes_.rpmin[Npmat];
+    fkexts_.zrmax[Nexs] = fkddes_.rpmax[Npmat];
+
+    Nexs++;
+    Npmat++;
+    
+    // left-hand part
+    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*_FTDdisk_thickness/radlen;
+    fkddes_.xelosp[Npmat] = 0.1*_FTDdisk_thickness*dedx;
+
+    fkexts_.itexts[Nexs] = 1;
+    fkexts_.rzsurf[Nexs] = fkddes_.zpmat[Npmat];
+    fkexts_.zrmin[Nexs] = fkddes_.rpmin[Npmat];
+    fkexts_.zrmax[Nexs] = fkddes_.rpmax[Npmat];
+
+    Nexs++;
+    Npmat++;
+      
+    // Inner Support Rings
+    // right-hand part
+    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*(_rInFTD[i]-_FTD_innerSupport_dR);
+    fkddes_.rpmax[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*_FTD_innerSupport_thickness/_radlen_kapton;
+    fkddes_.xelosp[Npmat] = 0.1*_FTD_innerSupport_thickness*_dedx_kapton;
+    Npmat++;
+   
+    // left-hand part
+    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*(_rInFTD[i]-_FTD_innerSupport_dR);
+    fkddes_.rpmax[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*_FTD_innerSupport_thickness/_radlen_kapton;
+    fkddes_.xelosp[Npmat] = 0.1*_FTD_innerSupport_thickness*_dedx_kapton;
+    Npmat++;
+   
+    // Outer Support
+    // right-hand part
+    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
+    fkddes_.xrlp[Npmat] = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
+    fkddes_.xelosp[Npmat] = 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
+    Npmat++;
+   
+     // left-hand part
+    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
+    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
+    fkddes_.xrlp[Npmat]  = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
+    fkddes_.xelosp[Npmat]= 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
+    Npmat++;
+  }
+
+  // Outer support cyllinders (FTD)
+
+  // copper cables; left part
+  fkddes_.rcmat[Ncmat] = 0.1*(_rOutFTD[nLayersFTD-1]+
+			      _FTD_outerSupport_dR+0.5+
+			      0.5*_FTD_copper_thickness);
+  fkddes_.zcmin[Ncmat] = -0.1*_zFTDOuterCyllinderEnd;
+  fkddes_.zcmax[Ncmat] = -0.1*_zFTDOuterCyllinderStart;
+  fkddes_.xrlc[Ncmat] = 0.1*_FTD_copper_thickness/_radlen_copper;
+  fkddes_.xelosc[Ncmat] = 0.1*_FTD_copper_thickness*_dedx_copper;
+  Ncmat++;
+  // copper cables; right part
+  fkddes_.rcmat[Ncmat] = 0.1*(_rOutFTD[nLayersFTD-1]+
+			      _FTD_outerSupport_dR+0.5+ 
+			      0.5*_FTD_copper_thickness);
+  fkddes_.zcmin[Ncmat] = 0.1*_zFTDOuterCyllinderStart;
+  fkddes_.zcmax[Ncmat] = 0.1*_zFTDOuterCyllinderEnd;
+  fkddes_.xrlc[Ncmat] = 0.1*_FTD_copper_thickness/_radlen_copper;
+  fkddes_.xelosc[Ncmat] = 0.1*_FTD_copper_thickness*_dedx_copper;
+  Ncmat++;  
+  // kapton cyllinder; left part
+  fkddes_.rcmat[Ncmat] = 0.1*(_rOutFTD[nLayersFTD-1]+
+			      _FTD_outerSupport_dR+0.5+
+			      _FTD_copper_thickness+
+			      0.5*_FTD_kaptonCyl_thickness);
+  fkddes_.zcmin[Ncmat] = -0.1*_zFTDOuterCyllinderEnd;
+  fkddes_.zcmax[Ncmat] = -0.1*_zFTDOuterCyllinderStart;
+  fkddes_.xrlc[Ncmat] = 0.1*_FTD_kaptonCyl_thickness/_radlen_kapton;
+  fkddes_.xelosc[Ncmat] = 0.1*_FTD_kaptonCyl_thickness*_dedx_kapton;
+  Ncmat++;
+  // kapton cyllinder; right part
+  fkddes_.rcmat[Ncmat] = 0.1*(_rOutFTD[nLayersFTD-1]+
+			      _FTD_outerSupport_dR+0.5+
+			      _FTD_copper_thickness+
+			      0.5*_FTD_kaptonCyl_thickness);
+  fkddes_.zcmin[Ncmat] = 0.1*_zFTDOuterCyllinderStart;
+  fkddes_.zcmax[Ncmat] = 0.1*_zFTDOuterCyllinderEnd;
+  fkddes_.xrlc[Ncmat] = 0.1*_FTD_kaptonCyl_thickness/_radlen_kapton;
+  fkddes_.xelosc[Ncmat] = 0.1*_FTD_kaptonCyl_thickness*_dedx_kapton;
+  Ncmat++;
+
+//   // Inner support cones (FTD)
+
+//   int nMin = nLayersFTD-4;
+
+//   if (nMin < 0)
+//       nMin = 0;
+
+//   // copper cables ; left part
+//   fkddes1_.z1conmat[Nconmat] = -0.1*_zFTDInnerConeEnd;
+//   fkddes1_.z2conmat[Nconmat] = -0.1*_zFTDInnerConeStart;
+//   fkddes1_.r2conmat[Nconmat] = 0.1*(_rInFTD[nMin]-
+// 				    _FTD_innerSupport_dR-0.5-
+// 				    0.5*_FTD_copper_thickness);
+//   fkddes1_.r1conmat[Nconmat] = 0.1*(_rInFTD[nLayersFTD-1]-
+// 				    _FTD_innerSupport_dR-0.5-
+// 				    0.5*_FTD_copper_thickness);
+//   float dR = fkddes1_.r1conmat[Nconmat]-fkddes1_.r2conmat[Nconmat];
+//   float dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//   float alpha = atan(fabs(dR/dZ));
+//   float cosa = fabs(cos(alpha));
+//   float dL = _FTD_copper_thickness*cosa;
+//   fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_copper;
+//   fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_copper;
+//   fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_copper;
+//   fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_copper;  
+//   Nconmat++;
+//   // copper cables ; right part
+//   fkddes1_.z1conmat[Nconmat] = 0.1*_zFTDInnerConeStart;
+//   fkddes1_.z2conmat[Nconmat] = 0.1*_zFTDInnerConeEnd;
+//   fkddes1_.r1conmat[Nconmat] = 0.1*(_rInFTD[nMin]-
+// 				    _FTD_innerSupport_dR-0.5-
+// 				    0.5*_FTD_copper_thickness);
+//   fkddes1_.r2conmat[Nconmat] = 0.1*(_rInFTD[nLayersFTD-1]-
+// 				    _FTD_innerSupport_dR-0.5-
+// 				    0.5*_FTD_copper_thickness);
+//   dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
+//   dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//   alpha = atan(fabs(dR/dZ));
+//   cosa = fabs(cos(alpha));
+//   dL = _FTD_copper_thickness*cosa;
+//   fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_copper;
+//   fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_copper;
+//   fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_copper;
+//   fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_copper;  
+//   Nconmat++;
+//   // kapton cone ; left part
+//   fkddes1_.z1conmat[Nconmat] = -0.1*_zFTDInnerConeEnd;
+//   fkddes1_.z2conmat[Nconmat] = -0.1*_zFTDInnerConeStart;
+//   fkddes1_.r2conmat[Nconmat] = 0.1*(_rInFTD[nMin]-
+// 				    _FTD_innerSupport_dR-0.5-
+//                                     _FTD_copper_thickness-
+// 				    0.5*_FTD_kaptonCyl_thickness);
+//   fkddes1_.r1conmat[Nconmat] = 0.1*(_rInFTD[nLayersFTD-1]-
+// 				    _FTD_innerSupport_dR-0.5-
+//                                     _FTD_copper_thickness-
+// 				    0.5*_FTD_kaptonCyl_thickness);
+//   dR = fkddes1_.r1conmat[Nconmat]-fkddes1_.r2conmat[Nconmat];
+//   dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//   alpha = atan(fabs(dR/dZ));
+//   cosa = fabs(cos(alpha));
+//   dL = _FTD_kaptonCyl_thickness*cosa;
+//   fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_kapton;
+//   fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_kapton;
+//   fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_kapton;
+//   fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
+//   Nconmat++;
+//   // kapton cone ; right part
+//   fkddes1_.z2conmat[Nconmat] = 0.1*_zFTDInnerConeEnd;
+//   fkddes1_.z1conmat[Nconmat] = 0.1*_zFTDInnerConeStart;
+//   fkddes1_.r1conmat[Nconmat] = 0.1*(_rInFTD[nMin]-
+// 				    _FTD_innerSupport_dR-0.5-
+//                                     _FTD_copper_thickness-
+// 				    0.5*_FTD_kaptonCyl_thickness);
+//   fkddes1_.r2conmat[Nconmat] = 0.1*(_rInFTD[nLayersFTD-1]-
+// 				    _FTD_innerSupport_dR-0.5-
+//                                     _FTD_copper_thickness-
+// 				    0.5*_FTD_kaptonCyl_thickness);
+//   dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
+//   dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
+//   alpha = atan(fabs(dR/dZ));
+//   cosa = fabs(cos(alpha));
+//   dL = _FTD_kaptonCyl_thickness*cosa;
+//   fkddes1_.xrl1con[Nconmat]=0.1*dL/_radlen_kapton;
+//   fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_kapton;
+//   fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_kapton;
+//   fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
+//   Nconmat++;
+
+  // **************************************** //
+  // ** Building Database for SIT Detector ** //
+  // **************************************** //
+  const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
+
+  // SIT layers
+
+  int nSITR = int(pSITDet.getDoubleVals("SITLayerRadius").size());
+  int nSITHL = int(pSITDet.getDoubleVals("SITLayerHalfLength").size());
+  int nLayersSIT = 0;
+
+  if (nSITR == nSITHL) {
+    nLayersSIT = nSITR;
+    _rSIT.resize(nLayersSIT);
+    _halfZSIT.resize(nLayersSIT);
+  }
+  else {
+    std::cout << "Size of SITLayerRadius vector (" << nSITR 
+	      << ") is not equal to the size of SITHalfLength vector ("
+	      << nSITHL << ")" << std::endl;
+    exit(1);
+  }
+
+  for (int iL=0;iL<nLayersSIT;++iL) {
+    _rSIT[iL] = float(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
+    _halfZSIT[iL] = float(pSITDet.getDoubleVals("SITLayerHalfLength")[iL]);
+  }
+
+  _radlen_si872 = 0.1*float(pSITDet.getDoubleVal("SITLayer_RadLen"));
+  _dedx_si872 = 10.*float(pSITDet.getDoubleVal("SITLayer_dEdx"));
+
+  _SITLayer_thickness =  float(pSITDet.getDoubleVal("SITLayerThickness"));
+
+  for (int iL = 0; iL < nLayersSIT; ++iL) {
+      fkddes_.rcmat[Ncmat] = 0.1*_rSIT[iL];
+      fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
+      fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
+      fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si872;
+      fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness*_dedx_si872;     
+
+      fkexts_.itexts[Nexs] = 0;
+      fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
+      fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
+      fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+
+      Nexs++;
+      Ncmat++;
+
+  } 
+
+
+  // **************************************** //
+  // ** Building Database for TPC Detector ** //
+  // **************************************** //
+
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+  const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+  
+  float innerrad = 0.1 * float( planeExt[0] ) ;
+  float outerrad = 0.1 *float( planeExt[1] ) ;
+  //  float npadrows = padLayout.getNRows() ;
+  float maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
+  //  float tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
+  //  float ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
+  //  float tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResMax")) ;  
+  //  float tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
+  //  float tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
+
+
+  float RTPCINN = 32.0;
+  float TPCTHBI = 0.01*8.9;
+  float TPCTHBO = 0.03*8.9;
+  float xralu = 8.9;
+  float dedxalu = 2.70*1.62e-3;
+  float TPCACRI = innerrad;
+  float TPCACRO = outerrad;
+  float RTPCOUT = TPCACRO + 6.4;
+  float TPCHLFZ = maxdrift + 23.;
+  float xrargon = 10971.;
+  float dedxargon = 0.0018*1.52e-3;
+  float TPCTHKE = 23.;
+  
+  // inner tube    
+  fkddes_.rcmat[Ncmat] = RTPCINN + TPCTHBI/2.;
+  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
+  fkddes_.zcmax[Ncmat] = TPCHLFZ;
+  fkddes_.xrlc[Ncmat] = TPCTHBI/xralu;
+  fkddes_.xelosc[Ncmat] = TPCTHBI*dedxalu;
+
+  fkexts_.itexts[Nexs] = 0;
+  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]+1.0;
+  fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
+  fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+
+  Nexs++;
+  Ncmat++;
+
+  int ncyl = 10;
+  
+  // gas
+  float xstep = (RTPCOUT-TPCTHBO-TPCACRI-TPCTHBI)/float(ncyl);
+  for (int icyl=0;icyl<ncyl;++icyl) {
+    fkddes_.rcmat[Ncmat] = RTPCINN + TPCTHBI + (float(icyl)+0.5)*xstep;
+    fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
+    fkddes_.zcmax[Ncmat] = TPCHLFZ;
+    fkddes_.xrlc[Ncmat] = xstep/xrargon;
+    fkddes_.xelosc[Ncmat] = xstep*dedxargon;
+    Ncmat++;
+  }
+
+  // outer tube
+  fkddes_.rcmat[Ncmat] = RTPCOUT;
+  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
+  fkddes_.zcmax[Ncmat] = TPCHLFZ;
+  fkddes_.xrlc[Ncmat] = TPCTHBO/xralu;
+  fkddes_.xelosc[Ncmat] = TPCTHBO*dedxalu;
+  Ncmat++;
+    
+  // endplates
+  fkddes_.rpmin[Npmat] = RTPCINN;
+  fkddes_.rpmax[Npmat] = RTPCOUT;
+  fkddes_.zpmat[Npmat] = -(TPCHLFZ-TPCTHKE/2.);
+  fkddes_.xrlp[Npmat] = 0.35;
+  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
+  Npmat++;
+
+  fkddes_.rpmin[Npmat] = RTPCINN;
+  fkddes_.rpmax[Npmat] = RTPCOUT;
+  fkddes_.zpmat[Npmat] = TPCHLFZ-TPCTHKE/2.;
+  fkddes_.xrlp[Npmat] = 0.35;
+  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
+  Npmat++;
+
+
+  // setting numbers of planar, cyllinder and conical shapes and extrapolation surfaces
+  fkddes_.npmat = Npmat;
+  fkddes_.ncmat = Ncmat;
+  fkddes1_.nconmat = Nconmat;
+  //  fkexts_.nexs = Nexs;
+  fkexts_.nexs = 0;
+
+}
+
+void MaterialDB::processRunHeader( LCRunHeader* run) { 
+  _nRun++ ;
+  _bField = Global::parameters->getFloatVal("BField");
+  fkfild_.consb = 2.99e-3*_bField;
+} 
+
+void MaterialDB::processEvent( LCEvent * evt ) { 
+  _nEvt ++ ;
+}
+
+
+
+void MaterialDB::check( LCEvent * evt ) { 
+  // nothing to check here - could be used to fill checkplots in reconstruction processor
+}
+
+
+void MaterialDB::end(){ 
+//   std::cout << "MaterialDB::end()  " << name() 
+// 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
+// 	    << std::endl ;
+}
+

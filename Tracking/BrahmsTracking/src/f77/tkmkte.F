@@ -1,5 +1,5 @@
 *  
-* $Id: tkmkte.F,v 1.4 2005-11-03 15:16:14 aplin Exp $
+* $Id: tkmkte.F,v 1.5 2006-11-02 11:49:01 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.3  2005/07/29 15:06:17  aplin
@@ -212,7 +212,7 @@ C.......save in local TE array
         ITELOC( 4,ILOC)=IMPNT ! measurement code
         ITELOC( 5,ILOC)=20    ! pointer to mass info
         ITELOC( 6,ILOC)=3     ! unknown charge
-        ITELOC( 7,ILOC)=0       ! no degrees of freedom
+        ITELOC( 7,ILOC)=0     ! no degrees of freedom
         RTELOC( 8,ILOC)=0.0   ! chi^2 of the fit
         RTELOC( 9,ILOC)=0.1   ! length of track element
         RTELOC(10,ILOC)=POS(1) ! r or x
@@ -327,6 +327,7 @@ C----------------------
            IF (TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: fit failed. retry.'
            GOTO 100
         END IF
+           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
         IF (TKSTDBG.GT.0) THEN
            WRITE(6,*) 'TKMKTE: fit failed. no retry.'
 ccc           WRITE(6,*) '  track properties of last hit: '

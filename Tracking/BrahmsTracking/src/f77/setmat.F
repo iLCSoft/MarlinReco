@@ -1,7 +1,12 @@
 *  
-* $Id: setmat.F,v 1.4 2006-06-28 15:29:04 aplin Exp $
+* $Id: setmat.F,v 1.5 2006-11-02 11:49:00 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2006/06/28 15:29:04  aplin
+* The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
+*
+* The value is passed internaly to the F77 code via the same function which passes the TPC geometry i.e. gettpcgeom(float* innerrad, float* outerrad, int* npadrows, float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float* tpcbfield). It is set in setmat.F. tpcgeom.F had to be modified as it also uses gettpcgeom, although it does not make use of the B-Field.
+*
 * Revision 1.3  2005/11/03 15:16:14  aplin
 * Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
 *
@@ -85,6 +90,11 @@ c#include "flag.inc"
       INTEGER gettpcgeom
       external gettpcgeom
 
+      LOGICAL LFIRST
+      
+      DATA LFIRST /.TRUE./
+
+      SAVE LFIRST
 
 
 C CALL wrapper function to get tpc parameters from GEAR including the BFIELD
@@ -199,9 +209,9 @@ c      BFIELD = 40.0
 
       consb = bfield*fct
 
-      ncmat = 0
-      npmat = 0
-      nexs  = 0
+c      ncmat = 0
+c      npmat = 0
+c      nexs  = 0
 * beam pipe
 csja      if (lvxdp) then
 csja         ncmat         = ncmat+1
@@ -234,46 +244,46 @@ csja*
 
 C FIXME: the CCD is set to default for now
 csja      if (lvxdc) then
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = BPCINR1
-         zcmin(ncmat)  = -BPCINZ1
-         zcmax(ncmat)  = BPCINZ1
-         xrlc(ncmat)   = BPCT1/xrbery
-         xelosc(ncmat) = BPCT1*dedxbery
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = BPCINR1
+c$$$         zcmin(ncmat)  = -BPCINZ1
+c$$$         zcmax(ncmat)  = BPCINZ1
+c$$$         xrlc(ncmat)   = BPCT1/xrbery
+c$$$         xelosc(ncmat) = BPCT1*dedxbery
 *
 *          radius of 1st conical part is middle of cone
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = 0.5*(BPCINR1+BPCINR2)
-         zcmin(ncmat)  = bpcinz1*rcmat(ncmat)/bpcinr1
-c         zcmax(ncmat)  = bpcinz3*rcmat(ncmat)/bpcinr2
-         zcmax(ncmat)  = 100.
-* fudge factor is the longer path through the cone for 10 deg
-         xrlc(ncmat)   = bpct2/xrbery*
-     $        (sin(0.175)/sin(0.175-atan((BPCINR2-BPCINR1)/
-     $        (BPCINZ2-BPCINZ1))))
-         xelosc(ncmat) = bpct2*dedxbery*
-     $        (sin(0.175)/sin(0.175-atan((BPCINR2-BPCINR1)/
-     $        (BPCINZ2-BPCINZ1))))
-*
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = rcmat(ncmat-1)
-         zcmin(ncmat)  = -zcmax(ncmat-1)
-         zcmax(ncmat)  = -zcmin(ncmat-1)
-         xrlc(ncmat)   = xrlc(ncmat-1)
-         xelosc(ncmat) = xelosc(ncmat-1)
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = 0.5*(BPCINR1+BPCINR2)
+c$$$         zcmin(ncmat)  = bpcinz1*rcmat(ncmat)/bpcinr1
+c$$$c         zcmax(ncmat)  = bpcinz3*rcmat(ncmat)/bpcinr2
+c$$$         zcmax(ncmat)  = 100.
+c$$$* fudge factor is the longer path through the cone for 10 deg
+c$$$         xrlc(ncmat)   = bpct2/xrbery*
+c$$$     $        (sin(0.175)/sin(0.175-atan((BPCINR2-BPCINR1)/
+c$$$     $        (BPCINZ2-BPCINZ1))))
+c$$$         xelosc(ncmat) = bpct2*dedxbery*
+c$$$     $        (sin(0.175)/sin(0.175-atan((BPCINR2-BPCINR1)/
+c$$$     $        (BPCINZ2-BPCINZ1))))
+c$$$*
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = rcmat(ncmat-1)
+c$$$         zcmin(ncmat)  = -zcmax(ncmat-1)
+c$$$         zcmax(ncmat)  = -zcmin(ncmat-1)
+c$$$         xrlc(ncmat)   = xrlc(ncmat-1)
+c$$$         xelosc(ncmat) = xelosc(ncmat-1)
 *
 
 csja      endif
 *
 
-      nexs          = nexs+1
-      typx(nexs)    = 'CYLI'
+c$$$      nexs          = nexs+1
+c$$$      typx(nexs)    = 'CYLI'
 C FIXME:SJA: this line is commened out and the value replace with 0 to ensure that the material
 C     description of brahm and marlin "agree"
-      rzsurf(nexs)  = rcmat(1)-0.01
+c      rzsurf(nexs)  = rcmat(1)-0.01
 c      rzsurf(nexs)  = 0.
-      zrmin(nexs)   = -1000.
-      zrmax(nexs)   = 1000.
+c      zrmin(nexs)   = -1000.
+c      zrmax(nexs)   = 1000.
 
 
 ccc*  microvertex
@@ -375,143 +385,143 @@ csja*
 c FIXME: CCD set to default for now
 csja      if (lvxdc) then
 csja         if (ccdtype.eq.1) then
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = vxdrl1
-            zcmin(ncmat)  = -vxdzl1
-            zcmax(ncmat)  = vxdzl1
-            xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
-            xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
-*
-            nexs          = nexs+1
-            typx(nexs)    = 'CYLI'
-            rzsurf(nexs)  = rcmat(ncmat)
-            zrmin(nexs)   = zcmin(ncmat)
-            zrmax(nexs)   = zcmax(ncmat)
-csja         endif
-*
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdrl2
-         zcmin(ncmat)  = -vxdzl2
-         zcmax(ncmat)  = vxdzl2
-         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
-         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
-*
-         nexs          = nexs+1
-         typx(nexs)    = 'CYLI'
-         rzsurf(nexs)  = rcmat(ncmat)
-         zrmin(nexs)   = zcmin(ncmat)
-         zrmax(nexs)   = zcmax(ncmat)
-*
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdrl3
-         zcmin(ncmat)  = -vxdzl3
-         zcmax(ncmat)  = vxdzl3
-         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
-         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
-*
-         nexs          = nexs+1
-         typx(nexs)    = 'CYLI'
-         rzsurf(nexs)  = rcmat(ncmat)
-         zrmin(nexs)   = zcmin(ncmat)
-         zrmax(nexs)   = zcmax(ncmat)
-*
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdrl4
-         zcmin(ncmat)  = -vxdzl4
-         zcmax(ncmat)  = vxdzl4
-         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
-         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
-*
-         nexs          = nexs+1
-         typx(nexs)    = 'CYLI'
-         rzsurf(nexs)  = rcmat(ncmat)
-         zrmin(nexs)   = zcmin(ncmat)
-         zrmax(nexs)   = zcmax(ncmat)
-*
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdrl5
-         zcmin(ncmat)  = -vxdzl5
-         zcmax(ncmat)  = vxdzl5
-         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
-         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
-*
-         nexs          = nexs+1
-         typx(nexs)    = 'CYLI'
-         rzsurf(nexs)  = rcmat(ncmat)
-         zrmin(nexs)   = zcmin(ncmat)
-         zrmax(nexs)   = zcmax(ncmat)
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = vxdrl1
+c$$$            zcmin(ncmat)  = -vxdzl1
+c$$$            zcmax(ncmat)  = vxdzl1
+c$$$            xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
+c$$$            xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
+c$$$*
+c$$$            nexs          = nexs+1
+c$$$            typx(nexs)    = 'CYLI'
+c$$$            rzsurf(nexs)  = rcmat(ncmat)
+c$$$            zrmin(nexs)   = zcmin(ncmat)
+c$$$            zrmax(nexs)   = zcmax(ncmat)
+c$$$csja         endif
+c$$$*
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdrl2
+c$$$         zcmin(ncmat)  = -vxdzl2
+c$$$         zcmax(ncmat)  = vxdzl2
+c$$$         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
+c$$$         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
+c$$$*
+c$$$         nexs          = nexs+1
+c$$$         typx(nexs)    = 'CYLI'
+c$$$         rzsurf(nexs)  = rcmat(ncmat)
+c$$$         zrmin(nexs)   = zcmin(ncmat)
+c$$$         zrmax(nexs)   = zcmax(ncmat)
+c$$$*
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdrl3
+c$$$         zcmin(ncmat)  = -vxdzl3
+c$$$         zcmax(ncmat)  = vxdzl3
+c$$$         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
+c$$$         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
+c$$$*
+c$$$         nexs          = nexs+1
+c$$$         typx(nexs)    = 'CYLI'
+c$$$         rzsurf(nexs)  = rcmat(ncmat)
+c$$$         zrmin(nexs)   = zcmin(ncmat)
+c$$$         zrmax(nexs)   = zcmax(ncmat)
+c$$$*
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdrl4
+c$$$         zcmin(ncmat)  = -vxdzl4
+c$$$         zcmax(ncmat)  = vxdzl4
+c$$$         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
+c$$$         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
+c$$$*
+c$$$         nexs          = nexs+1
+c$$$         typx(nexs)    = 'CYLI'
+c$$$         rzsurf(nexs)  = rcmat(ncmat)
+c$$$         zrmin(nexs)   = zcmin(ncmat)
+c$$$         zrmax(nexs)   = zcmax(ncmat)
+c$$$*
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdrl5
+c$$$         zcmin(ncmat)  = -vxdzl5
+c$$$         zcmax(ncmat)  = vxdzl5
+c$$$         xrlc(ncmat)   = vxdclt/xrsili+vxdsup/xrbery
+c$$$         xelosc(ncmat) = vxdclt*dedxsili+vxdsup*dedxbery
+c$$$*
+c$$$         nexs          = nexs+1
+c$$$         typx(nexs)    = 'CYLI'
+c$$$         rzsurf(nexs)  = rcmat(ncmat)
+c$$$         zrmin(nexs)   = zcmin(ncmat)
+c$$$         zrmax(nexs)   = zcmax(ncmat)
 *     electronics
-         do xs=-1.,1.,2.
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = VXDELR11
-            zcmin(ncmat)  = min(xs*VXDELZ11,xs*VXDELZ12)
-            zcmax(ncmat)  = max(xs*VXDELZ11,xs*VXDELZ12)
-            xrlc(ncmat)   = VXDELE/xrsili
-            xelosc(ncmat) = VXDELE*dedxsili
-*
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = VXDELR21
-            zcmin(ncmat)  = min(xs*VXDELZ21,xs*VXDELZ22)
-            zcmax(ncmat)  = max(xs*VXDELZ21,xs*VXDELZ22)
-            xrlc(ncmat)   = VXDELE/xrsili
-            xelosc(ncmat) = VXDELE*dedxsili
-*
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = VXDELR31
-            zcmin(ncmat)  = min(xs*VXDELZ31,xs*VXDELZ32)
-            zcmax(ncmat)  = max(xs*VXDELZ31,xs*VXDELZ32)
-            xrlc(ncmat)   = VXDELE/xrsili
-            xelosc(ncmat) = VXDELE*dedxsili
-*
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = VXDELR41
-            zcmin(ncmat)  = min(xs*VXDELZ41,xs*VXDELZ42)
-            zcmax(ncmat)  = max(xs*VXDELZ41,xs*VXDELZ42)
-            xrlc(ncmat)   = VXDELE/xrsili
-            xelosc(ncmat) = VXDELE*dedxsili
-*
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = VXDELR51
-            zcmin(ncmat)  = min(xs*VXDELZ51,xs*VXDELZ52)
-            zcmax(ncmat)  = max(xs*VXDELZ51,xs*VXDELZ52)
-            xrlc(ncmat)   = VXDELE/xrsili
-            xelosc(ncmat) = VXDELE*dedxsili
-         enddo
+c$$$         do xs=-1.,1.,2.
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = VXDELR11
+c$$$            zcmin(ncmat)  = min(xs*VXDELZ11,xs*VXDELZ12)
+c$$$            zcmax(ncmat)  = max(xs*VXDELZ11,xs*VXDELZ12)
+c$$$            xrlc(ncmat)   = VXDELE/xrsili
+c$$$            xelosc(ncmat) = VXDELE*dedxsili
+c$$$*
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = VXDELR21
+c$$$            zcmin(ncmat)  = min(xs*VXDELZ21,xs*VXDELZ22)
+c$$$            zcmax(ncmat)  = max(xs*VXDELZ21,xs*VXDELZ22)
+c$$$            xrlc(ncmat)   = VXDELE/xrsili
+c$$$            xelosc(ncmat) = VXDELE*dedxsili
+c$$$*
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = VXDELR31
+c$$$            zcmin(ncmat)  = min(xs*VXDELZ31,xs*VXDELZ32)
+c$$$            zcmax(ncmat)  = max(xs*VXDELZ31,xs*VXDELZ32)
+c$$$            xrlc(ncmat)   = VXDELE/xrsili
+c$$$            xelosc(ncmat) = VXDELE*dedxsili
+c$$$*
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = VXDELR41
+c$$$            zcmin(ncmat)  = min(xs*VXDELZ41,xs*VXDELZ42)
+c$$$            zcmax(ncmat)  = max(xs*VXDELZ41,xs*VXDELZ42)
+c$$$            xrlc(ncmat)   = VXDELE/xrsili
+c$$$            xelosc(ncmat) = VXDELE*dedxsili
+c$$$*
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = VXDELR51
+c$$$            zcmin(ncmat)  = min(xs*VXDELZ51,xs*VXDELZ52)
+c$$$            zcmax(ncmat)  = max(xs*VXDELZ51,xs*VXDELZ52)
+c$$$            xrlc(ncmat)   = VXDELE/xrsili
+c$$$            xelosc(ncmat) = VXDELE*dedxsili
+c$$$         enddo
 *     support tube
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdsupr
-         zcmin(ncmat)  = -vxdsupz
-         zcmax(ncmat)  = vxdsupz
-         xrlc(ncmat)   = vxdsupt/xrbery
-         xelosc(ncmat) = vxdsupt*dedxbery
-*     endplate
-*
-         do xs=-1.,1.,2.
-            npmat         = npmat+1
-            zpmat(npmat)  = xs*(VXDEPZ2+VXDEPZ1)/2.
-            rpmin(npmat)  = VXDEPR1
-            rpmax(npmat)  = VXDEPR2
-            xrlp(npmat)   = VXDEPT/xralu
-            xelosp(npmat) = VXDEPT*dedxalu
-         enddo
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdsupr
+c$$$         zcmin(ncmat)  = -vxdsupz
+c$$$         zcmax(ncmat)  = vxdsupz
+c$$$         xrlc(ncmat)   = vxdsupt/xrbery
+c$$$         xelosc(ncmat) = vxdsupt*dedxbery
+c$$$*     endplate
+c$$$*
+c$$$         do xs=-1.,1.,2.
+c$$$            npmat         = npmat+1
+c$$$            zpmat(npmat)  = xs*(VXDEPZ2+VXDEPZ1)/2.
+c$$$            rpmin(npmat)  = VXDEPR1
+c$$$            rpmax(npmat)  = VXDEPR2
+c$$$            xrlp(npmat)   = VXDEPT/xralu
+c$$$            xelosp(npmat) = VXDEPT*dedxalu
+c$$$         enddo
 *
 *     cryostat barrel
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = vxdcr2
-         zcmin(ncmat)  = -vxdcrz
-         zcmax(ncmat)  = vxdcrz
-         xrlc(ncmat)   = vxdcrt2/xralu
-         xelosc(ncmat) = vxdcrt2*dedxalu
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = vxdcr2
+c$$$         zcmin(ncmat)  = -vxdcrz
+c$$$         zcmax(ncmat)  = vxdcrz
+c$$$         xrlc(ncmat)   = vxdcrt2/xralu
+c$$$         xelosc(ncmat) = vxdcrt2*dedxalu
 *     cryostate endplate
 *
-         do xs=-1.,1.,2.
-            npmat         = npmat+1
-            zpmat(npmat)  = xs*(VXDCRZ + VXDCRT1)
-            rpmin(npmat)  = VXDCR1
-            rpmax(npmat)  = VXDCR2+VXDCRT1+VXDCRT2
-            xrlp(npmat)   = VXDCRT2/xralu
-            xelosp(npmat) = VXDCRT2*dedxalu
-         enddo
+c$$$         do xs=-1.,1.,2.
+c$$$            npmat         = npmat+1
+c$$$            zpmat(npmat)  = xs*(VXDCRZ + VXDCRT1)
+c$$$            rpmin(npmat)  = VXDCR1
+c$$$            rpmax(npmat)  = VXDCR2+VXDCRT1+VXDCRT2
+c$$$            xrlp(npmat)   = VXDCRT2/xralu
+c$$$            xelosp(npmat) = VXDCRT2*dedxalu
+c$$$         enddo
 
 *
 csja      endif
@@ -615,71 +625,83 @@ ccc      endif
 
 csja FIXME: the SIT geom will be called from here for now.
          call sitgeom
-
-csja      if (lsit) then
-         do i=1,nsit
-            ncmat         = ncmat+1
-            rcmat(ncmat)  = sitrad(i)
-            zcmin(ncmat)  = -sitlen(i)
-            zcmax(ncmat)  = sitlen(i)
-            xrlc(ncmat)   = sitthk/xrsili *8.72/2.33
-            xelosc(ncmat) = sitthk*dedxsili *8.72/2.33
-*
-            nexs          = nexs+1
-            typx(nexs)    = 'CYLI'
-            rzsurf(nexs)  = rcmat(ncmat)
-            zrmin(nexs)   = zcmin(ncmat)
-            zrmax(nexs)   = zcmax(ncmat)
-         enddo
+c$$$
+c$$$csja      if (lsit) then
+c$$$         do i=1,nsit
+c$$$            ncmat         = ncmat+1
+c$$$            rcmat(ncmat)  = sitrad(i)
+c$$$            zcmin(ncmat)  = -sitlen(i)
+c$$$            zcmax(ncmat)  = sitlen(i)
+c$$$            xrlc(ncmat)   = sitthk/xrsili *8.72/2.33
+c$$$            xelosc(ncmat) = sitthk*dedxsili *8.72/2.33
+c$$$*
+c$$$            nexs          = nexs+1
+c$$$            typx(nexs)    = 'CYLI'
+c$$$            rzsurf(nexs)  = rcmat(ncmat)
+c$$$            zrmin(nexs)   = zcmin(ncmat)
+c$$$            zrmax(nexs)   = zcmax(ncmat)
+c$$$         enddo
 csja      endif
 
 
 * TPC
 c      if (ltpc) then
 *     inner tube
-         ncmat         = ncmat+1
-c(KH)    rcmat(ncmat)  = RTPCINN
-         rcmat(ncmat)  = RTPCINN+TPCTHBI/2.
-         zcmin(ncmat)  = -TPCHLFZ
-         zcmax(ncmat)  = TPCHLFZ
-         xrlc(ncmat)   = TPCTHBI/xralu
-         xelosc(ncmat) = TPCTHBI*dedxalu
-*
-         nexs          = nexs+1
-         typx(nexs)    = 'CYLI'
-         rzsurf(nexs)  = rcmat(ncmat)+1
-         zrmin(nexs)   = zcmin(ncmat)
-         zrmax(nexs)   = zcmax(ncmat)
+c$$$         ncmat         = ncmat+1
+c$$$c(KH)    rcmat(ncmat)  = RTPCINN
+c$$$         rcmat(ncmat)  = RTPCINN+TPCTHBI/2.
+c$$$         zcmin(ncmat)  = -TPCHLFZ
+c$$$         zcmax(ncmat)  = TPCHLFZ
+c$$$         xrlc(ncmat)   = TPCTHBI/xralu
+c$$$         xelosc(ncmat) = TPCTHBI*dedxalu
+c$$$*
+c$$$         nexs          = nexs+1
+c$$$         typx(nexs)    = 'CYLI'
+c$$$         rzsurf(nexs)  = rcmat(ncmat)+1
+c$$$         zrmin(nexs)   = zcmin(ncmat)
+c$$$         zrmax(nexs)   = zcmax(ncmat)
+c$$$
+c$$$         WRITE(*,*) 'setmat.F ---->'
+c$$$
+c$$$         write(*,*) 'RTPCINN = ',RTPCINN
+c$$$         WRITE(*,*) 'TPCHLFZ = ',TPCHLFZ
+c$$$         WRITE(*,*) 'TPCTHBI = ',TPCTHBI
+
+
 *     gas
 c(KH)    xstep = (rtpcout-rtpcinn)/real(nsttpc)
-         xstep = (rtpcout-tpcthbo-tpcacri-tpcthbi)/real(nsttpc)
-         do i=1,nsttpc
-           ncmat         = ncmat+1
-c(KH)      rcmat(ncmat)  = rtpcinn+(real(i)-0.5)*xstep
-           rcmat(ncmat)  = rtpcinn+tpcthbi+(real(i)-0.5)*xstep
-           zcmin(ncmat)  = -TPCHLFZ
-           zcmax(ncmat)  = TPCHLFZ
-           xrlc(ncmat)   = xstep/xrargon
-           xelosc(ncmat) = xstep*dedxargon
-        enddo
-*
-
-*     outer tube
-         ncmat         = ncmat+1
-         rcmat(ncmat)  = RTPCOUT
-         zcmin(ncmat)  = -TPCHLFZ
-         zcmax(ncmat)  = TPCHLFZ
-         xrlc(ncmat)   = TPCTHBO/xralu
-         xelosc(ncmat) = TPCTHBO*dedxalu
-*     endplate
-         do xs=-1.,1.,2.
-            npmat         = npmat+1
-            zpmat(npmat)  = xs*(TPCHLFZ-TPCTHKE/2.)
-            rpmin(npmat)  = RTPCINN
-            rpmax(npmat)  = RTPCOUT
-            xrlp(npmat)   = 0.35
-            xelosp(npmat) = 0.35*xralu*dedxalu
-         enddo
+c$$$         xstep = (rtpcout-tpcthbo-tpcacri-tpcthbi)/real(nsttpc)
+c$$$         WRITE(*,*) 'nsttpc = ',NSTTPC
+c$$$         WRITE(*,*) 'rtpcout = ',rtpcout
+c$$$         WRITE(*,*) 'tpcacri = ',tpcacri
+c$$$         WRITE(*,*) 'tpcthbi = ',tpcthbi
+c$$$         do i=1,nsttpc
+c$$$           ncmat         = ncmat+1
+c$$$c(KH)      rcmat(ncmat)  = rtpcinn+(real(i)-0.5)*xstep
+c$$$           rcmat(ncmat)  = rtpcinn+tpcthbi+(real(i)-0.5)*xstep
+c$$$           zcmin(ncmat)  = -TPCHLFZ
+c$$$           zcmax(ncmat)  = TPCHLFZ
+c$$$           xrlc(ncmat)   = xstep/xrargon
+c$$$           xelosc(ncmat) = xstep*dedxargon
+c$$$        enddo
+c$$$*
+c$$$
+c$$$*     outer tube
+c$$$         ncmat         = ncmat+1
+c$$$         rcmat(ncmat)  = RTPCOUT
+c$$$         zcmin(ncmat)  = -TPCHLFZ
+c$$$         zcmax(ncmat)  = TPCHLFZ
+c$$$         xrlc(ncmat)   = TPCTHBO/xralu
+c$$$         xelosc(ncmat) = TPCTHBO*dedxalu
+c$$$*     endplate
+c$$$         do xs=-1.,1.,2.
+c$$$            npmat         = npmat+1
+c$$$            zpmat(npmat)  = xs*(TPCHLFZ-TPCTHKE/2.)
+c$$$            rpmin(npmat)  = RTPCINN
+c$$$            rpmax(npmat)  = RTPCOUT
+c$$$            xrlp(npmat)   = 0.35
+c$$$            xelosp(npmat) = 0.35*xralu*dedxalu
+c$$$         enddo
 
 c      endif
 

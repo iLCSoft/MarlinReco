@@ -1,5 +1,5 @@
 *  
-* $Id: fk3trk.F,v 1.2 2005-11-03 15:16:14 aplin Exp $
+* $Id: fk3trk.F,v 1.3 2006-11-02 11:49:00 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
@@ -89,7 +89,7 @@
       DIMENSION DATTK1(MXTK),IDTER(NTEMX),IERX(NEXSMX)
 *
       CHARACTER*30 ERRMES(3)
-      EXTERNAL FXPROB        ! MVL
+ccc      EXTERNAL FXPROB        ! MVL
 *
       DATA ERRMES /'inconsistent TER data         ',
      &             'error matrix not positive     ',
@@ -315,7 +315,7 @@ c MVL     +        FXPROB(CHBACK,NDBACK).LT.PRTOT(IBAFO)) THEN
      $          '(/,''   Successful backward fit - TKR data : '','//
      $         'I5,2(2X,Z8),5I5,/,8G14.6,/,6G14.6,/,10G12.4,/,5G12.4)')
      $          (IDATK(K),K=1,8),(DATK(K),K=9,37)
-            IF(IDEB.GT.1.AND.ITAN.GT.1) CALL FKCVPR(IPRNT,DATK(23))
+ccc            IF(IDEB.GT.1.AND.ITAN.GT.1) CALL FKCVPR(IPRNT,DATK(23))
 *
 *           Save TKR data in array DATTK1
 *
@@ -340,19 +340,19 @@ c MVL     +        FXPROB(CHBACK,NDBACK).LT.PRTOT(IBAFO)) THEN
      &    IX,TYPX(IX),IERX(IX)
         ELSE
           IF(IER2.EQ.0)THEN
-            CALL FKEXMN(DQBCKE(1,IX),WGBCKE(1,IX),DQFRWE(1,IX),
-     &      WGFRWE(1,IX),DQX(1,IX),WGTX(1,IX),COVX(1,IX),IERE)
+ccc            CALL FKEXMN(DQBCKE(1,IX),WGBCKE(1,IX),DQFRWE(1,IX),
+ccc     &      WGFRWE(1,IX),DQX(1,IX),WGTX(1,IX),COVX(1,IX),IERE)
             IF(IERE.NE.0) THEN
               IERX(IX)=-9999
               IF(IDEB.GT.0) WRITE(IPRNT,
      &        '(''    extr. surf.'',I4,2X,A4,'' : error in FKEXMN'')')
      &        IX,TYPX(IX)
             ELSE
-              CALL FKDPVA(PARAMX(2,IX),DQX(1,IX),PARAMX(2,IX),5)
+ccc              CALL FKDPVA(PARAMX(2,IX),DQX(1,IX),PARAMX(2,IX),5)
             ENDIF
           ELSE
-            CALL FKDPVA(PARAMX(2,IX),DQBCKE(1,IX),PARAMX(2,IX),5)
-            CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE)
+ccc            CALL FKDPVA(PARAMX(2,IX),DQBCKE(1,IX),PARAMX(2,IX),5)
+ccc            CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE)
             IF(IERE.NE.0) THEN
               IERX(IX)=-9999
               IF(IDEB.GT.0) WRITE(IPRNT,
@@ -378,8 +378,8 @@ c MVL     +        FXPROB(CHBACK,NDBACK).LT.PRTOT(IBAFO)) THEN
         DO 11 IX=1,NEXS
             IFLX(IX) = IERX(IX)
             IF(IERX(IX).EQ.0) THEN
-              CALL FKSPAR(TYPX(IX),PARAMX(1,IX),PARAMX(2,IX),COVX(1,IX),
-     &        DATX(1,IX))
+ccc              CALL FKSPAR(TYPX(IX),PARAMX(1,IX),PARAMX(2,IX),COVX(1,IX),
+ccc     &        DATX(1,IX))
               CALL VZERO(DATX(22,IX),3)
               IF(IDEB.GE.2) WRITE(IPRNT,
      $             '(/,6X,''TKX data ('',A4,'') : '','//

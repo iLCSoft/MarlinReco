@@ -1,8 +1,13 @@
 
 *  
-* $Id: tpcgeom.F,v 1.3 2006-06-28 15:29:04 aplin Exp $
+* $Id: tpcgeom.F,v 1.4 2006-11-02 11:49:01 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2006/06/28 15:29:04  aplin
+* The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
+*
+* The value is passed internaly to the F77 code via the same function which passes the TPC geometry i.e. gettpcgeom(float* innerrad, float* outerrad, int* npadrows, float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float* tpcbfield). It is set in setmat.F. tpcgeom.F had to be modified as it also uses gettpcgeom, although it does not make use of the B-Field.
+*
 * Revision 1.2  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -92,6 +97,7 @@ C Maximum drift length:
       ZDRIFT=MAXDRIFT
 c Radial pad size
       TPCPADR=(TPCACRO-TPCACRI)/REAL(NRTPC)
+      BFIELD =  TPCBFIELD*10.0
 
       write(*,*) 'NRTPC ', NRTPC
       write(*,*) 'TPCACRO ', TPCACRO

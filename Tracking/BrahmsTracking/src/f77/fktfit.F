@@ -1,7 +1,10 @@
 *  
-* $Id: fktfit.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fktfit.F,v 1.2 2006-11-02 11:49:00 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -67,6 +70,7 @@
 #include "include/fkcom_plus.inc"
 #include "include/fkcons.inc"
 #include "include/fkddes.inc"
+#include "include/fkddes1.inc"
 #include "include/fkexts.inc"
 #include "include/fkfild.inc"
 
@@ -94,6 +98,15 @@
 *
       dimension pchint(ntemx),ipchint(ntemx),iidet(ntemx)
       EXTERNAL FXPROB   ! MVL
+
+      Real PhiMom,ThetaMom
+      Real PhiSurface,ThetaSurface
+      Real TanThetaSurface
+      Real unitSurface(3)
+      Real unitMom(3)
+      Real xxel,xxrl
+
+
 
       IOUT=MOD(IOUTR,10)
       ITAN=MOD(IOUTR,100)/10
@@ -258,6 +271,8 @@ C(KH)---end
 *
 *   cylinders
 *
+c$$$      write(*,*) ' '
+c$$$      write(*,*) 'Number of cyllindrical detectors = ',ncmat
       do 30 ic=1,ncmat
 *
 *   check the limits in r and z
@@ -286,8 +301,91 @@ C(KH)---end
         endif
    30 continue
 *
+*   cones
+*
+c$$$      write(*,*) ' '
+c$$$      write(*,*) 'Number of conical detectrors = ',nconmat
+      do 31 ic=1,nconmat
+*
+*   check the limits in r and z
+*
+        rconmin = min(r1conmat(ic),r2conmat(ic))
+        rconmax = max(r1conmat(ic),r2conmat(ic))
+        zconmin = min(z1conmat(ic),z2conmat(ic))
+        zconmax = max(z1conmat(ic),z2conmat(ic))
+c$$$        write(*,*) ' '
+c$$$        write(*,*) 'Conical detector ',ic,
+c$$$     &             ' R1 = ',r1conmat(ic),' R2 = ',r2conmat(ic),
+c$$$     &             ' Z1 = ',z1conmat(ic),' Z2 = ',z2conmat(ic)   
+c$$$        write(*,*) ic,remin,remax,zemin,zemax
+c$$$        write(*,*) rconmin,rconmax,zconmin,zconmax
+c$$$        write(*,*) ' '
+        if (rconmin.ge.remin .and. rconmax.le.remax .and.
+     $      zconmin.ge.zemin .and. zconmax.le.zemax) then
+*
+           call fkxcon(parref,0,z1conmat(ic),z2conmat(ic),
+     $                         r1conmat(ic),r2conmat(ic),
+     $                sinbmx,0,parint,der,alrph,ier)
+           if (ier.eq.0 .and. alrph.ge.alrmin.and.alrph.le.alrmax) then
+*
+              if (ideb.ge.2) write(IPRNT,
+     $           '(''       mat. cyl. '',I3,''  param.'','//
+     $           'T39,3F11.3,2F11.4,F11.6,''  proj. dist.'',F8.2)')
+     $           ic,parint,alrph
+*
+              nsurf = nsurf+1
+*
+              alrphi(nsurf) = alrph
+              typsur(nsurf) = 'CYLI'
+              PhiSurface = parint(2)
+              TanThetaSurface = (r2conmat(ic)-r1conmat(ic))/
+     $             (z2conmat(ic)-z1conmat(ic))
+              ThetaSurface = atan(TanThetaSurface) + 0.5*PI
+              PhiMom = parint(5) + parint(2)
+              ThetaMom = parint(4)
+              unitSurface(1) = cos(PhiSurface)*sin(ThetaSurface)            
+              unitSurface(2) = sin(PhiSurface)*sin(ThetaSurface)
+              unitSurface(3) = cos(ThetaSurface)
+              unitMom(1) = cos(PhiMom)*sin(ThetaMom)            
+              unitMom(2) = sin(PhiMom)*sin(ThetaMom)
+              unitMom(3) = cos(ThetaMom)
+              
+              cosalpha = 0.0
+              do icomp=1,3
+                 cosalpha = cosalpha + unitSurface(icomp)*unitMom(icomp)
+              enddo
+
+              xxrl = xrl1con(ic) +
+     &             (parint(3)-z1conmat(ic))*(xrl2con(ic)-xrl1con(ic))/
+     &             (z2conmat(ic)-z1conmat(ic))
+              xxel = xel1con(ic) +
+     &             (parint(3)-z1conmat(ic))*(xel2con(ic)-xel1con(ic))/
+     &             (z2conmat(ic)-z1conmat(ic))
+              
+              xrls(nsurf)   = xxrl/abs(cosalpha)
+              call ucopy(parint,params(1,nsurf),2*6)
+              xeloss(nsurf) =
+     $             xxel/abs(cosalpha)
+           else
+c$$$              WRITE(*,*) 'FKXCON : IER = ',IER 
+           endif
+        else
+c$$$           WRITE(*,*) ' OUTSIDE REGION: RMIN = ',remin,
+c$$$     $                               ' RMAX = ',remax,
+c$$$     $                               ' ZMIN = ',zemin,
+c$$$     $                               ' ZMAX = ',zemax
+                    
+        endif
+ 31   continue
+
+*
 *   planes
 *
+c$$$      write(*,*) '  '
+c$$$      write(*,*) 'Number of planar detectors = ',npmat
+c$$$      WRITE(*,*) REMIN,REMAX,ZEMIN,ZEMAX
+c$$$      WRITE(*,*) PARPLA(1),PARPLA(2),PARPLA(3),PARPLA(4),PARPLA(5),
+c$$$     &           PARPLA(6)
       DO 40 IP=1,NPMAT
 
         if ( ip .ge. npmamx ) then
@@ -302,19 +400,27 @@ C(KH)---end
          IF(RPMAX(IP).GE.REMIN .AND. RPMIN(IP).LE.REMAX .AND.
      &      ZPMAT(IP).GE.ZEMIN .AND. ZPMAT(IP).LE.ZEMAX) THEN
 *
-          CALL FKXPLA(PARPLA,0,ZPMAT(IP),RPMIN(IP),RPMAX(IP),0,
+          
+         CALL FKXPLA(PARPLA,0,ZPMAT(IP),RPMIN(IP),RPMAX(IP),0,
      &     PARINT,DER,ALRPH,IER)
           IF(IER.EQ.0 .AND. ALRPH.GE.ALRMIN.AND.ALRPH.LE.ALRMAX) THEN
 *
-          IF(IDEB.GE.2) WRITE(IPRNT,
-     $           '(''       mat. plane'',I3,''  param.'','//
-     $           'T39,3F11.3,2F11.4,F11.6,''  proj. dist.'',F8.2)')
-     $           IP,PARINT,ALRPH
+c$$$             WRITE(*,75) IP,ZPMAT(IP),RPMIN(IP),RPMAX(IP),
+c$$$     &            0.03/XRLP(IP),1e+3*XELOSP(IP)/0.03
+c$$$ 75          FORMAT('ID = ',I2,' ; Z = ',F5.1,' ; R1 = ',F4.1,
+c$$$     &            ' ; R2 = ',F4.1,' ; X0 = ',F5.2,' ; DEDX = ',F5.2)
+
+             IF(IDEB.GE.2) WRITE(IPRNT,
+     $            '(''       mat. plane'',I3,''  param.'','//
+     $            'T39,3F11.3,2F11.4,F11.6,''  proj. dist.'',F8.2)')
+     $            IP,PARINT,ALRPH
 *
             NSURF=NSURF+1
             ALRPHI(NSURF)=ALRPH
             TYPSUR(NSURF)='PLAN'
             XRLS(NSURF)=XRLP(IP)/DABS(DCOS(PARINT(4)))
+c$$$            WRITE(*,*) 'XINT=',PARINT(2),' YINT=',parint(3),
+c$$$     &                 ' ZINT=',PARINT(1)
             CALL FKDPCO(PARINT,PARAMS(1,NSURF),6)
             XELOSS(NSURF)=XELOSP(IP)/ABS(COS(PARINT(4)))
           ENDIF

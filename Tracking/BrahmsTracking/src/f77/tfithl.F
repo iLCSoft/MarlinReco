@@ -1,7 +1,10 @@
 *  
-* $Id: tfithl.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tfithl.F,v 1.2 2006-11-02 11:49:00 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -81,6 +84,8 @@ C GAB:
        LOGICAL FIRST
        SAVE
        DATA FIRST/.TRUE./
+
+*       WRITE(*,*) 'HERE WE ARE'
 
        IF(FIRST)THEN
         FIRST=.FALSE.

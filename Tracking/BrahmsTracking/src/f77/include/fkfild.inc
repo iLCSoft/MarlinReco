@@ -1,7 +1,10 @@
 *  
-* $Id: fkfild.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fkfild.inc,v 1.2 2006-11-02 11:49:01 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -12,5 +15,5 @@
 * Brahms V308
 *
 *  
-       real*4 consb
+       real consb
        COMMON /FKFILD/ CONSB

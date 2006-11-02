@@ -1,7 +1,10 @@
 *  
-* $Id: fkexts.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fkexts.inc,v 1.2 2006-11-02 11:49:01 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -14,10 +17,12 @@
 *  
 *  description of inter- and extrapolation surfaces
 *
-       integer   nexs,nexhpc
+       integer   nexs,nexhpc,itexts
        real*4    rzsurf,zrmin,zrmax
        COMMON /FKEXTS/ NEXS,RZSURF(NEXSMX),ZRMIN(NEXSMX),ZRMAX(NEXSMX),
-     &                 NEXHPC
+     &                 ITEXTS(NEXSMX),NEXHPC
 *
        CHARACTER*4 TYPX
        COMMON /FKEXTY/ TYPX(NEXSMX)
+
+	

@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.6 2005-11-03 15:16:14 aplin Exp $
+* $Id: tktrev.F,v 1.7 2006-11-02 11:49:01 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2005/11/03 15:16:14  aplin
+* Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
+*
 * Revision 1.5  2005/08/03 19:14:06  aplin
 * removed the combining of TEs to TSs for now
 *
@@ -62,6 +65,7 @@ C#include "include/gcbank.inc"
 #include "include/chgtrak.inc"
 C#include "include/brtime.inc"
 #include "include/tknoisepar.inc"
+#include "include/fkddes.inc"
       INTEGER I,J,K,L,IERROR,IKINE, try, ierr
       REAL TSTART,TEND
 
@@ -111,7 +115,36 @@ CCC FIXME: SJA: the database of materials is set up in SETMAT for the TPC only a
 CCC             commented out.
       CALL SETMAT
 
+      DO I=1,NEXS
+         IF (ITEXTS(I).EQ.0) THEN
+            TYPX(I) = 'CYLI'
+         ELSE
+            TYPX(I) = 'PLAN'
+         ENDIF
+      ENDDO
+      
+
       CALL TKSETR
+
+c$$$      WRITE(*,*) 'EXTRAPOLATIONS ---> '
+c$$$      DO I=1,NEXS
+c$$$         WRITE(*,*) I,' ',TYPX(I),' ',RZSURF(I),' ',ZRMIN(I),' ',
+c$$$     +              ZRMAX(I)
+c$$$      ENDDO
+c$$$
+c$$$      WRITE(*,*) 'CYLLINDRICAL SHAPES ---> '
+c$$$      DO I=1,NCMAT
+c$$$         WRITE(*,*) I,' ',RCMAT(I),' ',ZCMIN(I),' ',ZCMAX(I),' ',
+c$$$     +             XRLC(I),' ',XELOSC(I)
+c$$$      ENDDO
+c$$$
+c$$$      WRITE(*,*) 'PLANAR SHAPES ---> '
+c$$$      DO I=1,NPMAT
+c$$$         WRITE(*,*) I,' ',ZPMAT(I),' ',RPMIN(I),' ',RPMAX(I),' ',
+c$$$     +             XRLP(I),' ',XELOSP(I)
+c$$$      ENDDO
+
+
 
 C.....init CHGTRAK common block (still needed in BRAHMS)
 c MVL       added also into BRINI in GUTREV

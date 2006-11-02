@@ -38,7 +38,7 @@ unset GSL_HOME
 # modify the following pathes as needed
 
 # path to LCIO is required
-export LCIO=/afs/desy.de/group/it/ilcsoft/lcio/v01-05
+export LCIO=/afs/desy.de/group/it/ilcsoft/lcio/v01-07
 
 #-- comment out for production
 export MARLINDEBUG=1
@@ -53,7 +53,7 @@ export GSL_HOME=/afs/desy.de/group/it/ilcsoft/gsl/1.6
 export CERNLIB_HOME=/opt/products/cernlib/pro/lib
 
 #---- GEAR ---------------
-export GEAR=/afs/desy.de/group/it/ilcsoft/gear/v00-02
+export GEAR=/afs/desy.de/group/it/ilcsoft/gear/v00-03
 
 #---- AIDA setup ---------
 

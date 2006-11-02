@@ -5,14 +5,15 @@
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
-
+#include <vector>
+#include <gsl/gsl_rng.h>
 
 using namespace lcio ;
 using namespace marlin ;
 
 
-/**  Produces VTX TrackerHit collection from SimTrackerHit collection. At present no smearing is applied
- * @author S. Aplin, DESY
+/**  Produces VTX TrackerHit collection from SimTrackerHit collection. 
+ * @author A. Raspereza, MPI (Munich)
  */
 class VTXDigiProcessor : public Processor {
   
@@ -47,15 +48,24 @@ class VTXDigiProcessor : public Processor {
   
  protected:
 
-  /** Input collection name.
+  /** Input collection names.
    */
-  std::string _colName ;
+  std::string _colNameVTX ;
   std::string _colNameSIT ;
-  std::string _outColName ;
-  std::string _outColNameSIT ;
+  std::string _outColNameVTX;
+  std::string _outColNameSIT;
 
   int _nRun ;
   int _nEvt ;
+  int _debug;
+  int _removeDRays;
+  float _pointResoRPhi,_pointResoRPhi_VTX,_pointResoRPhi_SIT;
+	float _pointResoZ,_pointResoZ_VTX,_pointResoZ_SIT;
+  float _momCut;
+
+  gsl_rng * r ;
+
+
 } ;
 
 #endif

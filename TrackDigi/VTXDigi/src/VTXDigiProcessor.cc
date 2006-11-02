@@ -7,8 +7,9 @@
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <EVENT/MCParticle.h>
-#include "random.h"
-#include "CLHEP/Random/RandGauss.h"
+// #include "random.h"
+// #include <CLHEP/Random/RandGauss.h>
+#include <gsl/gsl_randist.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -95,6 +96,7 @@ void VTXDigiProcessor::init() {
 
   _nRun = 0 ;
   _nEvt = 0 ;
+  r = gsl_rng_alloc(gsl_rng_ranlxs2);
   
 }
 
@@ -156,14 +158,14 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           double zSmear;
           
           if (iColl==0) {        
-            xSmear = RandGauss::shoot(0.0,_pointResoRPhi_VTX);
-            zSmear = RandGauss::shoot(0.0,_pointResoZ_VTX);
+            xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
+            zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
             _pointResoRPhi = _pointResoRPhi_VTX;
             _pointResoZ = _pointResoZ_VTX;
           }
           else {
-            xSmear = RandGauss::shoot(0.0,_pointResoRPhi_SIT);
-            zSmear = RandGauss::shoot(0.0,_pointResoZ_SIT);
+            xSmear = gsl_ran_gaussian(r,_pointResoRPhi_SIT);
+            zSmear = gsl_ran_gaussian(r,_pointResoZ_SIT);
             _pointResoRPhi = _pointResoRPhi_SIT;
             _pointResoZ = _pointResoZ_SIT; 
           }

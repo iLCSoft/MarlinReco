@@ -23,6 +23,18 @@ with example_VTX_FTD.xml steering file, the LCIO file
 top_6j_500GeV_silicon.slcio is processes. It contains LCIO collections 
 of TrackerHits both in the vertex detector and FTD.
 
+Example steering XML file "steer_ldctracking.xml" demonstrates 
+functionality of LEPTrackingProcessor, SiliconTracking and 
+FullLDCTracking processors. The job steered by this file 
+reads detector geometry description from the GEAR xml file "gear_ldc01.xml", 
+performs combined tracking in TPC and silicon detectors (VTX,FTD,SIT) and 
+produces "outputfile.slcio" file. The job runs on "ZHllX_350.slcio" file,
+which is produced by Mokka (Model LDC01) and contains results of 
+the simulation of LDC detector response to ZH->llX events. The file
+input LCIO file "ZHllX_350.slcio" contains collections 
+of SimCalorimeterHits and SimTrackerHits. The output file "outputfile.slcio"  
+contains in addition collections of TPCTracks, SiTracks and full LDCTracks.
+
 Content of the output LCIO files can be inspected with "dumpevt" utility
 from $LCIO/bin directory.
 

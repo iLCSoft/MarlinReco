@@ -3,92 +3,170 @@
 # Example GNUmakefile to build an Application with Marlin
 #
 # @author Frank Gaede
-# @version $Id: GNUmakefile,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+# @author Jan Engels
+# @version $Id: GNUmakefile,v 1.2 2007-01-11 17:15:59 engels Exp $
 #
 ###########################################################
-
-# requires path to MARLIN and Marlin v00-09 or higher
-# can be called from top level makefile
-
+                                                                                                                                                             
 
 #----------------------------------------------------------------------------
-#                user variables 
+#        user variables
 #----------------------------------------------------------------------------
 
-
-# name of the program/library
+# name of the program
 PROGNAME = TPCDigi
 
+# source file for the binary
+# leave this commented out if your Application does not produce a binary file
+#BINSRC = $(PROGNAME).cc
 
-#----  additional user include/libraries
-#-- optionally can be specified in the to level GNUmakefile of $MARLIN
+# marlin working directory
+ifndef MARLINWORKDIR
+ MARLINWORKDIR=$(MARLIN)
+ export MARLINWORKDIR
+endif
 
+# additional user include/libraries
 ifndef USERINCLUDES
- USERINCLUDES = -I $(MARLIN)/packages/MarlinCommon/include
+ USERINCLUDES =
 endif
 
 ifndef USERLIBS
- USERLIBS = 
+ USERLIBS =
 endif
-
 
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile
 #----------------------------------------------------------------------------
 
-# the base directory of your application
-# this is where you  would normaly have the lib, bin and source directories
-BASEDIR = ..
-INSTALL = $(BASEDIR)/lib
-BINDIR = $(BASEDIR)/bin
+# directories
+INCDIR = ../include
+BINDIR = $(MARLINWORKDIR)/bin
+DOCDIR = $(MARLINWORKDIR)/doc/MarlinReco/$(PROGNAME)
+TMPDIR = $(MARLINWORKDIR)/tmp/MarlinReco
+LIBDIR = $(TMPDIR)/lib
+OBJDIR = $(TMPDIR)/obj/$(PROGNAME)
+DEPDIR = $(TMPDIR)/dep/$(PROGNAME)
 
-ifdef MARLINDEBUG
- CPPFLAGS = -g -Wall -ansi
-else
- CPPFLAGS = -O3 -Wall -ansi
+ifdef BINSRC
+# binary file with path
+BIN = $(BINDIR)/$(patsubst %.cc,%, $(BINSRC))
+
+# object file for the binary without path
+BINOBJS = $(patsubst %.cc,%.o,$(BINSRC))
+
+# object file for the binary with path
+BINOBJ = $(OBJDIR)/$(patsubst %.cc,%.o,$(BINSRC))
 endif
 
+# library file without path
+LIBNAME = lib$(PROGNAME).a
 
-# check for private compiler definition
+# library file with path
+LIB = $(LIBDIR)/$(LIBNAME)
+
+# source files wothout path
+SRCS = $(filter-out $(BINSRC), $(wildcard *.cc))
+
+# object files without path
+OBJS = $(patsubst %.cc,%.o, $(SRCS))
+
+# object files with path
+OBJ = $(patsubst %,$(OBJDIR)/%,$(OBJS))
+
+# dependencie files without path
+DEPS = $(patsubst %.o,%.d,$(OBJS) $(BINOBJS))
+
+# dependencie files with path
+DEP = $(patsubst %,$(DEPDIR)/%,$(DEPS))
+
+# c++ compiler
 ifdef MY_CXX
   CXX = $(MY_CXX)
 else
   CXX = g++
 endif
 
-AR = ar
+# compiler flags
+ifdef MARLINDEBUG
+ CXXFLAGS = -g -Wall -ansi
+else
+ CXXFLAGS = -O3 -Wall -ansi
+endif
 
-#--------------------------------------------------------------------------------------
-LIBS +=   -Wl,-whole-archive  -L $(INSTALL)  -l$(PROGNAME) -Wl,-no-whole-archive
-#--------------------------------------------------------------------------------------
+# pre-processor flags
+CPPFLAGS = -I $(INCDIR)
+CPPFLAGS += $(USERINCLUDES)
+CPPFLAGS += `. $(MARLINWORKDIR)/bin/marlin_includes.sh`
 
-INCLUDE +=  -I $(BASEDIR)/include
-INCLUDE += $(USERINCLUDES)
-CPPFLAGS += $(INCLUDE)
-CPPFLAGS += `. $(MARLIN)/bin/marlin_includes.sh`
-
+# libraries
+LIBS = -Wl,-whole-archive -L $(LIBDIR) -l$(PROGNAME) -Wl,-no-whole-archive
 LIBS += $(USERLIBS)
-LIBS += `. $(MARLIN)/bin/marlin_libs.sh`
+LIBS += `. $(MARLINWORKDIR)/bin/marlin_libs.sh`
 
-bin:  lib $(BINDIR)/$(PROGNAME)
+#compile command
+COMPILE = $(CXX) $(CXXFLAGS) $(CPPFLAGS) -c
 
-$(BINDIR)/$(PROGNAME): $(INSTALL)/lib$(PROGNAME).a
-	mkdir -p $(BINDIR)
-	$(CXX) -o $(BINDIR)/$(PROGNAME) $(CPPFLAGS) $(MARLIN)/src/Marlin.cc $(LIBS) 
+# linker
+LD = $(CXX)
 
+# linker flags
+LDFLAGS = -Wl,--demangle
 
-objects = $(patsubst %.cc,%.o, $(wildcard *.cc)  )
+# archiever
+AR = ar cru
 
-$(INSTALL)/lib$(PROGNAME).a: $(objects)
-	mkdir -p $(INSTALL)
-	$(AR) cr $(INSTALL)/lib$(PROGNAME).a  $?
+# check if a directory exists
+DIR_EXISTS = test -d
 
-lib: $(INSTALL)/lib$(PROGNAME).a
+.PHONY: all lib doc clean distclean
 
+all: lib
 
-clean:
-	rm -f *.o $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME)
+ifdef BINSRC
+.PHONY: bin
+bin: lib $(BINOBJ) $(BIN)
+	rm -f $(BINOBJ)
+endif
+
+lib: $(LIB)
 
 doc:
-	cd $(BASEDIR)/doc ; doxygen ;
+	@$(DIR_EXISTS) $(DOCDIR) || mkdir -p $(DOCDIR) ; \
+	export DOX_PROGNAME=$(PROGNAME) ; \
+	export DOX_DOCDIR=$(DOCDIR) ; \
+	cd ../doc ; doxygen ;
 
+clean:
+	rm -f $(OBJ) $(BINOBJ) $(BIN) $(LIB)
+
+distclean:
+	rm -rf $(BIN) $(LIB) $(TMPDIR)/*/$(PROGNAME) $(DOCDIR)
+
+# tell make to include dependencies
+-include $(DEP)
+
+# binary rule
+$(BIN) : $(OBJ) $(BINOBJ)
+	@$(DIR_EXISTS) $(BINDIR) || mkdir -p $(BINDIR)
+	$(LD) $(BINOBJ) $(LDFLAGS) $(LIBS) -o $@
+
+# objects rule
+$(OBJDIR)/%.o: %.cc
+	@$(DIR_EXISTS) $(OBJDIR) || mkdir -p $(OBJDIR)
+	$(COMPILE) $< -o $@
+
+# library rule
+$(LIB) : $(OBJ)
+	@$(DIR_EXISTS) $(LIBDIR) || mkdir -p $(LIBDIR)
+	$(AR) $@ $?
+
+# dependencies rule
+$(DEPDIR)/%.d : %.cc
+	@$(DIR_EXISTS) $(DEPDIR) || mkdir -p $(DEPDIR)
+	@echo "Creating dependencies for $<" ; \
+	set -e; $(CXX) -MM $(CPPFLAGS) $< \
+	| sed 's/\($*\)\.o[ :]*/$(subst /,\/,$(OBJDIR))\/\1.o $(subst /,\/,$(DEPDIR))\/$*.d : /g'\
+	> $@; [ -s $@ ] || rm -f $@
+
+# end

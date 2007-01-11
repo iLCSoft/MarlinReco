@@ -3,114 +3,168 @@
 # Example GNUmakefile to build an Application with Marlin
 #
 # @author Frank Gaede
-# @version $Id: GNUmakefile,v 1.1 2006-02-24 11:01:06 gaede Exp $
-#     last modification by A.Zhelezov -- include dependencies
-#                                     and HBOOK if needed
+# @author Jan Engels
+# @version $Id: GNUmakefile,v 1.2 2007-01-11 17:15:58 engels Exp $
+#
 ###########################################################
 
-# requires path to MARLIN and Marlin v00-09 or higher
-# can be called from top level makefile
-
 
 #----------------------------------------------------------------------------
-#                user variables 
+#        user variables
 #----------------------------------------------------------------------------
 
-
-# name of the program/library
+# name of the program
 PROGNAME = AbsCalibration
 
+# source files for the binary
+# leave this commented out if your Application does not produce binary files
+#BINSRCS = $(PROGNAME).cc test.cc
 
-#----  additional user include/libraries
-#-- optionally can be specified in the to level GNUmakefile of $MARLIN
-ROOTCFLAGS   := $(shell root-config --cflags)
-ROOTLIBS     := $(shell root-config --libs)
-ROOTGLIBS    := $(shell root-config --glibs)
-
-
-USERINCLUDES = -I ../../MarlinCommon/include
-USERINCLUDES += -I../../../../CEDViewer/include
-USERINCLUDES += -I/opt/products/gsl/1.6/include
-USERINCLUDES += -I /opt/products/cernlib/2003/include/cfortran
-
-ifndef USERLIBS
- USERLIBS =  -L ../../MarlinCommon/lib -lMarlinCommon
- USERLIBS += -L /opt/products/gsl/1.6/lib -lgsl -lgslcblas
- USERLIBS += -L /opt/products/lib/ -lstdc++ -lg2c
+# marlin working directory
+ifndef MARLINWORKDIR
+ MARLINWORKDIR=$(MARLIN)
+ export MARLINWORKDIR
 endif
 
+# additional user include/libraries
+ifndef USERINCLUDES
+ USERINCLUDES += -I $(GSL_HOME)/include
+endif
+
+ifndef USERLIBS
+ USERLIBS += -L $(GSL_HOME)/lib -lgsl -lgslcblas
+ USERLIBS += -L /opt/products/lib/ -lstdc++ -lg2c
+endif
 
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile
 #----------------------------------------------------------------------------
 
-# the base directory of your application
-# this is where you  would normaly have the lib, bin and source directories
-BASEDIR = ..
-INSTALL = $(BASEDIR)/lib
-BINDIR = $(BASEDIR)/bin
+# directories
+INCDIR = ../include
+BINDIR = $(MARLINWORKDIR)/bin
+DOCDIR = $(MARLINWORKDIR)/doc/MarlinReco/$(PROGNAME)
+TMPDIR = $(MARLINWORKDIR)/tmp/MarlinReco
+LIBDIR = $(TMPDIR)/lib
+OBJDIR = $(TMPDIR)/obj/$(PROGNAME)
+DEPDIR = $(TMPDIR)/dep/$(PROGNAME)
 
-ifdef MARLINDEBUG
- CPPFLAGS = -g -Wall -ansi
-else
- CPPFLAGS = -O3 -Wall -ansi
+# library file without path
+LIBNAME = lib$(PROGNAME).a
+
+# library file with path
+LIB = $(LIBDIR)/$(LIBNAME)
+
+ifdef BINSRCS
+# binary files with path
+BIN = $(patsubst %.cc,$(BINDIR)/%,$(BINSRCS))
+
+# object files for the binaries without path
+BINOBJS = $(patsubst %.cc,%.o,$(BINSRCS))
+
+# object files for the binaries with path
+BINOBJ = $(patsubst %,$(OBJDIR)/%,$(BINOBJS))
 endif
 
+# source files without path
+SRCS = $(filter-out $(BINSRCS),$(wildcard *.cc))
 
-# check for private compiler definition
+# object files without path
+OBJS = $(patsubst %.cc,%.o,$(SRCS))
+
+# object files with path
+OBJ = $(patsubst %,$(OBJDIR)/%,$(OBJS))
+
+# dependency files without path
+DEPS = $(patsubst %.o,%.d,$(OBJS) $(BINOBJS))
+
+# dependency files with path
+DEP = $(patsubst %,$(DEPDIR)/%,$(DEPS))
+
+# c++ compiler
 ifdef MY_CXX
   CXX = $(MY_CXX)
 else
   CXX = g++
 endif
 
-AR = ar
+# compiler flags
+ifdef MARLINDEBUG
+ CXXFLAGS = -g -Wall -ansi
+else
+ CXXFLAGS = -O3 -Wall -ansi
+endif
 
-#--------------------------------------------------------------------------------------
-LIBS +=   -Wl,-whole-archive  -L $(INSTALL)  -l$(PROGNAME) -Wl,-no-whole-archive
-#--------------------------------------------------------------------------------------
+# pre-processor flags
+CPPFLAGS = -I $(INCDIR)
+CPPFLAGS += $(USERINCLUDES)
+CPPFLAGS += `. $(MARLINWORKDIR)/bin/marlin_includes.sh`
 
-INCLUDE +=  -I $(BASEDIR)/include
-INCLUDE += $(USERINCLUDES)
-CPPFLAGS = -g -ansi
-CPPFLAGS += $(INCLUDE)
-CPPFLAGS += `. $(MARLIN)/bin/marlin_includes.sh`
-
+# libraries
+#LIBS = -Wl,-whole-archive -L $(LIBDIR) -l$(PROGNAME) -Wl,-no-whole-archive
 LIBS += $(USERLIBS)
-LIBS += `. $(MARLIN)/bin/marlin_libs.sh`
+LIBS += `. $(MARLINWORKDIR)/bin/marlin_libs.sh`
 
-all:	lib
+# linker
+LD = $(CXX)
 
-bin:  lib $(BINDIR)/$(PROGNAME)
+# linker flags
+LDFLAGS = -Wl,--demangle
 
-$(BINDIR)/$(PROGNAME): $(INSTALL)/lib$(PROGNAME).a
-	mkdir -p $(BINDIR)
-	$(CXX) -o $(BINDIR)/$(PROGNAME) $(CPPFLAGS) $(MARLIN)/src/Marlin.cc $(LIBS) 
+# archiever
+AR = ar cru
 
-objects = $(patsubst %.cc,%.o, $(wildcard *.cc)  )
+# check if a directory exists
+DIR_EXISTS = test -d
 
-$(INSTALL)/lib$(PROGNAME).a: $(objects)
-	mkdir -p $(INSTALL)
-	rm -f $@
-	$(AR) qc $@ $+
-	ranlib $@
+.PHONY: all lib doc clean distclean
 
-lib: $(INSTALL)/lib$(PROGNAME).a
+all: lib
 
+ifdef BINSRCS
+.PHONY: bin
+bin: lib $(BINOBJ) $(BIN)
+	rm -f $(BINOBJ)
+endif
 
-clean:
-	rm -f *.o *.P $(INSTALL)/lib$(PROGNAME).a $(BINDIR)/$(PROGNAME)
+lib: $(LIB)
 
 doc:
-	cd $(BASEDIR)/doc ; doxygen ;
+	@$(DIR_EXISTS) $(DOCDIR) || mkdir -p $(DOCDIR) ; \
+	export DOX_PROGNAME=$(PROGNAME) ; \
+	export DOX_DOCDIR=$(DOCDIR) ; \
+	cd ../doc ; doxygen ;
 
-MAKEDEPEND=$(CXX) -M $(CPPFLAGS) -o $*.d $<
+clean:
+	rm -f $(OBJ) $(BINOBJ) $(BIN) $(LIB)
 
+distclean:
+	rm -rf $(BIN) $(LIB) $(TMPDIR)/*/$(PROGNAME) $(DOCDIR)
 
-%.P : %.cc
-	$(MAKEDEPEND)
-	@sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' < $*.d > $@; \
-	rm -f $*.d; [ -s $@ ] || rm -f $@
+# tell make to include dependencies
+-include $(DEP)
 
-include $(objects:.o=.P)
+# binary rule
+$(BIN) : $(OBJ) $(BINOBJ)
+	@$(DIR_EXISTS) $(BINDIR) || mkdir -p $(BINDIR)
+	$(LD) $(OBJDIR)/$(notdir $@).o $(LDFLAGS) $(LIBS) -o $@
 
+# objects rule
+$(OBJDIR)/%.o: %.cc
+	@$(DIR_EXISTS) $(OBJDIR) || mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+# library rule
+$(LIB) : $(OBJ)
+	@$(DIR_EXISTS) $(LIBDIR) || mkdir -p $(LIBDIR)
+	$(AR) $@ $?
+
+# dependencies rule
+$(DEPDIR)/%.d : %.cc
+	@$(DIR_EXISTS) $(DEPDIR) || mkdir -p $(DEPDIR)
+	@echo "Creating dependencies for $<" ; \
+	set -e; $(CXX) -MM $(CPPFLAGS) $< \
+	| sed 's/\($*\)\.o[ :]*/$(subst /,\/,$(OBJDIR))\/\1.o $(subst /,\/,$(DEPDIR))\/$*.d : /g'\
+	> $@; [ -s $@ ] || rm -f $@
+
+# end

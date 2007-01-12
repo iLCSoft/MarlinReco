@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.4 2007-01-11 17:15:59 engels Exp $
+# @version $Id: GNUmakefile,v 1.5 2007-01-12 11:13:56 engels Exp $
 #
 ###########################################################
 
@@ -36,7 +36,7 @@ ifndef USERLIBS
  USERLIBS += -L $(CERNLIB_HOME)/lib/ -lmathlib -lkernlib
 endif
 
-F77INCLUDES = -I $(MARLINWORKDIR)/packages/MarlinUtil/include/
+F77INCLUDES = -I$(MARLINWORKDIR)/packages/MarlinUtil/include/
 
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile

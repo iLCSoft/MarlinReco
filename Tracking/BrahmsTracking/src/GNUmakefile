@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.5 2007-01-12 11:13:56 engels Exp $
+# @version $Id: GNUmakefile,v 1.6 2007-01-18 13:01:25 engels Exp $
 #
 ###########################################################
 
@@ -28,12 +28,12 @@ endif
 
 # additional user include/libraries
 ifndef USERINCLUDES
- USERINCLUDES +=  -Df2cFortran
+ USERINCLUDES += -I $(MARLINWORKDIR)/packages/MarlinUtil/include
+ USERINCLUDES += -Df2cFortran
 endif
 
 ifndef USERLIBS
- USERLIBS += -lg2c
- USERLIBS += -L $(CERNLIB_HOME)/lib/ -lmathlib -lkernlib
+ USERLIBS +=
 endif
 
 F77INCLUDES = -I$(MARLINWORKDIR)/packages/MarlinUtil/include/

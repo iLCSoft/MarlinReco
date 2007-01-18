@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.2 2007-01-11 17:15:58 engels Exp $
+# @version $Id: GNUmakefile,v 1.3 2007-01-18 13:01:25 engels Exp $
 #
 ###########################################################
 
@@ -28,12 +28,12 @@ endif
 
 # additional user include/libraries
 ifndef USERINCLUDES
+ USERINCLUDES += -I $(MARLINWORKDIR)/packages/MarlinUtil/include
  USERINCLUDES += -I $(GSL_HOME)/include
 endif
 
 ifndef USERLIBS
- USERLIBS += -L $(GSL_HOME)/lib -lgsl -lgslcblas
- USERLIBS += -L /opt/products/lib/ -lstdc++ -lg2c
+ USERLIBS +=
 endif
 
 #----------------------------------------------------------------------------

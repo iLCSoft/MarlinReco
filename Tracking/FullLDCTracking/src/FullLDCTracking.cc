@@ -310,36 +310,65 @@ FullLDCTracking aFullLDCTracking ;
 FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {  
   _description = "Create rootfile with FTD hit info " ;  
 
-  registerProcessorParameter("FTDHitCollection",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "FTDHitCollection",
 			     "FTD Hit Collection Name",
 			     _FTDTrackerHitCollection,
 			     std::string("FTDTrackerHits"));  
 
-  registerProcessorParameter("VXDHitCollection",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "VXDHitCollection",
 			     "VXD Hit Collection Name",
 			     _VTXTrackerHitCollection,
 			     std::string("VTXTrackerHits"));  
 
-  registerProcessorParameter("SITHitCollection",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "SITHitCollection",
 			     "SIT Hit Collection Name",
 			     _SITTrackerHitCollection,
 			     std::string("SITTrackerHits"));
   
-  registerProcessorParameter("TPCHitCollection",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "TPCHitCollection",
 			     "TPC Hit Collection Name",
 			     _TPCTrackerHitCollection,
 			     std::string("TPCTrackerHits"));
 
-  
-  registerProcessorParameter("TPCTracks",
+  registerInputCollection( LCIO::TRACK,
+                             "TPCTracks",
 			     "TPC Track Collection",
 			     _TPCTrackCollection,
 			     std::string("TPCTracks"));
 
-  registerProcessorParameter("SiTracks",
+  registerInputCollection( LCIO::TRACK,
+                             "SiTracks",
 			     "Si Track Collection",
 			     _SiTrackCollection,
 			     std::string("SiTracks"));
+
+  registerInputCollection( LCIO::LCRELATION,
+                             "SiTrackMCPRel",
+                             "Name of the Si Track MCP Relation collection",
+                             _SiTracksMCP,
+                             std::string("SiTracksMCP"));
+  
+  registerInputCollection( LCIO::LCRELATION,
+                            "MCTPCTrackRelCollectionName" ,
+                            "Name of the TPC Track MCP Relation collection"  ,
+                            _MCTPCTracksRel ,
+                            std::string("MCTPCTracksRel") ) ;
+  
+  registerOutputCollection( LCIO::TRACK,
+                             "LDCTrackCollection",
+                             "Name of the LDC Track Collection",
+                             _LDCTracks,
+                             std::string("LDCTracks"));
+                                                                                                                                                             
+  registerOutputCollection( LCIO::LCRELATION,
+                             "LDCTrackMCPRelCollection",
+                             "Name of the LDC Track MCP Relation collection",
+                             _LDCTracksMCPRel,
+                             std::string("LDCTracksMCP"));
 
 
   registerProcessorParameter("SimpleHelixFit",
@@ -519,9 +548,9 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
 
   }
 
-  evt->addCollection(colTRK,"LDCTracks");
+  evt->addCollection(colTRK,_LDCTracks);
   if (_createMap > 0)
-    evt->addCollection(colRel,"LDCTracksMCP");
+    evt->addCollection(colRel,_LDCTracksMCPRel);
 
   CleanUp();
   _nEvt++;
@@ -983,8 +1012,8 @@ void FullLDCTracking::SelectCombinedTracks() {
 
 void FullLDCTracking::AddNotCombinedTracks(LCEvent * evt) {  
 
-  LCCollection * colTPCRel = evt->getCollection("MCTPCTracksRel");
-  LCCollection * colSiRel  = evt->getCollection("SiTracksMCP");
+  LCCollection * colTPCRel = evt->getCollection(_MCTPCTracksRel);
+  LCCollection * colSiRel  = evt->getCollection(_SiTracksMCP);
   LCRelationNavigator navTPC(colTPCRel);
   LCRelationNavigator navSi(colSiRel);
 

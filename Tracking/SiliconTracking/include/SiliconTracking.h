@@ -178,6 +178,8 @@ class SiliconTracking : public Processor {
   std::string _FTDHitCollection;
   std::string _SITHitCollection;
   std::string _relCollection;
+  std::string _SiTracks;
+  std::string _SiTracksMCP;
   
   std::vector<TrackerHitExtendedVec> _sectors;
   std::vector<TrackerHitExtendedVec> _sectorsFTD;

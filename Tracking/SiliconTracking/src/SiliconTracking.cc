@@ -510,22 +510,35 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 			     _nDivisionsInTheta,
 			     int(60));
   
-  registerProcessorParameter("VXDHitCollectionName",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "VXDHitCollectionName",
 			     "VXD Hit Collection Name",
 			     _VTXHitCollection,
 			     std::string("VTXTrackerHits"));
 
-
-  registerProcessorParameter("FTDHitCollectionName",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "FTDHitCollectionName",
 			     "FTD Hit Collection Name",
 			     _FTDHitCollection,
 			     std::string("FTDTrackerHits"));  
 
-
-  registerProcessorParameter("SITHitCollectionName",
+  registerInputCollection( LCIO::TRACKERHIT,
+                             "SITHitCollectionName",
 			     "SIT Hit Collection Name",
 			     _SITHitCollection,
 			     std::string("SITTrackerHits"));  
+
+  registerOutputCollection( LCIO::TRACK,
+                             "SiTracks",
+			     "Name of the Si Track Output Collection",
+			     _SiTracks,
+			     std::string("SiTracks"));  
+
+  registerOutputCollection( LCIO::LCRELATION,
+                             "SiTrackMCPRel",
+			     "Name of the Si Track MCP Relation collection",
+			     _SiTracksMCP,
+			     std::string("SiTracksMCP"));  
 
    
   registerProcessorParameter("Chi2WRphiTriplet",
@@ -868,9 +881,9 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	}
       }
     }        
-    evt->addCollection(trkCol,"SiTracks");     
+    evt->addCollection(trkCol,_SiTracks);
     if (_createMap>0)
-      evt->addCollection(relCol,"SiTracksMCP");
+      evt->addCollection(relCol,_SiTracksMCP);
   }
   CleanUp();
   //  std::cout << "Event is done " << std::endl;

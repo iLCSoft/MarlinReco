@@ -46,6 +46,10 @@ class FullLDCTracking : public Processor {
   std::string _SITTrackerHitCollection;
   std::string _FTDTrackerHitCollection;
   std::string _TPCTrackerHitCollection;
+  std::string _SiTracksMCP;
+  std::string _MCTPCTracksRel;
+  std::string _LDCTracks;
+  std::string _LDCTracksMCPRel;
 
   TrackExtendedVec _allSiTracks;
   TrackExtendedVec _allTPCTracks;

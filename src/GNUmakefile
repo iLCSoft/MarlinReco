@@ -33,16 +33,23 @@ $(libs):
 
 doc:
 	@for dir in $(subdirs); do \
-	echo "Creating documentation for $$dir..."; \
+	echo "*************************************"; \
+	echo "*    creating documentation for $$dir..."; \
+	echo "*************************************"; \
 	$(MAKE) -C $$dir/src doc; done;
 
 clean:
 	@for dir in $(subdirs); do \
-	echo "Clearing $$dir..."; \
+	echo "*************************************"; \
+	echo "*    clearing $$dir..."; \
+	echo "*************************************"; \
 	$(MAKE) -C $$dir/src clean; done; \
 	rm -f $(MARLINWORKDIR)/lib/lib$(PROGNAME).a
 
 distclean:
+	@echo "*************************************";
+	@echo "*    clearing $(PROGNAME)...";
+	@echo "*************************************";
 	rm -rf $(MARLINWORKDIR)/lib/lib$(PROGNAME).a $(MARLINWORKDIR)/tmp/$(PROGNAME) $(DOCDIR)
 
 # end

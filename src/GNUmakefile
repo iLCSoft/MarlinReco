@@ -5,7 +5,7 @@ endif
 
 PROGNAME = MarlinReco
 
-subdirs := $(patsubst %/src/GNUmakefile,%, $(wildcard $(MARLINWORKDIR)/packages/MarlinReco/*/*/src/GNUmakefile))
+subdirs := $(patsubst %/src/GNUmakefile,%, $(wildcard ../*/*/src/GNUmakefile))
 
 packages := $(foreach file, $(subdirs), $(shell basename $(file)))
 

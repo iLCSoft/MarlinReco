@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.4 2007-01-18 13:01:25 engels Exp $
+# @version $Id: GNUmakefile,v 1.5 2007-02-21 13:52:32 engels Exp $
 #
 ###########################################################
 
@@ -108,7 +108,7 @@ else
 endif
 
 # pre-processor flags
-CPPFLAGS = -I $(INCDIR)
+CPPFLAGS = -I$(INCDIR)
 CPPFLAGS += $(USERINCLUDES)
 CPPFLAGS += `. $(MARLINWORKDIR)/bin/marlin_includes.sh`
 

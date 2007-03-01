@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.5 2007-02-21 13:52:32 engels Exp $
+# @version $Id: GNUmakefile,v 1.6 2007-03-01 15:54:34 engels Exp $
 #
 ###########################################################
                                                                                                                                                              
@@ -42,10 +42,10 @@ endif
 
 # directories
 INCDIR = ../include
+LIBDIR = ../lib
 BINDIR = $(MARLINWORKDIR)/bin
 DOCDIR = $(MARLINWORKDIR)/doc/MarlinReco/$(PROGNAME)
 TMPDIR = $(MARLINWORKDIR)/tmp/MarlinReco
-LIBDIR = $(TMPDIR)/lib
 OBJDIR = $(TMPDIR)/obj/$(PROGNAME)
 DEPDIR = $(TMPDIR)/dep/$(PROGNAME)
 

@@ -87,7 +87,7 @@ MokkaCaloDigi::MokkaCaloDigi() : Processor("MokkaCaloDigi") {
 			    std::string("HCAL"));
   
 
-  registerOutputCollection(  LCIO::CALORIMETERHIT,
+  registerOutputCollection(  LCIO::LCRELATION,
 			     "RelationCollName" ,
 			     "name for collection of relations between CalorimeterHits and SimCalorimeterHits", 
 			     _relationCollName , 

@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.5 2006-10-11 16:22:10 gaede Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.6 2007-03-17 14:36:17 samson Exp $
 **
 **
 */ 
@@ -49,6 +49,11 @@ namespace marlin
     registerOptionalParameter( "Debug",
                                "Set debug level",
                                _debug, 0 );
+
+    registerOptionalParameter( "SuccessTag",
+                               "Name of parameter added to event in case of successful jet finding",
+                               _successTag,
+                               std::string("JetsFound") );
 
 
     
@@ -119,6 +124,9 @@ namespace marlin
               << std::endl 
               << "  parameters: " << std::endl 
               << *parameters()  ;
+
+    // write success tag only if parameter "SuccessTag" has been set
+    _writeTag = parameters()->isParameterSet("SuccessTag");
 
     transform(_jetFindingMode.begin(),_jetFindingMode.end(),
               _jetFindingMode.begin(),( int (*)(int) ) std::tolower );
@@ -232,10 +240,12 @@ namespace marlin
     int DimensionOfInputArray=4;
     int DimensionOfOutputArray=4;
     int MaximalNumberOfJets=20;
-    float YMinus,YPlus;
+    //    float YMinus,YPlus;
     int IError;
     int GlobalModusLength=_globalMode.length();
 
+    _YMinus = -9999;
+    _YPlus  = -9999;
     syjkrn_(_globalMode.c_str(),
             _nJetRequested,_threshold,
             _primaryJetFindingMode,_yCut,
@@ -246,7 +256,7 @@ namespace marlin
             MaximalNumberOfJets,
             _jetsWorkArray.NumberOfJets,_partonsWorkArray.PointerParticleToJets,
             DimensionOfOutputArray,_jetsWorkArray.Momentum,
-            YMinus,YPlus,IError,GlobalModusLength);
+            _YMinus,_YPlus,IError,GlobalModusLength);
   };
 
   void SatoruJetFinderProcessor::getJets(LCEvent * evt,LCCollection* JetsCol){
@@ -271,11 +281,22 @@ namespace marlin
         }
       }
       JetsCol->addElement(Jets);
-	
+      
     }  
+
+    JetsCol->parameters().setValue( "YMinus", _YMinus );
+    JetsCol->parameters().setValue( "YPlus" , _YPlus  );
+
     evt->addCollection(JetsCol ,_outputCollection) ; 
-    // cout << "bla" << endl;
-    // cout << "Next Event" << endl;
+    if ( _writeTag == true )
+      {
+        /// \todo fixme: check for requested number of Jets...
+        if ( JetsCol->getNumberOfElements() > 0 )
+          evt->parameters().setValue( _successTag, 1 );
+        else
+          evt->parameters().setValue( _successTag, 0 );
+      }
+
   };
 
 

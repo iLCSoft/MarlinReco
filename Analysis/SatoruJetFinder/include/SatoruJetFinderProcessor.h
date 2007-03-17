@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.6 2006-02-16 17:24:49 samson Exp $
+** $Id: SatoruJetFinderProcessor.h,v 1.7 2007-03-17 14:36:17 samson Exp $
 **
 **
 */ 
@@ -218,7 +218,7 @@ namespace marlin
    * \endverbatim
    *
    * @author Satoru Yamashita (original fortran code), Thorsten Kuhl, J&ouml;rgen Samson
-   * @version $Id: SatoruJetFinderProcessor.h,v 1.6 2006-02-16 17:24:49 samson Exp $
+   * @version $Id: SatoruJetFinderProcessor.h,v 1.7 2007-03-17 14:36:17 samson Exp $
    */
   class SatoruJetFinderProcessor : public Processor {
 
@@ -254,6 +254,8 @@ namespace marlin
 
     std::string _inputCollection;
     std::string _outputCollection;
+    std::string _successTag;
+    bool        _writeTag;
     std::string _jetFindingMode;
     SatoruPartonArray _partonsWorkArray;
     SatoruJetsArray _jetsWorkArray;
@@ -270,6 +272,8 @@ namespace marlin
     float _mergingThreshold;
     int _secondJetFindingMode;
     int _debug;
+    float _YMinus;
+    float _YPlus;
     void putPartons(LCEvent * evt);
     void callSatoru(LCEvent * evt);
     void goSatoru(LCEvent * evt,LCCollection *JetsCol);                     

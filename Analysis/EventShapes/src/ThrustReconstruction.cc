@@ -90,13 +90,12 @@ void ThrustReconstruction::processEvent( LCEvent * evt ) {
 
   for (int n=0;n<_inParVec->getNumberOfElements() ;n++) 
     {
-      Hep3Vector temp;
-      temp.set(
-          dynamic_cast<ReconstructedParticle*>(_inParVec->getElementAt(n))->getMomentum()[0],
-	  dynamic_cast<ReconstructedParticle*>(_inParVec->getElementAt(n))->getMomentum()[1],
-	  dynamic_cast<ReconstructedParticle*>(_inParVec->getElementAt(n))->getMomentum()[2]
-          );
-      _partMom.push_back(temp);
+      ReconstructedParticle* aPart = dynamic_cast<ReconstructedParticle*>( _inParVec->getElementAt(n) );
+      if ( part == NULL )
+	throw Exception( std::string("Particle in ReconstructedParticle collection is not ReconstructedParticle") );
+      
+      const double* partMom = aPart->getMomentum();
+      _partMom.push_back( Hep3Vector(partMom[0], partMom[1], partMom[2]) );
     } // for n
 
   // Reset the Class variables for Output

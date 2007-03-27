@@ -91,7 +91,7 @@ void ThrustReconstruction::processEvent( LCEvent * evt ) {
   for (int n=0;n<_inParVec->getNumberOfElements() ;n++) 
     {
       ReconstructedParticle* aPart = dynamic_cast<ReconstructedParticle*>( _inParVec->getElementAt(n) );
-      if ( part == NULL )
+      if ( aPart == NULL )
 	throw Exception( std::string("Particle in ReconstructedParticle collection is not ReconstructedParticle") );
       
       const double* partMom = aPart->getMomentum();

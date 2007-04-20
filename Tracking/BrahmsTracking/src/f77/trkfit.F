@@ -1,7 +1,11 @@
 *  
-* $Id: trkfit.F,v 1.1 2006-11-02 12:04:59 rasp Exp $
+* $Id: trkfit.F,v 1.2 2007-04-20 13:40:03 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2006/11/02 12:04:59  rasp
+*
+* New fitting routine used in SiliconTracking and FullLDCTracking processors
+*
 * Revision 1.3  2005/07/29 15:06:17  aplin
 * Initialised number of tracks found to 0 in tpcrun.
 *
@@ -140,7 +144,7 @@ C      WRITE(*,*) 'NUMBER OF HITS = ',N
       DO I=1,N
          J=J+1
 C         WRITE(*,*) XHIT(I),' ',YHIT(I),' ',ZHIT(I),' ',ITYPE(I)
-         RLIST(J)=SQRT(XHIT(I)**2+YHIT(I)**2+ZHIT(I)**2)
+         RLIST(J)=SQRT(XHIT(I)**2+YHIT(I)**2)
          ZLIST(J)=ZHIT(I)
       END DO
       N=J

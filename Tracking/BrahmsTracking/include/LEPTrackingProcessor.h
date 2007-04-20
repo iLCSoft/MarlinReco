@@ -47,6 +47,9 @@ using namespace marlin ;
 * The final track fitting is done using a Kalman filter. At present the both the magnetic field 
 * and the material desciption of the TPC is hard coded into the Fortran code and C++ code, 
 * and will be improved when GEAR becomes more evolved.
+* 
+* A.Raspereza : Magnetic field is specified via global steering parameter "BField".
+* A.Raspereza : TPC Geomtery is steered via GEAR steering file.
 * @author S. Aplin, DESY    
 */
 class LEPTrackingProcessor : public Processor {

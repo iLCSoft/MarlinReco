@@ -1,7 +1,11 @@
 *  
-* $Id: setmat.F,v 1.5 2006-11-02 11:49:00 rasp Exp $
+* $Id: setmat.F,v 1.6 2007-04-20 13:40:03 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2006/11/02 11:49:00  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.4  2006/06/28 15:29:04  aplin
 * The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
 *
@@ -723,6 +727,15 @@ ccc         rzsurf(nexs)  = zpmat(npmat)
 ccc         zrmin(nexs)   = rpmin(npmat)
 ccc         zrmax(nexs)   = rpmax(npmat)
 ccc      endif
+
+         DO I=1,NEXS
+            IF (ITEXTS(I).EQ.0) THEN
+               TYPX(I) = 'CYLI'
+            ELSE
+               TYPX(I) = 'PLAN'
+            ENDIF
+         ENDDO
+
 
          IF (TKSTDBG.GT.0) then
             print*

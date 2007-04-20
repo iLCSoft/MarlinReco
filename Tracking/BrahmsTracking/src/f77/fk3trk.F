@@ -1,7 +1,11 @@
 *  
-* $Id: fk3trk.F,v 1.3 2006-11-02 11:49:00 rasp Exp $
+* $Id: fk3trk.F,v 1.4 2007-04-20 13:40:03 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2006/11/02 11:49:00  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -257,7 +261,7 @@ c MVL     +        FXPROB(CHBACK,NDBACK).LT.PRTOT(IBAFO)) THEN
           CALL FKSTKR(ISREFB,-1,IHIS,DATK(17),IERS)
           IER1=MAX(IER1,IERS)
 *
-*         TK length = distance between ref. points of first and last
+*         TK length = distance between ref. points of first and las
 *                     TEs plus the length of the last TE
 *
           DATK(10)=(ALRPHI(ISREFF)-ALRPHI(ISREFB))
@@ -328,6 +332,8 @@ ccc            IF(IDEB.GT.1.AND.ITAN.GT.1) CALL FKCVPR(IPRNT,DATK(23))
 *     on extrapolation surfaces if both backward and forward fits
 *     succeeded. If only backward take these values.
 *
+*     IDEB = 3
+
       IF(IER1.EQ.0.AND.IEXT.EQ.0) THEN
 *
         IF(IDEB.GE.2) WRITE(IPRNT,
@@ -340,19 +346,20 @@ ccc            IF(IDEB.GT.1.AND.ITAN.GT.1) CALL FKCVPR(IPRNT,DATK(23))
      &    IX,TYPX(IX),IERX(IX)
         ELSE
           IF(IER2.EQ.0)THEN
-ccc            CALL FKEXMN(DQBCKE(1,IX),WGBCKE(1,IX),DQFRWE(1,IX),
-ccc     &      WGFRWE(1,IX),DQX(1,IX),WGTX(1,IX),COVX(1,IX),IERE)
+            CALL FKEXMN(DQBCKE(1,IX),WGBCKE(1,IX),DQFRWE(1,IX),
+     &            WGFRWE(1,IX),DQX(1,IX),WGTX(1,IX),COVX(1,IX),IERE) ! this line was commented in the original version
             IF(IERE.NE.0) THEN
               IERX(IX)=-9999
               IF(IDEB.GT.0) WRITE(IPRNT,
      &        '(''    extr. surf.'',I4,2X,A4,'' : error in FKEXMN'')')
      &        IX,TYPX(IX)
             ELSE
-ccc              CALL FKDPVA(PARAMX(2,IX),DQX(1,IX),PARAMX(2,IX),5)
+               CALL FKDPVA(PARAMX(2,IX),DQX(1,IX),PARAMX(2,IX),5) ! this line was commented in the original version
             ENDIF
           ELSE
-ccc            CALL FKDPVA(PARAMX(2,IX),DQBCKE(1,IX),PARAMX(2,IX),5)
-ccc            CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE)
+c            The following two lines were commented
+             CALL FKDPVA(PARAMX(2,IX),DQBCKE(1,IX),PARAMX(2,IX),5) ! this line was commented in the original version
+             CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE) ! this line was commented in the original version
             IF(IERE.NE.0) THEN
               IERX(IX)=-9999
               IF(IDEB.GT.0) WRITE(IPRNT,
@@ -366,7 +373,7 @@ ccc            CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE)
      $           'T39,3F11.4,2F11.5,F11.7)')
      $           IX,TYPX(IX),(PARAMX(J,IX),J=1,6)
             WRITE(IPRNT,
-     $           '(30X,''errors'',T39,11X,2F11.4,2F11.5,F11.7)')
+     $           '(30X,''errors'',T39,11X,2F11.6,2F11.5,F11.7)')
      $           DSQRT(COVX(1,IX)),DSQRT(COVX(3,IX)),DSQRT(COVX(6,IX)),
      $           DSQRT(COVX(10,IX)),DSQRT(COVX(15,IX))
           ENDIF
@@ -378,9 +385,9 @@ ccc            CALL FKMI5D(WGBCKE(1,IX),COVX(1,IX),IERE)
         DO 11 IX=1,NEXS
             IFLX(IX) = IERX(IX)
             IF(IERX(IX).EQ.0) THEN
-ccc              CALL FKSPAR(TYPX(IX),PARAMX(1,IX),PARAMX(2,IX),COVX(1,IX),
-ccc     &        DATX(1,IX))
-              CALL VZERO(DATX(22,IX),3)
+              CALL FKSPAR(TYPX(IX),PARAMX(1,IX),PARAMX(2,IX),COVX(1,IX),
+     &             DATX(1,IX)) ! this line was commented in the original version
+C              CALL VZERO(DATX(22,IX),3) ! this line was uncommented in the original version
               IF(IDEB.GE.2) WRITE(IPRNT,
      $             '(/,6X,''TKX data ('',A4,'') : '','//
      $             '6G14.6,/,8X,10G12.4,/,8X,5G12.4)')
@@ -389,6 +396,8 @@ ccc     &        DATX(1,IX))
             IF(IERX(IX).EQ.-9999)IERX(IX)=0
    11   CONTINUE
       ENDIF
+
+      IDEB = 0
 *
 *           build the list of rejected TER's
 *

@@ -1,7 +1,11 @@
 *  
-* $Id: tktrev.F,v 1.7 2006-11-02 11:49:01 rasp Exp $
+* $Id: tktrev.F,v 1.8 2007-04-20 13:40:03 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2006/11/02 11:49:01  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.6  2005/11/03 15:16:14  aplin
 * Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
 *
@@ -113,16 +117,7 @@ C.....Initalise TKTREV as error this will only be set to 0 if TKTREV exits norma
 
 CCC FIXME: SJA: the database of materials is set up in SETMAT for the TPC only all other systems are
 CCC             commented out.
-      CALL SETMAT
-
-      DO I=1,NEXS
-         IF (ITEXTS(I).EQ.0) THEN
-            TYPX(I) = 'CYLI'
-         ELSE
-            TYPX(I) = 'PLAN'
-         ENDIF
-      ENDDO
-      
+C      CALL SETMAT
 
       CALL TKSETR
 

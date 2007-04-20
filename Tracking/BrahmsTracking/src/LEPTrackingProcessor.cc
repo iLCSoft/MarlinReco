@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.22 2006-10-17 12:34:19 gaede Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.23 2007-04-20 13:40:03 rasp Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.22  2006/10/17 12:34:19  gaede
+** replaced registerProcessorParameter with registerInput/OutputCollection
+**
 ** Revision 1.21  2006/06/28 15:29:04  aplin
 ** The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
 **
@@ -202,9 +205,9 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
   *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
-  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResMax")) ;  
+  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
   *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
-  *tpcbfield = float(gearTPC.getDoubleVal("tpcBField")) ;
+  *tpcbfield = float(Global::parameters->getFloatVal("BField")) ;
 
   //  }
 //  catch() {return 1} ;
@@ -381,9 +384,19 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
       de_dx = de_dx/tpcIonisationPotential;
 
-      double tpcRPhiResMax = (gearTPC.getDoubleVal("tpcRPhiResMax"));
-      double tpcRPhiRes = 0.1 * (tpcRPhiResMax - fabs(pos[2])/gearTPC.getMaxDriftLength()*0.01);
-      double tpcZRes = 0.1 * (gearTPC.getDoubleVal("tpcZRes"));
+      double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+      double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+      double aReso = tpcRPhiResConst*tpcRPhiResConst;
+      double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
+      if (driftLenght <0) { 
+        driftLenght = 0.10;
+      }
+      double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+      double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+
+      tpcRPhiRes = 0.1 * tpcRPhiRes;
+      tpcZRes = 0.1 * tpcZRes;
 
 
       // Brahms resolution code for TPC = 3 REF tkhtpc.F
@@ -399,7 +412,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
       TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
 
-    } 
+    }
 
     TkHitBank->setLastHitIndex("TPC"); 
     
@@ -438,7 +451,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         int subid = trkHitVTX->getType() ;
         
         // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
-        float vtxRes = 0.0007 ;
+        float vtxRes = 0.007 ;
         int resCode = 3 ;
         
         int mctrack = 0 ;
@@ -544,7 +557,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
         // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-        const double bField = gearTPC.getDoubleVal("tpcBField") ;
+        const double bField = Global::parameters->getFloatVal("BField") ;
         const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
 
         // tan lambda and curvature remain unchanged as the track is only extrapolated
@@ -760,7 +773,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
       // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-      const double bField = gearTPC.getDoubleVal("tpcBField") ;
+      const double bField = Global::parameters->getFloatVal("BField") ;
       const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
       
       // tan lambda and curvature remain unchanged as the track is only extrapolated

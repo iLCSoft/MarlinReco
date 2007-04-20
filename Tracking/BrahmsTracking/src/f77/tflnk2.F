@@ -1,7 +1,10 @@
 *  
-* $Id: tflnk2.F,v 1.2 2005-07-29 15:06:17 aplin Exp $
+* $Id: tflnk2.F,v 1.3 2007-04-20 13:40:03 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -793,7 +796,7 @@ c(kh)--bug workaround
           IF (IC.GT.0) THEN
              TPCO_TN(IC)=-ITK
           ELSE
-             WRITE(6,*) 'TFLNK2: internal error. IC=',IC
+c             WRITE(6,*) 'TFLNK2: internal error. IC=',IC
              CALL TKVETO(1)
           END IF
 c(kh)--end

@@ -2,7 +2,6 @@
 #include <EVENT/LCObject.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
-#include <EVENT/TrackerHit.h>
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackImpl.h>
 #include <IMPL/LCCollectionVec.h>
@@ -14,6 +13,17 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <marlin/Global.h>
+
+extern "C" {
+  void tksetr_();
+}
+
+extern "C" {
+  void tkinit_();
+}
+
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -35,12 +45,14 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
 			    _trueTracksCollection ,
 			    std::string("TrueTracks"));
   
-  std::vector<std::string> trackerHitCollections;
-  
+  std::vector<std::string> trackerHitCollections;  
+  trackerHitCollections.push_back(std::string("VTXTrackerHits"));
+  trackerHitCollections.push_back(std::string("FTDTrackerHits"));
+  trackerHitCollections.push_back(std::string("SITTrackerHits"));
   trackerHitCollections.push_back(std::string("TPCTrackerHits"));
   
   registerInputCollections( LCIO::TRACKERHIT,
-			    "TrackerHitCollections",
+ 			    "TrackerHitCollections",
 			    "Tracker Hit Collection Names",
 			    _trackerHitCollections ,
 			    trackerHitCollections);
@@ -49,28 +61,17 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
 			    "MCTrueTrackRelCollectionName" , 
 			    "Name of the TrueTrack MC Relation collection"  ,
 			    _colNameMCTrueTracksRel ,
-			    std::string("TrueTrackToMCP") );
+			    std::string("TrueTracksMCP") );
   
-  registerProcessorParameter("BField",
-			     "Magnetic Field",
-			     _bField ,
-			     (float)4.0);
-
   registerProcessorParameter("ECut",
 			     "Energy Cut",
 			     _eCut ,
-			     (float)0.2);
+			     (float)0.1);
 
   registerProcessorParameter("HitToHelixDist",
 			     "Cut on distance from hit to helix",
 			     _hitToHelixCut,
-			     (float)50.0);
-
-
-  registerProcessorParameter("HitToHelixInFit",
-			     "Cut on distance from hit to helix used in fit",
-			     _hitToHelixInFit,
-			     (float)15.0);
+			     (float)10.0);
 
   registerProcessorParameter("FitTrueTrack",
 			     "Flag to Fit True Track",
@@ -81,24 +82,36 @@ TrackCheater::TrackCheater() : Processor("TrackCheater") {
   registerProcessorParameter("Chi2Cut",
 			     "Cut On Fit Chi2",
 			     _chi2Cut,
-			     (float)30.);    
+			     (float)100.);    
 
   registerProcessorParameter("MinimalHits",
 			     "Minimal Hits in Track Cluster",
 			     _minimal_hits,
-			     (int)4);
+			     (int)3);
+
+  registerProcessorParameter("UseExtraPoint",
+			     "Use Extra Point in Fit?",
+			     _useExtraPoint,
+			     int(0));
+
+  registerProcessorParameter("OptPrefitFit",
+			     "Prefit Option",
+			     _optFit,
+			     int(1));
 
 }
 
 void TrackCheater::init() {
     _nRun = -1;
     _nEvt = 0;
+    PI = acos(-1.0);
 }
 
 
 void TrackCheater::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
   _nEvt = 0;
+  _bField = Global::parameters->getFloatVal("BField");
 } 
 
 void TrackCheater::processEvent( LCEvent * evt ) { 
@@ -119,8 +132,6 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 		  dynamic_cast<TrackerHit*>(col->getElementAt(ielem));
 		LCObjectVec objVec =  trkHit->getRawHits();
 		int nInVec = objVec.size();
-		// FIXME: up to now there is only one raw hit per TrackerHit implemented
-		//std::cout << "n of Raw hits : " << nInVec << std::endl;
 		if (nInVec > 0 ) {
 		    SimTrackerHit * simTrkHit = 
 		      dynamic_cast<SimTrackerHit*>(objVec[0]);
@@ -162,7 +173,7 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 			  xPoint[1] = (float)trkHit->getPosition()[1];
 			  xPoint[2] = (float)trkHit->getPosition()[2];
 			  helix->getDistanceToPoint(xPoint,Dist);
-			  if (Dist[2] < _hitToHelixCut)
+			  if (fabs(Dist[2])<_hitToHelixCut)
 			    track->addHit( trkHit );
 			}
 		      }
@@ -178,14 +189,13 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	}
     }
 
-    // debug
-    
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "TrackCheater : " <<  nonAssignedHits 
-	      << " hits non pointing to MCParticle ; " 
-	      << assignedToNeutrals 
-	      << " hits assigned to neutrals " << std::endl;
+    // debug    
+    //     std::cout << std::endl;
+    //     std::cout << std::endl;
+    //     std::cout << "TrackCheater : " <<  nonAssignedHits 
+    // 	      << " hits non pointing to MCParticle ; " 
+    // 	      << assignedToNeutrals 
+    // 	      << " hits assigned to neutrals " << std::endl;
     
 
     LCCollectionVec * trkcol = new LCCollectionVec(LCIO::TRACK);
@@ -195,157 +205,313 @@ void TrackCheater::processEvent( LCEvent * evt ) {
     int nlost = 0;
     int nincl = 0;
     for (pos = _mcp_track.begin(); pos != _mcp_track.end(); ++pos) {
-	const MCParticle * mcp = pos->first;
-	TrackImpl * track = pos->second;
-	HelixClass * helix = _mcp_helix[mcp];
-	TrackerHitVec hitvec = track->getTrackerHits();
-	int nhits = (int)hitvec.size();
+      const MCParticle * mcp = pos->first;
+      TrackImpl * track = pos->second;
+      TrackImpl * newTrack = new TrackImpl();
+      HelixClass * helix = _mcp_helix[mcp];
+      TrackerHitVec hitvec = track->getTrackerHits();
+      int nhits = (int)hitvec.size();
 
-	// debug
-	/*
-	std::cout << "Track " << itk << " Q = " << mcp->getCharge() 
-		  << " ; Px, Py, Pz = " 
-		  << "  " << mcp->getMomentum()[0]
-		  << "  " << mcp->getMomentum()[1]
-		  << "  " << mcp->getMomentum()[2] << std::endl;
-	*/
+      // debug	
+      // 	std::cout << "Track " << itk << " Q = " << mcp->getCharge() 
+      // 		  << " ; Px, Py, Pz = " 
+      // 		  << "  " << mcp->getMomentum()[0]
+      // 		  << "  " << mcp->getMomentum()[1]
+      // 		  << "  " << mcp->getMomentum()[2] 
+      // 		  << "  nhits = " << nhits << std::endl;
 
+      bool storeTrack = true;
+      float Pos[3];
+      float Mom[3];
+      Pos[0] = (float)mcp->getVertex()[0];
+      Pos[1] = (float)mcp->getVertex()[1];
+      Pos[2] = (float)mcp->getVertex()[2];
+      Mom[0] = mcp->getMomentum()[0];
+      Mom[1] = mcp->getMomentum()[1];
+      Mom[2] = mcp->getMomentum()[2];
+      if (_fitTrueTrack==0) { // store True MC Information
 	if (nhits > _minimal_hits) {
 	  nincl += nhits ;	  
-	  float Pos[3];
-	  float Mom[3];
-	  Pos[0] = (float)mcp->getVertex()[0];
-	  Pos[1] = (float)mcp->getVertex()[1];
-	  Pos[2] = (float)mcp->getVertex()[2];
-	  Mom[0] = mcp->getMomentum()[0];
-	  Mom[1] = mcp->getMomentum()[1];
-	  Mom[2] = mcp->getMomentum()[2];
-	  track->setReferencePoint(Pos);
-	  track->setD0(helix->getD0());
-	  track->setPhi(helix->getPhi0());
-	  track->setZ0(helix->getZ0());
-	  track->setOmega(helix->getOmega());
-	  track->setTanLambda(helix->getTanLambda());
-	  TrackerHitVec hitvec = track->getTrackerHits();
-	  int nHitsInFit = 0;	  
-	  for (int ihit = 0; ihit < nhits; ++ihit) {
+	  newTrack->setReferencePoint(Pos);
+	  newTrack->setD0(helix->getD0());
+	  newTrack->setPhi(helix->getPhi0());
+	  newTrack->setZ0(helix->getZ0());
+	  newTrack->setOmega(helix->getOmega());
+	  newTrack->setTanLambda(helix->getTanLambda());
+	  int * lh = new int[nhits];
+	  for (int ihit=0;ihit<nhits;++ihit) {
+	    lh[ihit] = 1;
+	    TrackerHit * trkHit = hitvec[ihit];
+	    int det = trkHit->getType()/100;
+	    if (det <= 4) {
+	      for (int lhit=0;lhit<ihit;++lhit) {
+		TrackerHit * trkHitS = hitvec[lhit];
+		if ((trkHitS->getType()==trkHit->getType()) && (lh[lhit]==1)) {
+		  float xP[3];
+		  float xPS[3];
+		  for (int iC=0;iC<3;++iC) {
+		    xP[iC] = float(trkHit->getPosition()[iC]);
+		    xPS[iC] = float(trkHitS->getPosition()[iC]);
+		  }
+		  float Point[3];
+		  float PointS[3];
+		  if (det == 2) {
+		    float time = helix->getPointInZ(xP[2],Pos,Point);
+		    time = helix->getPointInZ(xPS[2],Pos,PointS);
+		  }
+		  else {
+		    float RAD = sqrt(xP[0]*xP[0]+xP[1]*xP[1]);
+		    float RADS = sqrt(xPS[0]*xPS[0]+xPS[1]*xPS[1]);
+		    float time = helix->getPointOnCircle(RAD,Pos,Point);
+		    time = helix->getPointOnCircle(RADS,Pos,PointS);
+		  }
+		  float DIST = 0;
+		  float DISTS = 0;
+		  for (int iC=0;iC<3;++iC) {
+		    DIST += (Point[iC]-xP[iC])*(Point[iC]-xP[iC]);
+		    DISTS += (PointS[iC]-xPS[iC])*(PointS[iC]-xPS[iC]);
+		  }
+		  if (DIST < DISTS) {
+		    lh[lhit] = 0;
+		  }
+		  else {
+		    lh[ihit] = 0;
+		  }
+		  break;
+		}
+	      }
+	    }
+	  }
+	  int nHitsVTX = 0;
+	  int nHitsFTD = 0;
+	  int nHitsSIT = 0;
+	  int nHitsTPC = 0;
+	  for (int ihit=0;ihit<nhits;++ihit) {
+	    if (lh[ihit] == 1) {
+	      TrackerHit * trkHit = hitvec[ihit]; 
+	      newTrack->addHit( trkHit );
+	      int det = trkHit->getType()/100;
+	      if (det == 1) // VTX
+		nHitsVTX++;
+	      if (det == 2) // FTD
+		nHitsFTD++;
+	      if (det == 4) // SIT
+		nHitsSIT++;
+	      if (det == 5) // TPC
+		nHitsTPC++;
+	    }
+	  }
+	  newTrack->subdetectorHitNumbers().resize(4);
+	  newTrack->subdetectorHitNumbers()[0] = nHitsVTX;
+	  newTrack->subdetectorHitNumbers()[1] = nHitsFTD;
+	  newTrack->subdetectorHitNumbers()[2] = nHitsSIT;
+	  newTrack->subdetectorHitNumbers()[3] = nHitsTPC;	  
+	  newTrack->setIsReferencePointPCA(false);
+	  storeTrack = true;
+	  int ntot = nHitsVTX + nHitsFTD + nHitsSIT + nHitsTPC;
+	  if (ntot < _minimal_hits)
+	    storeTrack = false;
+	  delete[] lh; 
+	}
+	else {
+	  storeTrack = false;
+	}
+      }
+      else { // Track is supposed to be fitted
+	int nHitsInFit=0;
+	float PeriodZ = fabs(2*PI*helix->getRadius()*helix->getTanLambda());
+	TrackerHitVec hitsInFit;
+	hitsInFit.clear();
+	storeTrack = false;
+	TrackerHitVec hitvec = track->getTrackerHits();	  
+	float z1 = helix->getZ0() + PeriodZ*float(round((Pos[2]-helix->getZ0())/PeriodZ));
+	float z2 = z1 + PI*helix->getRadius()*helix->getTanLambda();
+	float zMin = z1;
+	float zMax = z2;
+	if (z1>z2) { 
+	  zMin = z2;
+	  zMax = z1;
+	}
+
+	int * lh = new int[nhits];
+	for (int ihit=0;ihit<nhits;++ihit) {
+	  lh[ihit] = 1;
+	  TrackerHit * trkHit = hitvec[ihit];
+	  int det = trkHit->getType()/100;
+	  if (det <= 4) {
+	    for (int lhit=0;lhit<ihit;++lhit) {
+	      TrackerHit * trkHitS = hitvec[lhit];
+	      if ((trkHitS->getType() ==trkHit->getType()) && (lh[lhit] == 1)) {
+		float xP[3];
+		float xPS[3];
+		for (int iC=0;iC<3;++iC) {
+		  xP[iC] = float(trkHit->getPosition()[iC]);
+		  xPS[iC] = float(trkHitS->getPosition()[iC]);
+		}
+		float Point[3];
+		float PointS[3];
+		if (det == 2) {
+		  float time = helix->getPointInZ(xP[2],Pos,Point);
+		  time = helix->getPointInZ(xPS[2],Pos,PointS);
+		}
+		else {
+		  float RAD = sqrt(xP[0]*xP[0]+xP[1]*xP[1]);
+		  float RADS = sqrt(xPS[0]*xPS[0]+xPS[1]*xPS[1]);
+		  float time = helix->getPointOnCircle(RAD,Pos,Point);
+		  time = helix->getPointOnCircle(RADS,Pos,PointS);
+		}
+		float DIST = 0;
+		float DISTS = 0;
+		for (int iC=0;iC<3;++iC) {
+		  DIST += (Point[iC]-xP[iC])*(Point[iC]-xP[iC]);
+		  DISTS += (PointS[iC]-xPS[iC])*(PointS[iC]-xPS[iC]);
+		}
+		if (DIST < DISTS) {
+		  lh[lhit] = 0;
+		}
+		else {
+		  lh[ihit] = 0;
+		}
+		break;
+	      }
+	    }
+	  }
+	}
+
+	for (int ihit = 0; ihit < nhits; ++ihit) {
+	  if (lh[ihit] == 1) {
 	    float xPoint[3];
-	    float Dist[3];
 	    TrackerHit * trkHit = hitvec[ihit];
 	    xPoint[0] = (float)trkHit->getPosition()[0];
 	    xPoint[1] = (float)trkHit->getPosition()[1];
 	    xPoint[2] = (float)trkHit->getPosition()[2];
-	    helix->getDistanceToPoint(xPoint,Dist);
-	    if (Dist[2] < _hitToHelixInFit)
+	    if ((xPoint[2]>zMin+1) && (xPoint[2]<zMax-1)) {
 	      nHitsInFit++;
-	  }
-
-	  // debug
-	  /*
-	  std::cout << " # hits = " << nhits << " ; used in fit = "
-		    << nHitsInFit << std::endl;
-	  */
-
-	  if (_fitTrueTrack > 0 && nHitsInFit > 3) {
-	    float * xh = new float[nHitsInFit];
-	    float * yh = new float[nHitsInFit];
-	    float * zh = new float[nHitsInFit];
-	    float * ah = new float[nHitsInFit];
-	    int iHitInFit = 0;
-	    for (int ihit = 0; ihit < nhits; ++ihit) {
-	      float xPoint[3];
-	      float Dist[3];
-	      TrackerHit * trkHit = hitvec[ihit];
-	      xPoint[0] = (float)trkHit->getPosition()[0];
-	      xPoint[1] = (float)trkHit->getPosition()[1];
-	      xPoint[2] = (float)trkHit->getPosition()[2];
-	      helix->getDistanceToPoint(xPoint,Dist);
-	      if (Dist[2] < _hitToHelixInFit) {
-		xh[iHitInFit]=xPoint[0];
-		yh[iHitInFit]=xPoint[1];
-		zh[iHitInFit]=xPoint[2];
-		ah[iHitInFit]=0.0;	
-		iHitInFit++;
-	      }
-	    }
-	    ClusterShapes * shapes = new ClusterShapes(nHitsInFit,ah,xh,yh,zh);
-	    float par[5];
-	    float dpar[5];
-	    float chi2;
-	    float distmax;
-	    shapes->FitHelix(500, 0, 1, par, dpar, chi2, distmax);
-	    if (chi2 < _chi2Cut ) {
-	      //debug
-	      //std::cout << "Successfull fit " << std::endl;
-	      HelixClass * fittedHelix = new HelixClass();
-	      float x0 = par[0];
-	      float y0 = par[1];
-	      float r0 = par[2];
-	      float bz = par[3];
-	      float phi0 = par[4];
-	      fittedHelix->Initialize_BZ(x0,y0,r0,bz,phi0,
-					 _bField,Mom[2],
-					 Pos[2]);
-	      //debug
-	      /*
-	      std::cout << "Fitted track momentum : "
-			<< " Px, Py,Pz = "
-			<< " " << fittedHelix->getMomentum()[0]
-			<< " " << fittedHelix->getMomentum()[1]
-			<< " " << fittedHelix->getMomentum()[2]
-			<< std::endl;
-	      */
-
-	      track->setD0(fittedHelix->getD0());
-	      track->setZ0(fittedHelix->getZ0());
-	      track->setPhi(fittedHelix->getPhi0());
-	      track->setTanLambda(fittedHelix->getTanLambda());
-	      track->setOmega(fittedHelix->getOmega());	  
-	      float RefPoint[3];
-	      RefPoint[0] = fittedHelix->getReferencePoint()[0];
-	      RefPoint[1] = fittedHelix->getReferencePoint()[1];
-	      RefPoint[2] = fittedHelix->getReferencePoint()[2];	    
-	      track->setReferencePoint(RefPoint);
-	      delete fittedHelix;
-	    }
-	    delete shapes;
-	    delete[] xh;
-	    delete[] yh;
-	    delete[] zh;
-	    delete[] ah;
-	  }
-	  MCParticle * particle;
-	  try {
-	    LCCollection * colpart = evt->getCollection("MCParticle");
-	    int nelem = colpart->getNumberOfElements();
-	    for (int ielem(0); ielem < nelem; ++ielem) {
-	      particle = 
-		dynamic_cast<MCParticle*>(colpart->getElementAt(ielem));
-	      if (particle == mcp) 
-		break;
+	      hitsInFit.push_back(trkHit);
 	    }
 	  }
-	  catch(DataNotAvailableException &e){}
-	  trkcol->addElement( track );
+	}	  
 
-	  // debug
-	  /*
-	  std::cout << " D0 = " << track->getD0()
-		    << " Z0 = " << track->getZ0() << std::endl;
-	  */
+	delete[] lh;
 
-	  LCRelationImpl * rel = new LCRelationImpl(track,particle,(float)1.0);
-	  relationcol->addElement( rel );	  
+	if (nHitsInFit>=3) {
+	  storeTrack = true;
+	  float * xh = new float[nHitsInFit];
+	  float * yh = new float[nHitsInFit];
+	  float * zh = new float[nHitsInFit];
+	  int   * idet = new int[nHitsInFit];
+	  int   * ityp = new int[nHitsInFit];
+	  float * rR = new float[nHitsInFit];
+	  float * rZ = new float[nHitsInFit];
+	  int * lhits = new int[nHitsInFit];
+	  for (int ihit = 0; ihit < nHitsInFit; ++ihit) {
+	    float xPoint[3];
+	    TrackerHit * trkHit = hitsInFit[ihit];
+	    xPoint[0] = (float)trkHit->getPosition()[0];
+	    xPoint[1] = (float)trkHit->getPosition()[1];
+	    xPoint[2] = (float)trkHit->getPosition()[2];	    
+	    xh[ihit]=xPoint[0];
+	    yh[ihit]=xPoint[1];
+	    zh[ihit]=xPoint[2];
+	    int det = trkHit->getType()/100;
+	    idet[ihit] = det;
+	    if (det==2) { // FTD Planar Detector
+	      ityp[ihit] = int(2);
+	      rR[ihit] = sqrt(trkHit->getCovMatrix()[0]);
+	      rZ[ihit] = 0.1;
+	    }
+	    else { // Cyllindrical Detector
+	      ityp[ihit] = int(3);		  
+	      rR[ihit] = sqrt(trkHit->getCovMatrix()[2]);
+	      rZ[ihit] = sqrt(trkHit->getCovMatrix()[5]);		  
+	    }
+	  }
+	  float chi2PrefitCut = 1.0e+10;
+	  float par[5];
+	  float epar[15];
+	  float chi2_D;
+	  int ndf_D;
+	  float chi2rphi,chi2z;
+	  int NPT = nHitsInFit;
+	  float refPoint[3];
+	  _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet,ityp,chi2PrefitCut,
+			      xh,yh,zh,rR,rZ,par,epar,refPoint,chi2_D,ndf_D,chi2rphi,chi2z,lhits);
+	  newTrack->setD0(par[3]);
+	  newTrack->setZ0(par[4]);
+	  newTrack->setPhi(par[2]);
+	  newTrack->setTanLambda(par[1]);
+	  newTrack->setOmega(par[0]);	  
+	  newTrack->setCovMatrix(epar);
+	  newTrack->setChi2(chi2_D);
+	  newTrack->setNdf(ndf_D);
+	  newTrack->setReferencePoint(refPoint);
+	  newTrack->setIsReferencePointPCA(false);
+	  if (_useExtraPoint == 1)
+	    newTrack->setIsReferencePointPCA(true);
+	  int nHitsVTX = 0;
+	  int nHitsFTD = 0;
+	  int nHitsSIT = 0;
+	  int nHitsTPC = 0;
+	  for (int ihit=0;ihit<nHitsInFit;++ihit) {
+	    if (lhits[ihit] > 0) {
+	      TrackerHit * trkHit = hitsInFit[ihit];
+	      int det = trkHit->getType()/100;
+	      if (det == 1) // VTX
+		nHitsVTX++;
+	      if (det == 2) // FTD
+		nHitsFTD++;
+	      if (det == 4) // SIT
+		nHitsSIT++;
+	      if (det == 5) // TPC
+		nHitsTPC++;	    
+	      newTrack->addHit( trkHit );
+	    }
+	  }
+	  newTrack->subdetectorHitNumbers().resize(4);
+	  newTrack->subdetectorHitNumbers()[0] = nHitsVTX;
+	  newTrack->subdetectorHitNumbers()[1] = nHitsFTD;
+	  newTrack->subdetectorHitNumbers()[2] = nHitsSIT;
+	  newTrack->subdetectorHitNumbers()[3] = nHitsTPC;	  
+	  delete[] xh;
+	  delete[] yh;
+	  delete[] zh;
+	  delete[] idet;
+	  delete[] ityp;
+	  delete[] rR;
+	  delete[] rZ;
+	  delete[] lhits;
 	}
 	else {
-	  nlost += nhits;
-	  // std::cout << "Track is lost : " << "# of hits = " << nhits << std::endl;
+	  storeTrack = false;
 	}
-	delete helix;
-	itk++;
-
-	// debug
-	//std::cout << std::endl;
+      }
+      if (storeTrack) {
+	MCParticle * particle;
+	try {
+	  LCCollection * colpart = evt->getCollection("MCParticle");
+	  int nelem = colpart->getNumberOfElements();
+	  for (int ielem(0); ielem < nelem; ++ielem) {
+	    particle = 
+	      dynamic_cast<MCParticle*>(colpart->getElementAt(ielem));
+	    if (particle == mcp) 
+	      break;
+	  }
+	}
+	catch(DataNotAvailableException &e){}
+	trkcol->addElement( newTrack );
+	LCRelationImpl * rel = new LCRelationImpl(newTrack,particle,(float)1.0);
+	relationcol->addElement( rel );	  
+      }
+      else { // track is lost
+	nlost += nhits;
+	delete newTrack;
+      }
+      delete helix;
+      delete track;
+      itk++;
+    
+    // debug
+    //std::cout << std::endl;
     }
 
     // debug
@@ -355,6 +521,33 @@ void TrackCheater::processEvent( LCEvent * evt ) {
     evt->addCollection(relationcol,_colNameMCTrueTracksRel);
 
   _nEvt++;
+
+}
+
+void TrackCheater::SortTrackerHitsByRadius(TrackerHitVec & trackerHitVec) {
+
+  int sizeOfVector = int(trackerHitVec.size());
+  TrackerHit *one,*two,*Temp;
+  
+  for (int i = 0 ; i < sizeOfVector-1; i++)
+    for (int j = 0; j < sizeOfVector-i-1; j++)
+      {
+	one = trackerHitVec[j];
+	two = trackerHitVec[j+1];
+	
+	float xOne = float(one->getPosition()[0]);
+	float xTwo = float(two->getPosition()[0]);
+	float yOne = float(one->getPosition()[1]);
+	float yTwo = float(two->getPosition()[1]);
+	float rOne = xOne*xOne+yOne*yOne;
+	float rTwo = xTwo*xTwo+yTwo*yTwo;
+	if( rOne > rTwo )
+	  {
+	    Temp = trackerHitVec[j];
+	    trackerHitVec[j] = trackerHitVec[j+1];
+	    trackerHitVec[j+1] = Temp;
+	  }
+      }  
 
 }
 

@@ -11,21 +11,28 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/**  Example processor for marlin.
- * 
- *  If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
- * 
- *  <h4>Input - Prerequisites</h4>
- *  Needs the collection of MCParticles.
- *
- *  <h4>Output</h4> 
- *  A histogram.
- * 
- * @param CollectionName Name of the MCParticle collection
- * 
- * @author F. Gaede, DESY
- * @version $Id: MaterialDB.h,v 1.1 2006-11-02 12:34:17 rasp Exp $ 
+/**======= MaterialDB ============ <br>
+ * Processor builds material database used by DELPHI fitting package <br>
+ * Information about material shapes and properties are read in from GEAR steering and
+ * passed to the DELPHI fitter via global C structures. Processor defines also 
+ * extrapolation surfaces on which Track parameters can be evaluated <br>
+ * <h4>Input</h4>
+ * Processor doesn't require any LCIO collection but needs GEAR steering
+ * to create material database <br> 
+ * <h4>Output</h4> 
+ * No LCIO collections are produced by the processor. 
+ * It is meant only as material database builder. <br>
+ * @param UseMaterials When this flag is set to 1 material database is built 
+ * otherwise no materials are assumed to be present in detector and DELPHI fit
+ * ignores effects of particle interactions with detector materials <br> 
+ * (default value 1) <br>
+ * @param UseExtrapolations When this flag is set to 1 extrapolation surfaces are defined.
+ * Otherwise track parameters can be calculated only at the measurement point and no
+ * track extrapolations are possible <br>
+ * (default value 1) <br>
+ * <br>
+ * @author A. Raspereza (MPI Munich)
+ * @version $Id: MaterialDB.h,v 1.2 2007-04-20 13:44:39 rasp Exp $ 
  */
 
 class MaterialDB : public Processor {
@@ -108,7 +115,8 @@ class MaterialDB : public Processor {
   float _beamPipeRadius,_beamPipeHalfZ,_beamPipe_thickness;
   float _SITLayer_thickness;
 
-  int _useGearFile;
+  int _useExtrapolations;
+  int _useMaterials;
 
 } ;
 

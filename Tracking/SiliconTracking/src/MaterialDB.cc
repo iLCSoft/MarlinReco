@@ -23,6 +23,10 @@ using namespace lcio ;
 using namespace marlin ;
 
 extern "C" {
+  void setmat_();
+}
+
+extern "C" {
   extern struct {
     int ncmat;
     float rcmat[100];
@@ -398,12 +402,15 @@ MaterialDB::MaterialDB() : Processor("MaterialDB") {
 //                              _radlen_copper,
 //                              float(1.43));
   
-//   registerProcessorParameter("UseGearFile",
-// 			     "Use Gear File",
-// 			     _useGearFile,
-// 			     int(1));
-  
+  registerProcessorParameter("UseExtrapolations",
+			     "Use Extrapolations in Fit",
+			     _useExtrapolations,
+			     int(1));
 
+  registerProcessorParameter("UseMaterials",
+			     "Use material database",
+			     _useMaterials,
+			     int(1));
 
 }
 
@@ -441,18 +448,75 @@ void MaterialDB::init() {
   fkddes_.zcmax[Ncmat] = 0.1*_beamPipeHalfZ;
   fkddes_.xrlc[Ncmat] = 0.1*_beamPipe_thickness/_radlen_ber;
   fkddes_.xelosc[Ncmat] = 0.1*_beamPipe_thickness*_dedx_ber;
-
-  fkexts_.itexts[Nexs] = 0;  
-  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]-0.01 ;
-  fkexts_.zrmin[Nexs] = -1000.;
-  fkexts_.zrmax[Nexs] = 1000.;
-  Nexs++;
   Ncmat++;
 
-  // FIXME : Introduce additional cones and tubes (Tube00.cc)
+//   fkexts_.itexts[Nexs] = 0;  
+//   fkexts_.rzsurf[Nexs] =  0;
+//   fkexts_.zrmin[Nexs] = -1000.;
+//   fkexts_.zrmax[Nexs] = 1000.;
+//   Nexs++;
 
+//   fkexts_.itexts[Nexs] = 1;  
+//   fkexts_.rzsurf[Nexs] = 0.0 ;
+//   fkexts_.zrmin[Nexs] = 0.;
+//   fkexts_.zrmax[Nexs] = 1000.;
+//   Nexs++;
+
+//   int Nb = 10;
+//   float dR = 0.1*_beamPipeRadius;
+  fkexts_.itexts[Nexs] = 0;  
+  fkexts_.rzsurf[Nexs] = 0.1*_beamPipeRadius-0.001 ;
+  fkexts_.zrmin[Nexs] = -10000.;
+  fkexts_.zrmax[Nexs] = 10000.;
+  Nexs++;
+
+//   for (int iB=0;iB<Nb;++iB) {
+//       fkexts_.itexts[Nexs] = 0;  
+//       fkexts_.rzsurf[Nexs] = 0.01+dR*(0.5+float(iB)) ;
+//       fkexts_.zrmin[Nexs] = -10000.;
+//       fkexts_.zrmax[Nexs] = 10000.;
+//       Nexs++;
+//   }
+  
+
+  // A.R. FIXME : Introduce additional cones and tubes (Tube00.cc)
 
   //  Cyllinders and cones in VXD00
+
+  // Cryostat
+
+  float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
+  float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
+  float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
+  float AlZEndCap = float(pVXDDet.getDoubleVal("CryostatAlZEndCap"));
+  float AlRinEndCap = float(pVXDDet.getDoubleVal("CryostatAlInnerR"));
+  float xrad_cryo = 0.1*float(pVXDDet.getDoubleVal("Cryostat_RadLen"));
+  float dedx_cryo = 10.0*float(pVXDDet.getDoubleVal("Cryostat_dEdx"));
+  
+
+  // Al cryostat barrel
+  fkddes_.rcmat[Ncmat] = 0.1*(AlRadius+0.5*AlThickness);
+  fkddes_.zcmin[Ncmat] = -0.1*AlHalfLength;
+  fkddes_.zcmax[Ncmat] = 0.1*AlHalfLength;
+  fkddes_.xrlc[Ncmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosc[Ncmat] = 0.1*AlThickness*dedx_cryo;
+  Ncmat++;
+  
+
+  // Al cryostat endcaps
+  fkddes_.zpmat[Npmat] = -0.1*(AlZEndCap+0.5*AlThickness);
+  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+  Npmat++;
+
+  fkddes_.zpmat[Npmat] = 0.1*(AlZEndCap+0.5*AlThickness);
+  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+  Npmat++;
   
   int nLayersVTX = pVXDLayerLayout.getNLayers();
   _layerRadius.resize(nLayersVTX);
@@ -511,17 +575,17 @@ void MaterialDB::init() {
 
   for (int i=0;i<nLayersVTX;++i) {
     // beryllium support    
-//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_support_thickness);
-//     fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-//     fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-//     fkddes_.xrlc[Ncmat] = 0.1*_support_thickness/_radlen_ber;
-//     fkddes_.xelosc[Ncmat] = 0.1*_support_thickness*_dedx_ber;
+    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_support_thickness);
+    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+    fkddes_.xrlc[Ncmat] = 0.1*_support_thickness/_radlen_ber;
+    fkddes_.xelosc[Ncmat] = 0.1*_support_thickness*_dedx_ber;
 
-    fkddes_.rcmat[Ncmat] = 0.1*_layerRadius[i];
-    fkddes_.zcmin[Ncmat] = -0.1*_ladder_dim_z[i];
-    fkddes_.zcmax[Ncmat] = 0.1*_ladder_dim_z[i];
-    fkddes_.xrlc[Ncmat] = 0.1*(_support_thickness/_radlen_ber+_si_thickness/_radlen_si);
-    fkddes_.xelosc[Ncmat] = 0.1*(_support_thickness*_dedx_ber+_si_thickness*_dedx_si);
+//     fkddes_.rcmat[Ncmat] = 0.1*_layerRadius[i];
+//     fkddes_.zcmin[Ncmat] = -0.1*_ladder_dim_z[i];
+//     fkddes_.zcmax[Ncmat] = 0.1*_ladder_dim_z[i];
+//     fkddes_.xrlc[Ncmat] = 0.1*(_support_thickness/_radlen_ber+_si_thickness/_radlen_si);
+//     fkddes_.xelosc[Ncmat] = 0.1*(_support_thickness*_dedx_ber+_si_thickness*_dedx_si);
 
     fkexts_.itexts[Nexs] = 0;
     fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
@@ -549,22 +613,22 @@ void MaterialDB::init() {
     fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness*_dedx_si;
     Ncmat++;
 
-//     // Active Silicon
-//     // right-hand part
-//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
-//     fkddes_.zcmin[Ncmat] = 0.1*_ladderGaps[i];
-//     fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-//     fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
-//     fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
-//     Ncmat++;
+    // Active Silicon
+    // right-hand part
+    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
+    fkddes_.zcmin[Ncmat] = 0.1*_ladderGaps[i];
+    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+    fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
+    Ncmat++;
 
-//     // left-hand part
-//     fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
-//     fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-//     fkddes_.zcmax[Ncmat] = -0.1*_ladderGaps[i];
-//     fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
-//     fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
-//     Ncmat++;
+    // left-hand part
+    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
+    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
+    fkddes_.zcmax[Ncmat] = -0.1*_ladderGaps[i];
+    fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
+    Ncmat++;
     
 //     // Strip Lines
 //     // right-hand part    
@@ -913,8 +977,9 @@ void MaterialDB::init() {
 
   _SITLayer_thickness =  float(pSITDet.getDoubleVal("SITLayerThickness"));
 
+
   for (int iL = 0; iL < nLayersSIT; ++iL) {
-      fkddes_.rcmat[Ncmat] = 0.1*_rSIT[iL];
+      fkddes_.rcmat[Ncmat] = 0.1*(_rSIT[iL]+0.5*_SITLayer_thickness);
       fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
       fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
       fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si872;
@@ -936,33 +1001,38 @@ void MaterialDB::init() {
   // **************************************** //
 
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
-  const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+  //  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+  //  const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
   
-  float innerrad = 0.1 * float( planeExt[0] ) ;
-  float outerrad = 0.1 *float( planeExt[1] ) ;
-  //  float npadrows = padLayout.getNRows() ;
+//   float innerrad = 0.1 * float( planeExt[0] ) ;
+//   float outerrad = 0.1 *float( planeExt[1] ) ;
   float maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
+  //  float npadrows = padLayout.getNRows() ;
   //  float tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
   //  float ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   //  float tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResMax")) ;  
   //  float tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
   //  float tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
-
-
-  float RTPCINN = 32.0;
-  float TPCTHBI = 0.01*8.9;
-  float TPCTHBO = 0.03*8.9;
-  float xralu = 8.9;
-  float dedxalu = 2.70*1.62e-3;
-  float TPCACRI = innerrad;
-  float TPCACRO = outerrad;
-  float RTPCOUT = TPCACRO + 6.4;
-  float TPCHLFZ = maxdrift + 23.;
-  float xrargon = 10971.;
-  float dedxargon = 0.0018*1.52e-3;
-  float TPCTHKE = 23.;
+  //  float xralu = 8.9;
+  //  float dedxalu = 2.70*1.62e-3;
+  //  float xrargon = 10971.;
+  //  float dedxargon = 0.0018*1.52e-3;
   
+
+
+  float RTPCINN = 0.1*float(gearTPC.getDoubleVal("tpcInnerRadius"));
+  float RTPCOUT = 0.1*float(gearTPC.getDoubleVal("tpcOuterRadius"));
+  float TPCTHBI = 0.1*float(gearTPC.getDoubleVal("tpcInnerWallThickness"));
+  float TPCTHBO = 0.1*float(gearTPC.getDoubleVal("tpcOuterWallThickness"));
+  //  float TPCACRI = innerrad;
+  //  float TPCACRO = outerrad;
+  float TPCHLFZ = maxdrift;
+  float xralu = 0.1*float(gearTPC.getDoubleVal("TPCWallProperties_RadLen"));
+  float dedxalu = 10.*float(gearTPC.getDoubleVal("TPCWallProperties_dEdx"));
+  float xrargon = 0.1*float(gearTPC.getDoubleVal("TPCGasProperties_RadLen"));
+  float dedxargon = 10.*float(gearTPC.getDoubleVal("TPCGasProperties_dEdx"));
+  
+
   // inner tube    
   fkddes_.rcmat[Ncmat] = RTPCINN + TPCTHBI/2.;
   fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
@@ -971,17 +1041,17 @@ void MaterialDB::init() {
   fkddes_.xelosc[Ncmat] = TPCTHBI*dedxalu;
 
   fkexts_.itexts[Nexs] = 0;
-  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]+1.0;
+  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]+0.1;
   fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
   fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
 
   Nexs++;
   Ncmat++;
 
-  int ncyl = 10;
+  int ncyl = 50;
   
-  // gas
-  float xstep = (RTPCOUT-TPCTHBO-TPCACRI-TPCTHBI)/float(ncyl);
+  // Gas volume in TPC
+  float xstep = (RTPCOUT-RTPCINN-TPCTHBO-TPCTHBI)/float(ncyl);
   for (int icyl=0;icyl<ncyl;++icyl) {
     fkddes_.rcmat[Ncmat] = RTPCINN + TPCTHBI + (float(icyl)+0.5)*xstep;
     fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
@@ -992,42 +1062,52 @@ void MaterialDB::init() {
   }
 
   // outer tube
-  fkddes_.rcmat[Ncmat] = RTPCOUT;
-  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
-  fkddes_.zcmax[Ncmat] = TPCHLFZ;
-  fkddes_.xrlc[Ncmat] = TPCTHBO/xralu;
-  fkddes_.xelosc[Ncmat] = TPCTHBO*dedxalu;
-  Ncmat++;
+  //  fkddes_.rcmat[Ncmat] = RTPCOUT;
+  //  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
+  //  fkddes_.zcmax[Ncmat] = TPCHLFZ;
+  //  fkddes_.xrlc[Ncmat] = TPCTHBO/xralu;
+  //  fkddes_.xelosc[Ncmat] = TPCTHBO*dedxalu;
+  //  Ncmat++;
     
   // endplates
-  fkddes_.rpmin[Npmat] = RTPCINN;
-  fkddes_.rpmax[Npmat] = RTPCOUT;
-  fkddes_.zpmat[Npmat] = -(TPCHLFZ-TPCTHKE/2.);
-  fkddes_.xrlp[Npmat] = 0.35;
-  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
-  Npmat++;
+  //  fkddes_.rpmin[Npmat] = RTPCINN;
+  //  fkddes_.rpmax[Npmat] = RTPCOUT;
+  //  fkddes_.zpmat[Npmat] = -(TPCHLFZ-TPCTHKE/2.);
+  //  fkddes_.xrlp[Npmat] = 0.35;
+  //  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
+  //  Npmat++;
 
-  fkddes_.rpmin[Npmat] = RTPCINN;
-  fkddes_.rpmax[Npmat] = RTPCOUT;
-  fkddes_.zpmat[Npmat] = TPCHLFZ-TPCTHKE/2.;
-  fkddes_.xrlp[Npmat] = 0.35;
-  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
-  Npmat++;
+  //  fkddes_.rpmin[Npmat] = RTPCINN;
+  //  fkddes_.rpmax[Npmat] = RTPCOUT;
+  //  fkddes_.zpmat[Npmat] = TPCHLFZ-TPCTHKE/2.;
+  //  fkddes_.xrlp[Npmat] = 0.35;
+  //  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
+  //  Npmat++;
 
 
   // setting numbers of planar, cyllinder and conical shapes and extrapolation surfaces
   fkddes_.npmat = Npmat;
   fkddes_.ncmat = Ncmat;
   fkddes1_.nconmat = Nconmat;
-  //  fkexts_.nexs = Nexs;
-  fkexts_.nexs = 0;
+  fkexts_.nexs = Nexs;
+  if (_useMaterials == 0) {
+    fkddes_.npmat = 0;
+    fkddes_.ncmat = 0;
+    fkddes1_.nconmat = 0;    
+  }
+    
+  if (_useExtrapolations == 0)
+    fkexts_.nexs = 0;
+
+  // Call to FORTRAN Routine
+  setmat_();
 
 }
 
 void MaterialDB::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
   _bField = Global::parameters->getFloatVal("BField");
-  fkfild_.consb = 2.99e-3*_bField;
+  fkfild_.consb = 2.997924e-3*_bField;
 } 
 
 void MaterialDB::processEvent( LCEvent * evt ) { 

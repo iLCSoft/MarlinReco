@@ -16,7 +16,6 @@
 #include <gsl/gsl_linalg.h>
 #include <marlin/Global.h>
 #include "ClusterShapes.h"
-
 #include <gear/GEAR.h>
 #include <gear/VXDParameters.h>
 #include <gear/GearParameters.h>
@@ -53,6 +52,12 @@ int abs(int x) {
     result = -x;
   return result;
 }
+
+// extern "C" {
+//   struct {
+//     float consb;
+//   } fkfild_;
+// }
 
 float FastTripletCheck(TrackerHitExtended * hitIn,
 		       TrackerHitExtended * hitMiddle,
@@ -129,229 +134,13 @@ float FastTripletCheck(TrackerHitExtended * hitIn,
   
 }
 
-extern "C" {
-  void tfithl_(int & NPT, double * XF,double * YF, float * RF, float *PF, double * WF,float * ZF,
-	       float * WZF, int & IOPT, float * VV0,
-	       float * EE0, float & CH2PH, float & CH2Z);
-}
-
-extern "C" {
-  void trkfit_(int & nhits, int * idet, int * itype, 
-	       float * x, float * y, float * z, float * phireso, float * zreso,
-	       float * ref, int & ierr, float * rfit, float * rfite, float & chi2, int & ndf);
-  
-}
-
-int TrackFitting(int & nhits, float bField, int * idet, int * itype, // inputs 
-		 float chi2PrefitCut, // inputs 
-		 float * x, float * y, float * z, float * RPReso, float * ZReso, // inputs 
-		 float * param, float * eparam, float & chi2, int & ndf,
-		 float & chi2rphi, float & chi2z) { // outputs
-
-  //
-  // Subroutine performs track fitting taking into account energy loss and MS 
-  // First simple helix fit is performed to define initial track parameters
-  // at the PCA to primary IP. If simple helix fit converges and has qood quality 
-  // defined by "distMax" proximity criterion, then DELPHI fitting routine trkfit.F is envoked
-  // Inputs :
-  //          nhits - number of tracker hits used in fit
-  //          bField - magnetic field in Tesla
-  //          idet - list of the hit detector identifiers 
-  //          itype - list of the hit types ( 2 - planar disks, 
-  //                                          3 - cyllindrical or laddered detector )
-  //          distMax - proximity parameter defining quality of simple
-  //                    helix fit. If maximal hit distance to the fitted helix is
-  //                    greater than distMax fit is regarded to fail
-  //          x,y,z - list of the hit Cartesian coordinates
-  //          RPReso - list of the hit resolutions in R-Phi projection
-  //          ZReso  - list of the hit Z resolutions
-  // Outpus :
-  //          param  - list of the track parameters at the PCA
-  //          param[0] - Omega (signed curvuture)
-  //          param[1] - tan(Lambda) (tangence of the dip angle)
-  //          param[2] - Phi angle of the particle momentum @ PCA
-  //          param[3] - D0 (IP in the R-Phi projection @ PCA )
-  //          param[4] - Z0 (z coordinate displacement @ PCA in the R-Phi projection )
-  //          eparam[15] - covariance matrix of the track parameters
-  //          chi2 - fit chi2
-  //          ndf - number of degrees of freedom
-  //          returned integer indicate error flag
-  //          error = 0 - no error, fit is successfull
-  //          error = -1 - simple helix fit failed
-  //  std::cout << "Tracking processor ----------->" << std::endl;
-  //  std::cout << "# of hits = " << nhits << std::endl;
-  //
-
-  float * xhit = new float[nhits+1];
-  float * yhit = new float[nhits+1];
-  float * zhit = new float[nhits+1];
-  int * iDet = new int[nhits+1];
-  int * iTyp = new int[nhits+1];
-  float * rphireso = new float[nhits+1];
-  float * zreso = new float[nhits+1];
-  float * phi = new float[nhits];
-  double * xd = new double[nhits];
-  double * yd = new double[nhits];
-  float * r = new float[nhits];
-  double * wfr = new double[nhits];
-  float  * wfz = new float[nhits];
-  float * ampl = new float[nhits];
-  float ref[6];
-  float rfit[6];
-  float rfite[15];
-  float rshape[6];
-  
-  float dzMin = 1.0e+20;
-  float dzMax = -1.0e+20;
-  float zBegin = zhit[0];
-  float zEnd = zhit[1];
-  for (int i=0;i<nhits;++i) {
-    xhit[i] = 0.1*x[i];
-    yhit[i] = 0.1*y[i];
-    zhit[i] = 0.1*z[i];
-    ampl[i] = 1.0;
-    xd[i] = xhit[i];
-    yd[i] = yhit[i];
-    phi[i] = atan2(yhit[i],xhit[i]);
-    r[i] = sqrt(xhit[i]*xhit[i]+yhit[i]*yhit[i]);
-    wfz[i] = 1./(0.01*ZReso[i]*ZReso[i]);
-    wfr[i] = 1./(0.01*RPReso[i]*RPReso[i]);
-    rphireso[i] = 0.01*RPReso[i]*RPReso[i];
-    zreso[i] = 0.01*ZReso[i]*ZReso[i];    
-    iDet[i] = idet[i];
-    iTyp[i] = itype[i];
-    if (fabs(zhit[i])>dzMax) {
-      dzMax = fabs(zhit[i]);
-      zEnd = zhit[i];
-    }
-    if (fabs(zhit[i])<dzMin) {
-      dzMin = fabs(zhit[i]);
-      zBegin = zhit[i];
-    }
-  }
-  int IOPT = 2;
-  HelixClass  helix;
-  tfithl_(nhits,xd,yd,r,phi,wfr,zhit,
-	  wfz,IOPT,param,eparam,chi2rphi,chi2z);
-
-  int ndfSh = 2*nhits-5;  
-  float chi2Sh = chi2rphi + chi2z;
-
-  if (chi2Sh/float(ndfSh) > chi2PrefitCut) {
-    delete[] xhit;
-    delete[] yhit;
-    delete[] zhit;
-    delete[] rphireso;
-    delete[] zreso;
-    delete[] phi;
-    delete[] xd;
-    delete[] yd;
-    delete[] r;
-    delete[] wfr;
-    delete[] wfz;
-    delete[] iDet;
-    delete[] iTyp;
-    delete[] ampl;
-    chi2 = chi2Sh/float(ndfSh);
-    return -1;
-  }
-
-  float tanlambda = param[1];
-  float omega = param[0];  
-  float phi0 = param[2];
-  float z0 = param[4];
-  float d0 = param[3];
-  float xInitial =  -d0*sin(phi0);
-  float yInitial = d0*cos(phi0);
-  
-  ref[0] = xInitial;
-  ref[1] = yInitial;
-  ref[2] = z0;
-  ref[4] = phi0;
-  ref[3] = 0.5*acos(-1.) - atan(tanlambda);
-  ref[5] = -100.0*omega/(0.299*bField);
-  ref[5] = ref[5]*fabs(sin(ref[3]));
-
-  for (int i=0;i<6;++i)
-    rshape[i] = ref[i];
-
-  xhit[nhits] = xInitial;
-  yhit[nhits] = yInitial;
-  zhit[nhits] = z0;
-  rphireso[nhits] = 1.0;
-  zreso[nhits] = 1.0;
-  iDet[nhits] = 2;
-  iTyp[nhits] = 2;
-  int nfit = nhits+1 ;
-
-  int ierr;
-  
-  trkfit_(nfit,iDet,iTyp,xhit,yhit,zhit,rphireso,zreso,ref,ierr,rfit,rfite,chi2,ndf);  
-
-
-  //  std::cout << "Delphi Fit : chi2 = " << chi2 
-  //	    << " ; ndf = " << ndf
-  //	    << " ; ierr = " << ierr << std::endl;
-
-  //  std::cout << std::endl;
-  if (chi2Sh <0 ) std::cout << "WARNING chi2 = " << chi2Sh << std::endl;
-  if (chi2<0 && ierr==0) std::cout << "WARNING chi2 = " << chi2 << std::endl;
-  
-  if ((ierr != 0) || (chi2 < 0) || (chi2 > chi2Sh)) {
-    ierr = 1;
-    chi2 = chi2Sh;
-    ndf  = ndfSh;
-    for (int i=0;i<6;++i)
-      rfit[i] = rshape[i];
-  }
-  float xx = rfit[0]*cos(rfit[1]/rfit[0]);
-  float yy = rfit[0]*sin(rfit[1]/rfit[0]);
-  float pos[3];
-  pos[0] = 10*xx;
-  pos[1] = 10*yy;
-  pos[2] = 10*rfit[2];
-  float mom[3];
-  mom[0] = sin(rfit[3])*cos(rfit[4])/fabs(rfit[5]);
-  mom[1] = sin(rfit[3])*sin(rfit[4])/fabs(rfit[5]);
-  mom[2] = cos(rfit[3])/fabs(rfit[5]);
-  float charge = -rfit[5]/fabs(rfit[5]);
-  
-  helix.Initialize_VP(pos,mom,charge,bField);
-  
-  param[0] = helix.getOmega();
-  param[1] = helix.getTanLambda();
-  param[2] = helix.getPhi0();
-  param[3] = helix.getD0();
-  param[4] = helix.getZ0();
-  
-  delete[] xhit;
-  delete[] yhit;
-  delete[] zhit;
-  delete[] rphireso;
-  delete[] zreso;
-  delete[] phi;
-  delete[] xd;
-  delete[] yd;
-  delete[] r;
-  delete[] wfr;
-  delete[] wfz;
-  delete[] iDet;
-  delete[] iTyp;
-  delete[] ampl;
-
-  return ierr;
-
-}
-
-
-
 SiliconTracking aSiliconTracking ;
 
 SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 
-  std::vector<int> combinations;
+  _description = "Pattern recognition in silicon trackers";
 
-  
+  std::vector<int> combinations;
 
   combinations.push_back(6);
   combinations.push_back(4);
@@ -470,31 +259,11 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   combinationsFTD.push_back(0);
 
 
-
-
   registerProcessorParameter("LayerCombinationsFTD",
 			     "Combinations of Hits in FTD",
 			     _CombinationsFTD,
 			     combinationsFTD);
 
-
-//   registerProcessorParameter("NumberOfLayersVTX",
-// 			     "Number of Layers in VTX",
-// 			     _nLayersVTX,
-// 			     int(5));
-  
-
-//   registerProcessorParameter("NumberOfLayersSIT",
-// 			     "Number of Layers in SIT",
-// 			     _nLayersSIT,
-// 			     int(0));
-  
-
-//   registerProcessorParameter("NumberOfFTDLayers",
-// 			     "Number of FTD Layers",
-// 			     _nLayersFTD,
-// 			     int(7));
-  
   registerProcessorParameter("NDivisionsInPhi",
 			     "Number of divisions in Phi",
 			     _nDivisionsInPhi,
@@ -503,83 +272,75 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
 			     _nPhiFTD,
-			     int(40));
+			     int(3));
   
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
 			     _nDivisionsInTheta,
 			     int(60));
   
-  registerInputCollection( LCIO::TRACKERHIT,
-                             "VXDHitCollectionName",
-			     "VXD Hit Collection Name",
-			     _VTXHitCollection,
-			     std::string("VTXTrackerHits"));
+  // Input Collections
+  // ^^^^^^^^^^^^^^^^^^^^^^^^
+  registerInputCollection(LCIO::TRACKERHIT,
+			  "VXDHitCollectionName",
+			  "VXD Hit Collection Name",
+			  _VTXHitCollection,
+			  std::string("VTXTrackerHits"));
 
-  registerInputCollection( LCIO::TRACKERHIT,
-                             "FTDHitCollectionName",
-			     "FTD Hit Collection Name",
-			     _FTDHitCollection,
-			     std::string("FTDTrackerHits"));  
 
-  registerInputCollection( LCIO::TRACKERHIT,
-                             "SITHitCollectionName",
-			     "SIT Hit Collection Name",
-			     _SITHitCollection,
-			     std::string("SITTrackerHits"));  
+  registerInputCollection(LCIO::TRACKERHIT,
+			  "FTDHitCollectionName",
+			  "FTD Hit Collection Name",
+			  _FTDHitCollection,
+			  std::string("FTDTrackerHits"));  
 
-  registerOutputCollection( LCIO::TRACK,
-                             "SiTracks",
-			     "Name of the Si Track Output Collection",
-			     _SiTracks,
-			     std::string("SiTracks"));  
 
-  registerOutputCollection( LCIO::LCRELATION,
-                             "SiTrackMCPRel",
-			     "Name of the Si Track MCP Relation collection",
-			     _SiTracksMCP,
-			     std::string("SiTracksMCP"));  
+  registerInputCollection(LCIO::TRACKERHIT,
+			  "SITHitCollectionName",
+			  "SIT Hit Collection Name",
+			  _SITHitCollection,
+			  std::string("SITTrackerHits"));  
+  
 
-   
   registerProcessorParameter("Chi2WRphiTriplet",
 			     "Chi2WRphiTriplet",
 			     _chi2WRPhiTriplet,
-			     float(10.));
+			     float(1.));
    
   registerProcessorParameter("Chi2WRphiQuartet",
 			     "Chi2WRphiQuartet",
 			     _chi2WRPhiQuartet,
-			     float(10.));
+			     float(1.));
    
   registerProcessorParameter("Chi2WRphiSeptet",
 			      "Chi2WRphiSeptet",
 			     _chi2WRPhiSeptet,
-			     float(10.));
+			     float(1.));
    
   registerProcessorParameter("Chi2WZTriplet",
 			     "Chi2WZTriplet",
 			     _chi2WZTriplet,
-			     float(20.));
+			     float(0.5));
    
   registerProcessorParameter("Chi2WZQuartet",
 			     "Chi2WZQuartet",
 			     _chi2WZQuartet,
-			     float(20.));
+			     float(0.5));
    
   registerProcessorParameter("Chi2WZSeptet",
 			     "Chi2WZSeptet",
 			     _chi2WZSeptet,
-			     float(20.));
+			     float(0.5));
    
   registerProcessorParameter("Chi2FitCut",
 			     "Chi2 Fit Cut",
 			     _chi2FitCut,
-			     float(25.0));
+			     float(50.0));
 
   registerProcessorParameter("Chi2PrefitCut",
 			     "Chi2 Prefit Cut",
 			     _chi2PrefitCut,
-			     float(1.0e+4));
+			     float(1.0e+5));
   
   // Resolutions used in fit
   //^^^^^^^^^^^^^^^^^^^^^^^^
@@ -611,25 +372,15 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("ResolutionZSIT",
 			     "ResolutionZSIT",
 			     _resolutionZSIT,
-			     float(0.10));
+			     float(0.01));
 
 
   // Some Steering Parameters for Patrec
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  registerProcessorParameter("TanLambdaCutForMerging",
-			     "TanLambdaCutForMerging",
-			     _tanlambdaCutForMerging,
-			     float(0.1));
-   
-  registerProcessorParameter("PhiCutForMerging",
-			     "PhiCutForMerging",
-			     _phiCutForMerging,
-			     float(0.1));
-
   registerProcessorParameter("AngleCutForMerging",
 			     "Angle Cut For Merging",
 			     _angleCutForMerging,
-			     float(0.2));
+			     float(0.1));
 
      
   registerProcessorParameter("MinDistCutAttach",
@@ -640,7 +391,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("MinLayerToAttach",
 			     "MinLayerToAttach",
 			     _minimalLayerToAttach,
-			     int(-2));
+			     int(-1));
    
   registerProcessorParameter("CutOnD0",
 			     "cut on D0 for tracks",
@@ -660,13 +411,17 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("MinimalHits",
 			     "minimal hits",
 			     _minimalHits,
-			     int(4));
-
+			     int(3));
 
   registerProcessorParameter("FastAttachment",
 			     "Fast attachment",
 			     _attachFast,
 			     int(1));
+
+  registerProcessorParameter("OptPrefit",
+			     "Option of prefit ?",
+			     _optFit,
+			     int(0));
 
   registerProcessorParameter("SimpleHelixFit",
 			     "Simple Helix Fit ?",
@@ -676,8 +431,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("UseSIT",
 			     "Use SIT",
 			     _useSIT,
-			     int(0));
-
+			     int(1));
   
   registerProcessorParameter("FinalRefit",
 			     "Final Refit ?",
@@ -690,7 +444,11 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 			     _createMap,
 			     int(1));
 
-  //  _nLayers = _nLayersVTX + _nLayersSIT;
+
+  registerProcessorParameter("UseExtraPoint",
+			     "Use Extra Point in Fit",
+			     _useExtraPoint,
+			     int(0));
 
 }
 
@@ -698,33 +456,34 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 
 void SiliconTracking::init() { 
 
-    _nRun = -1 ;
-    _nEvt = 0 ;
-    printParameters() ;
+  _nRun = -1 ;
+  _nEvt = 0 ;
+  printParameters() ;
 
-    const gear::VXDParameters& pVXDDet = Global::GEAR->getVXDParameters();
-    const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDet.getVXDLayerLayout();
-    _nLayersVTX = int(pVXDLayerLayout.getNLayers());
+  const gear::VXDParameters& pVXDDet = Global::GEAR->getVXDParameters();
+  const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDet.getVXDLayerLayout();
+  _nLayersVTX = int(pVXDLayerLayout.getNLayers());
     
-    const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");
-
-    _nLayersFTD = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
-
-    _zLayerFTD.resize( _nLayersFTD);
-
-    for (int iL=0;iL<_nLayersFTD;++iL) {
-      _zLayerFTD[iL] = float(pFTDDet.getDoubleVals("FTDZCoordinate")[iL]);
-    }
-
-    const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
-    
-    _nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
-
-    if (_useSIT == 0)
-      _nLayers = _nLayersVTX;
-    else 
-      _nLayers = _nLayersVTX + _nLayersSIT;
-    
+  const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");
+  
+  _nLayersFTD = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
+  
+  _zLayerFTD.resize( _nLayersFTD);
+  
+  for (int iL=0;iL<_nLayersFTD;++iL) {
+    _zLayerFTD[iL] = float(pFTDDet.getDoubleVals("FTDZCoordinate")[iL]);
+  }
+  
+  const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
+  
+  _nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
+  
+  if (_useSIT == 0)
+    _nLayers = _nLayersVTX;
+  else 
+    _nLayers = _nLayersVTX + _nLayersSIT;
+  
+  _bField = Global::parameters->getFloatVal("BField");
 
 }
 
@@ -745,15 +504,11 @@ void SiliconTracking::processRunHeader( LCRunHeader* run) {
     float cutOnR = _cutOnPt/(0.3*_bField);
     cutOnR = 1000.*cutOnR;
     _cutOnOmega = 1/cutOnR;
+    //    fkfild_.consb = 2.997924e-3*_bField;
 
 } 
 
 void SiliconTracking::processEvent( LCEvent * evt ) { 
-
-//   _nEvt++;
-//   if (_nEvt < 211)
-//     return;
-
 
   // Clearing all working dynamical arrays (vectors)
   _tracks5Hits.clear();
@@ -763,7 +518,7 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 
   int success = InitialiseVTX( evt );
   int successFTD = InitialiseFTD( evt );
-  //  std::cout << "Event = " << _nEvt << " Run = " << _nRun << std::endl;
+  std::cout << "Event = " << _nEvt << " Run = " << _nRun << std::endl;
 
   if (success == 1) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
@@ -837,35 +592,57 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	trackImpl->setD0(trackAR->getD0());
 	trackImpl->setZ0(trackAR->getZ0());
 	trackImpl->setChi2(trackAR->getChi2());
+	trackImpl->setNdf(trackAR->getNDF());
+	trackImpl->setCovMatrix(trackAR->getCovMatrix());
 	int nHits = int(hitVec.size());
 	std::vector<MCParticle*> mcPointers ;
 	std::vector<int> mcHits ;
 	mcPointers.clear();
 	mcHits.clear();
+	int nHitsVTX = 0;
+	int nHitsFTD = 0;
+	int nHitsSIT = 0;
+	int nHitsTPC = 0;
 	for (int iHit=0;iHit<nHits;++iHit) {
-	  TrackerHit * trkHit = hitVec[iHit]->getTrackerHit();
-	  trackImpl->addHit(trkHit);
-	  if (_createMap > 0) {
-	    int nSH = int(trkHit->getRawHits().size());
-	    for (int ish=0;ish<nSH;++ish) {
-	      SimTrackerHit * simHit = dynamic_cast<SimTrackerHit*>(trkHit->getRawHits()[ish]);
-	      MCParticle * mcp = simHit->getMCParticle();
-	      bool found = false;
-	      int nMCP = int(mcPointers.size());
-	      for (int iMCP=0;iMCP<nMCP;++iMCP) {
-		if (mcp == mcPointers[iMCP]) {
-		  found = true;
-		  mcHits[iMCP]++;
-		  break;
+	  if (hitVec[iHit]->getType()!=0) {
+	    TrackerHit * trkHit = hitVec[iHit]->getTrackerHit();
+	    trackImpl->addHit(trkHit);
+	    int det = trkHit->getType()/100;
+	    if (det == 1)
+	      nHitsVTX++;
+	    if (det == 2)
+	      nHitsFTD++;
+	    if (det == 4)
+	      nHitsSIT++;
+	    if (det == 5)
+	      nHitsTPC++;
+	    if (_createMap > 0) {
+	      int nSH = int(trkHit->getRawHits().size());
+	      for (int ish=0;ish<nSH;++ish) {
+		SimTrackerHit * simHit = dynamic_cast<SimTrackerHit*>(trkHit->getRawHits()[ish]);
+		MCParticle * mcp = simHit->getMCParticle();
+		bool found = false;
+		int nMCP = int(mcPointers.size());
+		for (int iMCP=0;iMCP<nMCP;++iMCP) {
+		  if (mcp == mcPointers[iMCP]) {
+		    found = true;
+		    mcHits[iMCP]++;
+		    break;
+		  }
 		}
-	      }
-	      if (!found) {
-		mcPointers.push_back(mcp);
-		mcHits.push_back(1);
+		if (!found) {
+		  mcPointers.push_back(mcp);
+		  mcHits.push_back(1);
+		}
 	      }
 	    }
 	  }
 	}
+	trackImpl->subdetectorHitNumbers().resize(4);
+	trackImpl->subdetectorHitNumbers()[0] = nHitsVTX;
+	trackImpl->subdetectorHitNumbers()[1] = nHitsFTD;
+	trackImpl->subdetectorHitNumbers()[2] = nHitsSIT;
+	trackImpl->subdetectorHitNumbers()[3] = nHitsTPC;
 	trkCol->addElement(trackImpl);
 	if (_createMap > 0) {
 	  int nRel = int(mcPointers.size());
@@ -881,9 +658,9 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	}
       }
     }        
-    evt->addCollection(trkCol,_SiTracks);
+    evt->addCollection(trkCol,"SiTracks");     
     if (_createMap>0)
-      evt->addCollection(relCol,_SiTracksMCP);
+      evt->addCollection(relCol,"SiTracksMCP");
   }
   CleanUp();
   //  std::cout << "Event is done " << std::endl;
@@ -959,8 +736,10 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
       TrackerHitExtended * hitExt = new TrackerHitExtended( hit );
-      hitExt->setResolutionRPhi(_resolutionRPhiFTD);
-      hitExt->setResolutionZ(_resolutionZFTD);
+      hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[0])));
+      hitExt->setResolutionZ(0.1);
+      if (hit->getCovMatrix()[0] < 1e-10)
+	hitExt->setResolutionRPhi(_resolutionRPhiFTD);
       hitExt->setType(int(2));
       hitExt->setDet(int(2));
       double pos[3];
@@ -969,14 +748,14 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
       }
       double Phi = atan2(pos[1],pos[0]);
       if (Phi < 0.) Phi = Phi + TWOPI;
-      int layer = abs(hit->getType()) - 1;
+      int layer = hit->getType() - 201;
       if (layer < 0 || layer > _nLayersFTD-1) {
 	std::cout << "SiliconTracking => fatal error in FTD : layer is outside allowed range : " << layer << std::endl;
 	exit(1);
       }
       int iPhi = int(Phi/_dPhiFTD);
       int iSemiSphere = 0;
-      if (hit->getType() > 0) 
+      if (hit->getPosition()[2] > 0) 
 	iSemiSphere = 1;
       int iCode = iSemiSphere + 2*layer + 2*_nLayersFTD*iPhi;
       _sectorsFTD[iCode].push_back( hitExt );
@@ -1013,8 +792,12 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
       TrackerHitExtended * hitExt = new TrackerHitExtended( hit );
-      hitExt->setResolutionRPhi(_resolutionRPhiVTX);
-      hitExt->setResolutionZ(_resolutionZVTX);
+      hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
+      hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
+      if (hit->getCovMatrix()[2] < 1e-10) 
+	hitExt->setResolutionRPhi(_resolutionRPhiVTX);
+      if (hit->getCovMatrix()[5] < 1e-10)
+	hitExt->setResolutionZ(_resolutionZVTX);
       hitExt->setType(int(3));
       hitExt->setDet(int(3));
       double pos[3];
@@ -1052,8 +835,12 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
       for (int ielem=0; ielem<nelem; ++ielem) {
 	TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
 	TrackerHitExtended * hitExt = new TrackerHitExtended( hit );
-	hitExt->setResolutionRPhi(_resolutionRPhiSIT);
-	hitExt->setResolutionZ(_resolutionZSIT);
+	hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
+	hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
+	if (hit->getCovMatrix()[2] < 1e-10) 
+	  hitExt->setResolutionRPhi(_resolutionRPhiSIT);
+	if (hit->getCovMatrix()[5] < 1e-10)
+	    hitExt->setResolutionZ(_resolutionZSIT);
 	hitExt->setType(int(3));
 	hitExt->setDet(int(7));
 	double pos[3];
@@ -1271,9 +1058,7 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   float dZ = FastTripletCheck(innerHit, middleHit, outerHit);
 
   if (fabs(dZ) > _minDistCutAttach)
-    return trackAR;
-    
-
+    return trackAR;    
 
   double * xh = new double[3];
   double * yh = new double[3];
@@ -1288,6 +1073,7 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   float * z_reso = new float[3];
   int * idet_h = new int[3];
   int * ityp_h = new int[3];
+  int * lhits = new int[3];
   float par[5];
   float epar[15];
 
@@ -1337,15 +1123,16 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   float chi2Z;
   float chi2_D;
   int ndf_D;
-  int ierr;
+  float refPoint[3];
   if (_simpleHelixFit > 0) {
     tfithl_(NPT, xh, yh, rh, ph, wrh, zh,
 	    wzh, IOPT, par, epar, chi2RPhi, chi2Z);
+    par[3] = par[3]*par[0]/fabs(par[0]);
   }
   else {
-    ierr = TrackFitting(NPT,_bField,idet_h,ityp_h,_chi2PrefitCut,
+    _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h,_chi2PrefitCut,
 			xh_fl,yh_fl,zh,rphi_reso,z_reso,
-			par,epar,chi2_D,ndf_D, chi2RPhi, chi2Z);
+			par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
   }
 
   delete[] xh;
@@ -1361,19 +1148,23 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   delete[] z_reso;
   delete[] idet_h;
   delete[] ityp_h;
+  delete[] lhits;
   float omega = par[0];
   float tanlambda = par[1];
   float phi0 = par[2];
   float d0 = par[3];
   float z0 = par[4];
 
-  float Chi2 = chi2_D/float(ndf_D);
-  if (_simpleHelixFit > 0) 
-    Chi2 = chi2RPhi/_chi2WRPhiTriplet+chi2Z/_chi2WZTriplet;
+  float Chi2 = chi2_D;
+  int ndf = ndf_D;
+  if (_simpleHelixFit > 0) { 
+    Chi2 = chi2RPhi*_chi2WRPhiTriplet+chi2Z*_chi2WZTriplet;
+    ndf = 2*NPT-5;
+  }
  
   // Check if track satisfies all conditions
 
-  if ( Chi2 > _chi2FitCut || fabs(d0) > _cutOnD0 || fabs(z0) > _cutOnZ0 )
+  if ( Chi2/float(ndf) > _chi2FitCut || fabs(d0) > _cutOnD0 || fabs(z0) > _cutOnZ0 || fabs(omega)>_cutOnOmega)
     return trackAR;
 
   helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
@@ -1391,6 +1182,7 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   trackAR->setTanLambda(tanlambda);
   trackAR->setOmega(omega);
   trackAR->setChi2( Chi2 );
+  trackAR->setNDF( ndf );
   trackAR->setCovMatrix(epar);
   return trackAR;
 
@@ -1470,6 +1262,7 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
       float * z_reso = new float[nHits+1];
       int * ityp_h = new int[nHits+1];
       int * idet_h = new int[nHits+1];
+      int * lhits = new int[nHits+1];
       float par[5];
       float epar[15];
       for (int ih=0;ih<nHits;++ih) {
@@ -1512,15 +1305,16 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
       float chi2Z;
       float chi2_D;
       int ndf_D;
-      int ierr;
+      float refPoint[3];
       if (_simpleHelixFit > 0) {
 	tfithl_(NPT, xh, yh, rh, ph, wrh, zh,
 		wzh, IOPT, par, epar, chi2RPhi, chi2Z);
+	par[3] = par[3]*par[0]/fabs(par[0]);
       }
       else {
-	ierr = TrackFitting(NPT,_bField,idet_h,ityp_h,_chi2PrefitCut, 
+	_trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h,_chi2PrefitCut, 
 			    xh_fl,yh_fl,zh,rphi_reso,z_reso,
-			    par,epar,chi2_D,ndf_D,chi2RPhi,chi2Z);
+			    par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
       }
 
       delete[] xh;
@@ -1536,22 +1330,22 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
       delete[] z_reso;
       delete[] ityp_h;
       delete[] idet_h;
+      delete[] lhits;
 
       bool validCombination = 0;
-      float Chi2;
+      float Chi2 = chi2_D;
+      int ndf = ndf_D;
       if (_simpleHelixFit>0) {
 	if ((nHits+1) == 4) {
-	  Chi2 = chi2RPhi/_chi2WRPhiQuartet+chi2Z/_chi2WZQuartet;
+	  Chi2 = chi2RPhi*_chi2WRPhiQuartet+chi2Z*_chi2WZQuartet;
 	}	  
 	if ((nHits+1) >= 5) {
-	  Chi2 = chi2RPhi/_chi2WRPhiSeptet+chi2Z/_chi2WZSeptet;
+	  Chi2 = chi2RPhi*_chi2WRPhiSeptet+chi2Z*_chi2WZSeptet;
 	}
-      }
-      else {
-	Chi2 = chi2_D/float(ndf_D);
+	ndf = 2*NPT-5;
       }
 
-      validCombination = Chi2 < _chi2FitCut;
+      validCombination = Chi2/float(ndf) < _chi2FitCut;
 
       if ( validCombination ) {
 	trackAR->addTrackerHitExtended(assignedhit);
@@ -1569,6 +1363,7 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
 	trackAR->setOmega(omega);
 	trackAR->setChi2( Chi2 );
 	trackAR->setCovMatrix(epar);
+	trackAR->setNDF( ndf );
       }
      
     }
@@ -1582,6 +1377,9 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
 
 
 void SiliconTracking::Sorting(TrackExtendedVec & trackVec) {
+  /**
+     Sorting of Track Vector in ascending order of chi2
+   */
 
   int sizeOfVector = int(trackVec.size());
   TrackExtended *one,*two,*Temp;
@@ -1591,7 +1389,7 @@ void SiliconTracking::Sorting(TrackExtendedVec & trackVec) {
       {
 	one = trackVec[j];
 	two = trackVec[j+1];
-	if( one->getChi2() > two->getChi2() )
+	if( one->getChi2()/float(one->getNDF()) > two->getChi2()/float(two->getNDF()) )
 	  {
 	    Temp = trackVec[j];
 	    trackVec[j] = trackVec[j+1];
@@ -1611,8 +1409,8 @@ void SiliconTracking::Sorting(TrackExtendedVec & trackVec) {
 void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
 
   /**
-   Method which creates Track out of TrackExtended objects. Check for possible
-   track splitting (separate track segments in VXD and FTD) is done.
+   Method which creates Track out of TrackExtended objects. Checks for possible
+   track splitting (separate track segments in VXD and FTD).
    */
 
 
@@ -1642,8 +1440,6 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
     float angle = (cos(phiNew)*cos(phiOld)+sin(phiNew)*sin(phiOld))*sin(thetaNew)*sin(thetaOld)+cos(thetaNew)*cos(thetaOld);
     angle = acos(angle);
 
-    //    if ((fabs(trackAR->getTanLambda()-trackOld->getTanLambda())<_tanlambdaCutForMerging && 
-    //	fabs(trackAR->getPhi()-trackOld->getPhi())<_phiCutForMerging)) {
     if (angle < _angleCutForMerging) {
       int nHitsOld = int(hitVecOld.size());
       int nTotHits = nHits + nHitsOld;
@@ -1660,8 +1456,10 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
       float * z_reso = new float[nTotHits];
       int * idet_h = new int[nTotHits];
       int * ityp_h = new int[nTotHits];
+      int * lhits = new int[nTotHits];
       float par[5];
       float epar[15];
+      float refPoint[3] = {0.,0.,0.};
       for (int ih=0;ih<nHits;++ih) {
 	TrackerHit * trkHit = hitVec[ih]->getTrackerHit();
 	float rR = hitVec[ih]->getResolutionRPhi();
@@ -1706,34 +1504,43 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
       float chi2Z;
       float chi2_D;
       int ndf_D;
+      int ndf = 2*NPT - 5;
       if (_simpleHelixFit > 0) {
 	tfithl_(NPT, xh, yh, rh, ph, wrh, zh,
 		wzh, IOPT, par, epar, chi2RPhi, chi2Z);
+	par[3] = par[3]*par[0]/fabs(par[0]);
       }
       else {
-	int ierr = TrackFitting(NPT,_bField,idet_h,ityp_h,_chi2PrefitCut,
-				xh_fl,yh_fl,zh,rphi_reso,z_reso,
-				par,epar,chi2_D,ndf_D,chi2RPhi,chi2Z);
+	_trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h,_chi2PrefitCut,
+				       xh_fl,yh_fl,zh,rphi_reso,z_reso,
+				       par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
       }
-
 
       float omega = par[0];
       float tanlambda = par[1];
       float phi0 = par[2];
       float d0 = par[3];
       float z0 = par[4];
+
+      float eparmin[15];
+      for (int iparam=0;iparam<15;++iparam)
+	eparmin[iparam] = epar[iparam];      
      
+      float refPointMin[3];
+      for (int ipp=0;ipp<3;++ipp)
+	refPointMin[ipp] = refPoint[ipp];
+
       float chi2Min = chi2_D/float(ndf_D);
-      if (_simpleHelixFit>0)
-	  chi2Min = chi2RPhi/_chi2WRPhiSeptet+chi2Z/_chi2WZSeptet;
-      float chi2Full = chi2Min;
+      if (_simpleHelixFit>0) {
+	  chi2Min = chi2RPhi*_chi2WRPhiSeptet+chi2Z*_chi2WZSeptet;
+	  chi2Min = chi2Min/float(ndf);
+      }
       float chi2MinRPhi = chi2RPhi;
       float chi2MinZ = chi2Z;
       float chi2DMin = chi2_D;
-      int ndfDMin  = ndf_D;
-      
+	
       int iBad = -1;
-      if (chi2Full < _chi2FitCut) {
+      if (chi2Min < _chi2FitCut) {
 	found = 1;
       }
       else {
@@ -1765,26 +1572,32 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
 	  if (_simpleHelixFit>0){
 	    tfithl_(NPT, xh, yh, rh, ph, wrh, zh, 
 		    wzh, IOPT, par, epar, chi2RPhi, chi2Z);
+	    par[3] = par[3]*par[0]/fabs(par[0]);
 	  }
 	  else {
-	    TrackFitting(NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
-			 xh_fl,yh_fl,zh,rphi_reso,z_reso,
-			 par,epar,chi2_D,ndf_D,chi2RPhi,chi2Z);
+	    _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
+				xh_fl,yh_fl,zh,rphi_reso,z_reso,
+				par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
 	  }
 	  float chi2Cur = chi2_D/float(ndf_D);
-	  if (_simpleHelixFit>0)
-	    chi2Cur = chi2RPhi/_chi2WRPhiSeptet+chi2Z/_chi2WZSeptet;
+	  if (_simpleHelixFit>0) {
+	    chi2Cur = chi2RPhi*_chi2WRPhiSeptet+chi2Z*_chi2WZSeptet;
+	    chi2Cur = chi2Cur/float(ndf);
+	  }
 	  if (chi2Cur < chi2Min) {
 	    chi2Min = chi2Cur;
 	    chi2MinRPhi = chi2RPhi;
 	    chi2MinZ = chi2Z;
 	    chi2DMin = chi2_D;
-	    ndfDMin = ndf_D;
 	    omega = par[0];
 	    tanlambda = par[1];
 	    phi0 = par[2];
 	    d0 = par[3];
 	    z0 = par[4];
+	    for (int iparam=0;iparam<15;++iparam)
+	      eparmin[iparam] = epar[iparam];
+	    for (int ipp=0;ipp<3;++ipp)
+	      refPointMin[ipp] = refPoint[ipp];
 	    iBad = i;
 	  }
 	}
@@ -1828,7 +1641,13 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
 	trackOld->setPhi(phi0);
 	trackOld->setD0(d0);
 	trackOld->setZ0(z0);
-	trackOld->setChi2(chi2Min );	
+	//	std::cout << "Splitted track found " << d0 << " " << z0 << std::endl;
+	if (_simpleHelixFit == 0) 
+	  ndf = ndf_D;
+	trackOld->setChi2(chi2Min*float(ndf));	
+	trackOld->setNDF(ndf);
+	trackOld->setCovMatrix(eparmin);
+	//	trackOld->setReferencePoint(refPointMin);
       }
 
       delete[] xh;
@@ -1844,6 +1663,7 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
       delete[] ityp_h;
       delete[] rphi_reso;
       delete[] z_reso;
+      delete[] lhits;
 
     }
     if (found == 1)
@@ -1956,26 +1776,38 @@ void SiliconTracking::AttachRemainingVTXHitsFast() {
 	    int nTrk = int(trackVector[iCodeForTrack].size());
 	    for (int iTrk=0; iTrk<nTrk; ++iTrk) {	  
 	      TrackExtended * trackAR = trackVector[iCodeForTrack][iTrk];
-	      float phi0 = trackAR->getPhi();
-	      float d0 = trackAR->getD0();
-	      float z0 = trackAR->getZ0();
-	      float omega = trackAR->getOmega();
-	      float tanlambda = trackAR->getTanLambda();
-	      HelixClass helix;
-	      helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
-	      int layer = hit->getTrackerHit()->getType() - 1;
-	      if (layer > _minimalLayerToAttach) {
-		float pos[3];
-		for (int i=0; i<3; ++i) 
-		  pos[i] = hit->getTrackerHit()->getPosition()[i];      
-		float distance[3];
-		float time = helix.getDistanceToPoint(pos,distance);
-		if (time < 1.0e+10) {
-		  if (distance[2] < minDist) {
-		    minDist = distance[2];
-		    trackToAttach = trackAR;
-		  }		  	   
-		}    
+	      bool consider = true;
+	      TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	      int NHITS = int(hitVector.size());
+	      for (int IHIT=0;IHIT<NHITS;++IHIT) {
+		if (hit->getTrackerHit()->getType() == 
+		    hitVector[IHIT]->getTrackerHit()->getType()) {
+		  consider = false;
+		  break;
+		}
+	      }
+	      if (consider) {	
+		float phi0 = trackAR->getPhi();
+		float d0 = trackAR->getD0();
+		float z0 = trackAR->getZ0();
+		float omega = trackAR->getOmega();
+		float tanlambda = trackAR->getTanLambda();
+		HelixClass helix;
+		helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
+		int layer = hit->getTrackerHit()->getType() - 1;
+		if (layer > _minimalLayerToAttach) {
+		  float pos[3];
+		  for (int i=0; i<3; ++i) 
+		    pos[i] = hit->getTrackerHit()->getPosition()[i];      
+		  float distance[3];
+		  float time = helix.getDistanceToPoint(pos,distance);
+		  if (time < 1.0e+10) {
+		    if (distance[2] < minDist) {
+		      minDist = distance[2];
+		      trackToAttach = trackAR;
+		    }		  	   
+		  }    
+		}
 	      }
 	    }
 	  }
@@ -2022,19 +1854,31 @@ void SiliconTracking::AttachRemainingVTXHitsSlow() {
       TrackExtended * trackToAttach = NULL;
       for (int iTrk=0; iTrk<nTrk; ++iTrk) {
 	TrackExtended * trackAR = _trackImplVec[iTrk];
-	HelixClass helix;
-	float phi0 = trackAR->getPhi();
-	float d0 = trackAR->getD0();
-	float z0 = trackAR->getZ0();
-	float omega = trackAR->getOmega();
-	float tanlambda = trackAR->getTanLambda();
-	helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
-	float distance[3];
-	float time = helix.getDistanceToPoint(pos,distance);
-	if (time < 1.0e+10) {
-	  if (distance[2] < minDist) {
-	    minDist = distance[2];
-	    trackToAttach = trackAR;
+	bool consider = true;
+	TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	int NHITS = int(hitVector.size());
+	for (int IHIT=0;IHIT<NHITS;++IHIT) {
+	  if (hit->getTrackerHit()->getType() == 
+	      hitVector[IHIT]->getTrackerHit()->getType()) {
+	    consider = false;
+	    break;
+	  }
+	}
+	if (consider) {
+	  HelixClass helix;
+	  float phi0 = trackAR->getPhi();
+	  float d0 = trackAR->getD0();
+	  float z0 = trackAR->getZ0();
+	  float omega = trackAR->getOmega();
+	  float tanlambda = trackAR->getTanLambda();
+	  helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
+	  float distance[3];
+	  float time = helix.getDistanceToPoint(pos,distance);
+	  if (time < 1.0e+10) {
+	    if (distance[2] < minDist) {
+	      minDist = distance[2];
+	      trackToAttach = trackAR;
+	    }
 	  }
 	}
       }
@@ -2078,20 +1922,32 @@ void SiliconTracking::AttachRemainingFTDHitsSlow() {
     TrackExtended * trackToAttach = NULL;
     for (int iTrk=0; iTrk<nTrk; ++iTrk) {
       TrackExtended * trackAR = _trackImplVec[iTrk];
-      HelixClass helix;
-      float phi0 = trackAR->getPhi();
-      float d0 = trackAR->getD0();
-      float z0 = trackAR->getZ0();
-      float omega = trackAR->getOmega();
-      float tanlambda = trackAR->getTanLambda();
-      if (tanlambda*float(layer) > 0) {
-	helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
-	float distance[3];
-	float time = helix.getDistanceToPoint(pos,distance);
-	if (time < 1.0e+10) {
-	  if (distance[2] < minDist) {
-	    minDist = distance[2];
-	    trackToAttach = trackAR;
+      bool consider = true;
+      TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+      int NHITS = int(hitVector.size());
+      for (int IHIT=0;IHIT<NHITS;++IHIT) {
+	if (hit->getTrackerHit()->getType() == 
+	    hitVector[IHIT]->getTrackerHit()->getType()) {
+	  consider = false;
+	  break;
+	}
+      }
+      if (consider) {
+	HelixClass helix;
+	float phi0 = trackAR->getPhi();
+	float d0 = trackAR->getD0();
+	float z0 = trackAR->getZ0();
+	float omega = trackAR->getOmega();
+	float tanlambda = trackAR->getTanLambda();
+	if (tanlambda*float(layer) > 0) {
+	  helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
+	  float distance[3];
+	  float time = helix.getDistanceToPoint(pos,distance);
+	  if (time < 1.0e+10) {
+	    if (distance[2] < minDist) {
+	      minDist = distance[2];
+	      trackToAttach = trackAR;
+	    }
 	  }
 	}
       }
@@ -2144,16 +2000,28 @@ void SiliconTracking::AttachRemainingFTDHitsFast() {
 	int nHits = int(_sectorsFTD[iCode].size());
 	for (int iHit=0;iHit<nHits;++iHit) {
 	  TrackerHitExtended * hit = _sectorsFTD[iCode][iHit];
-	  float pos[3];
-	  for (int i=0;i<3;++i) {
-	    pos[i] = hit->getTrackerHit()->getPosition()[i];
+	  bool consider = true;
+	  TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	  int NHITS = int(hitVector.size());
+	  for (int IHIT=0;IHIT<NHITS;++IHIT) {
+	    if (hit->getTrackerHit()->getType() == 
+		hitVector[IHIT]->getTrackerHit()->getType()) {
+	      consider = false;
+	      break;
+	    }
 	  }
-	  float distance[3];
-	  float time = helix.getDistanceToPoint(pos,distance);
-	  if (time < 1.0e+10) {
-	    if (distance[2] < distMin) {
-	      distMin = distance[2];
-	      attachedHit = hit;
+	  if (consider) {
+	    float pos[3];
+	    for (int i=0;i<3;++i) {
+	      pos[i] = hit->getTrackerHit()->getPosition()[i];
+	    }
+	    float distance[3];
+	    float time = helix.getDistanceToPoint(pos,distance);
+	    if (time < 1.0e+10) {
+	      if (distance[2] < distMin) {
+		distMin = distance[2];
+		attachedHit = hit;
+	      }
 	    }
 	  }
 	}
@@ -2271,8 +2139,8 @@ int SiliconTracking::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
       if (iS == 0) 
 	ZL = - ZL;
       helix.getPointInZ(ZL,ref,point);
-      float Phi = atan2(point[1],point[0]);
-      int iPhi = int(Phi/_dPhiFTD);
+      //      float Phi = atan2(point[1],point[0]);
+      //      int iPhi = int(Phi/_dPhiFTD);
       float distMin = 1e+6;
       TrackerHitExtended * attachedHit = NULL;
       for (int ip=0;ip<=_nPhiFTD;++ip) {
@@ -2329,6 +2197,7 @@ int SiliconTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtende
   float * ph = new float[nHits+1];
   int * idet_h = new int[nHits+1];
   int * ityp_h = new int[nHits+1];
+  int * lhits = new int[nHits+1];
   float par[5];
   float epar[15];
   
@@ -2373,14 +2242,16 @@ int SiliconTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtende
   float chi2Z;
   float chi2_D;
   int ndf_D;
+  float refPoint[3] = {0.,0.,0.};
   if (_simpleHelixFit>0){
     tfithl_(NPT, xh, yh, rh, ph, wrh, zh,
 	    wzh, IOPT, par, epar, chi2RPhi, chi2Z);
+    par[3] = par[3]*par[0]/fabs(par[0]);
   }
   else {
-    TrackFitting(NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
-		 xh_fl,yh_fl,zh,rphi_reso,z_reso,
-		 par,epar,chi2_D,ndf_D,chi2RPhi,chi2Z);
+    _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
+			xh_fl,yh_fl,zh,rphi_reso,z_reso,
+			par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
   }
 
   
@@ -2389,34 +2260,33 @@ int SiliconTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtende
   float phi0 = par[2];
   float d0 = par[3];
   float z0 = par[4];
-  float chi2;
+  float chi2 = chi2_D;
+  int ndf = ndf_D;
 
   if (_simpleHelixFit>0) {
     if (NPT == 3) {
-      chi2 = chi2RPhi/_chi2WRPhiTriplet+chi2Z/_chi2WZTriplet;
+      chi2 = chi2RPhi*_chi2WRPhiTriplet+chi2Z*_chi2WZTriplet;
     }
     if (NPT == 4) {
-      chi2 = chi2RPhi/_chi2WRPhiQuartet+chi2Z/_chi2WZQuartet;
+      chi2 = chi2RPhi*_chi2WRPhiQuartet+chi2Z*_chi2WZQuartet;
     }
     if (NPT > 4) {
-      chi2 = chi2RPhi/_chi2WRPhiSeptet+chi2Z/_chi2WZSeptet;
+      chi2 = chi2RPhi*_chi2WRPhiSeptet+chi2Z*_chi2WZSeptet;
     }
+    ndf = 2*NPT-5;
   }
-  else 
-      chi2 = chi2_D/float(ndf_D);
   
-  if (chi2 < _chi2FitCut) {
+  if (chi2/float(ndf) < _chi2FitCut) {
     trackAR->addTrackerHitExtended(hit);
     hit->addTrackExtended( trackAR );
-    if (_simpleHelixFit>0)
-	trackAR->setChi2( chi2RPhi );
-    else 
-	trackAR->setChi2( chi2_D/float(ndf_D));
+    trackAR->setChi2( chi2 );
     trackAR->setOmega( omega );
     trackAR->setTanLambda( tanlambda );
     trackAR->setD0( d0 );
     trackAR->setZ0( z0 );
     trackAR->setPhi( phi0 );
+    trackAR->setNDF( ndf );
+    trackAR->setCovMatrix( epar );
     attached = 1;
   }	
   delete[] xh;
@@ -2432,7 +2302,7 @@ int SiliconTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtende
   delete[] z_reso;
   delete[] ityp_h;
   delete[] idet_h;
-  
+  delete[] lhits;
 
   return attached;
 
@@ -2460,49 +2330,124 @@ void SiliconTracking::FinalRefit() {
     float * ph = new float[nHits];
     int * idet_h = new int[nHits];
     int * ityp_h = new int[nHits];
+    int * lhits = new int[nHits];
     float par[5];
     float epar[15];
-  
-    for (int i=0; i<nHits; ++i) {
-      TrackerHit * trkHit = hitVec[i]->getTrackerHit();
-      xh[i] = double(trkHit->getPosition()[0]);
-      yh[i] = double(trkHit->getPosition()[1]);
-      xh_fl[i] = float(xh[i]);
-      yh_fl[i] = float(yh[i]);
-      zh[i] = float(trkHit->getPosition()[2]);
-      ph[i] = float(atan2(yh[i],xh[i]));
-      rh[i] = float(sqrt(xh[i]*xh[i]+yh[i]*yh[i]));
-      float rR = hitVec[i]->getResolutionRPhi();
-      float rZ = hitVec[i]->getResolutionZ();
-      wrh[i] = double(1.0/(rR*rR));
-      wzh[i] = 1.0/(rZ*rZ);
-      rphi_reso[i] = rR;
-      z_reso[i] = rZ;
-      ityp_h[i] = hitVec[i]->getType();
-      idet_h[i] = hitVec[i]->getDet();
+
+    
+    int * lh = new int[nHits];
+
+    float d0 = trackAR->getD0();
+    float z0 = trackAR->getZ0();
+    float omega = trackAR->getOmega();
+    float tanlambda = trackAR->getTanLambda();
+    float phi0 = trackAR->getPhi();
+
+    HelixClass * helix = new HelixClass();
+    helix->Initialize_Canonical(phi0, d0, z0, omega, 
+				tanlambda, _bField);
+
+
+    float Pos[3];
+    Pos[0] = -d0*sin(phi0);
+    Pos[1] = d0*cos(phi0);
+    Pos[2] = z0;
+
+    for (int ihit=0;ihit<nHits;++ihit) {
+      lh[ihit] = 1;
+      TrackerHit * trkHit = hitVec[ihit]->getTrackerHit();
+      int det = trkHit->getType()/100;
+      if (det <= 4) {
+	for (int lhit=0;lhit<ihit;++lhit) {
+	  TrackerHit * trkHitS = hitVec[lhit]->getTrackerHit();
+	  if ((trkHitS->getType() ==trkHit->getType()) && (lh[lhit] == 1)) {
+	    float xP[3];
+	    float xPS[3];
+	    for (int iC=0;iC<3;++iC) {
+	      xP[iC] = float(trkHit->getPosition()[iC]);
+	      xPS[iC] = float(trkHitS->getPosition()[iC]);
+	    }
+	    float Point[3];
+	    float PointS[3];
+	    if (det == 2) {
+	      float time = helix->getPointInZ(xP[2],Pos,Point);
+	      time = helix->getPointInZ(xPS[2],Pos,PointS);
+	    }
+	    else {
+	      float RAD = sqrt(xP[0]*xP[0]+xP[1]*xP[1]);
+	      float RADS = sqrt(xPS[0]*xPS[0]+xPS[1]*xPS[1]);
+	      float time = helix->getPointOnCircle(RAD,Pos,Point);
+	      time = helix->getPointOnCircle(RADS,Pos,PointS);
+	    }
+	    float DIST = 0;
+	    float DISTS = 0;
+	    for (int iC=0;iC<3;++iC) {
+	      DIST += (Point[iC]-xP[iC])*(Point[iC]-xP[iC]);
+	      DISTS += (PointS[iC]-xPS[iC])*(PointS[iC]-xPS[iC]);
+	    }
+	    if (DIST < DISTS) {
+	      lh[lhit] = 0;
+	    }
+	    else {
+	      lh[ihit] = 0;
+	    }
+	    break;
+	  }
+	}
+      }
     }
 
-    int NPT = nHits;
+    delete helix;
+
+    int nFit = 0;
+    for (int i=0; i<nHits; ++i) {
+      if (lh[i] == 1) {
+	TrackerHit * trkHit = hitVec[i]->getTrackerHit();
+	xh[nFit] = double(trkHit->getPosition()[0]);
+	yh[nFit] = double(trkHit->getPosition()[1]);
+	xh_fl[nFit] = float(xh[nFit]);
+	yh_fl[nFit] = float(yh[nFit]);
+	zh[nFit] = float(trkHit->getPosition()[2]);
+	ph[nFit] = float(atan2(yh[nFit],xh[nFit]));
+	rh[nFit] = float(sqrt(xh[nFit]*xh[nFit]+yh[nFit]*yh[nFit]));
+	float rR = hitVec[i]->getResolutionRPhi();
+	float rZ = hitVec[i]->getResolutionZ();
+	wrh[nFit] = double(1.0/(rR*rR));
+	wzh[nFit] = 1.0/(rZ*rZ);
+	rphi_reso[nFit] = rR;
+	z_reso[nFit] = rZ;
+	ityp_h[nFit] = hitVec[i]->getType();
+	idet_h[nFit] = hitVec[i]->getDet();
+	nFit++;
+      }
+      else {
+	hitVec[i]->setType(int(0));
+      }
+    }
+    int NPT = nFit;
     float chi2_D,chi2RPhi,chi2Z;
     int ndf_D;
+    float refPoint[3];
 
-    TrackFitting(NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
-		 xh_fl,yh_fl,zh,rphi_reso,z_reso,
-		 par,epar,chi2_D,ndf_D,chi2RPhi,chi2Z);
+    _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,idet_h,ityp_h, _chi2PrefitCut, 
+			xh_fl,yh_fl,zh,rphi_reso,z_reso,
+			par,epar,refPoint,chi2_D,ndf_D,chi2RPhi,chi2Z,lhits);
     
-    float omega = par[0];
-    float tanlambda = par[1];
-    float phi0 = par[2];
-    float d0 = par[3];
-    float z0 = par[4];
-    float chi2 = chi2_D/float(ndf_D);
+    omega = par[0];
+    tanlambda = par[1];
+    phi0 = par[2];
+    d0 = par[3];
+    z0 = par[4];
     trackAR->setOmega(omega);
     trackAR->setTanLambda(tanlambda);
     trackAR->setPhi(phi0);
     trackAR->setD0(d0);
     trackAR->setZ0(z0);
     trackAR->setCovMatrix(epar);
-    trackAR->setChi2(chi2);
+    trackAR->setChi2(chi2_D);
+    trackAR->setNDF(ndf_D);
+    trackAR->setCovMatrix( epar );
+    
 
     delete[] xh;
     delete[] yh;
@@ -2517,7 +2462,8 @@ void SiliconTracking::FinalRefit() {
     delete[] ph;
     delete[] idet_h;
     delete[] ityp_h;
-
+    delete[] lhits;
+    delete[] lh;
   }
 
 

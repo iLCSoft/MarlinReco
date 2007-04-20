@@ -1,7 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "VTXDigiProcessor.h"
 #include <iostream>
-#include <cmath>
 
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
@@ -50,7 +49,7 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
   registerProcessorParameter( "RemoveDrays" ,
                               "Remove D-rays ?",
                               _removeDRays,
-                              int(1));
+                              int(0));
 
   registerProcessorParameter( "MomentumCutForDRays" , 
                               "Momentum Cut For D Rays (MeV)",
@@ -63,7 +62,7 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               int(0)); 
  
   registerInputCollection( LCIO::SIMTRACKERHIT,
-                           "CollectionName" , 
+                           "VTXCollectionName" , 
                            "Name of the SimTrackerHit collection"  ,
                            _colNameVTX ,
                            std::string("vxd00_VXD") ) ;
@@ -131,8 +130,6 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       LCCollectionVec* trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
     
       int nSimHits = STHcol->getNumberOfElements()  ;
-
-
     
       for(int i=0; i< nSimHits; i++){
       
@@ -148,7 +145,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             accept = 0;
         }
         
-        if (accept) {
+        if (accept == 1) {
           
           const int celId = SimTHit->getCellID() ;
           
@@ -200,7 +197,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             trkHit->setType(100+celId ); 
           else
             trkHit->setType(400+celId);
-          float covMat[TRKHITNCOVMATRIX]={_pointResoRPhi,0.,0.,_pointResoRPhi,0.,_pointResoZ};
+          float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
           trkHit->setCovMatrix(covMat);      
           // 	  push back the SimTHit for this TrackerHit
           trkHit->rawHits().push_back( SimTHit ) ;

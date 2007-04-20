@@ -40,6 +40,11 @@ FTDDigiProcessor::FTDDigiProcessor() : Processor("FTDDigiProcessor") {
                               _momCut ,
                               float(10.0));
 
+  registerProcessorParameter( "RemoveDrays",
+                              "Remove D rays?",
+                              _removeDrays ,
+                              int(0));
+
   registerOutputCollection( LCIO::TRACKERHIT,
                             "OutputCollectionName" , 
                             "Name of the TrackerHit output collection"  ,
@@ -94,7 +99,11 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
 
           mom = sqrt(mom);
 
-          if (mom > _momCut) {
+          bool accept = true; 
+          if (_removeDrays==1 && mom < _momCut) 
+            accept = false;
+
+          if (accept) {
     
 //             const int celId = SimTHit->getCellID() ;
           
@@ -125,10 +134,8 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
             trkHit->setPosition(  newPos  ) ;
 
             trkHit->setdEdx( de_dx ) ;
-            trkHit->setType( SimTHit->getCellID());
-            // FIXME: SJA this needs to set to FTD code
-            // trkHit->setType( 100+celId ) ;
-            float covMat[TRKHITNCOVMATRIX]={_pointReso,0.,0.,_pointReso,0.,0.};
+            trkHit->setType( 200+abs(SimTHit->getCellID()));
+            float covMat[TRKHITNCOVMATRIX]={_pointReso*_pointReso,0.,_pointReso*_pointReso,0.,0.,0.};
             trkHit->setCovMatrix(covMat);      
             // push back the SimTHit for this TrackerHit
             trkHit->rawHits().push_back( SimTHit ) ;

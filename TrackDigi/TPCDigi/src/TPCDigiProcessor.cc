@@ -55,7 +55,7 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                            "CollectionName" , 
                            "Name of the SimTrackerHit collection"  ,
                            _colName ,
-                           std::string("tpc04_TPC") ) ;
+                           std::string("STpc01_TPC") ) ;
 
   registerOutputCollection( LCIO::TRACKERHIT,
                             "TPCTrackerHitsCol" , 
@@ -160,12 +160,23 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       //  SMEARING
 
-
-      double tpcRPhiResMax = gearTPC.getDoubleVal("tpcRPhiResMax");
-      double tpcRPhiRes = tpcRPhiResMax-fabs(pos[2])/gearTPC.getMaxDriftLength()*0.010;
+      double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+      double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+      double aReso = tpcRPhiResConst*tpcRPhiResConst;
+      double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
+      if (driftLenght <0) { 
+        std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 " << driftLenght << " --> Check out your GEAR file!!!!" << std::endl; 
+        std::cout << "Setting driftLenght to 0.1" << std::endl;
+        driftLenght = 0.10;
+      }
+      double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+      double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 
-      
+//       std::cout << "tpcRPhiResConst = " << tpcRPhiResConst << std::endl;
+//       std::cout << "tpcRPhiResDiff = " << tpcRPhiResDiff << std::endl;
+//       std::cout << "tpcRPhiRes = " << tpcRPhiRes << std::endl;
+//       std::cout << "tpcZRes = " << tpcZRes << std::endl;
 
       double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
       double randz =  gsl_ran_gaussian(_random,tpcZRes);
@@ -378,12 +389,25 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           trkHit->setPosition(pos);
           trkHit->setdEdx(row_hits[j]->getdEdx());
           trkHit->setType( 500 );
+          double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+          double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+          double aReso = tpcRPhiResConst*tpcRPhiResConst;
+          double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
+          if (driftLenght <0) { 
+            std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 "  
+                      << driftLenght << " --> Check out your GEAR file!!!!" << std::endl; 
+            std::cout << "Setting driftLenght to 0.1" << std::endl;
+            driftLenght = 0.10;
+          }
+          double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+          double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+          double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+          float covMat[TRKHITNCOVMATRIX]={0.,0.,float(tpcRPhiRes*tpcRPhiRes),0.,0.,float(tpcZRes*tpcZRes)};
+          trkHit->setCovMatrix(covMat);      
           
           if(pos[0]*pos[0]+pos[1]*pos[1]>0.0 * 0.0){
             // 	  push back the SimTHit for this TrackerHit
-            trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );
-            
-            
+            trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );                        
             trkhitVec->addElement( trkHit ); 
           }
 

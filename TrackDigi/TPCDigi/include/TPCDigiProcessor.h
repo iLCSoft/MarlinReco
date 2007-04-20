@@ -13,11 +13,26 @@ using namespace marlin ;
 
 
 
-/**  Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. 
+/** ====== TPCDigiProcessor ====== <br>
+ * Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in r-phi and z. 
  * Double hits are identified but are currently not added to the collection. This may be change 
  * at a later date when criteria for their seperation is defined. The resolutions are defined in 
- * the GEAR stearing file.  
- * @author S. Aplin, DESY
+ * the GEAR stearing file. Resolution in r-phi is calculated according to the formular <br>
+ * sigma(r-phi) = sqrt(const**2 + diffusion*z_drift) <br>
+ * where 'const' stands for the constant term and 'diffusion' stands for the diffusion term,
+ * 'z_drift' is the drift length <br>
+ * At the moment resolution in z assumed to be independent of drift length. <br>
+ * The type of TPC TrackerHit is set to 500 via method TrackerHitImpl::setType(int type) <br>
+ * <h4>Input collections and prerequisites</h4> 
+ * Processor requires collections of SimTrackerHits in TPC <br>
+ * <h4>Output</h4>
+ * Processor produces collection of digitized TrackerHits in TPC <br>
+ * @param CollectionName The name of input SimTrackerHit collection <br>
+ * (default name STpc01_TPC)
+ * @param TPCTrackerHitsCol The name of output collection of TrackerHits <br>
+ * (default name TPCTrackerHits) <br>
+ * <br>
+ * @authors S. Aplin, DESY and A.Raspereza, MPI
  */
 class TPCDigiProcessor : public Processor {
   

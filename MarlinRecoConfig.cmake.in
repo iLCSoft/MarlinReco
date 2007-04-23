@@ -1,0 +1,49 @@
+###############################################
+# cmake configuration file for @PROJECT_NAME@
+# @author Jan Engels, DESY
+###############################################
+
+# do not store find results in cache
+SET( G2C_LIB G2C_LIB-NOTFOUND )
+
+FIND_LIBRARY( G2C_LIB
+	NAMES g2c
+	PATHS /usr/lib/gcc-lib/i386-redhat-linux/3.2.3
+)
+IF( NOT G2C_LIB )
+    MESSAGE( STATUS "Check for @PROJECT_NAME@: failed to find g2c library!!" )
+ELSE( NOT G2C_LIB )
+    MARK_AS_ADVANCED( G2C_LIB )
+ENDIF( NOT G2C_LIB )
+
+
+# do not store find results in cache
+SET( @PROJECT_NAME@_LIB @PROJECT_NAME@_LIB-NOTFOUND )
+
+FIND_LIBRARY( @PROJECT_NAME@_LIB
+	NAMES @PROJECT_NAME@
+	PATHS @CMAKE_INSTALL_PREFIX@
+	PATH_SUFFIXES lib
+	NO_DEFAULT_PATH
+)
+IF( NOT @PROJECT_NAME@_LIB )
+    MESSAGE( STATUS "Check for @PROJECT_NAME@: ${@PROJECT_NAME@_HOME}"
+					" -- failed to find @PROJECT_NAME@ library!!" )
+ELSE( NOT @PROJECT_NAME@_LIB )
+    MARK_AS_ADVANCED( @PROJECT_NAME@_LIB )
+ENDIF( NOT @PROJECT_NAME@_LIB )
+
+
+# set variables and display results
+IF( @PROJECT_NAME@_LIB AND G2C_LIB )
+	SET( @PROJECT_NAME@_LIBRARIES ${G2C_LIB} ${@PROJECT_NAME@_LIB} )
+	MARK_AS_ADVANCED( @PROJECT_NAME@_LIBRARIES )
+	MESSAGE( STATUS "Check for @PROJECT_NAME@: ${@PROJECT_NAME@_HOME} -- works" )
+ELSE( @PROJECT_NAME@_LIB AND G2C_LIB )
+	IF( @PROJECT_NAME@_FIND_REQUIRED )
+		MESSAGE( FATAL_ERROR "Check for @PROJECT_NAME@: ${@PROJECT_NAME@_HOME} -- failed!!" )
+    ELSE( @PROJECT_NAME@_FIND_REQUIRED )
+        MESSAGE( STATUS "Check for @PROJECT_NAME@: ${@PROJECT_NAME@_HOME}"
+						" -- failed!! will skip this package..." )
+    ENDIF( @PROJECT_NAME@_FIND_REQUIRED )
+ENDIF( @PROJECT_NAME@_LIB AND G2C_LIB )

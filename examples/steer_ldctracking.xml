@@ -13,7 +13,7 @@
 <!--#     o FullLDCTracking                  #-->
 <!--#     o LCIOOutputProcessor              #-->
 <!--#                                        #-->
-<!--#     A.Raspereza , November 1 2006      #-->
+<!--#     A.Raspereza , April 23 2007        #-->
 <!--##########################################-->
 
 
@@ -31,7 +31,7 @@
 
  <global>
   <parameter name="LCIOInputFiles"> ZHllX_350.slcio </parameter>
-  <parameter name="GearXMLFile"> gear_ldc01.xml </parameter>
+  <parameter name="GearXMLFile"> gear_ldc01_tracking.xml </parameter>
   <parameter name="MaxRecordNumber" value="11" />  
   <parameter name="SupressCheck" value="false" />  
   <parameter name="BField"> 4.0 </parameter>
@@ -39,7 +39,18 @@
 
  <processor name="MyFullLDCTracking" type="FullLDCTracking">
  <!--Perform Full Tracking in LDC detector-->
-  
+  <parameter name="AngleCutForMerging" type="float"> 0.2 </parameter>
+  <parameter name="RefitTPCTracks" type="int"> 0 </parameter>
+  <parameter name="StoreRefittedTPCTracks" type="int"> 0 </parameter>
+  <parameter name="UseExtraPoint" type="int"> 0 </parameter>
+  <parameter name="OptFit" type="int"> 1 </parameter>
+  <parameter name="ResolutionRPhi_VTX" type="float"> 0.004 </parameter>
+  <parameter name="ResolutionZ_VTX" type="float"> 0.004 </parameter>
+  <parameter name="ResolutionRPhi_FTD" type="float"> 0.01 </parameter>
+  <parameter name="ResolutionZ_FTD" type="float"> 0.1 </parameter>
+  <parameter name="ResolutionRPhi_SIT" type="float"> 0.01 </parameter>
+  <parameter name="ResolutionZ_SIT" type="float"> 0.01 </parameter>
+  <parameter name="ForceMerging" type="int"> 1 </parameter>
  </processor>
 
  <processor name="MyLEPTrackingProcessor" type="LEPTrackingProcessor">

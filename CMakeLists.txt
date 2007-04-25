@@ -18,6 +18,9 @@ SET( CMAKE_Fortran_COMPILER_INIT g77 )
 # project name
 PROJECT( MarlinReco C CXX Fortran )
 
+# project dependencies
+SET( ${PROJECT_NAME}_DEPENDS "Marlin;MarlinUtil;GEAR;LCIO;CLHEP;GSL;CERNLIB" )
+
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 0 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 3 )
@@ -97,6 +100,8 @@ SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
 	"Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE )
 SET( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" CACHE PATH
 	"Path to custom CMake Modules" FORCE )
+SET( ${PROJECT_NAME}_DEPENDS "${${PROJECT_NAME}_DEPENDS}" CACHE STRING
+	"${PROJECT_NAME} dependencies" FORCE )
 
 # export library dependencies (keep this as the last line in the file)
 EXPORT_LIBRARY_DEPENDENCIES( "${PROJECT_NAME}LibDeps.cmake" )

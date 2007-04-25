@@ -307,6 +307,8 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
 	# create *nix style library versions + symbolic links
 	VERSION ${${PROJECT_NAME}_VERSION}
 	SOVERSION ${${PROJECT_NAME}_SOVERSION}
+	# allow creating static and shared libs without conflicts
+	CLEAN_DIRECT_OUTPUT 1
 	# linker must be explicitly set due to mixed sources
 	LINKER_LANGUAGE CXX
 	# avoid conflicts between library and binary target names

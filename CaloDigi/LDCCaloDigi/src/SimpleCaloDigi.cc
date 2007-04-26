@@ -5,25 +5,12 @@
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCFlagImpl.h>
 #include <IMPL/LCRelationImpl.h>
+#include <EVENT/LCParameters.h>
+#include <UTIL/CellIDDecoder.h>
 #include <iostream>
+#include <string>
 
-#define SHIFT_M 0
-#define SHIFT_S 3
-#define SHIFT_I 6
-#define SHIFT_J 15
-#define SHIFT_K 24
-#define SHIFT_2 30
-#define SHIFT_1 31
-
-#define MASK_M (unsigned int) 0x00000007
-#define MASK_S (unsigned int) 0x00000038
-#define MASK_I (unsigned int) 0x00007FC0
-#define MASK_J (unsigned int) 0x00FF8000
-#define MASK_K (unsigned int) 0x3F000000
-#define MASK_2 (unsigned int) 0x40000000
-#define MASK_1 (unsigned int) 0x80000000
-
-
+using namespace std;
 using namespace lcio ;
 using namespace marlin ;
 
@@ -40,11 +27,10 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   ecalCollections.push_back(std::string("ecal02_EcalBarrel"));
   ecalCollections.push_back(std::string("ecal02_EcalEndcap"));
 
-  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
-			    "ECALCollections" , 
-			    "ECAL Collection Names" ,
-			    _ecalCollections ,
-			    ecalCollections);
+  registerProcessorParameter( "ECALCollections" , 
+			      "ECAL Collection Names" ,
+			      _ecalCollections ,
+			       ecalCollections);
 
   std::vector<std::string> hcalCollections;
 
@@ -52,27 +38,23 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelReg"));
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalEndCaps"));
 
-  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
-			    "HCALCollections" , 
-			    "HCAL Collection Names" , 
-			    _hcalCollections , 
-			    hcalCollections);
-  
-  registerOutputCollection( LCIO::CALORIMETERHIT, 
-			     "ECALOutputCollection" , 
+  registerProcessorParameter("HCALCollections" , 
+			     "HCAL Collection Names" , 
+			     _hcalCollections , 
+			     hcalCollections);
+
+  registerProcessorParameter("ECALOutputCollection" , 
 			     "ECAL Collection of real Hits" , 
 			     _outputEcalCollection , 
 			     std::string("ECAL")) ; 
-  
-  registerOutputCollection( LCIO::CALORIMETERHIT, 
-			     "HCALOutputCollection" , 
+
+  registerProcessorParameter("HCALOutputCollection" , 
 			     "HCAL Collection of real Hits" , 
 			     _outputHcalCollection , 
 			     std::string("HCAL")) ; 
+
   
-  
-  registerOutputCollection( LCIO::LCRELATION, 
-			     "RelationOutputCollection" , 
+  registerProcessorParameter("RelationOutputCollection" , 
 			     "CaloHit Relation Collection" , 
 			     _outputRelCollection , 
 			     std::string("RelationCaloHit")) ; 
@@ -175,11 +157,13 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 // 
 // * Reading Collections of ECAL Simulated Hits * 
 // 
-
+  string initString;
   for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
       try{
 	  LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
+          initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
 	  int numElements = col->getNumberOfElements();
+	   CellIDDecoder<SimCalorimeterHit> idDecoder( col );
 	  for (int j(0); j < numElements; ++j) {
 	      SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	      float energy = hit->getEnergy();
@@ -187,8 +171,9 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 	      if (energy > _thresholdEcal) {
 		  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 		  int cellid = hit->getCellID0();
+		  int cellid1 = hit->getCellID1();
 		  float calibr_coeff(1.);
-		  int layer = cellid >> 24;
+		  int layer = idDecoder(hit)["K-1"];
 		  for (unsigned int k(0); k < _ecalLayers.size(); ++k) {
 		      int min,max;
 		      if (k == 0) 
@@ -202,6 +187,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 		      }
 		  } 
 		  calhit->setCellID0(cellid);
+		  calhit->setCellID1(cellid1);
 		  if (_digitalEcal) {
 		      calhit->setEnergy(calibr_coeff); 
 		  }
@@ -210,6 +196,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 		  }
 		  calhit->setPosition(hit->getPosition());
 		  calhit->setType((int)0);
+		  calhit->setRawHit(hit);
 		  ecalcol->addElement(calhit);
 		  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
 		  relcol->addElement( rel );
@@ -220,7 +207,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
       catch(DataNotAvailableException &e){ 
       }
   }
-
+  ecalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(ecalcol,_outputEcalCollection.c_str());
 
 
@@ -231,7 +218,9 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
       try{
 	  LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
+	  initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
 	  int numElements = col->getNumberOfElements();
+	  CellIDDecoder<SimCalorimeterHit> idDecoder(col);
 	  for (int j(0); j < numElements; ++j) {
 	      SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	      float energy = hit->getEnergy();
@@ -240,8 +229,9 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 	      if (energy > _thresholdHcal) {
 		  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 		  int cellid = hit->getCellID0();
+		  int cellid1 = hit->getCellID1();
 		  float calibr_coeff(1.);
-		  int layer = cellid >> 24 ;
+		  int layer =idDecoder(hit)["K-1"]; 
 		  for (unsigned int k(0); k < _hcalLayers.size(); ++k) {
 		      int min,max;
 		      if (k == 0) 
@@ -255,6 +245,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 		      }
 		  } 
 		  calhit->setCellID0(cellid);		  
+		  calhit->setCellID1(cellid1);
 		  if (_digitalHcal) {
 		      calhit->setEnergy(calibr_coeff); 
 		  }
@@ -263,6 +254,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 		  }
 		  calhit->setPosition(hit->getPosition());
 		  calhit->setType(int(1));
+		  calhit->setRawHit(hit);
 		  hcalcol->addElement(calhit);
 		  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
 		  relcol->addElement( rel );
@@ -273,7 +265,7 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
       catch(DataNotAvailableException &e){ 
       }
   }
-
+  hcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(hcalcol,_outputHcalCollection.c_str());
   evt->addCollection(relcol,_outputRelCollection.c_str());
 

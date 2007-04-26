@@ -123,7 +123,7 @@ void KIT::processEvent( LCEvent * evt ) {
 	  // finding cores.
 	  if( _ToClean=="YES" || _ToClean=="yes")
 	    {
-	      cout << " da koristim cat " << endl;
+	      // cout << " da koristim cat " << endl;
 	       FindCores2(&(calo[4]), bbb , &prs2,_N,_miipstep,Ccut);     
 	    }else{
 	       FindCores2(&(calo[0]), bbb , &prs2,_N,_miipstep,Ccut);   
@@ -131,12 +131,12 @@ void KIT::processEvent( LCEvent * evt ) {
 
 
 	  // writting out in LCIO
-	  int brojac=0;
+	 
 	  for(unsigned int i=0;i<prs2.size();i++)
 	    {
 	      if(prs2[i].active==true)
 		{
-		  brojac++;
+		
 		  ClusterImpl * cluster = new ClusterImpl();
 		  
 		  for(unsigned int j=0;j<prs2[i].cl->hits.size();j++)
@@ -158,7 +158,7 @@ void KIT::processEvent( LCEvent * evt ) {
 		  clscol->addElement(cluster);
 	        }
 	    }
-	  cout << " NC " << brojac << endl;
+	
 
 	  // for strong memory and nice dreams ..
 	  for(unsigned int i=0;i<N;i++)

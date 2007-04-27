@@ -12,14 +12,28 @@ CheckPlots aCheckPlots ;
 
 
 CheckPlots::CheckPlots() : Processor("CheckPlots") {
+
+  _nMC = 0;
+  _nMCCh = 0;
+  _nMCN = 0;
+  _nReco = 0;
+  _nRecoCh = 0;
+  _nRecoN = 0;
   
+  _energyMC = 0.0;
+  _energyMCCh = 0.0;
+  _energyMCN = 0.0;
+  _energyReco = 0.0;
+  _energyRecoCh = 0.0;
+  _energyRecoN = 0.0;
+  
+
   _description = "produces Check Plots" ;
 
 
-
     
-  registerProcessorParameter("FillMC","fill clouds for MC particles",
-			     _fillMC,
+  registerProcessorParameter("FillMCGen","fill clouds for MC particles generated at IP",
+			     _fillMCGen,
 			     (int)1);
   
   registerProcessorParameter("FillMCSim","fill clouds for MC particles created during simulation",
@@ -27,23 +41,56 @@ CheckPlots::CheckPlots() : Processor("CheckPlots") {
 			     (int)0);
 
   
-  registerProcessorParameter("FillSimCalo","fill clouds for SimCalorimeter hits",
-			     _fillSimCalo,
+  registerProcessorParameter("FillSimCaloHit","fill clouds for SimCalorimeter hits",
+			     _fillSimCaloHit,
 			     (int)1);
   registerProcessorParameter("SimECut","energy cut for filling clouds for SimCalorimeter hits",
 			     _simECut,
 			     (float)0.0001);
   
   
-  registerProcessorParameter("FillCalo","fill clouds for Calorimeter hits",
-			     _fillCalo,
+  registerProcessorParameter("FillCaloHit","fill clouds for Calorimeter hits",
+			     _fillCaloHit,
 			     (int)1);
   
   registerProcessorParameter("ECut","energy cut for filling clouds for Calorimeter hits",
 			     _ECut,
 			     (float)0.0001);
 
+  registerProcessorParameter("ThetaCut","Polar angle cut, given in rad. Particles with a smaller polar angle will be treated as 'lost in the beam pipe'",
+			     _thetaCut,
+			     (float)0.1);
+
+    
+  registerProcessorParameter("FillTracks","fill clouds for tracks",
+			     _fillTracks,
+			     (int)1);
+
+  registerProcessorParameter("ColNameTracks" ,
+			     "name of the Track collection" ,
+			     _colNameTracks ,
+			     std::string("Tracks") ); 
+
+  registerProcessorParameter( "ColNameRelationTrackToMCP" , 
+			      "name of the LC Relation collection between Tracks and MC particles"  ,
+			      _colNameRelationTrackToMCP,
+			      std::string("TrueTrackToMCP") );
   
+
+  registerProcessorParameter("FillReconstructedParticles","fill clouds for ReconstructedParticles",
+			     _fillReconstructedParticles,
+			     (int)1);
+
+  registerProcessorParameter("ColNameReconstructedParticles" ,
+			     "name of the ReconstructedParticles collection" ,
+			     _colNameReconstructedParticles ,
+			     std::string("ReconstructedParticles") ); 
+
+
+  registerProcessorParameter("Fill","fill clouds for comparison of MC tree and reconstructed particles",
+			     _fillComparisonMCReco,
+			     (int)1);
+
 }
 
 
@@ -52,6 +99,12 @@ CheckPlots::CheckPlots() : Processor("CheckPlots") {
 void CheckPlots::init() { 
 
   // printParameters();
+ 
+  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  
+  _bField = gearTPC.getDoubleVal("BField");
+
+  createClouds();
 
   _nRun = -1;
   _nEvt = 0;
@@ -79,13 +132,20 @@ void CheckPlots::processEvent( LCEvent * evt ) {
   if(firstEvent) std::cout << "Check Plot processor called for first event" << std::endl;
 
 
-  if (_fillMC) fillMCCheckPlots(evt);
+  if (_fillMCGen) fillMCGenCheckPlots(evt);
+  if (_fillMCSim) fillMCSimCheckPlots(evt);
 
-  //  fillSimTrackerCheckPlots(evt);
-  if (_fillSimCalo) fillSimCaloCheckPlots(evt);
+  //  fillSimTrackerHitCheckPlots(evt);
+  if (_fillSimCaloHit) fillSimCaloHitCheckPlots(evt);
   
-  //  fillTrackerCheckPlots(evt);
-  if (_fillCalo) fillCaloCheckPlots(evt);
+  //  fillTrackerHitCheckPlots(evt);
+  if (_fillCaloHit) fillCaloHitCheckPlots(evt);
+  
+  if (_fillTracks) fillTrackCheckPlots(evt);
+
+  if (_fillReconstructedParticles) fillReconstructedParticlesCheckPlots(evt);
+
+  if (_fillComparisonMCReco) fillComparisonMCRecoPlots();
   
 
   _nEvt ++;
@@ -111,347 +171,597 @@ void CheckPlots::end(){
 
 
 
+void CheckPlots::createClouds() {
 
+  if (_fillMCSim) {
 
-
-
-
-
-void CheckPlots::fillMCCheckPlots(LCEvent * evt){
-
-  
-  #ifdef MARLIN_USE_AIDA
-  
-  
-  try {
-
-    // MCPs with generator status != 1
-    // accumulated numbers
-    //  static AIDA::ICloud1D* cMCPIDAccSim;
-    
-    // MCPs with generator status == 1
-    // accumulated numbers
-    //  static AIDA::ICloud1D* cMCPIDAccGen;
-    
-    
-	
-    // MCPs with generator status != 1
     // numbers per event
-    static AIDA::ICloud1D* cMCNumberSim;
-    static AIDA::ICloud1D* cMCEnergySumSim;
+    _cMCNumberSim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSim", "number of all MC particles per event (generator status != 1)", -1 );
+    _cMCEnergySumSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumSim", "MC particle energy sum per event (generator status != 1)", -1 );
     
-    static AIDA::ICloud1D* cMCNumberElectronsSim;
-    static AIDA::ICloud1D* cMCNumberPositronsSim;
-    static AIDA::ICloud1D* cMCNumberMuonsSim;
-    static AIDA::ICloud1D* cMCNumberMuonBarsSim;
-    static AIDA::ICloud1D* cMCNumberTausSim;
-    static AIDA::ICloud1D* cMCNumberTauBarsSim;
-    static AIDA::ICloud1D* cMCNumberNusSim;
+    _cMCNumberElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsSim", "number of the e+/- per event (generator status != 1)", -1 );
+    _cMCNumberMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsSim", "number of the mu+/- per event (generator status != 1)", -1 );
+    _cMCNumberTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausSim", "number of the tau+/- per event (generator status != 1)", -1 );
+    _cMCNumberNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusSim", "number of neutrinos per event (generator status != 1)", -1 );
     
-    static AIDA::ICloud1D* cMCNumberPiPlusSim;
-    static AIDA::ICloud1D* cMCNumberPiMinusSim;
-    static AIDA::ICloud1D* cMCNumberKPlusSim;
-    static AIDA::ICloud1D* cMCNumberKMinusSim;
-    static AIDA::ICloud1D* cMCNumberProtonsSim;
-    static AIDA::ICloud1D* cMCNumberProtonBarsSim;
-    static AIDA::ICloud1D* cMCNumberPi0Sim;
-    static AIDA::ICloud1D* cMCNumberK0lSim;
-    static AIDA::ICloud1D* cMCNumberK0sSim;
-    static AIDA::ICloud1D* cMCNumberNeutronsSim;
-    static AIDA::ICloud1D* cMCNumberGammasSim;
-    static AIDA::ICloud1D* cMCNumberLambdasSim;
+    _cMCNumberPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChSim", "number of Pi+/- per event (generator status != 1)", -1 );
+    _cMCNumberKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChSim", "number of K+/- per event (generator status != 1)", -1 );
+    _cMCNumberProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsSim", "number of protons per event (generator status != 1)", -1 );
+    _cMCNumberPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Sim", "number of Pi0 per event (generator status != 1)", -1 );
+    _cMCNumberK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lSim", "number of K0l per event (generator status != 1)", -1 );
+    _cMCNumberK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sSim", "number of K0s per event (generator status != 1)", -1 );
+    _cMCNumberNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsSim", "number of neutrons per event (generator status != 1)", -1 );
+    _cMCNumberGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasSim", "number of gammas per event (generator status != 1)", -1 );
+    _cMCNumberLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sSim", "number of Lambda0s per event (generator status != 1)", -1 );
+    _cMCNumberSigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status != 1)", -1 );
+    _cMCNumberXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status != 1)", -1 );
     
-    static AIDA::ICloud1D* cMCNumberRemainingSim;
+    _cMCNumberRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingSim", "number of the remaining particles per event (generator status != 1)", -1 );
     
+  }
+  
+
+  if (_fillMCGen) {
+
+    _cMCNumberGen             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGen", "number of all MC particles per event (generator status == 1)", -1 );
+    _cMCEnergySumGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumGen", "MC particle energy sum per event (generator status == 1)", -1 );
+
+    _cMCNumberHChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberHChGen", "number of charged particles/hadrons (generator status == 1)", -1 );
+    _cMCNumberH0Gen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberH0Gen", "number of neutral particles/hadrons (generator status == 1)", -1 );
+    _cMCNumberGGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGGen", "number of gammas and pi0s (generator status == 1)", -1 );
+    _cMCFractionHChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionHChGen", "fraction of charged particles/hadrons (generator status == 1)", -1 );
+    _cMCFractionH0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionH0Gen", "fraction of neutral particles/hadrons (generator status == 1)", -1 );
+    _cMCFractionGGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionGGen", "fraction of gammas and pi0s (generator status == 1)", -1 );
+
+    _cMCNumberElectronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsGen", "number of the e+/- per event (generator status == 1)", -1 );
+    _cMCNumberMuonsGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsGen", "number of the mu+/- per event (generator status == 1)", -1 );
+    _cMCNumberTausGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausGen", "number of the tau+/- per event (generator status == 1)", -1 );
+    _cMCNumberNusGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusGen", "number of neutrinos per event (generator status == 1)", -1 );
     
-    
-    // MCPs with generator status == 1
-    // numbers per event
-    static AIDA::ICloud1D* cMCNumberGen;
-    static AIDA::ICloud1D* cMCEnergySumGen;
-    
-    static AIDA::ICloud1D* cMCNumberElectronsGen;
-    static AIDA::ICloud1D* cMCNumberPositronsGen;
-    static AIDA::ICloud1D* cMCNumberMuonsGen;
-    static AIDA::ICloud1D* cMCNumberMuonBarsGen;
-    static AIDA::ICloud1D* cMCNumberTausGen;
-    static AIDA::ICloud1D* cMCNumberTauBarsGen;
-    static AIDA::ICloud1D* cMCNumberNusGen;
-    
-    static AIDA::ICloud1D* cMCNumberPiPlusGen;
-    static AIDA::ICloud1D* cMCNumberPiMinusGen;
-    static AIDA::ICloud1D* cMCNumberKPlusGen;
-    static AIDA::ICloud1D* cMCNumberKMinusGen;
-    static AIDA::ICloud1D* cMCNumberProtonsGen;
-    static AIDA::ICloud1D* cMCNumberProtonBarsGen;
-    static AIDA::ICloud1D* cMCNumberPi0Gen;
-    static AIDA::ICloud1D* cMCNumberK0lGen;
-    static AIDA::ICloud1D* cMCNumberK0sGen;
-    static AIDA::ICloud1D* cMCNumberNeutronsGen;
-    static AIDA::ICloud1D* cMCNumberGammasGen;
-    static AIDA::ICloud1D* cMCNumberLambdasGen;
-    
-    static AIDA::ICloud1D* cMCNumberRemainingGen;
-    
-    
-    
-    // MCPs with generator status != 1
-    // numbers per single particle
-    static AIDA::ICloud1D* cMCEnergySim;
-    static AIDA::ICloud1D* cMCEnergyElectronsSim;
-    static AIDA::ICloud1D* cMCEnergyPositronsSim;
-    static AIDA::ICloud1D* cMCEnergyMuonsSim;
-    static AIDA::ICloud1D* cMCEnergyMuonBarsSim;
-    static AIDA::ICloud1D* cMCEnergyTausSim;
-    static AIDA::ICloud1D* cMCEnergyTauBarsSim;
-    static AIDA::ICloud1D* cMCEnergyNusSim;
-    
-    static AIDA::ICloud1D* cMCEnergyPiPlusSim;
-    static AIDA::ICloud1D* cMCEnergyPiMinusSim;
-    static AIDA::ICloud1D* cMCEnergyKPlusSim;
-    static AIDA::ICloud1D* cMCEnergyKMinusSim;
-    static AIDA::ICloud1D* cMCEnergyProtonsSim;
-    static AIDA::ICloud1D* cMCEnergyProtonBarsSim;
-    static AIDA::ICloud1D* cMCEnergyPi0Sim;
-    static AIDA::ICloud1D* cMCEnergyK0lSim;
-    static AIDA::ICloud1D* cMCEnergyK0sSim;
-    static AIDA::ICloud1D* cMCEnergyNeutronsSim;
-    static AIDA::ICloud1D* cMCEnergyGammasSim;
-    static AIDA::ICloud1D* cMCEnergyLambdasSim;
-    
-    static AIDA::ICloud1D* cMCEnergyRemainingSim;
+    _cMCNumberPiChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChGen", "number of Pi+/- per event (generator status == 1)", -1 );
+    _cMCNumberKChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChGen", "number of K+/- per event (generator status == 1)", -1 );
+    _cMCNumberProtonsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsGen", "number of protons per event (generator status == 1)", -1 );
+    _cMCNumberPi0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Gen", "number of Pi0 per event (generator status == 1)", -1 );
+    _cMCNumberK0lGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lGen", "number of K0l per event (generator status == 1)", -1 );
+    _cMCNumberK0sGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sGen", "number of K0s per event (generator status == 1)", -1 );
+    _cMCNumberNeutronsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsGen", "number of neutrons per event (generator status == 1)", -1 );
+    _cMCNumberGammasGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasGen", "number of gammas per event (generator status == 1)", -1 );
+    _cMCNumberLambda0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sGen", "number of Lambda0s per event (generator status == 1)", -1 );
+    _cMCNumberSigma0sGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status == 1)", -1 );
+    _cMCNumberXi0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status == 1)", -1 );
 
 
-
-    // MCPs with generator status == 1
-    // numbers per single particle
-    static AIDA::ICloud1D* cMCEnergyGen;
-    static AIDA::ICloud1D* cMCEnergyElectronsGen;
-    static AIDA::ICloud1D* cMCEnergyPositronsGen;
-    static AIDA::ICloud1D* cMCEnergyMuonsGen;
-    static AIDA::ICloud1D* cMCEnergyMuonBarsGen;
-    static AIDA::ICloud1D* cMCEnergyTausGen;
-    static AIDA::ICloud1D* cMCEnergyTauBarsGen;
-    static AIDA::ICloud1D* cMCEnergyNusGen;
-    
-    static AIDA::ICloud1D* cMCEnergyPiPlusGen;
-    static AIDA::ICloud1D* cMCEnergyPiMinusGen;
-    static AIDA::ICloud1D* cMCEnergyKPlusGen;
-    static AIDA::ICloud1D* cMCEnergyKMinusGen;
-    static AIDA::ICloud1D* cMCEnergyProtonsGen;
-    static AIDA::ICloud1D* cMCEnergyProtonBarsGen;
-    static AIDA::ICloud1D* cMCEnergyPi0Gen;
-    static AIDA::ICloud1D* cMCEnergyK0lGen;
-    static AIDA::ICloud1D* cMCEnergyK0sGen;
-    static AIDA::ICloud1D* cMCEnergyNeutronsGen;
-    static AIDA::ICloud1D* cMCEnergyGammasGen;
-    static AIDA::ICloud1D* cMCEnergyLambdasGen;
-    
-    static AIDA::ICloud1D* cMCEnergyRemainingGen;
-
-
-
-
-	
-    if( isFirstEvent() ) {
+    _cMCNumberLostInBeamPipe  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLostInBeamPipe", "number of particles lost in beam pipe (generator status == 1)", -1 );
+    _cMCNumberRemainingGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingGen", "number of the remaining particles per event (generator status == 1)", -1 );
       
-      if (_fillMCSim) {
-	    
-	// accumulated numbers
-	// cMCPIDAccSim             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCPIDAccSim", "MC particle IDs accumulated over all events (generator status != 1)", -1 );
+  }  
+    
+      
+  if (_fillMCSim) {
 	
-      }
+    // numbers per single particle
+    _cMCEnergySim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySim", "energy spectrum of all MC particles in one event (generator status != 1)", -1 );
+    _cMCEnergyElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsSim", "energy spectrum of the e+/- in one event (generator status != 1)", -1 );
+    _cMCEnergyMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsSim", "energy spectrum of the mu+/- in one event (generator status != 1)", -1 );
+    _cMCEnergyTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausSim", "energy spectrum of the tau+/- in one event (generator status != 1)", -1 );
+    _cMCEnergyNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusSim", "energy spectrum of the neutrinos in one event (generator status != 1)", -1 );
+    
+    _cMCEnergyPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChSim", "energy spectrum of Pi+/- in one event (generator status != 1)", -1 );
+    _cMCEnergyKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChSim", "energy spectrum of K+/- in one event (generator status != 1)", -1 );
+    _cMCEnergyProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsSim", "energy spectrum of protons in one event (generator status != 1)", -1 );
+    _cMCEnergyPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Sim", "energy spectrum of Pi0 in one event (generator status != 1)", -1 );
+    _cMCEnergyK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lSim", "energy spectrum of K0l in one event (generator status != 1)", -1 );
+    _cMCEnergyK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sSim", "energy spectrum of K0s in one event (generator status != 1)", -1 );
+    _cMCEnergyNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsSim", "energy spectrum of neutrons in one event (generator status != 1)", -1 );
+    _cMCEnergyGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasSim", "energy spectrum of gammas in one event (generator status != 1)", -1 );
+    _cMCEnergyLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sSim", "energy spectrum of Lambda0s in one event (generator status != 1)", -1 );
+    _cMCEnergySigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sSim", "energy spectrum of Sigma0s in one event (generator status != 1)", -1 );
+    _cMCEnergyXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyXi0sSim", "energy spectrum of Xi0s in one event (generator status != 1)", -1 );
+  
+    _cMCEnergyRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingSim", "energy spectrum of the remaining particles in one event (generator status != 1)", -1 );
+    
+  }
+
+  
+
+  if (_fillMCGen) {    
+   
+    _cMCEnergyGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGen", "energy spectrum of all MC particles in one event (generator status == 1)", -1 );
+
+    _cMCEnergyHChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyHChGen", "energy of charged particles/hadrons (generator status == 1)", -1 );
+    _cMCEnergyH0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyH0Gen", "energy of neutral particles/hadrons (generator status == 1)", -1 );  
+    _cMCEnergyGGen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGGen", "energy of gammas and pi0s (generator status == 1)", -1 );  
+    _cMCEnergyFractionHChGen = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionHChGen", "energy fraction of charged particles/hadrons (generator status == 1)", -1 );
+    _cMCEnergyFractionH0Gen  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionH0Gen", "energy fraction of neutral particles/hadrons (generator status == 1)", -1 );
+    _cMCEnergyFractionGGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionGGen", "energy fraction of gammas and pi0s (generator status == 1)", -1 );  
+
+
+
+    _cMCEnergyElectronsGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsGen", "energy spectrum of the e+/- in one event (generator status == 1)", -1 );
+    _cMCEnergyMuonsGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsGen", "energy spectrum of the mu+/- in one event (generator status == 1)", -1 );
+    _cMCEnergyTausGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausGen", "energy spectrum of the tau+/- in one event (generator status == 1)", -1 );
+    _cMCEnergyNusGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusGen", "energy spectrum of the neutrinos in one event (generator status == 1)", -1 );
+       
+    _cMCEnergyPiChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChGen", "energy spectrum of Pi+/- in one event (generator status == 1)", -1 );
+    _cMCEnergyKChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChGen", "energy spectrum of K+/- in one event (generator status == 1)", -1 );
+    _cMCEnergyProtonsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsGen", "energy spectrum of protons in one event (generator status == 1)", -1 );
+    _cMCEnergyPi0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Gen", "energy spectrum of Pi0 in one event (generator status == 1)", -1 );
+    _cMCEnergyK0lGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lGen", "energy spectrum of K0l in one event (generator status == 1)", -1 );
+    _cMCEnergyK0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sGen", "energy spectrum of K0s in one event (generator status == 1)", -1 );
+    _cMCEnergyNeutronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsGen", "energy spectrum of neutrons in one event (generator status == 1)", -1 );
+    _cMCEnergyGammasGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasGen", "energy spectrum of gammas in one event (generator status == 1)", -1 );
+    _cMCEnergyLambda0sGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Lambda0s in one event (generator status == 1)", -1 );
+    _cMCEnergySigma0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sGen", "energy spectrum of Sigma0s in one event (generator status == 1)", -1 );
+    _cMCEnergyXi0sGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Xi0s in one event (generator status == 1)", -1 );
+
+    
+    _cMCEnergyLostInBeamPipe = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLostInBeamPipe", "energy of particles lost in beam pipe (generator status == 1)", -1 ); 
+    _cMCEnergyRemainingGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingGen", "energy spectrum of the remaining particles in one event (generator status == 1)", -1 );
+        
+  }
+   
+
+
+
+
+  if (_fillSimCaloHit) {  
+    
+    _cNumberSimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberSimCaloHits", "number of SimCaloHits per event", -1 );
+    _cEnergySimCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHitsSum", "energy sum of the SimCaloHits per event", -1 );    
+    _cEnergySimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHits", "energy spectrum of the SimCaloHits per event", -1 );
+      
+  }
+
+
+
+
+  if (_fillCaloHit) {  
+    
+    _cNumberCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberCaloHits", "number of CaloHits per event", -1 );
+    _cEnergyCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHitsSum", "energy sum of the CaloHits per event", -1 );    
+    _cEnergyCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHits", "energy spectrum of the CaloHits per event", -1 );
+      
+  }
+
+
+
+
+  if (_fillTracks) {  
+
+    _cNumberTracks              = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTracks", "number of tracks per event", -1 );
+    _cNumberTrackerHitsPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTrackerHitsPerTrack", "number of tracker hits per track", -1 );
+    _cMomentumTracks            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MomentumTracks", "|p| of tracks", -1 );
+    _cNumberMCParticlesPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberMCParticlesPerTrack", "number of MC particles per track", -1 );
+
+  }
+
+
+
+ if (_fillReconstructedParticles) {  
+
+   _cNumberReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberReconstructedParticles", "number of reconstructed particles per event", -1 );
+   _cEnergyReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyReconstructedParticles", "energy spectrum of reconstructed particles", -1 );
+   _cEnergySumReconstructedParticles  = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySumReconstructedParticles", "energy sum of all reconstructed particles in an event", -1 );
+   
+ }
+
+
+
+ if (_fillComparisonMCReco) {  
+
+   _cNumberMCvsNumberReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCvsNumberReco", "number of MC particles vs. number of reconstructed particles" , -1);
+   _cNumberMCChvsNumberRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCChvsNumberRecoCh", "number of charged MCparticles vs. number of charged reconstructed particles" , -1);
+   _cNumberMCNvsNumberRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCNvsNumberRecoN", "number of neutral MCparticles vs. number of neutral reconstructed particles" , -1);
+   
+   _cEnergyMCvsEnergyReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCvsEnergyReco", "energy of MC particles vs. energy of reconstructed particles" , -1);
+   _cEnergyMCChvsEnergyRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCChvsEnergyRecoCh", "energy of charged MC particles vs. energy of charged reconstructed particles" , -1);
+   _cEnergyMCNvsEnergyRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCNvsEnergyRecoN", "energy of neutral MC particles vs. energy of neutral reconstructed particles" , -1);
+
+
+ }
+
+
+}
+
+
+
+
+void CheckPlots::fillMCGenCheckPlots(LCEvent * evt){
+
+
+  if (_fillMCGen) {
+    
+    unsigned int NMCGen             = 0;
 	  
-      
-      // cMCPIDAccGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCPIDAccGen", "MC particle IDs accumulated over all events (generator status == 1)", -1 );
-      
-      
-      
-      if (_fillMCSim) {
+    unsigned int NMCHChGen          = 0;
+    unsigned int NMCH0Gen           = 0;
+    unsigned int NMCGGen            = 0;
+	  
+    unsigned int NMCElectronsGen    = 0;
+    unsigned int NMCMuonsGen        = 0;
+    unsigned int NMCTausGen         = 0;
+    unsigned int NMCNusGen          = 0;
+    
+    unsigned int NMCPiChGen         = 0;
+    unsigned int NMCKChGen          = 0;
+    unsigned int NMCProtonsGen      = 0;
+    unsigned int NMCPi0Gen          = 0;
+    unsigned int NMCK0lGen          = 0;
+    unsigned int NMCK0sGen          = 0;
+    unsigned int NMCNeutronsGen     = 0;
+    unsigned int NMCGammasGen       = 0;
+    unsigned int NMCLambda0sGen     = 0;
+    unsigned int NMCSigma0sGen      = 0;
+    unsigned int NMCXi0sGen         = 0;
 
-	// numbers per event
-	cMCNumberSim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSim", "number of all MC particles per event (generator status != 1)", -1 );
-	cMCEnergySumSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumSim", "MC particle energy sum per event (generator status != 1)", -1 );
-	
-	cMCNumberElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsSim", "number of the electrons per event (generator status != 1)", -1 );
-	cMCNumberPositronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPositronsSim", "number of the positrons per event (generator status != 1)", -1 );
-	cMCNumberMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsSim", "number of the muons per event (generator status != 1)", -1 );
-	cMCNumberMuonBarsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonBarsSim", "number of the anti-muons per event (generator status != 1)", -1 );
-	cMCNumberTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausSim", "number of the taus per event (generator status != 1)", -1 );
-	cMCNumberTauBarsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTauBarsSim", "number of the anti-taus per event (generator status != 1)", -1 );
-	cMCNumberNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusSim", "number of neutrinos per event (generator status != 1)", -1 );
-	
-	cMCNumberPiPlusSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiPlusSim", "number of Pi+ per event (generator status != 1)", -1 );
-	cMCNumberPiMinusSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiMinusSim", "number of Pi- per event (generator status != 1)", -1 );
-	cMCNumberKPlusSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKPlusSim", "number of K+ per event (generator status != 1)", -1 );
-	cMCNumberKMinusSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKMinusSim", "number of K- per event (generator status != 1)", -1 );
-	cMCNumberProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsSim", "number of protons per event (generator status != 1)", -1 );
-	cMCNumberProtonBarsSim = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonBarsSim", "number of anti-protons per event (generator status != 1)", -1 );
-	cMCNumberPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Sim", "number of Pi0 per event (generator status != 1)", -1 );
-	cMCNumberK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lSim", "number of K0l per event (generator status != 1)", -1 );
-	cMCNumberK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sSim", "number of K0s per event (generator status != 1)", -1 );
-	cMCNumberNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsSim", "number of neutrons per event (generator status != 1)", -1 );
-	cMCNumberGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasSim", "number of anti-neutrons per event (generator status != 1)", -1 );
-	cMCNumberLambdasSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambdasSim", "number of lambdas per event (generator status != 1)", -1 );
-	
-	cMCNumberRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingSim", "number of the remaining particles per event (generator status != 1)", -1 );
-	
-      }
+    unsigned int NMCLostInBeamPipe  = 0;	  
+    unsigned int NMCRemainingGen    = 0;
+    
+    double energyGen                = 0.0;
+    double energyMCHChGen           = 0.0;
+    double energyMCH0Gen            = 0.0;
+    double energyMCGGen             = 0.0;
+    double energyLostInBeamPipe     = 0.0;
+
+       
+    try {
       
+      const std::vector< std::string >* strVec = evt->getCollectionNames() ;
+      std::vector< std::string >::const_iterator name ;
+    
+      for( name = strVec->begin() ; name != strVec->end() ; name++) {
       
-      cMCNumberGen             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGen", "number of all MC particles per event (generator status == 1)", -1 );
-      cMCEnergySumGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumGen", "MC particle energy sum per event (generator status == 1)", -1 );
-      
-      cMCNumberElectronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsGen", "number of the electrons per event (generator status == 1)", -1 );
-      cMCNumberPositronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPositronsGen", "number of the positrons per event (generator status == 1)", -1 );
-      cMCNumberMuonsGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsGen", "number of the muons per event (generator status == 1)", -1 );
-      cMCNumberMuonBarsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonBarsGen", "number of the anti-muons per event (generator status == 1)", -1 );
-      cMCNumberTausGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausGen", "number of the taus per event (generator status == 1)", -1 );
-      cMCNumberTauBarsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTauBarsGen", "number of the anti-taus per event (generator status == 1)", -1 );
-      cMCNumberNusGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusGen", "number of neutrinos per event (generator status == 1)", -1 );
-      
-      cMCNumberPiPlusGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiPlusGen", "number of Pi+ per event (generator status == 1)", -1 );
-      cMCNumberPiMinusGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiMinusGen", "number of Pi- per event (generator status == 1)", -1 );
-      cMCNumberKPlusGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKPlusGen", "number of K+ per event (generator status == 1)", -1 );
-      cMCNumberKMinusGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKMinusGen", "number of K- per event (generator status == 1)", -1 );
-      cMCNumberProtonsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsGen", "number of protons per event (generator status == 1)", -1 );
-      cMCNumberProtonBarsGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonBarsGen", "number of anti-protons per event (generator status == 1)", -1 );
-      cMCNumberPi0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Gen", "number of Pi0 per event (generator status == 1)", -1 );
-      cMCNumberK0lGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lGen", "number of K0l per event (generator status == 1)", -1 );
-      cMCNumberK0sGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sGen", "number of K0s per event (generator status == 1)", -1 );
-      cMCNumberNeutronsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsGen", "number of neutrons per event (generator status == 1)", -1 );
-      cMCNumberGammasGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasGen", "number of anti-neutrons per event (generator status == 1)", -1 );
-      cMCNumberLambdasGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambdasGen", "number of lambdas per event (generator status == 1)", -1 );
-      
-      cMCNumberRemainingGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingGen", "number of the remaining particles per event (generator status == 1)", -1 );
-      
-      
-      
-      
-      if (_fillMCSim) {
-	
-	// numbers per single particle
-	cMCEnergySim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySim", "energy spectrum of all MC particles in one event (generator status != 1)", -1 );
-	cMCEnergyElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsSim", "energy spectrum of the electrons in one event (generator status != 1)", -1 );
-	cMCEnergyPositronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPositronsSim", "energy spectrum of the positrons in one event (generator status != 1)", -1 );
-	cMCEnergyMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsSim", "energy spectrum of the muons in one event (generator status != 1)", -1 );
-	cMCEnergyMuonBarsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonBarsSim", "energy spectrum of the anti-muons in one event (generator status != 1)", -1 );
-	cMCEnergyTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausSim", "energy spectrum of the taus in one event (generator status != 1)", -1 );
-	cMCEnergyTauBarsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTauBarsSim", "energy spectrum of the anti-taus in one event (generator status != 1)", -1 );
-	cMCEnergyNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusSim", "energy spectrum of the neutrinos in one event (generator status != 1)", -1 );
+	LCCollection* col = evt->getCollection( *name ) ;
+
+	if ( col->getTypeName() == LCIO::MCPARTICLE ) {
+
+	  int nMCP = col->getNumberOfElements();
+	  
+	  for(int i = 0; i < nMCP ; ++i){
 	    
-	cMCEnergyPiPlusSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiPlusSim", "energy spectrum of Pi+ in one event (generator status != 1)", -1 );
-	cMCEnergyPiMinusSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiMinusSim", "energy spectrum of Pi- in one event (generator status != 1)", -1 );
-	cMCEnergyKPlusSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKPlusSim", "energy spectrum of K+ in one event (generator status != 1)", -1 );
-	cMCEnergyKMinusSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKMinusSim", "energy spectrum of K- in one event (generator status != 1)", -1 );
-	cMCEnergyProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsSim", "energy spectrum of protons in one event (generator status != 1)", -1 );
-	cMCEnergyProtonBarsSim = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonBarsSim", "energy spectrum of anti-protons in one event (generator status != 1)", -1 );
-	cMCEnergyPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Sim", "energy spectrum of Pi0 in one event (generator status != 1)", -1 );
-	cMCEnergyK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lSim", "energy spectrum of K0l in one event (generator status != 1)", -1 );
-	cMCEnergyK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sSim", "energy spectrum of K0s in one event (generator status != 1)", -1 );
-	cMCEnergyNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsSim", "energy spectrum of neutrons in one event (generator status != 1)", -1 );
-	cMCEnergyGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasSim", "energy spectrum of anti-neutrons in one event (generator status != 1)", -1 );
-	cMCEnergyLambdasSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambdasSim", "energy spectrum of lambdas in one event (generator status != 1)", -1 );
-	
-	cMCEnergyRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingSim", "energy spectrum of the remaining particles in one event (generator status != 1)", -1 );
+	    MCParticle* mcp = dynamic_cast<MCParticle*>( col->getElementAt( i ) ) ;
+	   	    
+	    const double* p = mcp->getMomentum();
+	    float e = mcp->getEnergy();
+
+	    if ( mcp->getGeneratorStatus() == 1 ) {
+
+	      double pt = hypot(p[0],p[1]);
+	      double theta = atan2(pt,p[2]);
+
+	      if ( fabs(theta) > _thetaCut ) {
+		
+		++NMCGen;
+		energyGen += e;
+
+                #ifdef MARLIN_USE_AIDA
+		_cMCEnergyGen->fill(e);
+	        #endif
+
+		
+		switch (abs(mcp->getPDG())) {
+		  
+		case 11  : {
+		  ++NMCElectronsGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyElectronsGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 13  : {
+		  ++NMCMuonsGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyMuonsGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 15  : {
+		  ++NMCTausGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyTausGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case  12 : {
+		  ++NMCNusGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyNusGen->fill(e);
+	          #endif
+		  break;
+		}
+		case  14 : {
+		  ++NMCNusGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyNusGen->fill(e);
+	          #endif
+		  break;
+		}
+		case  16 : {
+		  ++NMCNusGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyNusGen->fill(e);
+	          #endif
+		  break;
+		}
+		  
+		case 211  : {
+		  ++NMCPiChGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyPiChGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 321  : {
+		  ++NMCKChGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyKChGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 2212  : {
+		  ++NMCProtonsGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyProtonsGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 111  : {
+		  ++NMCPi0Gen;
+		  ++NMCGGen;
+		  energyMCGGen += e;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyPi0Gen->fill(e);
+	          #endif
+		  break;
+		}
+		case 130 : {
+		  ++NMCK0lGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyK0lGen->fill(e);
+	          #endif
+
+		  ++NMCH0Gen;
+		  energyMCH0Gen += e;
+		  break;
+		}
+		case 310  : {
+		  ++NMCK0sGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyK0sGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 2112 : {
+		  ++NMCNeutronsGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyNeutronsGen->fill(e);
+	          #endif
+
+		  ++NMCH0Gen;
+		  energyMCH0Gen += e;
+		  break;
+		}
+		case 22 : {
+		  ++NMCGammasGen;
+		  ++NMCGGen;
+		  energyMCGGen += e;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyGammasGen->fill(e);
+	          #endif
+		  break;
+		}
+		case 3122 : {
+		  ++NMCLambda0sGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyLambda0sGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 3212 : {
+		  ++NMCSigma0sGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergySigma0sGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		case 3322 : {
+		  ++NMCXi0sGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyXi0sGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+
+		default  : {
+
+		  // debug
+		  std::cout << "default case for for MCP (generator status == 1)" << mcp->getPDG() << std::endl;
+		  
+		  ++NMCRemainingGen;
+
+                  #ifdef MARLIN_USE_AIDA
+		  _cMCEnergyRemainingGen->fill(e);
+	          #endif
+
+		  ++NMCHChGen;
+		  energyMCHChGen += e;
+		  break;
+		}
+		  
+		} // end of switch
+		
+	      }
+	      else { // in beam pipe
+
+		++NMCGen;
+		energyGen += e;
+
+		++NMCLostInBeamPipe;
+		energyLostInBeamPipe += e;
+		
+	      }
+	      
+	    }
+	    
+	  }
+	  		  
+	}
 	
       }
-      
-      
-      cMCEnergyGen             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGen", "energy spectrum of all MC particles in one event (generator status == 1)", -1 );
-      cMCEnergyElectronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsGen", "energy spectrum of the electrons in one event (generator status == 1)", -1 );
-      cMCEnergyPositronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPositronsGen", "energy spectrum of the positrons in one event (generator status == 1)", -1 );
-      cMCEnergyMuonsGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsGen", "energy spectrum of the muons in one event (generator status == 1)", -1 );
-      cMCEnergyMuonBarsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonBarsGen", "energy spectrum of the anti-muons in one event (generator status == 1)", -1 );
-      cMCEnergyTausGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausGen", "energy spectrum of the taus in one event (generator status == 1)", -1 );
-      cMCEnergyTauBarsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTauBarsGen", "energy spectrum of the anti-taus in one event (generator status == 1)", -1 );
-      cMCEnergyNusGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusGen", "energy spectrum of the neutrinos in one event (generator status == 1)", -1 );
-      
-      cMCEnergyPiPlusGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiPlusGen", "energy spectrum of Pi+ in one event (generator status == 1)", -1 );
-      cMCEnergyPiMinusGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiMinusGen", "energy spectrum of Pi- in one event (generator status == 1)", -1 );
-      cMCEnergyKPlusGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKPlusGen", "energy spectrum of K+ in one event (generator status == 1)", -1 );
-      cMCEnergyKMinusGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKMinusGen", "energy spectrum of K- in one event (generator status == 1)", -1 );
-      cMCEnergyProtonsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsGen", "energy spectrum of protons in one event (generator status == 1)", -1 );
-      cMCEnergyProtonBarsGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonBarsGen", "energy spectrum of anti-protons in one event (generator status == 1)", -1 );
-      cMCEnergyPi0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Gen", "energy spectrum of Pi0 in one event (generator status == 1)", -1 );
-      cMCEnergyK0lGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lGen", "energy spectrum of K0l in one event (generator status == 1)", -1 );
-      cMCEnergyK0sGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sGen", "energy spectrum of K0s in one event (generator status == 1)", -1 );
-      cMCEnergyNeutronsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsGen", "energy spectrum of neutrons in one event (generator status == 1)", -1 );
-      cMCEnergyGammasGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasGen", "energy spectrum of anti-neutrons in one event (generator status == 1)", -1 );
-      cMCEnergyLambdasGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambdasGen", "energy spectrum of lambdas in one event (generator status == 1)", -1 );
-      
-      cMCEnergyRemainingGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingGen", "energy spectrum of the remaining particles in one event (generator status == 1)", -1 );
-      
-      
+          
     }
+    catch(DataNotAvailableException &e){
+      std::cout << "MC particle collection not available in Check Plot processor" << std::endl ;
+    };
+
+
+    #ifdef MARLIN_USE_AIDA
+    _cMCNumberGen            -> fill(NMCGen);
+    _cMCNumberElectronsGen   -> fill(NMCElectronsGen);
+    _cMCNumberMuonsGen       -> fill(NMCMuonsGen);   
+    _cMCNumberTausGen        -> fill(NMCTausGen);    
+    _cMCNumberNusGen         -> fill(NMCNusGen);  
+
+    _cMCNumberHChGen         -> fill(NMCHChGen);
+    _cMCNumberH0Gen          -> fill(NMCH0Gen);
+    _cMCNumberGGen           -> fill(NMCGGen);
+    _cMCFractionHChGen       -> fill(double(NMCHChGen)/double(NMCGen));
+    _cMCFractionH0Gen        -> fill(double(NMCH0Gen)/double(NMCGen));
+    _cMCFractionGGen         -> fill(double(NMCGGen)/double(NMCGen));
+    _cMCEnergyHChGen         -> fill(energyMCHChGen);
+    _cMCEnergyH0Gen          -> fill(energyMCH0Gen);
+    _cMCEnergyGGen           -> fill(energyMCGGen);
+    _cMCEnergyFractionHChGen -> fill(energyMCHChGen/energyGen);
+    _cMCEnergyFractionH0Gen  -> fill(energyMCH0Gen/energyGen);
+    _cMCEnergyFractionGGen   -> fill(energyMCGGen/energyGen);
+
+    _cMCNumberPiChGen        -> fill(NMCPiChGen);
+    _cMCNumberKChGen         -> fill(NMCKChGen);   
+    _cMCNumberProtonsGen     -> fill(NMCProtonsGen);    
+    _cMCNumberPi0Gen         -> fill(NMCPi0Gen);
+    _cMCNumberK0lGen         -> fill(NMCK0lGen);
+    _cMCNumberK0sGen         -> fill(NMCK0sGen);   
+    _cMCNumberNeutronsGen    -> fill(NMCNeutronsGen); 
+    _cMCNumberGammasGen      -> fill(NMCGammasGen);    
+    _cMCNumberLambda0sGen    -> fill(NMCLambda0sGen);
+    _cMCNumberSigma0sGen     -> fill(NMCSigma0sGen);
+    _cMCNumberXi0sGen        -> fill(NMCXi0sGen);
+
+    _cMCNumberLostInBeamPipe -> fill(NMCLostInBeamPipe);
+    _cMCEnergyLostInBeamPipe -> fill(energyLostInBeamPipe);
+
+    _cMCNumberRemainingGen   -> fill(NMCRemainingGen);       
     
+    _cMCEnergySumGen         -> fill(energyGen);
+    #endif  	
+
+
+    _nMC = NMCGen - NMCLostInBeamPipe;
+    _nMCCh = NMCElectronsGen + NMCMuonsGen + NMCTausGen + NMCHChGen;
+    _nMCN = NMCH0Gen + NMCGGen;
     
+    _energyMC = energyGen - energyLostInBeamPipe;
+    _energyMCCh = energyMCHChGen;
+    _energyMCN  = energyMCH0Gen + energyMCGGen;
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+void CheckPlots::fillMCSimCheckPlots(LCEvent * evt){
+
+
+  if (_fillMCSim) {
+	  
+    unsigned int NMCSim             = 0;
     
-    const std::vector< std::string >* strVec = evt->getCollectionNames() ;
-    std::vector< std::string >::const_iterator name ;
+    unsigned int NMCElectronsSim    = 0;
+    unsigned int NMCMuonsSim        = 0;
+    unsigned int NMCTausSim         = 0;
+    unsigned int NMCNusSim          = 0;
     
-    for( name = strVec->begin() ; name != strVec->end() ; name++) {
+    unsigned int NMCPiChSim         = 0;
+    unsigned int NMCKChSim          = 0;
+    unsigned int NMCProtonsSim      = 0;
+    unsigned int NMCPi0Sim          = 0;
+    unsigned int NMCK0lSim          = 0;
+    unsigned int NMCK0sSim          = 0;
+    unsigned int NMCNeutronsSim     = 0;
+    unsigned int NMCGammasSim       = 0;
+    unsigned int NMCLambda0sSim     = 0;
+    unsigned int NMCSigma0sSim      = 0;
+    unsigned int NMCXi0sSim         = 0;
+    
+    unsigned int NMCRemainingSim    = 0;
+    
+    double energySim                = 0.0;
+	  
+
+    try {
       
-      LCCollection* col = evt->getCollection( *name ) ;
-
-      if ( col->getTypeName() == LCIO::MCPARTICLE ) {
+      const std::vector< std::string >* strVec = evt->getCollectionNames() ;
+      std::vector< std::string >::const_iterator name ;
+      
+      for( name = strVec->begin() ; name != strVec->end() ; name++) {
 	
-	if( col != 0 ){
-	  
-	  unsigned int NMCSim             = 0;
-	  unsigned int NMCElectronsSim    = 0;
-	  unsigned int NMCPositronsSim    = 0;
-	  unsigned int NMCMuonsSim        = 0;
-	  unsigned int NMCMuonBarsSim     = 0;
-	  unsigned int NMCTausSim         = 0;
-	  unsigned int NMCTauBarsSim      = 0;
-	  unsigned int NMCNusSim          = 0;
-	  
-	  unsigned int NMCPiPlusSim       = 0;
-	  unsigned int NMCPiMinusSim      = 0;
-	  unsigned int NMCKPlusSim        = 0;
-	  unsigned int NMCKMinusSim       = 0;
-	  unsigned int NMCProtonsSim      = 0;
-	  unsigned int NMCProtonBarsSim   = 0;
-	  unsigned int NMCPi0Sim          = 0;
-	  unsigned int NMCK0lSim          = 0;
-	  unsigned int NMCK0sSim          = 0;
-	  unsigned int NMCNeutronsSim     = 0;
-	  unsigned int NMCGammasSim       = 0;
-	  unsigned int NMCLambdasSim      = 0;
-	  
-	  unsigned int NMCRemainingSim    = 0;
-	  
-	  double energySim                = 0.0;
-
-	  
-	  unsigned int NMCGen             = 0;
-	  unsigned int NMCElectronsGen    = 0;
-	  unsigned int NMCPositronsGen    = 0;
-	  unsigned int NMCMuonsGen        = 0;
-	  unsigned int NMCMuonBarsGen     = 0;
-	  unsigned int NMCTausGen         = 0;
-	  unsigned int NMCTauBarsGen      = 0;
-	  unsigned int NMCNusGen          = 0;
-	  
-	  unsigned int NMCPiPlusGen       = 0;
-	  unsigned int NMCPiMinusGen      = 0;
-	  unsigned int NMCKPlusGen        = 0;
-	  unsigned int NMCKMinusGen       = 0;
-	  unsigned int NMCProtonsGen      = 0;
-	  unsigned int NMCProtonBarsGen   = 0;
-	  unsigned int NMCPi0Gen          = 0;
-	  unsigned int NMCK0lGen          = 0;
-	  unsigned int NMCK0sGen          = 0;
-	  unsigned int NMCNeutronsGen     = 0;
-	  unsigned int NMCGammasGen       = 0;
-	  unsigned int NMCLambdasGen      = 0;
-	  
-	  unsigned int NMCRemainingGen    = 0;
-	  
-	  double energyGen                = 0.0;
-
-	  
+	LCCollection* col = evt->getCollection( *name ) ;
+	
+	if ( col->getTypeName() == LCIO::MCPARTICLE ) {
 	  
 	  int nMCP = col->getNumberOfElements();
 	  
@@ -459,350 +769,411 @@ void CheckPlots::fillMCCheckPlots(LCEvent * evt){
 	    
 	    MCParticle* mcp = dynamic_cast<MCParticle*>( col->getElementAt( i ) ) ;
 	    
+	    float e = mcp->getEnergy();
+	    
 	    if (mcp->getGeneratorStatus() != 1 ) {
 	      
-	      if (_fillMCSim) {
+	      ++NMCSim;
+	      energySim += e;
 		
-		++NMCSim;
-		energySim += mcp->getEnergy();
+              #ifdef MARLIN_USE_AIDA  
+	      _cMCEnergySim->fill(e);
+              #endif
+
 		
-		cMCEnergySim->fill(mcp->getEnergy());
-		
-		switch (mcp->getPDG()) {
+	      switch (abs(mcp->getPDG())) {
 		  
-		case 11  : {
-		  ++NMCElectronsSim;
-		  cMCEnergyElectronsSim->fill(mcp->getEnergy());
-		}
-		case -11 : {
-		  ++NMCPositronsSim;
-		  cMCEnergyPositronsSim->fill(mcp->getEnergy());
-		}
-		case 13  : {
-		  ++NMCMuonsSim;
-		  cMCEnergyMuonsSim->fill(mcp->getEnergy());
-		}
-		case -13 : {
-		  ++NMCMuonBarsSim; 
-		  cMCEnergyMuonBarsSim->fill(mcp->getEnergy());
-		}
-		case 15  : {
-		  ++NMCTausSim;
-		  cMCEnergyTausSim->fill(mcp->getEnergy());
-		}
-		case -15 : {
-		  ++NMCTauBarsSim;
-		  cMCEnergyTauBarsSim->fill(mcp->getEnergy());
-		}
-		case  12 :
-		case -12 :
-		case  14 :
-		case -14 :
-		case  16 :
-		case -16 : {
-		  ++NMCNusSim;
-		  cMCEnergyNusSim->fill(mcp->getEnergy());
-		}
-		  
-		case 211  : {
-		  ++NMCPiPlusSim;
-		  cMCEnergyPiPlusSim->fill(mcp->getEnergy());
-		}
-		case -211 : {
-		  ++NMCPiMinusSim;
-		  cMCEnergyPiMinusSim->fill(mcp->getEnergy());
-		}
-		case 321  : {
-		  ++NMCKPlusSim;
-		  cMCEnergyKPlusSim->fill(mcp->getEnergy());
-		}
-		case -321 : {
-		  ++NMCKMinusSim; 
-		  cMCEnergyKMinusSim->fill(mcp->getEnergy());
-		}
-		case 2212  : {
-		  ++NMCProtonsSim;
-		  cMCEnergyProtonsSim->fill(mcp->getEnergy());
-		}
-		case -2212 : {
-		  ++NMCProtonBarsSim;
-		  cMCEnergyProtonBarsSim->fill(mcp->getEnergy());
-		}
-		case 111  : {
-		  ++NMCPi0Sim;
-		  cMCEnergyPi0Sim->fill(mcp->getEnergy());
-		}
-		case 130 : {
-		  ++NMCK0lSim;
-		  cMCEnergyK0lSim->fill(mcp->getEnergy());
-		}
-		case 310  : {
-		  ++NMCK0sSim;
-		  cMCEnergyK0sSim->fill(mcp->getEnergy());
-		}
-		case 2112 : {
-		  ++NMCNeutronsSim; 
-		  cMCEnergyNeutronsSim->fill(mcp->getEnergy());
-		}
-		case 22  : {
-		  ++NMCGammasSim;
-		  cMCEnergyGammasSim->fill(mcp->getEnergy());
-		}
-		case 3122 : {
-		  ++NMCLambdasSim;
-		  cMCEnergyLambdasSim->fill(mcp->getEnergy());
-		}
-		  
-		  
-		default  : {
-		  ++NMCRemainingSim;
-		  cMCEnergyRemainingSim->fill(mcp->getEnergy());
-		}
-		  
-		}
-		
-	      }
-	      
-	    }
-	    else {
-	      
-	      ++NMCGen;
-	      energyGen += mcp->getEnergy();
-	      
-	      cMCEnergyGen->fill(mcp->getEnergy());
-	      
-	      switch (mcp->getPDG()) {
-		
 	      case 11  : {
-		++NMCElectronsGen;
-		cMCEnergyElectronsGen->fill(mcp->getEnergy());
-	      }
-	      case -11 : {
-		++NMCPositronsGen;
-		cMCEnergyPositronsGen->fill(mcp->getEnergy());
+		++NMCElectronsSim;
+
+                #ifdef MARLIN_USE_AIDA  
+		_cMCEnergyElectronsSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 13  : {
-		++NMCMuonsGen;
-		cMCEnergyMuonsGen->fill(mcp->getEnergy());
-	      }
-	      case -13 : {
-		++NMCMuonBarsGen;
-		cMCEnergyMuonBarsGen->fill(mcp->getEnergy());
-	      }
+		++NMCMuonsSim;
+
+                #ifdef MARLIN_USE_AIDA  
+		_cMCEnergyMuonsSim->fill(e);
+                #endif
+		break;
+	      }		
 	      case 15  : {
-		++NMCTausGen;
-		cMCEnergyTausGen->fill(mcp->getEnergy());
+		++NMCTausSim;
+
+                #ifdef MARLIN_USE_AIDA  
+		_cMCEnergyTausSim->fill(e);
+                #endif
+		break;
 	      }
-	      case -15 : {
-		++NMCTauBarsGen;
-		cMCEnergyTauBarsGen->fill(mcp->getEnergy());
+	
+	      case  12 : {
+		++NMCNusSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyNusSim->fill(e);
+                #endif
+		break;
 	      }
-	      case  12 :
-	      case -12 :
-	      case  14 :
-	      case -14 :
-	      case  16 :
-	      case -16 : {
-		++NMCNusGen;
-		cMCEnergyNusGen->fill(mcp->getEnergy());
+	      case  14 : {
+		++NMCNusSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyNusSim->fill(e);
+                #endif
+		break;
 	      }
-		
+	      case 16 : {
+		++NMCNusSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyNusSim->fill(e);
+                #endif
+		break;
+	      }
+		  
 	      case 211  : {
-		++NMCPiPlusGen;
-		cMCEnergyPiPlusGen->fill(mcp->getEnergy());
-	      }
-	      case -211 : {
-		++NMCPiMinusGen;
-		cMCEnergyPiMinusGen->fill(mcp->getEnergy());
+		++NMCPiChSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyPiChSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 321  : {
-		++NMCKPlusGen;
-		cMCEnergyKPlusGen->fill(mcp->getEnergy());
-	      }
-	      case -321 : {
-		++NMCKMinusGen;
-		cMCEnergyKMinusGen->fill(mcp->getEnergy());
+		++NMCKChSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyKChSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 2212  : {
-		++NMCProtonsGen;
-		cMCEnergyProtonsGen->fill(mcp->getEnergy());
-	      }
-	      case -2212 : {
-		++NMCProtonBarsGen;
-		cMCEnergyProtonBarsGen->fill(mcp->getEnergy());
+		++NMCProtonsSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyProtonsSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 111  : {
-		++NMCPi0Gen;
-		cMCEnergyPi0Gen->fill(mcp->getEnergy());
+		++NMCPi0Sim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyPi0Sim->fill(e);
+                #endif
+		break;
 	      }
 	      case 130 : {
-		++NMCK0lGen;
-		cMCEnergyK0lGen->fill(mcp->getEnergy());
+		++NMCK0lSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyK0lSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 310  : {
-		++NMCK0sGen;
-		cMCEnergyK0sGen->fill(mcp->getEnergy());
+		++NMCK0sSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyK0sSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 2112 : {
-		++NMCNeutronsGen;
-		cMCEnergyNeutronsGen->fill(mcp->getEnergy());
+		++NMCNeutronsSim;
+
+                 #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyNeutronsSim->fill(e);
+                #endif
+		break;
 	      }
-	      case 22 : {
-		++NMCGammasGen;
-		cMCEnergyGammasGen->fill(mcp->getEnergy());
+	      case 22  : {
+		++NMCGammasSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyGammasSim->fill(e);
+                #endif
+		break;
 	      }
 	      case 3122 : {
-		++NMCLambdasGen;
-		cMCEnergyLambdasGen->fill(mcp->getEnergy());
+		++NMCLambda0sSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyLambda0sSim->fill(e);
+                #endif
+		break;
 	      }
-		
+	      case 3212 : {
+		++NMCSigma0sSim;
+		  
+                #ifdef MARLIN_USE_AIDA
+		_cMCEnergySigma0sSim->fill(e);
+	        #endif
+		break;
+	      }
+	      case 3322 : {
+		++NMCXi0sSim;
+
+                #ifdef MARLIN_USE_AIDA
+	        _cMCEnergyXi0sSim->fill(e);
+	        #endif
+		break;
+	      }
+	
 	      default  : {
-		++NMCRemainingGen;
-		cMCEnergyRemainingGen->fill(mcp->getEnergy());
+
+		// debug
+		std::cout << "default case for for MCP (generator status != 1)" << mcp->getPDG() << std::endl;
+		  
+		++NMCRemainingSim;
+
+                #ifdef MARLIN_USE_AIDA 
+		_cMCEnergyRemainingSim->fill(e);
+                #endif
+	 	break;
 	      }
 		
+	      } // end of switch
+	      
+	    }
+	    
+	  }
+	  
+	}
+
+      }
+
+    }
+    catch(DataNotAvailableException &e){
+      std::cout << "MC particle collection not available in Check Plot processor" << std::endl ;
+    };
+    
+
+    #ifdef MARLIN_USE_AIDA
+    _cMCNumberSim             -> fill(NMCSim);
+    _cMCNumberElectronsSim    -> fill(NMCElectronsSim);
+    _cMCNumberMuonsSim        -> fill(NMCMuonsSim);   
+    _cMCNumberTausSim         -> fill(NMCTausSim);    
+    _cMCNumberNusSim          -> fill(NMCNusSim);
+    
+    _cMCNumberPiChSim         -> fill(NMCPiChSim);
+    _cMCNumberKChSim          -> fill(NMCKChSim);   
+    _cMCNumberProtonsSim      -> fill(NMCProtonsSim);    
+    _cMCNumberPi0Sim          -> fill(NMCPi0Sim);
+    _cMCNumberK0lSim          -> fill(NMCK0lSim);
+    _cMCNumberK0sSim          -> fill(NMCK0sSim);   
+    _cMCNumberNeutronsSim     -> fill(NMCNeutronsSim); 
+    _cMCNumberGammasSim       -> fill(NMCGammasSim);    
+    _cMCNumberLambda0sSim     -> fill(NMCLambda0sSim);  
+    _cMCNumberSigma0sSim      -> fill(NMCSigma0sSim);  
+    _cMCNumberXi0sSim         -> fill(NMCXi0sSim);  
+
+    _cMCNumberRemainingSim    -> fill(NMCRemainingSim);       
+	    
+    _cMCEnergySumSim          -> fill(energySim);
+    #endif
+
+
+	    
+  }
+
+}
+
+
+
+
+void CheckPlots::fillSimCaloHitCheckPlots(LCEvent * evt) {
+
+
+  if (_fillSimCaloHit) {  
+
+    try {
+
+      int numberSimHits = 0;
+      float energySimSum = 0.0;
+
+
+      const std::vector< std::string >* strVec = evt->getCollectionNames() ;
+      std::vector< std::string >::const_iterator name ;
+    
+      for( name = strVec->begin() ; name != strVec->end() ; name++) {
+      
+	LCCollection* col = evt->getCollection( *name ) ;
+	
+	if ( col->getTypeName() == LCIO::SIMCALORIMETERHIT ) {
+
+	  if( col != 0 ){
+	 	  
+	    int nSimHits = col->getNumberOfElements();
+	  
+	    numberSimHits += nSimHits;
+
+	    for(int i = 0; i < nSimHits; ++i){
+	      
+	      SimCalorimeterHit* SimCaloHit = dynamic_cast<SimCalorimeterHit*>(col->getElementAt(i));
+	      
+	      float simEnergy = SimCaloHit->getEnergy();
+	    
+	      if (simEnergy > _simECut) {
+
+                #ifdef MARLIN_USE_AIDA
+		_cEnergySimCaloHits->fill(simEnergy);
+	        #endif
+
+		energySimSum += simEnergy;
+	      }
+	      
+	    }
+	  
+	  }
+	
+	}
+      
+      }
+
+      #ifdef MARLIN_USE_AIDA
+      _cNumberSimCaloHits->fill(numberSimHits);
+      _cEnergySimCaloHitsSum->fill(energySimSum);
+      #endif
+    
+    }
+    catch(DataNotAvailableException &e){std::cout << "SimCalorimeterHit collection not available in Check Plot processor" << std::endl; };
+ 
+  }
+  
+}
+
+
+
+
+void CheckPlots::fillCaloHitCheckPlots(LCEvent * evt) {
+
+
+  if (_fillCaloHit) {  
+
+    try {
+
+      int numberHits = 0;
+      float energySum = 0.0;
+
+      
+      const std::vector< std::string >* strVec = evt->getCollectionNames() ;
+      std::vector< std::string >::const_iterator name ;
+    
+      for( name = strVec->begin() ; name != strVec->end() ; name++) {
+      
+	LCCollection* col = evt->getCollection( *name ) ;
+	
+	if ( col->getTypeName() == LCIO::CALORIMETERHIT ) {
+
+	  if( col != 0 ){
+	 	  
+	    int nHits = col->getNumberOfElements();
+	  
+	    numberHits += nHits;
+
+	    for(int i = 0; i < nHits; ++i){
+	      
+	      CalorimeterHit* CaloHit = dynamic_cast<CalorimeterHit*>(col->getElementAt(i));
+	    
+	      float Energy = CaloHit->getEnergy();
+	    
+	      if (Energy > _ECut) {
+
+                #ifdef MARLIN_USE_AIDA
+		_cEnergyCaloHits->fill(Energy);
+                #endif
+
+		energySum += Energy;
 	      }
 	      
 	    }
 	    
 	  }
 	  
-	  
-	  if (_fillMCSim) {
-	    
-	    cMCNumberSim             -> fill(NMCSim);
-	    cMCNumberElectronsSim    -> fill(NMCElectronsSim);
-	    cMCNumberPositronsSim    -> fill(NMCPositronsSim);
-	    cMCNumberMuonsSim        -> fill(NMCMuonsSim);   
-	    cMCNumberMuonBarsSim     -> fill(NMCMuonBarsSim); 
-	    cMCNumberTausSim         -> fill(NMCTausSim);    
-	    cMCNumberTauBarsSim      -> fill(NMCTauBarsSim);  
-	    cMCNumberNusSim          -> fill(NMCNusSim);
-	    
-	    cMCNumberPiPlusSim       -> fill(NMCPiPlusSim);
-	    cMCNumberPiMinusSim      -> fill(NMCPiMinusSim);
-	    cMCNumberKPlusSim        -> fill(NMCKPlusSim);   
-	    cMCNumberKMinusSim       -> fill(NMCKMinusSim); 
-	    cMCNumberProtonsSim      -> fill(NMCProtonsSim);    
-	    cMCNumberProtonBarsSim   -> fill(NMCProtonBarsSim);  
-	    cMCNumberPi0Sim          -> fill(NMCPi0Sim);
-	    cMCNumberK0lSim          -> fill(NMCK0lSim);
-	    cMCNumberK0sSim          -> fill(NMCK0sSim);   
-	    cMCNumberNeutronsSim     -> fill(NMCNeutronsSim); 
-	    cMCNumberGammasSim       -> fill(NMCGammasSim);    
-	    cMCNumberLambdasSim      -> fill(NMCLambdasSim);  
-	    
-	    cMCNumberRemainingSim    -> fill(NMCRemainingSim);       
-	    
-	    cMCEnergySumSim          -> fill(energySim);
-	    
-	  }
-
-	  
-	  cMCNumberGen           -> fill(NMCGen);
-	  cMCNumberElectronsGen  -> fill(NMCElectronsGen);
-	  cMCNumberPositronsGen  -> fill(NMCPositronsGen);
-	  cMCNumberMuonsGen      -> fill(NMCMuonsGen);   
-	  cMCNumberMuonBarsGen   -> fill(NMCMuonBarsGen); 
-	  cMCNumberTausGen       -> fill(NMCTausGen);    
-	  cMCNumberTauBarsGen    -> fill(NMCTauBarsGen);
-	  cMCNumberNusGen        -> fill(NMCNusGen);  
-	  
-	  cMCNumberPiPlusGen     -> fill(NMCPiPlusGen);
-	  cMCNumberPiMinusGen    -> fill(NMCPiMinusGen);
-	  cMCNumberKPlusGen      -> fill(NMCKPlusGen);   
-	  cMCNumberKMinusGen     -> fill(NMCKMinusGen); 
-	  cMCNumberProtonsGen    -> fill(NMCProtonsGen);    
-	  cMCNumberProtonBarsGen -> fill(NMCProtonBarsGen);
-	  cMCNumberPi0Gen        -> fill(NMCPi0Gen);
-	  cMCNumberK0lGen        -> fill(NMCK0lGen);
-	  cMCNumberK0sGen        -> fill(NMCK0sGen);   
-	  cMCNumberNeutronsGen   -> fill(NMCNeutronsGen); 
-	  cMCNumberGammasGen     -> fill(NMCGammasGen);    
-	  cMCNumberLambdasGen    -> fill(NMCLambdasGen);
-	  
-	  cMCNumberRemainingGen  -> fill(NMCRemainingGen);       
-	  
-	  cMCEnergySumGen        -> fill(energyGen);
-	  
 	}
-		
+	
       }
 
+      #ifdef MARLIN_USE_AIDA
+      _cNumberCaloHits->fill(numberHits);
+      _cEnergyCaloHitsSum->fill(energySum);
+      #endif
+
+
+
+
+      //    cDifferenceEnergyCaloSumAndMCEnergy->fill(energySum-SEMC);
+
+
+
+
+
     }
-      
+    catch(DataNotAvailableException &e){std::cout << "CalorimeterHit collection not available in Check Plot processor" << std::endl; };
+    
   }
-  catch(DataNotAvailableException &e){
-    std::cout << "MC particle collection not available in Check Plot processor" << std::endl ;
-  };
-  
-  #endif
   
 }
 
 
 
 
+void CheckPlots::fillTrackCheckPlots(LCEvent * evt) {
 
 
+  if (_fillTracks) {
 
-
-void CheckPlots::fillSimCaloCheckPlots(LCEvent * evt) {
-
-
-  #ifdef MARLIN_USE_AIDA
-
-
-  try {
-
-    // numbers per event
-    static AIDA::ICloud1D* cNumberSimCaloHits;
-    static AIDA::ICloud1D* cEnergySimCaloHitsSum;
+    try {
     
-    // numbers per single particle
-    static AIDA::ICloud1D* cEnergySimCaloHits;
+      std::vector< std::string >::const_iterator iter;
+      const std::vector< std::string >* ColNames = evt->getCollectionNames();
     
-    
-    
-    if( isFirstEvent() ) {
+      for( iter = ColNames->begin() ; iter != ColNames->end() ; iter++) {
       
-      cNumberSimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberSimCaloHits", "number of SimCaloHits per event", -1 );
-      cEnergySimCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHitsSum", "energy sum of the SimCaloHits per event", -1 );
-      
-      cEnergySimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHits", "energy spectrum of the SimCaloHits per event", -1 );
-      
-    }
-    
+	LCCollection* col = evt->getCollection( *iter ) ;
+  
+	if ( (col->getTypeName() == LCIO::TRACK) && (*iter == _colNameTracks) ) {
 
-    int numberSimHits = 0;
-    float energySimSum = 0.0;
-
-
-    const std::vector< std::string >* strVec = evt->getCollectionNames() ;
-    std::vector< std::string >::const_iterator name ;
-    
-    for( name = strVec->begin() ; name != strVec->end() ; name++) {
-      
-      LCCollection* col = evt->getCollection( *name ) ;
-
-      if ( col->getTypeName() == LCIO::SIMCALORIMETERHIT ) {
-
-	if( col != 0 ){
-	 	  
-	  int nSimHits = col->getNumberOfElements();
+	  int nTracks = col->getNumberOfElements();
 	  
-	  numberSimHits += nSimHits;
+          #ifdef MARLIN_USE_AIDA
+	  _cNumberTracks->fill(nTracks);	
+	  #endif
 
-	  for(int i = 0; i < nSimHits; ++i){
+	  for(int j=0; j<nTracks; ++j){
+	  
+	    Track* track = dynamic_cast<Track*>(col->getElementAt(j));
+
+	    int nTrackerHits = track->getTrackerHits().size();
 	    
-	    SimCalorimeterHit* SimCaloHit = dynamic_cast<SimCalorimeterHit*>(col->getElementAt(i));
-	    
-	    float simEnergy = SimCaloHit->getEnergy();
-	    
-	    if (simEnergy > _simECut) {
-	      cEnergySimCaloHits->fill(simEnergy);
-	      energySimSum += simEnergy;
+            #ifdef MARLIN_USE_AIDA
+	    _cNumberTrackerHitsPerTrack->fill(nTrackerHits);	
+     	    #endif
+
+	    const double absP = MarlinUtil::getAbsMomentum(track,_bField);
+	  
+            #ifdef MARLIN_USE_AIDA
+	    _cMomentumTracks->fill(absP);	
+	    #endif
+
+	    try {
+
+	      LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);
+
+	      LCRelationNavigator* navTracks = new LCRelationNavigator(LCRcolTracks);
+	      const LCObjectVec& relMCParticlesToTrack = navTracks->getRelatedToObjects(track); 
+
+	      int nOfRelatedMCParticles = relMCParticlesToTrack.size();
+
+              #ifdef MARLIN_USE_AIDA
+	      _cNumberMCParticlesPerTrack->fill(nOfRelatedMCParticles);
+              #endif
+
 	    }
+	    catch(DataNotAvailableException &e){std::cout << "no valid LCRelation between track and MC particle in event " << _nEvt << std::endl; };
 	    
 	  }
 	  
@@ -811,109 +1182,119 @@ void CheckPlots::fillSimCaloCheckPlots(LCEvent * evt) {
       }
       
     }
-
-    cNumberSimCaloHits->fill(numberSimHits);
-    cEnergySimCaloHitsSum->fill(energySimSum);
-
+    catch(DataNotAvailableException &e){std::cout << "no valid track collection available in event " << _nEvt << std::endl; };
   }
-  catch(DataNotAvailableException &e){
-      std::cout << "SimCalorimeterHit collection not available in Check Plot processor" << std::endl ;
-  };
-  
-
-  #endif
 
 }
 
 
 
 
-void CheckPlots::fillCaloCheckPlots(LCEvent * evt) {
+void CheckPlots::fillReconstructedParticlesCheckPlots(LCEvent * evt) {
 
 
-  #ifdef MARLIN_USE_AIDA
+  if (_fillReconstructedParticles) {
 
+    int nReco   = 0;
+    int nRecoCh = 0;
+    int nRecoN  = 0;
 
-  try {
-
-    // numbers per event
-    static AIDA::ICloud1D* cNumberCaloHits;
-    static AIDA::ICloud1D* cEnergyCaloHitsSum;
-    static AIDA::ICloud1D* cDifferenceEnergyCaloSumAndMCEnergy;
+    double energyReco   = 0.0;
+    double energyRecoCh = 0.0;
+    double energyRecoN  = 0.0;
     
-    // numbers per single particle
-    static AIDA::ICloud1D* cEnergyCaloHits;
+
+    try {
+
+      int nReconstructedParticles = 0;
+      double energySumReconstructedParticles = 0.0;
     
+      std::vector< std::string >::const_iterator iter;
+      const std::vector< std::string >* ColNames = evt->getCollectionNames();
     
-    
-    if( isFirstEvent() ) {
+      for( iter = ColNames->begin() ; iter != ColNames->end() ; iter++) {
       
-      cNumberCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberCaloHits", "number of CaloHits per event", -1 );
-      cEnergyCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHitsSum", "energy sum of the CaloHits per event", -1 );
-      cDifferenceEnergyCaloSumAndMCEnergy = AIDAProcessor::histogramFactory(this)->createCloud1D( "DifferenceEnergyCaloSumAndMCEnergy",
-												  "difference between sum of all the CaloHit energy per event and the MC energy"
-
-												  , -1 );
-     
-      cEnergyCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHits", "energy spectrum of the CaloHits per event", -1 );
+	LCCollection* col = evt->getCollection( *iter ) ;
       
-    }
-    
+	if ( (col->getTypeName() == LCIO::RECONSTRUCTEDPARTICLE) && (*iter == _colNameReconstructedParticles) ) {
 
-    int numberHits = 0;
-    float energySum = 0.0;
-
-
-    const std::vector< std::string >* strVec = evt->getCollectionNames() ;
-    std::vector< std::string >::const_iterator name ;
-    
-    for( name = strVec->begin() ; name != strVec->end() ; name++) {
-      
-      LCCollection* col = evt->getCollection( *name ) ;
-
-      if ( col->getTypeName() == LCIO::CALORIMETERHIT ) {
-
-	if( col != 0 ){
-	 	  
-	  int nHits = col->getNumberOfElements();
+	  nReconstructedParticles += col->getNumberOfElements();
 	  
-	  numberHits += nHits;
+	  for(int j=0; j<nReconstructedParticles; ++j){
+	  
+	    ReconstructedParticle* recoParticle = dynamic_cast<ReconstructedParticle*>(col->getElementAt(j));
 
-	  for(int i = 0; i < nHits; ++i){
+	    double energyReconstructedParticle = recoParticle->getEnergy();
 	    
-	    CalorimeterHit* CaloHit = dynamic_cast<CalorimeterHit*>(col->getElementAt(i));
+	    energySumReconstructedParticles += energyReconstructedParticle;
+
+            #ifdef MARLIN_USE_AIDA
+            _cEnergyReconstructedParticles->fill(energyReconstructedParticle);
+            #endif
 	    
-	    float Energy = CaloHit->getEnergy();
-	    
-	    if (Energy > _ECut) {
-	      cEnergyCaloHits->fill(Energy);
-	      energySum += Energy;
+
+	    if ( (recoParticle->getTracks().size()) > 0 ) {
+	      
+	      ++nRecoCh;
+	      energyRecoCh += energyReconstructedParticle;
+
 	    }
-	    
+	    else {
+
+	      ++nRecoN;
+	      energyRecoN += energyReconstructedParticle;
+	      
+	    }
+
 	  }
 	  
 	}
 	
       }
-      
+      	  
+      #ifdef MARLIN_USE_AIDA
+      _cNumberReconstructedParticles->fill(nReconstructedParticles);
+      _cEnergySumReconstructedParticles->fill(energySumReconstructedParticles);
+      #endif
+	
+      nReco = nReconstructedParticles;
+      energyReco = energySumReconstructedParticles;
+
     }
-
-    cNumberCaloHits->fill(numberHits);
-    cEnergyCaloHitsSum->fill(energySum);
-
-    double accumulatedEnergies[20] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,};
-    MarlinUtil::getMC_Balance(evt,accumulatedEnergies);
-    float SEMC = (float)accumulatedEnergies[0];
-
-    cDifferenceEnergyCaloSumAndMCEnergy->fill(energySum-SEMC);
-
-
-  }
-  catch(DataNotAvailableException &e){
-      std::cout << "CalorimeterHit collection not available in Check Plot processor" << std::endl ;
-  };
+    catch(DataNotAvailableException &e){std::cout << "no valid reconstructed particle collection available in event " << _nEvt << std::endl; };
   
 
-  #endif
+    _nReco = nReco;
+    _nRecoCh = nRecoCh;
+    _nRecoN = nRecoN;
+    
+    _energyReco = energyReco;
+    _energyRecoCh = energyRecoCh;
+    _energyRecoN = energyRecoN;
+
+  }
+
+}
+
+
+
+
+void CheckPlots::fillComparisonMCRecoPlots() {
+
+  if (_fillComparisonMCReco) {
+
+    if ( _fillMCGen && _fillReconstructedParticles ) {
+
+      _cNumberMCvsNumberReco->fill(_nMC,_nReco);
+      _cNumberMCChvsNumberRecoCh->fill(_nMCCh,_nRecoCh);
+      _cNumberMCNvsNumberRecoN->fill(_nMCN,_nRecoN);
+      
+      _cEnergyMCvsEnergyReco->fill(_energyMC,_energyReco);
+      _cEnergyMCChvsEnergyRecoCh->fill(_energyMCCh,_energyRecoCh);
+      _cEnergyMCNvsEnergyRecoN->fill(_energyMCN,_energyRecoN);
+
+    }
+
+  }
 
 }

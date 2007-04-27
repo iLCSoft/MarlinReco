@@ -27,38 +27,43 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
   ecalCollections.push_back(std::string("ecal02_EcalBarrel"));
   ecalCollections.push_back(std::string("ecal02_EcalEndcap"));
 
-  registerProcessorParameter( "ECALCollections" , 
-			      "ECAL Collection Names" ,
-			      _ecalCollections ,
-			       ecalCollections);
-
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "ECALCollections" , 
+			    "ECAL Collection Names" ,
+			    _ecalCollections ,
+			    ecalCollections);
+  
   std::vector<std::string> hcalCollections;
 
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelEnd"));
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalBarrelReg"));
   hcalCollections.push_back(std::string("hcalFeScintillator_HcalEndCaps"));
 
-  registerProcessorParameter("HCALCollections" , 
-			     "HCAL Collection Names" , 
-			     _hcalCollections , 
-			     hcalCollections);
-
-  registerProcessorParameter("ECALOutputCollection" , 
-			     "ECAL Collection of real Hits" , 
-			     _outputEcalCollection , 
-			     std::string("ECAL")) ; 
-
-  registerProcessorParameter("HCALOutputCollection" , 
-			     "HCAL Collection of real Hits" , 
-			     _outputHcalCollection , 
-			     std::string("HCAL")) ; 
-
+  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
+			    "HCALCollections" , 
+			    "HCAL Collection Names" , 
+			    _hcalCollections , 
+			    hcalCollections);
   
-  registerProcessorParameter("RelationOutputCollection" , 
-			     "CaloHit Relation Collection" , 
-			     _outputRelCollection , 
-			     std::string("RelationCaloHit")) ; 
-
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
+			    "ECALOutputCollection" , 
+			    "ECAL Collection of real Hits" , 
+			    _outputEcalCollection , 
+			    std::string("ECAL")) ; 
+  
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
+			    "HCALOutputCollection" , 
+			    "HCAL Collection of real Hits" , 
+			    _outputHcalCollection , 
+			    std::string("HCAL")) ; 
+  
+  
+  registerOutputCollection( LCIO::LCRELATION, 
+			    "RelationOutputCollection" , 
+			    "CaloHit Relation Collection" , 
+			    _outputRelCollection , 
+			    std::string("RelationCaloHit")) ; 
+  
   registerProcessorParameter("ECALThreshold" , 
 			     "Threshold for ECAL Hits in GeV" ,
 			     _thresholdEcal,
@@ -127,8 +132,11 @@ SimpleCaloDigi::SimpleCaloDigi() : Processor("SimpleCaloDigi") {
 
 void SimpleCaloDigi::init() {
 
-    _nRun = -1;
-    _nEvt = 0;
+  _nRun = -1;
+  _nEvt = 0;
+
+  //fg: need to set default encoding in for reading old files...
+  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
 
 }
 
@@ -154,116 +162,116 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
   hcalcol->setFlag(flag.getFlag());
 
 
-// 
-// * Reading Collections of ECAL Simulated Hits * 
-// 
+  // 
+  // * Reading Collections of ECAL Simulated Hits * 
+  // 
   string initString;
   for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
-      try{
-	  LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
-          initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
-	  int numElements = col->getNumberOfElements();
-	   CellIDDecoder<SimCalorimeterHit> idDecoder( col );
-	  for (int j(0); j < numElements; ++j) {
-	      SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
-	      float energy = hit->getEnergy();
+    try{
+      LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
+      initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
+      int numElements = col->getNumberOfElements();
+      CellIDDecoder<SimCalorimeterHit> idDecoder( col );
+      for (int j(0); j < numElements; ++j) {
+	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+	float energy = hit->getEnergy();
 
-	      if (energy > _thresholdEcal) {
-		  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
-		  int cellid = hit->getCellID0();
-		  int cellid1 = hit->getCellID1();
-		  float calibr_coeff(1.);
-		  int layer = idDecoder(hit)["K-1"];
-		  for (unsigned int k(0); k < _ecalLayers.size(); ++k) {
-		      int min,max;
-		      if (k == 0) 
-			  min = 0;		      
-		      else 
-			  min = _ecalLayers[k-1];		      
-		      max = _ecalLayers[k];
-		      if (layer >= min && layer < max) {
-			  calibr_coeff = _calibrCoeffEcal[k];
-			  break;
-		      }
-		  } 
-		  calhit->setCellID0(cellid);
-		  calhit->setCellID1(cellid1);
-		  if (_digitalEcal) {
-		      calhit->setEnergy(calibr_coeff); 
-		  }
-		  else {
-		      calhit->setEnergy(calibr_coeff*energy);
-		  }
-		  calhit->setPosition(hit->getPosition());
-		  calhit->setType((int)0);
-		  calhit->setRawHit(hit);
-		  ecalcol->addElement(calhit);
-		  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
-		  relcol->addElement( rel );
-	      }
-
+	if (energy > _thresholdEcal) {
+	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
+	  int cellid = hit->getCellID0();
+	  int cellid1 = hit->getCellID1();
+	  float calibr_coeff(1.);
+	  int layer = idDecoder(hit)["K-1"];
+	  for (unsigned int k(0); k < _ecalLayers.size(); ++k) {
+	    int min,max;
+	    if (k == 0) 
+	      min = 0;		      
+	    else 
+	      min = _ecalLayers[k-1];		      
+	    max = _ecalLayers[k];
+	    if (layer >= min && layer < max) {
+	      calibr_coeff = _calibrCoeffEcal[k];
+	      break;
+	    }
+	  } 
+	  calhit->setCellID0(cellid);
+	  calhit->setCellID1(cellid1);
+	  if (_digitalEcal) {
+	    calhit->setEnergy(calibr_coeff); 
 	  }
+	  else {
+	    calhit->setEnergy(calibr_coeff*energy);
+	  }
+	  calhit->setPosition(hit->getPosition());
+	  calhit->setType((int)0);
+	  calhit->setRawHit(hit);
+	  ecalcol->addElement(calhit);
+	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
+	  relcol->addElement( rel );
+	}
+
       }
-      catch(DataNotAvailableException &e){ 
-      }
+    }
+    catch(DataNotAvailableException &e){ 
+    }
   }
   ecalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(ecalcol,_outputEcalCollection.c_str());
 
 
-//
-// * Reading HCAL Collections of Simulated Hits * 
-//
+  //
+  // * Reading HCAL Collections of Simulated Hits * 
+  //
 
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
-      try{
-	  LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
-	  initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
-	  int numElements = col->getNumberOfElements();
-	  CellIDDecoder<SimCalorimeterHit> idDecoder(col);
-	  for (int j(0); j < numElements; ++j) {
-	      SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
-	      float energy = hit->getEnergy();
+    try{
+      LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
+      initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
+      int numElements = col->getNumberOfElements();
+      CellIDDecoder<SimCalorimeterHit> idDecoder(col);
+      for (int j(0); j < numElements; ++j) {
+	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+	float energy = hit->getEnergy();
 
 
-	      if (energy > _thresholdHcal) {
-		  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
-		  int cellid = hit->getCellID0();
-		  int cellid1 = hit->getCellID1();
-		  float calibr_coeff(1.);
-		  int layer =idDecoder(hit)["K-1"]; 
-		  for (unsigned int k(0); k < _hcalLayers.size(); ++k) {
-		      int min,max;
-		      if (k == 0) 
-			  min = 0;
-		      else 
-			  min = _hcalLayers[k-1];
-		      max = _hcalLayers[k];
-		      if (layer >= min && layer < max) {
-			  calibr_coeff = _calibrCoeffHcal[k];
-			  break;
-		      }
-		  } 
-		  calhit->setCellID0(cellid);		  
-		  calhit->setCellID1(cellid1);
-		  if (_digitalHcal) {
-		      calhit->setEnergy(calibr_coeff); 
-		  }
-		  else {
-		      calhit->setEnergy(calibr_coeff*energy);
-		  }
-		  calhit->setPosition(hit->getPosition());
-		  calhit->setType(int(1));
-		  calhit->setRawHit(hit);
-		  hcalcol->addElement(calhit);
-		  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
-		  relcol->addElement( rel );
-	      }
-
+	if (energy > _thresholdHcal) {
+	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
+	  int cellid = hit->getCellID0();
+	  int cellid1 = hit->getCellID1();
+	  float calibr_coeff(1.);
+	  int layer =idDecoder(hit)["K-1"]; 
+	  for (unsigned int k(0); k < _hcalLayers.size(); ++k) {
+	    int min,max;
+	    if (k == 0) 
+	      min = 0;
+	    else 
+	      min = _hcalLayers[k-1];
+	    max = _hcalLayers[k];
+	    if (layer >= min && layer < max) {
+	      calibr_coeff = _calibrCoeffHcal[k];
+	      break;
+	    }
+	  } 
+	  calhit->setCellID0(cellid);		  
+	  calhit->setCellID1(cellid1);
+	  if (_digitalHcal) {
+	    calhit->setEnergy(calibr_coeff); 
 	  }
+	  else {
+	    calhit->setEnergy(calibr_coeff*energy);
+	  }
+	  calhit->setPosition(hit->getPosition());
+	  calhit->setType(int(1));
+	  calhit->setRawHit(hit);
+	  hcalcol->addElement(calhit);
+	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
+	  relcol->addElement( rel );
+	}
+
       }
-      catch(DataNotAvailableException &e){ 
-      }
+    }
+    catch(DataNotAvailableException &e){ 
+    }
   }
   hcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(hcalcol,_outputHcalCollection.c_str());

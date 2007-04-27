@@ -10,6 +10,10 @@
 #include "TrackExtended.h"
 #include <string>
 #include <vector>
+#include <algorithm>
+
+#include "PFlowObjectCollection.h"
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -90,7 +94,7 @@ using namespace marlin ;
  *    <a href="http://www.desy.de/~rasp/Raspereza_pfa.pdf">
  *     http://www.desy.de/~rasp/Raspereza_pfa.pdf</a> <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $Id: Wolf.h,v 1.6 2006-02-22 12:19:21 owendt Exp $<br>
+ *    @version $Id: Wolf.h,v 1.7 2007-04-27 13:42:19 owendt Exp $<br>
  */
 class Wolf : public Processor {
   
@@ -143,21 +147,21 @@ class Wolf : public Processor {
   float _distMergeCut;
   int _mergeClusters;
   int _nHitsInFit;
+  int _useTracks;
 
   ClusterExtendedVec _clusterVec;
   TrackExtendedVec   _trackVec;
 
   void initialiseEvent( LCEvent * evt );
   void createPartCollection( LCEvent * evt);
+  void createPartCollection2( LCEvent * evt);
   void ClusterTrackMatching();
   void defineIntersection( TrackExtended * track);    
   float DistanceBetweenPoints(float * x1, float * x2 );
   void MergeClustersToTracks();
   float angleVectors(float * vec1, float * vec2);
   void CleanUp();
+
 } ;
 
 #endif
-
-
-

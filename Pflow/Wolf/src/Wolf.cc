@@ -18,6 +18,9 @@
 #include <UTIL/LCRelationNavigator.h>
 #include <math.h>
 
+#include <stdlib.h>
+#include <time.h>
+
 // GEAR include files
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
@@ -28,6 +31,7 @@
 
 using namespace lcio ;
 using namespace marlin ;
+
 
 
 Wolf aWolf ;
@@ -107,6 +111,12 @@ Wolf::Wolf() : Processor("Wolf") {
 			      _nHitsInFit,
 			      (int)40);
 
+  registerProcessorParameter( "UseTracks",
+			      "Use Tracks for the reconstruction or take the calorimeter information only",
+			      _useTracks,
+			      (int)1);
+
+
 }
 
 void Wolf::init() {
@@ -136,7 +146,8 @@ void Wolf::processEvent( LCEvent * evt ) {
   ClusterTrackMatching();
   if (_mergeClusters == 1) 
     MergeClustersToTracks();  
-  createPartCollection( evt );
+  //createPartCollection( evt );
+  createPartCollection2( evt );
   CleanUp();
   _nEvt++;
 
@@ -171,8 +182,32 @@ void Wolf::initialiseEvent( LCEvent * evt ) {
     for (int ielem=0; ielem < nelem; ++ielem) {
       Track * track = dynamic_cast<Track*>(col->getElementAt(ielem));
       TrackExtended * trackAR = new TrackExtended( track );
+
+      /*
+      // changed OW: TEST, cylindrical cut on track end points
+      const TrackerHitVec& tvec = track->getTrackerHits();
+      double zmax  = -1000000000.0;
+      double r2max =  0.0;
+
+      for (unsigned int i = 0; i < tvec.size(); ++i ) {
+	TrackerHit* t = tvec.at(i);
+	const double* pos = t->getPosition();
+	if (fabs(pos[2]) > zmax) {
+	  zmax  = pos[2];
+	  r2max = pos[0]*pos[0] + pos[1]*pos[1];
+	}
+      }
+      if ( (zmax > 2000.0) || (r2max > 1000.0*1000.0) ) _trackVec.push_back( trackAR );
+      // end changed
+      */
+
       _trackVec.push_back( trackAR );
+
     }    
+
+    if (_useTracks == 0) _trackVec.clear();
+
+
     std::cout << "WOLF : # of Tracks = " << nelem  << std::endl;
   }
   catch( DataNotAvailableException &e){}
@@ -197,7 +232,6 @@ void Wolf::initialiseEvent( LCEvent * evt ) {
 void Wolf::createPartCollection( LCEvent * evt) {
 
     LCCollectionVec * recparcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-
 
     int nClusters = (int)_clusterVec.size();
     int nTracks = (int)_trackVec.size();
@@ -232,8 +266,7 @@ void Wolf::createPartCollection( LCEvent * evt) {
 	    recPart->addCluster( cluster );
 	    if (cluster->getSubdetectorEnergies().size() == 2) {
 	      EcalEnergy += cluster->getSubdetectorEnergies()[0];
-	      totEnergy += cluster->getEnergy();
-	      
+	      totEnergy += cluster->getEnergy();	      
 	    }
 	  }
 	}
@@ -245,7 +278,8 @@ void Wolf::createPartCollection( LCEvent * evt) {
 	for (int j=0; j < 3; ++j) {
 	  Mom[j] = helix->getMomentum()[j];
 	  energy += Mom[j]*Mom[j];
-	}	
+	}
+	
 	energy = sqrt(energy+mass*mass);
 	float charge = omega/fabs(omega); 	
 	recPart->setMomentum( Mom );
@@ -506,6 +540,7 @@ void Wolf::ClusterTrackMatching() {
   int nTracks = (int)_trackVec.size();
   int nClusters = (int)_clusterVec.size();
 
+
   for (int i(0); i < nTracks; ++i) {
     TrackExtended * track = _trackVec[i];
     defineIntersection( track );    
@@ -531,14 +566,40 @@ void Wolf::ClusterTrackMatching() {
 	  clusterToAttach = clusterAR;	
 	}
       }
-
+      
     }
     if (minDist < _distTrackToCluster && clusterToAttach != NULL) {
       track->addCluster(clusterToAttach);
       clusterToAttach->addTrackExtended( track );
     }
-
+    
   }
+  
+
+
+  // match tracks and clusters randomly
+  /*
+  srand( time(NULL) );
+
+  int randomCluster = 0;
+  ClusterExtended * clusterToAttach = NULL;
+
+  for (int i(0); i < nTracks; ++i) {
+    TrackExtended* track = _trackVec[i];
+    // it is possible that one cluster is related to more than one track (the same as in the original Wolf PFlow concept)
+    randomCluster = rand()%nClusters;
+    ClusterExtended* clusterAR = _clusterVec[randomCluster];
+    clusterToAttach = clusterAR;
+    track->addCluster(clusterToAttach);
+    clusterToAttach->addTrackExtended( track );
+ }
+  */
+
+
+
+
+
+
 
 }
 
@@ -708,3 +769,226 @@ void Wolf::CleanUp() {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+void Wolf::createPartCollection2( LCEvent * evt) {
+
+  
+  PFlowObjectCollection* listOfPFlowObjects = new PFlowObjectCollection();
+
+  listOfPFlowObjects->combinePFlowObject(_trackVec,_clusterVec);
+
+
+  // build reco particle collections  
+  LCCollectionVec * recparcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  
+  int nOfRecParticles = listOfPFlowObjects->getNumberOfPFlowObjects();
+
+  for (int i=0; i < nOfRecParticles; ++i) {
+
+    PFlowObject* p = listOfPFlowObjects->getPFlowObjectAt(i);
+
+    // charged objects
+    unsigned int nOfTracks = p->getNOfTracks();
+    if (nOfTracks != 0) {
+
+      // PFlow Objects with single track
+      if (nOfTracks == 1) {
+	
+	TrackExtended * trackAR = p->getTrackAt(0);
+	Track * track = trackAR->getTrack();
+	float d0, z0, omega, phi0, tanlambda;      
+	d0 = track->getD0();
+	z0 = track->getZ0();
+	omega = track->getOmega();
+	phi0  = track->getPhi();
+	tanlambda = track->getTanLambda();
+	
+	if (fabs(d0) < _rPhiCut && fabs(z0) < _zCut) {      
+	  HelixClass * helix = new HelixClass();
+	  helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);
+	  ReconstructedParticleImpl * recPart
+	    = new ReconstructedParticleImpl();	
+	  float Mom[3];
+	  float mass = 0.140;
+	  float energy = 0.0;
+	  int IDPart = 2;
+	  
+	  ClusterExtendedVec clusterVec = p->getClusterCollection();
+	  int nClst = (int)clusterVec.size();
+	  float EcalEnergy = 0.0;
+	  float totEnergy  = 0.0;
+	  for (int iClst=0; iClst<nClst; ++iClst) {
+	    ClusterExtended * clusterAR = clusterVec[iClst];
+
+	    Cluster * cluster = clusterAR->getCluster();
+
+	    if (cluster != NULL) {
+	      recPart->addCluster( cluster );
+	      if (cluster->getSubdetectorEnergies().size() == 2) {
+		EcalEnergy += cluster->getSubdetectorEnergies()[0];
+		totEnergy += cluster->getEnergy();	      
+	      }
+	    }
+	  }
+
+	  
+	  
+	  float fraction = EcalEnergy/fmax(totEnergy,1.0e-6);
+	  if (fraction > _fractionEM) {
+	    IDPart = 1;
+	    mass = 0.0;
+	  }
+	  for (int j=0; j < 3; ++j) {
+	    Mom[j] = helix->getMomentum()[j];
+	    energy += Mom[j]*Mom[j];
+	  }
+	  
+	  energy = sqrt(energy+mass*mass);
+	  float charge = omega/fabs(omega); 	
+	  recPart->setMomentum( Mom );
+	  recPart->setEnergy( energy );
+	  recPart->setMass( mass );
+	  recPart->setCharge( charge );
+	  recPart->setType( IDPart );
+	  recPart->addTrack( track );
+	  recparcol->addElement( recPart );
+	  delete helix;
+	}
+
+      }
+
+      // PFlow Objects with several tracks
+      else {
+	
+	ReconstructedParticleImpl * recPart = new ReconstructedParticleImpl();	
+
+	float Mom[3] = {0.0,0.0,0.0};
+	float absMom = 0.0;
+	float Position[3] = {0.0,0.0,0.0};
+	float rPos = 0.0;
+	float mass = 0.0;
+	float energy = 0.0;
+	float charge = 0.0;
+	int IDPart = 99;
+	
+	TrackExtendedVec colOfTracks = p->getTrackCollection();
+	
+	int nTracks = colOfTracks.size();	
+	mass = nTracks * 0.140;
+
+	for (int g = 0; g < nTracks; ++g)  {
+	  TrackExtended* tTempExt = p->getTrackAt(g);
+	  Track* tTemp = tTempExt->getTrack();
+	  
+	  float omega = tTemp->getOmega();	  
+	  charge += omega/fabs(omega);
+	  
+	  recPart->addTrack( tTemp );
+
+	}
+
+
+	ClusterExtendedVec colOfClusters = p->getClusterCollection();
+	
+	int nClusters = colOfClusters.size();
+	for (int g = 0; g < nClusters; ++g)  {
+	  ClusterExtended* clTempExt = p->getClusterAt(g);
+	  Cluster* clTemp = clTempExt->getCluster();
+
+	  for (int ii = 0; ii < 3; ++ii)  Position[ii] += clTemp->getPosition()[ii];
+
+	  energy += clTemp->getEnergy();
+	  
+	  recPart->addCluster( clTempExt->getCluster() );
+	  
+	}
+	
+	if ( (energy*energy) < (mass*mass)) std::cout << "E^2 - m^2 < 0, misassignment of mass -> bad particle ID" << std::endl;
+	
+	
+	absMom = sqrt( (energy * energy) - (mass * mass) );
+	
+	for (int ii = 0; ii < 3; ++ii) rPos += Position[ii] * Position[ii];
+		
+	for (int ii = 0; ii < 3; ++ii) Mom[ii] = (absMom/sqrt(rPos)) * Position[ii];
+
+
+	recPart->setMomentum( Mom );
+	recPart->setEnergy( energy );
+	recPart->setMass( mass );
+	recPart->setCharge( charge );
+	recPart->setType( IDPart );
+	
+	recparcol->addElement( recPart );
+	
+      }
+    }
+    
+    // neutrals
+    else {
+
+      ClusterExtended* clExt =  p->getClusterAt(0);
+      Cluster * cluster = clExt->getCluster();
+      ReconstructedParticleImpl * recPart 
+	= new ReconstructedParticleImpl();
+      float Mom[3];
+      float mass = 0.498;
+      float totGravity = 0.0;
+      float totene = cluster->getEnergy();
+      for (int ii(0); ii < 3; ++ii) {
+	float xgrav = cluster->getPosition()[ii];
+	Mom[ii] = totene*xgrav;
+	totGravity += xgrav*xgrav;
+      }
+      totGravity = sqrt(totGravity);
+      Mom[0] = Mom[0]/totGravity;
+      Mom[1] = Mom[1]/totGravity;
+      Mom[2] = Mom[2]/totGravity;
+      int IDPart = 4;
+      if (cluster->getSubdetectorEnergies().size() == 2) {
+	float EcalEnergy = cluster->getSubdetectorEnergies()[0];
+	float totEnergy = cluster->getEnergy();
+	float fraction = EcalEnergy/fmax(totEnergy,1.0e-6);
+	if (fraction > _fractionEM) { 
+	  IDPart = 3;
+	  mass = 0.0;
+	}
+      }
+      float energy = sqrt(Mom[0]*Mom[0]+
+			  Mom[1]*Mom[1]+
+			  Mom[2]*Mom[2]+
+			  mass*mass);
+      recPart->setMomentum( Mom );
+      recPart->setEnergy( energy );
+      recPart->setMass( mass );
+      recPart->setCharge(0.);
+      recPart->setType(IDPart);
+      recPart->addCluster( cluster );
+      recparcol->addElement( recPart );	      
+	
+    }
+  }
+  
+  evt->addCollection( recparcol , _particleCollection.c_str() );
+
+  
+
+  // delete transient objects
+  delete listOfPFlowObjects;
+  listOfPFlowObjects = 0;
+
+
+ 
+}
+

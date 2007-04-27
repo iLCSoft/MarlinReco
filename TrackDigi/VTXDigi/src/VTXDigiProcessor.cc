@@ -11,6 +11,9 @@
 // #include <CLHEP/Random/RandGauss.h>
 #include <gsl/gsl_randist.h>
 
+#include <cmath>
+#include <math.h>
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace std ;

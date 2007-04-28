@@ -15,7 +15,9 @@ INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater/in
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater5_3/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/NNClustering/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/TrackwiseClustering/include" )
+INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/PhotonFinderKit/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/Wolf/include" )
+INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/TrackBasedPFlow/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/FTDDigi/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/TPCDigi/include" )
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/VTXDigi/include" )
@@ -126,12 +128,34 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackwiseClustering_cxx_srcs} PROPERTIES
 
 
 ####################################################################################################
+# PhotonFinderKit
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Clustering/PhotonFinderKit/src PhotonFinderKit_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${PhotonFinderKit_cxx_srcs} PROPERTIES
+	# require proper c++
+	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+
+####################################################################################################
 # Wolf
 
 # cxx sources
 AUX_SOURCE_DIRECTORY( ../Pflow/Wolf/src Wolf_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${Wolf_cxx_srcs} PROPERTIES
+	# require proper c++
+	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+
+####################################################################################################
+# TrackBasedPFlow
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Pflow/TrackBasedPFlow/src TrackBasedPFlow_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${TrackBasedPFlow_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
@@ -253,7 +277,9 @@ SET( lib_srcs
 	${ClusterCheater5_3_cxx_srcs}
 	${NNClustering_cxx_srcs}
 	${TrackwiseClustering_cxx_srcs}
+	${PhotonFinderKit_cxx_srcs}
 	${Wolf_cxx_srcs}
+	${TrackBasedPFlow_cxx_srcs}
 	${FTDDigi_cxx_srcs}
 	${TPCDigi_cxx_srcs}
 	${VTXDigi_cxx_srcs}

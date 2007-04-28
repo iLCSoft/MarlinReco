@@ -350,21 +350,7 @@ void TrackBasedPFlow::init()
 
 
   // debug
-  /*if (_drawOnCED)*/  MarlinCED::init(this);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if (_drawOnCED)  MarlinCED::init(this);
 
 
   _mcParticleHelper = new MCParticleHelper();

@@ -1,3 +1,625 @@
+2007-04-30 17:43  gaede
+
+	* doc/release.notes:  v00-03
+
+2007-04-28 18:44  engels
+
+	* src/CMakeLists.txt: added PhotonFinderKit and TrackBasedPFlow
+	  processors
+
+2007-04-28 17:03  owendt
+
+	* Pflow/TrackBasedPFlow/src/TrackBasedPFlow.cc: bug fix
+
+2007-04-28 09:11  gaede
+
+	* Pflow/Wolf/src/Wolf.cc: reverted changes by OW, i.e. deactivated
+	  CED again
+
+2007-04-27 15:54  owendt
+
+	* Pflow/Wolf/: include/Wolf.h, src/Wolf.cc: reverted to version 1.6
+
+2007-04-27 15:42  owendt
+
+	* Pflow/: TrackBasedPFlow/doc/Doxyfile,
+	  TrackBasedPFlow/include/TrackBasedPFlow.h,
+	  TrackBasedPFlow/src/GNUmakefile,
+	  TrackBasedPFlow/src/TrackBasedPFlow.cc, Wolf/include/Wolf.h,
+	  Wolf/src/Wolf.cc: initial version of a Track-Based Particle Flow
+	  processor
+
+2007-04-27 15:30  owendt
+
+	* Analysis/CheckPlots/: include/CheckPlots.h, src/CheckPlots.cc:
+	  added several new histograms/clouds filled in this processor
+
+2007-04-27 12:35  gaede
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: added <cmath> and
+	  <math.h> for gcc3.4 and higher
+
+2007-04-27 11:02  gaede
+
+	* examples/LDC/: gear_ldc.xml, steer_ldc.xml: made compatible with
+	  current code version
+
+2007-04-27 11:02  gaede
+
+	* CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc: added default string
+	  for decoding
+
+2007-04-26 12:28  krstonos
+
+	* Clustering/PhotonFinderKit/src/KIT.cc: removed cout's
+
+2007-04-26 12:21  krstonos
+
+	* Clustering/PhotonFinderKit/: include/KIT.h, include/KITutil.h,
+	  src/KIT.cc, src/KITutil.cc, src/GNUmakefile: [no log message]
+
+2007-04-26 12:13  krstonos
+
+	* CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc: corrected writting of
+	  coding string
+
+2007-04-26 10:56  gaede
+
+	* GNUmakefile: test - ignore
+
+2007-04-25 14:56  engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: improved build_shared_libs
+
+2007-04-25 11:54  engels
+
+	* CMakeLists.txt: bug fix: install_prefix
+
+2007-04-25 11:00  engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: moved dependencies to
+	  top-level CMakeLists.txt
+
+2007-04-24 09:30  rasp
+
+	* examples/steer_ldctracking.xml:
+
+	  Updated Marlin steering file.
+
+2007-04-24 09:30  rasp
+
+	* examples/README:
+
+	  Updated README file
+
+2007-04-24 09:25  rasp
+
+	* examples/gear_ldc01_tracking.xml:
+
+	  Gear steering for LDC01 Mokka model
+
+2007-04-24 09:24  rasp
+
+	* examples/gear_ldc00_tracking.xml:
+	  Gear steering for the LDC00 Mokka model
+
+2007-04-23 19:14  engels
+
+	* CMakeLists.txt, MarlinRecoConfig.cmake.in,
+	  cmake_uninstall.cmake.in, src/CMakeLists.txt: added CMake files
+
+2007-04-20 16:42  rasp
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc:
+	  New version of digitizer. Covariance matrix is added for LCIO
+	  object TrackerHit
+
+2007-04-20 16:38  rasp
+
+	* TrackDigi/: VTXDigi/include/VTXDigiProcessor.h,
+	  VTXDigi/src/VTXDigiProcessor.cc,
+	  FTDDigi/include/FTDDigiProcessor.h,
+	  FTDDigi/src/FTDDigiProcessor.cc:
+	  New version of digitizer. Covariance matrix for LCIO object
+	  TrackerHit is added
+
+2007-04-20 15:57  rasp
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc:
+	  New version of FullLDCTracking. Calculation of full covariance
+	  matrix is added
+
+2007-04-20 15:46  rasp
+
+	* Tracking/TrackCheater/: include/TrackCheater.h,
+	  src/TrackCheater.cc:
+	  New header and source files. Track fitting with DELPHI package
+	  added. Full covariance matrix is calculated
+
+2007-04-20 15:44  rasp
+
+	* Tracking/SiliconTracking/: include/MaterialDB.h,
+	  include/SiliconTracking.h, src/MaterialDB.cc,
+	  src/SiliconTracking.cc:
+	  New versions of source and header files. Calculation of full
+	  covariance matrix added
+
+2007-04-20 15:41  rasp
+
+	* Tracking/BrahmsTracking/src/f77/trackfit.F:
+	  Interface to DELPHI fitting routine
+
+2007-04-20 15:40  rasp
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  src/LEPTrackingProcessor.cc, src/f77/fk3trk.F, src/f77/setmat.F,
+	  src/f77/tflnk2.F, src/f77/tktrev.F, src/f77/trkfit.F:
+	  Modified source files.
+
+2007-03-27 12:47  samson
+
+	* Analysis/EventShapes/src/ThrustReconstruction.cc: Fix Typo
+
+2007-03-22 20:08  samson
+
+	* Analysis/EventShapes/src/ThrustReconstruction.cc: avoid 2
+	  dynamic_casts in loop over all events
+
+2007-03-17 15:36  samson
+
+	* Analysis/SatoruJetFinder/: include/SatoruJetFinderProcessor.h,
+	  src/SatoruJetFinderProcessor.cc: Write separation measures of
+	  jets as parameter to the collections
+
+2007-03-14 16:54  gaede
+
+	* CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc: fixed wrong output
+	  collection type
+
+2007-03-01 16:54  engels
+
+	* GNUmakefile, Analysis/EventShapes/src/GNUmakefile,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Calibration/AbsCalibration/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/NNClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Pflow/Wolf/src/GNUmakefile, TrackDigi/FTDDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/VTXDigi/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/FullLDCTracking/src/GNUmakefile,
+	  Tracking/SiliconTracking/src/GNUmakefile,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/VertexTracking/src/GNUmakefile, src/GNUmakefile:
+	  libraries put back to the original place
+
+2007-02-21 14:52  engels
+
+	* Analysis/EventShapes/src/GNUmakefile,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Calibration/AbsCalibration/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/NNClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Pflow/Wolf/src/GNUmakefile, TrackDigi/FTDDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/VTXDigi/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/FullLDCTracking/src/GNUmakefile,
+	  Tracking/SiliconTracking/src/GNUmakefile,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/VertexTracking/src/GNUmakefile: bug fix: -I CPP Flag
+	  whitespace removed
+
+2007-02-16 17:52  engels
+
+	* Analysis/EventShapes/src/GNUmakefile,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/NNClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Pflow/Wolf/src/GNUmakefile, TrackDigi/FTDDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/VTXDigi/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/FullLDCTracking/src/GNUmakefile,
+	  Tracking/SiliconTracking/src/GNUmakefile,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/VertexTracking/src/GNUmakefile: bug fix: removed
+	  whitespaces from -L -I compile flags
+
+2007-02-16 14:52  engels
+
+	* src/GNUmakefile: fixed for not having to build MarlinReco from
+	  within Marlin
+
+2007-02-09 16:00  engels
+
+	* src/GNUmakefile: better visualization of the build process
+
+2007-01-19 14:12  engels
+
+	* Tracking/: BrahmsTracking/src/CurlKillerProcessor.cc,
+	  FullLDCTracking/include/FullLDCTracking.h,
+	  FullLDCTracking/src/FullLDCTracking.cc,
+	  SiliconTracking/include/SiliconTracking.h,
+	  SiliconTracking/src/SiliconTracking.cc: changed
+	  registerProcessorParameter to register(Input/Output)Collection(s)
+
+2007-01-18 14:01  engels
+
+	* Analysis/EventShapes/src/GNUmakefile,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Calibration/AbsCalibration/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/NNClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Pflow/Wolf/src/GNUmakefile, TrackDigi/FTDDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/VTXDigi/src/GNUmakefile,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/FullLDCTracking/src/GNUmakefile,
+	  Tracking/SiliconTracking/src/GNUmakefile,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/VertexTracking/src/GNUmakefile: fixed needed includes
+
+2007-01-17 17:20  engels
+
+	* Tracking/: FullLDCTracking/src/GNUmakefile,
+	  SiliconTracking/src/GNUmakefile: bug fix: makefiles for
+	  FullLDCTracking and SiliconTracking updated
+
+2007-01-12 12:13  engels
+
+	* Tracking/BrahmsTracking/src/GNUmakefile: fixed small bug in f77
+	  compile flags
+
+2007-01-11 18:21  engels
+
+	* Tracking/VertexTracking/doc/Doxyfile: added doxygen file
+
+2007-01-11 18:15  engels
+
+	* GNUmakefile, Analysis/EventShapes/doc/Doxyfile,
+	  Analysis/SatoruJetFinder/doc/Doxyfile,
+	  Analysis/SatoruJetFinder/src/GNUmakefile,
+	  Calibration/AbsCalibration/src/GNUmakefile,
+	  CaloDigi/LDCCaloDigi/doc/Doxyfile,
+	  CaloDigi/LDCCaloDigi/src/GNUmakefile,
+	  Clustering/ClusterCheater/doc/Doxyfile,
+	  Clustering/ClusterCheater/src/GNUmakefile,
+	  Clustering/ClusterCheater5_3/doc/Doxyfile,
+	  Clustering/ClusterCheater5_3/src/GNUmakefile,
+	  Clustering/NNClustering/doc/Doxyfile,
+	  Clustering/NNClustering/src/GNUmakefile,
+	  Clustering/TrackwiseClustering/doc/Doxyfile,
+	  Clustering/TrackwiseClustering/src/GNUmakefile,
+	  Pflow/Wolf/doc/Doxyfile, Pflow/Wolf/src/GNUmakefile,
+	  TrackDigi/FTDDigi/doc/Doxyfile,
+	  TrackDigi/FTDDigi/src/GNUmakefile,
+	  TrackDigi/TPCDigi/doc/Doxyfile,
+	  TrackDigi/TPCDigi/src/GNUmakefile,
+	  TrackDigi/VTXDigi/doc/Doxyfile,
+	  TrackDigi/VTXDigi/src/GNUmakefile,
+	  Tracking/BrahmsTracking/doc/Doxyfile,
+	  Tracking/BrahmsTracking/src/GNUmakefile,
+	  Tracking/TrackCheater/doc/Doxyfile,
+	  Tracking/TrackCheater/src/GNUmakefile,
+	  Tracking/VertexTracking/src/GNUmakefile, doc/manual/makedoc.sh,
+	  src/GNUmakefile, Analysis/EventShapes/src/GNUmakefile: modified
+	  Makefiles to work with $MARLINWORKDIR
+
+2007-01-02 17:20  samson
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: Insert missing
+	  #include <cmath>
+
+2006-11-03 14:03  rasp
+
+	* examples/README:
+	  README file explaining how to run Track reconstruction in Marlin
+
+2006-11-03 13:33  rasp
+
+	* examples/ZHllX_350.slcio:
+	  LCIO file with ZH->llX events at 350GeV File is produced with
+	  Mokka. Model LDC01
+
+2006-11-03 13:31  rasp
+
+	* examples/gear_ldc01.xml:
+	  Example GEAR xml file to run full LDC tracking
+
+2006-11-03 13:30  rasp
+
+	* examples/steer_ldctracking.xml:
+	  Example steering file to run full LDC tracking
+
+2006-11-02 16:45  rasp
+
+	* TrackDigi/VTXDigi/include/VTXDigiProcessor.h:
+	  new header file
+
+2006-11-02 16:40  rasp
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc:
+	  New VTXDigiProcessor
+
+2006-11-02 16:06  rasp
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc:
+	  modified VTXDigiProcessor
+
+2006-11-02 14:04  rasp
+
+	* env.sh:
+	  New script to set environment variables for MarlinReco export
+	  LCIO=/afs/desy.de/group/it/ilcsoft/lcio/v01-07 export
+	  GEAR=/afs/desy.de/group/it/ilcsoft/gear/v00-03
+
+2006-11-02 13:35  rasp
+
+	* Tracking/SiliconTracking/include/SiliconTracking.h:
+
+	  SiliconTrackingProcessor
+
+2006-11-02 13:34  rasp
+
+	* Tracking/SiliconTracking/include/MaterialDB.h:
+	  Header file for MaterialDB Processor
+
+2006-11-02 13:32  rasp
+
+	* Tracking/FullLDCTracking/src/GNUmakefile:
+
+	  GNUmakefile
+
+2006-11-02 13:32  rasp
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc:
+
+	  Full LDC Tracking processor
+
+2006-11-02 13:31  rasp
+
+	* Tracking/FullLDCTracking/include/FullLDCTracking.h:
+	  Header file for FullLDCTracking processor
+
+2006-11-02 13:29  rasp
+
+	* Tracking/SiliconTracking/src/GNUmakefile:
+	  GNUMakefile
+
+2006-11-02 13:28  rasp
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc:
+
+	  Material Database processor
+
+2006-11-02 13:27  rasp
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc:
+	  Silicon Tracking processor
+
+2006-11-02 13:06  rasp
+
+	* Tracking/BrahmsTracking/src/f77/include/fkddes1.inc:
+
+	  Include file to describe conical shapes for Delphi fitting
+	  routine
+
+2006-11-02 13:04  rasp
+
+	* Tracking/BrahmsTracking/src/f77/trkfit.F:
+	  New fitting routine used in SiliconTracking and FullLDCTracking
+	  processors
+
+2006-11-02 13:03  rasp
+
+	* Tracking/BrahmsTracking/src/f77/fkxcon.F:
+	  Description of conical parts in material database
+
+2006-11-02 12:49  rasp
+
+	* Tracking/BrahmsTracking/src/f77/: fk3trk.F, fktfit.F, setmat.F,
+	  tfithl.F, tkmkte.F, tktrev.F, tpcgeom.F, include/fkexts.inc,
+	  include/fkfild.inc:
+	  Modified files adopted to FullLDCTracking processor
+
+2006-10-17 16:46  gaede
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: registered output collection of
+	  TrackerHits
+
+2006-10-17 14:34  gaede
+
+	* Clustering/ClusterCheater5_3/src/ClusterCheater5_3.cc,
+	  Clustering/NNClustering/src/NNClusterProcessor.cc,
+	  Clustering/TrackwiseClustering/src/CalorimeterFinalStage.cc,
+	  Clustering/TrackwiseClustering/src/TrackwiseClustering.cc,
+	  Pflow/Wolf/src/Wolf.cc,
+	  TrackDigi/FTDDigi/include/FTDDigiProcessor.h,
+	  TrackDigi/FTDDigi/src/FTDDigiProcessor.cc,
+	  TrackDigi/VTXDigi/include/VTXDigiProcessor.h,
+	  TrackDigi/VTXDigi/include/VTXDigitizer.h,
+	  TrackDigi/VTXDigi/src/VTXDigiProcessor.cc,
+	  TrackDigi/VTXDigi/src/VTXDigitizer.cc,
+	  Tracking/BrahmsTracking/src/CurlKillerProcessor.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc,
+	  Tracking/TrackCheater/src/TrackCheater.cc,
+	  Tracking/VertexTracking/include/VertexTracking.h,
+	  Tracking/VertexTracking/src/VertexTracking.cc: replaced
+	  registerProcessorParameter with registerInput/OutputCollection
+
+2006-10-17 14:33  gaede
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: renamed r to _random added
+	  registerCollectionParameter
+
+2006-10-11 18:22  gaede
+
+	* Analysis/EventShapes/src/Fox.cc,
+	  Analysis/EventShapes/src/SelectReconstructedParticle.cc,
+	  Analysis/EventShapes/src/Sphere.cc,
+	  Analysis/EventShapes/src/ThrustReconstruction.cc,
+	  Analysis/SatoruJetFinder/src/SatoruJetFinderProcessor.cc,
+	  CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc,
+	  Clustering/ClusterCheater/src/ClusterCheater.cc: use new methods
+	  registerInput(Output)Collection, needs Marlin fg20061011 or newer
+
+2006-10-10 11:18  aplin
+
+	* TrackDigi/TPCDigi/include/random.h: usage replaced by gsl
+
+2006-10-10 11:17  aplin
+
+	* TrackDigi/FTDDigi/: include/FTDDigiProcessor.h,
+	  src/FTDDigiProcessor.cc: removed the use of the random.h and
+	  replaced it with gsl version of ranlux to provide gaussian
+	  smearing
+
+2006-10-10 11:14  aplin
+
+	* TrackDigi/TPCDigi/: src/TPCDigiProcessor.cc,
+	  include/TPCDigiProcessor.h: Fixed bug where the smearing was
+	  shifted by 1mm due incorrect use of random number function.
+	  Gaussian smearing is now applied with the gsl version of the
+	  ranlux generator.
+
+2006-06-28 17:29  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/setmat.F, f77/tpcgeom.F: The B-Field is now variable for
+	  LEPTracking via the gear xml file. The B-Field is specified in
+	  the TPCParameters as follows: <parameter name="tpcBField"
+	  type="double"> 4.0  </parameter>
+
+	  The value is passed internaly to the F77 code via the same
+	  function which passes the TPC geometry i.e. gettpcgeom(float*
+	  innerrad, float* outerrad, int* npadrows, float* maxdrift, float*
+	  tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float*
+	  tpcbfield). It is set in setmat.F. tpcgeom.F had to be modified
+	  as it also uses gettpcgeom, although it does not make use of the
+	  B-Field.
+
+2006-06-02 11:07  owendt
+
+	* CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc: modified default name
+	  "RelCaloHit" to "RealtioCaloHit" to have the same kind of name as
+	  in the TPCDigitiser
+
+2006-05-28 17:24  owendt
+
+	* Tracking/TrackCheater/: include/TrackCheater.h,
+	  src/TrackCheater.cc: added processor parameter with the name of
+	  the LCRelation between the TrueTracks and the MC particles
+
+2006-05-28 17:22  owendt
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: changed text
+	  for the explanation of a processor parameter
+
+2006-05-27 15:58  owendt
+
+	* Analysis/CheckPlots/src/CheckPlots.cc: Added energy resolution
+	  plot.
+
+2006-05-27 15:58  owendt
+
+	* Analysis/CheckPlots/include/CheckPlots.h: Added calorimeter
+	  energy resolution plot.
+
+2006-05-22 15:16  owendt
+
+	* Analysis/CheckPlots/: include/CheckPlots.h, src/CheckPlots.cc:
+	  initial version of a check plot processor
+
+2006-05-19 18:06  gaede
+
+	* Clustering/NNClustering/include/NNClusterProcessor.h: added
+	  documentation
+
+2006-05-18 20:26  gaede
+
+	* Clustering/NNClustering/src/GNUmakefile: initial version
+
+2006-05-18 19:06  gaede
+
+	* Clustering/NNClustering/: doc/Doxyfile,
+	  include/NNClusterProcessor.h, src/NNClusterProcessor.cc: initial
+	  version
+
+2006-05-03 16:15  owendt
+
+	* Tracking/TrackCheater/src/TrackCheater.cc: removed some debug
+	  outputs
+
+2006-05-03 16:15  owendt
+
+	* Pflow/Wolf/src/Wolf.cc: commented out CED display of cluster
+	  seeds on layer 0
+
+2006-04-27 15:07  samson
+
+	* Calibration/AbsCalibration/include/AbsCalibr.h,
+	  TrackDigi/VTXDigi/src/MyG4UniversalFluctuationForSi.cc,
+	  Tracking/BrahmsTracking/src/CurlKillerProcessor.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: Fix minor
+	  syntax errors to achieve compatibility with gcc4
+
+2006-04-26 12:50  rasp
+
+	* examples/README: README file
+
+2006-04-26 12:50  rasp
+
+	* examples/top_6j_500GeV_silicon.slcio: Example LCIO file
+	  containing collections of VTX and FTD hits.  File is produced
+	  with Mokka program running on top->6jet events.
+
+2006-04-26 12:48  rasp
+
+	* examples/example_VTX_FTD.xml: Example steering file to run patrec
+	  on VTX and FTD hits
+
+2006-04-26 12:06  rasp
+
+	* TrackDigi/FTDDigi/src/FTDDigiProcessor.cc: Modified FTD digitizer
+	  processor. Position of hit is smeared according to gaussian
+	  distribution with the specified resolution.
+
+2006-04-26 12:05  rasp
+
+	* TrackDigi/FTDDigi/include/FTDDigiProcessor.h: Modified FTD
+	  digitizer. The position of hit is semared in r-phi plane
+	  according to Gaussian distribution with specified resolution.
+
+2006-04-26 11:59  rasp
+
+	* Tracking/VertexTracking/include/VertexTracking.h: New version of
+	  VertexTracking processor. Tracking in FTD is included.
+
+2006-04-26 11:59  rasp
+
+	* Tracking/VertexTracking/src/VertexTracking.cc: New version of
+	  VertexTracking. Includes also tracking in FTD.
+
+2006-03-31 10:48  gaede
+
+	* ChangeLog: intitial version
+
 2006-03-31 10:48  gaede
 
 	* doc/manual/manual_document.tex: added explanation for ccvssh

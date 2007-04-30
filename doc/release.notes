@@ -1,0 +1,20 @@
+================================
+
+ release notes for MarlinReco
+
+================================
+
+ --------
+| v00-03 |
+ --------
+  - improved Full Tracking  (A.Raspereza)
+
+  - initial version of TrackBasedPFA (O.Wendt)
+
+  - PhotonFinderKit (P. Krstonosic)
+
+  - added cmake support (epxerimental)
+ 
+
+
+

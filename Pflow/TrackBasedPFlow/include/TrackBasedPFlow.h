@@ -118,8 +118,6 @@ class TrackBasedPFlow : public Processor {
   double _zMinCutHelixExtrapolation;
   double _rMinCylindricalCut;
   double _zMinCylindricalCut;
-  double _rMaxHelix;
-  double _zMaxHelix;
   double _openingAngleConeTube;
   double _maximalConeTubeLength;
   double _maximalPathLengthForMIPLikeStub;
@@ -162,6 +160,8 @@ class TrackBasedPFlow : public Processor {
   float _thetaofendcap;
   float _weightForReso;
   float _weightForDist;
+  float _weightForResoForNeutrals;
+  float _weightForDistForNeutrals;
 
 
   // debug
@@ -291,6 +291,8 @@ class TrackBasedPFlow : public Processor {
   
   std::vector<CalorimeterHit*> getNeutralHitsAssignedToChargedParticle(LCEvent* evt, ReconstructedParticle* recoParticle, int& n, double& energy, double hitEnergyFraction=0.5);
   std::vector<CalorimeterHit*> getChargedHitsAssignedToNeutralParticle(LCEvent* evt, ReconstructedParticle* recoParticle, int& n, double& energy, double hitEnergyFraction=0.5);
+
+  int getTypeOfPositionOfCluster(ClusterImpl* cluster);
 
   double getDistanceToHelix(double* point, Trajectory* helix);
   double getDistanceToHelix(std::vector<double> point, Trajectory* helix);

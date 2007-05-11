@@ -93,16 +93,6 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
 			      "cut on the minimal z coordiante of the 'nOfTrackerHitsOutsideCylindricalCut' tracker hits",
 			      _zMinCylindricalCut,
 			      (double)1300.0) ;
-
-  registerProcessorParameter( "rMaxHelix",
-			      "maximal radius of the helix extrapolation which should be taken into account (in cylindrical coordinates)",
-			      _rMaxHelix, // later take this from the GEAR file
-			      (double)3500.0) ;
-  
-  registerProcessorParameter( "zMaxHelix",
-			      "maximal z coordinale of the helix extrapolation which should be taken into account (in cylindrical coordinates)",
-			      _zMaxHelix, // later take this from the GEAR file
-			      (double)4500.0) ;
   
   registerProcessorParameter( "openingAngleConeTube",
 			      "opening angle (in degree) of the cone-like tube around the track extrapolation (only calorimeter hits insider this tube are taken into account)",
@@ -320,6 +310,19 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
 			      "Weight For Distance",
 			      _weightForDist,
 			      (float)5.0);
+
+  
+  registerProcessorParameter( "WeightForResolutionForNeutrals",
+			      "Weight For Resolution for Neutrals",
+			      _weightForResoForNeutrals,
+			      (float)1.0);
+  
+  registerProcessorParameter( "WeightForDistanceForNeutrals",
+			      "Weight For Distance for Neutrals",
+			      _weightForDistForNeutrals,
+			      (float)1.0);
+
+
 }
 
 
@@ -1230,6 +1233,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
       
       
       // debug      
+      
       if ( _debugLevel > 5 )MarlinUtil::printRecoParticle(recoParticle,_bField);
       
       if (_drawOnCED) { 
@@ -1241,7 +1245,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
       }
 
-
+      
 
 
 
@@ -1257,14 +1261,10 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
     // have a look at the charged particles, which do not reach the calorimeter 
     // FIXME: A realistic kink, V0 and 'hard delta ray' finding is needed
-
+    
     for ( std::vector<Track*>::const_iterator i = _tracksNotExtrapolatedIntoCalorimeter.begin(); i != _tracksNotExtrapolatedIntoCalorimeter.end(); ++i ) {
       
-      
-
       std::vector<Track*>::const_iterator index = find(_tracksWhichWouldReachCalorimeter.begin(),_tracksWhichWouldReachCalorimeter.end(),(*i));
-
-
 
       if ( (index == _tracksWhichWouldReachCalorimeter.end()) ) {
 
@@ -1290,6 +1290,18 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	      << "N: " << NTracks << "  " << "N failed to extrapolate: " << _tracksNotExtrapolatedIntoCalorimeter.size() << "  "
 	      << "N would reach Calo: " << _tracksWhichWouldReachCalorimeter.size() << "  " 
 	      << "N not reaching Calo: " << _tracksNotReachingTheCalorimeter.size() << std::endl;
+
+    
+    std::cout << "TracksWhichWouldReachCalorimeter:" << std::endl;
+    for ( std::vector<Track*>::const_iterator i = _tracksWhichWouldReachCalorimeter.begin(); i != _tracksWhichWouldReachCalorimeter.end(); ++i ) {
+      MarlinUtil::printTrack(*i,_bField);
+    }
+
+    std::cout << "TracksNotReachingTheCalorimeter:" << std::endl;
+    for ( std::vector<Track*>::const_iterator i = _tracksNotReachingTheCalorimeter.begin(); i != _tracksNotReachingTheCalorimeter.end(); ++i ) {
+      MarlinUtil::printTrack(*i,_bField);
+    }
+
 
 
 
@@ -1395,7 +1407,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
   
   _cDEdcEwavsDSERecoMC->fill(sumEChargedHitsAssignedToNeutrals-sumENeutralHitsAssignedToCharged,SEReco - SEMC);
-  _cDEdcEwaMinusDSERecoMCvsDSERecoMC->fill(sumEChargedHitsAssignedToNeutrals-sumENeutralHitsAssignedToCharged-(SEReco - SEMC),SEReco - SEMC);
+  _cDEdcEwaMinusDSERecoMCvsDSERecoMC->fill(((sumEChargedHitsAssignedToNeutrals-sumENeutralHitsAssignedToCharged)-(SEReco - SEMC)),SEReco - SEMC);
 
 
   if ( fabs(alphaRecoMC) >= _outputConditionLimit*100.0 ) setReturnValue(true);
@@ -3098,8 +3110,8 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doTrackwiseClusteringFo
   trackwiseClustersGeometryParameters.nsymmetry         = _nsymmetry;
   trackwiseClustersGeometryParameters.thetaofendcap     = _thetaofendcap;
 
-  trackwiseClustersGeometryParameters.weightForReso     = _weightForReso;
-  trackwiseClustersGeometryParameters.weightForDist     = _weightForDist;
+  trackwiseClustersGeometryParameters.weightForReso     = _weightForResoForNeutrals;
+  trackwiseClustersGeometryParameters.weightForDist     = _weightForDistForNeutrals;
   trackwiseClustersGeometryParameters.bField            = _bField;
 
   const TrackwiseClustersGeometryParameters* pTrackwiseClustersGeometryParameters = &trackwiseClustersGeometryParameters;
@@ -4157,19 +4169,33 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
   }
 
 
-  double maximalDistanceToCompareWith = 0.0;
+  double maximalDistanceToCompareStartHitWith = 0.0;
+  double maximalDistanceToCompareEndHitWith = 0.0;
+  double maximalDistanceToCompareCoGWith = 0.0;
+  int typeOfCoG = 0;
 
   for(std::vector<ClusterImplWithAttributes*>::const_iterator i = clusters.begin(); i != clusters.end(); ++i) {    
         
     if ( (cluster->getTypeEndHit()) == ((*i)->getTypeStartHit()) ) {
-      
+    
+
+      switch (cluster->getTypeStartHit()) {
+
+        case -1 : maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
+        case  0 : maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at(1); break;
+        case  1 : maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at(2); break;
+        case  2 : maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at(3); break;
+        default : maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
+	  
+      }
+
       switch (cluster->getTypeEndHit()) {
 
-        case -1 : maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
-        case  0 : maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at(1); break;
-        case  1 : maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at(2); break;
-        case  2 : maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at(3); break;
-        default : maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
+        case -1 : maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
+        case  0 : maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at(1); break;
+        case  1 : maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at(2); break;
+        case  2 : maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at(3); break;
+        default : maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at(0); break;
 	  
       }
       
@@ -4177,14 +4203,22 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
 
     else if ( (cluster->getTypeEndHit()) < ((*i)->getTypeStartHit()) ) {
 
-      maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeEndHit()) + 1);
+      maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeStartHit()) + 1);
+      maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeEndHit()) + 1);
 
     }
     else {
       
-      maximalDistanceToCompareWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeEndHit()) + 1);
+      maximalDistanceToCompareStartHitWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeStartHit()) + 1);
+      maximalDistanceToCompareEndHitWith = _maximalDistanceToHelixToAssignCluster.at( (cluster->getTypeEndHit()) + 1);
 
     }
+
+
+    typeOfCoG = getTypeOfPositionOfCluster((*i)->getClusterImpl());
+    maximalDistanceToCompareCoGWith = _maximalDistanceToHelixToAssignCluster.at(typeOfCoG+1);
+    
+
 
 
     
@@ -4252,13 +4286,20 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
       std::cout << "cluster: " << cluster << "  " << "( E = " << cluster->getEnergy() << " n = " << cluster->getClusterImpl()->getCalorimeterHits().size() << " )" << "  " 
 		<< "cluster to compare: " << (*i) << "  " << "( E = " << (*i)->getEnergy() << " n = " << (*i)->getClusterImpl()->getCalorimeterHits().size() << " )" << "  " 
 		<< "conditions to assign cluster:" << std::endl
-		<< "distanceEndToStartHit < maximalDistanceToCompareWith: " << (distanceEndToStartHit < maximalDistanceToCompareWith) << "  " << std::endl
-		<< "distanceStartToEndHit < maximalDistanceToCompareWith: " << (distanceStartToEndHit < maximalDistanceToCompareWith) << "  " << std::endl 
-		<< "distanceCoGToCoG < maximalDistanceToCompareWith: " << (distanceCoGToCoG < maximalDistanceToCompareWith) << "  " << std::endl
-		<< "distanceEndToCoG < maximalDistanceToCompareWith: " << (distanceEndToCoG < maximalDistanceToCompareWith) << "  " << std::endl
-		<< "distanceStartToCoG < maximalDistanceToCompareWith: " << (distanceStartToCoG < maximalDistanceToCompareWith) << "  " << std::endl
-		<< "distanceCoGToStartHit < maximalDistanceToCompareWith: " << (distanceCoGToStartHit < maximalDistanceToCompareWith) << "  " << std::endl
-		<< "distanceCoGToEndHit < maximalDistanceToCompareWith: " << (distanceCoGToEndHit < maximalDistanceToCompareWith) << "  " << std::endl
+		<< "distanceEndToStartHit < maximalDistanceToCompareEndHitWith (" << distanceEndToStartHit << " < " << maximalDistanceToCompareEndHitWith << "): " 
+		<< (distanceEndToStartHit < maximalDistanceToCompareEndHitWith) << "  " << std::endl
+		<< "distanceStartToEndHit < maximalDistanceToCompareStartHitWith (" << distanceStartToEndHit << " < " << maximalDistanceToCompareStartHitWith << "): " 
+		<< (distanceStartToEndHit < maximalDistanceToCompareStartHitWith) << "  " << std::endl 
+		<< "distanceCoGToCoG < maximalDistanceToCompareCoGWith (" << distanceCoGToCoG << " < " << maximalDistanceToCompareCoGWith << "):  " 
+		<< (distanceCoGToCoG < maximalDistanceToCompareCoGWith) << "  " << std::endl
+		<< "distanceEndToCoG < maximalDistanceToCompareEndHitWith (" << distanceEndToCoG << " < " << maximalDistanceToCompareEndHitWith << "):  " 
+		<< (distanceEndToCoG < maximalDistanceToCompareEndHitWith) << "  " << std::endl
+		<< "distanceStartToCoG < maximalDistanceToCompareStartHitWith (" << distanceStartToCoG << " < " << maximalDistanceToCompareStartHitWith << "): " 
+		<< (distanceStartToCoG < maximalDistanceToCompareStartHitWith) << "  " << std::endl	
+		<< "distanceCoGToStartHit < maximalDistanceToCompareCoGWith (" << distanceCoGToStartHit << " < " << maximalDistanceToCompareCoGWith << "): "
+		<< (distanceCoGToStartHit < maximalDistanceToCompareCoGWith) << "  " << std::endl
+		<< "distanceCoGToEndHit < maximalDistanceToCompareCoGWith (" << distanceCoGToEndHit << " < " << maximalDistanceToCompareCoGWith << "): " 
+		<< (distanceCoGToEndHit < maximalDistanceToCompareCoGWith) << "  " << std::endl
 		<< "pathLengthRefPositionToCoG (" << pathLengthRefPositionToCoG << ") < ( _maximalConeTubeLength (" << _maximalConeTubeLength 
 		<< ") - pathLengthRefPosition (" << pathLengthOfReferencePositionProjected << ") ) (" 
 		<< _maximalConeTubeLength-pathLengthOfReferencePositionProjected << "): " 
@@ -4268,21 +4309,21 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
 		<< -0.1*(_maximalConeTubeLength-pathLengthOfReferencePositionProjected)<< "): " 
 		<< (pathLengthRefPositionToCoG > -0.1*(_maximalConeTubeLength-pathLengthOfReferencePositionProjected))
 		<< "  " << std::endl 
-		<< "distanceExtrapolatedTrajectoryToCoG (" << distanceExtrapolatedTrajectoryToCoG <<") < maximalDistanceToCompareWith (" << maximalDistanceToCompareWith 
-		<< "): " << (distanceExtrapolatedTrajectoryToCoG < maximalDistanceToCompareWith) << std::endl;
+		<< "distanceExtrapolatedTrajectoryToCoG (" << distanceExtrapolatedTrajectoryToCoG <<") < maximalDistanceToCompareCoGWith (" 
+		<< maximalDistanceToCompareCoGWith << "): " << (distanceExtrapolatedTrajectoryToCoG < maximalDistanceToCompareCoGWith ) << std::endl;
 
     }
 
 
     
     bool conditionToAssign = 
-      ( distanceEndToStartHit < maximalDistanceToCompareWith ) ||  ( distanceStartToEndHit < maximalDistanceToCompareWith ) || 
-      ( distanceCoGToCoG < maximalDistanceToCompareWith ) ||
-      ( distanceEndToCoG < maximalDistanceToCompareWith ) ||  ( distanceStartToCoG < maximalDistanceToCompareWith ) ||
-      ( distanceCoGToStartHit < maximalDistanceToCompareWith ) ||  ( distanceCoGToEndHit < maximalDistanceToCompareWith ) ||
+      ( distanceEndToStartHit < maximalDistanceToCompareEndHitWith ) ||  ( distanceStartToEndHit < maximalDistanceToCompareStartHitWith ) || 
+      ( distanceCoGToCoG < maximalDistanceToCompareCoGWith ) ||
+      ( distanceEndToCoG < maximalDistanceToCompareEndHitWith ) ||  ( distanceStartToCoG < maximalDistanceToCompareStartHitWith ) ||
+      ( distanceCoGToStartHit < maximalDistanceToCompareCoGWith ) ||  ( distanceCoGToEndHit < maximalDistanceToCompareCoGWith ) ||
       ( ( pathLengthRefPositionToCoG < (_maximalConeTubeLength-pathLengthOfReferencePositionProjected) ) 
 	&& ( pathLengthRefPositionToCoG > -0.1 * (_maximalConeTubeLength-pathLengthOfReferencePositionProjected)  ) 
-	&& ( distanceExtrapolatedTrajectoryToCoG < maximalDistanceToCompareWith ) );
+	&& ( distanceExtrapolatedTrajectoryToCoG < maximalDistanceToCompareCoGWith ) );
 
     
 
@@ -4649,6 +4690,32 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
   return collectedCalotimeterHits;
 
 }
+
+
+int TrackBasedPFlow::getTypeOfPositionOfCluster(ClusterImpl* cluster) {
+
+  int type = 0;
+  double smallestDistance = DBL_MAX;
+  
+  for(CalorimeterHitVec::const_iterator i = cluster->getCalorimeterHits().begin(); i != cluster->getCalorimeterHits().end(); ++i) {
+    
+    double distanceHitToPosition = sqrt( pow( ( cluster->getPosition()[0] - (*i)->getPosition()[0] ) ,2) + 
+					 pow( ( cluster->getPosition()[1] - (*i)->getPosition()[1] ) ,2) + 
+					 pow( ( cluster->getPosition()[2] - (*i)->getPosition()[2] ) ,2) );
+    
+    if ( distanceHitToPosition < smallestDistance ) {
+
+      smallestDistance = distanceHitToPosition;
+      type = (*i)->getType();
+
+    }
+    
+  }
+
+  return type;
+
+}
+
 
 
 

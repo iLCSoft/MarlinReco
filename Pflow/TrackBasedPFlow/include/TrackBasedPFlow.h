@@ -128,6 +128,7 @@ class TrackBasedPFlow : public Processor {
   double _outputConditionLimit;
   std::vector<float> _mipCoeffEcal;
   std::vector<float> _mipCoeffHcal;
+  int _doComparisonWithMC;
   int _drawOnCED;
   int _debugLevel;
 
@@ -287,6 +288,9 @@ class TrackBasedPFlow : public Processor {
 
   std::vector<ClusterImplWithAttributes*> assignClusters(ClusterImplWithAttributes* cluster, std::vector<ClusterImplWithAttributes*> clusters, LCVector3D referencePosition,
 							 const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
+
+  std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
+								   std::vector<ClusterImplWithAttributes*> clustersToCheck, Track* track);
 
   
   std::vector<CalorimeterHit*> getNeutralHitsAssignedToChargedParticle(LCEvent* evt, ReconstructedParticle* recoParticle, int& n, double& energy, double hitEnergyFraction=0.5);

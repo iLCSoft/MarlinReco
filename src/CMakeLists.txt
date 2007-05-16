@@ -3,29 +3,56 @@
 # @author Jan Engels, DESY
 ######################################
 
+# MarlinReco Packages
+SET( MarlinReco_PKGS
+	"Analysis/EventShapes"
+	"Analysis/SatoruJetFinder"
+	"Calibration/AbsCalibration"
+	"CaloDigi/LDCCaloDigi"
+	"Clustering/ClusterCheater" 
+	"Clustering/ClusterCheater5_3"
+	"Clustering/NNClustering"
+	"Clustering/TrackwiseClustering"
+	"Clustering/PhotonFinderKit"
+	"Pflow/Wolf"
+	"Pflow/TrackBasedPFlow"
+	"TrackDigi/FTDDigi"
+	"TrackDigi/TPCDigi"
+	"TrackDigi/VTXDigi"
+	"Tracking/BrahmsTracking"
+	"Tracking/FullLDCTracking"
+	"Tracking/SiliconTracking"
+	"Tracking/TrackCheater"
+	"Tracking/VertexTracking"
+)
+
 ####################################################################################################
 ### INCLUDES
 ####################################################################################################
+FOREACH( pkg ${MarlinReco_PKGS} )
+	MESSAGE( STATUS "MarlinReco: Including directory ${${PROJECT_NAME}_SOURCE_DIR}/${pkg}/include" )
+	INCLUDE_DIRECTORIES( "../${pkg}/include" )
+ENDFOREACH()
 
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/EventShapes/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/SatoruJetFinder/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Calibration/AbsCalibration/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/CaloDigi/LDCCaloDigi/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater5_3/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/NNClustering/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/TrackwiseClustering/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/PhotonFinderKit/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/Wolf/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/TrackBasedPFlow/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/FTDDigi/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/TPCDigi/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/VTXDigi/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/BrahmsTracking/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/FullLDCTracking/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/SiliconTracking/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/TrackCheater/include" )
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/VertexTracking/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/EventShapes/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/SatoruJetFinder/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Calibration/AbsCalibration/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/CaloDigi/LDCCaloDigi/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater5_3/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/NNClustering/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/TrackwiseClustering/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/PhotonFinderKit/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/Wolf/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/TrackBasedPFlow/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/FTDDigi/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/TPCDigi/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/VTXDigi/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/BrahmsTracking/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/FullLDCTracking/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/SiliconTracking/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/TrackCheater/include" )
+#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/VertexTracking/include" )
 
 
 ####################################################################################################
@@ -42,6 +69,8 @@ SET_SOURCE_FILES_PROPERTIES( ${EventShapes_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( EventShapes_srcs ${EventShapes_cxx_srcs} )
+
 
 ####################################################################################################
 # SatoruJetFinder
@@ -57,8 +86,10 @@ SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_cxx_srcs} PROPERTIES
 FILE( GLOB SatoruJetFinder_f77_srcs ../Analysis/SatoruJetFinder/src/fortsrc/*.f )
 
 # fortran flags
-SET_SOURCE_FILES_PROPERTIES( ${f77_srcs} PROPERTIES
+SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_f77_srcs} PROPERTIES
 	COMPILE_FLAGS "-Wno-globals -ff2c" )
+
+SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs} )
 
 
 ####################################################################################################
@@ -71,6 +102,8 @@ SET_SOURCE_FILES_PROPERTIES( ${AbsCalibration_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( AbsCalibration_srcs ${AbsCalibration_cxx_srcs} )
+
 
 ####################################################################################################
 # LDCCaloDigi
@@ -82,6 +115,7 @@ SET_SOURCE_FILES_PROPERTIES( ${LDCCaloDigi_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( LDCCaloDigi_srcs ${LDCCaloDigi_cxx_srcs} )
 
 ####################################################################################################
 # ClusterCheater
@@ -93,6 +127,7 @@ SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( ClusterCheater_srcs ${ClusterCheater_cxx_srcs} )
 
 ####################################################################################################
 # ClusterCheater5_3
@@ -104,6 +139,7 @@ SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater5_3_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( ClusterCheater5_3_srcs ${ClusterCheater5_3_cxx_srcs} )
 
 ####################################################################################################
 # NNClustering
@@ -115,6 +151,7 @@ SET_SOURCE_FILES_PROPERTIES( ${NNClustering_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
 
 ####################################################################################################
 # TrackwiseClustering
@@ -126,6 +163,7 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackwiseClustering_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( TrackwiseClustering_srcs ${TrackwiseClustering_cxx_srcs} )
 
 ####################################################################################################
 # PhotonFinderKit
@@ -137,6 +175,7 @@ SET_SOURCE_FILES_PROPERTIES( ${PhotonFinderKit_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( PhotonFinderKit_srcs ${PhotonFinderKit_cxx_srcs} )
 
 ####################################################################################################
 # Wolf
@@ -148,6 +187,7 @@ SET_SOURCE_FILES_PROPERTIES( ${Wolf_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( Wolf_srcs ${Wolf_cxx_srcs} )
 
 ####################################################################################################
 # TrackBasedPFlow
@@ -159,6 +199,7 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackBasedPFlow_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( TrackBasedPFlow_srcs ${TrackBasedPFlow_cxx_srcs} )
 
 ####################################################################################################
 # FTDDigi
@@ -170,7 +211,7 @@ SET_SOURCE_FILES_PROPERTIES( ${FTDDigi_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
-
+SET( FTDDigi_srcs ${FTDDigi_cxx_srcs} )
 
 ####################################################################################################
 # TPCDigi
@@ -182,6 +223,7 @@ SET_SOURCE_FILES_PROPERTIES( ${TPCDigi_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( TPCDigi_srcs ${TPCDigi_cxx_srcs} )
 
 ####################################################################################################
 # VTXDigi
@@ -193,6 +235,7 @@ SET_SOURCE_FILES_PROPERTIES( ${VTXDigi_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( VTXDigi_srcs ${VTXDigi_cxx_srcs} )
 
 ####################################################################################################
 # BrahmsTracking
@@ -220,6 +263,7 @@ FILE( GLOB BrahmsTracking_f77_srcs ../Tracking/BrahmsTracking/src/f77/*.F )
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_f77_srcs} PROPERTIES
 	COMPILE_FLAGS "-Wno-globals -ff2c" )
 
+SET( BrahmsTracking_srcs ${BrahmsTracking_cxx_srcs} ${BrahmsTracking_c_srcs} ${BrahmsTracking_f77_srcs} )
 
 ####################################################################################################
 # FullLDCTracking
@@ -231,6 +275,7 @@ SET_SOURCE_FILES_PROPERTIES( ${FullLDCTracking_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( FullLDCTracking_srcs ${FullLDCTracking_cxx_srcs} )
 
 ####################################################################################################
 # SiliconTracking
@@ -243,6 +288,7 @@ SET_SOURCE_FILES_PROPERTIES( ${SiliconTracking_cxx_srcs} PROPERTIES
 	#COMPILE_FLAGS "-Wall -ansi -pedantic" )
 	COMPILE_FLAGS "-Wall -ansi" )
 
+SET( SiliconTracking_srcs ${SiliconTracking_cxx_srcs} )
 
 ####################################################################################################
 # TrackCheater
@@ -254,6 +300,7 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackCheater_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
 
 ####################################################################################################
 # VertexTracking
@@ -265,36 +312,37 @@ SET_SOURCE_FILES_PROPERTIES( ${VertexTracking_cxx_srcs} PROPERTIES
 	# require proper c++
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
+SET( VertexTracking_srcs ${VertexTracking_cxx_srcs} )
 
-# set library sources
-SET( lib_srcs
-	${EventShapes_cxx_srcs}
-	${SatoruJetFinder_cxx_srcs}
-	${SatoruJetFinder_f77_srcs}
-	${AbsCalibration_cxx_srcs}
-	${LDCCaloDigi_cxx_srcs}
-	${ClusterCheater_cxx_srcs}
-	${ClusterCheater5_3_cxx_srcs}
-	${NNClustering_cxx_srcs}
-	${TrackwiseClustering_cxx_srcs}
-	${PhotonFinderKit_cxx_srcs}
-	${Wolf_cxx_srcs}
-	${TrackBasedPFlow_cxx_srcs}
-	${FTDDigi_cxx_srcs}
-	${TPCDigi_cxx_srcs}
-	${VTXDigi_cxx_srcs}
-	${BrahmsTracking_cxx_srcs}
-	${BrahmsTracking_c_srcs}
-	${BrahmsTracking_f77_srcs}
-	${FullLDCTracking_cxx_srcs}
-	${SiliconTracking_cxx_srcs}
-	${TrackCheater_cxx_srcs}
-	${VertexTracking_cxx_srcs}
-)
+
+####################################################################################################
+### DEPENDENCIES
+####################################################################################################
+
+# load macro
+IF( DEFINED ${PROJECT_NAME}_DEPENDS OR DEFINED BUILD_WITH OR DEFINED LINK_WITH )
+    # load macro
+    IF( NOT EXISTS "${CMAKE_MODULE_PATH}/MacroCheckDeps.cmake" )
+        MESSAGE( FATAL_ERROR "\nSorry, could not find MacroCheckDeps.cmake...\n"
+            "Please set CMAKE_MODULE_PATH correctly with: "
+            "cmake -DCMAKE_MODULE_PATH=<path_to_cmake_modules>" )
+    ENDIF()
+    INCLUDE( "${CMAKE_MODULE_PATH}/MacroCheckDeps.cmake" )
+    CHECK_DEPS()
+ENDIF()
+
 
 ####################################################################################################
 ### LIBRARY
 ####################################################################################################
+
+# set library sources
+SET( lib_srcs )
+FOREACH( pkgDir ${MarlinReco_PKGS} )
+	# extract basename from dir (e.g. Analysis/EventShapes -> EventShapes)
+	STRING( REGEX REPLACE ".*/([^ ]+)" "\\1" pkgName ${pkgDir} )
+	SET( lib_srcs ${lib_srcs} ${${pkgName}_srcs} )
+ENDFOREACH()
 
 # create library
 ADD_LIBRARY( lib_${PROJECT_NAME} ${lib_srcs} )
@@ -341,7 +389,6 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
 	OUTPUT_NAME ${PROJECT_NAME}	)
 
 # FIXME ******************************************************************
-# do not store find results in cache
 SET( G2C_LIB G2C_LIB-NOTFOUND )
 FIND_LIBRARY( G2C_LIB
     NAMES g2c
@@ -362,57 +409,4 @@ INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS
 		GROUP_READ GROUP_EXECUTE
 		WORLD_READ WORLD_EXECUTE )
 
-####################################################################################################
-### DEPENDENCIES
-####################################################################################################
-
-# load macro
-IF( DEFINED ${PROJECT_NAME}_DEPENDS OR DEFINED BUILD_WITH OR DEFINED LINK_WITH )
-	MESSAGE( STATUS "-------------------------------------------------------------------------------" )
-	MESSAGE( STATUS "Change a module with: cmake -D<ModuleName>_HOME=<Path_to_Module>" )
-	MESSAGE( STATUS )
-
-	# load macro
-	IF( NOT EXISTS "${CMAKE_MODULE_PATH}/LoadPackageMacro.cmake" )
-		MESSAGE( FATAL_ERROR "\nSorry, could not find LoadPackageMacro.cmake...\n" 
-			"Please set CMAKE_MODULE_PATH correctly with: "
-			"cmake -DCMAKE_MODULE_PATH=<path_to_cmake_modules>" )
-	ENDIF()
-	INCLUDE( "${CMAKE_MODULE_PATH}/LoadPackageMacro.cmake" )
-ENDIF()
-
-# project dependencies
-IF( DEFINED ${PROJECT_NAME}_DEPENDS )
-	SEPARATE_ARGUMENTS( ${PROJECT_NAME}_DEPENDS )
-	MARK_AS_ADVANCED( ${PROJECT_NAME}_DEPENDS )
-	FOREACH( req_pkg ${${PROJECT_NAME}_DEPENDS} )
-		LOAD_PACKAGE( ${req_pkg} REQUIRED )
-	ENDFOREACH()
-ENDIF()
-
-# user defined dependencies
-IF( DEFINED BUILD_WITH )
-	SEPARATE_ARGUMENTS( BUILD_WITH )
-	MARK_AS_ADVANCED( BUILD_WITH )
-	FOREACH( opt_pkg ${BUILD_WITH} )
-		LOAD_PACKAGE( ${opt_pkg} )
-	ENDFOREACH()
-	SET( BUILD_WITH "${BUILD_WITH}" CACHE STRING
-		"Build ${PROJECT_NAME} with these optional packages" FORCE )
-ENDIF()
-
-# user defined dependencies
-IF( DEFINED LINK_WITH )
-	SEPARATE_ARGUMENTS( LINK_WITH )
-	MARK_AS_ADVANCED( LINK_WITH )
-	FOREACH( lnk_pkg ${LINK_WITH} )
-		LOAD_PACKAGE( ${lnk_pkg} LINK_ONLY )
-	ENDFOREACH()
-	SET( LINK_WITH "${LINK_WITH}" CACHE STRING
-		"Link ${PROJECT_NAME} with these optional packages" FORCE )
-ENDIF()
-
-IF( DEFINED ${PROJECT_NAME}_DEPENDS OR DEFINED BUILD_WITH OR DEFINED LINK_WITH )
-	MESSAGE( STATUS "-------------------------------------------------------------------------------" )
-ENDIF()
 

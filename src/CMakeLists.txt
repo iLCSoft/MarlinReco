@@ -30,30 +30,9 @@ SET( MarlinReco_PKGS
 ### INCLUDES
 ####################################################################################################
 FOREACH( pkg ${MarlinReco_PKGS} )
-	MESSAGE( STATUS "MarlinReco: Including directory ${${PROJECT_NAME}_SOURCE_DIR}/${pkg}/include" )
+	MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
 	INCLUDE_DIRECTORIES( "../${pkg}/include" )
 ENDFOREACH()
-
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/EventShapes/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Analysis/SatoruJetFinder/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Calibration/AbsCalibration/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/CaloDigi/LDCCaloDigi/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/ClusterCheater5_3/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/NNClustering/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/TrackwiseClustering/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Clustering/PhotonFinderKit/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/Wolf/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Pflow/TrackBasedPFlow/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/FTDDigi/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/TPCDigi/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/TrackDigi/VTXDigi/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/BrahmsTracking/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/FullLDCTracking/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/SiliconTracking/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/TrackCheater/include" )
-#INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/Tracking/VertexTracking/include" )
-
 
 ####################################################################################################
 ### SOURCES
@@ -390,12 +369,17 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
 
 # FIXME ******************************************************************
 SET( G2C_LIB G2C_LIB-NOTFOUND )
-FIND_LIBRARY( G2C_LIB
-    NAMES g2c
-    PATHS /usr/lib/gcc-lib/i386-redhat-linux/3.2.3
+FIND_LIBRARY( G2C_LIB NAMES g2c PATHS
+	/usr/lib/gcc-lib/i386-redhat-linux/3.2.3	# SL3
+	/usr/lib/gcc/i386-redhat-linux/3.4.3		# SL4
+	NO_DEFAULT_PATH	# prevent static library to be detected instead of shared one
 )
+FIND_LIBRARY( G2C_LIB NAMES g2c )
+
 IF( NOT G2C_LIB )
-    MESSAGE( FATAL_ERROR "failed to find g2c library!!" )
+	MESSAGE( FATAL_ERROR "Check for libg2c: failed to find g2c library!!" )
+ELSE()
+	MESSAGE( STATUS "Check for libg2c: ${G2C_LIB}" )
 ENDIF()
 MARK_AS_ADVANCED( G2C_LIB )
 

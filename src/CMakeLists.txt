@@ -129,7 +129,7 @@ AUX_SOURCE_DIRECTORY( ../Clustering/NNClustering/src NNClustering_cxx_srcs )
 SET_SOURCE_FILES_PROPERTIES( ${NNClustering_cxx_srcs} PROPERTIES
 	# require proper c++
 	# FIXME -pedantic flag crashes under sl4
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+	COMPILE_FLAGS "-Wall -ansi" )
 
 SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
 

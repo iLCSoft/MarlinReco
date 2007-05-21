@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.6 2007-03-17 14:36:17 samson Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.7 2007-05-21 12:57:58 engels Exp $
 **
 **
 */ 
@@ -192,7 +192,7 @@ namespace marlin
 
   }
 
-  void SatoruJetFinderProcessor::end(){};
+  void SatoruJetFinderProcessor::end(){}
 
 
   /* *********************************************************************** */
@@ -206,7 +206,7 @@ namespace marlin
     callSatoru(evt);
     getJets(evt,JetsCol);
     //GetPointerFromPartonToJet();
-  };
+  }
 
 
   void SatoruJetFinderProcessor::putPartons(LCEvent * evt){
@@ -221,7 +221,7 @@ namespace marlin
         _partonsWorkArray.Momentum[ienflow*4+i]=(enflow->getMomentum())[i];	  }
       _partonsWorkArray.Momentum[ienflow*4+3]=enflow->getEnergy();
     }
-  };
+  }
 
 
 
@@ -233,7 +233,7 @@ namespace marlin
         _partonsWorkArray.Momentum[iparton*4+2] << ", " <<
         _partonsWorkArray.Momentum[iparton*4+3] << endl;    
     }
-  };
+  }
 
 
   void SatoruJetFinderProcessor::callSatoru(LCEvent * evt){
@@ -257,7 +257,7 @@ namespace marlin
             _jetsWorkArray.NumberOfJets,_partonsWorkArray.PointerParticleToJets,
             DimensionOfOutputArray,_jetsWorkArray.Momentum,
             _YMinus,_YPlus,IError,GlobalModusLength);
-  };
+  }
 
   void SatoruJetFinderProcessor::getJets(LCEvent * evt,LCCollection* JetsCol){
     LCCollection* enflowcol=evt->getCollection(_inputCollection);
@@ -297,11 +297,11 @@ namespace marlin
           evt->parameters().setValue( _successTag, 0 );
       }
 
-  };
+  }
 
 
-  void SatoruJetFinderProcessor::writeJets(){};
-  void SatoruJetFinderProcessor::writeParameters(){};
+  void SatoruJetFinderProcessor::writeJets(){}
+  void SatoruJetFinderProcessor::writeParameters(){}
 
 
 } //namespace marlin

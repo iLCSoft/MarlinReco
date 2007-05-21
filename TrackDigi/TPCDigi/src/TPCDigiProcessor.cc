@@ -41,7 +41,7 @@ using namespace std ;
 TPCDigiProcessor aTPCDigiProcessor ;
 
 // put this here as I dont't know how to get it into the tpc class or if that is even the write place for it
-bool compare_phi( Voxel_tpc * a, Voxel_tpc * b){return ( a->getPhiIndex() < b->getPhiIndex() );};
+bool compare_phi( Voxel_tpc * a, Voxel_tpc * b){return ( a->getPhiIndex() < b->getPhiIndex() );}
 
 TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor") 
 {

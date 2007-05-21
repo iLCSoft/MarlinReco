@@ -676,7 +676,7 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
 
   //  std::cout << "Amplitude = " << _ampl << std::endl;
 
-};
+}
 
 
 void VTXDigitizer::ProduceSignalPoints() {

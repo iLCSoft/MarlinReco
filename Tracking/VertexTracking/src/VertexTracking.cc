@@ -554,7 +554,7 @@ int VertexTracking::Initialise(LCEvent * evt) {
 
 }
 
-void VertexTracking::check(LCEvent * evt) { };
+void VertexTracking::check(LCEvent * evt) { }
 
 void VertexTracking::end() {
 

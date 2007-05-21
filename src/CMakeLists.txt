@@ -128,6 +128,7 @@ AUX_SOURCE_DIRECTORY( ../Clustering/NNClustering/src NNClustering_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${NNClustering_cxx_srcs} PROPERTIES
 	# require proper c++
+	# FIXME -pedantic flag crashes under sl4
 	COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
@@ -152,7 +153,8 @@ AUX_SOURCE_DIRECTORY( ../Clustering/PhotonFinderKit/src PhotonFinderKit_cxx_srcs
 
 SET_SOURCE_FILES_PROPERTIES( ${PhotonFinderKit_cxx_srcs} PROPERTIES
 	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+	# FIXME -pedantic flag crashes under sl4
+	COMPILE_FLAGS "-Wall -ansi" )
 
 SET( PhotonFinderKit_srcs ${PhotonFinderKit_cxx_srcs} )
 
@@ -176,7 +178,8 @@ AUX_SOURCE_DIRECTORY( ../Pflow/TrackBasedPFlow/src TrackBasedPFlow_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${TrackBasedPFlow_cxx_srcs} PROPERTIES
 	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+	# FIXME -pedantic flag crashes under sl4
+	COMPILE_FLAGS "-Wall -ansi" )
 
 SET( TrackBasedPFlow_srcs ${TrackBasedPFlow_cxx_srcs} )
 

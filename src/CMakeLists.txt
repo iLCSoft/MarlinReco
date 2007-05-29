@@ -370,7 +370,7 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
 	# avoid conflicts between library and binary target names
 	OUTPUT_NAME ${PROJECT_NAME}	)
 
-# FIXME ******************************************************************
+# libg2c
 SET( G2C_LIB G2C_LIB-NOTFOUND )
 FIND_LIBRARY( G2C_LIB NAMES g2c PATHS
 	/usr/lib/gcc-lib/i386-redhat-linux/3.2.3	# SL3
@@ -388,7 +388,6 @@ MARK_AS_ADVANCED( G2C_LIB )
 
 # link MarlinReco library to lib g2c
 TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${G2C_LIB} )
-# FIXME END ***************************************************************
 
 # install library
 INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS

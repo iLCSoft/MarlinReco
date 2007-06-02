@@ -236,8 +236,8 @@ AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src/C BrahmsTracking_c_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_c_srcs} PROPERTIES
 	# require proper c
-	COMPILE_FLAGS "-Wall -ansi -pedantic"
-	COMPILE_FLAGS "-Wno-globals" )
+	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+	#COMPILE_FLAGS "-Wno-globals" )
 
 # fortran sources
 FILE( GLOB BrahmsTracking_f77_srcs ../Tracking/BrahmsTracking/src/f77/*.F )

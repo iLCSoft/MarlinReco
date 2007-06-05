@@ -25,6 +25,7 @@
 #include <EVENT/Cluster.h>
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <UTIL/LCRelationNavigator.h>
+#include <LCRTRelations.h>
 
 #include <MarlinUtil.h>
 
@@ -70,6 +71,11 @@ using namespace constants;
 
 
 
+// integer runtime extension which flags CalorimeterHits in EMShowers
+struct isPartOfEMShowerCandidate : LCIntExtension<isPartOfEMShowerCandidate> {};
+
+
+
 
 /**
  *    This processor is an initial version of a Track-Based Particle Flow approach. More docu will come soon.
@@ -104,14 +110,20 @@ class TrackBasedPFlow : public Processor {
   std::string _colNameTracks;
   std::string _colNameECAL;
   std::string _colNameHCAL;
+  std::string _colNameEMShowerCandidates;
   std::string _colNameRelationTrackToMCP;
   std::string _colNameRelationCaloHitToSimCaloHit;
+  std::string _reconstructedClusterCollectionName;
   std::string _reconstructedParticleCollectionName;
 
   std::vector<float> _calibrCoeffECAL;
   std::vector<float> _calibrCoeffHCAL;
 
   double _absMomentumCut;
+  double _absD0Cut;
+  double _absZ0Cut;
+  int _minNTPCHits;
+  int _minNNonTPCHits;
   int _nOfTrackerHitsUsedForExtrapolation;
   int _nOfTrackerHitsOutsideCylindricalCut;
   double _rMinCutHelixExtrapolation;
@@ -124,11 +136,12 @@ class TrackBasedPFlow : public Processor {
   std::vector<float> _maximalRadiusOfInnerTubeForMIPLikeStub;
   std::vector<float> _minimalRadiusOfOuterTubeForMIPLikeStub;
   std::vector<float> _maximalDistanceToHelixToAssignCluster;
+  std::vector<float> _maximalDistanceOfElectronShowerPosition;
   double _fractionEM;
   double _outputConditionLimit;
   std::vector<float> _mipCoeffEcal;
   std::vector<float> _mipCoeffHcal;
-  int _doComparisonWithMC;
+  //  int _doComparisonWithMC;
   int _drawOnCED;
   int _debugLevel;
 
@@ -175,6 +188,8 @@ class TrackBasedPFlow : public Processor {
   std::vector<Track*> _tracksNotExtrapolatedIntoCalorimeter;
   std::vector<Track*> _tracksWhichWouldReachCalorimeter;
   std::vector<Track*> _tracksNotReachingTheCalorimeter;
+  std::vector<Cluster*> _emShowerCandidatesRecognisedAsCharged;
+
 
 
   #ifdef MARLIN_USE_AIDA
@@ -285,18 +300,21 @@ class TrackBasedPFlow : public Processor {
 
   void getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Track* track, ClusterImpl* clusterRealEnergy, ClusterImpl* clusterPerfectEnergy);
   void drawRelatedCalorimeterHits(const LCEvent* evt,Track* track);
+  void drawEMShowerCandidates(const LCEvent* evt);
 
   std::vector<ClusterImplWithAttributes*> assignClusters(ClusterImplWithAttributes* cluster, std::vector<ClusterImplWithAttributes*> clusters, LCVector3D referencePosition,
 							 const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
 
-  std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
+  std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(ClusterImplWithAttributes* mipStub, std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
 								   std::vector<ClusterImplWithAttributes*> clustersToCheck, Track* track);
 
   
   std::vector<CalorimeterHit*> getNeutralHitsAssignedToChargedParticle(LCEvent* evt, ReconstructedParticle* recoParticle, int& n, double& energy, double hitEnergyFraction=0.5);
   std::vector<CalorimeterHit*> getChargedHitsAssignedToNeutralParticle(LCEvent* evt, ReconstructedParticle* recoParticle, int& n, double& energy, double hitEnergyFraction=0.5);
+  double getNotAssignedCalorimeterEnergy(LCEvent* evt, LCCollectionVec* reconstructedParticles);
 
   int getTypeOfPositionOfCluster(ClusterImpl* cluster);
+  int getTypeOfPositionOfCluster(Cluster* cluster);
 
   double getDistanceToHelix(double* point, Trajectory* helix);
   double getDistanceToHelix(std::vector<double> point, Trajectory* helix);

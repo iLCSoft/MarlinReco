@@ -260,7 +260,11 @@ class TrackBasedPFlow : public Processor {
   void getMIPStub(ClusterImplWithAttributes* clusterWithAttributes, const std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes, 
 		  const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
 
-  const std::vector<CalorimeterHitWithAttributes*> TrackBasedPFlow::removeMIPStub(std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes,
+// je: for gcc4 compatibility
+// const std::vector<CalorimeterHitWithAttributes*> TrackBasedPFlow::removeMIPStub(std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes,
+//										  ClusterImplWithAttributes* mipStub);
+// 
+  const std::vector<CalorimeterHitWithAttributes*> removeMIPStub(std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes,
 										  ClusterImplWithAttributes* mipStub);
   
   std::vector<ClusterImplWithAttributes*> doTrackwiseClustering(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix,

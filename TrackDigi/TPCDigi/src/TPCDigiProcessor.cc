@@ -252,7 +252,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //       cout << "padLayout.getPadHeight(0) = " <<padLayout.getPadHeight(0) << endl;  
 //       cout << "padLayout.getPadHeight(padIndex) = " <<padLayout.getPadHeight(padIndex) << endl;  
 
-      gear::Point2D padCoord = padLayout.getPadCenter(padIndex);
+      //je: commented out next line as proposed by Kristian Harder
+      //gear::Point2D padCoord = padLayout.getPadCenter(padIndex);
 
       //get phi index of current hit
 

@@ -6,6 +6,7 @@
 #include <IMPL/TrackImpl.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCRelationImpl.h>
+#include <IMPL/LCFlagImpl.h>
 #include <UTIL/LCTOOLS.h>
 #include <UTIL/LCRelationNavigator.h>
 #include "HelixClass.h"
@@ -116,6 +117,12 @@ void TrackCheater::processRunHeader( LCRunHeader* run) {
 
 void TrackCheater::processEvent( LCEvent * evt ) { 
 
+
+  // set flag to store more information in the output file
+  LCFlagImpl flag;
+  flag.setBit(LCIO::TRBIT_HITS);
+
+
     map_MCP_Track _mcp_track;
     map_MCP_Helix _mcp_helix;
 
@@ -199,6 +206,9 @@ void TrackCheater::processEvent( LCEvent * evt ) {
     
 
     LCCollectionVec * trkcol = new LCCollectionVec(LCIO::TRACK);
+    trkcol->setFlag(flag.getFlag());
+
+    
     LCCollectionVec * relationcol = new LCCollectionVec(LCIO::LCRELATION);
     map_MCP_Track::iterator pos;
     int itk = 0;

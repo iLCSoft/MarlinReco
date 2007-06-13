@@ -265,7 +265,11 @@ void MokkaCaloDigi::processRunHeader( LCRunHeader* run) {
 } 
 
 void MokkaCaloDigi::processEvent( LCEvent * evt ) { 
- 
+   
+  // set flag to store more information in the output file
+  LCFlagImpl flag;
+  flag.setBit(LCIO::CHBIT_LONG);
+
   //
   // * Reading Collections of HCAL Simulated Hits * 
   //
@@ -308,6 +312,7 @@ void MokkaCaloDigi::processEvent( LCEvent * evt ) {
 
   float digitizedEnergy = 0.;
   LCCollectionVec * hcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
+  hcalcol->setFlag(flag.getFlag());
   for (int i=0; i<numberOfZones; ++i) {
     int nHits = int(_calorimeterHitVec[i].size());
     for (int iHit=0; iHit<nHits; ++iHit) {
@@ -386,6 +391,7 @@ void MokkaCaloDigi::processEvent( LCEvent * evt ) {
   // 
 
   LCCollectionVec * ecalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
+  ecalcol->setFlag(flag.getFlag());
 
   for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
       try{

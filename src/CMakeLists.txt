@@ -5,38 +5,44 @@
 
 # MarlinReco Packages
 SET( MarlinReco_PKGS
-	"Analysis/EventShapes"
-	"Analysis/SatoruJetFinder"
-	"Calibration/AbsCalibration"
-	"CaloDigi/LDCCaloDigi"
-	"Clustering/ClusterCheater" 
-	"Clustering/ClusterCheater5_3"
-	"Clustering/NNClustering"
-	"Clustering/TrackwiseClustering"
-	"Clustering/PhotonFinderKit"
-	"Pflow/Wolf"
-	"Pflow/TrackBasedPFlow"
-	"TrackDigi/FTDDigi"
-	"TrackDigi/TPCDigi"
-	"TrackDigi/VTXDigi"
-	"Tracking/BrahmsTracking"
-	"Tracking/FullLDCTracking"
-	"Tracking/SiliconTracking"
-	"Tracking/TrackCheater"
-	"Tracking/VertexTracking"
+    "Analysis/EventShapes"
+    "Analysis/SatoruJetFinder"
+    "Calibration/AbsCalibration"
+    "CaloDigi/LDCCaloDigi"
+    "Clustering/ClusterCheater" 
+    "Clustering/ClusterCheater5_3"
+    "Clustering/NNClustering"
+    "Clustering/TrackwiseClustering"
+    "Clustering/PhotonFinderKit"
+    "Pflow/Wolf"
+    "Pflow/TrackBasedPFlow"
+    "TrackDigi/FTDDigi"
+    "TrackDigi/TPCDigi"
+    "TrackDigi/VTXDigi"
+    "Tracking/BrahmsTracking"
+    "Tracking/FullLDCTracking"
+    "Tracking/SiliconTracking"
+    "Tracking/TrackCheater"
+    "Tracking/VertexTracking"
 )
+
+
 
 ####################################################################################################
 ### INCLUDES
 ####################################################################################################
+
 FOREACH( pkg ${MarlinReco_PKGS} )
-	MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
-	INCLUDE_DIRECTORIES( "../${pkg}/include" )
+    MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
+    INCLUDE_DIRECTORIES( "../${pkg}/include" )
 ENDFOREACH()
+
+
 
 ####################################################################################################
 ### SOURCES
 ####################################################################################################
+
 
 ####################################################################################################
 # EventShapes
@@ -45,8 +51,8 @@ ENDFOREACH()
 AUX_SOURCE_DIRECTORY( ../Analysis/EventShapes/src EventShapes_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${EventShapes_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( EventShapes_srcs ${EventShapes_cxx_srcs} )
 
@@ -58,15 +64,15 @@ SET( EventShapes_srcs ${EventShapes_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Analysis/SatoruJetFinder/src SatoruJetFinder_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 # fortran sources
 FILE( GLOB SatoruJetFinder_f77_srcs ../Analysis/SatoruJetFinder/src/fortsrc/*.f )
 
 # fortran flags
 SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_f77_srcs} PROPERTIES
-	COMPILE_FLAGS "-ff2c" )
+    COMPILE_FLAGS "-ff2c" )
 
 SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs} )
 
@@ -78,8 +84,8 @@ SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs
 AUX_SOURCE_DIRECTORY( ../Calibration/AbsCalibration/src AbsCalibration_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${AbsCalibration_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( AbsCalibration_srcs ${AbsCalibration_cxx_srcs} )
 
@@ -91,8 +97,8 @@ SET( AbsCalibration_srcs ${AbsCalibration_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../CaloDigi/LDCCaloDigi/src LDCCaloDigi_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${LDCCaloDigi_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( LDCCaloDigi_srcs ${LDCCaloDigi_cxx_srcs} )
 
@@ -103,8 +109,8 @@ SET( LDCCaloDigi_srcs ${LDCCaloDigi_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Clustering/ClusterCheater/src  ClusterCheater_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( ClusterCheater_srcs ${ClusterCheater_cxx_srcs} )
 
@@ -115,8 +121,8 @@ SET( ClusterCheater_srcs ${ClusterCheater_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Clustering/ClusterCheater5_3/src  ClusterCheater5_3_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater5_3_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( ClusterCheater5_3_srcs ${ClusterCheater5_3_cxx_srcs} )
 
@@ -127,9 +133,9 @@ SET( ClusterCheater5_3_srcs ${ClusterCheater5_3_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Clustering/NNClustering/src NNClustering_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${NNClustering_cxx_srcs} PROPERTIES
-	# require proper c++
-	# FIXME -pedantic flag crashes under sl4
-	COMPILE_FLAGS "-Wall -ansi" )
+    # require proper c++
+    # FIXME -pedantic flag crashes under sl4
+    COMPILE_FLAGS "-Wall -ansi" )
 
 SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
 
@@ -140,8 +146,8 @@ SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Clustering/TrackwiseClustering/src TrackwiseClustering_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${TrackwiseClustering_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( TrackwiseClustering_srcs ${TrackwiseClustering_cxx_srcs} )
 
@@ -152,9 +158,9 @@ SET( TrackwiseClustering_srcs ${TrackwiseClustering_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Clustering/PhotonFinderKit/src PhotonFinderKit_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${PhotonFinderKit_cxx_srcs} PROPERTIES
-	# require proper c++
-	# FIXME -pedantic flag crashes under sl4
-	COMPILE_FLAGS "-Wall -ansi" )
+    # require proper c++
+    # FIXME -pedantic flag crashes under sl4
+    COMPILE_FLAGS "-Wall -ansi" )
 
 SET( PhotonFinderKit_srcs ${PhotonFinderKit_cxx_srcs} )
 
@@ -165,8 +171,8 @@ SET( PhotonFinderKit_srcs ${PhotonFinderKit_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Pflow/Wolf/src Wolf_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${Wolf_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( Wolf_srcs ${Wolf_cxx_srcs} )
 
@@ -177,9 +183,9 @@ SET( Wolf_srcs ${Wolf_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Pflow/TrackBasedPFlow/src TrackBasedPFlow_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${TrackBasedPFlow_cxx_srcs} PROPERTIES
-	# require proper c++
-	# FIXME -pedantic flag crashes under sl4
-	COMPILE_FLAGS "-Wall -ansi" )
+    # require proper c++
+    # FIXME -pedantic flag crashes under sl4
+    COMPILE_FLAGS "-Wall -ansi" )
 
 SET( TrackBasedPFlow_srcs ${TrackBasedPFlow_cxx_srcs} )
 
@@ -190,8 +196,8 @@ SET( TrackBasedPFlow_srcs ${TrackBasedPFlow_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../TrackDigi/FTDDigi/src FTDDigi_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${FTDDigi_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( FTDDigi_srcs ${FTDDigi_cxx_srcs} )
 
@@ -202,8 +208,8 @@ SET( FTDDigi_srcs ${FTDDigi_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../TrackDigi/TPCDigi/src TPCDigi_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${TPCDigi_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( TPCDigi_srcs ${TPCDigi_cxx_srcs} )
 
@@ -214,8 +220,8 @@ SET( TPCDigi_srcs ${TPCDigi_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../TrackDigi/VTXDigi/src VTXDigi_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${VTXDigi_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( VTXDigi_srcs ${VTXDigi_cxx_srcs} )
 
@@ -226,24 +232,24 @@ SET( VTXDigi_srcs ${VTXDigi_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src BrahmsTracking_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic"
-	# required for the fortran interface to work
-	COMPILE_FLAGS "-Df2cFortran" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic"
+    # required for the fortran interface to work
+    COMPILE_FLAGS "-Df2cFortran" )
 
 # c sources
 AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src/C BrahmsTracking_c_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_c_srcs} PROPERTIES
-	# require proper c
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
-	#COMPILE_FLAGS "-Wno-globals" )
+    # require proper c
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    #COMPILE_FLAGS "-Wno-globals" )
 
 # fortran sources
 FILE( GLOB BrahmsTracking_f77_srcs ../Tracking/BrahmsTracking/src/f77/*.F )
 
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_f77_srcs} PROPERTIES
-	COMPILE_FLAGS "-ff2c" )
+    COMPILE_FLAGS "-ff2c" )
 
 SET( BrahmsTracking_srcs ${BrahmsTracking_cxx_srcs} ${BrahmsTracking_c_srcs} ${BrahmsTracking_f77_srcs} )
 
@@ -254,8 +260,8 @@ SET( BrahmsTracking_srcs ${BrahmsTracking_cxx_srcs} ${BrahmsTracking_c_srcs} ${B
 AUX_SOURCE_DIRECTORY( ../Tracking/FullLDCTracking/src FullLDCTracking_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${FullLDCTracking_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( FullLDCTracking_srcs ${FullLDCTracking_cxx_srcs} )
 
@@ -266,9 +272,9 @@ SET( FullLDCTracking_srcs ${FullLDCTracking_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Tracking/SiliconTracking/src SiliconTracking_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${SiliconTracking_cxx_srcs} PROPERTIES
-	# FIXME require proper c++
-	#COMPILE_FLAGS "-Wall -ansi -pedantic" )
-	COMPILE_FLAGS "-Wall -ansi" )
+    # FIXME require proper c++
+    #COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    COMPILE_FLAGS "-Wall -ansi" )
 
 SET( SiliconTracking_srcs ${SiliconTracking_cxx_srcs} )
 
@@ -279,8 +285,8 @@ SET( SiliconTracking_srcs ${SiliconTracking_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Tracking/TrackCheater/src TrackCheater_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${TrackCheater_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
 
@@ -291,27 +297,10 @@ SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Tracking/VertexTracking/src VertexTracking_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${VertexTracking_cxx_srcs} PROPERTIES
-	# require proper c++
-	COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( VertexTracking_srcs ${VertexTracking_cxx_srcs} )
-
-
-####################################################################################################
-### DEPENDENCIES
-####################################################################################################
-
-# load macro
-IF( DEFINED ${PROJECT_NAME}_DEPENDS OR DEFINED BUILD_WITH OR DEFINED LINK_WITH )
-    # load macro
-    IF( NOT EXISTS "${CMAKE_MODULE_PATH}/MacroCheckDeps.cmake" )
-        MESSAGE( FATAL_ERROR "\nSorry, could not find MacroCheckDeps.cmake...\n"
-            "Please set CMAKE_MODULE_PATH correctly with: "
-            "cmake -DCMAKE_MODULE_PATH=<path_to_cmake_modules>" )
-    ENDIF()
-    INCLUDE( "${CMAKE_MODULE_PATH}/MacroCheckDeps.cmake" )
-    CHECK_DEPS()
-ENDIF()
 
 
 ####################################################################################################
@@ -321,9 +310,9 @@ ENDIF()
 # set library sources
 SET( lib_srcs )
 FOREACH( pkgDir ${MarlinReco_PKGS} )
-	# extract basename from dir (e.g. Analysis/EventShapes -> EventShapes)
-	STRING( REGEX REPLACE ".*/([^ ]+)" "\\1" pkgName ${pkgDir} )
-	SET( lib_srcs ${lib_srcs} ${${pkgName}_srcs} )
+    # extract basename from dir (e.g. Analysis/EventShapes -> EventShapes)
+    STRING( REGEX REPLACE ".*/([^ ]+)" "\\1" pkgName ${pkgDir} )
+    SET( lib_srcs ${lib_srcs} ${${pkgName}_srcs} )
 ENDFOREACH()
 
 # create library
@@ -332,25 +321,25 @@ ADD_LIBRARY( lib_${PROJECT_NAME} ${lib_srcs} )
 # workaround for fortran cmake bug
 ADD_CUSTOM_TARGET( fix_f77_cmake_bug
 
-	# SatoruJetFinder fix
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > original.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > this.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > YCUT.mod.proxy
+    # SatoruJetFinder fix
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > original.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > this.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > YCUT.mod.proxy
 
-	# BrahmsTracking fix
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > Monte.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > data.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > a.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > A.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GEAR.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > of.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > helix.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > as.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GRNDM.mod.proxy
-	COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > ranecu.mod.proxy
+    # BrahmsTracking fix
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > Monte.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > data.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > a.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > A.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GEAR.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > of.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > helix.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > as.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GRNDM.mod.proxy
+    COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > ranecu.mod.proxy
 
-	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-	COMMENT "Fixing cmake fortran bug..." VERBATIM )
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Fixing cmake fortran bug..." VERBATIM )
 
 # establish dependency for fixing fortran bug
 ADD_DEPENDENCIES( lib_${PROJECT_NAME} fix_f77_cmake_bug )
@@ -360,29 +349,29 @@ ADD_CUSTOM_TARGET( lib DEPENDS lib_${PROJECT_NAME} )
 
 # change lib_target properties
 SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
-	# create *nix style library versions + symbolic links
-	VERSION ${${PROJECT_NAME}_VERSION}
-	SOVERSION ${${PROJECT_NAME}_SOVERSION}
-	# allow creating static and shared libs without conflicts
-	CLEAN_DIRECT_OUTPUT 1
-	# linker must be explicitly set due to mixed sources
-	LINKER_LANGUAGE CXX
-	# avoid conflicts between library and binary target names
-	OUTPUT_NAME ${PROJECT_NAME}	)
+    # create *nix style library versions + symbolic links
+    VERSION ${${PROJECT_NAME}_VERSION}
+    SOVERSION ${${PROJECT_NAME}_SOVERSION}
+    # allow creating static and shared libs without conflicts
+    CLEAN_DIRECT_OUTPUT 1
+    # linker must be explicitly set due to mixed sources
+    LINKER_LANGUAGE CXX
+    # avoid conflicts between library and binary target names
+    OUTPUT_NAME ${PROJECT_NAME} )
 
 # libg2c
 SET( G2C_LIB G2C_LIB-NOTFOUND )
 FIND_LIBRARY( G2C_LIB NAMES g2c PATHS
-	/usr/lib/gcc-lib/i386-redhat-linux/3.2.3	# SL3
-	/usr/lib/gcc/i386-redhat-linux/3.4.3		# SL4
-	NO_DEFAULT_PATH	# prevent static library to be detected instead of shared one
+    /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3
+    /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4
+    NO_DEFAULT_PATH # prevent static library to be detected instead of shared one
 )
 FIND_LIBRARY( G2C_LIB NAMES g2c )
 
 IF( NOT G2C_LIB )
-	MESSAGE( FATAL_ERROR "Check for libg2c: failed to find g2c library!!" )
+    MESSAGE( FATAL_ERROR "Check for libg2c: failed to find g2c library!!" )
 ELSE()
-	MESSAGE( STATUS "Check for libg2c: ${G2C_LIB}" )
+    MESSAGE( STATUS "Check for libg2c: ${G2C_LIB}" )
 ENDIF()
 MARK_AS_ADVANCED( G2C_LIB )
 
@@ -391,8 +380,8 @@ TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${G2C_LIB} )
 
 # install library
 INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS
-		OWNER_READ OWNER_WRITE OWNER_EXECUTE
-		GROUP_READ GROUP_EXECUTE
-		WORLD_READ WORLD_EXECUTE )
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE )
 
 

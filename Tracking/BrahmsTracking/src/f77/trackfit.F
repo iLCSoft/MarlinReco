@@ -1,5 +1,5 @@
 *  
-* $Id: trackfit.F,v 1.1 2007-04-20 13:41:14 rasp Exp $
+* $Id: trackfit.F,v 1.2 2007-06-22 14:24:02 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.1  2006/11/02 12:04:59  rasp
@@ -32,7 +32,8 @@
 *  
       SUBROUTINE TRACKFIT(NHITS,IDET,ITYPE,XHIT,YHIT,ZHIT,
      *                    RCOV,ZCOV,REF,
-     *                    IERR,RFIT,RFITE,CHI2FIT,NDFFIT,FITCODE)
+     *                    IERR,RFIT,RFITE,CHI2FIT,NDFFIT,NOUTL,
+     *                    IDOUTL,FITCODE)
 **********************************************************************
 *
 *     subroutine TRACKFIT (Interface to MarlinReco)
@@ -56,10 +57,12 @@
 *     output: IERR    - 0 if successful
 *             RFIT    - fitted track parameters at reference point 
 *                       as defined by TANAGRA convention
-*             RFITE   - covariance matric for fitted parameters as 
+*             RFITE   - covariance matrix for fitted parameters as 
 *                       defined by TANAGRA convention
 *             CHI2FIT - fit chi2
 *             NDFFIT  - number of degrees of freedom
+*             NOUTL   - number of outliers
+*             IDOUTL  - array of outliers indecies
 *             FITCODE - measurement code, 
 *                       0 : cartesian coordinates of the reference point
 *                           are given (X,Y,Z)
@@ -87,11 +90,13 @@ c#include "gcbank.inc"
 C#include "include/fkcom.inc"
 C.....max number of hits per track
       INTEGER NHTMAX
-      PARAMETER (NHTMAX=500)
+      PARAMETER (NHTMAX=400)
       INTEGER IH,NHITS
       REAL XHIT(*),YHIT(*),ZHIT(*)
       INTEGER ITYPE(*),IDET(*)
       REAL RCOV(*),ZCOV(*)
+      INTEGER NOUTL
+      INTEGER IDOUTL(*)
       REAL RFIT(6)
       REAL RFITE(15)
       REAL CHI2FIT
@@ -181,6 +186,7 @@ C.......read hit
          HIT(1) = XHIT(IH)
          HIT(2) = YHIT(IH)
          HIT(3) = ZHIT(IH)
+         LIST3(I) = IH
 
 C.......calculate position and covariance matrix for desired detector type
 
@@ -260,12 +266,12 @@ C.....reference trajectory
  100  IF (REF(1).EQ.0.0) THEN
 C       create one using FKREF
 CSJAWRT
-c      write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
+C        write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
         CALL FKREF(ILOC,RTELOC,RTSREF,ITSREF)
       ELSE
 C       use parameters given by calling function
         CALL VZERO(ITSREF,MXTS)
-        ITSREF(3)=1+4
+        ITSREF(3)=1+4+8
         CALL UCOPY(REF,RTSREF(17),6)
       END IF
 
@@ -293,6 +299,8 @@ C.....track fit
       END DO
       CALL FK3TRK(3,ILOC,IDTE,RTELOC,RTSREF,RTKLOC,
      >            NOUT,IDOU,IERR1,IERR2,IFLTE,IERX)
+      
+C      write(*,*) 'HERE WE ARE ---',NOUT
 
       IERR=IERR1+10*IERR2
 
@@ -431,13 +439,24 @@ C.....create TE structure
       NDFFIT  = ITKLOC(8)
       FITCODE = ITKLOC(3)
 
+      NOUTL = NOUT
+C      WRITE(*,*) 'NOUT = ',NOUT
+      
+      DO I=1,NOUTL
+        IDOUTL(I)=LIST3(IDOU(I))
+C        WRITE(*,*) IDOUTL(I)
+      END DO
+
+      
+
       IXPNT = 2
       DISTMIN = 1E+10
       REFRAD = SQRT(REF(1)**2+REF(2)**2)
+      DELTADIST = 0
 
       DO 63 IX=1,NEXS
          IF (IFLX(IX).EQ.0) THEN
-            IF (TYPX(IX).EQ.'CYLI') THEN               
+            IF (TYPX(IX).EQ.'CYLI'.AND.ABS(DATX(1,IX)).GT.REFRAD) THEN               
                DELTADIST = ABS(DATX(1,IX)-REFRAD)
 c               DELTADIST = ABS(DATX(1,IX)-RHMIN)  
 c            ELSE

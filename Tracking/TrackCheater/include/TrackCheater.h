@@ -19,7 +19,7 @@ using namespace marlin ;
  *  via processor parameter TrackerHitCollections. 
  *  An output collection of tracks is specified 
  *  with processor parameter TrueTrackCollection. Furthermore,
- *  relations between tracks and MCParticles is created and stored for each event. 
+ *  relations between tracks and MCParticles are created and stored for each event. 
  *  There is an option to perform a fit of TrackerHits assigned to 
  *  track. This is done if processor parameter FitTrueTrack is set 
  *  to 1. In this case parameters extracted from the fit are used 
@@ -30,11 +30,11 @@ using namespace marlin ;
  *  Covariance matrix for these parameters is also provided.
  *  Only lower left corner of the covariance matrix is stored. The sequence of the covariance matrix elements 
  *  assigned to track is the following: <br>
- *  (D0,D0) <br>
- *  (Phi,D0), (Phi,Phi) <br>
- *  (Omega,D0), (Omega,Phi), (Omega,Omega) <br>
- *  (Z0,D0), (Z0,Phi), (Z0,Omega), (Z0,Z0) <br>
- *  (TanL,D0), (TanL,Phi), (TanL,Omega), (TanL,Z0), (TanL,TanL) <br>
+ *  (Omega,Omega) <br>
+ *  (Omega,TanLambda), (TanLambda,TanLambda) <br>
+ *  (Omega,Phi), (TanLamda,Phi), (Phi,Phi) <br>
+ *  (Omega,D0), (TanLambda,D0), (Phi,D0), (D0,D0) <br>
+ *  (Omega,Z0), (TanLambda,Z0), (Phi,Z0), (D0,Z0), (Z0,Z0) <br>
  *  If FitTrueTrack is set to 0 then true Monte Carlo information, namely 
  *  MCParticle momentum and vertex, is used to define 
  *  track parameters. The number of hits in the different subdetectors associated
@@ -48,9 +48,12 @@ using namespace marlin ;
  *  (Track::getSubdetectorHitNumbers()[2]) <br>
  *  number of TPC hits in track is the forth element in this vector  
  *  (Track::getSubdetectorHitNumbers()[3]) <br>
+ *  number of outliers (hits not included in fit)
+ *  (Track::getSubdetectorHitNumbers()[4]) <br>
  *  <br>
  *  <h4>Input collections and prerequisites</h4> 
- *  Processor requires collections of digitized tracker hits in tracker subdetectors 
+ *  Processor requires collections of digitized tracker hits 
+ *  in tracker subdetectors 
  *  namely VXD, FTD,  SIT and TPC. <br>
  *  If such collections with the user specified names do not exist, 
  *  processor takes no action. <br>
@@ -61,36 +64,52 @@ using namespace marlin ;
  *  (default names VTXTrackerHits FTDTrackerHits SITTrackerHits TPCTrackerHits) <br>
  *  @param TrueTrackCollection The name of the output collection of true MC tracks <br>
  *  (default name TrueTracks) <br>
- *  @param MCTrueTrackRelCollectionName The name of the output collection of relations 
+ *  @param MCTrueTrackRelCollectionName The name of the output collection 
+ *  of relations 
  *  between true MC tracks and MCParticles <br>
  *  (default name TrueTracksMCP) <br>
  *  @param HitToHelixDist Cut on distance between hit and true MC track helix (in mm). True MC track helix is 
- *  defined by MCParticle momentum and vertex. If the distance between hit and helix is greater than this cut, hit is 
+ *  defined by MCParticle momentum and vertex. If the distance between 
+ *  hit and helix is greater than this cut, hit is 
  *  not assigned to track <br>
- *  (default value is 10) <br>
+ *  (default value is 50) <br>
  *  @param ECut Lower cut on the energy of MCParticle (in GeV) <br>
  *  (default value is 0.1) <br>
  *  @param FitTrueTrack When this flag is set to 1 tracks are fitted and covariance matrix for each
  *  track is calculated. If this flag is set to 0 then track parameters are calculated using 
  *  true MC information. No covariance matricies are produced in this case <br>
  *  (default value is 1) <br>
+ *  
  *  @param Chi2Cut Cut on the chi2/ndf for the track fit. Tracks failing this cut are dropped
  *  from output collection. This occurs only if the flag FitTrueTrack is set to 1 <br>
  *  (default value is 100) <br>
  *  @param MinimalHits Minimal required number of hits in track. If number of hits
  *  assigned to true track is less than MinimalHits, track is dropped from output collection <br>
  *  (default value is 3) <br>
- *  @param UseExtraPoint This flag is used to steer DELPHI fitting code. If set to 0, an additional 
- *  artificial mesurement point at PCA is introduced with relatively large errors. This helps
- *  to improve resolution on D0 and Z0 for fitted track. <br>
- *  (default value is 1) <br>
- *  @param OptPrefit Option for prefit of the track with the simple helix model. If 
- *  set to 0, helix fit based on FORTRAN code tfithl is used, when set to 1 ClusterShapes class
- *  is used to fit track with the simple helix model <br>
- *  (default value is 1) <br>
+ *  @param UseExtraPoint This flag is used to steer DELPHI fitting code. If set 
+ *  to 1, an additional artificial mesurement point at PCA is introduced with relatively 
+ *  large errors (this was used in early versions of code to improve d0 and z0
+ *  resolutions, in a new version this parameter is recommended to be set to 0) <br> 
+ *  (default value is 0) <br>
+ *  @param OptPrefit Flag to steer the track fitting: <br>
+ *  0 - simple helix model is used for track prefit, prefit is done with tfithl 
+ *  routine of the DELPHI code, <br>
+ *  1 - simple helix model is used for track prefit, prefit is done with the 
+ *  ClusterShapes class from MarlinUtil package, <br>
+ *  2 - true Monte Carlo parameters of the charged particle at the generator
+ *  level are used as initial approximation for the track fit, <br>
+ *  3 - a sophisticated iterative procedure is employed to determine the
+ *  initial track parameters passed to the Kalman fit (this option
+ *  recommended while running TrackCheater in combination with PFlow algorithm), <br>
+ *  4 - track parameters are determined by combining
+ *  separate fits of the Si and TPC track segments. Parameters d0, z0, phi0,
+ *  tan(lambda) and their errors are determinde from the fit of the Si segment (if it contains 
+ *  3 or more hits), while parameter omega and its error is determined from the fit of 
+ *  the entire set of hits contributing to a given track (this option 
+ *  is recommended for the heavy-flavour tagging applications) <br>
+ *  (default value is 3) <br>
  *  <br>
  *    @author A. Raspereza (MPI Munich)
- *    @version $Id: TrackCheater.h,v 1.6 2007-04-20 13:46:54 rasp Exp $<br>
  */
 class TrackCheater : public Processor {
   
@@ -148,7 +167,7 @@ class TrackCheater : public Processor {
   int _useOnlyOneLoop;
   int _useExtraPoint;
   int _optFit;
-  
+  int _storeHitsInFit;
   
   MarlinTrackFit _trackFit;
 

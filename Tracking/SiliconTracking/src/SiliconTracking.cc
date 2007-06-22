@@ -344,35 +344,35 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   
   // Resolutions used in fit
   //^^^^^^^^^^^^^^^^^^^^^^^^
-  registerProcessorParameter("ResolutionRPhiVTX",
-			     "ResolutionRPhiVTX",
-			     _resolutionRPhiVTX,
-			     float(0.004));
+//   registerProcessorParameter("ResolutionRPhiVTX",
+// 			     "ResolutionRPhiVTX",
+// 			     _resolutionRPhiVTX,
+// 			     float(0.004));
 
-  registerProcessorParameter("ResolutionZVTX",
-			     "ResolutionZVTX",
-			     _resolutionZVTX,
-			     float(0.004));
+//   registerProcessorParameter("ResolutionZVTX",
+// 			     "ResolutionZVTX",
+// 			     _resolutionZVTX,
+// 			     float(0.004));
 
-  registerProcessorParameter("ResolutionRPhiFTD",
-			     "ResolutionRPhiFTD",
-			     _resolutionRPhiFTD,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionRPhiFTD",
+// 			     "ResolutionRPhiFTD",
+// 			     _resolutionRPhiFTD,
+// 			     float(0.01));
 
-  registerProcessorParameter("ResolutionZFTD",
-			     "ResolutionZFTD",
-			     _resolutionZFTD,
-			     float(0.10));
+//   registerProcessorParameter("ResolutionZFTD",
+// 			     "ResolutionZFTD",
+// 			     _resolutionZFTD,
+// 			     float(0.10));
 
-  registerProcessorParameter("ResolutionRPhiSIT",
-			     "ResolutionRPhiSIT",
-			     _resolutionRPhiSIT,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionRPhiSIT",
+// 			     "ResolutionRPhiSIT",
+// 			     _resolutionRPhiSIT,
+// 			     float(0.01));
 
-  registerProcessorParameter("ResolutionZSIT",
-			     "ResolutionZSIT",
-			     _resolutionZSIT,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionZSIT",
+// 			     "ResolutionZSIT",
+// 			     _resolutionZSIT,
+// 			     float(0.01));
 
 
   // Some Steering Parameters for Patrec
@@ -448,7 +448,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("UseExtraPoint",
 			     "Use Extra Point in Fit",
 			     _useExtraPoint,
-			     int(0));
+			     int(1));
 
 }
 
@@ -580,6 +580,11 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     if (_createMap)
       relCol = new LCCollectionVec(LCIO::LCRELATION);
     nTrk = int(_trackImplVec.size());
+    int nSiSegments = 0;	
+    float eTot = 0.;
+    float pxTot = 0.;
+    float pyTot = 0.;
+    float pzTot = 0.;
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
       TrackExtended * trackAR = _trackImplVec[iTrk];
       TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
@@ -643,6 +648,22 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	trackImpl->subdetectorHitNumbers()[1] = nHitsFTD;
 	trackImpl->subdetectorHitNumbers()[2] = nHitsSIT;
 	trackImpl->subdetectorHitNumbers()[3] = nHitsTPC;
+	nSiSegments++;
+	float omega = trackAR->getOmega();
+	float tanLambda = trackAR->getTanLambda();
+	float phi0 = trackAR->getPhi();
+	float d0 = trackAR->getD0();
+	float z0 = trackAR->getZ0();
+	HelixClass helix;
+	helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
+	float trkPx = helix.getMomentum()[0];
+	float trkPy = helix.getMomentum()[1];
+	float trkPz = helix.getMomentum()[2];
+	float trkP = sqrt(trkPx*trkPx+trkPy*trkPy+trkPz*trkPz);
+	eTot += trkP;
+	pxTot += trkPx;
+	pyTot += trkPy;
+	pzTot += trkPz;
 	trkCol->addElement(trackImpl);
 	if (_createMap > 0) {
 	  int nRel = int(mcPointers.size());
@@ -658,6 +679,15 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	}
       }
     }        
+    std::cout << "SiliconTracking -> run " << _nRun
+	      << " event " << _nEvt << std::endl;
+    std::cout << "Number of Si tracks = " << nSiSegments << std::endl;
+    std::cout << "Total 4-momentum of Si tracks : E = " << eTot
+	      << " Px = " << pxTot
+	      << " Py = " << pyTot
+	      << " Pz = " << pzTot << std::endl;
+    
+	
     evt->addCollection(trkCol,"SiTracks");     
     if (_createMap>0)
       evt->addCollection(relCol,"SiTracksMCP");
@@ -739,7 +769,7 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
       hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[0])));
       hitExt->setResolutionZ(0.1);
       if (hit->getCovMatrix()[0] < 1e-10)
-	hitExt->setResolutionRPhi(_resolutionRPhiFTD);
+	hitExt->setResolutionRPhi(0.1);
       hitExt->setType(int(2));
       hitExt->setDet(int(2));
       double pos[3];
@@ -795,9 +825,9 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
       hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
       hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
       if (hit->getCovMatrix()[2] < 1e-10) 
-	hitExt->setResolutionRPhi(_resolutionRPhiVTX);
+	hitExt->setResolutionRPhi(0.1);
       if (hit->getCovMatrix()[5] < 1e-10)
-	hitExt->setResolutionZ(_resolutionZVTX);
+	hitExt->setResolutionZ(0.1);
       hitExt->setType(int(3));
       hitExt->setDet(int(3));
       double pos[3];
@@ -838,9 +868,9 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
 	hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
 	hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
 	if (hit->getCovMatrix()[2] < 1e-10) 
-	  hitExt->setResolutionRPhi(_resolutionRPhiSIT);
+	  hitExt->setResolutionRPhi(0.1);
 	if (hit->getCovMatrix()[5] < 1e-10)
-	    hitExt->setResolutionZ(_resolutionZSIT);
+	    hitExt->setResolutionZ(0.1);
 	hitExt->setType(int(3));
 	hitExt->setDet(int(7));
 	double pos[3];

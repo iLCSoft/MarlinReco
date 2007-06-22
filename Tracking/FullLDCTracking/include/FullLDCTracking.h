@@ -128,6 +128,7 @@ class FullLDCTracking : public Processor {
   void AddNotCombinedTracks();
   void AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec, 
 			std::string TrkColName, std::string RelColName);
+  float CompareTrk(TrackExtended * first, TrackExtended * second);
 
  protected:
 
@@ -156,7 +157,7 @@ class FullLDCTracking : public Processor {
   float _resolutionRPhi_SIT,_resolutionZ_SIT;
   float PI, PIOVER2, TWOPI;
   float _deltaPhiForTracks,_deltaQForTracks;
-  float _angleCutForMerging;
+  float _angleCutForMerging,_omegaCutForMerging;
   float _bField;
   float _chi2PrefitCut;
   float _chi2FitCut;
@@ -172,6 +173,13 @@ class FullLDCTracking : public Processor {
   int _refitSiTracks;
   int _storeRefittedTPCTracks;
   int _storeRefittedSiTracks;
+
+  int _mergeTPCSegments;
+  float _deltaPtToMerge;
+  float _deltaD0ToMerge;
+  float _deltaZ0ToMerge;
+
+  int _cutOnTPCHits;
 
 } ;
 

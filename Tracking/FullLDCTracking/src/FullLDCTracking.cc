@@ -67,40 +67,45 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			  _SiTrackCollection,
 			  std::string("SiTracks"));
 
-  registerProcessorParameter("ResolutionRPhi_VTX",
-			     "R-Phi Resolution for VTX",
-			     _resolutionRPhi_VTX,
-			     float(0.004));
+//   registerProcessorParameter("ResolutionRPhi_VTX",
+// 			     "R-Phi Resolution for VTX",
+// 			     _resolutionRPhi_VTX,
+// 			     float(0.004));
 
-  registerProcessorParameter("ResolutionZ_VTX",
-			     "Z Resolution for VTX",
-			     _resolutionZ_VTX,
-			     float(0.004));
+//   registerProcessorParameter("ResolutionZ_VTX",
+// 			     "Z Resolution for VTX",
+// 			     _resolutionZ_VTX,
+// 			     float(0.004));
 
-  registerProcessorParameter("ResolutionRPhi_FTD",
-			     "R-Phi Resolution for FTD",
-			     _resolutionRPhi_FTD,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionRPhi_FTD",
+// 			     "R-Phi Resolution for FTD",
+// 			     _resolutionRPhi_FTD,
+// 			     float(0.01));
 
-  registerProcessorParameter("ResolutionZ_FTD",
-			     "Z Resolution for FTD",
-			     _resolutionZ_FTD,
-			     float(0.10));
+//   registerProcessorParameter("ResolutionZ_FTD",
+// 			     "Z Resolution for FTD",
+// 			     _resolutionZ_FTD,
+// 			     float(0.10));
 
-  registerProcessorParameter("ResolutionRPhi_SIT",
-			     "R-Phi Resolution for SIT",
-			     _resolutionRPhi_SIT,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionRPhi_SIT",
+// 			     "R-Phi Resolution for SIT",
+// 			     _resolutionRPhi_SIT,
+// 			     float(0.01));
 
-  registerProcessorParameter("ResolutionZ_SIT",
-			     "Z Resolution for SIT",
-			     _resolutionZ_SIT,
-			     float(0.01));
+//   registerProcessorParameter("ResolutionZ_SIT",
+// 			     "Z Resolution for SIT",
+// 			     _resolutionZ_SIT,
+// 			     float(0.01));
 
   registerProcessorParameter("AngleCutForMerging",
 			     "Angle Cut For Merging",
 			     _angleCutForMerging,
-			     float(0.2));
+			     float(0.20));
+
+  registerProcessorParameter("OmegaCutForMerging",
+			     "Omega Cut For Merging",
+			     _omegaCutForMerging,
+			     float(0.25));
 
   registerProcessorParameter("Chi2FitCut",
 			     "Cut on fit Chi2",
@@ -110,7 +115,7 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
   registerProcessorParameter("Chi2PrefitCut",
 			     "Cut on fit Chi2",
 			     _chi2PrefitCut,
-			     float(1.0e+10));
+			     float(1.0e+4));
 
   registerProcessorParameter("CreateMap",
 			     "Create Track to MCP Relations",
@@ -130,22 +135,22 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
   registerProcessorParameter("OptPrefit",
 			     "Option of prefit ?",
 			     _optFit,
-			     int(1));
+			     int(4));
 
-  registerProcessorParameter("ForceMerging",
-			     "Force Merging?",
+  registerProcessorParameter("ForceSiTPCMerging",
+			     "Force merging of Si and TPC segments?",
 			     _forceMerging,
 			     int(1));
 
   registerProcessorParameter("AngleCutForForcedMerging",
 			     "Angle Cut For Forced Merging",
 			     _angleCutForForcedMerging,
-			     float(0.07));
+			     float(0.05));
 
   registerProcessorParameter("OmegaCutForForcedMerging",
 			     "Omega Cut For Forced Merging",
 			     _omegaCutForForcedMerging,
-			     float(0.1));
+			     float(0.25));
 
   registerProcessorParameter("RefitTPCTracks",
 			     "Refit TPC Tracks ?",
@@ -166,6 +171,27 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			     "Store Refitted Si Tracks ?",
 			     _storeRefittedSiTracks,
 			     int(0));
+
+  registerProcessorParameter("ForceTPCSegmentsMerging",
+			     "Force merging of TPC Segments?",
+			     _mergeTPCSegments,
+			     int(1));
+
+  registerProcessorParameter("DeltaD0ToMergeTPCSegments",
+			     "Cut on D0 difference for merging TPC segments",
+			     _deltaD0ToMerge,
+			     float(200));
+
+  registerProcessorParameter("DeltaPToMergeTPCSegments",
+			     "Cut on dP/P difference for merging TPC segments",
+			     _deltaPtToMerge,
+			     float(0.05));
+
+  registerProcessorParameter("CutOnTPCHits",
+			     "Cut on the number of TPC hits",
+			     _cutOnTPCHits,
+			     int(30));
+  
 
 }
 
@@ -194,7 +220,8 @@ void FullLDCTracking::processRunHeader( LCRunHeader* run) {
 
 void FullLDCTracking::processEvent( LCEvent * evt ) { 
 
-  //  std::cout << "Full LDC Tracking Processor" << std::endl;
+  std::cout << "Full LDC Tracking -> run " << _nRun 
+	    << " event " << _nEvt << std::endl;
   prepareVectors( evt );
   //  std::cout << "prepareVectors done..." << std::endl;
   if (_storeRefittedTPCTracks>0 && _refitTPCTracks>0) {
@@ -203,7 +230,7 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
     // std::cout << "Collection of refitted TPC tracks is added to event..." << std::endl;
   }
   if (_storeRefittedSiTracks>0 && _refitSiTracks>0) {
-     AddTrackColToEvt(evt,_allTPCTracks,
+     AddTrackColToEvt(evt,_allSiTracks,
 		      std::string("RefittedSiTracks"),std::string("RefittedSiTracksMCP"));
      // std::cout << "Collection of refitted Si tracks is added to event..." << std::endl; 
   }
@@ -217,8 +244,12 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
   //  std::cout << "Not combined tracks added..." << std::endl;
   AddTrackColToEvt(evt,_trkImplVec,
 		   std::string("LDCTracks"),std::string("LDCTracksMCP"));
+  //  std::cout << "Collections added to event..." << std::endl;
 
   CleanUp();
+
+  //  std::cout << "Cleanup is done..." << std::endl;
+  
   _nEvt++;
   //  getchar();
 
@@ -229,11 +260,20 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
   
   LCCollectionVec * colTRK = new LCCollectionVec(LCIO::TRACK);
 
+  std::cout << "Collection " << TrkColName
+	    << " is added to event " << std::endl;
+
   LCCollectionVec * colRel = NULL;
   if (_createMap > 0)
     colRel = new LCCollectionVec(LCIO::LCRELATION);
 
   int nTrkCand = int(trkVec.size());
+  
+  int nTotTracks = 0;
+  float eTot = 0.0;
+  float pxTot = 0.0;
+  float pyTot = 0.0;
+  float pzTot = 0.0;
 
   for (int iTRK=0;iTRK<nTrkCand;++iTRK) {
     TrackExtended * trkCand = trkVec[iTRK];
@@ -306,21 +346,49 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
     track->subdetectorHitNumbers()[2] = nHitsSIT;
     track->subdetectorHitNumbers()[3] = nHitsTPC;
 
-    colTRK->addElement(track);
-    if (_createMap > 0) {
-      int nRel = int(mcPointers.size());
-      for (int k=0;k<nRel;++k) {
-	LCRelationImpl* tpclcRel = new LCRelationImpl;
-	MCParticle * mcp = mcPointers[k];
-	tpclcRel->setFrom (track);
-	tpclcRel->setTo (mcp);
-	float weight = (float)(mcHits[k])/(float)(track->getTrackerHits().size());
-	tpclcRel->setWeight(weight);
-	colRel->addElement(tpclcRel);
-      }
+    if ((nHitsTPC<_cutOnTPCHits) && ((nHitsVTX+nHitsFTD+nHitsSIT)<=0) ) {
+      delete track;
+    }
+    else {
+	float omega = trkCand->getOmega();
+	float tanLambda = trkCand->getTanLambda();
+	float phi0 = trkCand->getPhi();
+	float d0 = trkCand->getD0();
+	float z0 = trkCand->getZ0();
+	HelixClass helix;
+	helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
+	float trkPx = helix.getMomentum()[0];
+	float trkPy = helix.getMomentum()[1];
+	float trkPz = helix.getMomentum()[2];
+	float trkP = sqrt(trkPx*trkPx+trkPy*trkPy+trkPz*trkPz);
+	eTot += trkP;
+	pxTot += trkPx;
+	pyTot += trkPy;
+	pzTot += trkPz;	
+	nTotTracks++;
+	colTRK->addElement(track);
+	if (_createMap > 0) {
+	    int nRel = int(mcPointers.size());
+	    for (int k=0;k<nRel;++k) {
+		LCRelationImpl* tpclcRel = new LCRelationImpl;
+		MCParticle * mcp = mcPointers[k];
+		tpclcRel->setFrom (track);
+		tpclcRel->setTo (mcp);
+		float weight = (float)(mcHits[k])/(float)(track->getTrackerHits().size());
+		tpclcRel->setWeight(weight);
+		colRel->addElement(tpclcRel);
+	    }
+	}
     }
 
   }
+  std::cout << "Number of " << TrkColName << " = " 
+	    << nTotTracks << std::endl;
+  std::cout << "Total 4-momentum of " << TrkColName << " : E = " << eTot
+	    << " Px = " << pxTot
+	    << " Py = " << pyTot
+	    << " Pz = " << pzTot << std::endl;
+  
   evt->addCollection(colTRK,TrkColName.c_str());
   if (_createMap)
     evt->addCollection(colRel,RelColName.c_str());
@@ -340,7 +408,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
   _allCombinedTracks.clear();
   _trkImplVec.clear();
 
-  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  //  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   //  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
 
 
@@ -353,18 +421,18 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     for (int ielem=0;ielem<nelem;++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(col->getElementAt(ielem));
       TrackerHitExtended * hitExt = new TrackerHitExtended(hit);
-      double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
-      double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
-      double aReso = tpcRPhiResConst*tpcRPhiResConst;
-      double driftLenght = gearTPC.getMaxDriftLength() - fabs(hit->getPosition()[2]);
-      if (driftLenght <0) { 
-        driftLenght = 0.10;
-      }
-      double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
-      double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
-      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
-      //      hitExt->setResolutionRPhi(float(tpcRPhiRes));
-      //      hitExt->setResolutionZ(float(tpcZRes));      
+//       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+//       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+//       double aReso = tpcRPhiResConst*tpcRPhiResConst;
+//       double driftLenght = gearTPC.getMaxDriftLength() - fabs(hit->getPosition()[2]);
+//       if (driftLenght <0) { 
+//         driftLenght = 0.10;
+//       }
+//       double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+//       double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+//       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+//       hitExt->setResolutionRPhi(float(tpcRPhiRes));
+//       hitExt->setResolutionZ(float(tpcZRes));      
       hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
       hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
       hitExt->setType(int(3));
@@ -663,7 +731,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 
 
 
-}
+};
 
 void FullLDCTracking::CleanUp(){
 
@@ -725,7 +793,7 @@ void FullLDCTracking::CleanUp(){
 //   }
   _trkImplVec.clear();
 
-}
+};
 
 void FullLDCTracking::MergeTPCandSiTracks() {
 
@@ -738,15 +806,18 @@ void FullLDCTracking::MergeTPCandSiTracks() {
     float phiTPC = tpcTrack->getPhi();
     float tanLambdaTPC = tpcTrack->getTanLambda();
     float qTPC = PIOVER2 - atan(tanLambdaTPC);
+    float oTPC = tpcTrack->getOmega();
     for (int iSi=0;iSi<nSiTracks;++iSi) {
       TrackExtended * siTrackExt = _allSiTracks[iSi];
       Track * siTrack = siTrackExt->getTrack();
       float phiSi = siTrack->getPhi();
       float tanLambdaSi = siTrack->getTanLambda();
       float qSi = PIOVER2 - atan(tanLambdaSi);
+      float oSi = siTrack->getOmega();
       float angle = (cos(phiTPC)*cos(phiSi)+sin(phiTPC)*sin(phiSi))*sin(qTPC)*sin(qSi)+cos(qTPC)*cos(qSi);
       angle = acos(angle);
-      if (angle < _angleCutForMerging) {
+      float deltaOmega = fabs((oSi-oTPC)/oTPC);
+      if (angle < _angleCutForMerging && deltaOmega < _omegaCutForMerging) {
 	TrackExtended * combinedTrack = CombineTracks(tpcTrackExt,siTrackExt);
 	if (combinedTrack != NULL) {
 	  _allCombinedTracks.push_back( combinedTrack );
@@ -756,7 +827,7 @@ void FullLDCTracking::MergeTPCandSiTracks() {
   }
 
 
-}
+};
 
 TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackExtended * siTrack) {
 
@@ -819,7 +890,8 @@ TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackEx
 				 xh,yh,zh,rphi_reso,z_reso,
 				 par,epar,refPoint,chi2_D,ndf_D,chi2rphi,chi2z,lhits);
   
-  if (ierr >= 0) {
+  float chiQ = chi2_D/float(ndf_D);
+  if (ierr >= 0 && chiQ > 0.001) {
     float omega = par[0];
     float tanlambda = par[1];
     float phi0 = par[2];
@@ -881,7 +953,9 @@ void FullLDCTracking::Sorting(TrackExtendedVec & trackVec) {
       {
 	one = trackVec[j];
 	two = trackVec[j+1];
-	if( one->getChi2() > two->getChi2() )
+	float oneQ = one->getChi2()/float(one->getNDF());
+	float twoQ = two->getChi2()/float(two->getNDF());
+	if( oneQ > twoQ )
 	  {
 	    Temp = trackVec[j];
 	    trackVec[j] = trackVec[j+1];
@@ -948,7 +1022,7 @@ void FullLDCTracking::AddNotCombinedTracks() {
 		OutputTrack->setGroupTracks(group);
 		trkExtSi->setGroupTracks(group);
 		trkExtTPC->setGroupTracks(group);	      
-		OutputTrack->setOmega(trkExtTPC->getOmega());
+		OutputTrack->setOmega(trkExtSi->getOmega());
 		OutputTrack->setTanLambda(trkExtSi->getTanLambda());
 		OutputTrack->setPhi(trkExtSi->getPhi());
 		OutputTrack->setZ0(trkExtSi->getZ0());
@@ -978,14 +1052,117 @@ void FullLDCTracking::AddNotCombinedTracks() {
     }  
   }
 
-  for (int i=0;i<nTPCTrk;++i) {
-    TrackExtended * trkExt = _allTPCTracks[i];
-    Track * track = trkExt->getTrack();
-    GroupTracks * group = trkExt->getGroupTracks();
-    if (group == NULL) {
-      TrackerHitVec hitVec = track->getTrackerHits();       
-      _trkImplVec.push_back(trkExt);
+  if (_mergeTPCSegments) {
+    std::vector<GroupTracks*> TPCSegments;
+    TPCSegments.clear();
+    for (int i=0;i<nTPCTrk;++i) {
+      TrackExtended * trkExt = _allTPCTracks[i];
+      GroupTracks * group = trkExt->getGroupTracks();
+      if (group == NULL) {
+	int nGroups = int(TPCSegments.size());
+	float dPtMin = 1.0e+10;
+	GroupTracks * groupToAttach = NULL;
+	for (int iG=0;iG<nGroups;++iG) {
+	  GroupTracks * segments = TPCSegments[iG];
+	  TrackExtendedVec segVec = segments->getTrackExtendedVec();
+	  int nTrk = int(segVec.size());
+	  for (int iTrk=0;iTrk<nTrk;++iTrk) {
+	    TrackExtended * trkInGroup = segVec[iTrk];
+	    float dPt = CompareTrk(trkExt,trkInGroup);
+	    if (dPt < dPtMin) {
+	      dPtMin = dPt;
+	      groupToAttach = segments;
+	      break;
+	    }
+	  }
+	}
+	if (dPtMin < _deltaPtToMerge && groupToAttach != NULL) {
+	  groupToAttach->addTrackExtended(trkExt);
+	  trkExt->setGroupTracks(groupToAttach);
+	}
+	else {
+	  GroupTracks * newSegment = new GroupTracks(trkExt);
+	  trkExt->setGroupTracks(newSegment);
+	  TPCSegments.push_back(newSegment);
+	}
+      }
     }
+    int nCombTrk = int(_trkImplVec.size());
+    int nSegments = int(TPCSegments.size());
+    for (int iS=0;iS<nSegments;++iS) {
+      GroupTracks * segments = TPCSegments[iS];
+      TrackExtendedVec segVec = segments->getTrackExtendedVec();
+      int nTrk = int(segVec.size());
+      int found = 0;
+      for (int iCTrk=0;iCTrk<nCombTrk;++iCTrk) {
+	TrackExtended * combTrk = _trkImplVec[iCTrk];
+	for (int iTrk=0;iTrk<nTrk;++iTrk) {
+	  TrackExtended * trk = segVec[iTrk];
+	  float dPt = CompareTrk(trk,combTrk);
+	  if (dPt<_deltaPtToMerge) {
+	    found = 1;
+	    break;
+	  }
+	}
+	if (found == 1)
+	  break;
+      }
+      if (found == 0) {
+	if (nTrk==1) {
+	  _trkImplVec.push_back(segVec[0]);
+	  segVec[0]->setGroupTracks(NULL);
+	}
+	else {
+	  float zMin = 1.0e+20;
+	  TrackExtended * chosenTrack = NULL;
+	  for (int iTrk=0;iTrk<nTrk;++iTrk) {
+	    TrackExtended * trk = segVec[iTrk];
+	    Track * track = trk->getTrack();
+	    TrackerHitVec hitVec = track->getTrackerHits();
+	    int nHits = int(hitVec.size());
+	    for (int iH=0;iH<nHits;++iH) {
+	      float zPosi = fabs(hitVec[iH]->getPosition()[2]);
+	      if (zPosi<zMin) {
+		chosenTrack = trk;
+		zMin = zPosi;
+		break;
+	      }
+	    }
+	  }
+	  if (chosenTrack!=NULL) {
+	    _trkImplVec.push_back(chosenTrack);
+	    for (int iTrk=0;iTrk<nTrk;++iTrk) {
+		TrackExtended * trk = segVec[iTrk];
+		if (trk!=chosenTrack) {
+		    TrackerHitExtendedVec hitVec = trk->getTrackerHitExtendedVec();
+		    int nHits = int(hitVec.size());
+		    for (int iH=0;iH<nHits;++iH) {
+			TrackerHitExtended * trkHitExt = hitVec[iH];
+			chosenTrack->addTrackerHitExtended(trkHitExt);
+		    }
+		}
+	    }
+	    chosenTrack->setGroupTracks(NULL);
+	  }
+	}
+      }
+    }
+    for (int iS=0;iS<nSegments;++iS) {
+      GroupTracks * segments = TPCSegments[iS];
+      delete segments;
+    }
+    TPCSegments.clear();
+  }
+  else {
+    for (int i=0;i<nTPCTrk;++i) {
+      TrackExtended * trkExt = _allTPCTracks[i];
+      Track * track = trkExt->getTrack();
+      GroupTracks * group = trkExt->getGroupTracks();
+      if (group == NULL) {
+	TrackerHitVec hitVec = track->getTrackerHits();       
+	_trkImplVec.push_back(trkExt);
+      }
+    }    
   }
 
   for (int i=0;i<nSiTrk;++i) {
@@ -1000,6 +1177,77 @@ void FullLDCTracking::AddNotCombinedTracks() {
 
 }
 
-void FullLDCTracking::check(LCEvent * evt) { }
-void FullLDCTracking::end() {}
+
+float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second) {
+
+  float result = 1.0e+20;
+
+  float d0First = first->getD0();
+  float z0First = first->getZ0();
+  float omegaFirst = first->getOmega();
+  float tanLFirst = first->getTanLambda();
+  float phiFirst = first->getPhi();
+
+  float d0Second = second->getD0();
+  float z0Second = second->getZ0();
+  float omegaSecond = second->getOmega();
+  float tanLSecond = second->getTanLambda();
+  float phiSecond = second->getPhi();
+
+  if (fabs(d0First-d0Second)<_deltaD0ToMerge || fabs(d0First+d0Second)<_deltaD0ToMerge) {
+
+    HelixClass helixFirst;
+    helixFirst.Initialize_Canonical(phiFirst,d0First,z0First,omegaFirst,tanLFirst,_bField);
+    HelixClass helixSecond;
+    helixSecond.Initialize_Canonical(phiSecond,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
+
+    float pFirst[3];
+    float pSecond[3];
+    float dPminus[3];
+    float dPplus[3];
+    float momFirst = 0;
+    float momSecond = 0;
+    float momMinus = 0;
+    float momPlus = 0;
+
+    for (int iC=0;iC<3;++iC) {
+      pFirst[iC] = helixFirst.getMomentum()[iC];
+      pSecond[iC] = helixSecond.getMomentum()[iC];
+      momFirst += pFirst[iC]* pFirst[iC];
+      momSecond += pSecond[iC]*pSecond[iC];
+      dPminus[iC] = pFirst[iC] - pSecond[iC];
+      dPplus[iC] = pFirst[iC] + pSecond[iC];
+      momMinus += dPminus[iC]*dPminus[iC];
+      momPlus += dPplus[iC]*dPplus[iC];
+    }
+    momFirst = sqrt(momFirst);
+    momSecond = sqrt(momSecond);
+    momMinus = sqrt(momMinus);
+    momPlus = sqrt(momPlus);
+    float nom = momMinus;
+    if (momPlus<nom)
+      nom = momPlus;
+    float den = momFirst;
+    if (momSecond<momFirst)
+      den = momSecond;
+
+    result = nom/den;
+//     if (momMinus<0.1 || momPlus <0.1) {
+//       std::cout << pFirst[0] << " "
+// 		<< pFirst[1] << " "
+// 		<< pFirst[2] << std::endl;
+//       std::cout << pSecond[0] << " "
+// 		<< pSecond[1] << " "
+// 		<< pSecond[2] << std::endl;
+//       std::cout << result << std::endl;	
+//     }
+
+  }
+
+  return result;
+
+}
+
+void FullLDCTracking::check(LCEvent * evt) { };
+void FullLDCTracking::end() {};
     

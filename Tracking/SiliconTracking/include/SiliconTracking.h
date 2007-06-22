@@ -65,11 +65,11 @@ using namespace marlin ;
  * Z0 (displacement along z axis at the point of closest approach to IP). Covariance matrix for these parameters is also provided.
  * Only lower left corner of the covariance matrix is stored. The sequence of the covariance matrix elements 
  * assigned to track is the following: <br>
- * (D0,D0) <br>
- * (Phi,D0), (Phi,Phi) <br>
- * (Omega,D0), (Omega,Phi), (Omega,Omega) <br>
- * (Z0,D0), (Z0,Phi), (Z0,Omega), (Z0,Z0) <br>
- * (TanL,D0), (TanL,Phi), (TanL,Omega), (TanL,Z0), (TanL,TanL) <br>
+ * (Omega,Omega) <br>
+ * (Omega,TanLambda), (TanLambda,TanLambda) <br>
+ * (Omega,Phi), (TanLamda,Phi), (Phi,Phi) <br>
+ * (Omega,D0), (TanLambda,D0), (Phi,D0), (D0,D0) <br>
+ * (Omega,Z0), (TanLambda,Z0), (Phi,Z0), (D0,Z0), (Z0,Z0) <br>
  * The number of hits in the different subdetectors associated
  * with each track can be accessed via method Track::getSubdetectorHitNumbers().
  * This method returns vector of integers : <br>
@@ -80,8 +80,7 @@ using namespace marlin ;
  * number of SIT hits in track is the third element in this vector  
  * (Track::getSubdetectorHitNumbers()[2]) <br>
  * Output track collection has a name "SiTracks". <br>
- * In addition collection of relations of the tracks to MCParticles is stored 
- * if flag CreateMap is set to 1. <br>
+ * In addition collection of relations of the tracks to MCParticles is stored if flag CreateMap is set to 1. <br>
  * Collection of relations has a name "SiTracksMCP" <br>
  * @param VXDHitCollectionName name of input VXD TrackerHit collection <br>
  * (default parameter value : "VTXTrackerHits") <br>
@@ -152,8 +151,7 @@ using namespace marlin ;
  * (default value is 0.1) <br>
  * @param MinimalHits minimal number of hits in track required <br>
  * (default value is 3) <br>
- * @param FastAttachment if this flag is set to 1, less accurate but 
- * fast procedure to merge additional hits to tracks is used <br> 
+ * @param FastAttachment if this flag is set to 1, less accurate but fast procedure to merge additional hits to tracks is used <br> 
  * if set to 0, a more accurate, but slower procedure is invoked <br>
  * (default value is 1) <br>
  * @param OptPrefit Option for prefit of the track with simple helix model. If 
@@ -172,10 +170,10 @@ using namespace marlin ;
  * @param CreateMap When this flag is set to 1 collection of relations between tracks and MCParticles is 
  * created <br>
  * (default value is 1) <br>
- * @param UseExtraPoint This flag is used to steer DELPHI fitting code. If set to 1, additional 
+ * @param UseExtraPoint This flag is used to steer DELPHI fitting code. If set to 0, an additional 
  * artificial mesurement point at PCA is introduced with relatively large errors. This helps
  * to improve resolution on D0 and Z0 for fitted track. <br>
- * (default value 0)
+ * (default value 1)
  * <br>
  * @author A. Raspereza (MPI Munich)<br>
  */

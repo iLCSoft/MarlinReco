@@ -74,7 +74,7 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
     ADD_CUSTOM_TARGET( doc DEPENDS
         "${CMAKE_SOURCE_DIR}/doc/manual_html" )
 ELSE()
-    MESSAGE( SEND_ERROR "Latex not found in your system!!" )
+    MESSAGE( STATUS "Latex not found in your system!!" )
     IF( INSTALL_DOC )
         MESSAGE( STATUS "INSTALL_DOC forced to OFF" )
         SET( INSTALL_DOC OFF )

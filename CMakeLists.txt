@@ -19,8 +19,7 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 # User section: modify as needed
 ####################################################################################################
 
-# force cmake to use g77 fortran compiler
-# FIXME: detect and test gfortran
+# use g77 fortran compiler
 SET( CMAKE_Fortran_COMPILER_INIT g77 )
 
 # project name
@@ -103,9 +102,15 @@ SET( ${PROJECT_NAME}_VERSION
 SET( ${PROJECT_NAME}_SOVERSION
     "${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}" )
 
-# add library install path to the rpath list
+# add install path to the rpath list
 SET( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" )
 MARK_AS_ADVANCED( CMAKE_INSTALL_RPATH )
+
+# add install path to the rpath list (apple)
+IF( APPLE )
+    SET( CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib" )
+    MARK_AS_ADVANCED( CMAKE_INSTALL_NAME_DIR )
+ENDIF()
 
 # append link pathes to rpath list
 SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH 1 )

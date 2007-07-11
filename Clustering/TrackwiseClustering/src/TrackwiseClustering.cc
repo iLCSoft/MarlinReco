@@ -27,7 +27,6 @@ TrackwiseClustering::TrackwiseClustering() : Processor("TrackwiseClustering") {
   _description = "Performs clustering in a track-wise manner..." ;
 
 
-     // Not used  
      registerProcessorParameter( "DistanceForDirection", 
 				"Distance to Define Direction", 
 				_distanceToDefineDirection,

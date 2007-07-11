@@ -24,6 +24,7 @@
 #include <IMPL/ClusterImpl.h>
 #include <EVENT/Cluster.h>
 #include <IMPL/ReconstructedParticleImpl.h>
+#include <IMPL/LCFlagImpl.h>
 #include <UTIL/LCRelationNavigator.h>
 #include <LCRTRelations.h>
 
@@ -86,13 +87,13 @@ struct isPartOfEMShowerCandidate : LCIntExtension<isPartOfEMShowerCandidate> {};
  *
  */
 class TrackBasedPFlow : public Processor {
-
+  
  public:
 
   virtual Processor* newProcessor() { return new TrackBasedPFlow; }
 
   TrackBasedPFlow();
-
+  
   virtual void init();
   virtual void processRunHeader( LCRunHeader* run );
   virtual void processEvent( LCEvent* evt ); 
@@ -104,6 +105,10 @@ class TrackBasedPFlow : public Processor {
 
   
  protected:
+
+  // 'global constants
+  float _cutOnAbsMomentumForFitOnOuterMostTrackerHits;
+  
 
   float _bField;
 
@@ -119,7 +124,7 @@ class TrackBasedPFlow : public Processor {
   std::vector<float> _calibrCoeffECAL;
   std::vector<float> _calibrCoeffHCAL;
 
-  double _absMomentumCut;
+  double _cutOnPt;
   double _absD0Cut;
   double _absZ0Cut;
   int _minNTPCHits;
@@ -150,6 +155,7 @@ class TrackBasedPFlow : public Processor {
   std::vector<float> _distanceTrackBack;
   std::vector<float> _stepTrackBack;
   std::vector<float> _resolutionParameter;
+  std::vector<float> _resolutionParameterForNeutrals;
   std::vector<float> _distanceMergeForward;
   float _distanceToTrackSeed;
   float _distanceToDefineDirection;
@@ -185,9 +191,20 @@ class TrackBasedPFlow : public Processor {
   int _nOfFoundMIPStubs;
   int _nOfChargedObjectsExtrapolatedIntoCalorimeter;
 
+  std::vector<Track*> _tracksExtrapolatedIntoCalorimeter;
+
   std::vector<Track*> _tracksNotExtrapolatedIntoCalorimeter;
+  std::vector<Track*> _tracksNotFulFillingPtCut;
+  std::vector<Track*> _tracksWithTooFewTrackerHits;
+  std::vector<Track*> _tracksNotFulfillingCombinedCylinderShellCuts;
+
+  std::vector<Track*> _tracksNotExtrapolatedWithEnoughSiliconAndTPCHits;
+  std::vector<Track*> _tracksNotExtrapolatedComingFromIP;
+  std::vector<Track*> _tracksDiscarded;
+
   std::vector<Track*> _tracksWhichWouldReachCalorimeter;
   std::vector<Track*> _tracksNotReachingTheCalorimeter;
+
   std::vector<Cluster*> _emShowerCandidatesRecognisedAsCharged;
 
 
@@ -218,6 +235,7 @@ class TrackBasedPFlow : public Processor {
   AIDA::ICloud1D* _cAlphaRecoCalo;
   AIDA::ICloud1D* _cAlphaCaloMC;
 
+  AIDA::ICloud1D* _cNTracksWithEnergyAssignedByMC;
   AIDA::ICloud1D* _cNTracksNotPassingCylinderCuts;
   AIDA::ICloud1D* _cPTracksNotPassingCylinderCuts;
   AIDA::ICloud1D* _cSumPTracksNotPassingCylinderCuts;
@@ -269,7 +287,8 @@ class TrackBasedPFlow : public Processor {
   
   std::vector<ClusterImplWithAttributes*> doTrackwiseClustering(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix,
 								const std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes, 
-								const double* startPoint, const double* startDirection);
+								const double* startPoint, const float pathLengthOnHelixOfStartPoint, const float distanceToHelixOfStartPoint,
+								const double* startDirection);
 
   std::vector<ClusterImplWithAttributes*> doConeClustering(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix,
 							   const std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes, 
@@ -309,7 +328,8 @@ class TrackBasedPFlow : public Processor {
   std::vector<ClusterImplWithAttributes*> assignClusters(ClusterImplWithAttributes* cluster, std::vector<ClusterImplWithAttributes*> clusters, LCVector3D referencePosition,
 							 const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
 
-  std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(ClusterImplWithAttributes* mipStub, std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
+  std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(ClusterImplWithAttributes* mipStub, Trajectory* fittedHelix, 
+								   std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
 								   std::vector<ClusterImplWithAttributes*> clustersToCheck, Track* track);
 
   

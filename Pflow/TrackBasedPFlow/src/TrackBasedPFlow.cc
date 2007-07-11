@@ -14,6 +14,10 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
   // modify processor description
   _description = "simple track-based particle flow processor" ;
 
+  // FIXME: remove hard coded number, if absP > 10 GeV do not perform a fir on outermost tracker hits but take track parameter as parameters for trajectory
+  _cutOnAbsMomentumForFitOnOuterMostTrackerHits = 10.0;
+  
+
   registerProcessorParameter( "colNameTracks" ,
 			      "name of the Track collection" ,
 			      _colNameTracks ,
@@ -69,9 +73,9 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
 			     _calibrCoeffHCAL,
 			     calibrHCAL);
   
-  registerProcessorParameter( "absMomentumCut",
-			      "cut on |p|, use only tracks with |p| larger than cut (in GeV)",
-			      _absMomentumCut,
+  registerProcessorParameter( "cutOnPt",
+			      "cut on pt, use only tracks with pt larger than cut (in GeV)",
+			      _cutOnPt,
 			      (double)0.1 ) ; // 100 MeV
 
   registerProcessorParameter( "absD0Cut",
@@ -239,11 +243,13 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
 
 
   // parameters needed for Trackwise Clustering
+  // Not used
   registerProcessorParameter( "DistanceForDirection", 
 			      "Distance to Define Direction", 
 			      _distanceToDefineDirection,
 			      (float)1.0);
 
+  // Not used
   registerProcessorParameter( "DistanceToTrackSeed", 
 			      "Distance to Track Seed", 
 			      _distanceToTrackSeed,
@@ -278,7 +284,17 @@ TrackBasedPFlow::TrackBasedPFlow() : Processor("TrackBasedPFlow")
 			      "Resolution Parameter "  ,
 			      _resolutionParameter,
 			      resolutionParameter); 
+
+  // SCut (merging parameter cut for neutrals)
+  std::vector<float>  resolutionParameterForNeutrals;
+  resolutionParameterForNeutrals.push_back(30.0);
+  resolutionParameterForNeutrals.push_back(100.0);
   
+  registerProcessorParameter( "ResolutionParameterForNeutrals" , 
+			      "Resolution Parameter for neutral particles"  ,
+			      _resolutionParameterForNeutrals,
+			      resolutionParameterForNeutrals); 
+
   std::vector<float>  distanceMergeForward;
   distanceMergeForward.push_back(50.0);
   distanceMergeForward.push_back(100.0);
@@ -437,7 +453,7 @@ void TrackBasedPFlow::init()
   _cAlphaRecoCalo = AIDAProcessor::histogramFactory(this)->createCloud1D( "AlphaRecoCalo", "AlphaRecoCalo", -1 );
   _cAlphaCaloMC = AIDAProcessor::histogramFactory(this)->createCloud1D( "AlphaCaloMC", "AlphaCaloMC", -1 );
 
-  
+  _cNTracksWithEnergyAssignedByMC = AIDAProcessor::histogramFactory(this)->createCloud1D( "NTracksWithEnergyAssignedByMC", "NTracksWithEnergyAssignedByMC", -1 );
   _cNTracksNotPassingCylinderCuts = AIDAProcessor::histogramFactory(this)->createCloud1D( "NTracksNotPassingCylinderCuts", "NTracksNotPassingCylinderCuts", -1 );
   _cPTracksNotPassingCylinderCuts = AIDAProcessor::histogramFactory(this)->createCloud1D( "PTracksNotPassingCylinderCuts", "PTracksNotPassingCylinderCuts", -1 );;
   _cSumPTracksNotPassingCylinderCuts = AIDAProcessor::histogramFactory(this)->createCloud1D( "SumPTracksNotPassingCylinderCuts", "SumPTracksNotPassingCylinderCuts", -1 );;
@@ -530,12 +546,24 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
   // debug
   int NTracks = 0;
+  int NTracksWithEnergyAssignedByMC = 0;
   double SEReco  = 0.0;
   double SpxReco = 0.0;
   double SpyReco = 0.0;
   double SpzReco = 0.0;
 
+
+  _tracksExtrapolatedIntoCalorimeter.clear();
+
   _tracksNotExtrapolatedIntoCalorimeter.clear();
+  _tracksNotFulFillingPtCut.clear();
+  _tracksWithTooFewTrackerHits.clear();
+  _tracksNotFulfillingCombinedCylinderShellCuts.clear();
+
+  _tracksNotExtrapolatedWithEnoughSiliconAndTPCHits.clear();
+  _tracksNotExtrapolatedComingFromIP.clear();
+  _tracksDiscarded.clear();
+
   _tracksWhichWouldReachCalorimeter.clear();
   _tracksNotReachingTheCalorimeter.clear();
 
@@ -550,10 +578,15 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
   std::vector<CalorimeterHit*> neutralCaloHitsAssignedToCharged;
   std::vector<CalorimeterHit*> chargedCaloHitsAssignedToNeutral;
 
-
+  
   LCCollectionVec* reconstructedParticles = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   LCCollectionVec* reconstructedClusters = new LCCollectionVec(LCIO::CLUSTER);
-  
+
+  // set flag to store more information in the output file
+  LCFlagImpl flag;
+  flag.setBit(LCIO::CLBIT_HITS);
+  reconstructedClusters->setFlag(flag.getFlag());
+
   try {
     
     std::vector< std::string >::const_iterator iter;
@@ -579,8 +612,9 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  Track* track = dynamic_cast<Track*>(col->getElementAt(j));
 
 	  const double absP = MarlinUtil::getAbsMomentum(track,_bField);
-	  const double absD0 = fabs(track->getD0());
-	  const double absZ0 = fabs(track->getZ0());
+	  // not used at the moment
+	  // const double absD0 = fabs(track->getD0());
+	  // const double absZ0 = fabs(track->getZ0());
 
 
 
@@ -590,26 +624,28 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  double cosTh = p[2]/absP;
 	  double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
 
+
 	  /*
 	  std::cout << std::endl
 		    << "New Track: " << std::endl
 		    << "track momentum: |p| = " << absP << "  " << "cosTh = " << cosTh << "  " 
-		    << "momentum cut: |pcut| = " << _absMomentumCut << std::endl;
+		    << "momentum cut: pt = " << pt << " < " << << _cutOnPt << std::endl;
 	  */
 
-	  if ( _debugLevel > 1 )  MarlinUtil::printTrack(track);
-	 
-       	  if ( (absP > _absMomentumCut) && (absD0 < _absD0Cut) && (absZ0 < _absZ0Cut) ) {
 
-	    // debug	   
+	  // debug
+
+	  if ( _debugLevel > 4 )  MarlinUtil::printTrack(track);	        	 	    
+	  if (_drawOnCED) {
+	    MarlinCED::newEvent(this,0);
+	    // MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
+	    MarlinCED::drawTrack(track,3,1,0xff0000,3);
+	  }
+	  
+
+	  
+	  if ( pt >= _cutOnPt ) {
 	    
-	    if (_drawOnCED) {
-	      MarlinCED::newEvent(this,0);
-	      //MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
-	      MarlinCED::drawTrack(track,3,1,0xff0000,3);
-	    }
-	   
-
 	    // 1. get outermost hits of the track	  
 	    outermostTrackerHits = getOuterTrackerHits(track,_nOfTrackerHitsUsedForExtrapolation);
 
@@ -694,7 +730,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		++index;
 
 	      }
-
+	      
 	      
 	      if ( allOuterTrackerHitsFullfillRPhiCutForHelixExtrapolation && outerTrackerHitsFullfillCylindricalCut ) {
 
@@ -725,9 +761,14 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		float* yCoordiantesOfOutermostHits = new float[_nOfTrackerHitsUsedForExtrapolation];
 		float* zCoordiantesOfOutermostHits = new float[_nOfTrackerHitsUsedForExtrapolation];
 		float* aCoordiantesOfOutermostHits = new float[_nOfTrackerHitsUsedForExtrapolation];
+
+
+
+
 		
 		for(int k=0; k<_nOfTrackerHitsUsedForExtrapolation; ++k){
-		  
+		
+		  // transform coordinates, set origin at outermost tracker hit
 		  xCoordiantesOfOutermostHits[k] = (float)( (outermostTrackerHits.at(k)->getPosition()[0]) - (outermostTrackerHits.at(0)->getPosition()[0]) );
 		  yCoordiantesOfOutermostHits[k] = (float)( (outermostTrackerHits.at(k)->getPosition()[1]) - (outermostTrackerHits.at(0)->getPosition()[1]) );
 		  zCoordiantesOfOutermostHits[k] = (float)( (outermostTrackerHits.at(k)->getPosition()[2]) - (outermostTrackerHits.at(0)->getPosition()[2]) );
@@ -742,69 +783,93 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		}
 		
 	      
-		// 4. fit helix on outermost hits
-		
-		ClusterShapes* shape = new ClusterShapes(_nOfTrackerHitsUsedForExtrapolation,aCoordiantesOfOutermostHits,
-							 xCoordiantesOfOutermostHits,yCoordiantesOfOutermostHits,zCoordiantesOfOutermostHits);
-	      
-		double par[5];
-		double dpar[5];
-		double chi2;
-		double distmax;
-		int status = 0;
-		
-		int direction = (int)( (track->getOmega())/fabs(track->getOmega()));
+		// 4. fit helix on outermost hits, if |p| < _cutOnAbsMomentumForFitOnOuterMostTrackerHits
 
-		
-		//shape->FitHelix(1000,status,1,par,dpar,chi2,distmax); // bZ parametrisation
-		shape->FitHelix(1000,status,3,par,dpar,chi2,distmax,direction); // canonical parametrisation
-		
-
-		// debug
-		if ( _debugLevel > 1 ) std::cout << "Result of the helix fit on outermost tracker hits: chi2 = " << chi2 << std::endl;
-		
-	       
-		/*
-		// bz parametrisation, parameter vector: (x0,y0,r0,bz,phi0) 
-		double x0 = par[0];
-		double y0 = par[1];
-		double r0 = par[2];
-		double bz = par[3];
-		double phi0 = par[4];
-		*/
-		
 		// canonical parametrisation, parameter vector: (z0,Phi0,omega,d0,tanL)				
-		double z0    = par[0];
-		double Phi0  = par[1];
-		double omega = par[2];
-		double d0    = par[3];
-		double tanL  = par[4];
+		double z0    = 0.0;
+		double Phi0  = 0.0;
+		double omega = 0.0;
+		double d0    = 0.0;
+		double tanL  = 0.0;
 		
+		double chi2  = 0.0;
 
-		/*
-		std::vector<double> referencePoint;
-		referencePoint.push_back(0.0);
-		referencePoint.push_back(0.0);
-		referencePoint.push_back(0.0);
-
-		//HelixTrack* fittedHelix = new HelixTrack(x0,y0,r0,bz,phi0,_bField,referencePoint);
-		HelixTrack* fittedHelix = new HelixTrack(d0,Phi0,omega,z0,tanL,referencePoint,_bField);
-		*/
+		LCVector3D referencePoint;
 
 
-		// new Trajectory interface
-		// LCVector3D referencePoint(0.0,0.0,0.0);
-		LCVector3D referencePoint((outermostTrackerHits.at(0)->getPosition()[0]),
-					  (outermostTrackerHits.at(0)->getPosition()[1]),
-					  (outermostTrackerHits.at(0)->getPosition()[2]));
+
+		if ( absP < _cutOnAbsMomentumForFitOnOuterMostTrackerHits ) { 
+
+		  ClusterShapes* shape = new ClusterShapes(_nOfTrackerHitsUsedForExtrapolation,aCoordiantesOfOutermostHits,
+							   xCoordiantesOfOutermostHits,yCoordiantesOfOutermostHits,zCoordiantesOfOutermostHits);
+	      
+		  double par[5];
+		  double dpar[5];
+		  double distmax;
+		  int status = 0;
+
+		  int direction = 1;
+
+		  // FIXME: replace hard coded number, needed to avoid instable fits
+		  if ( fabs(track->getOmega()) < 0.0001 ) direction = 1; 
+		  else direction = (int)( (track->getOmega())/fabs(track->getOmega()));
+		  
+		  shape->FitHelix(1000,status,3,par,dpar,chi2,distmax,direction); // canonical parametrisation
+
+		  z0    = par[0];
+		  Phi0  = par[1];
+		  omega = par[2];
+		  d0    = par[3];
+		  tanL  = par[4];
+
+		  referencePoint.setX(outermostTrackerHits.at(0)->getPosition()[0]);
+		  referencePoint.setY(outermostTrackerHits.at(0)->getPosition()[1]);
+		  referencePoint.setZ(outermostTrackerHits.at(0)->getPosition()[2]);
+
+		  delete shape;
+		  shape = 0;
+		
+		  // debug
+		  if ( _debugLevel > 1 ) std::cout << "Result of the helix fit on outermost tracker hits: chi2 = " << chi2 << std::endl;
+		  
+		}
+		else {
+		  
+		  z0    = track->getZ0();
+		  Phi0  = track->getPhi();
+		  omega = track->getOmega();
+		  d0    = track->getD0();
+		  tanL  = track->getTanLambda();
+
+		  referencePoint.setX(0.0);
+		  referencePoint.setY(0.0);
+		  referencePoint.setZ(0.0);
+
+		  // debug
+		  if ( _debugLevel > 1 ) std::cout << "Track momentum |p| = " << absP << " larger than cut. Track parameter are used for track extrapolation" << std::endl;
+
+		}
+
+	       
+
+		// Trajectory interface
+	
 		
 		SimpleHelix* fittedHelix = new SimpleHelix(d0,Phi0,omega,z0,tanL,referencePoint);
 
-		LCVector3D firstPointInHelixFit(xCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1] - xCoordiantesOfOutermostHits[0],
-						yCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1] - yCoordiantesOfOutermostHits[0],
-						zCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1] - zCoordiantesOfOutermostHits[0]);
+		LCVector3D firstPointInHelixFit(xCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1] 
+						+ outermostTrackerHits.at(0)->getPosition()[0],
+						yCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1]
+						+ outermostTrackerHits.at(0)->getPosition()[1],
+						zCoordiantesOfOutermostHits[_nOfTrackerHitsUsedForExtrapolation-1]
+						+ outermostTrackerHits.at(0)->getPosition()[2] );
 
-		LCVector3D lastPointInHelixFit(0.0,0.0,0.0);
+		LCVector3D lastPointInHelixFit(xCoordiantesOfOutermostHits[0]
+					       + outermostTrackerHits.at(0)->getPosition()[0],
+					       yCoordiantesOfOutermostHits[0]
+					       + outermostTrackerHits.at(0)->getPosition()[1],
+					       zCoordiantesOfOutermostHits[0]
+					       + outermostTrackerHits.at(0)->getPosition()[2] );
 		  
 		double sOfFirstPointInHelixFit = getPathLengthOnHelix(firstPointInHelixFit,fittedHelix);
 		double sOfLastPointInHelixFit  = getPathLengthOnHelix(lastPointInHelixFit,fittedHelix);
@@ -812,8 +877,8 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		
 		
 		fittedHelix->setStart(sOfFirstPointInHelixFit);
-		fittedHelix->setEnd(sOfLastPointInHelixFit);
-
+		fittedHelix->setEnd(sOfLastPointInHelixFit+_maximalConeTubeLength);
+		
 		
 
 		// debug
@@ -823,17 +888,11 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		  // MarlinCED::drawTrajectory(fittedHelix,0 | 3 << CED_LAYER_SHIFT,1,0xff75fa);
 
 
-		  // self made draw helix (for debugging of MarlinCED::drawHelix() or MarlinCED::drawTrajectory() method)
-		  
-		  
+		  // self made draw helix (for debugging of MarlinCED::drawHelix() or MarlinCED::drawTrajectory() method)		 		  
 
-		  if ( _debugLevel > 1 ) std::cout << "sOfFirstPointInHelixFit = " << sOfFirstPointInHelixFit << "  " 
-						   << "sOfLastPointInHelixFit = " << sOfLastPointInHelixFit << std::endl;
-		
-
-		 
-
-  
+		  if ( _debugLevel > 1 ) std::cout << "sOfFirstPointInHelixFit = " << sOfFirstPointInHelixFit << "  "
+						   << "sOfLastPointInHelixFit = " << sOfLastPointInHelixFit << "  "
+						   << "maxPathLengthInConeTube = " << sOfLastPointInHelixFit+_maximalConeTubeLength << std::endl;	     
 		  
 		  LCVector3D firstPointInHelixFitProjected = getProjectedPointOnHelix(firstPointInHelixFit,fittedHelix);
 		  LCVector3D lastPointInHelixFitProjected  = getProjectedPointOnHelix(lastPointInHelixFit,fittedHelix);
@@ -876,7 +935,9 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		  // draw hits and projections
 		  for(int k=_nOfTrackerHitsUsedForExtrapolation-1; k>=0; --k) {
 		    
-		    LCVector3D trackerHit(xCoordiantesOfOutermostHits[k],yCoordiantesOfOutermostHits[k],zCoordiantesOfOutermostHits[k]);
+		    LCVector3D trackerHit(xCoordiantesOfOutermostHits[k] + outermostTrackerHits.at(0)->getPosition()[0],
+					  yCoordiantesOfOutermostHits[k] + outermostTrackerHits.at(0)->getPosition()[1],
+					  zCoordiantesOfOutermostHits[k] + outermostTrackerHits.at(0)->getPosition()[2]);
 		    double sOfTrackerHit = getPathLengthOnHelix(trackerHit,fittedHelix);
 		    LCVector3D trackerHitProjected = getProjectedPointOnHelix(trackerHit,fittedHelix);
 		    double sOfTrackerHitProjected = getPathLengthOnHelix(trackerHitProjected,fittedHelix);
@@ -957,10 +1018,9 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		ClusterImplWithAttributes* mipStub = new ClusterImplWithAttributes();
 		std::vector<ClusterImplWithAttributes*> clusters;
 		
-		
-		
 		getRelatedClusters(calorimeterHitsWithAttributes,outermostTrackerHits,fittedHelix,mipStub,clusters);
 		//getRelatedClusterPerfectly(evt,track,outermostTrackerHits,fittedHelix,clusters);
+
 
 
 
@@ -969,6 +1029,97 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		ReconstructedParticleImpl* recoParticle = assignClustersToTrack(track,mipStub,clusters,outermostTrackerHits,fittedHelix);
 		//ReconstructedParticleImpl* recoParticle = assignClustersToTrackPerfectly(track,clusters);
 		
+
+
+
+		// FIXME: very simple approach to find mistakes in the clustering and im the assignment of clusters
+		// simply redo the full procedure with smaller resolution parameters of the trackwise clustering
+		// this can also been done iteratively!!!
+	      	      		
+		double energyAssignedToRecoParticle = 0.0;
+		const ClusterVec ClustersAssignedToRecoParticle = recoParticle->getClusters();
+		int nOfClustersAssignedToRecoParticle = ClustersAssignedToRecoParticle.size();
+		
+		for (int iOfClustersAssignedToRecoParticle = 0; iOfClustersAssignedToRecoParticle<nOfClustersAssignedToRecoParticle; ++iOfClustersAssignedToRecoParticle) {
+		  
+		  Cluster* cl = recoParticle->getClusters()[iOfClustersAssignedToRecoParticle];
+		   energyAssignedToRecoParticle+= cl->getEnergy();
+		  
+		}
+
+
+		// get track energy for comparison
+		double energyOfTrack = sqrt( absP*absP + 0.13957*0.13957); // FIXME: at the moment the pion hypothesis is used
+
+		if ( fabs(energyAssignedToRecoParticle-energyOfTrack) > (0.6*sqrt(energyOfTrack)) ) {
+		  
+		  if ( _debugLevel > 5 ) {
+		  
+		    std::cout << "RECLUSTERING => => =>" << std::endl
+			      << "absP of track: " << absP << "  " << "energy of track: " << energyOfTrack << "  " 
+			      << "energyAssignedToRecoParticle: " << energyAssignedToRecoParticle << std::endl
+			      << "fabs(energyAssignedToRecoParticle-energyOfTrack) = " << fabs(energyAssignedToRecoParticle-energyOfTrack) << "  "
+			      << "0.6*sqrt(energyOfTrack) = " << 0.6*sqrt(energyOfTrack) << std::endl
+			      << "Full Condition: fabs(energyAssignedToRecoParticle-energyOfTrack) > (0.6*sqrt(energyOfTrack)) : " 
+			      << ( fabs(energyAssignedToRecoParticle-energyOfTrack) > (0.6*sqrt(energyOfTrack)) ) << std::endl << std::endl;
+		    
+		  }
+		  
+		  delete mipStub;
+		  mipStub = 0;
+
+		  mipStub = new ClusterImplWithAttributes();
+		  
+		  clusters.clear();
+
+		  delete recoParticle;
+		  recoParticle = 0;
+		  
+
+		  
+		  float weightForResoStore = _weightForReso;
+		  _weightForReso = 5.0;
+
+		  for(std::vector<float>::iterator k = _resolutionParameter.begin(); k != _resolutionParameter.end(); ++k) {
+
+		    // FIXME: hard coded number
+		    (*k) -= 10.0;
+		    
+		     if ( _debugLevel > 5 ) {
+		       
+		       std::cout << "resolutionParameter: " << (*k) << std::endl;
+		       
+		     }
+
+		  }
+
+		  if (_drawOnCED) {
+		    MarlinCED::newEvent(this,0);
+		    // MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
+		    MarlinCED::drawTrack(track,3,1,0xff0000,3);
+		  }
+
+
+		  getRelatedClusters(calorimeterHitsWithAttributes,outermostTrackerHits,fittedHelix,mipStub,clusters);
+		  //getRelatedClusterPerfectly(evt,track,outermostTrackerHits,fittedHelix,clusters);
+
+		  recoParticle = assignClustersToTrack(track,mipStub,clusters,outermostTrackerHits,fittedHelix);
+		  //ReconstructedParticleImpl* recoParticle = assignClustersToTrackPerfectly(track,clusters);
+
+
+		  _weightForReso = weightForResoStore;
+
+		  for(std::vector<float>::iterator k = _resolutionParameter.begin(); k != _resolutionParameter.end(); ++k) {
+		    
+		    // FIXME: hard coded number
+		    (*k) += 10.0;
+
+		  }
+
+		}
+
+
+
 		// fill cluster collection	      
 		for(ClusterVec::const_iterator k = recoParticle->getClusters().begin(); k != recoParticle->getClusters().end(); ++k) {
 
@@ -977,6 +1128,8 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		}
 
 
+
+	      	      	  
 
 
 		// in between: calculate the MIP-Stub finding efficiency
@@ -1118,7 +1271,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		}
 		neutralCaloHits.clear();
 		
-		if (_drawOnCED) {
+		if ( _drawOnCED ) {
 		  
 		  for (std::vector<CalorimeterHit*>::const_iterator i = neutralCaloHitsAssignedToCharged.begin(); i != neutralCaloHitsAssignedToCharged.end(); ++i) {
 		    
@@ -1134,15 +1287,12 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		// 9. add recoParticle to collection		
 		reconstructedParticles->addElement(recoParticle);
 		
+		// track is added to the _tracksExtrapolatedIntoCalorimeter collection assuming that the assignment of energy was successful
+		_tracksExtrapolatedIntoCalorimeter.push_back(track);
 
 		
 		delete fittedHelix;
-		fittedHelix = 0;
-		
-		delete shape;
-		shape = 0;
-		
-		
+		fittedHelix = 0;	       		
 		
 		delete[] xCoordiantesOfOutermostHits;
 		xCoordiantesOfOutermostHits = 0;
@@ -1154,73 +1304,344 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		aCoordiantesOfOutermostHits = 0;     
 		
 	      }
-	      else { // track does not fullfill 'cylinder cuts'
+	      else { // track does not fulfil 'combined cylinder shell cuts'
 		
 		if ( _debugLevel > 5 ) {
 		  
 		std::cout << "Track has NOT been extrapolated ==> Track is added to _tracksNotExtrapolated collection" << std::endl 
-			  << "Reason: Track does not fullfill 'cylinder cuts'" << std::endl << std::endl;
+			  << "Reason: Track does not fulfil 'combined cylinder shell cuts'" << std::endl
+			  << "allOuterTrackerHitsFullfillRPhiCutForHelixExtrapolation = " << allOuterTrackerHitsFullfillRPhiCutForHelixExtrapolation << "  "
+			  << "outerTrackerHitsFullfillCylindricalCut = " << outerTrackerHitsFullfillCylindricalCut << std::endl
+			  << "Full Condition: (allOuterTrackerHitsFullfillRPhiCutForHelixExtrapolation && outerTrackerHitsFullfillCylindricalCut) = "
+			  << (allOuterTrackerHitsFullfillRPhiCutForHelixExtrapolation && outerTrackerHitsFullfillCylindricalCut) << std::endl << std::endl;
 		
 		}
 		
-		_tracksNotExtrapolatedIntoCalorimeter.push_back(track);	     
+
+		_tracksNotExtrapolatedIntoCalorimeter.push_back(track);
+		_tracksNotFulfillingCombinedCylinderShellCuts.push_back(track);
+
 
 		++NTracksNotPassingCylinderCuts;
+
                 #ifdef MARLIN_USE_AIDA
 		_cPTracksNotPassingCylinderCuts->fill(absP);
                 #endif
 		SumPTracksNotPassingCylinderCuts += absP;
 	      
 	      }
-
+	      
 	    }
-	    else { // 'no' outermost tracker hits
+	    else { // too few tracker hits
 
 	      if ( _debugLevel > 5 ) {
 		
 		std::cout << "Track has NOT been extrapolated ==> Track is added to _tracksNotExtrapolated collection" << std::endl 
-			  << "Reason: too few (" << outermostTrackerHits.size()  << ") outermost tracker hits" << std::endl << std::endl;
+			  << "Reason: too few tracker hits (" << track->getTrackerHits().size() << "). " << track->getTrackerHits().size() 
+			  << " < " << _nOfTrackerHitsUsedForExtrapolation << std::endl << std::endl;
 		
 	      }
 
 	      _tracksNotExtrapolatedIntoCalorimeter.push_back(track);
-
+	      _tracksWithTooFewTrackerHits.push_back(track);
+	      
 	    }
 	    
-	    
-	    // debug
-	    if (_drawOnCED) MarlinCED::draw(this,true);
-
-	    	    
 	  }
-	  else { // momentum cut
+	  else { // cut on pt
 
 	    if ( _debugLevel > 5 ) {
 
 	      std::cout << "Track has NOT been extrapolated ==> Track is added to _tracksNotExtrapolated collection" << std::endl 
-			<< "Reason: absP = " << absP << " <= " << _absMomentumCut << "  " << "absD0 = " << absD0 << " < " << _absD0Cut << "  " 
-			<< "absZ0 = " << absZ0 << " < " << _absZ0Cut << std::endl
-			<< "Full Condition: (absP > _absMomentumCut) && (absD0 < absD0Cut) && (absZ0 < absZ0Cut) = "
-			<< ( (absP > _absMomentumCut) && (absD0 < _absD0Cut) && (absZ0 < _absZ0Cut) ) << std::endl << std::endl;
+			<< "Reason: pt = " << pt << " < " << _cutOnPt << std::endl
+			<< "Full Condition: (pt >= _cutOnPt) = " << ( pt >= _cutOnPt ) << std::endl << std::endl;
 
 	    }
 
 	    _tracksNotExtrapolatedIntoCalorimeter.push_back(track);
+	    _tracksNotFulFillingPtCut.push_back(track);
 
 	  }
-	  
-	}
+
+
+	  // debug
+	  if ( _drawOnCED ) MarlinCED::draw(this,true);
+
+
+	} // loop over tracks
 	
       }
       
     }
     
 
-  
-    if ( _debugLevel > 5 ) std::cout << "failed to extrapolate "<< _tracksNotExtrapolatedIntoCalorimeter.size() << " tracks into the calorimeter" << std::endl;
-    
 
     
+      
+    double pSumOfTracksNotExtrapolatedIntoCalorimeter = 0.0;
+      
+    for ( std::vector<Track*>::const_iterator i = _tracksNotExtrapolatedIntoCalorimeter.begin(); i != _tracksNotExtrapolatedIntoCalorimeter.end(); ++i ) {
+      
+      pSumOfTracksNotExtrapolatedIntoCalorimeter += MarlinUtil::getAbsMomentum((*i),_bField);
+      
+    }
+      
+
+      
+    // debug
+    if ( _debugLevel > 5 ) {
+      std::cout << "Failed to extrapolate "<< _tracksNotExtrapolatedIntoCalorimeter.size() << " tracks with a momentum sum of " 
+		<< pSumOfTracksNotExtrapolatedIntoCalorimeter << " into the calorimeter" << std::endl << std::endl
+		<< "Loop over these tracks:" << std::endl << std::endl;
+      
+    }
+    
+    
+
+    // have a look at the charged particles, which do not reach the calorimeter 
+    // FIXME: A realistic kink, V0, pair production and 'hard delta ray' finding is needed
+
+    double pSumOfTracksWithReassignedEnergyByMC = 0.0;
+    double ESumOfTracksWithReassignedEnergyByMC = 0.0;
+      
+    for ( std::vector<Track*>::const_iterator i = _tracksNotExtrapolatedIntoCalorimeter.begin(); i != _tracksNotExtrapolatedIntoCalorimeter.end(); ++i ) {
+
+      // check if track fulfilling cuts on number of silicon and TPC hits
+      int nOfTPcHits = 0;
+      int nOfNonTPcHits = 0;
+      bool minNTPCHitsReached = false;
+      bool minNNonTPCHitsReached = false;
+      
+      for ( TrackerHitVec::const_iterator j = (*i)->getTrackerHits().begin(); j != (*i)->getTrackerHits().end(); ++j ) {
+	
+	if ( ((*j)->getType()) == 500 ) { // FIXME: hard coded number for type describing the TPC hits
+
+	  ++nOfTPcHits;
+	  
+	  if ( nOfTPcHits >= _minNTPCHits) minNTPCHitsReached = true;	  	  
+
+	}
+	
+	if ( ((*j)->getType()) != 500 ) { // FIXME: hard coded number for type describing the non TPC hits
+	  
+	  ++nOfNonTPcHits;
+	  
+	  if ( nOfNonTPcHits >= _minNNonTPCHits ) minNNonTPCHitsReached = true;
+	  
+	}
+		
+      }
+      
+    
+      // discard track if it has to few TPC or Silicon Tracker Hits
+      if ( minNTPCHitsReached && minNNonTPCHitsReached ) {
+      
+	const double absD0ofNotExtrapolatedTrack = fabs((*i)->getD0());
+	const double absZ0ofNotExtrapolatedTrack = fabs((*i)->getZ0());
+
+	if ( (absD0ofNotExtrapolatedTrack < _absD0Cut) && (absZ0ofNotExtrapolatedTrack < _absZ0Cut) ) {
+
+
+	  // debug
+	  if ( _debugLevel > 5 ) std::cout << "Energy of the following track will be assigned by MC information: " << std::endl;
+
+
+	  // FIXME: there seems to be a bug in the filling of _tracksWhichWouldReachCalorimeter, use method 'getRelatedCalorimeterHitsPerfectly()' instead
+	  // But this takes more computing time
+	  // std::vector<Track*>::const_iterator index = find(_tracksWhichWouldReachCalorimeter.begin(),_tracksWhichWouldReachCalorimeter.end(),(*i));
+
+	  ClusterImpl* clusterRealEnergy = new ClusterImpl();
+	  ClusterImpl* clusterPerfectEnergy = new ClusterImpl();
+	
+	  // also used to cut off GEANT4 bugs
+	  // FIXME: to take out GEANT4 bugs in this way takes far to much time, therefore it is done only for _drawOnCED; find an other way
+	  getRelatedCalorimeterHitsPerfectly(evt,(*i),clusterRealEnergy,clusterPerfectEnergy);
+
+
+	  ReconstructedParticleImpl* recoParticle = new ReconstructedParticleImpl();
+	    
+	  recoParticle->addTrack(*i);
+	  recoParticle->addCluster(clusterRealEnergy);
+	  // do not delete clusters which are assigned to an reconstructed particle
+	  
+	  doPID(recoParticle,false);
+	  
+	  reconstructedClusters->addElement(clusterRealEnergy);
+	  
+	  reconstructedParticles->addElement(recoParticle);
+	  
+
+	  ++NTracksWithEnergyAssignedByMC;
+
+	  pSumOfTracksWithReassignedEnergyByMC += MarlinUtil::getAbsMomentum((*i),_bField);
+	  
+	 
+	  int nCaloHitsAssigned = clusterRealEnergy->getCalorimeterHits().size();
+	  for (int j = 0; j < nCaloHitsAssigned; ++j) {
+
+	    CalorimeterHit* caloHit = clusterRealEnergy->getCalorimeterHits().at(j);
+	  
+	    ESumOfTracksWithReassignedEnergyByMC += caloHit->getEnergy();
+	    
+	  }
+	  
+	  // FIXME: perhaps put these clusters into a separate lcio collection
+	  // delete clusters which are NOT assigned to any reconstructed particle
+      
+	  //  delete clusterRealEnergy;
+	  //  clusterRealEnergy = 0;
+  
+	  delete clusterPerfectEnergy;
+	  clusterPerfectEnergy = 0;
+	  
+	
+	
+	  
+	  /*
+	    bool isTrackReachingCalorimeter = false;
+	    if ( clusterRealEnergy->getCalorimeterHits().size() > 0 ) isTrackReachingCalorimeter = true;
+	    
+	    // take only tracks into account which would not reach the Calorimeter and which fullfill the d0, z0, number of TPC hits and number of non TPC hits cuts 
+	    
+	    if ( (!isTrackReachingCalorimeter) && (absD0 < _absD0Cut) && (absZ0 < _absZ0Cut) && 
+	    minNTPCHitsReached && minNNonTPCHitsReached ) {
+	    
+	    _tracksNotReachingTheCalorimeter.push_back(*i);	
+	    
+	    if ( _debugLevel > 5 ) {
+	
+	    std::cout << "Track with no energy deposition in Calorimeter found. Added to the collection of reconstructed particles..." << std::endl;
+	    MarlinUtil::printTrack(*i);
+	    
+	    }
+	    
+	    if (_drawOnCED) {
+	    
+	    MarlinCED::newEvent(this,0);
+	    MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
+	    MarlinCED::drawTrack((*i),3,1,0xff0000,7);
+	    drawRelatedCalorimeterHits(evt,(*i));
+	    MarlinCED::draw(this,true);
+	    
+	    }
+	    
+	    
+	
+	    ReconstructedParticleImpl* recoParticle = new ReconstructedParticleImpl();
+	    
+	    recoParticle->addTrack(*i);
+	    doPID(recoParticle,false);
+	    
+	    reconstructedParticles->addElement(recoParticle);
+		
+	    
+	    }
+	  */
+
+
+	
+	  
+	  _tracksNotExtrapolatedComingFromIP.push_back(*i);
+	  
+	}
+	else { // track (not extrapolated) is not comming from IP
+	  
+	  if ( _debugLevel > 5 ) {
+	    
+	    std::cout << "Track (not extrapolated) is not coming from IP ==> Track will be discarded" << std::endl 
+		      << "Reason: absD0 = " << absD0ofNotExtrapolatedTrack << " < " << _absD0Cut << "  " << "absZ0 = " << absZ0ofNotExtrapolatedTrack << " < " 
+		      << _absZ0Cut << std::endl
+		      << "Full Condition: (absD0 < absD0Cut) && (absZ0 < absZ0Cut) = "
+		      << ( (absD0ofNotExtrapolatedTrack < _absD0Cut) && (absZ0ofNotExtrapolatedTrack < _absZ0Cut) ) << std::endl << std::endl;
+	    
+	  }
+	  
+	  _tracksDiscarded.push_back(*i);
+
+	}
+	
+	
+	_tracksNotExtrapolatedWithEnoughSiliconAndTPCHits.push_back(*i);
+
+      }
+      else { // too few TPC or Silicon Tracker Hits of this not extrapolated track 
+
+	if ( _debugLevel > 5 ) {
+
+	  std::cout << "Track (not extrapolated) has too few TPC or Silicon Tracker hits ==> Track will be discarded" << std::endl 
+		    << "Reason: minNTPCHitsReached = " << minNTPCHitsReached << "  " << "minNSiliconHitsReached = " << minNNonTPCHitsReached << std::endl
+		    << "Full Condition: (minNTPCHitsReached && minNNonTPCHitsReached) = " << ( minNTPCHitsReached && minNNonTPCHitsReached ) << std::endl << std::endl;
+	  
+	}
+
+	_tracksDiscarded.push_back(*i);
+	
+      }
+            
+      // debug  
+      if (_drawOnCED) {
+	MarlinCED::newEvent(this,0);   
+	MarlinCED::drawTrack((*i),3,1,0xff0000,3);
+	MarlinCED::draw(this,true);
+      }
+	        
+    }
+
+
+
+    
+    // debug
+    if ( _debugLevel > 5 ) {
+      std::cout << "Recovered "<< NTracksWithEnergyAssignedByMC << " tracks where the energy is assigned by MC. Total momentum sum: " 
+		<< pSumOfTracksWithReassignedEnergyByMC << "  " << "Total energy sum: " << ESumOfTracksWithReassignedEnergyByMC << std::endl << std::endl;
+      
+    }
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+    
+    // debug
+    if ( _debugLevel > 5 ) {
+    
+      std::cout << "Track Summary:" << std::endl 
+		<< "N: " << NTracks << "  " << "N failed to extrapolate: " << _tracksNotExtrapolatedIntoCalorimeter.size() << "  "
+		<< "N would reach Calo: " << _tracksWhichWouldReachCalorimeter.size() << "  " 
+		<< "N not reaching Calo: " << _tracksNotReachingTheCalorimeter.size() << std::endl;
+      
+      
+      std::cout << "TracksWhichWouldReachCalorimeter:" << std::endl;
+      for ( std::vector<Track*>::const_iterator i = _tracksWhichWouldReachCalorimeter.begin(); i != _tracksWhichWouldReachCalorimeter.end(); ++i ) {
+	MarlinUtil::printTrack(*i,_bField);
+      }
+      
+      std::cout << "TracksNotReachingTheCalorimeter:" << std::endl;
+      for ( std::vector<Track*>::const_iterator i = _tracksNotReachingTheCalorimeter.begin(); i != _tracksNotReachingTheCalorimeter.end(); ++i ) {
+	MarlinUtil::printTrack(*i,_bField);
+      }
+      
+    }
+    
+    */
+
+
+
 
 
 
@@ -1306,14 +1727,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
       ReconstructedParticleImpl* recoParticle = assignNeutralClusterToReconstructedParticle(*i);
 
-      // fill cluster collection	      
-      for(ClusterVec::const_iterator j = recoParticle->getClusters().begin(); j != recoParticle->getClusters().end(); ++j) {
-
-	reconstructedClusters->addElement(*j);
-	
-      }
-
-      
+        
       // 13. perfom PID on them and add them to reco particle collection
       
       doPID(recoParticle,false);
@@ -1371,6 +1785,14 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
 
 
+      // fill cluster collection     
+      for(ClusterVec::const_iterator j = recoParticle->getClusters().begin(); j != recoParticle->getClusters().end(); ++j) {
+
+	reconstructedClusters->addElement(*j);
+
+      }
+      
+
       // 14. add recoParticle to collection
 		
       reconstructedParticles->addElement(recoParticle);
@@ -1381,128 +1803,33 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
     
 
-    // have a look at the charged particles, which do not reach the calorimeter 
-    // FIXME: A realistic kink, V0 and 'hard delta ray' finding is needed
-    
-    for ( std::vector<Track*>::const_iterator i = _tracksNotExtrapolatedIntoCalorimeter.begin(); i != _tracksNotExtrapolatedIntoCalorimeter.end(); ++i ) {
-      
-
-      // FIXME: there seems to be a bug in the filling of _tracksWhichWouldReachCalorimeter, use method 'getRelatedCalorimeterHitsPerfectly()' instead
-      // But this takes more computing time
-      // std::vector<Track*>::const_iterator index = find(_tracksWhichWouldReachCalorimeter.begin(),_tracksWhichWouldReachCalorimeter.end(),(*i));
-
-      ClusterImpl* clusterRealEnergy = new ClusterImpl();
-      ClusterImpl* clusterPerfectEnergy = new ClusterImpl();
-	
-      // also used to cut off GEANT4 bugs
-      // FIXME: to take out GEANT4 bugs in this way takes far to much time, therefore it is done only for _drawOnCED; find an other way
-      getRelatedCalorimeterHitsPerfectly(evt,(*i),clusterRealEnergy,clusterPerfectEnergy);
-
-      bool isTrackReachingCalorimeter = false;
-      if ( clusterRealEnergy->getCalorimeterHits().size() > 0 ) isTrackReachingCalorimeter = true;
-
-      delete clusterRealEnergy;
-      clusterRealEnergy = 0;
-  
-      delete clusterPerfectEnergy;
-      clusterPerfectEnergy = 0;
-
-
-
-      const double absD0 = fabs((*i)->getD0());
-      const double absZ0 = fabs((*i)->getZ0());
-
-      int nOfTPcHits = 0;
-      int nOfNonTPcHits = 0;
-      bool minNTPCHitsReached = false;
-      bool minNNonTPCHitsReached = false;
-
-      for ( TrackerHitVec::const_iterator j = (*i)->getTrackerHits().begin(); j != (*i)->getTrackerHits().end(); ++j ) {
-	
-	if ( ((*j)->getType()) == 500 ) { // FIXME: haed coded number for type describing the TPC hits
-
-	  ++nOfTPcHits;
-
-	  if ( nOfTPcHits >= _minNTPCHits) minNTPCHitsReached = true;	  	  
-
-	}
-
-	if ( ((*j)->getType()) != 500 ) { // FIXME: haed coded number for type describing the non TPC hits
-
-	  ++nOfNonTPcHits;
-	  
-	  if ( nOfNonTPcHits >= _minNNonTPCHits ) minNNonTPCHitsReached = true;
-	       
-	}
-
-      }
-
-	
-      // take only tracks into account which would not reach the Calorimeter and which fullfill the d0, z0, number of TPC hits and number of non TPC hits cuts 
-
-      if ( /*(index == _tracksWhichWouldReachCalorimeter.end())*/ (!isTrackReachingCalorimeter) && (absD0 < _absD0Cut) && (absZ0 < _absZ0Cut) && 
-	   minNTPCHitsReached && minNNonTPCHitsReached ) {
-
-	_tracksNotReachingTheCalorimeter.push_back(*i);	
-
-	if ( _debugLevel > 5 ) {
-
-	std::cout << "Track with no energy deposition in Calorimeter found. Added to the collection of reconstructed particles..." << std::endl;
-	MarlinUtil::printTrack(*i);
-	
-	}
-		
-	if (_drawOnCED) {
-
-	  MarlinCED::newEvent(this,0);
-	  MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
-	  MarlinCED::drawTrack((*i),3,1,0xff0000,7);
-	  drawRelatedCalorimeterHits(evt,(*i));
-	  MarlinCED::draw(this,true);
-
-	}
-	 
-
-	
-	ReconstructedParticleImpl* recoParticle = new ReconstructedParticleImpl();
-  
-	recoParticle->addTrack(*i);
-	doPID(recoParticle,false);
-	
-	reconstructedParticles->addElement(recoParticle);
-		
-		 
-      }
-    
-    }
-
-    
-    // debug
-    if ( _debugLevel > 5 ) {
-    
-      std::cout << "Track Summary:" << std::endl 
-		<< "N: " << NTracks << "  " << "N failed to extrapolate: " << _tracksNotExtrapolatedIntoCalorimeter.size() << "  "
-		<< "N would reach Calo: " << _tracksWhichWouldReachCalorimeter.size() << "  " 
-		<< "N not reaching Calo: " << _tracksNotReachingTheCalorimeter.size() << std::endl;
-      
-      
-      std::cout << "TracksWhichWouldReachCalorimeter:" << std::endl;
-      for ( std::vector<Track*>::const_iterator i = _tracksWhichWouldReachCalorimeter.begin(); i != _tracksWhichWouldReachCalorimeter.end(); ++i ) {
-	MarlinUtil::printTrack(*i,_bField);
-      }
-      
-      std::cout << "TracksNotReachingTheCalorimeter:" << std::endl;
-      for ( std::vector<Track*>::const_iterator i = _tracksNotReachingTheCalorimeter.begin(); i != _tracksNotReachingTheCalorimeter.end(); ++i ) {
-	MarlinUtil::printTrack(*i,_bField);
-      }
-      
-    }
-
-
     
     // debug 
     // calculate check numbers to fill histograms
-    std::cout << "collection of reconstructed particles (Size: " << reconstructedParticles->getNumberOfElements() << "):" << std::endl;
+    
+    int numberOfReconstructedElectrons = 0;
+    int numberOfReconstructedChargedHadrons = 0;
+    int numberOfReconstructedPhotons = 0;
+    int numberOfReconstructedNeutralHadrons = 0;
+    int numberOfReconstructedMuons = 0;
+
+    int numberOfChargedReconstructedParticles = 0;
+    int numberOfNeutralReconstructedParticles = 0;
+    int numberOfReconstructedNoTypeParticles = 0;  
+    
+    double SumEnergyOfReconstructedElectrons = 0.0;
+    double SumEnergyOfReconstructedChargedHadrons = 0.0;
+    double SumEnergyOfReconstructedPhotons = 0.0;
+    double SumEnergyOfReconstructedNeutralHadrons = 0.0;
+    double SumEnergyOfReconstructedMuons = 0.0;
+
+    double SumEnergyOfChargedReconstructedParticles = 0.0;
+    double SumEnergyOfNeutralReconstructedParticles = 0.0;
+    double SumEnergyOfReconstructedNoTypeParticles = 0.0;  
+    
+
+
+    /*if ( _debugLevel > 1 )*/ std::cout << "collection of reconstructed particles (Size: " << reconstructedParticles->getNumberOfElements() << "):" << std::endl;
     for (LCCollectionVec::const_iterator i = reconstructedParticles->begin(); i != reconstructedParticles->end(); ++i) {
 
       ReconstructedParticle* recoParticle = dynamic_cast<ReconstructedParticle*>( (*i) );
@@ -1513,12 +1840,79 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 
       // debug
       if ( _debugLevel > 5 ) MarlinUtil::printRecoParticle(recoParticle,_bField);
-    
+
+      
+      switch ( recoParticle->getType() ) {
+	
+      case 1 : 
+	++numberOfReconstructedElectrons;
+	SumEnergyOfReconstructedElectrons += recoParticle->getEnergy();
+	
+	++numberOfChargedReconstructedParticles;
+	SumEnergyOfChargedReconstructedParticles += recoParticle->getEnergy();
+	break;
+	
+      case 2 : 
+	++numberOfReconstructedChargedHadrons;
+	SumEnergyOfReconstructedChargedHadrons += recoParticle->getEnergy();
+	
+	++numberOfChargedReconstructedParticles;
+	SumEnergyOfChargedReconstructedParticles += recoParticle->getEnergy();
+	break;
+	
+      case 3 : 
+	++numberOfReconstructedPhotons;
+	SumEnergyOfReconstructedPhotons += recoParticle->getEnergy();
+	
+	++numberOfNeutralReconstructedParticles;
+	SumEnergyOfNeutralReconstructedParticles += recoParticle->getEnergy();
+	break;
+
+      case 4 : 
+	++numberOfReconstructedNeutralHadrons;
+	SumEnergyOfReconstructedNeutralHadrons += recoParticle->getEnergy();
+	
+	++numberOfNeutralReconstructedParticles;
+	SumEnergyOfNeutralReconstructedParticles += recoParticle->getEnergy();
+	break;
+
+      case 5 : 
+	++numberOfReconstructedMuons;
+	SumEnergyOfReconstructedMuons += recoParticle->getEnergy();
+	
+	++numberOfChargedReconstructedParticles;
+	SumEnergyOfChargedReconstructedParticles += recoParticle->getEnergy();
+	break;
+
+      default :	
+	++numberOfReconstructedNoTypeParticles;
+	SumEnergyOfReconstructedNoTypeParticles += recoParticle->getEnergy();
+
+      }
+          
     }
-
     
-
-
+  
+    // debug
+    // summary of reconstructed particles
+    //    if ( _debugLevel > 1 ) {
+      
+      std::cout << "N of reconstructed electrons " << numberOfReconstructedElectrons << "  " << "with energy " << SumEnergyOfReconstructedElectrons << std::endl
+		<< "N of reconstructed charged hadrons " << numberOfReconstructedChargedHadrons << "  " << "with energy " << SumEnergyOfReconstructedChargedHadrons << std::endl
+		<< "N of reconstructed photons " << numberOfReconstructedPhotons << "  " << "with energy " << SumEnergyOfReconstructedPhotons << std::endl
+		<< "N of reconstructed neutral hadrons " << numberOfReconstructedNeutralHadrons << "  " << "with energy " << SumEnergyOfReconstructedNeutralHadrons << std::endl
+    		<< "N of reconstructed muons " << numberOfReconstructedMuons << "  " << "with energy " << SumEnergyOfReconstructedMuons << std::endl
+		<< std::endl
+		<< "N of charged reconstructed particles " << numberOfChargedReconstructedParticles << "  " << "with energy " 
+		<< SumEnergyOfChargedReconstructedParticles << std::endl
+		<< "N of neutral reconstructed particles " << numberOfNeutralReconstructedParticles << "  " << "with energy " 
+		<< SumEnergyOfNeutralReconstructedParticles << std::endl
+		<< "N of reconstructed particles w/o type " <<  numberOfReconstructedNoTypeParticles << "  " << "with energy " 
+		<< SumEnergyOfReconstructedNoTypeParticles << std::endl
+		<< std::endl;
+      
+      //    }
+    
 
     evt->addCollection(reconstructedClusters,_reconstructedClusterCollectionName.c_str());
     evt->addCollection(reconstructedParticles,_reconstructedParticleCollectionName.c_str());
@@ -1566,6 +1960,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
   _cAlphaRecoCalo->fill(alphaRecoCalo);
   _cAlphaCaloMC->fill(alphaCaloMC);
 
+  _cNTracksWithEnergyAssignedByMC->fill(NTracksWithEnergyAssignedByMC);
   _cNTracksNotPassingCylinderCuts->fill(NTracksNotPassingCylinderCuts);
   _cSumPTracksNotPassingCylinderCuts->fill(SumPTracksNotPassingCylinderCuts);
   _cSumPTracksNotPassingCylinderCutsvsDSERecoMC->fill(SumPTracksNotPassingCylinderCuts,SEReco - SEMC);
@@ -1614,8 +2009,12 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
   */
 
 
-  double notAssignedCaloEnergy = getNotAssignedCalorimeterEnergy(evt,reconstructedParticles);
+  /*
+  _debugLevel = 7;
+  _drawOnCED = 1;
+  */
 
+  double notAssignedCaloEnergy = getNotAssignedCalorimeterEnergy(evt,reconstructedParticles);
 
   // debug
   std::cout << "SpxReco = " << SpxReco << "  " << "SpyReco = " << SpyReco << "  " << "SpzReco = " << SpzReco << std::endl
@@ -1629,7 +2028,14 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	    << "(DSEdcSEwa)/(SEReco-SEMC) = " << (sumEChargedHitsAssignedToNeutrals-sumENeutralHitsAssignedToCharged)/(SEReco-SEMC) << std::endl;
   #endif
 
-  
+
+  if (_drawOnCED) MarlinCED::draw(this,true);
+
+  /*
+  _debugLevel = -7;
+  _drawOnCED = 0;
+  */
+
   _nEvt ++;
   firstEvent = false ;
 
@@ -1665,13 +2071,6 @@ const TrackerHitVec TrackBasedPFlow::getOuterTrackerHits(const Track* track, uns
     const TrackerHitVec emptyTrackerHitVec;
     return emptyTrackerHitVec;
 
-  }
-  // returning the TrackerHit vector of the track itself
-  else if ( nHits == n ) {
-    
-    const TrackerHitVec trackerHitVec = track->getTrackerHits();
-    return trackerHitVec;
-    
   }
   else {
 
@@ -2266,23 +2665,29 @@ void TrackBasedPFlow::getRelatedClusters(const std::vector<CalorimeterHitWithAtt
 
         
     // 2. method: apply trackwise clustering
-        
+
+    LCVector3D startPosition(mipStub->getPositionEndHit()[0],mipStub->getPositionEndHit()[1],mipStub->getPositionEndHit()[2]);
+    LCVector3D startPositionProjected = getProjectedPointOnHelix(startPosition,fittedHelix);
+
+    double pathLengthOnHelixOfStartPositionProjected  = getPathLengthOnHelix(referencePositionProjected,startPositionProjected,fittedHelix);
+    double distanceToHelixOfStartPosition = getDistanceToHelix(startPosition,fittedHelix);
+            
     if ( mipStub->isMIPStub() ) {
 
       std::vector<CalorimeterHitWithAttributes*> remainingCalorimeterHitsWithAttributes = removeMIPStub(calorimeterHitsWithAttributes,mipStub);
-
+      	
       clusters = doTrackwiseClustering(outermostTrackerHits,fittedHelix,remainingCalorimeterHitsWithAttributes, mipStub->getPositionEndHit(),
-				       mipStub->getDirectionEndHit());
+				       pathLengthOnHelixOfStartPositionProjected, distanceToHelixOfStartPosition, mipStub->getDirectionEndHit());
 
     }
     else {
-
+      
       clusters = doTrackwiseClustering(outermostTrackerHits,fittedHelix,calorimeterHitsWithAttributes,mipStub->getPositionEndHit(),
-				       mipStub->getDirectionEndHit());
-
+				       pathLengthOnHelixOfStartPositionProjected, distanceToHelixOfStartPosition, mipStub->getDirectionEndHit());
+      
     }
     
-
+    
     
     // 3. method: perform NN clustering
     /*
@@ -2661,8 +3066,8 @@ void TrackBasedPFlow::getMIPStub(ClusterImplWithAttributes* clusterWithAttribute
       
       ++numberOfHitsInVetoTube;
 
-
-      if ( numberOfHitsInVetoTube > 0 ) { // if the first hit is found in the veto tube break MIP stub searching
+      // FIXME: remove hard coded number for number of hits allowed in veto tube
+      if ( numberOfHitsInVetoTube > 0 ) { // if more than zero hit is found in the veto tube break MIP stub searching
 	// break if no calorimeter hit has fullfilled the MIP criteria
 	if ( (clusterWithAttributes->getClusterImpl()->getCalorimeterHits().size()) == 0 ) break;
 
@@ -2757,8 +3162,7 @@ void TrackBasedPFlow::getMIPStub(ClusterImplWithAttributes* clusterWithAttribute
     
   }
 
-  // no calorimeter hits was found fullfilling the MIP stub conditions -> take the first (with respect to the path length) calorimeter with 
-  // d > maximalRadiusOfInnerTubeForMIPLikeStubCompare and d <= minimalRadiusOfOuterTubeForMIPLikeStubCompare
+  // no calorimeter hits was found fullfilling the MIP stub conditions -> take hit with closest path length inside relaxed MIP stub criteria
   if ( clusterWithAttributes->getClusterImpl()->getCalorimeterHits().size() == 0 ) {
 
     // initialise with the closest by hit in the cone like tube
@@ -2766,7 +3170,7 @@ void TrackBasedPFlow::getMIPStub(ClusterImplWithAttributes* clusterWithAttribute
 
     for (i = calorimeterHitsWithAttributes.begin(); i!=calorimeterHitsWithAttributes.end(); ++i) {
 
-      if ( (*i)->getDistanceToHelix() <= 5.0*minimalRadiusOfOuterTubeForMIPLikeStubCompare ) { // FIXME: hard coded factor
+      if ( (*i)->getDistanceToHelix() <= 2.0*minimalRadiusOfOuterTubeForMIPLikeStubCompare ) { // FIXME: hard coded factor
 
 	calorimeterHitWithAttributes = (*i);
 	break;
@@ -2926,7 +3330,21 @@ const std::vector<CalorimeterHitWithAttributes*> TrackBasedPFlow::removeMIPStub(
     CalorimeterHitVec::const_iterator position = find(mipStub->getClusterImpl()->getCalorimeterHits().begin(),mipStub->getClusterImpl()->getCalorimeterHits().end(),
 						      (*i)->getCalorimeterHit());
 
-    if (position == mipStub->getClusterImpl()->getCalorimeterHits().end()) remainingCalorimeterHitWithAttributes.push_back(*i);
+    if (position == mipStub->getClusterImpl()->getCalorimeterHits().end()) {
+
+      remainingCalorimeterHitWithAttributes.push_back(*i);
+
+       //debug
+      if (_drawOnCED){
+
+	ced_hit ( (*i)->getCalorimeterHit()->getPosition()[0],
+		  (*i)->getCalorimeterHit()->getPosition()[1],
+		  (*i)->getCalorimeterHit()->getPosition()[2], 2 | 5 << CED_LAYER_SHIFT, 8, 0x3bff89);
+
+
+      }
+
+    }
     
   }
 
@@ -2941,7 +3359,8 @@ const std::vector<CalorimeterHitWithAttributes*> TrackBasedPFlow::removeMIPStub(
 
 std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doTrackwiseClustering(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix,
 									       const std::vector<CalorimeterHitWithAttributes*> calorimeterHitsWithAttributes,
-									       const double* startPoint, const double* startDirection) {
+									       const double* startPoint, const float pathLengthOnHelixOfStartPoint,
+									       const float distanceToHelixOfStartPoint, const double* startDirection) {
 
 
   std::vector<ClusterImpl*> resultingClusterImpls;
@@ -3000,7 +3419,8 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doTrackwiseClustering(c
   }
 
   
-  TrackwiseClusters* clusters = new TrackwiseClusters(calorimeterHitsWithAttributes,startP,startDir,pTrackwiseClustersParameters,pTrackwiseClustersGeometryParameters);
+  TrackwiseClusters* clusters = new TrackwiseClusters(calorimeterHitsWithAttributes,startP,pathLengthOnHelixOfStartPoint,distanceToHelixOfStartPoint,
+						      startDir,pTrackwiseClustersParameters,pTrackwiseClustersGeometryParameters);
 
 
   resultingClusterImpls = clusters->doClustering();
@@ -3330,7 +3750,7 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doTrackwiseClusteringFo
 
   trackwiseClustersParameters.distanceTrackBack         = _distanceTrackBack;
   trackwiseClustersParameters.stepTrackBack             = _stepTrackBack;
-  trackwiseClustersParameters.resolutionParameter       = _resolutionParameter;
+  trackwiseClustersParameters.resolutionParameter       = _resolutionParameterForNeutrals;
   trackwiseClustersParameters.distanceMergeForward      = _distanceMergeForward;
   trackwiseClustersParameters.distanceToTrackSeed       = _distanceToTrackSeed;
   trackwiseClustersParameters.distanceToDefineDirection = _distanceToDefineDirection;
@@ -3379,7 +3799,8 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doTrackwiseClusteringFo
   
 
   
-  TrackwiseClusters* clusters = new TrackwiseClusters(calorimeterHitsWithAttributes,startP,startDir,pTrackwiseClustersParameters,pTrackwiseClustersGeometryParameters);
+  TrackwiseClusters* clusters = new TrackwiseClusters(calorimeterHitsWithAttributes,startP,0.0,0.0,startDir,
+						      pTrackwiseClustersParameters,pTrackwiseClustersGeometryParameters);
 
 
   resultingClusterImpls = clusters->doClustering();
@@ -3450,7 +3871,7 @@ ReconstructedParticleImpl* TrackBasedPFlow::assignClustersToTrack(Track* track, 
 
 
   // find additional Clusters
-  std::vector<ClusterImplWithAttributes*> additionalRelatedClusters = assignAdditionalClusters(mipStub,relatedClusters,notAssignedClusters,track);
+  std::vector<ClusterImplWithAttributes*> additionalRelatedClusters = assignAdditionalClusters(mipStub,fittedHelix,relatedClusters,notAssignedClusters,track);
   
 
 
@@ -3964,13 +4385,16 @@ bool TrackBasedPFlow::isRealMIPStub(const LCEvent* evt, Track* track, const Trac
 
   try {
     
-    LCCollection* LCRcol = evt->getCollection(_colNameRelationTrackToMCP);
+    const LCCollection* LCRcol = evt->getCollection(_colNameRelationTrackToMCP);
     LCRelationNavigator* nav = new LCRelationNavigator(LCRcol);
+
     const LCObjectVec& relMCParticlesToTrack = nav->getRelatedToObjects(track); 
     if ( relMCParticlesToTrack.size() > 1 ) std::cout << "Error: More than one MCParticle related to track." << std::endl;
+
+    // FIXME: here is only the 0th contribution taken into account
+    MCParticle* mcpOfTrack = dynamic_cast<MCParticle*>(relMCParticlesToTrack.at(0));
     
-    MCParticle* mcpOfTrack = dynamic_cast<MCParticle*>(relMCParticlesToTrack.at(0)); // only 0th contribution
-    
+
     std::vector< std::string >::const_iterator iter;
     const std::vector< std::string >* ColNames = evt->getCollectionNames();
     
@@ -4135,6 +4559,7 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
 
   try {
 
+    // set up relations for MC particle to track
     LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);
 
     LCRelationNavigator* navTracks = new LCRelationNavigator(LCRcolTracks);
@@ -4142,6 +4567,10 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
 
     if ( relMCParticlesToTrack.size() > 1 ) std::cout << "Warning: More than one MCParticle related to track." << std::endl;
     
+    // set up relations for CalorimeterHit to SimCalorimeterHit
+    LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);    
+    LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
+
     MCParticle* mcpOfTrack = 0;
 
     // container for the CalorimeterHits which are related to the track with hit and sub-hit energy accuracy, both run in parallel, i.e. they have the same size
@@ -4188,13 +4617,10 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
 		MCParticle* mcpOfCalo = simCaloHit->getParticleCont(l);
 	      
 		if ( mcpOfCalo == mcp ) {
-			      
+		  
 		  // float ESimHit = simCaloHit->getEnergy(); // only for debugging
 		  float ESimHitContribution = simCaloHit->getEnergyCont(l);
 
-		  LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);
-
-		  LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
 		  const LCObjectVec& relCaloHitsToSimCaloHit = navCalorimeter->getRelatedFromObjects(simCaloHit);
 
 		  // there should only be one CalorimeterHit related to one SimCalorimeterHit since the CalorimeterHit consists (is related to) of several SimCalorimeterHit, 
@@ -4274,9 +4700,6 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
 		  
 		  }
 	      
-		  delete navCalorimeter;
-		  navCalorimeter = 0;
-		
 		}
 		
 	      }
@@ -4329,7 +4752,7 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
      
       std::cout << "MCP = " << MarlinUtil::getMCName(mcpOfTrack->getPDG()) << " ( " << mcpOfTrack->getPDG() << " )" << "  " << mcpOfTrack << "  " 
 		<< "Generator Status: " << mcpOfTrack->getGeneratorStatus() << std::endl
-		<< "E related to track (hit accuracy) = " << ESumCalorimeterHits << "  " 
+		<< "E related to track (|p| = " << MarlinUtil::getAbsMomentum(track,_bField) << ") (hit accuracy) = " << ESumCalorimeterHits << "  " 
 		<< "E related to track perfectly (sub-hit accuracy) = " << ESumSubCalorimeterHits << std::endl;	      
       
     }
@@ -4363,11 +4786,12 @@ void TrackBasedPFlow::getRelatedCalorimeterHitsPerfectly(const LCEvent* evt, Tra
 
     }
 
-        
+    delete navCalorimeter;
+    navCalorimeter = 0;   
+
     delete navTracks;
     navTracks = 0;
-    
-
+		
   }
   catch(DataNotAvailableException &e){
     std::cout << "Collection " << _colNameRelationTrackToMCP << " or " << _colNameRelationCaloHitToSimCaloHit  << " not available in event." << std::endl;
@@ -4542,10 +4966,10 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
 
     }
 
+    
+    typeOfCoG = getTypeOfPositionOfCluster(cluster->getClusterImpl());
 
-    typeOfCoG = getTypeOfPositionOfCluster((*i)->getClusterImpl());
-
-    //    std::cout << "typeOfCoG = " << typeOfCoG << std::endl;
+    // std::cout << "typeOfCoG = " << typeOfCoG << std::endl;
 
     maximalDistanceToCompareCoGWith = _maximalDistanceToHelixToAssignCluster.at(typeOfCoG+1);
     
@@ -4698,7 +5122,7 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignClusters(ClusterI
 
 
 
-std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignAdditionalClusters(ClusterImplWithAttributes* mipStub, 
+std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignAdditionalClusters(ClusterImplWithAttributes* mipStub, Trajectory* fittedHelix,
 										  std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,
 										  std::vector<ClusterImplWithAttributes*> clustersToCheck, 
 										  Track* track) {
@@ -4710,6 +5134,15 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignAdditionalCluster
 
 
   // FIXME: this is only a simple approach to get the energy resolution of the assigned energy, we need a much more elaborated procedure here
+
+  
+  // get path lenght of end point of MIP stub as a reference
+  
+  LCVector3D mipStubPosition(mipStub->getPosition()[0],mipStub->getPosition()[1],mipStub->getPosition()[2]);
+  LCVector3D mipStubPositionProjected = getProjectedPointOnHelix(mipStubPosition,fittedHelix);
+  double pathLengthMIPStubPositionProjected = getPathLengthOnHelix(mipStubPositionProjected,fittedHelix);
+  
+
 
   // get track energy for comparison
   double absTrackMomentum = MarlinUtil::getAbsMomentum(track,_bField);
@@ -4739,7 +5172,29 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::assignAdditionalCluster
   for(std::vector<ClusterImplWithAttributes*>::const_iterator i = clustersToCheck.begin(); i != clustersToCheck.end(); ++i) { 
     
     double smallestDistanceBetweenClusters = DBL_MAX;
-    double energyOfClusterToCheck = 0.0;    
+    double energyOfClusterToCheck = 0.0;
+
+    LCVector3D startPositionOfClusterToCheck((*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2]);
+    LCVector3D startPositionOfClusterToCheckProjected = getProjectedPointOnHelix(startPositionOfClusterToCheck,fittedHelix);
+    double pathLengthOfStartPositionProjected = getPathLengthOnHelix(startPositionOfClusterToCheckProjected,fittedHelix);
+
+  
+    // debug
+    if ( _debugLevel > 5 ) { 
+      std::cout << "pathLengthMIPStubPositionProjected: " << pathLengthMIPStubPositionProjected << "  " 
+		<< "pathLengthOfStartPositionProjected: " << pathLengthOfStartPositionProjected << "  " 
+		<< ( pathLengthOfStartPositionProjected < pathLengthMIPStubPositionProjected );
+      
+      if ( pathLengthOfStartPositionProjected < pathLengthMIPStubPositionProjected ) std::cout << "  " << "s is too small => cluster is skipped";
+      
+      std::cout << std::endl;
+    }
+
+
+    // have a look at the next cluster if path length of start position of the cluster to check is smaller than path length of position of MIP stub    
+    if ( pathLengthOfStartPositionProjected < pathLengthMIPStubPositionProjected ) continue;
+
+
 
     for(CalorimeterHitVec::const_iterator j = (*i)->getClusterImpl()->getCalorimeterHits().begin(); j != (*i)->getClusterImpl()->getCalorimeterHits().end(); ++j) { 
 
@@ -4967,14 +5422,17 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getNeutralHitsAssignedToChargedPar
 
   Track* track = recoParticle->getTracks().at(0);
 
-  LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);
-  
+  // set up relations for MC particle to track
+  LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);  
   LCRelationNavigator* navTracks = new LCRelationNavigator(LCRcolTracks);
   const LCObjectVec& relMCParticlesToTrack = navTracks->getRelatedToObjects(track); 
   
   if ( relMCParticlesToTrack.size() > 1 ) std::cout << "Warning: More than one MCParticle related to track." << std::endl;
     
 
+  // set up relations for CalorimeterHit to SimCalorimeterHit
+  LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);  
+  LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
 
 
   // calibration of the calorimeter
@@ -4989,10 +5447,7 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getNeutralHitsAssignedToChargedPar
       
       double energyCaloHit = (*j)->getEnergy();
       double relatedNeutralEnergyPerCaloHit = 0.0;
-
-      LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);
-      
-      LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
+   
       const LCObjectVec& relCaloHitsToSimCaloHit = navCalorimeter->getRelatedToObjects(*j);
       
       for ( unsigned int k = 0; k < relCaloHitsToSimCaloHit.size(); ++k ) {
@@ -5084,18 +5539,20 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getNeutralHitsAssignedToChargedPar
 
       }
 
-      delete navCalorimeter;
-      navCalorimeter = 0;
+    
 
     }
     
   }
-  
+
+  delete navCalorimeter;
+  navCalorimeter = 0;
+
   delete navTracks;
   navTracks = 0;
-
+  
   return collectedCalotimeterHits;
-
+  
 }
 
 
@@ -5115,6 +5572,14 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
 
   }
 
+  // set up relations for MC particle to track
+  LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);
+  LCRelationNavigator* navTracks = new LCRelationNavigator(LCRcolTracks);
+
+  // set up relations for CalorimeterHit to SimCalorimeterHit
+  LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);
+  LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
+
 
   // calibration of the calorimeter
   std::vector<float> calibration;
@@ -5129,9 +5594,6 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
       double energyCaloHit = (*j)->getEnergy();
       double relatedChargedEnergyPerCaloHit = 0.0;
 
-      LCCollection* LCRcolCalorimeter = evt->getCollection(_colNameRelationCaloHitToSimCaloHit);
-      
-      LCRelationNavigator* navCalorimeter = new LCRelationNavigator(LCRcolCalorimeter);
       const LCObjectVec& relCaloHitsToSimCaloHit = navCalorimeter->getRelatedToObjects(*j);
             
       for ( unsigned int k = 0; k < relCaloHitsToSimCaloHit.size(); ++k ) {
@@ -5146,8 +5608,6 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
 	  // search for SimCalorimeterHit related to not extrapolated tracks
 	  bool isMCOfSimCalorimeterHitDaughtherOfNotExtrapolatedTrack = false;
 
-	  LCCollection* LCRcolTracks = evt->getCollection(_colNameRelationTrackToMCP);
-	  LCRelationNavigator* navTracks = new LCRelationNavigator(LCRcolTracks);
 	   
 	  for ( std::vector<Track*>::const_iterator m = _tracksNotExtrapolatedIntoCalorimeter.begin(); m != _tracksNotExtrapolatedIntoCalorimeter.end(); ++m) {
 	    
@@ -5179,10 +5639,6 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
 	    }
 	    
 	  }
-	    
-	  delete navTracks;
-	  navTracks = 0;
-
 
 	  if ( !isMCOfSimCalorimeterHitDaughtherOfNotExtrapolatedTrack ) {
 
@@ -5252,13 +5708,16 @@ std::vector<CalorimeterHit*> TrackBasedPFlow::getChargedHitsAssignedToNeutralPar
 	energy += energyCaloHit;
 
       }
-      
-      delete navCalorimeter;
-      navCalorimeter = 0;
-
+     
     }
 
   }
+
+  delete navCalorimeter;
+  navCalorimeter = 0;
+	    
+  delete navTracks;
+  navTracks = 0;
 
   return collectedCalotimeterHits;
 
@@ -5303,11 +5762,68 @@ double TrackBasedPFlow::getNotAssignedCalorimeterEnergy(LCEvent* evt, LCCollecti
   catch(DataNotAvailableException &e){std::cout << "no valid calorimeter hit collection in event " << _nEvt << std::endl; };
 
 
-    
+
+  // debug
+  if (_drawOnCED) {
+    MarlinCED::init(this);
+    MarlinCED::newEvent(this,0);
+  }
+
+
+      
   for (LCCollectionVec::const_iterator i = reconstructedParticles->begin(); i != reconstructedParticles->end(); ++i) {
 
     ReconstructedParticle* recoParticle = dynamic_cast<ReconstructedParticle*>( (*i) );
+
+
+    // debug
+    if (_drawOnCED) { 
+
+      unsigned int color = 0;
+      
+      // draw charged reconstructed particles
+      if ( recoParticle->getCharge() != 0.0 ) {
+	
+	switch ( recoParticle->getType() ) {
+	  
+	case 1 : // e+/-
+	  color = MarlinDrawUtil::getColor(11);
+	  break;
+	case 2 : // pi+/-
+	  color = MarlinDrawUtil::getColor(211);
+	  break;
+	case 5 : // mu+/-
+	  color = MarlinDrawUtil::getColor(13);
+	  break;
+	default : // assume it is a pi+/-
+	  color = MarlinDrawUtil::getColor(211);
+	  break;
+	}
+	
+	MarlinCED::drawRecoParticle(recoParticle,0,2,color,8);
+	
+      }
+      else {
+
+	switch ( recoParticle->getType() ) {
+		
+	case 3 : // gamma
+	  color = MarlinDrawUtil::getColor(22);
+	  break;
+	case 4 : // K0L, that means neutral hadron
+	  color = MarlinDrawUtil::getColor(130);
+	  break;
+	default : // assume it is a K0L, that means a neutral hadron
+	  color = MarlinDrawUtil::getColor(130);
+	  break;
+	}
+	
+	MarlinCED::drawRecoParticle(recoParticle,0,2,color,9);
+
+      }
+    }
     
+
     for (ClusterVec::const_iterator j = recoParticle->getClusters().begin(); j != recoParticle->getClusters().end(); ++j) {
 	
       for (CalorimeterHitVec::const_iterator k = (*j)->getCalorimeterHits().begin(); k != (*j)->getCalorimeterHits().end(); ++k) {
@@ -5326,12 +5842,10 @@ double TrackBasedPFlow::getNotAssignedCalorimeterEnergy(LCEvent* evt, LCCollecti
 
   }
 
+
   // debug
-  if (_drawOnCED) {
-    MarlinCED::init(this);
-    MarlinCED::newEvent(this,0);
-    MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
-  }
+  if (_drawOnCED) MarlinCED::drawMCParticleTree(evt,"MCParticle",0.05,4.0,15.5,50.0,1626.0,2500.0);
+  
 
   for (std::vector<CalorimeterHit*>::const_iterator i = allCalorimeterHits.begin(); i != allCalorimeterHits.end(); ++i) {
 
@@ -5339,53 +5853,51 @@ double TrackBasedPFlow::getNotAssignedCalorimeterEnergy(LCEvent* evt, LCCollecti
 
     if (_drawOnCED) {
 
-    double hitEnergyInMIPs = 0.0;
-		
-    switch ( (*i)->getType() ) {
-		
-    case 0 : 
-      hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffEcal.at(0);
-      break;
-    case 1 : 
-      hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffEcal.at(1);
-      break;
-    case 2 : 
-      hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffHcal.at(0);
-      break;
-      
-    }
+      double hitEnergyInMIPs = 0.0;
     
+      switch ( (*i)->getType() ) {
+		
+      case 0 : 
+	hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffEcal.at(0);
+	break;
+      case 1 : 
+	hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffEcal.at(1);
+	break;
+      case 2 : 
+	hitEnergyInMIPs = ((*i)->getEnergy())/_mipCoeffHcal.at(0);
+	break;
+	
+      }
     
-    std::cout << (*i)->getEnergy() << "  " << hitEnergyInMIPs << "  " << (*i)->getType() << std::endl;
+      // debug
+      // std::cout << (*i)->getEnergy() << "  " << hitEnergyInMIPs << "  " << (*i)->getType() << std::endl;
 	      
-    
-    if (hitEnergyInMIPs < 0.5) { 
       
-      ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 4 << CED_LAYER_SHIFT, 2, 0xff696c );
-
-    }
-    else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 2.0) ) {
+      if (hitEnergyInMIPs < 0.5) { 
+	
+	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 4 << CED_LAYER_SHIFT, 2, 0xff696c );
       
-      ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 5 << CED_LAYER_SHIFT, 2, 0xff0000 );
+      }
+      else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 2.0) ) {
+	
+	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 5 << CED_LAYER_SHIFT, 2, 0xff0000 );
+	
+      }
+      else if ( (hitEnergyInMIPs >= 2.0) && (hitEnergyInMIPs < 4.0) ) {
+	
+	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 6 << CED_LAYER_SHIFT, 2, 0x0dff00 );
+	
+      }
+      else {
+	
+	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 7 << CED_LAYER_SHIFT, 2, 0x2f6dff );
       
-    }
-    else if ( (hitEnergyInMIPs >= 2.0) && (hitEnergyInMIPs < 4.0) ) {
+      }
       
-      ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 6 << CED_LAYER_SHIFT, 2, 0x0dff00 );
       
-    }
-    else {
-      
-      ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 7 << CED_LAYER_SHIFT, 2, 0x2f6dff );
-      
-    }
-    
-        
     }
     
   }
-
-  if (_drawOnCED) MarlinCED::draw(this,true);
   
   return notAssignedCalorimeterEnergy;
     

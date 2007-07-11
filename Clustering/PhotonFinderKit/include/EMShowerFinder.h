@@ -47,8 +47,14 @@ struct isPartOfEMShowerCandidate : LCIntExtension<isPartOfEMShowerCandidate> {};
 
 
 
-/** Initial version of a processor to find electro-magnetic showers. I is based on the KIT package and takes only ECAL hits into account.
- *  The output is a collection of clusters in which the electro-magnetic shower are stored.
+/**
+ *    Initial version of a processor to find electro-magnetic showers. It is based on the KIT package and takes only ECAL hits into account.
+ *    The output is a collection of clusters in which the electro-magnetic showers are stored. More docu will come soon.
+ *    <br>
+ *
+ *    @author O. Wendt (DESY)
+ *    @version
+ *
  */
 class EMShowerFinder : public Processor {
 
@@ -82,6 +88,7 @@ class EMShowerFinder : public Processor {
   double _Distcut; 
   double _Coscut;
   double _energyDeviationCut;
+  double _probabilityDensityCut;
 
   int _debugLevel;  
   int _drawOnCED;

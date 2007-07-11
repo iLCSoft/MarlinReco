@@ -80,6 +80,11 @@ EMShowerFinder::EMShowerFinder() : Processor("EMShowerFinder") {
 			      _energyDeviationCut,
 			      (double)0.25);
 
+  registerProcessorParameter( "probabilityDensityCut",
+			      "cut on the probability density to assign hits to shower cores",
+			      _probabilityDensityCut,
+			      (double)1E-3);
+
   registerProcessorParameter( "DebugLevel",
 			      "limits the amount of information written to std out (0 - none, 9 - maximal information)",
 			      _debugLevel,
@@ -101,17 +106,6 @@ void EMShowerFinder::init() {
 
   // FIXME: hard coded cell id's for old Mokka (e.g. Mokka v5.4) versions)
   CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
-
-
-
-
-  /*
-  _drawOnCED = 1;
-  _debugLevel = 7;
-  */
-
-
-
 
 
   // debug
@@ -206,7 +200,8 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 	      directionOfCluster[1] = prs2[i].cl->direction[1]; // already normalised
 	      directionOfCluster[2] = prs2[i].cl->direction[2]; // already normalised
 
-
+	      
+	      double coreEnergy = 0.0;
 	      double startPosition[3];
 	      double startPositionMinProjection[3];
 	      double startPositionMaxProjection[3];
@@ -216,6 +211,8 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 
 	      for(unsigned int j=0;j<prs2[i].cl->hits.size();j++) {
 
+		// sum up core energy
+		coreEnergy += prs2[i].cl->hits[j]->chit->getEnergy();
 
 		// debug 
 		if (_drawOnCED) ced_hit( prs2[i].cl->hits[j]->chit->getPosition()[0], prs2[i].cl->hits[j]->chit->getPosition()[1], 
@@ -277,8 +274,11 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 
 	      // debug
 	      if ( _debugLevel > 5 ) {
-		std::cout << "CoreEnergy: " << photonE << "  " << "centerPos: " << "(" << centerPosition[0] << ", " << centerPosition[1] << ", " << centerPosition[2] << ")" 
-			  << "  "	<< "startPos: " << "(" << startPosition[0] << ", " << startPosition[1] << ", " << startPosition[2] << ")" << std::endl;
+		std::cout << "EM Shower Core found by the KIT package: " << std::endl
+			  << "CoreEnergy: " << coreEnergy << "  " << " estimated 'em' particle energy: " <<  photonE << std::endl 
+			  << "centerPos: " << "(" << centerPosition[0] << ", " << centerPosition[1] << ", " << centerPosition[2] << ")" 
+			  << "  "	<< "startPos: " << "(" << startPosition[0] << ", " << startPosition[1] << ", " << startPosition[2] << ")" 
+			  << std::endl << std::endl;
 	      }
 
 	      // debug 
@@ -298,12 +298,11 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 
 		// loop over all ECAL hits
 		for(unsigned int j = 0; j < nelem; ++j) {
-		  
-		  double cutForProbabilities = 1E-4; // FIXME: hard coded number
+
 		  double probabilityAndDistance[2];
 		  CalorimeterHit* ECALHit = dynamic_cast<CalorimeterHit*>(colt->getElementAt(j));
 		  
-		  photonFinder->Prob(ECALHit,cutForProbabilities,probabilityAndDistance);
+		  photonFinder->Prob(ECALHit,_probabilityDensityCut,probabilityAndDistance);
 		  
 		  bool isECALHitAlreadyAssigned = false;
 		  int indexOfECALHitAlreadyAssigned = 0;
@@ -405,9 +404,8 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
       std::map<PROTSEED2*,ClusterImpl*> mapCoreToCluster;
       std::map<PROTSEED2*,double> mapCoreToEstimatedEnergy;
       
-      for(unsigned int i = 0; i  <  ECALHitsWithAttributes.size(); ++i) {
-	
-	
+      for(unsigned int i = 0; i < ECALHitsWithAttributes.size(); ++i) {
+		
 	PROTSEED2* coreToAddHitTo;
 	double estimatedEnergyOfCoreToAddHitTo = 0.0;
 	
@@ -453,9 +451,11 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 	    
       }
 	  
-	  
+
+      int iCluster = 0;
+
       for(std::map<PROTSEED2*,ClusterImpl*>::iterator i = mapCoreToCluster.begin(); i != mapCoreToCluster.end(); ++i) {
-	    
+       	    
 	ClusterImpl* cluster = (*i).second;
 	    
 	double estimatedEnergyOfCluster = mapCoreToEstimatedEnergy[(*i).first];
@@ -483,31 +483,36 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 	    
 	// cut of EM candidtate clusters which differ more than _energyDeviationCut from enery estimate
 	double energyDeviation = fabs( (energy-estimatedEnergyOfCluster)/estimatedEnergyOfCluster );
-
-
+	
+	
 	// simple cut on the starting layer of the shower
-	const unsigned int cutOnLayer = 4; // FIXME: remove hard-coded cut	
+	// FIXME: this is not working properly for the edges of the ECAL and HCAL => need pseudo layer !!!
+	const unsigned int cutOnLayer = 10; // FIXME: remove hard-coded cut	
+	const unsigned int contOnNumberOfHitsInLayerCut = 4; // FIXME: remove hard-coded cut
+
+	unsigned int nHitsInLayerCut = 0;
 	bool hitWithinCutRangeFound = false;
 
 	for (unsigned int j = 0; j < cluster->getCalorimeterHits().size(); ++j) {
 
 	  unsigned int layer = CDECAL(cluster->getCalorimeterHits().at(j))["K-1"];
 	  
-	  if ( layer <= cutOnLayer ) {
+	  if ( layer <= cutOnLayer ) ++nHitsInLayerCut;
 
+	  if ( nHitsInLayerCut >= contOnNumberOfHitsInLayerCut ) {
 	    hitWithinCutRangeFound = true;
 	    break;
 	    
 	  }
 
 	}
-
+	
 
 
 	   
 	// debug
 	if ( _debugLevel > 5 ) {
-	  std::cout << "Cluster Size:" << cluster->getCalorimeterHits().size() << std::endl
+	  std::cout << std::endl << "Cluster Size:" << cluster->getCalorimeterHits().size() << std::endl
 		    << "energy of cluster: " << energy << "  " << "estimated energy: " << estimatedEnergyOfCluster << "  " << "deviation: " << energyDeviation << std::endl
 		    << "Calorimeter Hist in this Cluster:" << std::endl;
 	  for (unsigned int j = 0; j < cluster->getCalorimeterHits().size(); ++j) {
@@ -543,12 +548,20 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 	      
 	  // debug
 	  if ( _debugLevel > 5 ) {
-	    std::cout << "cluster " << cluster << " with energy E = " << cluster->getEnergy() << "  " << "n of hits = " 
+	    std::cout << "EM Shower Candidate FOUND : " << "cluster " << cluster << " with energy E = " << cluster->getEnergy() << "  " << "n of hits = " 
 		      << cluster->getCalorimeterHits().size() << std::endl;
 	  }
 	      
 	      
-	  if (_drawOnCED) MarlinCED::drawClusterImpl(cluster,2,2,0xfff700,5); 
+	  if (_drawOnCED) {
+	    
+	    int color = 0x8f57ff * ( iCluster + 32);	   
+	    MarlinCED::drawClusterImpl(cluster,2,2,color,5); 
+	    ced_send_event();
+	    ++iCluster;
+	    getchar();
+
+	  }
 	      
 	      
 	      

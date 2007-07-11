@@ -4,7 +4,7 @@
 #
 # @author Frank Gaede
 # @author Jan Engels
-# @version $Id: GNUmakefile,v 1.6 2007-03-01 15:54:34 engels Exp $
+# @version $Id: GNUmakefile,v 1.7 2007-07-11 14:55:32 samson Exp $
 #
 ###########################################################
 
@@ -36,6 +36,8 @@ ifndef USERLIBS
  USERLIBS +=
 endif
 
+# add BrahmsTracking include directory to provide MarlinTrackFit.h
+USERINCLUDES += -I../../BrahmsTracking/include
 #----------------------------------------------------------------------------
 #        do not modify anything below in order to use top level makefile
 #----------------------------------------------------------------------------

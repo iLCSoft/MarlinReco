@@ -5,6 +5,40 @@
 ================================
 
  --------
+| v00-04 |
+ --------
+   - cmake is now default build tool:  (J.Engels)
+        # edit BuildSetup.cmake as needed
+        mkdir build ; cd build
+        cmake -C ../BuildSetup.cmake ..
+        make install
+     -> creates plugin library $MarlinReco/lib/libMarlinReco.so
+       
+
+   - improved Tracking  (A.Raspereza)
+       Extended version of TrackCheater, FullLDCTracking and SiliconTracking.
+       The numbers of hits from different subdetectors are stored using
+       TRACK:subdetectorHitNumbers. trackfit.F has been modified to
+       account for curling tracks.
+
+   -  Clustering/PhotonFinderKit/EMShowerFinder  (O.Wendt)
+	  Processor to find electro-magnetic showers. 
+          It is based on the KIT package and takes
+	  only ECAL hits into account.	The output is a collection of
+	  clusters in which the electro-magnetic shower are stored
+
+   - TrackBasedPFlow (O.Wendt)
+       + debugging and improvement of performance
+       + included EMShowerFinder for improved efficiency to find
+	 electromagnetic showers
+
+   - bug fixes
+       + made compliant with SL4 (gcc3.4) 
+       +...
+
+    -> see ChangeLog for details 
+
+ --------
 | v00-03 |
  --------
   - improved Full Tracking  (A.Raspereza)

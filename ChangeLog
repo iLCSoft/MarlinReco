@@ -1,3 +1,168 @@
+2007-07-13 09:56  gaede
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: removed extra ;
+	  at end of function definition
+
+2007-07-12 21:48  samson
+
+	* Tracking/SiliconTracking/src/GNUmakefile: Add BrahmsTracking
+	  include directory to provide MarlinTrackFit.h header file
+
+2007-07-11 16:55  samson
+
+	* Tracking/: FullLDCTracking/src/GNUmakefile,
+	  TrackCheater/src/GNUmakefile: Add BrahmsTracking include
+	  directory to provide MarlinTrackFit.h header file
+
+2007-07-11 15:09  owendt
+
+	* Pflow/TrackBasedPFlow/: include/TrackBasedPFlow.h,
+	  src/TrackBasedPFlow.cc: debugging and improvement of performance
+
+2007-07-11 15:08  owendt
+
+	* Clustering/TrackwiseClustering/src/TrackwiseClustering.cc: added
+	  a comment line
+
+2007-07-11 15:04  owendt
+
+	* Clustering/PhotonFinderKit/: include/EMShowerFinder.h,
+	  src/EMShowerFinder.cc: improved efficiency to find
+	  electromagnetic showers
+
+2007-07-10 11:51  engels
+
+	* BuildSetup.cmake: updated
+
+2007-07-04 16:05  engels
+
+	* CMakeLists.txt: added rpath for apple
+
+2007-07-02 15:26  engels
+
+	* BuildSetup.cmake, CMakeLists.txt: added BuildSetup.cmake
+
+2007-06-27 15:39  engels
+
+	* CMakeLists.txt: replaced SEND_ERROR with STATUS
+
+2007-06-22 16:24  rasp
+
+	* Tracking/BrahmsTracking/: include/MarlinTrackFit.h,
+	  src/MarlinTrackFit.cc: moved here from MArlinUtil (using f77 code
+	  from here)
+
+2007-06-22 16:24  rasp
+
+	* Tracking/: BrahmsTracking/src/f77/trackfit.F,
+	  FullLDCTracking/include/FullLDCTracking.h,
+	  FullLDCTracking/src/FullLDCTracking.cc,
+	  SiliconTracking/include/SiliconTracking.h,
+	  SiliconTracking/src/SiliconTracking.cc,
+	  TrackCheater/include/TrackCheater.h,
+	  TrackCheater/src/TrackCheater.cc: Extended version of
+	  TrackCheater, FullLDCTracking and SiliconTracking.  The numbers
+	  of hits from different subdetectors are stored using
+	  TRACK:subdetectorHitNumbers. trackfit.F has been modified to
+	  account for curling tracks.
+
+2007-06-21 16:33  engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: more readable code added
+	  documentation
+
+2007-06-13 18:02  owendt
+
+	* Tracking/TrackCheater/src/TrackCheater.cc: set flag
+	  LCIO::TRBIT_HITS as default
+
+2007-06-13 18:00  owendt
+
+	* CaloDigi/LDCCaloDigi/src/MokkaCaloDigi.cc: set flag
+	  LCIO::CHBIT_LONG as default
+
+2007-06-06 14:31  engels
+
+	* src/CMakeLists.txt: removed -Wno-globals flag in fortran code
+
+2007-06-05 17:44  engels
+
+	* Pflow/TrackBasedPFlow/include/TrackBasedPFlow.h,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: some bug fixes for gcc
+	  4
+
+2007-06-05 10:30  owendt
+
+	* Clustering/PhotonFinderKit/: include/EMShowerFinder.h,
+	  src/EMShowerFinder.cc: Initial version of a processor to find
+	  electro-magnetic showers. I is based on the KIT package and takes
+	  only ECAL hits into account.	The output is a collection of
+	  clusters in which the electro-magnetic shower are stored.
+
+2007-06-05 10:29  owendt
+
+	* Pflow/TrackBasedPFlow/: include/TrackBasedPFlow.h,
+	  src/TrackBasedPFlow.cc: Bug fixes and additional features, such
+	  as: electromagnetic shower candidates can be fed in and an
+	  addtional cluster assignment is done.
+
+2007-06-02 13:58  engels
+
+	* src/CMakeLists.txt: bug fix for gcc4
+
+2007-05-29 18:30  engels
+
+	* CMakeLists.txt: updated version
+
+2007-05-29 16:06  engels
+
+	* src/CMakeLists.txt: removed FIXME
+
+2007-05-21 16:41  engels
+
+	* src/CMakeLists.txt: bug fix: -pedantic flag in NNClustering
+
+2007-05-21 14:57  engels
+
+	* Analysis/SatoruJetFinder/src/SatoruJetFinderProcessor.cc,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  TrackDigi/VTXDigi/src/VTXDigitizer.cc,
+	  Tracking/FullLDCTracking/src/FullLDCTracking.cc,
+	  Tracking/VertexTracking/src/VertexTracking.cc,
+	  src/CMakeLists.txt: removed extra semi-colons that were causing
+	  an ISO C++ error under sl4 removed -pedantic flag in some
+	  packages that were causing problems in sl4
+
+2007-05-16 17:23  engels
+
+	* src/CMakeLists.txt: bug fix: libg2c is now also found in SL4
+	  machines
+
+2007-05-16 16:34  engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: moved dependencies code to a
+	  macro improved packages code
+
+2007-05-14 16:01  owendt
+
+	* Pflow/TrackBasedPFlow/: include/TrackBasedPFlow.h,
+	  src/TrackBasedPFlow.cc: Added a steering parameter
+	  (DoComparisonWithMC) to toggle the comparision with MC.
+
+2007-05-11 13:33  owendt
+
+	* Pflow/TrackBasedPFlow/: include/TrackBasedPFlow.h,
+	  src/TrackBasedPFlow.cc: bugfix
+
+2007-05-11 10:16  engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: bug fix: build_with and
+	  link_with were calling load_package with required arg
+
+2007-04-30 17:45  gaede
+
+	* ChangeLog, doc/release.notes:  tag v00-03
+
 2007-04-30 17:43  gaede
 
 	* doc/release.notes:  v00-03
@@ -285,7 +450,8 @@
 
 2007-01-11 18:21  engels
 
-	* Tracking/VertexTracking/doc/Doxyfile: added doxygen file
+	* Calibration/AbsCalibration/doc/Doxyfile,
+	  Tracking/VertexTracking/doc/Doxyfile: added doxygen file
 
 2007-01-11 18:15  engels
 

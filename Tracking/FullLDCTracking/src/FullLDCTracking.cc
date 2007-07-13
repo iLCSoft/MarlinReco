@@ -731,7 +731,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 
 
 
-};
+}
 
 void FullLDCTracking::CleanUp(){
 
@@ -793,7 +793,7 @@ void FullLDCTracking::CleanUp(){
 //   }
   _trkImplVec.clear();
 
-};
+}
 
 void FullLDCTracking::MergeTPCandSiTracks() {
 
@@ -827,7 +827,7 @@ void FullLDCTracking::MergeTPCandSiTracks() {
   }
 
 
-};
+}
 
 TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackExtended * siTrack) {
 
@@ -1248,6 +1248,6 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second)
 
 }
 
-void FullLDCTracking::check(LCEvent * evt) { };
-void FullLDCTracking::end() {};
+void FullLDCTracking::check(LCEvent * evt) { }
+void FullLDCTracking::end() {}
     

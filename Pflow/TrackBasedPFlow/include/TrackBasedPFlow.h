@@ -339,6 +339,7 @@ class TrackBasedPFlow : public Processor {
 
   int getTypeOfPositionOfCluster(ClusterImpl* cluster);
   int getTypeOfPositionOfCluster(Cluster* cluster);
+  bool hasTrackSufficientNumberOfHits(Track* track, bool& minNTPCHitsReached, bool& minNNonTPCHitsReached);
 
   double getDistanceToHelix(double* point, Trajectory* helix);
   double getDistanceToHelix(std::vector<double> point, Trajectory* helix);

@@ -612,9 +612,8 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  Track* track = dynamic_cast<Track*>(col->getElementAt(j));
 
 	  const double absP = MarlinUtil::getAbsMomentum(track,_bField);
-	  // not used at the moment
-	  // const double absD0 = fabs(track->getD0());
-	  // const double absZ0 = fabs(track->getZ0());
+	  const double absD0 = fabs(track->getD0());
+	  const double absZ0 = fabs(track->getZ0());
 
 
 
@@ -643,8 +642,15 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  }
 	  
 
+
+	  bool ptCut = (pt >= _cutOnPt);
+	  bool minNTPCHitsReached = false;
+	  bool minNNonTPCHitsReached = false;
+	  bool minNHitCut = hasTrackSufficientNumberOfHits(track,minNTPCHitsReached,minNNonTPCHitsReached);
+	  bool absD0Cut = (absD0 < _absD0Cut);
+	  bool absZ0Cut = (absZ0 < _absZ0Cut);
 	  
-	  if ( pt >= _cutOnPt ) {
+	  if ( ptCut && minNHitCut && absD0Cut &&  absZ0Cut ) {
 	    
 	    // 1. get outermost hits of the track	  
 	    outermostTrackerHits = getOuterTrackerHits(track,_nOfTrackerHitsUsedForExtrapolation);
@@ -1039,7 +1045,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 		double energyAssignedToRecoParticle = 0.0;
 		const ClusterVec ClustersAssignedToRecoParticle = recoParticle->getClusters();
 		int nOfClustersAssignedToRecoParticle = ClustersAssignedToRecoParticle.size();
-		
+ 
 		for (int iOfClustersAssignedToRecoParticle = 0; iOfClustersAssignedToRecoParticle<nOfClustersAssignedToRecoParticle; ++iOfClustersAssignedToRecoParticle) {
 		  
 		  Cluster* cl = recoParticle->getClusters()[iOfClustersAssignedToRecoParticle];
@@ -1350,16 +1356,32 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  }
 	  else { // cut on pt
 
-	    if ( _debugLevel > 5 ) {
 
+
+	  bool ptCut = (pt >= _cutOnPt);
+	  bool minNTPCHitsReached = false;
+	  bool minNNonTPCHitsReached = false;
+	  bool minNHitCut = hasTrackSufficientNumberOfHits(track,minNTPCHitsReached,minNNonTPCHitsReached);
+	  bool absD0Cut = (absD0 < _absD0Cut);
+	  bool absZ0Cut = (absZ0 < _absZ0Cut);
+	  
+
+
+	    if ( _debugLevel > 5 ) {
+ 
 	      std::cout << "Track has NOT been extrapolated ==> Track is added to _tracksNotExtrapolated collection" << std::endl 
-			<< "Reason: pt = " << pt << " < " << _cutOnPt << std::endl
-			<< "Full Condition: (pt >= _cutOnPt) = " << ( pt >= _cutOnPt ) << std::endl << std::endl;
+			<< "Reason: pt = " << pt << " < " << _cutOnPt << "  " << "ptCut = " << ptCut << std::endl
+			<< "        minNTPCHitsReached = " << minNTPCHitsReached << "  " 
+			<< "minNNonTPCHitsReached = " << minNNonTPCHitsReached << "  " << "minNHitCut = " << minNHitCut << std::endl
+			<< "        absD0 = " << absD0 << " < " << _absD0Cut << "  " << "absZ0 = " << absZ0 << " < " << _absZ0Cut
+			<< std::endl
+			<< "Full Condition: ( ptCut && minNHitCut && absD0Cut &&  absZ0Cut ) = " 
+			<< ( ptCut && minNHitCut && absD0Cut &&  absZ0Cut ) << std::endl << std::endl;
 
 	    }
 
 	    _tracksNotExtrapolatedIntoCalorimeter.push_back(track);
-	    _tracksNotFulFillingPtCut.push_back(track);
+	    if (ptCut)_tracksNotFulFillingPtCut.push_back(track);
 
 	  }
 
@@ -1406,42 +1428,29 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
       
     for ( std::vector<Track*>::const_iterator i = _tracksNotExtrapolatedIntoCalorimeter.begin(); i != _tracksNotExtrapolatedIntoCalorimeter.end(); ++i ) {
 
-      // check if track fulfilling cuts on number of silicon and TPC hits
-      int nOfTPcHits = 0;
-      int nOfNonTPcHits = 0;
       bool minNTPCHitsReached = false;
-      bool minNNonTPCHitsReached = false;
-      
-      for ( TrackerHitVec::const_iterator j = (*i)->getTrackerHits().begin(); j != (*i)->getTrackerHits().end(); ++j ) {
-	
-	if ( ((*j)->getType()) == 500 ) { // FIXME: hard coded number for type describing the TPC hits
+      bool minNNonTPCHitsReached = false;;
 
-	  ++nOfTPcHits;
-	  
-	  if ( nOfTPcHits >= _minNTPCHits) minNTPCHitsReached = true;	  	  
-
-	}
-	
-	if ( ((*j)->getType()) != 500 ) { // FIXME: hard coded number for type describing the non TPC hits
-	  
-	  ++nOfNonTPcHits;
-	  
-	  if ( nOfNonTPcHits >= _minNNonTPCHits ) minNNonTPCHitsReached = true;
-	  
-	}
-		
-      }
-      
+      bool trackHasSufficientNumberOfHits = hasTrackSufficientNumberOfHits(*i,minNTPCHitsReached,minNNonTPCHitsReached);
     
       // discard track if it has to few TPC or Silicon Tracker Hits
-      if ( minNTPCHitsReached && minNNonTPCHitsReached ) {
+      if ( trackHasSufficientNumberOfHits ) {
       
 	const double absD0ofNotExtrapolatedTrack = fabs((*i)->getD0());
 	const double absZ0ofNotExtrapolatedTrack = fabs((*i)->getZ0());
 
 	if ( (absD0ofNotExtrapolatedTrack < _absD0Cut) && (absZ0ofNotExtrapolatedTrack < _absZ0Cut) ) {
 
+	  // debug
+	  if ( _debugLevel > 5 ) std::cout << "Track will be discarded, particle will be measured as neutral." << std::endl;
+	  _tracksDiscarded.push_back(*i);
 
+
+
+
+	  /*
+	  // took out the assignment of energy to tracks by MC, particles will be measured as neutrals
+	  
 	  // debug
 	  if ( _debugLevel > 5 ) std::cout << "Energy of the following track will be assigned by MC information: " << std::endl;
 
@@ -1494,7 +1503,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  delete clusterPerfectEnergy;
 	  clusterPerfectEnergy = 0;
 	  
-	
+	  */
 	
 	  
 	  /*
@@ -2474,12 +2483,12 @@ const std::vector<CalorimeterHitWithAttributes*> TrackBasedPFlow::getRelatedCalo
 		ced_hit( calorimeterHitPosition.x(),calorimeterHitPosition.y(),calorimeterHitPosition.z(), 0 | 2 << CED_LAYER_SHIFT, 2, 0xff696c );
 
 	      }
-	      else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 2.0) ) {
+	      else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 1.7) ) {
 
 		ced_hit( calorimeterHitPosition.x(),calorimeterHitPosition.y(),calorimeterHitPosition.z(), 0 | 2 << CED_LAYER_SHIFT, 2, 0xff0000 );
 
 	      }
-	      else if ( (hitEnergyInMIPs >= 2.0) && (hitEnergyInMIPs < 4.0) ) {
+	      else if ( (hitEnergyInMIPs >= 1.7) && (hitEnergyInMIPs < 3.5) ) {
 
 		ced_hit( calorimeterHitPosition.x(),calorimeterHitPosition.y(),calorimeterHitPosition.z(), 0 | 3 << CED_LAYER_SHIFT, 2, 0x0dff00 );
 
@@ -3522,7 +3531,7 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doConeClustering(const 
 
     }
   
-    else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 2.0) ) {
+    else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 1.7) ) {
               
       if ( ( distanceOfHit <= tan(openingAngleConeTubeRed/2) * pathLengthOfHitToStartPoint ) && ( pathLengthOfHitToStartPoint > 0.0 ) && 
 	   ( pathLengthOfHitToStartPoint <= maxPathLengthInTubeRed ) ) {	
@@ -3543,7 +3552,7 @@ std::vector<ClusterImplWithAttributes*> TrackBasedPFlow::doConeClustering(const 
 
     }
  
-    else if ( (hitEnergyInMIPs >= 2.0) && (hitEnergyInMIPs < 4.0) ) {
+    else if ( (hitEnergyInMIPs >= 1.7) && (hitEnergyInMIPs < 3.5) ) {
       
       if ( ( distanceOfHit <= tan(openingAngleConeTubeGreen/2) * pathLengthOfHitToStartPoint ) && ( pathLengthOfHitToStartPoint > 0.0 ) && 
 	   ( pathLengthOfHitToStartPoint <= maxPathLengthInTubeGreen ) ) {	
@@ -5878,12 +5887,12 @@ double TrackBasedPFlow::getNotAssignedCalorimeterEnergy(LCEvent* evt, LCCollecti
 	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 4 << CED_LAYER_SHIFT, 2, 0xff696c );
       
       }
-      else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 2.0) ) {
+      else if ( (hitEnergyInMIPs >= 0.5) && (hitEnergyInMIPs < 1.7) ) {
 	
 	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 5 << CED_LAYER_SHIFT, 2, 0xff0000 );
 	
       }
-      else if ( (hitEnergyInMIPs >= 2.0) && (hitEnergyInMIPs < 4.0) ) {
+      else if ( (hitEnergyInMIPs >= 1.7) && (hitEnergyInMIPs < 3.5) ) {
 	
 	ced_hit( (*i)->getPosition()[0],(*i)->getPosition()[1],(*i)->getPosition()[2], 0 | 6 << CED_LAYER_SHIFT, 2, 0x0dff00 );
 	
@@ -5952,6 +5961,42 @@ int TrackBasedPFlow::getTypeOfPositionOfCluster(Cluster* cluster) {
   return type;
 
 }
+
+
+bool TrackBasedPFlow::hasTrackSufficientNumberOfHits(Track* track, bool& minNTPCHitsReached, bool& minNNonTPCHitsReached) {
+  
+  // check if track fulfilling cuts on number of silicon and TPC hits
+  int nOfTPCHits = 0;
+  int nOfNonTPCHits = 0;
+  bool trackHasSufficientNumberOfHits = false;
+      
+  for ( TrackerHitVec::const_iterator i = track->getTrackerHits().begin(); i != track->getTrackerHits().end(); ++i ) {
+	
+    if ( ((*i)->getType()) == 500 ) { // FIXME: hard coded number for type describing the TPC hits
+      
+      ++nOfTPCHits;
+	  
+      if ( nOfTPCHits >= _minNTPCHits) minNTPCHitsReached = true;	  	  
+
+    }
+	
+    if ( ((*i)->getType()) != 500 ) { // FIXME: hard coded number for type describing the non TPC hits
+	  
+      ++nOfNonTPCHits;
+	  
+      if ( nOfNonTPCHits >= _minNNonTPCHits ) minNNonTPCHitsReached = true;
+	  
+    }
+		
+  }
+      
+  trackHasSufficientNumberOfHits = minNTPCHitsReached && minNNonTPCHitsReached;
+
+  return trackHasSufficientNumberOfHits;
+
+}
+
+
 
 
 // FIXME: the following methods should be placed somewhere in a helix util class

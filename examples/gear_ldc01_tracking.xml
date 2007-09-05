@@ -1,7 +1,9 @@
 <gear>
 
      <!--Example XML file for GEAR describing tracking system of the LDC01 detector -->
-     <!-- A.Raspereza MPI Munich, rasp@mppmu.mpg.de, 12/2/2007 -->
+     <!-- A.Raspereza MPI Munich, rasp@mppmu.mpg.de, 5/9/2007 -->
+
+  <BField type="ConstantBField" x="0.0" y="0.0" z="4.0"/>
 
   <detectors> 
 
@@ -14,8 +16,8 @@
                          rMin="371" rMax="1516"
                          padHeight="6.2" padWidth="2.2"
                          maxRow="184" padGap="0.0" />
-	<parameter name="tpcRPhiResConst" type="double"> 0.055  </parameter>
-	<parameter name="tpcRPhiResDiff" type="double"> 0.003 </parameter>
+	<parameter name="tpcRPhiResConst" type="double"> 0.160  </parameter>
+	<parameter name="tpcRPhiResDiff" type="double"> 0.0 </parameter>
 	<parameter name="tpcZRes" type="double"> 0.5  </parameter>
 	<parameter name="tpcPixRP" type="double"> 1.0  </parameter>
 	<parameter name="tpcPixZ" type="double"> 1.4  </parameter>

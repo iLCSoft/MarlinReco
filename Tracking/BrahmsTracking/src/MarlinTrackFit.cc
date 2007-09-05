@@ -173,9 +173,9 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
 
   int nfit = nhits;
 
-  float d0 = param[0];
-  float phi0 = param[1];
-  float z0 = param[3];
+  float d0 = param[3];
+  float phi0 = param[2];
+  float z0 = param[4];
 
   RefPoint[0] = -d0*sin(phi0);
   RefPoint[1] = d0*cos(phi0);
@@ -346,6 +346,10 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   param[0] = 0.1*param[0];
   param[3] = 10.*param[3];
   param[4] = 10.*param[4];
+
+  d0 = param[3];
+  phi0 = param[2];
+  z0 = param[4];
 
   RefPoint[0] = -d0*sin(phi0);
   RefPoint[1] = d0*cos(phi0);

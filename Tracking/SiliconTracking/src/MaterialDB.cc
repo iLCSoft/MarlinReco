@@ -465,7 +465,7 @@ void MaterialDB::init() {
 //   int Nb = 10;
 //   float dR = 0.1*_beamPipeRadius;
   fkexts_.itexts[Nexs] = 0;  
-  fkexts_.rzsurf[Nexs] = 0.1*_beamPipeRadius-0.001 ;
+  fkexts_.rzsurf[Nexs] = 0.05*_beamPipeRadius ;
   fkexts_.zrmin[Nexs] = -10000.;
   fkexts_.zrmax[Nexs] = 10000.;
   Nexs++;
@@ -483,40 +483,6 @@ void MaterialDB::init() {
 
   //  Cyllinders and cones in VXD00
 
-  // Cryostat
-
-  float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
-  float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
-  float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
-  float AlZEndCap = float(pVXDDet.getDoubleVal("CryostatAlZEndCap"));
-  float AlRinEndCap = float(pVXDDet.getDoubleVal("CryostatAlInnerR"));
-  float xrad_cryo = 0.1*float(pVXDDet.getDoubleVal("Cryostat_RadLen"));
-  float dedx_cryo = 10.0*float(pVXDDet.getDoubleVal("Cryostat_dEdx"));
-  
-
-  // Al cryostat barrel
-  fkddes_.rcmat[Ncmat] = 0.1*(AlRadius+0.5*AlThickness);
-  fkddes_.zcmin[Ncmat] = -0.1*AlHalfLength;
-  fkddes_.zcmax[Ncmat] = 0.1*AlHalfLength;
-  fkddes_.xrlc[Ncmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosc[Ncmat] = 0.1*AlThickness*dedx_cryo;
-  Ncmat++;
-  
-
-  // Al cryostat endcaps
-  fkddes_.zpmat[Npmat] = -0.1*(AlZEndCap+0.5*AlThickness);
-  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
-  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
-  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
-  Npmat++;
-
-  fkddes_.zpmat[Npmat] = 0.1*(AlZEndCap+0.5*AlThickness);
-  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
-  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
-  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
-  Npmat++;
   
   int nLayersVTX = pVXDLayerLayout.getNLayers();
   _layerRadius.resize(nLayersVTX);
@@ -568,8 +534,7 @@ void MaterialDB::init() {
     _radlen_ber = 0.1*float(pVXDLayerLayout.getLadderRadLength(i));
     _radlen_si = 0.1*float(pVXDLayerLayout.getSensitiveRadLength(i));
     _stripLine_final_z[i] = float(pVXDDet.getDoubleVals("StripLineFinalZ")[i]);
-    _ladderGaps[i] = float(pVXDDet.getDoubleVals("LadderGaps")[i]);
-    
+    _ladderGaps[i] = float(pVXDDet.getDoubleVals("LadderGaps")[i]);    
   }
 
 
@@ -665,6 +630,42 @@ void MaterialDB::init() {
 //     fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
 //     Nconmat++;      
     }
+
+
+  // Cryostat
+  float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
+  float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
+  float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
+  float AlZEndCap = float(pVXDDet.getDoubleVal("CryostatAlZEndCap"));
+  float AlRinEndCap = float(pVXDDet.getDoubleVal("CryostatAlInnerR"));
+  float xrad_cryo = 0.1*float(pVXDDet.getDoubleVal("Cryostat_RadLen"));
+  float dedx_cryo = 10.0*float(pVXDDet.getDoubleVal("Cryostat_dEdx"));
+  
+
+  // Al cryostat barrel
+  fkddes_.rcmat[Ncmat] = 0.1*(AlRadius+0.5*AlThickness);
+  fkddes_.zcmin[Ncmat] = -0.1*AlHalfLength;
+  fkddes_.zcmax[Ncmat] = 0.1*AlHalfLength;
+  fkddes_.xrlc[Ncmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosc[Ncmat] = 0.1*AlThickness*dedx_cryo;
+  Ncmat++;
+  
+
+  // Al cryostat endcaps
+  fkddes_.zpmat[Npmat] = -0.1*(AlZEndCap+0.5*AlThickness);
+  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+  Npmat++;
+
+  fkddes_.zpmat[Npmat] = 0.1*(AlZEndCap+0.5*AlThickness);
+  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+  Npmat++;
+
 
   //  Outer support cyllinder for VTX
   fkddes_.rcmat[Ncmat] = 0.1*(_VTXShell_Radius+0.5*_VTXShell_thickness);
@@ -1049,7 +1050,7 @@ void MaterialDB::init() {
   Ncmat++;
 
   int ncyl = 50;
-  
+ 
   // Gas volume in TPC
   float xstep = (RTPCOUT-RTPCINN-TPCTHBO-TPCTHBI)/float(ncyl);
   for (int icyl=0;icyl<ncyl;++icyl) {

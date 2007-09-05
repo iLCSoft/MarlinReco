@@ -14,6 +14,8 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/BField.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -309,8 +311,8 @@ void VertexTracking::processRunHeader( LCRunHeader* run) {
     PIOVER2 = double(0.5)*PI;
     _dPhi = TWOPI/double(_nDivisionsInPhi);
     _dTheta = double(2.0)/double(_nDivisionsInTheta);
-    _bField = Global::parameters->getFloatVal("BField");
     _dPhiFTD = TWOPI/double(_nPhiFTD);
+    _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
     float cutOnR = _cutOnPt/(0.3*_bField);
     cutOnR = 1000.*cutOnR;
     _cutOnOmega = 1/cutOnR;
@@ -319,12 +321,15 @@ void VertexTracking::processRunHeader( LCRunHeader* run) {
 
 void VertexTracking::processEvent( LCEvent * evt ) { 
 
+  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
 
   // Clearing all working dynamical arrays (vectors)
   _tracks5Hits.clear();
   _tracks4Hits.clear();
   _tracks3Hits.clear();
   _trackImplVec.clear();
+
+
 
   int success = Initialise( evt );
   int successFTD = InitialiseFTD( evt );

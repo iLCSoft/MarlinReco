@@ -10,7 +10,7 @@
 #include "TrackExtended.h"
 #include "TrackerHitExtended.h"
 #include "HelixClass.h"
-#include "MarlinTrackFit.h"
+#include "../../BrahmsTracking/include/MarlinTrackFit.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -18,12 +18,12 @@ using namespace marlin ;
 
 /** === Silicon Tracking Processor === <br>
  * Processor performing stand-alone pattern recognition
- * in the vertex detector (VXD), forward tracking disks and SIT. <br>
+ * in the vertex detector (VTX), forward tracking disks and SIT. <br>
  * The procedure consists of three steps : <br> 
- * 1) Tracking in VXD and SIT ; <br>
+ * 1) Tracking in VTX and SIT ; <br>
  * 2) Tracking in FTD ; <br>
- * 3) Merging compatible track segments reconstructed in VXD and FTD <br>
- * STEP 1 : TRACKING IN VXD and SIT <br>
+ * 3) Merging compatible track segments reconstructed in VTX and FTD <br>
+ * STEP 1 : TRACKING IN VTX and SIT <br>
  * Algorithm starts with finding of hit triplets satisfying helix hypothesis <br> 
  * in three different layers. Two layers of SIT are effectively considered as outermost <br>
  * layers of the vertex detector. To accelerate procedure, the 4-pi solid angle
@@ -39,13 +39,13 @@ using namespace marlin ;
  * array until all track candidate have been output or discarded. <br>
  * STEP 2 : TRACKING IN FTD <br>
  * In the next step tracking in FTD is performed. The strategy of tracking in the FTD 
- * is the same as used for tracking in the VXD+SIT. <br>
- * STEP 3 : MERGING TRACK SEGMENTS FOUND IN FTD AND VXD+SIT <br>
- * In the last step, track segments reconstructed in the FTD and VXD+SIT, belonging to the
+ * is the same as used for tracking in the VTX+SIT. <br>
+ * STEP 3 : MERGING TRACK SEGMENTS FOUND IN FTD AND VTX+SIT <br>
+ * In the last step, track segments reconstructed in the FTD and VTX+SIT, belonging to the
  * same track  are identified and merged into one track. All possible 
  * pairings are tested for their compatibility.
- * The number of pairings considered is Ntrk_VXD_SIT*Ntrk_FTD, where Ntrk_VXD_SIT is the number of 
- * track segments reconstructed in the first step in VXD+SIT (segments containing solely VXD and SIT hits) and  
+ * The number of pairings considered is Ntrk_VTX_SIT*Ntrk_FTD, where Ntrk_VTX_SIT is the number of 
+ * track segments reconstructed in the first step in VTX+SIT (segments containing solely VTX and SIT hits) and  
  * Ntrk_FTD is the number of track segments reconstructed in the second step 
  * (segments containing solely FTD hits).
  * Pair of segments is accepted for further examination if the angle between track segments and 
@@ -73,7 +73,7 @@ using namespace marlin ;
  * The number of hits in the different subdetectors associated
  * with each track can be accessed via method Track::getSubdetectorHitNumbers().
  * This method returns vector of integers : <br>
- * number of VXD hits in track is the first element in this vector  
+ * number of VTX hits in track is the first element in this vector  
  * (Track::getSubdetectorHitNumbers()[0]) <br>
  * number of FTD hits in track is the second element in this vector  
  * (Track::getSubdetectorHitNumbers()[1]) <br>
@@ -82,26 +82,31 @@ using namespace marlin ;
  * Output track collection has a name "SiTracks". <br>
  * In addition collection of relations of the tracks to MCParticles is stored if flag CreateMap is set to 1. <br>
  * Collection of relations has a name "SiTracksMCP" <br>
- * @param VXDHitCollectionName name of input VXD TrackerHit collection <br>
+ * @param VTXHitCollectionName name of input VTX TrackerHit collection <br>
  * (default parameter value : "VTXTrackerHits") <br>
  * @param FTDHitCollectionName name of input FTD TrackerHit collection <br>
  * (default parameter value : "FTDTrackerHits") <br>
  * @param SITHitCollectionName name of input SIT TrackerHit collection <br>
  * (default parameter value : "SITTrackerHits") <br>
- * @param LayerCombinations combinations of layers used to search for hit triplets in VXD+SIT <br>
- * (default parameters : 6 4 3  6 4 2  5 4 3  5 4 2  4 3 2  4 3 1  4 2 1  3 2 1) <br> 
- * Note that in the VXD+SIT system the first and the second layers of SIT have indicies nLayerVTX and nLayerVTX+1. 
+ * @param SiTrackCollectionName name of the output Silicon track collection <br>
+ * (default parameter value : "SiTracks") <br>
+ * @param SiTrackMCPRelCollection collection name for the silicon track - MC particle relations <br>
+ * (default parameter value : "SiTracksMCP") <br>
+ * @param LayerCombinations combinations of layers used to search for hit triplets in VTX+SIT <br>
+ * (default parameters : 6 4 3  6 4 2  6 3 2  5 4 3  5 4 2  5 3 2  4 3 2  4 3 1  4 2 1  3 2 1) <br> 
+ * Note that in the VTX+SIT system the first and the second layers of SIT have indicies nLayerVTX and nLayerVTX+1. 
  * Combination given above means that triplets are looked first in layers 6 4 3, and then 
- * in 6 4 2;  5 4 3;  5 4 2;  4 3 2; 4 3 1; 4 2 1 and finally 3 2 1. NOTE THAT LAYER INDEXING STARTS FROM 0.
+ * in 6 4 2;  5 4 3;  6 3 2 etc. NOTE THAT LAYER INDEXING STARTS FROM 0.
  * LAYER 0 is the innermost layer  <br>
  * @param LayerCombinationsFTD combinations of layers used to search for hit triplets in FTD <br>
- * (default parameters 5 4 3 5 4 2 5 4 1 5 3 2 5 3 1 5 2 1 4 3 2 4 3 1 4 3 0 4 2 0 4 1 0 3 2 1 3 2 0 2 1 0). 
+ * (default parameters 6 5 4  5 4 3  5 4 2  5 4 1  5 3 2  5 3 1  5 2 1  4 3 2  4 3 1  
+ *  4 3 0  4 2 1  4 2 0  4 1 0  3 2 1  3 2 0  3 1 0  2 1 0). 
  * NOTE THAT TRACKS IN FTD ARE SEARCHED ONLY IN ONE HEMISPHERE. TRACK IS NOT 
  * ALLOWED TO HAVE HITS BOTH IN BACKWARD AND FORWARD PARTS OF FTD SIMULTANEOUSLY. 
- * @param NDivisionsInPhi Number of divisions in Phi for tracking in VXD+SIT <br>
- * (default value is 60) <br>
- * @param NDivisionsInTheta Number of divisions in cosQ for tracking in VXD+SIT <br>
- * (default value is 60) <br>
+ * @param NDivisionsInPhi Number of divisions in Phi for tracking in VTX+SIT <br>
+ * (default value is 40) <br>
+ * @param NDivisionsInTheta Number of divisions in cosQ for tracking in VTX+SIT <br>
+ * (default value is 40) <br>
  * @param NDivisionsInPhiFTD Number of divisions in Phi for tracking in FTD <br>
  * (default value is 3) <br>
  * @param Chi2WRphiTriplet weight on chi2 in R-Phi plane for track with 3 hits <br>
@@ -116,20 +121,10 @@ using namespace marlin ;
  * (default value is 1) <br>
  * @param Chi2WZSeptet Cut on chi2 in S-Z plane for track with 5 and more hits <br>
  * (default value is 0.5) <br>
- * @param Chi2FitCut Cut on chi2/ndf to accept track candidate
- * (default value is 50.)
- * @param ResolutionRPhiVTX Point resolution in R-Phi plane in mm for VXD <br> 
- * (default value is 0.004)
- * @param ResolutionZVTX Point resolution along Z coordinate in mm for VXD <br> 
- * (default value is 0.004)
- * @param ResolutionRPhiFTD Point resolution in R-Phi plane in mm for FTD <br> 
- * (default value is 0.01)
- * @param ResolutionZFTD Point resolution along Z coordinate in mm for FTD <br> 
- * (default value is 0.1)
- * @param ResolutionRPhiSIT Point resolution in R-Phi plane in mm for SIT <br> 
- * (default value is 0.01) 
- * @param ResolutionZSIT Point resolution along Z coordinate in mm for SIT <br> 
- * (default value is 0.01)  
+ * @param Chi2FitCut Cut on chi2/ndf to accept track candidate <br>
+ * (default value is 100.) <br>
+ * @param Chi2PrefitCut Chi2 Cut used in the track prefit with the simple helix hypothesis <br>
+ * (default value is 1e+10) <br>
  * @param AngleCutForMerging cut on the angle between two track segments.  
  * If the angle is greater than this cut, segments are not allowed to be merged. <br>
  * (default value is 0.1) <br>
@@ -137,7 +132,9 @@ using namespace marlin ;
  * to decide whether hit can be attached to the track. If the distance is less than 
  * cut value. The track is refitted with a given hit being added to the list of hits already 
  * assigned for the track. Additional hit is assigned if chi2 of the new fit has good chi2. <br>
- * (default value is 1 ) <br>
+ * (default value is 2 ) <br>
+ * @param MinLayerToAttach the minimal layer index to attach VTX hits to the found hit triplets <br>
+ * (default value is -1) <br>
  * @param CutOnZ0 cut on Z0 parameter of track (in mm). If abs(Z0) is greater than the cut value, track is 
  * discarded (used to suppress fake
  * track rate in the presence of beam induced background hits) <br>
@@ -153,7 +150,7 @@ using namespace marlin ;
  * (default value is 3) <br>
  * @param FastAttachment if this flag is set to 1, less accurate but fast procedure to merge additional hits to tracks is used <br> 
  * if set to 0, a more accurate, but slower procedure is invoked <br>
- * (default value is 1) <br>
+ * (default value is 0) <br>
  * @param OptPrefit Option for prefit of the track with simple helix model. If 
  * set to 0, helix fit based on FORTRAN code tfithl is used, when set to 1 ClusterShapes class
  * is used to fit track with the simple helix model <br>
@@ -173,6 +170,8 @@ using namespace marlin ;
  * @param UseExtraPoint This flag is used to steer DELPHI fitting code. If set to 0, an additional 
  * artificial mesurement point at PCA is introduced with relatively large errors. This helps
  * to improve resolution on D0 and Z0 for fitted track. <br>
+ * (default value 0)
+ * @param Debug flag to activate debug printout <br>
  * (default value 1)
  * <br>
  * @author A. Raspereza (MPI Munich)<br>
@@ -225,7 +224,8 @@ class SiliconTracking : public Processor {
   std::string _VTXHitCollection;
   std::string _FTDHitCollection;
   std::string _SITHitCollection;
-  std::string _relCollection;
+  std::string _siTrkCollection;
+  std::string _siTrkMCPCollection;
   
   std::vector<TrackerHitExtendedVec> _sectors;
   std::vector<TrackerHitExtendedVec> _sectorsFTD;
@@ -276,6 +276,8 @@ class SiliconTracking : public Processor {
   double _dPhi;
   double _dTheta;
   double _dPhiFTD;
+
+  int _debug;
 
   std::vector<float> _zLayerFTD;
   std::vector<int> _Combinations;

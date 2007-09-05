@@ -32,7 +32,7 @@ using namespace marlin ;
  * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: MaterialDB.h,v 1.2 2007-04-20 13:44:39 rasp Exp $ 
+ * @version $Id: MaterialDB.h,v 1.3 2007-09-05 10:21:05 rasp Exp $ 
  */
 
 class MaterialDB : public Processor {

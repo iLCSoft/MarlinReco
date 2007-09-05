@@ -20,6 +20,7 @@
 #include <gear/VXDParameters.h>
 #include <gear/GearParameters.h>
 #include <gear/VXDLayerLayout.h>
+#include <gear/BField.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -193,6 +194,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   combinationsFTD.push_back(6);
   combinationsFTD.push_back(5);
   combinationsFTD.push_back(4);
+  
 
   combinationsFTD.push_back(5);
   combinationsFTD.push_back(4);
@@ -267,7 +269,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInPhi",
 			     "Number of divisions in Phi",
 			     _nDivisionsInPhi,
-			     int(60));
+			     int(40));
   
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
@@ -277,13 +279,13 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
 			     _nDivisionsInTheta,
-			     int(60));
+			     int(40));
   
   // Input Collections
-  // ^^^^^^^^^^^^^^^^^^^^^^^^
+  // ^^^^^^^^^^^^^^^^^
   registerInputCollection(LCIO::TRACKERHIT,
-			  "VXDHitCollectionName",
-			  "VXD Hit Collection Name",
+			  "VTXHitCollectionName",
+			  "VTX Hit Collection Name",
 			  _VTXHitCollection,
 			  std::string("VTXTrackerHits"));
 
@@ -300,8 +302,24 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 			  "SIT Hit Collection Name",
 			  _SITHitCollection,
 			  std::string("SITTrackerHits"));  
-  
 
+  // Output Collections
+  // ^^^^^^^^^^^^^^^^^^
+  registerOutputCollection(LCIO::TRACK,
+			   "SiTrackCollectionName",
+			   "Silicon track Collection Name",
+			   _siTrkCollection,
+			   std::string("SiTracks"));
+
+  registerOutputCollection(LCIO::LCRELATION,
+			   "SiTrackMCPRelCollection",
+			   "Name of Si track MC particle relation collection",
+			   _siTrkMCPCollection,
+			   std::string("SiTracksMCP"));
+
+  
+  // Steering parameters
+  // ^^^^^^^^^^^^^^^^^^^
   registerProcessorParameter("Chi2WRphiTriplet",
 			     "Chi2WRphiTriplet",
 			     _chi2WRPhiTriplet,
@@ -335,58 +353,22 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("Chi2FitCut",
 			     "Chi2 Fit Cut",
 			     _chi2FitCut,
-			     float(50.0));
+			     float(100.0));
 
   registerProcessorParameter("Chi2PrefitCut",
 			     "Chi2 Prefit Cut",
 			     _chi2PrefitCut,
-			     float(1.0e+5));
+			     float(1.0e+10));
   
-  // Resolutions used in fit
-  //^^^^^^^^^^^^^^^^^^^^^^^^
-//   registerProcessorParameter("ResolutionRPhiVTX",
-// 			     "ResolutionRPhiVTX",
-// 			     _resolutionRPhiVTX,
-// 			     float(0.004));
-
-//   registerProcessorParameter("ResolutionZVTX",
-// 			     "ResolutionZVTX",
-// 			     _resolutionZVTX,
-// 			     float(0.004));
-
-//   registerProcessorParameter("ResolutionRPhiFTD",
-// 			     "ResolutionRPhiFTD",
-// 			     _resolutionRPhiFTD,
-// 			     float(0.01));
-
-//   registerProcessorParameter("ResolutionZFTD",
-// 			     "ResolutionZFTD",
-// 			     _resolutionZFTD,
-// 			     float(0.10));
-
-//   registerProcessorParameter("ResolutionRPhiSIT",
-// 			     "ResolutionRPhiSIT",
-// 			     _resolutionRPhiSIT,
-// 			     float(0.01));
-
-//   registerProcessorParameter("ResolutionZSIT",
-// 			     "ResolutionZSIT",
-// 			     _resolutionZSIT,
-// 			     float(0.01));
-
-
-  // Some Steering Parameters for Patrec
-  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   registerProcessorParameter("AngleCutForMerging",
 			     "Angle Cut For Merging",
 			     _angleCutForMerging,
 			     float(0.1));
-
      
   registerProcessorParameter("MinDistCutAttach",
 			     "MinDistCutAttach",
 			     _minDistCutAttach,
-			     float(1.0));
+			     float(2.0));
    
   registerProcessorParameter("MinLayerToAttach",
 			     "MinLayerToAttach",
@@ -416,7 +398,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("FastAttachment",
 			     "Fast attachment",
 			     _attachFast,
-			     int(1));
+			     int(0));
 
   registerProcessorParameter("OptPrefit",
 			     "Option of prefit ?",
@@ -448,6 +430,11 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("UseExtraPoint",
 			     "Use Extra Point in Fit",
 			     _useExtraPoint,
+			     int(0));
+
+  registerProcessorParameter("Debug",
+			     "Print out debugging info?",
+			     _debug,
 			     int(1));
 
 }
@@ -482,8 +469,6 @@ void SiliconTracking::init() {
     _nLayers = _nLayersVTX;
   else 
     _nLayers = _nLayersVTX + _nLayersSIT;
-  
-  _bField = Global::parameters->getFloatVal("BField");
 
 }
 
@@ -493,13 +478,15 @@ void SiliconTracking::processRunHeader( LCRunHeader* run) {
     _nRun++ ;
     _nEvt = 0;
 
+    std::cout << "SiliconTracking ---> new run : run number = " << _nRun << std::endl;
+
     // Intitialization of some constants and cuts
+    _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
     PI = acos(double(-1.0));
     TWOPI = double(2.0)*PI;
     PIOVER2 = double(0.5)*PI;
     _dPhi = TWOPI/double(_nDivisionsInPhi);
     _dTheta = double(2.0)/double(_nDivisionsInTheta);
-    _bField = Global::parameters->getFloatVal("BField");
     _dPhiFTD = TWOPI/double(_nPhiFTD);
     float cutOnR = _cutOnPt/(0.3*_bField);
     cutOnR = 1000.*cutOnR;
@@ -510,6 +497,19 @@ void SiliconTracking::processRunHeader( LCRunHeader* run) {
 
 void SiliconTracking::processEvent( LCEvent * evt ) { 
 
+  // Intitialization of some constants and cuts
+  PI = acos(double(-1.0));
+  TWOPI = double(2.0)*PI;
+  PIOVER2 = double(0.5)*PI;
+  _dPhi = TWOPI/double(_nDivisionsInPhi);
+  _dTheta = double(2.0)/double(_nDivisionsInTheta);
+  //_bField = Global::parameters->getFloatVal("BField");
+  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+  _dPhiFTD = TWOPI/double(_nPhiFTD);
+  float cutOnR = _cutOnPt/(0.3*_bField);
+  cutOnR = 1000.*cutOnR;
+  _cutOnOmega = 1/cutOnR;
+
   // Clearing all working dynamical arrays (vectors)
   _tracks5Hits.clear();
   _tracks4Hits.clear();
@@ -518,7 +518,12 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 
   int success = InitialiseVTX( evt );
   int successFTD = InitialiseFTD( evt );
-  std::cout << "Event = " << _nEvt << " Run = " << _nRun << std::endl;
+
+  std::cout << std::endl;
+  std::cout << "SiliconTracking -> run = " << _nRun 
+	    << "  event = " << _nEvt << std::endl;
+  std::cout << std::endl;
+
 
   if (success == 1) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
@@ -643,11 +648,17 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	    }
 	  }
 	}
-	trackImpl->subdetectorHitNumbers().resize(4);
+
+	trackImpl->subdetectorHitNumbers().resize(8);
 	trackImpl->subdetectorHitNumbers()[0] = nHitsVTX;
 	trackImpl->subdetectorHitNumbers()[1] = nHitsFTD;
 	trackImpl->subdetectorHitNumbers()[2] = nHitsSIT;
 	trackImpl->subdetectorHitNumbers()[3] = nHitsTPC;
+	trackImpl->subdetectorHitNumbers()[4] = nHitsVTX;
+	trackImpl->subdetectorHitNumbers()[5] = nHitsFTD;
+	trackImpl->subdetectorHitNumbers()[6] = nHitsSIT;
+	trackImpl->subdetectorHitNumbers()[7] = nHitsTPC;
+	
 	nSiSegments++;
 	float omega = trackAR->getOmega();
 	float tanLambda = trackAR->getTanLambda();
@@ -679,18 +690,22 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	}
       }
     }        
-    std::cout << "SiliconTracking -> run " << _nRun
-	      << " event " << _nEvt << std::endl;
-    std::cout << "Number of Si tracks = " << nSiSegments << std::endl;
-    std::cout << "Total 4-momentum of Si tracks : E = " << eTot
-	      << " Px = " << pxTot
-	      << " Py = " << pyTot
-	      << " Pz = " << pzTot << std::endl;
+
+    if (_debug == 1) {
+      std::cout << "SiliconTracking -> run " << _nRun
+		<< " event " << _nEvt << std::endl;
+      std::cout << "Number of Si tracks = " << nSiSegments << std::endl;
+      std::cout << "Total 4-momentum of Si tracks : E = " << eTot
+		<< " Px = " << pxTot
+		<< " Py = " << pyTot
+		<< " Pz = " << pzTot << std::endl;
     
+    }
+
 	
-    evt->addCollection(trkCol,"SiTracks");     
+    evt->addCollection(trkCol,_siTrkCollection.c_str());     
     if (_createMap>0)
-      evt->addCollection(relCol,"SiTracksMCP");
+      evt->addCollection(relCol,_siTrkMCPCollection.c_str());
   }
   CleanUp();
   //  std::cout << "Event is done " << std::endl;
@@ -840,7 +855,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
       double cosTheta = pos[2]/radius;
       double Phi = atan2(pos[1],pos[0]);
       if (Phi < 0.) Phi = Phi + TWOPI;
-      int layer = (hit->getType() - 100) - 1;
+      int layer = hit->getType() - 101;
       if (layer < 0 || layer >= _nLayers) {
 	std::cout << "SiliconTracking => fatal error in VTX : layer is outside allowed range : " << layer << std::endl;
 	exit(1);
@@ -883,7 +898,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
 	double cosTheta = pos[2]/radius;
 	double Phi = atan2(pos[1],pos[0]);
 	if (Phi < 0.) Phi = Phi + TWOPI;
-	int layer = (hit->getType() - 400) - 1 + _nLayersVTX;
+	int layer = hit->getType() - 401 + _nLayersVTX;
 	//	std::cout << "# VTX = " << _nLayersVTX
 	//		  << "# SIT = " << _nLayersSIT
 	//		  << " Type = " << hit->getType() 

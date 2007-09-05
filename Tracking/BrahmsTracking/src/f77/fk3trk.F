@@ -1,5 +1,5 @@
 *  
-* $Id: fk3trk.F,v 1.4 2007-04-20 13:40:03 rasp Exp $
+* $Id: fk3trk.F,v 1.5 2007-09-05 09:47:29 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.3  2006/11/02 11:49:00  rasp

@@ -61,7 +61,7 @@ CurlKillerProcessor::CurlKillerProcessor() : Processor("CurlKillerProcessor") {
 			    "CutCollectionName" , 
 			    "Name of the cut away TrackerHit collection"  ,
 			    _cutColName ,
-			    std::string("cutTPCTrackerHits") ) ;
+			    std::string("cutTPCTrackeHits") ) ;
   
   registerOutputCollection( LCIO::TRACKERHIT,
 			    "RemainingCollectionName" , 

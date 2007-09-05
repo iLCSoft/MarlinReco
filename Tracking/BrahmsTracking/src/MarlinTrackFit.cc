@@ -2,7 +2,11 @@
 #include "ClusterShapes.h"
 #include <math.h>
 
-MarlinTrackFit::MarlinTrackFit() {}
+MarlinTrackFit::MarlinTrackFit() {
+    _parIpReso[0] = 0.0;
+    _parIpReso[1] = 0.0;
+    _parIpReso[2] = 1.0;
+}
 
 MarlinTrackFit::~MarlinTrackFit() {}
 
@@ -17,7 +21,6 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   // Create and fill up some intermediate arrays
   // needed to perform fits -->
 
-  int foundSiSegment = 0;  
   float * xhit = new float[nhits+1];
   float * yhit = new float[nhits+1];
   float * zhit = new float[nhits+1];
@@ -39,8 +42,6 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   float ref[6];
   float rfit[6];
   float rfite[15];
-  float paramSi[5];
-  float eparamSi[15];
 
   float dzMin = 1.0e+20;
   float dzMax = -1.0e+20;
@@ -295,7 +296,7 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
     // sigma(Omega)/Omega = sigma(pT)/pT = 1e-3*pT
     // angular resolution = 1mrad
     // D0 resolution = 1mm (as for TPC)
-    // Z0 resolution = 5mm (as for TPC)
+    // Z0 resolution = 1mm (as for TPC)
     float reso[4];
     reso[0] = 1e-3;
     reso[1] = 0.001;
@@ -354,6 +355,48 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   if (noutl>50) {
     std::cout << "MarlinTrackFit ---> Too many outliers : " << noutl << std::endl;
   }
+
+  // Check if the d0 or z0 errors have too low values
+  float omega = param[0];
+  float tanlambda = param[1];
+  phi0 = param[2];
+  d0 = param[3];
+  z0 = param[4];
+  helix.Initialize_Canonical(phi0, d0, z0, omega, tanlambda, bField);
+  float momX = helix.getMomentum()[0];
+  float momY = helix.getMomentum()[1];
+  float momZ = helix.getMomentum()[2];
+  float totMom = sqrt(momX*momX+momY*momY+momZ*momZ); 
+  float TransMom = sqrt(momX*momX+momY*momY);
+  float sinTheta = TransMom/totMom;
+  float Parameter = totMom*pow(sinTheta,1.5);
+  float MinIpReso = _parIpReso[0]+_parIpReso[1]/pow(Parameter,_parIpReso[2]);
+  float ErrorD0 = sqrt(eparam[0]);
+  float ErrorZ0 = sqrt(eparam[9]);
+
+  if (ErrorD0<MinIpReso || ErrorZ0<MinIpReso) {
+//       std::cout << "Par = " << _parIpReso[0]
+// 		<< "  " << _parIpReso[1]
+// 		<< "  " << _parIpReso[2]
+// 		<< "  " << _parIpReso[3]
+// 		<< " ; Min = " 
+// 		<< " ED0 = " << 1e+3*ErrorD0
+// 		<< " EZ0 = " << 1e+3*ErrorZ0
+// 		<< std::endl;
+      float errPhi = eparam[2];
+      float errOmg = eparam[5];
+      float errTL  = eparam[14];
+      for (int ip=0;ip<15;++ip) 
+	  eparam[ip] = 0;
+      float Error = MinIpReso + 0.002;
+      eparam[0] = Error*Error;
+      eparam[2] = errPhi;
+      eparam[5] = errOmg;
+      Error = MinIpReso + 0.002;
+      eparam[9] = Error*Error;
+      eparam[14]= errTL;
+  }
+
 
 
   delete[] xhit;
@@ -784,4 +827,10 @@ void MarlinTrackFit::ConvertCovMatrix(float * rfit, float * rfite, float * param
   //  std::cout << "sigma(D0)=" << sqrt(eparam[9]) << std::endl;
   //  std::cout << std::endl;
 
+}
+
+void MarlinTrackFit::setParametersForIPErrors(float * par) {
+
+    for (int i=0;i<3;++i)
+	_parIpReso[i] = par[i];
 }

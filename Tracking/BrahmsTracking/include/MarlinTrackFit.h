@@ -134,8 +134,11 @@ class MarlinTrackFit {
    * Output : eparam[15] - covariance matrix <br>
    */ 
   void CrudeErrorEstimates(float BField, float * reso, float * param, float * eparam);
+  void setParametersForIPErrors(float * par);
 
  private:    
+
+  float _parIpReso[3];
     
   void CalculateChi2(HelixClass & helix, int & nhits, 
 		     float * xhit, float * yhit, float * zhit,

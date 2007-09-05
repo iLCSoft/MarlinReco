@@ -1,5 +1,5 @@
 *  
-* $Id: trackfit.F,v 1.2 2007-06-22 14:24:02 rasp Exp $
+* $Id: trackfit.F,v 1.3 2007-09-05 09:47:29 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.1  2006/11/02 12:04:59  rasp

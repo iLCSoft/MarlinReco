@@ -47,10 +47,32 @@ using namespace marlin ;
 * The final track fitting is done using a Kalman filter. At present the both the magnetic field 
 * and the material desciption of the TPC is hard coded into the Fortran code and C++ code, 
 * and will be improved when GEAR becomes more evolved.
-* 
-* A.Raspereza : Magnetic field is specified via global steering parameter "BField".
-* A.Raspereza : TPC Geomtery is steered via GEAR steering file.
-* @author S. Aplin, DESY    
+* <h4>Input collections and prerequisites</h4> 
+* Processor requires collection of digitized TPC tracker hits. 
+* If such a collections with the user specified names do not exist 
+* processor takes no action. Processor still attempts to assign 
+* VTX and SIT tracker hits to the found TPC tracks and produce 
+* combined Si-TPC tracks. Hence, optionally an user can provide 
+* the names of the VTX and SIT tracker hit collections. A more 
+* efficient algorithm of combining
+* information from TPC and silicon detectors <br>
+* <h4>Output</h4>
+* Processor produces collection of TPC tracks<br>
+* @param TPCTrackerHitCollectionName Name of the TPC TrackerHit collection <br>
+* (default value is TPCTrackerHits) <br>
+* @param VTXTrackerHitCollectionName Name of the VTX TrackerHit collection <br>
+* (default value is VTXTrackerHits) <br>
+* @param SITTrackerHitCollectionName Name of the SIT TrackerHit collection <br>
+* (default value is SITTrackerHits) <br>
+* @param TPCTrackCollectionName Name of the output TPC Track collection <br>
+* (default value is TPCTracks) <br>
+* @param TrackCollectionName Name of the combined Si-TPC Track collection <br>
+* (default value is Tracks) <br>
+* @param MCTPCTrackRelCollectionName Name of the TPC Track MC Relation collection <br>
+* (default value is TPCTracksMCP) <br>
+* @param MCTrackRelCollectionName Name of the Track MC Relation collection <br>
+* (default value is TracksMCP) <br>
+* @authors S. Aplin, DESY, A. Raspereza MPI-Munich    
 */
 class LEPTrackingProcessor : public Processor {
   

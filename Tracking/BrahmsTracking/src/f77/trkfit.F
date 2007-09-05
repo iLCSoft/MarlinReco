@@ -1,5 +1,5 @@
 *  
-* $Id: trkfit.F,v 1.2 2007-04-20 13:40:03 rasp Exp $
+* $Id: trkfit.F,v 1.3 2007-09-05 09:47:29 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
 * Revision 1.1  2006/11/02 12:04:59  rasp

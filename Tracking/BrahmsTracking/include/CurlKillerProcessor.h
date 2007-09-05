@@ -10,21 +10,29 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/**  Example processor for marlin.
- * 
- *  If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
- * 
- *  <h4>Input - Prerequisites</h4>
- *  Needs the collection of MCParticles.
- *
- *  <h4>Output</h4> 
- *  A histogram.
- * 
- * @param CollectionName Name of the MCParticle collection
- * 
- * @author F. Gaede, DESY
- * @version $Id: CurlKillerProcessor.h,v 1.1 2006-03-23 14:15:39 aplin Exp $ 
+/** === CurlKillerProcessor === <br>
+ * Kills loopers in TPC to enable efficient pattern recognition
+ * <h4>Input - Prerequisites</h4>
+ * Input collection of all TrackerHits in TPC
+ * <h4>Output</h4>
+ * Output collection of TrackerHits in TPC where all hits
+ * contributing to loopes are removed from
+ * @param InputCollectionName Name of the input TrackerHit collection <br>
+ * (default value is TPCTrackerHits) <br>
+ * @param CutCollectionName Name of the output cut away TrackerHit collection <br>
+ * (default value is cutTPCTrackeHits) <br>
+ * @param RemainingCollectionName Name of the output collection of remaining TrackerHits <br>
+ * (default value is remainingTPCTrackerHits) <br>
+ * @param BinSize Bin size in square root of pad multiples <br>
+ * (default value is 2) <br>
+ * @param MultiplicityCut Cut for the number of hits allowed in one bin <br>
+ * (default value is 4) <br>
+ * @param PadHeight TPC PadHeight <br>
+ * (default value is 6.2) <br>
+ * @param PadWidth TPC PadWidth <br>
+ * (default value is 2.2) <br>
+ * @author S. Aplin, DESY
+ * @version $Id: CurlKillerProcessor.h,v 1.2 2007-09-05 09:47:29 rasp Exp $ 
  */
 
 class CurlKillerProcessor : public Processor {

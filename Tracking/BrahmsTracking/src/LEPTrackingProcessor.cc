@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.23 2007-04-20 13:40:03 rasp Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.24 2007-09-05 09:47:29 rasp Exp $
 **
 ** $Log: not supported by cvs2svn $
 ** Revision 1.22  2006/10/17 12:34:19  gaede
@@ -90,6 +90,7 @@
 #include <gear/GEAR.h>
 #include <gear/TPCParameters.h>
 #include <gear/PadRowLayout2D.h>
+#include <gear/BField.h>
 //
 
 
@@ -207,7 +208,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
   *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
-  *tpcbfield = float(Global::parameters->getFloatVal("BField")) ;
+  *tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
 
   //  }
 //  catch() {return 1} ;
@@ -266,13 +267,13 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                             "MCTPCTrackRelCollectionName" , 
                             "Name of the TPC Track MC Relation collection"  ,
                             _colNameMCTPCTracksRel ,
-                            std::string("MCTPCTracksRel") ) ;
+                            std::string("TPCTracksMCP") ) ;
   
   registerOutputCollection( LCIO::LCRELATION,
                             "MCTrackRelCollectionName" , 
                             "Name of the Track MC Relation collection"  ,
                             _colNameMCTracksRel ,
-                            std::string("MCTracksRel") ) ;
+                            std::string("TracksMCP") ) ;
 }
 
 
@@ -557,7 +558,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
         // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-        const double bField = Global::parameters->getFloatVal("BField") ;
+        //        const double bField = gearTPC.getDoubleVal("BField") ;
+        const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
         const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
 
         // tan lambda and curvature remain unchanged as the track is only extrapolated
@@ -701,6 +703,17 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       
         //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
       
+        
+        tpcTrack->subdetectorHitNumbers().resize(8);
+        tpcTrack->subdetectorHitNumbers()[0] = int(0);
+        tpcTrack->subdetectorHitNumbers()[1] = int(0);
+        tpcTrack->subdetectorHitNumbers()[2] = int(0);
+        tpcTrack->subdetectorHitNumbers()[3] = int(hits->size());
+        tpcTrack->subdetectorHitNumbers()[4] = int(0);
+        tpcTrack->subdetectorHitNumbers()[5] = int(0);
+        tpcTrack->subdetectorHitNumbers()[6] = int(0);
+        tpcTrack->subdetectorHitNumbers()[7] = int(hits->size());
+
 
         tpcTrackVec->addElement( tpcTrack );
 
@@ -773,7 +786,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
       // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
-      const double bField = Global::parameters->getFloatVal("BField") ;
+      //      const double bField = gearTPC.getDoubleVal("BField") ;
+      const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
       const double consb = (2.99792458* bField )/(10*1000.) ;     // divide by 1000 m->mm
       
       // tan lambda and curvature remain unchanged as the track is only extrapolated

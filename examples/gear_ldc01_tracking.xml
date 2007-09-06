@@ -74,11 +74,6 @@
        <parameter name="StripLineThickness" type="double"> 0.09438 </parameter>       
        <parameter name="StripLineBeamPipeRadius" type="double"> 23.0 </parameter>
        <parameter name="VXDEndPlateInnerRadius" type="double"> 23.2 </parameter>     
-       <parameter name="BeamPipeRadius" type="double"> 10. </parameter>
-       <parameter name="BeamPipeHalfZ" type="double"> 61. </parameter>
-       <parameter name="BeamPipeThickness" type="double"> 0.5 </parameter>
-       <parameter name="BeamPipeProperties_RadLen" type="double"> 352.759946 </parameter>
-       <parameter name="BeamPipeProperties_dEdx" type="double"> 0.00029415 </parameter>
        <parameter name="CryostatAlRadius" type="double"> 100. </parameter>
        <parameter name="CryostatAlHalfZ" type="double"> 170. </parameter>
        <parameter name="CryostatAlThickness" type="double"> 0.5 </parameter>
@@ -86,6 +81,15 @@
        <parameter name="Cryostat_RadLen" type="double"> 88.9253 </parameter>		
        <parameter name="CryostatAlInnerR" type="double"> 23.2 </parameter>		
        <parameter name="Cryostat_dEdx" type="double"> 4.374e-4 </parameter>		
+     </detector>
+
+     <!-- Additional Information for beam pipe -->
+     <detector id="16" name="BeamPipe" geartype="GearParameters" type="UNKNOWN" insideTrackingVolume="true">
+       <parameter name="BeamPipeRadius" type="double"> 10. </parameter>
+       <parameter name="BeamPipeHalfZ" type="double"> 61. </parameter>
+       <parameter name="BeamPipeThickness" type="double"> 0.5 </parameter>
+       <parameter name="BeamPipeProperties_RadLen" type="double"> 352.759946 </parameter>
+       <parameter name="BeamPipeProperties_dEdx" type="double"> 0.00029415 </parameter>
      </detector>
 
      <!--  Forward Tracking Discs -->
@@ -98,12 +102,12 @@
         <parameter name="FTDOuterSupportdR" type="double"> 10.0 </parameter>
 	<parameter name="FTDInnerSupportThickness" type="double"> 4.0 </parameter>
 	<parameter name="FTDOuterSupportThickness" type="double"> 4.0 </parameter>	
-	<parameter name="zFTDOuterCyllinderStart" type="double"> 800.0 </parameter>
-	<parameter name="zFTDOuterCyllinderEnd" type="double"> 1300.0 </parameter>
+	<parameter name="zFTDOuterCylinderStart" type="double"> 800.0 </parameter>
+	<parameter name="zFTDOuterCylinderEnd" type="double"> 1300.0 </parameter>
 	<parameter name="zFTDInnerConeStart" type="double"> 550.0 </parameter>
 	<parameter name="zFTDInnerConeEnd" type="double"> 1300.0 </parameter>
 	<parameter name="FTDCopperThickness" type="double"> 0.08 </parameter>	
-	<parameter name="FTDOuterCyllinderThickness" type="double"> 1.0 </parameter>
+	<parameter name="FTDOuterCylinderThickness" type="double"> 1.0 </parameter>
 	<parameter name="LastHeavyLayer" type="int"> 3 </parameter>
 	<parameter name="Silicon_RadLen" type="double"> 93.6 </parameter>
 	<parameter name="Silicon872_RadLen" type="double"> 25.0 </parameter>

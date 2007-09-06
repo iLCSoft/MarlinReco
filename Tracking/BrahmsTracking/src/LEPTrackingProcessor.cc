@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.24 2007-09-05 09:47:29 rasp Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.25 2007-09-06 13:24:04 harderk Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.24  2007/09/05 09:47:29  rasp
+** Updated version
+**
 ** Revision 1.22  2006/10/17 12:34:19  gaede
 ** replaced registerProcessorParameter with registerInput/OutputCollection
 **
@@ -208,7 +211,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
   *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
-  *tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
+  *tpcbfield = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z();
 
   //  }
 //  catch() {return 1} ;

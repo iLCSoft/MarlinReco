@@ -30,7 +30,6 @@
         <parameter name="TPCWallProperties_dEdx" type="double"> 4.374e-4 </parameter>		
         <parameter name="TPCGasProperties_RadLen" type="double"> 109831 </parameter>		
         <parameter name="TPCGasProperties_dEdx" type="double"> 2.736e-7 </parameter>		
-	<parameter name="BField" type="double"> 4.0 </parameter>
      </detector>
 
      <!-- Vertex Detector-->
@@ -83,7 +82,6 @@
        <parameter name="Cryostat_dEdx" type="double"> 4.374e-4 </parameter>		
      </detector>
 
-     <!-- Additional Information for beam pipe -->
      <detector id="16" name="BeamPipe" geartype="GearParameters" type="UNKNOWN" insideTrackingVolume="true">
        <parameter name="BeamPipeRadius" type="double"> 10. </parameter>
        <parameter name="BeamPipeHalfZ" type="double"> 61. </parameter>

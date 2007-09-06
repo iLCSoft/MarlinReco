@@ -30,7 +30,6 @@
         <parameter name="TPCWallProperties_dEdx" type="double"> 4.374e-4 </parameter>		
         <parameter name="TPCGasProperties_RadLen" type="double"> 109831 </parameter>		
         <parameter name="TPCGasProperties_dEdx" type="double"> 2.736e-7 </parameter>		
-	<parameter name="BField" type="double"> 4.0 </parameter>
      </detector>
 
      <!-- Vertex Detector-->

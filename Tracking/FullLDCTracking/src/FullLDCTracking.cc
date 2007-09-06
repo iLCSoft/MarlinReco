@@ -2423,7 +2423,7 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
 }    
 
 
-void FullLDCTracking::check(LCEvent * evt) { };
-void FullLDCTracking::end() {};
+void FullLDCTracking::check(LCEvent * evt) { }
+void FullLDCTracking::end() {}
 
 

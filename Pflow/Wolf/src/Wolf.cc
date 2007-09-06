@@ -21,7 +21,7 @@
 // GEAR include files
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
-#include <gear/TPCParameters.h>
+#include <gear/BField.h>
 #include <gear/CalorimeterParameters.h>
 
 //#include "MarlinCED.h"
@@ -129,8 +129,7 @@ void Wolf::processEvent( LCEvent * evt ) {
 
   //MarlinCED::newEvent( this, 0 ) ;
 
-  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  _bField = float(gearTPC.getDoubleVal("BField"));
+  _bField = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
 
   initialiseEvent( evt );  
   ClusterTrackMatching();

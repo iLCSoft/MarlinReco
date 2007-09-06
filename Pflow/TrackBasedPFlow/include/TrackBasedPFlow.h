@@ -31,7 +31,7 @@
 #include <MarlinUtil.h>
 
 #include <gear/GEAR.h>
-#include <gear/TPCParameters.h>
+#include <gear/BField.h>
 
 #include "constants.h"
 #include "LCGeometryTypes.h"

@@ -100,9 +100,7 @@ void CheckPlots::init() {
 
   // printParameters();
  
-  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  
-  _bField = gearTPC.getDoubleVal("BField");
+  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z();
 
   createClouds();
 

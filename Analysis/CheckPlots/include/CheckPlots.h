@@ -23,7 +23,7 @@
 #include <UTIL/LCRelationNavigator.h>
 
 #include <gear/GEAR.h>
-#include <gear/TPCParameters.h>
+#include <gear/BField.h>
 
 #include <MarlinUtil.h>
 
@@ -64,7 +64,7 @@ using namespace marlin ;
  *    ColNameReconstructedParticles : name of the LCCollection of reconstructed paricles
  *
  *    @author O. Wendt (DESY)
- *    @version $Id: CheckPlots.h,v 1.3 2007-04-27 13:30:46 owendt Exp $
+ *    @version $Id: CheckPlots.h,v 1.4 2007-09-06 14:40:18 harderk Exp $
  *
  */
 class CheckPlots : public Processor {

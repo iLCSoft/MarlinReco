@@ -434,12 +434,14 @@ void MaterialDB::init() {
   const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
   const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDetMain.getVXDLayerLayout();
   const gear::GearParameters& pVXDDet = Global::GEAR->getGearParameters("VXDInfra");
+  const gear::GearParameters& pBeamPipe = Global::GEAR->getGearParameters("BeamPipe");
 
-  _beamPipeRadius = float(pVXDDet.getDoubleVal("BeamPipeRadius"));
-  _beamPipeHalfZ  = float(pVXDDet.getDoubleVal("BeamPipeHalfZ"));
-  _beamPipe_thickness = float(pVXDDet.getDoubleVal("BeamPipeThickness"));
-  _radlen_ber = 0.1*float(pVXDDet.getDoubleVal("BeamPipeProperties_RadLen"));
-  _dedx_ber = 10.0*float(pVXDDet.getDoubleVal("BeamPipeProperties_dEdx"));
+
+  _beamPipeRadius = float(pBeamPipe.getDoubleVal("BeamPipeRadius"));
+  _beamPipeHalfZ  = float(pBeamPipe.getDoubleVal("BeamPipeHalfZ"));
+  _beamPipe_thickness = float(pBeamPipe.getDoubleVal("BeamPipeThickness"));
+  _radlen_ber = 0.1*float(pBeamPipe.getDoubleVal("BeamPipeProperties_RadLen"));
+  _dedx_ber = 10.0*float(pBeamPipe.getDoubleVal("BeamPipeProperties_dEdx"));
 
   // Berillium beam-pipe
   
@@ -727,12 +729,12 @@ void MaterialDB::init() {
   _FTD_outerSupport_dR = float(pFTDDet.getDoubleVal("FTDOuterSupportdR"));
   _FTD_innerSupport_thickness = float(pFTDDet.getDoubleVal("FTDInnerSupportThickness"));
   _FTD_outerSupport_thickness = float(pFTDDet.getDoubleVal("FTDOuterSupportThickness"));
-  _zFTDOuterCyllinderStart = float(pFTDDet.getDoubleVal("zFTDOuterCyllinderStart"));
-  _zFTDOuterCyllinderEnd = float(pFTDDet.getDoubleVal("zFTDOuterCyllinderEnd"));
+  _zFTDOuterCyllinderStart = float(pFTDDet.getDoubleVal("zFTDOuterCylinderStart"));
+  _zFTDOuterCyllinderEnd = float(pFTDDet.getDoubleVal("zFTDOuterCylinderEnd"));
   _zFTDInnerConeStart = float(pFTDDet.getDoubleVal("zFTDInnerConeStart"));
   _zFTDInnerConeEnd = float(pFTDDet.getDoubleVal("zFTDInnerConeEnd"));
   _FTD_copper_thickness = float(pFTDDet.getDoubleVal("FTDCopperThickness"));
-  _FTD_kaptonCyl_thickness = float(pFTDDet.getDoubleVal("FTDOuterCyllinderThickness"));
+  _FTD_kaptonCyl_thickness = float(pFTDDet.getDoubleVal("FTDOuterCylinderThickness"));
   int iLast = pFTDDet.getIntVal("LastHeavyLayer");
   _dedx_si = 10.0*float(pFTDDet.getDoubleVal("Silicon_dEdx"));
   _dedx_si872 = 10.0*float(pFTDDet.getDoubleVal("Silicon872_dEdx"));

@@ -338,7 +338,7 @@ ADD_CUSTOM_TARGET( fix_f77_cmake_bug
     COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GRNDM.mod.proxy
     COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > ranecu.mod.proxy
 
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     COMMENT "Fixing cmake fortran bug..." VERBATIM )
 
 # establish dependency for fixing fortran bug

@@ -49,7 +49,7 @@ ENDIF()
 
 # set default install prefix to project root directory
 IF( CMAKE_INSTALL_PREFIX STREQUAL "/usr/local" )
-    SET( CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}" )
+    SET( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}" )
 ENDIF()
 
 ### DOCUMENTATION ############################################################
@@ -59,19 +59,19 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
     AND DVIPS_CONVERTER AND LATEX2HTML_CONVERTER )
 
     ADD_CUSTOM_COMMAND(
-        OUTPUT  "${CMAKE_SOURCE_DIR}/doc/manual_html"
+        OUTPUT  "${PROJECT_SOURCE_DIR}/doc/manual_html"
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
         COMMAND "${DVIPS_CONVERTER}" ARGS -q manual.dvi
         COMMAND "${LATEX2HTML_CONVERTER}" ARGS
             -mkdir -dir ../manual_html -verbosity 0 -info 0 -no_auto_link -split 0 -no_navigation manual.tex
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/doc/manual"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/doc/manual"
         COMMENT "Building Documentation - Users Manual..."
         VERBATIM )
 
     # add doc target
     ADD_CUSTOM_TARGET( doc DEPENDS
-        "${CMAKE_SOURCE_DIR}/doc/manual_html" )
+        "${PROJECT_SOURCE_DIR}/doc/manual_html" )
 ELSE()
     MESSAGE( STATUS "Latex not found in your system!!" )
     IF( INSTALL_DOC )
@@ -83,9 +83,9 @@ ENDIF()
 # install documentation
 IF( INSTALL_DOC )
     # make sure doxygen is executed (make doc) before make install
-    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${CMAKE_BINARY_DIR} ARGS doc)" )
+    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS doc)" )
     # install documentation
-    INSTALL( DIRECTORY "${CMAKE_SOURCE_DIR}/doc"
+    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
             DESTINATION .
             PATTERN "*CVS*" EXCLUDE )
 ENDIF()
@@ -117,9 +117,9 @@ SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH 1 )
 MARK_AS_ADVANCED( CMAKE_INSTALL_RPATH_USE_LINK_PATH )
 
 # output directories
-SET( EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH
+SET( EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin" CACHE PATH
     "EXECUTABLE_OUTPUT_PATH" FORCE )
-SET( LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib" CACHE PATH
+SET( LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib" CACHE PATH
     "LIBRARY_OUTPUT_PATH" FORCE )
 MARK_AS_ADVANCED( EXECUTABLE_OUTPUT_PATH LIBRARY_OUTPUT_PATH )
 
@@ -141,20 +141,20 @@ ENDIF()
 ADD_SUBDIRECTORY( src )
 
 # create uninstall configuration file 
-CONFIGURE_FILE( "${CMAKE_SOURCE_DIR}/cmake_uninstall.cmake.in"
-                "${CMAKE_BINARY_DIR}/cmake_uninstall.cmake"
+CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+                "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
                 IMMEDIATE @ONLY )
 
 # create uninstall target
 ADD_CUSTOM_TARGET( uninstall
-  "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/cmake_uninstall.cmake" )
+  "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake" )
 
 # create configuration file from .in file
-CONFIGURE_FILE( "${CMAKE_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
-                "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY )
+CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
+                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY )
 
 # install configuration file
-INSTALL( FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake" DESTINATION . )
+INSTALL( FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" DESTINATION . )
 
 # display status message for important variables
 MESSAGE( STATUS )

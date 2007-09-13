@@ -63,6 +63,35 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                            _TPCTrackerHitsCol ,
                             std::string("TPCTrackerHits") ) ;
 
+
+  registerProcessorParameter( "PointResolutionRPhi" ,
+                              "R-Phi Resolution constant in TPC"  ,
+                              _pointResoRPhi ,
+                               (float)0.160) ;
+
+ registerProcessorParameter( "DiffusionCoeffRPhi" ,
+                              "R-Phi Diffusion Co-efficent in TPC"  ,
+                              _diffRPhi ,
+                               (float)0.0) ;
+
+  registerProcessorParameter( "PointResolutionZ" ,
+                              "Z Resolution constant in TPC"  ,
+                              _pointResoZ ,
+                               (float)0.5) ;
+
+ registerProcessorParameter( "PixZ" ,
+                              "Defines spatial slice in Z"  ,
+                              _pixZ ,
+                               (float)1.4) ;
+
+ registerProcessorParameter( "PixRP" ,
+                              "Defines spatial slice in RP"  ,
+                              _pixRP ,
+                               (float)1.0) ;
+
+
+
+
 }
 
 
@@ -160,26 +189,25 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       //  SMEARING
 
-      double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
-      double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
-      double aReso = tpcRPhiResConst*tpcRPhiResConst;
+       
+      double aReso =_pointResoRPhi*_pointResoRPhi;
       double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
       if (driftLenght <0) { 
         std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 " << driftLenght << " --> Check out your GEAR file!!!!" << std::endl; 
         std::cout << "Setting driftLenght to 0.1" << std::endl;
         driftLenght = 0.10;
       }
-      double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+      double bReso = _diffRPhi*_diffRPhi;
       double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
-      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+ 
 
-//       std::cout << "tpcRPhiResConst = " << tpcRPhiResConst << std::endl;
-//       std::cout << "tpcRPhiResDiff = " << tpcRPhiResDiff << std::endl;
+//       std::cout << "_pointResoRPhi = " <<_pointResoRPhi << std::endl;
+//       std::cout << "_diffRPhi = " << _diffRPhi << std::endl;
 //       std::cout << "tpcRPhiRes = " << tpcRPhiRes << std::endl;
-//       std::cout << "tpcZRes = " << tpcZRes << std::endl;
+//       std::cout << "_pointResoZ = " << _pointResoZ << std::endl;
 
       double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
-      double randz =  gsl_ran_gaussian(_random,tpcZRes);
+      double randz =  gsl_ran_gaussian(_random,_pointResoZ);
 
       // Make sure that the radius is equal to a pad radius
       // Get current hit radius
@@ -259,7 +287,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       int iPhiHit = padLayout.getPadNumber(padIndex);
 
-      int NumberOfTimeSlices =  (int) ((2.0 * gearTPC.getMaxDriftLength()) / gearTPC.getDoubleVal("tpcPixZ"));
+      int NumberOfTimeSlices =  (int) ((2.0 * gearTPC.getMaxDriftLength()) / _pixZ);
 
       //get z index of current hit
 
@@ -323,7 +351,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
                  cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
                  cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
-                 cout << "gearTPC.getDoubleVal(tpcPixZ)" << gearTPC.getDoubleVal("tpcPixZ") << endl;
+                
 
                  cout << "row_hits dX^2 + dY^2 " << 
                    ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
@@ -335,7 +363,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
                       << endl;
                 */
 
-                if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < gearTPC.getDoubleVal("tpcPixZ") ) {
+                if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < _pixZ ) {
 
                   if((((row_hits[j]->getX()-row_hits[k]->getX())*(row_hits[j]->getX()-row_hits[k]->getX()))
                       +((row_hits[j]->getY()-row_hits[k]->getY())*(row_hits[j]->getY()-row_hits[k]->getY())))
@@ -390,9 +418,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           trkHit->setPosition(pos);
           trkHit->setdEdx(row_hits[j]->getdEdx());
           trkHit->setType( 500 );
-          double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
-          double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
-          double aReso = tpcRPhiResConst*tpcRPhiResConst;
+         
+          
+          double aReso =_pointResoRPhi*_pointResoRPhi;
           double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
           if (driftLenght <0) { 
             std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 "  
@@ -400,10 +428,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             std::cout << "Setting driftLenght to 0.1" << std::endl;
             driftLenght = 0.10;
           }
-          double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+          double bReso = _diffRPhi*_diffRPhi;
           double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
-          double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
-          float covMat[TRKHITNCOVMATRIX]={0.,0.,float(tpcRPhiRes*tpcRPhiRes),0.,0.,float(tpcZRes*tpcZRes)};
+          float covMat[TRKHITNCOVMATRIX]={0.,0.,float(tpcRPhiRes*tpcRPhiRes),0.,0.,float(_pointResoZ*_pointResoZ)};
           trkHit->setCovMatrix(covMat);      
           
           if(pos[0]*pos[0]+pos[1]*pos[1]>0.0 * 0.0){

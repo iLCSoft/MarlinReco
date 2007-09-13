@@ -33,6 +33,11 @@ using namespace marlin ;
  * (default name TPCTrackerHits) <br>
  * <br>
  * @authors S. Aplin, DESY and A.Raspereza, MPI
+ *
+ * Changed 7/9/07 so that the const and diffusion resolution terms are taken as processor parameters rather than the gear file.
+ * The parameters _pixZ and pixRP were also changed from gear parameters to processor parameters
+ * clare.lynch@bristol.ac.uk
+ *
  */
 class TPCDigiProcessor : public Processor {
   
@@ -78,6 +83,13 @@ protected:
   // gsl random number generator
   gsl_rng * _random ;
 
+
+
+  float _pointResoRPhi;
+  float _pointResoZ;
+  float _diffRPhi;
+  float _pixZ;
+  float _pixRP;
 } ;
 
 #endif

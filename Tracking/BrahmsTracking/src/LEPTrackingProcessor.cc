@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.25 2007-09-06 13:24:04 harderk Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.26 2007-09-13 07:39:04 rasp Exp $
 **
 ** $Log: not supported by cvs2svn $
 ** Revision 1.24  2007/09/05 09:47:29  rasp
@@ -207,11 +207,12 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *outerrad = 0.1 *float( planeExt[1] ) ;
   *npadrows = padLayout.getNRows() ;
   *maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
-  *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
+  //  *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
-  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
-  *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
-  *tpcbfield = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z();
+  //  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
+  //  *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
+  //  *tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
+  *tpcbfield = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
 
   //  }
 //  catch() {return 1} ;
@@ -388,16 +389,20 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
       de_dx = de_dx/tpcIonisationPotential;
 
-      double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
-      double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
-      double aReso = tpcRPhiResConst*tpcRPhiResConst;
-      double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
-      if (driftLenght <0) { 
-        driftLenght = 0.10;
-      }
-      double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
-      double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
-      double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+//       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+//       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+//       double aReso = tpcRPhiResConst*tpcRPhiResConst;
+//       double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
+//       if (driftLenght <0) { 
+//         driftLenght = 0.10;
+//       }
+//       double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+//       double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+//       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+
+
+      double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[2]);
+      double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
 
       tpcRPhiRes = 0.1 * tpcRPhiRes;
       tpcZRes = 0.1 * tpcZRes;

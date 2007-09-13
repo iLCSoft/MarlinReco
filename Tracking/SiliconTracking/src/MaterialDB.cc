@@ -17,7 +17,7 @@
 #include <gear/VXDLayerLayout.h>
 #include <gear/TPCParameters.h>
 #include <gear/PadRowLayout2D.h>
-
+#include <gear/BField.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -1109,12 +1109,15 @@ void MaterialDB::init() {
 
 void MaterialDB::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
-  _bField = Global::parameters->getFloatVal("BField");
+  //  _bField = Global::parameters->getFloatVal("BField");
+  _bField = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
   fkfild_.consb = 2.997924e-3*_bField;
 } 
 
 void MaterialDB::processEvent( LCEvent * evt ) { 
   _nEvt ++ ;
+  _bField = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
+  fkfild_.consb = 2.997924e-3*_bField;
 }
 
 

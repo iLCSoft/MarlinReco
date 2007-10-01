@@ -135,6 +135,7 @@ class TrackBasedPFlow : public Processor {
   double _zMinCutHelixExtrapolation;
   double _rMinCylindricalCut;
   double _zMinCylindricalCut;
+  double _rMaxOfOuterMostTrackerHit;
   double _openingAngleConeTube;
   double _maximalConeTubeLength;
   double _maximalPathLengthForMIPLikeStub;
@@ -198,8 +199,6 @@ class TrackBasedPFlow : public Processor {
   std::vector<Track*> _tracksWithTooFewTrackerHits;
   std::vector<Track*> _tracksNotFulfillingCombinedCylinderShellCuts;
 
-  std::vector<Track*> _tracksNotExtrapolatedWithEnoughSiliconAndTPCHits;
-  std::vector<Track*> _tracksNotExtrapolatedComingFromIP;
   std::vector<Track*> _tracksDiscarded;
 
   std::vector<Track*> _tracksWhichWouldReachCalorimeter;
@@ -235,7 +234,6 @@ class TrackBasedPFlow : public Processor {
   AIDA::ICloud1D* _cAlphaRecoCalo;
   AIDA::ICloud1D* _cAlphaCaloMC;
 
-  AIDA::ICloud1D* _cNTracksWithEnergyAssignedByMC;
   AIDA::ICloud1D* _cNTracksNotPassingCylinderCuts;
   AIDA::ICloud1D* _cPTracksNotPassingCylinderCuts;
   AIDA::ICloud1D* _cSumPTracksNotPassingCylinderCuts;
@@ -314,8 +312,14 @@ class TrackBasedPFlow : public Processor {
   ReconstructedParticleImpl* assignNeutralClusterToReconstructedParticle(ClusterImplWithAttributes* cluster);
 
   void assignClusterProperties(ClusterImpl* cluster); // basic properties of the cluster such as energy, position, angles etc.
-  void assignClusterAttributes(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix, std::vector<ClusterImplWithAttributes*> resultingClusterImplsWithAttributes,
-			       const double* startPoint); // additional cluster attributes, such as start point, start direction etc.
+
+  // additional cluster attributes, such as start point, start direction etc., done by projections on extrapolated trajectory
+  void assignClusterAttributesByTrajectory(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix, 
+					   std::vector<ClusterImplWithAttributes*> resultingClusterImplsWithAttributes, const double* startPoint); 
+  // additional cluster attributes, such as start point, start direction etc., done by energy distribution in the cluster itself
+  void assignClusterAttributesByCluster(const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix, 
+					std::vector<ClusterImplWithAttributes*> resultingClusterImplsWithAttributes, const double* startPoint); 
+
 
   void doPID(ReconstructedParticleImpl* recoParticle ,bool isMuon);
 
@@ -325,8 +329,8 @@ class TrackBasedPFlow : public Processor {
   void drawRelatedCalorimeterHits(const LCEvent* evt,Track* track);
   void drawEMShowerCandidates(const LCEvent* evt);
 
-  std::vector<ClusterImplWithAttributes*> assignClusters(ClusterImplWithAttributes* cluster, std::vector<ClusterImplWithAttributes*> clusters, LCVector3D referencePosition,
-							 const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
+  std::vector<ClusterImplWithAttributes*> assignClusters(ClusterImplWithAttributes* cluster, bool isMIPStub, std::vector<ClusterImplWithAttributes*> clusters, 
+							 LCVector3D referencePosition, const TrackerHitVec outermostTrackerHits, Trajectory* fittedHelix);
 
   std::vector<ClusterImplWithAttributes*> assignAdditionalClusters(ClusterImplWithAttributes* mipStub, Trajectory* fittedHelix, 
 								   std::vector<ClusterImplWithAttributes*> clustersAlreadyAssigned,

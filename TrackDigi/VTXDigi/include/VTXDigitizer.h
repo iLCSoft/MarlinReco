@@ -179,10 +179,12 @@ class VTXDigitizer : public Processor {
   double _diffusionCoefficient; 
   /** layer thickness
    */
-  double _layerThickness;
-  /** layer half-thickness
-   */
-  double _layerHalfThickness;
+ //  double _layerThickness;
+//   /** layer half-thickness
+//    */
+//   double _layerHalfThickness;
+
+
   int _numberOfLayers;
   double _pixelSizeX;
   double _pixelSizeY;
@@ -192,6 +194,8 @@ class VTXDigitizer : public Processor {
 
   std::vector<int> _laddersInLayer;
   std::vector<float> _layerRadius;
+  std::vector<float> _layerThickness;
+  std::vector<float> _layerHalfThickness;
   std::vector<float> _layerLadderLength;
   std::vector<float> _layerLadderHalfWidth;
   std::vector<float> _layerPhiOffset;

@@ -12,6 +12,13 @@
 #include "CLHEP/Random/RandPoisson.h" 
 #include "CLHEP/Random/RandFlat.h"
 
+
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/VXDParameters.h>
+#include <gear/VXDLayerLayout.h>
+
 namespace CLHEP{}    // declare namespace CLHEP for backward compatibility
 using namespace CLHEP ;
 
@@ -65,10 +72,7 @@ VTXDigitizer::VTXDigitizer() : Processor("VTXDigitizer") {
                              _diffusionCoefficient,
                              (double)0.002);
 
-  registerProcessorParameter("LayerThickness",
-                             "Thickness of active Si layer",
-                             _layerThickness,
-                             (double)0.03744);
+  
 
   registerProcessorParameter("PixelSizeX",
                              "Pixel Size X",
@@ -93,95 +97,10 @@ VTXDigitizer::VTXDigitizer() : Processor("VTXDigitizer") {
                              _electronsPerKeV,
                              (double)270.3);
 
-  std::vector<int> laddersInLayer;
-  laddersInLayer.push_back(8);
-  laddersInLayer.push_back(8);
-  laddersInLayer.push_back(12);
-  laddersInLayer.push_back(16);
-  laddersInLayer.push_back(20);
-
-  registerProcessorParameter("LaddersInLayer",
-                             "number of ladders in layers",
-                             _laddersInLayer,
-                             laddersInLayer);
-  
-
-  std::vector<float> radii;
-  radii.push_back(15.301);
-  radii.push_back(26.301);
-  radii.push_back(38.301);
-  radii.push_back(49.301);
-  radii.push_back(60.301);
-
-  registerProcessorParameter("LadderRadius",
-                             "Ladder Radius",
-                             _layerRadius,
-                             radii);
-   
-  std::vector<float> phi;
-  phi.push_back(1.455);
-  phi.push_back(1.39866);
-  phi.push_back(2.57163);
-  phi.push_back(3.59295);
-  phi.push_back(4.42245);
-   
-  registerProcessorParameter("ActiveLadderOffset",
-                             "Active Ladder Offset",
-                             _layerActiveSiOffset,
-                             phi);
-
-  std::vector<float> halfwidth;
-  halfwidth.push_back(6.5);
-  halfwidth.push_back(11.0);
-  halfwidth.push_back(11.0);
-  halfwidth.push_back(11.0);
-  halfwidth.push_back(11.0);
-  
-  registerProcessorParameter("LadderHalfWidth",
-                             "Ladder Half Width",
-                             _layerLadderHalfWidth,
-                             halfwidth);
-  
-
-  std::vector<float> ladderlength;
-  ladderlength.push_back(50.0);
-  ladderlength.push_back(125.0);
-  ladderlength.push_back(125.0);
-  ladderlength.push_back(125.0);
-  ladderlength.push_back(125.0);
-  
-  registerProcessorParameter("LadderLength",
-                             "Ladder Length",
-                             _layerLadderLength,
-                             ladderlength);
-  
 
 
-  
 
-
-  std::vector<float> gap;
-  gap.push_back(0.0);
-  gap.push_back(0.04);
-  gap.push_back(0.04);
-  gap.push_back(0.04);
-  gap.push_back(0.04);    
-  registerProcessorParameter("LadderGaps",
-                             "Ladder Gaps",
-                             _layerLadderGap,
-                             gap);
-
-  std::vector<float> phiOffset;
-  phiOffset.push_back(0.0);
-  phiOffset.push_back(0.0);
-  phiOffset.push_back(0.0);
-  phiOffset.push_back(0.0);
-  phiOffset.push_back(0.0);    
-  registerProcessorParameter("PhiOffset",
-                             "Phi offset of ladder",
-                             _layerPhiOffset,
-                             phiOffset);
-
+ 
   std::vector<float> bkgdHitsInLayer;
   bkgdHitsInLayer.push_back(34400.);
   bkgdHitsInLayer.push_back(23900.);
@@ -271,17 +190,94 @@ void VTXDigitizer::init() {
 void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
 
   _nRun++ ;
-  _numberOfLayers = _layerRadius.size();
+
+  //------Get the geometry from the gear file-----//
+
+  const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
+  const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
+ 
+ //number of layers
+  _numberOfLayers  = layerVXD.getNLayers();
+
+  //the number of ladders within layers
+  _laddersInLayer.resize(_numberOfLayers);
+
+ //Azimuthal offset of the whole structure of each layer.
   _layerHalfPhi.resize(_numberOfLayers);
+ 
+  //layer thickness and half-thickness
+  _layerHalfThickness.resize(_numberOfLayers);
+  _layerThickness.resize(_numberOfLayers);
+
+  //Distance from the middle of the Si sensor to IP in each layer.
+  _layerRadius.resize(_numberOfLayers);
+
+ //The length of the Si sensor in each layer
+  _layerLadderLength.resize(_numberOfLayers);
+
+  //The width and half-width of the Si sensor in each layer
   _layerLadderWidth.resize(_numberOfLayers);
-  _layerHalfThickness = 0.5*_layerThickness;
-  // LADDERED STRUCTURE IMPLIES NUMBER OF LADDERS > 2 !!!!!!!!
-  for (int i=0; i<_numberOfLayers; ++i) {
-    if (_laddersInLayer[i] > 2) {
-      _layerHalfPhi[i] = PI/((double)_laddersInLayer[i]);
-      _layerLadderWidth[i] = 2*_layerLadderHalfWidth[i];
+  _layerLadderHalfWidth.resize(_numberOfLayers);
+
+ //The offset of the sensitive area in ladder in each layer
+ _layerActiveSiOffset.resize(_numberOfLayers);
+
+ // The gaps in z between two subladders within each layer
+  const gear::GearParameters& gearVXDInfra = Global::GEAR->getGearParameters("VXDInfra") ;
+  const std::vector<double> laddergaps = gearVXDInfra.getDoubleVals("LadderGaps");
+  std::cout<<"laddergaps size "<<laddergaps.size()<<std::endl;
+  _layerLadderGap.resize(laddergaps.size());
+
+  //ladder offset in phi
+ _layerPhiOffset.resize(_numberOfLayers);
+
+  for(int layer = 0; layer < _numberOfLayers; layer++)
+    {
+      _laddersInLayer[layer] = layerVXD.getNLadders(layer);  
+      _layerHalfPhi[layer] = layerVXD.getPhi0(layer); 
+
+      //should half phi be replaced by this from Alexei's original code?
+      _layerHalfPhi[layer] = PI/((double)_laddersInLayer[layer]);
+
+      _layerThickness[layer] =layerVXD.getSensitiveThickness(layer);
+      _layerHalfThickness[layer] = 0.5*_layerThickness[layer];      
+      _layerRadius[layer] =layerVXD.getSensitiveDistance(layer) + 0.5 * _layerThickness[layer];
+      _layerLadderLength[layer] = 2*layerVXD.getSensitiveLength(layer);
+      _layerLadderWidth[layer] = layerVXD.getSensitiveWidth(layer);
+      _layerLadderHalfWidth[layer] = _layerLadderWidth[layer]/2.;
+      _layerActiveSiOffset[layer] = - (layerVXD.getSensitiveOffset(layer));
+      _layerLadderGap[layer] = laddergaps[layer];
+      _layerPhiOffset[layer] = layerVXD.getPhi0(layer);
     }
-  }
+ 
+ 
+ 
+  cout<<" _numberOfLayers "<<_numberOfLayers<<endl;
+  cout<<" _pixelSizeX "<<_pixelSizeX<<endl;
+  cout<<" _pixelSizeY "<<_pixelSizeY<<endl;
+  cout<<" _electronsPerKeV "<<_electronsPerKeV<<endl;
+  cout<<" _segmentDepth "<<_segmentDepth<<endl;
+  cout<<" _currentTotalCharge "<<_currentTotalCharge<<endl;
+  for (int i=0; i<_numberOfLayers; ++i) 
+    {
+      cout<<"layer "<<i<<endl;
+      cout<<" _laddersInLayer "<<_laddersInLayer[i]<<endl;
+      cout<<" _layerRadius "<<_layerRadius[i]<<endl;
+      cout<<" _layerLadderLength "<<_layerLadderLength[i]<<endl;
+      cout<<" _layerLadderHalfWidth "<<_layerLadderHalfWidth[i]<<endl;
+      cout<<" _layerPhiOffset "<<_layerPhiOffset[i]<<endl;
+      cout<<" _layerActiveSiOffset "<< _layerActiveSiOffset[i]<<endl;
+      cout<<" _layerHalfPhi "<<_layerHalfPhi[i]<<endl;
+      cout<<" _layerLadderGap "<<_layerLadderGap[i]<<endl;
+      cout<<" _bkgdHitsInLayer "<<_bkgdHitsInLayer[i]<<endl;
+      cout<<" _layerLadderWidth "<<_layerLadderWidth[i]<<endl;
+      cout<<" _layerThickness "<<_layerThickness[i]<<endl;
+      
+      cout<<" _layerHalfThickness "<<_layerHalfThickness[i]<<endl;
+
+
+    }
+
 
   SCALING = 25000.;
 } 
@@ -303,6 +299,9 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
       THLocCol = new LCCollectionVec(LCIO::TRACKERHIT);
       RelLocCol = new LCCollectionVec(LCIO::LCRELATION);
     }
+
+
+
 
     int nSTH = STHcol->getNumberOfElements();
     // Loop over sim tracker hits;
@@ -333,11 +332,21 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
         SimTrackerHitImplVec simTrkHitVec;
         // Produce fired pixels 
         ProduceHits( simTrkHitVec );
+
+   //      for (int iHit=0; iHit<int(simTrkHitVec.size()); ++iHit) {
+//           SimTrackerHit * hit = simTrkHitVec[iHit];
+//           //cout<<"hit 1"<<iHit <<" "<<hit->getdEdx()<<endl;
+//         }
+        // std::cout << "E
+
+
         // std::cout << "End of ProduceHits( ) " << std::endl;
         // Apply Poisson Smearing to deposited charges
         if (_PoissonSmearing != 0) PoissonSmearer( simTrkHitVec );
         if (_electronicEffects != 0) GainSmearer( simTrkHitVec );
+        //std::cout << "Amplitude 6 = " << _ampl << std::endl;
         TrackerHitImpl * recoHit = ReconstructTrackerHit( simTrkHitVec );
+        //std::cout << "Amplitude 7 = " << _ampl << std::endl;
         // std::cout << "End of ReconstructTrackerHit( ) " << std::endl;
         if (_produceFullPattern == 1 && recoHit !=0 ) {
           SimTrackerHitImpl * sth = new SimTrackerHitImpl();
@@ -369,8 +378,18 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
         }
 
         if ( recoHit != NULL) {
+
+
           recoHit->rawHits().push_back(simTrkHit);
-          recoHit->setType(simTrkHit->getCellID());
+
+
+          float pointResoRPhi=0.004;
+          float pointResoZ=0.004;
+          float covMat[TRKHITNCOVMATRIX]={0.,0.,pointResoRPhi*pointResoRPhi,0.,0.,pointResoZ*pointResoZ};
+          recoHit->setCovMatrix(covMat);      
+
+
+          recoHit->setType(100+simTrkHit->getCellID());
           THcol->addElement( recoHit );
           //          std::cout << "Hit is added to collection " << _nEvt << std::endl;
           LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
@@ -443,6 +462,7 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
    * 
    */
 
+ 
   double xLab[3] = { hit->getPosition()[0],
                      hit->getPosition()[1],
                      hit->getPosition()[2]};
@@ -473,7 +493,8 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
     }
   }
 */
- 
+
+
 // layer is encoded in CellID; 
    layer = hit->getCellID() - 1;
                                           
@@ -503,7 +524,7 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
 //  else {
 //    for (int j=0; j<3; ++j) {
 //      Momentum[j] = hit->getMomentum()[j];
-      //      std::cout << Momentum[j] << std::endl;
+
 //    }
 //  }
 
@@ -526,23 +547,32 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
   if (PhiInLabMom < 0.0) PhiInLabMom += TWOPI;
   double Radius = _layerRadius[layer];
   //  << " Radius = " << Radius << std::endl;
+
   double Phi0 = _layerPhiOffset[layer];
+
   int nLadders = _laddersInLayer[layer];
+
   double dPhi = 2.0*_layerHalfPhi[layer];
   // And now compute local coordinates
   // and local momentum of particle
+
+  double PhiLadder;
+  double PhiInLocal;
+  //cout<<"nLadders "<<nLadders<<" "<<dPhi<<" "<<Phi0<<" "<<endl;
+  
   if (nLadders > 2) { // laddered structure
-    double PhiLadder;
-    double PhiInLocal;
+    //std::cout<<"laddered structure "<<std::endl;
     int iLadder=0;
     for (int ic=0; ic<nLadders; ++ic) {
       PhiLadder = - PI2 + double(ic)*dPhi + Phi0;
       PhiInLocal = PhiInLab - PhiLadder;
-      if (RXY*cos(PhiInLocal)-Radius > -_layerThickness && 
-          RXY*cos(PhiInLocal)-Radius < _layerThickness) {
+      //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
+      if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 
+          RXY*cos(PhiInLocal)-Radius < _layerThickness[layer]) {
         iLadder = ic;
         break;
       }
+      //cout<<"phi ladder "<<PhiLadder<<endl;
     }
     double PhiLocalMom = PhiInLabMom - PhiLadder;
     localPosition[0] = RXY*sin(PhiInLocal);
@@ -552,8 +582,11 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
     localDirection[1]=Momentum[2];
     localDirection[2]=PXY*cos(PhiLocalMom);    
     _currentPhi = PhiLadder;
+    //cout<<"local direction "<<localDirection[0]<<" "<<localDirection[1]<<" "<<localDirection[2]<<endl;
+    //cout<<"phi local mom "<<PhiLocalMom<<" "<<PhiInLabMom<<" "<<PhiLadder<<endl;
   }  
   else { // cyllindrical structure
+    //std::cout<<"cyllindrical structure "<<std::endl;
     localPosition[0]=0.0;
     localPosition[1]=xLab[2];
     localPosition[2]=RXY-Radius;
@@ -564,7 +597,7 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
     _currentPhi = PhiInLab;
   }
 
-
+ 
 }
 
 void VTXDigitizer::TransformToLab(double * xLoc, double * xLab) {
@@ -598,7 +631,7 @@ void VTXDigitizer::TransformToLab(double * xLoc, double * xLab) {
 void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
   /** Produces ionisation points along track segment within active Silicon layer.
    */
-
+  //std::cout << "Amplitude 1 = " << _ampl << std::endl;
   // Position of hit in the Lab frame
   double pos[3];
   double dir[3];
@@ -619,8 +652,8 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
   // y = pos[1] + dir[1]*time
   // z = pos[2] + dir[2]*time  
 
-  entry[2] = -_layerHalfThickness; 
-  exit[2] = _layerHalfThickness;
+  entry[2] = -_layerHalfThickness[_currentLayer]; 
+  exit[2] = _layerHalfThickness[_currentLayer];
 
   for (int i=0; i<2; ++i) {
     entry[i]=pos[i]+dir[i]*(entry[2]-pos[2])/dir[2];
@@ -636,8 +669,9 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
  
   double tanx = dir[0]/dir[2];
   double tany = dir[1]/dir[2];  
-  double trackLength = min(1.0e+3,_layerThickness*sqrt(1.0+tanx*tanx+tany*tany));
-  //  std::cout << "HERE WE ARE " << trackLength << " " << _segmentLength << std::endl;
+  double trackLength = min(1.0e+3,_layerThickness[_currentLayer]*sqrt(1.0+tanx*tanx+tany*tany));
+  //std::cout << "HERE WE ARE " << trackLength << " " << _segmentLength << " "<<_layerThickness[_currentLayer]<<" "<<tanx<<" "<<tany<<std::endl;
+
   double dEmean = 1e-6*_energyLoss * trackLength;  
 //   _ampl = _fluctuate->SampleFluctuations(double(1000.*_currentParticleMomentum),
 //                                               double(1000.*_currentParticleMass),
@@ -647,17 +681,17 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
 
   //  dEmean = hit->getdEdx()/((double)_numberOfSegments);
   _numberOfSegments = int(trackLength/_segmentLength) + 1;
-  //  std::cout << "number of segments = " << _numberOfSegments << std::endl;
+  //std::cout << "number of segments = " << _numberOfSegments << std::endl;
   dEmean = dEmean/((double)_numberOfSegments);
   _ionisationPoints.resize(_numberOfSegments);
 
   _eSum = 0.0;
 
   double segmentLength = trackLength/((double)_numberOfSegments);
-  _segmentDepth = _layerThickness/((double)_numberOfSegments);
+  _segmentDepth = _layerThickness[_currentLayer]/((double)_numberOfSegments);
 
   for (int i=0; i<_numberOfSegments; ++i) {
-    double z = -_layerHalfThickness + ((double)(i)+0.5)*_segmentDepth;
+    double z = -_layerHalfThickness[_currentLayer] + ((double)(i)+0.5)*_segmentDepth;
     double x = pos[0]+dir[0]*(z-pos[2])/dir[2];
     double y = pos[1]+dir[1]*(z-pos[2])/dir[2];
     IonisationPoint ipoint;
@@ -665,7 +699,7 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
                                               double(1000.*_currentParticleMass),
                                               _cutOnDeltaRays,segmentLength,
                                               double(1000.*dEmean))/1000.;
-    //   std::cout << "segment " << i << " dE = " << de << std::endl;
+     //std::cout << "segment " << i << " dE = " << de << std::endl;
     _eSum = _eSum + de;
     ipoint.eloss = de;
     ipoint.x = x;
@@ -674,7 +708,7 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
     _ionisationPoints[i] = ipoint;
   }
 
-  //  std::cout << "Amplitude = " << _ampl << std::endl;
+  //std::cout << "Amplitude = " << _ampl << std::endl;
 
 }
 
@@ -702,11 +736,11 @@ void VTXDigitizer::ProduceSignalPoints() {
     double x = ipoint.x;
     double y = ipoint.y;
     double de = ipoint.eloss;
-    double DistanceToPlane = _layerHalfThickness - z;
+    double DistanceToPlane = _layerHalfThickness[_currentLayer] - z;
     double xOnPlane = x + TanLorentzX*DistanceToPlane;
     double yOnPlane = y + TanLorentzY*DistanceToPlane;
     double DriftLength = DistanceToPlane*sqrt(1.0+TanLorentzX*TanLorentzX+TanLorentzY*TanLorentzY);
-    double SigmaDiff = sqrt(DriftLength/_layerThickness)*_diffusionCoefficient;
+    double SigmaDiff = sqrt(DriftLength/_layerThickness[_currentLayer])*_diffusionCoefficient;
     double SigmaX = SigmaDiff*inverseCosLorentzX;
     double SigmaY = SigmaDiff*inverseCosLorentzY;
     double charge = 1.0e+6*de*_electronsPerKeV;
@@ -734,6 +768,8 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
 
   _currentTotalCharge = 0.0;
 
+  //cout<<"width "<<_widthOfCluster<<" "<<_numberOfSegments<<endl;
+
   for (int i=0; i<_numberOfSegments; ++i) {
     SignalPoint spoint = _signalPoints[i];
     double xCentre = spoint.x;
@@ -745,18 +781,22 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
     double yLo = spoint.y - _widthOfCluster*spoint.sigmaY;
     double yUp = spoint.y + _widthOfCluster*spoint.sigmaY;
     
+    
+
     _currentTotalCharge += spoint.charge;
 
+    //cout<<"spoint "<<xCentre<<" "<<yCentre<<" "<<sigmaX<<" "<<sigmaY<<" "<<xLo<<" "<<xUp<<" "<<yLo<<" "<<yUp<<endl;
+    //    cout<<"charge "<<_currentTotalCharge<<endl;
     int ixLo, ixUp, iyLo, iyUp;
 
     TransformXYToCellID(xLo,yLo,ixLo,iyLo);
     TransformXYToCellID(xUp,yUp,ixUp,iyUp);
 
-    //    std::cout << i << std::endl;
-    //    std::cout << xLo << " " << xUp << std::endl;    
-    //    std::cout << yLo << " " << yUp << std::endl;
-    //    std::cout << ixLo << " " << ixUp << std::endl;
-    //    std::cout << iyLo << " " << iyUp << std::endl;
+     //   std::cout << i << std::endl;
+//        std::cout << xLo << " " << xUp << std::endl;    
+//        std::cout << yLo << " " << yUp << std::endl;
+//        std::cout << ixLo << " " << ixUp << std::endl;
+//        std::cout << iyLo << " " << iyUp << std::endl;
 
     // Loop over all fired pads 
     // and calculate deposited charges
@@ -796,7 +836,7 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
             }
             else {
               SimTrackerHitImpl * hit = new SimTrackerHitImpl();
-              double pos[3] = {xCurrent, yCurrent, _layerHalfThickness};
+              double pos[3] = {xCurrent, yCurrent, _layerHalfThickness[_currentLayer]};
               hit->setPosition( pos );
               hit->setCellID( cellID );
               hit->setdEdx( totCharge );
@@ -848,7 +888,7 @@ void VTXDigitizer::TransformXYToCellID(double x, double y,
     xInLadder = x + _layerLadderHalfWidth[layer] + _layerActiveSiOffset[layer];
   }
   else { // cyllindrical structure
-    xInLadder = x + (_layerRadius[layer]+_layerHalfThickness)*Phi;
+    xInLadder = x + (_layerRadius[layer]+_layerHalfThickness[layer])*Phi;
   }
 
   if (xInLadder < 0.0) {
@@ -892,7 +932,7 @@ void VTXDigitizer::PositionWithinCell(double x, double y,
     xInLadder = x + _layerLadderHalfWidth[layer] + _layerActiveSiOffset[layer];
   }
   else { // cyllindrical structure
-    xInLadder = x + (_layerRadius[layer]+_layerHalfThickness)*Phi;
+    xInLadder = x + (_layerRadius[layer]+_layerHalfThickness[layer])*Phi;
   }
 
   if (xInLadder < 0.0) {
@@ -933,7 +973,7 @@ void VTXDigitizer::TransformCellIDToXY(int ix, int iy,
     x = x - _layerLadderHalfWidth[layer] - _layerActiveSiOffset[layer];
   }  
   else { // cyllindrical structure
-    x = x - (_layerRadius[layer]+_layerHalfThickness)*Phi;
+    x = x - (_layerRadius[layer]+_layerHalfThickness[layer])*Phi;
   }
   
 
@@ -999,8 +1039,11 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
   int ixSeed = 0;
   int iySeed = 0;
   _amplMax = 0.0;
+//cout<<"size "<<simTrkVec.size()<<endl;
+//cout<<"threshold "<<_threshold<<endl;
   for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
     SimTrackerHit * hit = simTrkVec[iHit];
+    //cout<<"hit "<<iHit <<" "<<hit->getdEdx()<<endl;
     if (hit->getdEdx() > _threshold) {
       if (nPixels < 100)
         _amplC[nPixels] = hit->getdEdx();
@@ -1028,6 +1071,7 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     }
   }
 
+  //cout<<"charge "<<charge<<endl;
   if (charge > 0.) {
     for (int j=0; j<2; ++j)
       pos[j] /= charge;
@@ -1038,11 +1082,16 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
   _nCoveredX = ixmax - ixmin + 1;
   _nCoveredY = iymax - iymin + 1;
 
+  //cout<<"ampl "<<_ampl<<endl;
+
   double tanXLorentz = _tanLorentzAngle;
   double tanYLorentz = 0;
 
-  pos[0] = pos[0] - _layerHalfThickness*tanXLorentz;
-  pos[1] = pos[1] - _layerHalfThickness*tanYLorentz;
+  pos[0] = pos[0] - _layerHalfThickness[_currentLayer]*tanXLorentz;
+  pos[1] = pos[1] - _layerHalfThickness[_currentLayer]*tanYLorentz;
+
+  //  cout<<"pos "<<pos[0]<<" "<<pos[1]<<endl;
+
 
   _clusterWidthX = 0.;
   _clusterWidthY = 0.;
@@ -1121,7 +1170,7 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
        }
     }
     _xRecoS = _xRecoS / aTot;
-    _xRecoS = _xRecoS - _layerHalfThickness*tanXLorentz;
+    _xRecoS = _xRecoS - _layerHalfThickness[_currentLayer]*tanXLorentz;
     aTot = 0;
     for (int i=iymin;i<iymax+1;++i) {
       double xx,yy;

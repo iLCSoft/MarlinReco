@@ -1,8 +1,11 @@
 /*
 *  
-* $Id: delsolve.c,v 1.1 2005-11-03 15:16:14 aplin Exp $
+* $Id: delsolve.c,v 1.2 2007-10-19 10:35:18 engels Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2005/11/03 15:16:14  aplin
+* Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
+*
 * Revision 1.1.1.1  2003/05/23 13:17:55  hvogt
 * Brahms V308
 *
@@ -838,7 +841,7 @@ SubTK(struct TK *tk, int Offendingte)
 {  struct TK *subtk;
    int i,j,noffending,offendingte[MAXLINK+2];
 
-   if(subtk=tk->subtk[Offendingte])
+   if((subtk=tk->subtk[Offendingte]))
    {  return subtk;
    }
    else
@@ -863,10 +866,10 @@ SubTK(struct TK *tk, int Offendingte)
       }
       offendingte[noffending]=tk->nte;
 
-      if(subtk=tk->subtk[offendingte[0]])
+      if((subtk=tk->subtk[offendingte[0]]))
       {  return subtk;
       }
-      if(subtk=FindSubTK(tk,offendingte,noffending,TKList,TKListUsed))
+      if((subtk=FindSubTK(tk,offendingte,noffending,TKList,TKListUsed)))
       {  tk->subtk[offendingte[0]]=subtk;
          return subtk;
       }
@@ -1598,8 +1601,9 @@ AddExclorLink(struct TE *te, int addid, int flag)
       {  if(addid==list[k]) break;
       }
       if(k<0)
-      {  if(fxdebug>0)
+      {  if(fxdebug>0){
 	/* printf("Adding %s to %d in %d.\n",name,list,te); */
+         }
          if(*nlist<MAXEXCL)
             list[(*nlist)++]=addid;
          else

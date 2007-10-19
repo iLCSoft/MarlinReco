@@ -372,8 +372,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
                      <  2.2 *  2.2 ){
 
 
-                    SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];
-                    SimTrackerHit* Hit2 = tpcHitMap[row_hits[k]];
+                    //SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];
+                    //SimTrackerHit* Hit2 = tpcHitMap[row_hits[k]];
 
 
                     /*

@@ -556,8 +556,8 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
   // And now compute local coordinates
   // and local momentum of particle
 
-  double PhiLadder;
-  double PhiInLocal;
+  double PhiLadder=0;
+  double PhiInLocal=0;
   //cout<<"nLadders "<<nLadders<<" "<<dPhi<<" "<<Phi0<<" "<<endl;
   
   if (nLadders > 2) { // laddered structure
@@ -580,7 +580,7 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
     localPosition[2] = RXY*cos(PhiInLocal)-Radius;
     localDirection[0]=PXY*sin(PhiLocalMom);
     localDirection[1]=Momentum[2];
-    localDirection[2]=PXY*cos(PhiLocalMom);    
+    localDirection[2]=PXY*cos(PhiLocalMom);
     _currentPhi = PhiLadder;
     //cout<<"local direction "<<localDirection[0]<<" "<<localDirection[1]<<" "<<localDirection[2]<<endl;
     //cout<<"phi local mom "<<PhiLocalMom<<" "<<PhiInLabMom<<" "<<PhiLadder<<endl;
@@ -820,7 +820,7 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
             float totCharge = float(spoint.charge)*integralX*integralY;
             int iexist = 0;
             int cellID = 100000*ix + iy;
-            SimTrackerHitImpl * existingHit;
+            SimTrackerHitImpl * existingHit = 0;
             for (int iHits=0; iHits<int(vectorOfHits.size()); ++iHits) {
               existingHit = vectorOfHits[iHits];
               int cellid = existingHit->getCellID();

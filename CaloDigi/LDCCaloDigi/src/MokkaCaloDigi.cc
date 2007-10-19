@@ -460,7 +460,7 @@ MyHit * MokkaCaloDigi::ProcessHitInBarrel( SimCalorimeterHit * hit ) {
   int Module=(cellid & MASK_M) >> SHIFT_M; // reed module number on it depends further calculation
   int Stave=(cellid & MASK_S) >> SHIFT_S; // stave	
   int Layer=(cellid & MASK_K) >> SHIFT_K; // layer      
-  int J=(cellid & MASK_J) >> SHIFT_J; // J 
+  //int J=(cellid & MASK_J) >> SHIFT_J; // J 
   int I=(cellid & MASK_I) >> SHIFT_I; // I
 
   float zBegin = 0.;
@@ -545,13 +545,13 @@ MyHit * MokkaCaloDigi::ProcessHitInBarrel( SimCalorimeterHit * hit ) {
       newPos[1] = Radius*sin(Phi);
     }
     newHit->setPosition( newPos );
-    float dist = sqrt((pos[0]-newPos[0])*(pos[0]-newPos[0])+
-		      (pos[1]-newPos[1])*(pos[1]-newPos[1])+
-		      (pos[2]-newPos[2])*(pos[2]-newPos[2]));
     newMyHit = new MyHit();
     newMyHit->hit = newHit;
     newMyHit->simHits.push_back( hit );
 
+//    float dist = sqrt((pos[0]-newPos[0])*(pos[0]-newPos[0])+
+//		      (pos[1]-newPos[1])*(pos[1]-newPos[1])+
+//		      (pos[2]-newPos[2])*(pos[2]-newPos[2]));
 //     if (dist > 0.01) {
 //       std::cout << "Layer width = " << _barrelLateralWidth[Layer] << std::endl;
 //       std::cout << I << " " << Inew << std::endl;

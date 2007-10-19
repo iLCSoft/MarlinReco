@@ -607,9 +607,9 @@ void TrackwiseClustering::calculateProperties(ClusterExtended * Cl) {
        xx[0] = xhit[nn];
        xx[1] = yhit[nn];
        xx[2] = zhit[nn];
-       float dd[3];
-       float time = helix.getDistanceToPoint(xx,dd);
-       float dist1 = dd[2];
+       //float dd[3];
+       //float time = helix.getDistanceToPoint(xx,dd);
+       //float dist1 = dd[2];
     }
 
     delete shapes;
@@ -961,7 +961,7 @@ void TrackwiseClustering::mergeForward() {
     int nHits = (int)hitvec.size();
     int iforw(0);
     int iback(0);
-    CaloHitExtended * calohitAttachTo ;
+    CaloHitExtended * calohitAttachTo = 0;
     if (nHits > _nhit_minimal && nHits < _nhit_merge_forward) {
       //      std::cout << "attempt to merge forward" << std::endl;
       //      for (int i=1; i<nHits; ++i) {
@@ -1099,7 +1099,7 @@ void TrackwiseClustering::mergeLowMultiplicity() {
       CaloHitExtended * last = hitvec[nHits - 1];
       int index = last->getIndex() + 1;
       float yres_min = 1.0e+20;
-      CaloHitExtended * hitToAttach;
+      CaloHitExtended * hitToAttach = 0;
       if (first->getCaloHitFrom() != NULL) {
 	yres_min = first->getYresFrom();
 	hitToAttach = first->getCaloHitFrom();
@@ -1183,7 +1183,7 @@ void TrackwiseClustering::MergeTrackSegments() {
       int iforw = 0;
       float xEnd[3];
       float xBeg[3];
-      ClusterExtended * ClusterAttach; 
+      ClusterExtended * ClusterAttach = 0; 
       for (int j=0; j<3; ++j) {
 	xBeg[j] = Cluster->getLowEdge()[j];
 	xEnd[j] = Cluster->getUpEdge()[j];

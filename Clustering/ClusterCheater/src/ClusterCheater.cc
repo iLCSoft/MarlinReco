@@ -87,13 +87,13 @@ void ClusterCheater::processEvent( LCEvent * evt ) {
  
 
   float totalUnrecoverableOverlapEcal1max=0.0;
-  float totalUnrecoverableOverlapEcal2max=0.0;
-  float totalUnrecoverableOverlapHcalmax=0.0;
+  //float totalUnrecoverableOverlapEcal2max=0.0;
+  //float totalUnrecoverableOverlapHcalmax=0.0;
   float totalUnrecoverableOverlapEcal1min=0.0;
-  float totalUnrecoverableOverlapEcal2min=0.0;
-  float totalUnrecoverableOverlapHcalmin=0.0;
+  //float totalUnrecoverableOverlapEcal2min=0.0;
+  //float totalUnrecoverableOverlapHcalmin=0.0;
   float noPointerEcal=0.0;
-  float noPointerHcal=0.0;
+  //float noPointerHcal=0.0;
 
  typedef std::map <MCParticle*,ClusterImpl*> mapMCP2Clust;
     
@@ -123,9 +123,9 @@ void ClusterCheater::processEvent( LCEvent * evt ) {
           
            SimCalorimeterHit * simhit=dynamic_cast<SimCalorimeterHit*>( objectVec[0]);
 	   unsigned int ncontrib=simhit->getNMCContributions();
-	   int cellid=calhit->getCellID0();
-           int layer=(cellid & MASK_K) >> SHIFT_K;  
-	   int module=(cellid & MASK_M) >> SHIFT_M;  
+	   //int cellid=calhit->getCellID0();
+       //int layer=(cellid & MASK_K) >> SHIFT_K;  
+	   //int module=(cellid & MASK_M) >> SHIFT_M;  
 	   if ( ncontrib>1)
 	     {   // so there is an overlap  
 	       float maxmix=0.0;
@@ -237,8 +237,8 @@ void ClusterCheater::processEvent( LCEvent * evt ) {
       int nhcl = (int)calohitvec.size();
     
 	float totene = 0.0;
-	float totecal = 0.0;
-	float tothcal = 0.0;
+	//float totecal = 0.0;
+	//float tothcal = 0.0;
 	for (int i=0; i< nhcl; ++i) 
 	  {
 	  CalorimeterHit * calhit = calohitvec[i];

@@ -106,15 +106,15 @@ void ClusterCheater5_3::processRunHeader( LCRunHeader* run) {
 
 void ClusterCheater5_3::processEvent( LCEvent * evt ) { 
  
-  float cut =50.0;
-  float totalUnrecoverableOverlapEcal1max=0.0;
-  float totalUnrecoverableOverlapEcal2max=0.0;
-  float totalUnrecoverableOverlapHcalmax=0.0;
-  float totalUnrecoverableOverlapEcal1min=0.0;
-  float totalUnrecoverableOverlapEcal2min=0.0;
-  float totalUnrecoverableOverlapHcalmin=0.0;
+  //float cut =50.0;
+  //float totalUnrecoverableOverlapEcal1max=0.0;
+  //float totalUnrecoverableOverlapEcal2max=0.0;
+  //float totalUnrecoverableOverlapHcalmax=0.0;
+  //float totalUnrecoverableOverlapEcal1min=0.0;
+  //float totalUnrecoverableOverlapEcal2min=0.0;
+  //float totalUnrecoverableOverlapHcalmin=0.0;
   float noPointerEcal=0.0;
-  float noPointerHcal=0.0;
+  //float noPointerHcal=0.0;
  
  typedef std::map <MCParticle*,ClusterImpl*> mapMCP2Clust;
      
@@ -144,7 +144,7 @@ void ClusterCheater5_3::processEvent( LCEvent * evt ) {
           
 	     vector<MCParticle*> vpar;
              vector<float>contrib;
-	     SimCalorimeterHit * simhit;
+	     SimCalorimeterHit * simhit=0;
 	     unsigned int ncontrib;
 	     vector<MCParticle*>::iterator testp;
 	     for( unsigned int k=0;k<objectVec.size();++k)
@@ -298,7 +298,7 @@ bool to_be_saved(const MCParticle * parm , const float cut,const CalorimeterHit 
 
  vector<MCParticle*> particlesToRec ;
  
- for( int pp=0;pp<parm->getDaughters().size();++pp)
+ for( unsigned int pp=0;pp<parm->getDaughters().size();++pp)
     {
         MCParticle * par =parm->getDaughters()[pp];
 	

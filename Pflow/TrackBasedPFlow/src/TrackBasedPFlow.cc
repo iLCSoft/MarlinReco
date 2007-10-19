@@ -617,7 +617,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  // debug
 	  
 	  const double* p = MarlinUtil::getMomentum(track,_bField);
-	  double cosTh = p[2]/absP;
+	  //double cosTh = p[2]/absP;
 	  double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
 
 
@@ -4057,10 +4057,10 @@ void TrackBasedPFlow::assignClusterAttributesByTrajectory(const TrackerHitVec ou
     double smallestDistanceToStartPoint = DBL_MAX;
     double largestDistanceToStartPoint = (-1.0)*DBL_MAX;
     
-    CalorimeterHit* closeByHitPathLength;
-    CalorimeterHit* farAwayHitPathLength;
-    CalorimeterHit* closeByHitDistanceToStartPoint;
-    CalorimeterHit* farAwayHitDistanceToStartPoint;   
+    CalorimeterHit* closeByHitPathLength = 0;
+    CalorimeterHit* farAwayHitPathLength = 0;
+    CalorimeterHit* closeByHitDistanceToStartPoint = 0;
+    CalorimeterHit* farAwayHitDistanceToStartPoint = 0;   
 
 
     for(CalorimeterHitVec::const_iterator j = ((*i)->getClusterImpl()->getCalorimeterHits().begin()); j != ((*i)->getClusterImpl()->getCalorimeterHits().end()); ++j ) {

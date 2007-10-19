@@ -328,9 +328,9 @@ void  Wolf::defineIntersection( TrackExtended * track) {
   tanlambda = track->getTrack()->getTanLambda();
   helix->Initialize_Canonical(phi0, d0, z0, omega, tanlambda, _bField);  
 
-  float pX = helix->getMomentum()[0];
-  float pY = helix->getMomentum()[1];
-  float pZ = helix->getMomentum()[2];
+  //float pX = helix->getMomentum()[0];
+  //float pY = helix->getMomentum()[1];
+  //float pZ = helix->getMomentum()[2];
 
 
   if (_trackFitter == 0) {

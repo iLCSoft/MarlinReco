@@ -1542,8 +1542,8 @@ int VertexTracking::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
       if (iS == 0) 
 	ZL = - ZL;
       helix.getPointInZ(ZL,ref,point);
-      float Phi = atan2(point[1],point[0]);
-      int iPhi = int(Phi/_dPhiFTD);
+      //float Phi = atan2(point[1],point[0]);
+      //int iPhi = int(Phi/_dPhiFTD);
       float distMin = 1e+6;
       TrackerHitExtended * attachedHit = NULL;
       for (int ip=0;ip<=_nPhiFTD;++ip) {
@@ -1636,7 +1636,9 @@ int VertexTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtended
   
   //  std::cout << "Chi2RPhi = " << chi2RPhi << "   Chi2Z = " << chi2Z << std::endl; 
 
-  float chi2;
+  
+  float chi2; //je: this variable should be initialized! to zero?!
+  
   if (NPT == 3) {
     chi2 = chi2RPhi/_chi2WRPhiTriplet+chi2Z/_chi2WZTriplet;
   }

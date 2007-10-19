@@ -35,6 +35,9 @@ SET( MarlinReco_PKGS
 FOREACH( pkg ${MarlinReco_PKGS} )
     MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
     INCLUDE_DIRECTORIES( "../${pkg}/include" )
+    INSTALL( DIRECTORY "../${pkg}/include" DESTINATION .
+        PATTERN "*~" EXCLUDE
+        PATTERN "*CVS*" EXCLUDE )
 ENDFOREACH()
 
 
@@ -69,10 +72,6 @@ SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_cxx_srcs} PROPERTIES
 
 # fortran sources
 FILE( GLOB SatoruJetFinder_f77_srcs ../Analysis/SatoruJetFinder/src/fortsrc/*.f )
-
-# fortran flags
-SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_f77_srcs} PROPERTIES
-    COMPILE_FLAGS "-ff2c" )
 
 SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs} )
 
@@ -242,14 +241,10 @@ AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src/C BrahmsTracking_c_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_c_srcs} PROPERTIES
     # require proper c
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-    #COMPILE_FLAGS "-Wno-globals" )
+    COMPILE_FLAGS "-ansi -pedantic" )
 
 # fortran sources
 FILE( GLOB BrahmsTracking_f77_srcs ../Tracking/BrahmsTracking/src/f77/*.F )
-
-SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_f77_srcs} PROPERTIES
-    COMPILE_FLAGS "-ff2c" )
 
 SET( BrahmsTracking_srcs ${BrahmsTracking_cxx_srcs} ${BrahmsTracking_c_srcs} ${BrahmsTracking_f77_srcs} )
 
@@ -272,8 +267,8 @@ SET( FullLDCTracking_srcs ${FullLDCTracking_cxx_srcs} )
 AUX_SOURCE_DIRECTORY( ../Tracking/SiliconTracking/src SiliconTracking_cxx_srcs )
 
 SET_SOURCE_FILES_PROPERTIES( ${SiliconTracking_cxx_srcs} PROPERTIES
-    # FIXME require proper c++
-    #COMPILE_FLAGS "-Wall -ansi -pedantic" )
+    # require proper c++
+    # FIXME -pedantic
     COMPILE_FLAGS "-Wall -ansi" )
 
 SET( SiliconTracking_srcs ${SiliconTracking_cxx_srcs} )

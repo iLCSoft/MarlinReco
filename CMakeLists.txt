@@ -14,13 +14,22 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 ########################################################
 
 
+# set fortran compiler
+SET( CMAKE_Fortran_COMPILER_INIT g77 )
+SET( CMAKE_Fortran_FLAGS "-Wno-globals -ff2c" CACHE STRING
+    "Flags for Fortran compiler." )
+SET( CMAKE_Fortran_FLAGS_DEBUG "-g" CACHE STRING
+    "Flags used by the compiler during debug builds." )
+SET( CMAKE_Fortran_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING
+    "Flags used by the compiler during release minsize builds." )
+SET( CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING
+    "Flags used by the compiler during Release with Debug Info builds." )
+SET( CMAKE_Fortran_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING
+    "Flags used by the compiler during release builds (/MD /Ob1 /Oi /Ot /Oy /Gs will produce slightly less optimized but smaller files" )
 
 ####################################################################################################
 # User section: modify as needed
 ####################################################################################################
-
-# use g77 fortran compiler
-SET( CMAKE_Fortran_COMPILER_INIT g77 )
 
 # project name
 PROJECT( MarlinReco C CXX Fortran )

@@ -2010,27 +2010,28 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 	TrackExtended * trackToAttach = NULL;
 	for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
 	    TrackExtended * foundTrack = _trkImplVec[iT];
-	    GroupTracks * group = foundTrack->getGroupTracks();
-	    TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
-	    int nTrkGrp = int(tracksInGroup.size());
-	    for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
+	    float tanLambdaFound = foundTrack->getTanLambda();
+	    float product = tanLambdaFound*pos[2];
+	    if (product>0) {
+	      GroupTracks * group = foundTrack->getGroupTracks();
+	      TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
+	      int nTrkGrp = int(tracksInGroup.size());
+	      for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
 		TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
 		float tanLambda = trkGrp->getTanLambda();
-		float product = tanLambda*pos[2];
-		if (product>0) {
-		    float omega = trkGrp->getOmega();
-		    float d0 = trkGrp->getD0();
-		    float z0 = trkGrp->getZ0();
-		    float phi0 = trkGrp->getPhi();
-		    float dist[3];
-		    HelixClass helix;
-		    helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
-		    helix.getDistanceToPoint(pos,dist);
-		    if (dist[2]<minDist) {
-			minDist = dist[2];
-			trackToAttach = foundTrack;
-		    }
+		float omega = trkGrp->getOmega();
+		float d0 = trkGrp->getD0();
+		float z0 = trkGrp->getZ0();
+		float phi0 = trkGrp->getPhi();
+		float dist[3];
+		HelixClass helix;
+		helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
+		helix.getDistanceToPoint(pos,dist);
+		if (dist[2]<minDist) {
+		  minDist = dist[2];
+		  trackToAttach = foundTrack;
 		}
+	      }
 	    }
 	}
 	if (trackToAttach!=NULL && minDist<dcut) {

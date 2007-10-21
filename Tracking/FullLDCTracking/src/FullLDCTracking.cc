@@ -1831,7 +1831,7 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 
   bool isCloseInIP = (fabs(d0First-d0Second)<d0Cut);
   if (iopt>0) 
-    isCloseInIP || (fabs(d0First+d0Second)<d0Cut);
+    isCloseInIP = isCloseInIP || (fabs(d0First+d0Second)<d0Cut);
   isCloseInIP = isCloseInIP && (fabs(z0Second-z0First)<z0Cut);
 
   if ( isCloseInIP ) {

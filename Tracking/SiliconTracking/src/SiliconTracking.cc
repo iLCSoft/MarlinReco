@@ -9,6 +9,7 @@
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCRelationImpl.h>
+#include <IMPL/LCFlagImpl.h>
 #include <iostream>
 #include <math.h>
 #include <gsl/gsl_vector.h>
@@ -581,6 +582,11 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     }
 
     LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
+    // if we want to point back to the hits we need to set the flag
+    LCFlagImpl trkFlag(0) ;
+    trkFlag.setBit( LCIO::TRBIT_HITS ) ;
+    trkCol->setFlag( trkFlag.getFlag()  ) ;
+    
     LCCollectionVec * relCol = NULL;
     if (_createMap)
       relCol = new LCCollectionVec(LCIO::LCRELATION);

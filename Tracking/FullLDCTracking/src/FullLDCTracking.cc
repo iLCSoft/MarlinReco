@@ -9,6 +9,7 @@
 #include <IMPL/TrackImpl.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCRelationImpl.h>
+#include <IMPL/LCFlagImpl.h>
 #include <iostream>
 #include <math.h>
 #include <map>
@@ -424,6 +425,10 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
 				       std::string TrkColName, std::string RelColName) {
   
   LCCollectionVec * colTRK = new LCCollectionVec(LCIO::TRACK);
+  // if we want to point back to the hits we need to set the flag
+  LCFlagImpl trkFlag(0) ;
+  trkFlag.setBit( LCIO::TRBIT_HITS ) ;
+  colTRK->setFlag( trkFlag.getFlag()  ) ;  
 
   if (_debug >= 2)
     std::cout << "Collection " << TrkColName

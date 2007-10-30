@@ -7,6 +7,7 @@
 SET( MarlinReco_PKGS
     "Analysis/EventShapes"
     "Analysis/SatoruJetFinder"
+    "Analysis/MarlinKinfit"
     "Calibration/AbsCalibration"
     "CaloDigi/LDCCaloDigi"
     "Clustering/ClusterCheater" 
@@ -58,6 +59,18 @@ SET_SOURCE_FILES_PROPERTIES( ${EventShapes_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( EventShapes_srcs ${EventShapes_cxx_srcs} )
+
+####################################################################################################
+# MarlinKinFit
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Analysis/MarlinKinfit/src MarlinKinfit_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${MarlinKinfit_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( MarlinKinfit_srcs ${MarlinKinfit_cxx_srcs} )
 
 
 ####################################################################################################

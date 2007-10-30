@@ -79,7 +79,7 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
         VERBATIM )
 
     # add doc target
-    ADD_CUSTOM_TARGET( doc DEPENDS
+    ADD_CUSTOM_TARGET( manual DEPENDS
         "${PROJECT_SOURCE_DIR}/doc/manual_html" )
 ELSE()
     MESSAGE( STATUS "Latex not found in your system!!" )
@@ -92,13 +92,51 @@ ENDIF()
 # install documentation
 IF( INSTALL_DOC )
     # make sure doxygen is executed (make doc) before make install
-    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS doc)" )
+    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS manual)" )
     # install documentation
     INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
             DESTINATION .
             PATTERN "*CVS*" EXCLUDE )
 ENDIF()
 
+
+# DOCUMENTATION
+FIND_PACKAGE( Doxygen )
+IF( DOXYGEN_FOUND )
+                                                                                                                                                            
+    ADD_CUSTOM_COMMAND(
+        OUTPUT  "${PROJECT_SOURCE_DIR}/doc/html"
+#        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+#            "${PROJECT_SOURCE_DIR}/README" "${PROJECT_SOURCE_DIR}/doc/README"
+        COMMAND "${DOXYGEN_EXECUTABLE}" ARGS "Doxyfile"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
+        COMMENT "Building API Documentation..."
+        VERBATIM )
+                                                                                                                                                            
+    # add doc target
+    ADD_CUSTOM_TARGET( apidoc DEPENDS
+        "${PROJECT_SOURCE_DIR}/doc/html" )
+ELSE()
+    MESSAGE( STATUS "Doxygen not found in your system!!" )
+    IF( INSTALL_DOC )
+        MESSAGE( STATUS "INSTALL_DOC forced to OFF" )
+        SET( INSTALL_DOC OFF )
+    ENDIF()
+ENDIF()
+    
+
+# install documentation
+IF( INSTALL_DOC )
+
+    # make sure doxygen is executed (make doc) before make install
+    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS apidoc)" )
+    # install documentation
+    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
+            DESTINATION .
+            PATTERN "*CVS*" EXCLUDE )
+ENDIF()
+
+ADD_CUSTOM_TARGET( doc DEPENDS  "${PROJECT_SOURCE_DIR}/doc/manual_html" "${PROJECT_SOURCE_DIR}/doc/html" )
 
 ##########################################################################################
 # End of User section: please try not to modify below this line

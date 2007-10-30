@@ -1,0 +1,21 @@
+MarlinKinfit
+------------
+
+Kinematic fitting library for Marlin.
+
+Currently one example is available: WW5CFit. This processor performs a 
+5C fit (px, py, pz, E and equal mass constraints) on 4 jet events, as
+one would do for WW or ZZ events.
+The center of mass energy and the name of the input jet collection are 
+steerable.
+
+The provided example steering assumes that you have an LCIO file which 
+already contains a collection of 4 jets per event. If you don't have 
+such a file, you have to call digitization, particle flow and jet finder
+before calling WW5CFit. 
+
+Further information about the fit engine and the user interface provided 
+in MarlinKinfit can be found at 
+https://www.desy.de/~blist/kinfit/doc/html/
+
+19.10.2007 Jenny List

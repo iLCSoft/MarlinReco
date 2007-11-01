@@ -63,6 +63,9 @@ ENDIF()
 
 ### DOCUMENTATION ############################################################
 
+ADD_CUSTOM_TARGET( doc )
+
+# MANUAL
 FIND_PACKAGE( LATEX )
 IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
     AND DVIPS_CONVERTER AND LATEX2HTML_CONVERTER )
@@ -81,6 +84,8 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
     # add doc target
     ADD_CUSTOM_TARGET( manual DEPENDS
         "${PROJECT_SOURCE_DIR}/doc/manual_html" )
+    # tell doc target to call manual
+    ADD_DEPENDENCIES( doc manual )
 ELSE()
     MESSAGE( STATUS "Latex not found in your system!!" )
     IF( INSTALL_DOC )
@@ -89,18 +94,8 @@ ELSE()
     ENDIF()
 ENDIF()
 
-# install documentation
-IF( INSTALL_DOC )
-    # make sure doxygen is executed (make doc) before make install
-    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS manual)" )
-    # install documentation
-    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
-            DESTINATION .
-            PATTERN "*CVS*" EXCLUDE )
-ENDIF()
 
-
-# DOCUMENTATION
+# APIDOC
 FIND_PACKAGE( Doxygen )
 IF( DOXYGEN_FOUND )
                                                                                                                                                             
@@ -116,6 +111,8 @@ IF( DOXYGEN_FOUND )
     # add doc target
     ADD_CUSTOM_TARGET( apidoc DEPENDS
         "${PROJECT_SOURCE_DIR}/doc/html" )
+    # tell doc target to call apidoc
+    ADD_DEPENDENCIES( doc apidoc )
 ELSE()
     MESSAGE( STATUS "Doxygen not found in your system!!" )
     IF( INSTALL_DOC )
@@ -129,14 +126,13 @@ ENDIF()
 IF( INSTALL_DOC )
 
     # make sure doxygen is executed (make doc) before make install
-    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS apidoc)" )
+    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS doc)" )
     # install documentation
     INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
             DESTINATION .
             PATTERN "*CVS*" EXCLUDE )
 ENDIF()
 
-ADD_CUSTOM_TARGET( doc DEPENDS  "${PROJECT_SOURCE_DIR}/doc/manual_html" "${PROJECT_SOURCE_DIR}/doc/html" )
 
 ##########################################################################################
 # End of User section: please try not to modify below this line

@@ -617,7 +617,7 @@ void TrackBasedPFlow::processEvent( LCEvent * evt )
 	  // debug
 	  
 	  const double* p = MarlinUtil::getMomentum(track,_bField);
-	  //double cosTh = p[2]/absP;
+	  double cosTh = p[2]/absP;
 	  double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
 
 

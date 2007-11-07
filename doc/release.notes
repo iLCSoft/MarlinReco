@@ -5,6 +5,50 @@
 ================================
 
  --------
+| v00-05 |
+ --------
+       - new package MarlinKinFit (J.List)
+	 * Analysis/MarlinKinfit
+         * kinematic fits with constraints
+         * see doxygen documentation       
+
+       - improved TrackBasedPFlow (O.Wendt)
+	 * example steering file for the
+	   Track-Based Particle Flow processor
+	 * bug fixes and improved performance
+         * LEPTracking: use TrackerHit::getCovMatrix for resolution
+
+       - make consistent use of GEAR (K.Harder, C.Lynch) 
+         * TrackDigi/VTXDigi: introduce gear
+         * use global GEAR B field setting instead of TPC parameters setting in:
+           Analysis/CheckPlots, Pflow/TrackBasedPFlow, Pflow/Wolf, Tracking/BrahmsTracking
+         * updated example gear files (Bfield)
+	 * Tracking/SiliconTracking: adjustments for new
+	   GEAR file format as of Mokka v06-04-p02
+
+       - improved FullLDCTracking (A.Raspereza)
+         * some bugs fixed, e.g. wrong reference point
+         * detailed users manual: doc/FullLDCTracking_Manual.pdf
+         * consistent use of gear::BField 
+       	 * TrackDigi/TPCDigi: Modified class for digitization of the
+	   TPC hits. Spatial resolutions as well as parameters tpcPixRP and
+	   tpcPixZ, representing the physical pad width and time binning
+	   respectively, are passed to the processor as external parameters
+	   (implemented by Clare Lynch)
+         * example steering file
+         * introduced various fit options
+         * improved performance
+  
+       - improved code and cmake build files (J.Engels)
+         * removed unused variables (compiler warnings)
+         * install target for header files
+         * fortran compiler flags and libg2c
+            
+       - improved documentation (F.Gaede)
+	 * automatic generation of API doc (doxygen)
+
+
+ --------
 | v00-04 |
  --------
    - cmake is now default build tool:  (J.Engels)

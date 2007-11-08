@@ -174,20 +174,23 @@ using namespace marlin ;
  * @param Z0CutToMergeTPCSegments cut on the difference in the track parameter
  * z0 [mm] to allow for merging TPC segments <br>
  * (default parameter value : 5000) <br> 
- * @param DeltaPCutMergeTPCSegments cut on the magnitude [GeV/c] of the vectorial difference
- * of the momentum vectors, associated with TPC segments, to allow for merging 
- * of these segments. <br>
+ * @param DeltaPCutToMergeTPCSegments cut on the magnitude [GeV/c] of the vectorial difference
+ * of the momentum vectors, associated with TPC segments, for the TPC segment's merging procedure <br>
  * (default parameter value : 0.1) <br>
+ * @param PtCutToMergeTPCSegments lower cutoff on Pt of the TPC segments of the looping track for
+ * the merging procedure.
+ * If transverse momentum of the segments is less than cutoff the segments are allowed to be merged. <br>
+ * (default parameter value : 1.2) <br> 
  * @param AssignTPCHits If this flag is set to 1, the code attempts to assign left-over 
  * TPC hits to the accepted track candidates. No track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
  * @param TPCHitToTrackDistance Cut on the distance between left-over TPC hit and the track helix
  * to allow for assignment of the hit with a given track <br>
- * (default parameter value : 25.0) <br>
+ * (default parameter value : 15.0) <br>
  * @param CutOnTPCHits minimal number of TPC hits, used in the track fit, which is 
  * required for tracks which have no hits from the Si detectors <br>
- * (default parameter value : 20) <br> 
+ * (default parameter value : 35) <br> 
  * @param CutOnTrackD0 cut on the d0 parameter of the track. If the d0 parameter is greater that 
  * this cut, track is rejected <br>
  * (default parameter value : 500) <br>
@@ -318,6 +321,7 @@ class FullLDCTracking : public Processor {
 
   int _mergeTPCSegments;
   float _dPCutToMergeTPC;
+  float _PtCutToMergeTPC;
   float _d0CutToMergeTPC;
   float _z0CutToMergeTPC;
 

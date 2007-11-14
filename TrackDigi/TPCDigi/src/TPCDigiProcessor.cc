@@ -171,22 +171,30 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
       
-      double *pos;
       float de_dx;
       EVENT::MCParticle *mcp;
       
-      pos = (double*) SimTHit->getPosition(); 
+//       double *pos;
+//       pos = (double*) SimTHit->getPosition();  
+      double pos[3] ; // fg: create a copy of the position in order to not modify the sim hit
+      pos[0] = SimTHit->getPosition()[0] ;
+      pos[1] = SimTHit->getPosition()[1] ; 
+      pos[2] = SimTHit->getPosition()[2] ;
+
       de_dx = SimTHit->getdEdx();
 
       mcp = SimTHit->getMCParticle() ;
 
-      //      cout << "x position for this hit is " << pos[0] << endl; 
-      //      cout << "y position for this hit is " << pos[1] << endl; 
-      //      cout << "z position for this hit is " << pos[2] << endl; 
-      //      cout << "de/dx for this hit is " << de_dx << endl; 
-      //      cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
-      //      cout << "x =  " << x << endl; 
+//       cout << "x position for this hit is " << pos[0] << " - " << SimTHit->getPosition()[0] << endl; 
+//       cout << "y position for this hit is " << pos[1] << " - " << SimTHit->getPosition()[1] << endl; 
+//       cout << "z position for this hit is " << pos[2] << " - " << SimTHit->getPosition()[2] << endl; 
 
+
+
+//       cout << "de/dx for this hit is " << de_dx << endl; 
+//       cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
+      //      cout << "x =  " << x << endl; 
+      
       //  SMEARING
 
        

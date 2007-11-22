@@ -32,7 +32,7 @@ using namespace marlin ;
  * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: MaterialDB.h,v 1.3 2007-09-05 10:21:05 rasp Exp $ 
+ * @version $Id: MaterialDB.h,v 1.4 2007-11-22 09:24:23 rasp Exp $ 
  */
 
 class MaterialDB : public Processor {
@@ -75,15 +75,19 @@ class MaterialDB : public Processor {
   int _nRun ;
   int _nEvt ;
 
-  std::vector<float> _ladder_dim_z;
-  std::vector<float> _layerRadius;
-  std::vector<float> _ladderGaps;
   std::vector<float> _zFTD;
-  std::vector<float> _stripLine_final_z;
   std::vector<float> _rInFTD;
   std::vector<float> _rOutFTD;
   std::vector<float> _rSIT;
   std::vector<float> _halfZSIT;
+
+  float _ladder_phi0, _ladder_distance, _ladder_thickness, _ladder_width, _ladder_length;
+  float _ladder_offset, _ladder_radLength;
+  float _sensitive_distance, _sensitive_thickness, _sensitive_width, _sensitive_length;
+  float _sensitive_offset, _sensitive_radLength;
+
+  float _stripLine_final_z;
+  float _halfLadderGaps;
 
   float _support_thickness, _si_thickness;
   float _radlen_ber, _radlen_si, _radlen_si872,_radlen_kapton;
@@ -107,12 +111,12 @@ class MaterialDB : public Processor {
   float _FTD_copper_thickness;
   float _FTD_kaptonCyl_thickness;
   
-  float _VTXShell_Radius,_VTXShell_thickness,_VTXShell_HalfZ;
+  float _VTXShell_Radius,_VTXShell_thickness,_VTXShell_HalfZ,_VTXShell_radLength;
   float _VTXEndPlate_innerRadius;
 
   float _bField;
 
-  float _beamPipeRadius,_beamPipeHalfZ,_beamPipe_thickness;
+  float _beamPipeRadius,_beamPipeHalfZ,_beamPipe_thickness,_beamPipe_radLength,_beamPipe_dedx;
   float _SITLayer_thickness;
 
   int _useExtrapolations;

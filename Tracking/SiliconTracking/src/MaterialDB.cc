@@ -59,6 +59,20 @@ extern "C" {
 
 extern "C" {
   extern struct {
+    int nplmat;          //total number of ladders
+    float xplmat[200];   //X coordinate of the center of the ladder
+    float yplmat[200];   //Y coordinate of the center of the ladder
+    float zplmat[200];   //Z coordinate of the center of the ladder
+    float widplmat[200]; //width of the ladder
+    float lenplmat[200]; //length of the ladder (ladder parallel to z axis)
+    float phiplmat[200]; //angle between normal vector of ladder and x axis
+    float xrlpl[200];    //radiation length
+    float xelospl[200];  //energy loss
+  } fkddes2_; 
+}
+
+extern "C" {
+  extern struct {
     int nexs;
     float rzsurf[50];
     float zrmin[50];
@@ -426,31 +440,34 @@ void MaterialDB::init() {
   int Npmat=0;
   int Nconmat=0;
   int Nexs=0;
+  int Nplmat=0;
 
   // **************************************** //
   // ** Building Database for VTX Detector ** //
   // **************************************** //
 
+  //--Get GEAR Parameters--
   const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
   const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDetMain.getVXDLayerLayout();
   const gear::GearParameters& pVXDDet = Global::GEAR->getGearParameters("VXDInfra");
   const gear::GearParameters& pBeamPipe = Global::GEAR->getGearParameters("BeamPipe");
 
 
+  //--Berillium beam-pipe--
   _beamPipeRadius = float(pBeamPipe.getDoubleVal("BeamPipeRadius"));
   _beamPipeHalfZ  = float(pBeamPipe.getDoubleVal("BeamPipeHalfZ"));
   _beamPipe_thickness = float(pBeamPipe.getDoubleVal("BeamPipeThickness"));
-  _radlen_ber = 0.1*float(pBeamPipe.getDoubleVal("BeamPipeProperties_RadLen"));
-  _dedx_ber = 10.0*float(pBeamPipe.getDoubleVal("BeamPipeProperties_dEdx"));
+  _beamPipe_radLength = 0.1*float(pBeamPipe.getDoubleVal("BeamPipeProperties_RadLen"));
+  _beamPipe_dedx = 10.0*float(pBeamPipe.getDoubleVal("BeamPipeProperties_dEdx"));
 
-  // Berillium beam-pipe
-  
   fkddes_.rcmat[Ncmat] = 0.1*_beamPipeRadius;
   fkddes_.zcmin[Ncmat] = -0.1*_beamPipeHalfZ;
   fkddes_.zcmax[Ncmat] = 0.1*_beamPipeHalfZ;
-  fkddes_.xrlc[Ncmat] = 0.1*_beamPipe_thickness/_radlen_ber;
-  fkddes_.xelosc[Ncmat] = 0.1*_beamPipe_thickness*_dedx_ber;
+  fkddes_.xrlc[Ncmat] = 0.1*_beamPipe_thickness / _beamPipe_radLength;
+  fkddes_.xelosc[Ncmat] = 0.1*_beamPipe_thickness * _beamPipe_dedx;
+
   Ncmat++;
+
 
 //   fkexts_.itexts[Nexs] = 0;  
 //   fkexts_.rzsurf[Nexs] =  0;
@@ -466,6 +483,8 @@ void MaterialDB::init() {
 
 //   int Nb = 10;
 //   float dR = 0.1*_beamPipeRadius;
+
+  //Extension Surface
   fkexts_.itexts[Nexs] = 0;  
   fkexts_.rzsurf[Nexs] = 0.05*_beamPipeRadius ;
   fkexts_.zrmin[Nexs] = -10000.;
@@ -480,21 +499,23 @@ void MaterialDB::init() {
 //       Nexs++;
 //   }
   
-
   // A.R. FIXME : Introduce additional cones and tubes (Tube00.cc)
-
   //  Cyllinders and cones in VXD00
 
-  
+  //--Get additional parameters from GEAR--
   int nLayersVTX = pVXDLayerLayout.getNLayers();
-  _layerRadius.resize(nLayersVTX);
-  _ladder_dim_z.resize(nLayersVTX);
-  _ladderGaps.resize(nLayersVTX);
-  _stripLine_final_z.resize(nLayersVTX);
-
   int nLadderGaps = int(pVXDDet.getDoubleVals("LadderGaps").size());
   int nStripLines = int(pVXDDet.getDoubleVals("StripLineFinalZ").size());
+  _dedx_si = 10.0*float(pVXDDet.getDoubleVal("ActiveLayerProperties_dEdx"));
+  _dedx_ber = 10.0*float(pVXDDet.getDoubleVal("SupportLayerProperties_dEdx"));
+  _dedx_kapton = 10.0*float(pVXDDet.getDoubleVal("StripLineProperties_dEdx"));
+  _radlen_kapton = 0.1*float(pVXDDet.getDoubleVal("StripLineProperties_RadLen"));
+  _electronicEnd_thickness = float(pVXDDet.getDoubleVal("ElectronicEndThickness"));
+  _electronicEnd_length = float(pVXDDet.getDoubleVal("ElectronicEndLength"));
+  _stripLine_thickness =  float(pVXDDet.getDoubleVal("StripLineThickness"));
+  _stripLine_beampipe_r = float(pVXDDet.getDoubleVal("StripLineBeamPipeRadius"));
 
+  // Check values
   if (nLadderGaps != nLayersVTX) {
     std::cout << "MaterialDB Processor : vector size of LadderGaps vector ("
 	      << nLadderGaps << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
@@ -505,104 +526,116 @@ void MaterialDB::init() {
 	      << nStripLines << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
     exit(1);
   }
-  
-
-  _dedx_si = 10.0*float(pVXDDet.getDoubleVal("ActiveLayerProperties_dEdx"));
-  _dedx_ber = 10.0*float(pVXDDet.getDoubleVal("SupportLayerProperties_dEdx"));
-  _dedx_kapton = 10.0*float(pVXDDet.getDoubleVal("StripLineProperties_dEdx"));
-  _radlen_kapton = 0.1*float(pVXDDet.getDoubleVal("StripLineProperties_RadLen"));
-  _electronicEnd_thickness = float(pVXDDet.getDoubleVal("ElectronicEndThickness"));
-  _electronicEnd_length = float(pVXDDet.getDoubleVal("ElectronicEndLength"));
-  _stripLine_thickness =  float(pVXDDet.getDoubleVal("StripLineThickness"));
-  _stripLine_beampipe_r = float(pVXDDet.getDoubleVal("StripLineBeamPipeRadius"));
-
   if (pVXDDetMain.getShellOuterRadius()<pVXDDetMain.getShellInnerRadius()) {
     std::cout << "Outer Shell Radius (" << pVXDDetMain.getShellOuterRadius() 
 	      << ") is smaller than inner Shell radius (" << pVXDDetMain.getShellInnerRadius()
 	      << ")" << std::endl;
     exit(1);
   }
+
   _shell_thickness = float(pVXDDetMain.getShellOuterRadius()-pVXDDetMain.getShellInnerRadius());
   _VTXShell_thickness = _shell_thickness;
   _VTXShell_Radius = float(pVXDDetMain.getShellInnerRadius());
   _VTXShell_HalfZ = float(pVXDDetMain.getShellHalfLength());
   _VTXEndPlate_innerRadius = float(pVXDDet.getDoubleVal("VXDEndPlateInnerRadius"));
-
-  for (int i=0;i<nLayersVTX;++i) {
-    _layerRadius[i] = float(pVXDLayerLayout.getLadderDistance(i));
-    _ladder_dim_z[i] = float(pVXDLayerLayout.getLadderLength(i));
-    _support_thickness = float(pVXDLayerLayout.getLadderThickness(i));
-    _si_thickness = float(pVXDLayerLayout.getSensitiveThickness(i));
-    _radlen_ber = 0.1*float(pVXDLayerLayout.getLadderRadLength(i));
-    _radlen_si = 0.1*float(pVXDLayerLayout.getSensitiveRadLength(i));
-    _stripLine_final_z[i] = float(pVXDDet.getDoubleVals("StripLineFinalZ")[i]);
-    _ladderGaps[i] = float(pVXDDet.getDoubleVals("LadderGaps")[i]);    
-  }
+  _VTXShell_radLength = float(pVXDDetMain.getShellRadLength());
 
 
-  for (int i=0;i<nLayersVTX;++i) {
-    // beryllium support    
-    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_support_thickness);
-    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-    fkddes_.xrlc[Ncmat] = 0.1*_support_thickness/_radlen_ber;
-    fkddes_.xelosc[Ncmat] = 0.1*_support_thickness*_dedx_ber;
+  //--The Ladder structure (cylinder or realistic ladder)--
+  int nLadders;
+  float Pi = acos(-1);
+  float deg2rad = Pi / 180.0;
 
-//     fkddes_.rcmat[Ncmat] = 0.1*_layerRadius[i];
-//     fkddes_.zcmin[Ncmat] = -0.1*_ladder_dim_z[i];
-//     fkddes_.zcmax[Ncmat] = 0.1*_ladder_dim_z[i];
-//     fkddes_.xrlc[Ncmat] = 0.1*(_support_thickness/_radlen_ber+_si_thickness/_radlen_si);
-//     fkddes_.xelosc[Ncmat] = 0.1*(_support_thickness*_dedx_ber+_si_thickness*_dedx_si);
+  for (int i=0; i<nLayersVTX; ++i) {
+    nLadders = pVXDLayerLayout.getNLadders(i);
 
-    fkexts_.itexts[Nexs] = 0;
-    fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
-    fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
-    fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+    _ladder_phi0 = deg2rad * float(pVXDLayerLayout.getPhi0(i));
+    _ladder_distance = float(pVXDLayerLayout.getLadderDistance(i));
+    _ladder_thickness = float(pVXDLayerLayout.getLadderThickness(i));
+    _ladder_width = float(pVXDLayerLayout.getLadderWidth(i));
+    _ladder_length = float (pVXDLayerLayout.getLadderLength(i));
+    _ladder_offset = float (pVXDLayerLayout.getLadderOffset(i));
+    _ladder_radLength = 0.1*float(pVXDLayerLayout.getLadderRadLength(i));
 
-    Ncmat++;
-    Nexs++;
+    _sensitive_distance = float(pVXDLayerLayout.getSensitiveDistance(i));
+    _sensitive_thickness = float(pVXDLayerLayout.getSensitiveThickness(i));
+    _sensitive_width = float(pVXDLayerLayout.getSensitiveWidth(i));
+    _sensitive_length = float(pVXDLayerLayout.getSensitiveLength(i));
+    _sensitive_offset = float (pVXDLayerLayout.getSensitiveOffset(i));
+    _sensitive_radLength = 0.1*float(pVXDLayerLayout.getSensitiveRadLength(i));
 
+    _stripLine_final_z = float(pVXDDet.getDoubleVals("StripLineFinalZ")[i]);
+    _halfLadderGaps = float(pVXDDet.getDoubleVals("LadderGaps")[i]);
+
+    if (nLadders < 3) {
+      //--Cylinder--
+
+      // Beryllium support    
+      fkddes_.rcmat[Ncmat] = 0.1*(_ladder_distance + 0.5*_ladder_thickness);
+      fkddes_.zcmin[Ncmat] = -0.1*(_ladder_length + _halfLadderGaps);
+      fkddes_.zcmax[Ncmat] = 0.1*(_ladder_length + _halfLadderGaps);
+      fkddes_.xrlc[Ncmat] = 0.1*_ladder_thickness/_ladder_radLength;
+      fkddes_.xelosc[Ncmat] = 0.1*_ladder_thickness * _dedx_ber;
+
+//     fkddes_.rcmat[Ncmat] = 0.1*_ladder_distance;
+//     fkddes_.zcmin[Ncmat] = -0.1*_ladder_length;
+//     fkddes_.zcmax[Ncmat] = 0.1*_ladder_length;
+//     fkddes_.xrlc[Ncmat] = 0.1*(_ladder_thickness/_ladder_radLength+_si_thickness/_sensitive_radLength);
+//     fkddes_.xelosc[Ncmat] = 0.1*(_ladder_thickness*_dedx_ber+_sensitive_thickness*_dedx_si);
+
+      // Extension Surface for Kalman filter
+      fkexts_.itexts[Nexs] = 0;
+      fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
+      fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
+      fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+
+      Ncmat++;
+      Nexs++;
+
+      // Electronic Ends;
+      // right-hand part
+      fkddes_.rcmat[Ncmat] = 0.1*(_ladder_distance + 0.5*_electronicEnd_thickness);
+      fkddes_.zcmin[Ncmat] = 0.1*(_ladder_length + _halfLadderGaps);
+      fkddes_.zcmax[Ncmat] = 0.1*(_ladder_length + _halfLadderGaps+_electronicEnd_length);
+      fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness / _sensitive_radLength;
+      fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness * _dedx_si;
       
-    // Electronic Ends;
-    // right-hand part
-    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_electronicEnd_thickness);
-    fkddes_.zcmin[Ncmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]);
-    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+_electronicEnd_length);
-    fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness*_dedx_si;
-    Ncmat++;
-      
-    // left-hand part
-    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + 0.5*_electronicEnd_thickness);
-    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+_electronicEnd_length);
-    fkddes_.zcmax[Ncmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]);
-    fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness*_dedx_si;
-    Ncmat++;
+      Ncmat++;
 
-    // Active Silicon
-    // right-hand part
-    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
-    fkddes_.zcmin[Ncmat] = 0.1*_ladderGaps[i];
-    fkddes_.zcmax[Ncmat] = 0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-    fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
-    Ncmat++;
+      // left-hand part
+      fkddes_.rcmat[Ncmat] = 0.1*(_ladder_distance + 0.5*_electronicEnd_thickness);
+      fkddes_.zcmin[Ncmat] = -0.1*(_ladder_length + _halfLadderGaps+_electronicEnd_length);
+      fkddes_.zcmax[Ncmat] = -0.1*(_ladder_length + _halfLadderGaps);
+      fkddes_.xrlc[Ncmat] = 0.1*_electronicEnd_thickness / _sensitive_radLength;
+      fkddes_.xelosc[Ncmat] = 0.1*_electronicEnd_thickness * _dedx_si;
 
-    // left-hand part
-    fkddes_.rcmat[Ncmat] = 0.1*(_layerRadius[i] + _support_thickness + 0.5*_si_thickness);
-    fkddes_.zcmin[Ncmat] = -0.1*(_ladder_dim_z[i]+_ladderGaps[i]);
-    fkddes_.zcmax[Ncmat] = -0.1*_ladderGaps[i];
-    fkddes_.xrlc[Ncmat] = 0.1*_si_thickness/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_si_thickness*_dedx_si;    
-    Ncmat++;
-    
+      Ncmat++;
+
+      // Active Silicon
+      // right-hand part
+      fkddes_.rcmat[Ncmat] = 0.1*(_sensitive_distance + 0.5*_sensitive_thickness);
+      fkddes_.zcmin[Ncmat] = 0.1*_halfLadderGaps;
+      fkddes_.zcmax[Ncmat] = 0.1*(_sensitive_length + _halfLadderGaps);
+      fkddes_.xrlc[Ncmat] = 0.1*_sensitive_thickness / _sensitive_radLength;
+      fkddes_.xelosc[Ncmat] = 0.1*_sensitive_thickness * _dedx_si;    
+
+      Ncmat++;
+
+      // left-hand part
+      fkddes_.rcmat[Ncmat] = 0.1*(_sensitive_distance + 0.5*_sensitive_thickness);
+      fkddes_.zcmin[Ncmat] = -0.1*(_sensitive_length + _halfLadderGaps);
+      fkddes_.zcmax[Ncmat] = -0.1*_halfLadderGaps;
+      fkddes_.xrlc[Ncmat] = 0.1*_sensitive_thickness / _sensitive_radLength;
+      fkddes_.xelosc[Ncmat] = 0.1*_sensitive_thickness * _dedx_si;    
+
+      Ncmat++;
+
 //     // Strip Lines
 //     // right-hand part    
-//     fkddes1_.z1conmat[Nconmat] = 0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+
+//     fkddes1_.z1conmat[Nconmat] = 0.1*(_ladder_length+_halfLadderGaps+
 // 				    _electronicEnd_length+_shell_thickness);
-//     fkddes1_.z2conmat[Nconmat] = 0.1*_stripLine_final_z[i];
-//     fkddes1_.r1conmat[Nconmat] = 0.1*(_layerRadius[i]+0.5*_stripLine_thickness);
+//     fkddes1_.z2conmat[Nconmat] = 0.1*_stripLine_final_z;
+//     fkddes1_.r1conmat[Nconmat] = 0.1*(_ladder_distance+0.5*_stripLine_thickness);
 //     fkddes1_.r2conmat[Nconmat] = 0.1*(_stripLine_beampipe_r+0.5*_stripLine_thickness);
 //     float dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
 //     float dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
@@ -616,10 +649,10 @@ void MaterialDB::init() {
 //     Nconmat++;
       
 //     // left-hand part    
-//     fkddes1_.z2conmat[Nconmat] = -0.1*(_ladder_dim_z[i]+0.5*_ladderGaps[i]+
+//     fkddes1_.z2conmat[Nconmat] = -0.1*(_ladder_length+_halfLadderGaps+
 // 				       _electronicEnd_length+_shell_thickness);
-//     fkddes1_.z1conmat[Nconmat] = -0.1*_stripLine_final_z[i];
-//     fkddes1_.r2conmat[Nconmat] = 0.1*(_layerRadius[i]+0.5*_stripLine_thickness);
+//     fkddes1_.z1conmat[Nconmat] = -0.1*_stripLine_final_z;
+//     fkddes1_.r2conmat[Nconmat] = 0.1*(_ladder_distance+0.5*_stripLine_thickness);
 //     fkddes1_.r1conmat[Nconmat] = 0.1*(_stripLine_beampipe_r+0.5*_stripLine_thickness);
 //     dR = fkddes1_.r2conmat[Nconmat]-fkddes1_.r1conmat[Nconmat];
 //     dZ = fkddes1_.z2conmat[Nconmat]-fkddes1_.z1conmat[Nconmat];
@@ -630,11 +663,63 @@ void MaterialDB::init() {
 //     fkddes1_.xrl2con[Nconmat]=0.1*dL/_radlen_kapton;
 //     fkddes1_.xel1con[Nconmat]=0.1*dL*_dedx_kapton;
 //     fkddes1_.xel2con[Nconmat]=0.1*dL*_dedx_kapton;  
-//     Nconmat++;      
+//     Nconmat++;  
+
+    } else {
+      //--Realistic ladder structure--
+
+      float currPhi;
+      float angleLadders = 2*Pi / nLadders;
+      float cosphi, sinphi;
+
+      _ladder_distance += 0.5* _ladder_thickness;
+      _sensitive_distance +=0.5* _sensitive_thickness;
+
+      for (int j=0; j<nLadders; ++j) {
+
+        currPhi = _ladder_phi0 + (angleLadders * j);
+        cosphi = cos(currPhi);
+        sinphi = sin(currPhi);
+
+        //Beryllium support
+        fkddes2_.xplmat[Nplmat] = 0.1*(_ladder_distance*cosphi - _ladder_offset*sinphi);
+        fkddes2_.yplmat[Nplmat] = 0.1*(_ladder_distance*sinphi + _ladder_offset*cosphi);
+        fkddes2_.zplmat[Nplmat] = 0.0; //Ladder is centered around z=0
+
+        fkddes2_.widplmat[Nplmat] = 0.1*(_ladder_width); 
+        fkddes2_.lenplmat[Nplmat] = 0.1*(2.*(_ladder_length+_halfLadderGaps));
+        fkddes2_.phiplmat[Nplmat] = currPhi;
+
+        fkddes2_.xrlpl[Nplmat] = 0.1*_ladder_thickness/_ladder_radLength;
+        fkddes2_.xelospl[Nplmat] = 0.1*_ladder_thickness*_dedx_ber;
+
+        Nplmat++;
+
+        //Sensitive Si part
+        fkddes2_.xplmat[Nplmat] = 0.1*(_sensitive_distance*cosphi - _sensitive_offset*sinphi);
+        fkddes2_.yplmat[Nplmat] = 0.1*(_sensitive_distance*sinphi + _sensitive_offset*cosphi);
+        fkddes2_.zplmat[Nplmat] = 0.0; //Ladder is centered around z=0
+
+        fkddes2_.widplmat[Nplmat] = 0.1*(_sensitive_width); 
+        fkddes2_.lenplmat[Nplmat] = 0.1*(2.*(_sensitive_length+_halfLadderGaps));
+        fkddes2_.phiplmat[Nplmat] = currPhi;
+
+        fkddes2_.xrlpl[Nplmat] = 0.1*_sensitive_thickness/_sensitive_radLength;
+        fkddes2_.xelospl[Nplmat] = 0.1*_sensitive_thickness*_dedx_si;
+
+        Nplmat++;
+      }
+
+      //Extension Surface (used by the Kalman filter); Radius is set to the distance from IP to the center of the support
+      fkexts_.itexts[Nexs] = 0;
+      fkexts_.rzsurf[Nexs] = 0.1*_ladder_distance;
+      fkexts_.zrmin[Nexs] = - 0.1*_ladder_length;
+      fkexts_.zrmax[Nexs] = 0.1*_ladder_length;
+      Nexs++;	
     }
+  }
 
-
-  // Cryostat
+  //--Cryostat--
   float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
   float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
   float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
@@ -673,21 +758,21 @@ void MaterialDB::init() {
   fkddes_.rcmat[Ncmat] = 0.1*(_VTXShell_Radius+0.5*_VTXShell_thickness);
   fkddes_.zcmin[Ncmat] = -0.1*_VTXShell_HalfZ;
   fkddes_.zcmax[Ncmat] = 0.1*_VTXShell_HalfZ;
-  fkddes_.xrlc[Ncmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xrlc[Ncmat] = 0.1*_VTXShell_thickness/_VTXShell_radLength;
   fkddes_.xelosc[Ncmat] = 0.1*_VTXShell_thickness*_dedx_ber;
   Ncmat++;
   //  EndPlate support disk for VTX ; left part
   fkddes_.zpmat[Npmat] = -0.1*(_VTXShell_HalfZ+0.5*_VTXShell_thickness);
   fkddes_.rpmin[Npmat] = 0.1*_VTXEndPlate_innerRadius;
   fkddes_.rpmax[Npmat] = 0.1*(_VTXShell_Radius+_VTXShell_thickness);
-  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_VTXShell_radLength;
   fkddes_.xelosp[Npmat] = 0.1*_VTXShell_thickness*_dedx_ber;  
   Npmat++;    
   //  EndPlate support disk for VTX ; right part
   fkddes_.zpmat[Npmat] = 0.1*(_VTXShell_HalfZ+0.5*_VTXShell_thickness);
   fkddes_.rpmin[Npmat] = 0.1*_VTXEndPlate_innerRadius;
   fkddes_.rpmax[Npmat] = 0.1*(_VTXShell_Radius+_VTXShell_thickness);
-  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_radlen_ber;
+  fkddes_.xrlp[Npmat] = 0.1*_VTXShell_thickness/_VTXShell_radLength;
   fkddes_.xelosp[Npmat] = 0.1*_VTXShell_thickness*_dedx_ber;  
   Npmat++;    
 
@@ -1088,15 +1173,21 @@ void MaterialDB::init() {
   //  Npmat++;
 
 
-  // setting numbers of planar, cyllinder and conical shapes and extrapolation surfaces
+  // setting numbers of planar, cyllinder, conical and realistic ladder  shapes and extrapolation surfaces
   fkddes_.npmat = Npmat;
   fkddes_.ncmat = Ncmat;
   fkddes1_.nconmat = Nconmat;
   fkexts_.nexs = Nexs;
+
+  //Set to 0 for no planar Material
+  fkddes2_.nplmat = Nplmat;
+  //fkddes2_.nplmat = 0;
+
   if (_useMaterials == 0) {
     fkddes_.npmat = 0;
     fkddes_.ncmat = 0;
-    fkddes1_.nconmat = 0;    
+    fkddes1_.nconmat = 0; 
+    fkddes2_.nplmat = 0;   
   }
     
   if (_useExtrapolations == 0)

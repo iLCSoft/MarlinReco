@@ -1,7 +1,11 @@
 *  
-* $Id: fktfit.F,v 1.2 2006-11-02 11:49:00 rasp Exp $
+* $Id: fktfit.F,v 1.3 2007-11-22 09:26:31 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2006/11/02 11:49:00  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -71,6 +75,7 @@
 #include "include/fkcons.inc"
 #include "include/fkddes.inc"
 #include "include/fkddes1.inc"
+#include "include/fkddes2.inc"
 #include "include/fkexts.inc"
 #include "include/fkfild.inc"
 
@@ -271,8 +276,8 @@ C(KH)---end
 *
 *   cylinders
 *
-c$$$      write(*,*) ' '
-c$$$      write(*,*) 'Number of cyllindrical detectors = ',ncmat
+c     write(*,*) ' '
+c      write(*,*) 'Number of cyllindrical detectors = ',ncmat
       do 30 ic=1,ncmat
 *
 *   check the limits in r and z
@@ -282,24 +287,59 @@ c$$$      write(*,*) 'Number of cyllindrical detectors = ',ncmat
 *
           call fkxcyl(parref,0,rcmat(ic),zcmin(ic),zcmax(ic),sinbmx,
      $         0,parint,der,alrph,ier)
+
           if (ier.eq.0 .and. alrph.ge.alrmin.and.alrph.le.alrmax) then
 *
             if (ideb.ge.2) write(IPRNT,
      $           '(''       mat. cyl. '',I3,''  param.'','//
      $           'T39,3F11.3,2F11.4,F11.6,''  proj. dist.'',F8.2)')
      $           ic,parint,alrph
-*
+
             nsurf = nsurf+1
-*
+
             alrphi(nsurf) = alrph
             typsur(nsurf) = 'CYLI'
-           xrls(nsurf)   = xrlc(ic)/abs(sin(parint(4))*dcos(parint(5)))
+            xrls(nsurf)   = xrlc(ic)/abs(sin(parint(4))*dcos(parint(5)))
             call ucopy(parint,params(1,nsurf),2*6)
             xeloss(nsurf) =
      $           xelosc(ic)/abs(sin(parint(4))*cos(parint(5)))
+
           endif
         endif
    30 continue
+
+*
+*  ladders
+*
+c      write(*,*) ' '
+c      write(*,*) 'Number of ladder detectors = ',nplmat
+
+      do 32 ic=1,nplmat
+          call fkxpln(parref,0,xplmat(ic),yplmat(ic),zplmat(ic),
+     &         widplmat(ic),lenplmat(ic),phiplmat(ic),sinbmx,
+     &         0,parint,der,alrph,cosn,ier)
+
+           if (ier.eq.0 .and. alrph.ge.alrmin.and.alrph.le.alrmax) then
+
+             if (ideb.ge.2) write(IPRNT,
+     $           '(''       mat. cyl. '',I3,''  param.'','//
+     $           'T39,3F11.3,2F11.4,F11.6,''  proj. dist.'',F8.2)')
+     $           ic,parint,alrph
+
+c             write(*,*) 'Final Ladder : ',parint(1)*cos(parint(2)),
+c     &        parint(1)*sin(parint(2)),parint(3)
+
+             nsurf = nsurf+1
+
+             alrphi(nsurf) = alrph
+             typsur(nsurf) = 'CYLI'
+             xrls(nsurf)   = xrlpl(ic)/cosn
+             call ucopy(parint,params(1,nsurf),2*6)
+             xeloss(nsurf) = xelospl(ic)/cosn
+
+           endif
+ 32   continue   
+
 *
 *   cones
 *

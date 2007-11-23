@@ -1,7 +1,10 @@
 *  
-* $Id: fkparm.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fkparm.inc,v 1.2 2007-11-23 08:51:15 rasp Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -13,10 +16,11 @@
 *
 *  
        integer ntemx,mxts,mxte,mxtk,nexsmx,ncmamx,npmamx,nsrfmx,
-     $         nsegmx,npgrmx
-c(kh)  PARAMETER (NTEMX=150,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50,
+     $         nsegmx,npgrmx, nplmamx
+c(kh)  PARAMETER (NTEMX=150,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50)
        PARAMETER (NTEMX=400,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50,
-     & NCMAMX=100,NPMAMX=50,NSRFMX=NTEMX+NEXSMX+NCMAMX+NPMAMX)
+     & NCMAMX=100,NPMAMX=50,NPLMAMX=200)
+       PARAMETER (NSRFMX=NTEMX+NEXSMX+NCMAMX+NPMAMX)
        PARAMETER (NSEGMX=20,NPGRMX=200)
 
 C SJA

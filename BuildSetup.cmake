@@ -48,7 +48,7 @@ SET( CERNLIB_HOME "${ILC_HOME}/cernlib/2006"
     CACHE PATH "Path to CERNLIB" FORCE )
 
 # CMake Modules Path
-SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/v01-04-01"
+SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/v01-05"
     CACHE PATH "Path to CMake Modules" FORCE )
 
 ###############################################

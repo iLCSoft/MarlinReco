@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include <gsl/gsl_randist.h>
-
+#include "marlin/VerbosityLevels.h"
 
 
 #ifdef MARLIN_USE_AIDA
@@ -124,6 +124,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 { 
 
   static bool firstEvent = true ;
+  int rechits = 0;
   
   // this gets called for every event 
   // usually the working horse ...
@@ -153,7 +154,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     
     int n_sim_hits = STHcol->getNumberOfElements()  ;
 
-    //    cout << "number of SimHits = " << n_sim_hits << endl;
+    streamlog_out(DEBUG) << "number of SimHits = " << n_sim_hits << std::endl;
+
     // Assume initialy that there is no merging 
     
     //
@@ -180,6 +182,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos[0] = SimTHit->getPosition()[0] ;
       pos[1] = SimTHit->getPosition()[1] ; 
       pos[2] = SimTHit->getPosition()[2] ;
+      int layerNumber = SimTHit->getCellID();
+
+      if(layerNumber<1) continue;
 
       de_dx = SimTHit->getdEdx();
 
@@ -318,7 +323,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
     }    
 
-    cout << "finished looping over simhits" << endl;
+    streamlog_out(DEBUG) << "finished looping over simhits" << endl;
     // Add background hits here
     
     vector <Voxel_tpc *> row_hits;
@@ -445,14 +450,17 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             // 	  push back the SimTHit for this TrackerHit
             trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );                        
             trkhitVec->addElement( trkHit ); 
+            rechits++;
           }
 
         }
       }
     }
     
-    cout << "finished row hits" << endl;
-    
+
+    streamlog_out(DEBUG) << "number of rec_hits = "  << rechits << endl ;
+    streamlog_out(DEBUG) << "finished row hits" << endl;    
+
     // set the parameters to decode the type information in the collection
     // for the time being this has to be done manually
     // in the future we should provide a more convenient mechanism to 

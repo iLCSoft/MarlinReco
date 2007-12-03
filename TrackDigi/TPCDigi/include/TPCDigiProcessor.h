@@ -14,7 +14,8 @@ using namespace marlin ;
 
 
 /** ====== TPCDigiProcessor ====== <br>
- * Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in r-phi and z. 
+ * Caution: This digitiser presently does not process space-point like SimTrackerHits which have been flagged with CellIDs set to the negetive row number. This must be implemented in future. 
+ *Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in r-phi and z. 
  * Double hits are identified but are currently not added to the collection. This may be change 
  * at a later date when criteria for their seperation is defined. The resolutions are defined in 
  * the GEAR stearing file. Resolution in r-phi is calculated according to the formular <br>

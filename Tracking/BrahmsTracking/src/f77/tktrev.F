@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.9 2007-09-05 09:47:29 rasp Exp $
+* $Id: tktrev.F,v 1.10 2007-12-12 13:40:35 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.9  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.7  2006/11/02 11:49:01  rasp
 *
 * Modified files adopted to FullLDCTracking processor
@@ -254,7 +257,7 @@ c        CALL SIPATR
 
 c ---   also add hit TEs for all silicon detectors
 
-        CALL TKADDH
+C        CALL TKADDH
 
 c        CALL HCDIR('//PAWC',' ')
 c      END IF

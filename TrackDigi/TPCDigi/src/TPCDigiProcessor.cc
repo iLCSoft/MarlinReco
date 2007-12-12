@@ -204,14 +204,16 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
        
       double aReso =_pointResoRPhi*_pointResoRPhi;
-      double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
-      if (driftLenght <0) { 
-        std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 " << driftLenght << " --> Check out your GEAR file!!!!" << std::endl; 
-        std::cout << "Setting driftLenght to 0.1" << std::endl;
-        driftLenght = 0.10;
+      double cathode = 5.0/2.0; // cathode is 5mm thick 
+      double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-cathode);
+      if (driftLength <0) { 
+        std::cout << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
+        std::cout << "Setting driftLength to 0.1" << std::endl;
+        std::cout << "gearTPC.getMaxDriftLength() = " << gearTPC.getMaxDriftLength() << std::endl; 
+        driftLength = 0.10;
       }
       double bReso = _diffRPhi*_diffRPhi;
-      double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+      double tpcRPhiRes = sqrt(aReso + bReso*driftLength);
  
 
 //       std::cout << "_pointResoRPhi = " <<_pointResoRPhi << std::endl;
@@ -434,15 +436,17 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
          
           
           double aReso =_pointResoRPhi*_pointResoRPhi;
-          double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
-          if (driftLenght <0) { 
-            std::cout << " TPCDigiProcessor : Warning! driftLenght < 0 "  
-                      << driftLenght << " --> Check out your GEAR file!!!!" << std::endl; 
-            std::cout << "Setting driftLenght to 0.1" << std::endl;
-            driftLenght = 0.10;
+          double cathode = 5.0/2.0; // cathode is 5mm thick 
+          double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-cathode);
+          if (driftLength <0) { 
+            std::cout << " TPCDigiProcessor : Warning! driftLength < 0 "  
+                      << driftLength << " --> Check out your GEAR file!!!! "<< std::endl; 
+            std::cout << "Setting driftLength to 0.1" << std::endl;
+            std::cout << "gearTPC.getMaxDriftLength() = " << gearTPC.getMaxDriftLength() << std::endl; 
+            driftLength = 0.10;
           }
           double bReso = _diffRPhi*_diffRPhi;
-          double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+          double tpcRPhiRes = sqrt(aReso + bReso*driftLength);
           float covMat[TRKHITNCOVMATRIX]={0.,0.,float(tpcRPhiRes*tpcRPhiRes),0.,0.,float(_pointResoZ*_pointResoZ)};
           trkHit->setCovMatrix(covMat);      
           

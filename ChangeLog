@@ -1,3 +1,89 @@
+2007-12-12 14:40  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tktrev.F: Removed the Silicon
+	  track matching in LEPTracking. This is now done solely by
+	  FullLDCTracking in conjuction with SiliconTracking by Alexei
+	  Raspereza.
+
+2007-12-12 12:53  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: Added hard coded
+	  number for the TPC cathode 5mm. Gear sets max drift length but
+	  does not contain information about the cathode. The TPC sensitive
+	  volume is therefor shifted in z and the abs z coordinate can no
+	  longer be compared to the max drift length.
+
+2007-12-03 18:37  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: Added an IF statement to skip
+	  SimTrackerHits with CellID < 1. These hits are only space-point
+	  like hits and do not lie at the centre of the tpc pad ring
+	  radius. A complete solution should be found to make use of these
+	  hits and pass them to the pattern recognition.
+
+2007-11-26 16:48  engels
+
+	* BuildSetup.cmake: updated versions for ilcsoft release v01-03
+
+2007-11-23 16:22  engels
+
+	* BuildSetup.cmake: updated for ilcsoft release v01-03
+
+2007-11-23 09:51  rasp
+
+	* Tracking/BrahmsTracking/src/f77/include/fkparm.inc: New version
+	  of parameters
+
+2007-11-23 09:50  rasp
+
+	* Tracking/BrahmsTracking/src/f77/include/fkddes2.inc: Common
+	  blocks containing info on the laddered structure of VTX
+
+2007-11-23 09:50  rasp
+
+	* Tracking/BrahmsTracking/src/f77/fkxpln.F: New module, calculating
+	  track intersection with laddered VTX materials
+
+2007-11-22 10:26  rasp
+
+	* Tracking/BrahmsTracking/src/f77/fktfit.F: Updated version of
+	  fktfit.F. Handles laddered structure of the VTX
+
+2007-11-22 10:24  rasp
+
+	* Tracking/SiliconTracking/: include/MaterialDB.h,
+	  src/MaterialDB.cc: Modified version of MaterialDB processor.
+	  Laddered structure of the VTX has been implemented. A. Moll, A.
+	  Raspereza
+
+2007-11-16 13:55  engels
+
+	* BuildSetup.cmake: updated for release v01-03
+
+2007-11-14 18:20  gaede
+
+	* doc/release.notes, examples/steer_ldctracking.xml: minor
+	  documentation updates
+
+2007-11-14 18:19  gaede
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: bug fix : old version
+	  has modified the SimTrackerHit position
+
+2007-11-08 14:20  rasp
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc: Updated version of FullLDCTracking. A new
+	  processor parameter PtCutToMergeTPCSegments is intriduced
+	  defining a lower cutoff on the transverse momentum of the TPC
+	  segments for merging procedure.
+
+2007-11-07 20:13  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: ---- version v00-05
+	  --------------
+
 2007-11-07 20:12  gaede
 
 	* BuildSetup.cmake: updated versions to ilcsoft release v01-03

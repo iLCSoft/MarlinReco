@@ -7,6 +7,9 @@
  --------
 | v00-05 |
  --------
+       - modified TPC digitization for new TPC driver (S.Aplin)
+       - removed silicon tracking in BrahmsTracking
+
        - new package MarlinKinFit (J.List)
 	 * Analysis/MarlinKinfit
          * kinematic fits with constraints
@@ -38,6 +41,7 @@
          * example steering file
          * introduced various fit options
          * improved performance
+         * digitization of laddered VXD detectors
   
        - improved code and cmake build files (J.Engels)
          * removed unused variables (compiler warnings)

@@ -4,11 +4,11 @@
 
 ================================
 
- --------
-| v00-05 |
- --------
+ ------------
+| v00-05-dev |
+ ------------
        - modified TPC digitization for new TPC driver (S.Aplin)
-       - removed silicon tracking in BrahmsTracking
+       - removed silicon tracking from BrahmsTracking
 
        - new package MarlinKinFit (J.List)
 	 * Analysis/MarlinKinfit

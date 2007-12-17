@@ -7,6 +7,11 @@
  ------------
 | v00-05-dev |
  ------------
+       - new package YThresh (B. Hooberman)
+         * Analysis/EventShapes
+         * calculates the yThresh variable
+         * see README and doxygen documentation
+ 
        - modified TPC digitization for new TPC driver (S.Aplin)
        - removed silicon tracking from BrahmsTracking
 

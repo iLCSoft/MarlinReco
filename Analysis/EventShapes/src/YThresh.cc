@@ -30,7 +30,8 @@ YThresh::YThresh() : Processor("YThresh") {
   _description = "YThresh finds the crossover value of the yCut variable from NMin to NMin+1 jets found using durhamycut";
   
   // register steering parameters: name, description, class-variable, default value
-  registerProcessorParameter("RecoParticleCollection",
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+                 "RecoParticleCollection",
 			     "Name of the input ReconstructedParticle collection",
 			     _inputCollection,
 			     std::string("RecoParticles"));

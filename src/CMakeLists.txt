@@ -372,6 +372,7 @@ SET( G2C_LIB G2C_LIB-NOTFOUND )
 FIND_LIBRARY( G2C_LIB NAMES g2c PATHS
     /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3
     /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4
+    /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5
     /usr/lib64
     NO_DEFAULT_PATH # prevent static library to be detected instead of shared one
 )

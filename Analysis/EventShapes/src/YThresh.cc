@@ -9,6 +9,7 @@
 
 #include "YThresh.h"
 #include <iostream>
+#include <math.h>
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/ReconstructedParticleImpl.h>

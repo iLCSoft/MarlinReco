@@ -16,16 +16,6 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
 # set fortran compiler
 SET( CMAKE_Fortran_COMPILER_INIT g77 )
-SET( CMAKE_Fortran_FLAGS "-Wno-globals -ff2c" CACHE STRING
-    "Flags for Fortran compiler." )
-SET( CMAKE_Fortran_FLAGS_DEBUG "-g" CACHE STRING
-    "Flags used by the compiler during debug builds." )
-SET( CMAKE_Fortran_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING
-    "Flags used by the compiler during release minsize builds." )
-SET( CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING
-    "Flags used by the compiler during Release with Debug Info builds." )
-SET( CMAKE_Fortran_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING
-    "Flags used by the compiler during release builds (/MD /Ob1 /Oi /Ot /Oy /Gs will produce slightly less optimized but smaller files" )
 
 ####################################################################################################
 # User section: modify as needed
@@ -41,6 +31,23 @@ SET( ${PROJECT_NAME}_PATCH_LEVEL 0 )
 
 
 ### SETTINGS #################################################################
+
+# fortran flags
+SET( CMAKE_Fortran_FLAGS "-ff2c" CACHE STRING
+    "Flags for Fortran compiler." )
+# gfortran does not support -Wno-globals
+GET_FILENAME_COMPONENT( FORTRAN_COMPILER "${CMAKE_Fortran_COMPILER}" NAME_WE )
+IF( FORTRAN_COMPILER STREQUAL "g77" )
+    SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" )
+ENDIF()
+SET( CMAKE_Fortran_FLAGS_DEBUG "-g" CACHE STRING
+    "Flags used by the compiler during debug builds." )
+SET( CMAKE_Fortran_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING
+    "Flags used by the compiler during release minsize builds." )
+SET( CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING
+    "Flags used by the compiler during Release with Debug Info builds." )
+SET( CMAKE_Fortran_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING
+    "Flags used by the compiler during release builds (/MD /Ob1 /Oi /Ot /Oy /Gs will produce slightly less optimized but smaller files" )
 
 # project options
 OPTION( BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON )

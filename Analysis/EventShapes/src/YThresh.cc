@@ -164,7 +164,7 @@ void YThresh::putPartons(LCEvent * evt){
         _partonsWorkArray.Momentum[ienflow*4+i]=(enflow->getMomentum())[i]; }
       _partonsWorkArray.Momentum[ienflow*4+3]=enflow->getEnergy();
   }
-};
+}
 
 void YThresh::callSatoru(LCEvent * evt){
 
@@ -197,7 +197,7 @@ void YThresh::callSatoru(LCEvent * evt){
 	  GlobalModusLength);
 
 
-};
+}
 
 void YThresh::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor

@@ -4,12 +4,11 @@
 
 ================================
 
- ------------
-| v00-05-dev |
- ------------
-       - new package YThresh (B. Hooberman)
-         * Analysis/EventShapes
-         * calculates the yThresh variable
+ --------
+| v00-05 |
+ --------
+       - new processor YThresh, calculates the yThresh variable(B. Hooberman)
+         * in Analysis/EventShapes
          * see README and doxygen documentation
  
        - modified TPC digitization for new TPC driver (S.Aplin)

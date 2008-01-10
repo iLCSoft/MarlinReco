@@ -20,6 +20,21 @@ ELSE( NOT G2C_LIB )
     MARK_AS_ADVANCED( G2C_LIB )
 ENDIF( NOT G2C_LIB )
 
+# do not store find results in cache
+SET( @PROJECT_NAME@_INCLUDE_DIRS @PROJECT_NAME@_INCLUDE_DIRS-NOTFOUND )
+                                                                                                                                                           
+FIND_PATH( @PROJECT_NAME@_INCLUDE_DIRS
+    NAMES MarlinTrackFit.h
+    PATHS @CMAKE_INSTALL_PREFIX@
+    PATH_SUFFIXES include
+    NO_DEFAULT_PATH
+)
+IF( NOT @PROJECT_NAME@_INCLUDE_DIRS )
+    MESSAGE( STATUS "Check for @PROJECT_NAME@: ${@PROJECT_NAME@_HOME}"
+                    " -- failed to find @PROJECT_NAME@ include directory!!" )
+ELSE( NOT @PROJECT_NAME@_INCLUDE_DIRS )
+    MARK_AS_ADVANCED( @PROJECT_NAME@_INCLUDE_DIRS )
+ENDIF( NOT @PROJECT_NAME@_INCLUDE_DIRS )
 
 # do not store find results in cache
 SET( @PROJECT_NAME@_LIB @PROJECT_NAME@_LIB-NOTFOUND )

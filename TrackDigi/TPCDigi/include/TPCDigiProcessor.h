@@ -30,6 +30,14 @@ using namespace marlin ;
  * Processor produces collection of digitized TrackerHits in TPC <br>
  * @param CollectionName The name of input SimTrackerHit collection <br>
  * (default name STpc01_TPC)
+ * @param RejectCellID0 Whether or not to reject SimTrackerHits with Cell ID 0. Mokka drivers
+ * TPC00-TPC03 encoded the pad row number in the cell ID, which should always be non-zero anyway.
+ * Drivers TPC04 and TPC05 do not simulate pad rows and thus have the cell ID set to zero for all hits.
+ * You will need to set RejectCellID0 to 0 in order to use this processor with these drivers, but note
+ * that the implications for track reconstruction are not strictly defined. Mokka driver TPC06 uses
+ * a mixed approach with one hit per pad row having non-zero cell ID, extra hits having 0 cell ID.
+ * Typically, unless you use TPC04 or TPC05, you should not touch this parameter. <br>
+ * (default value 1)
  * @param TPCTrackerHitsCol The name of output collection of TrackerHits <br>
  * (default name TPCTrackerHits) <br>
  * <br>
@@ -77,6 +85,8 @@ protected:
    */
   std::string _colName ;
   std::string _TPCTrackerHitsCol ;
+
+  int _rejectCellID0;
 
   int _nRun ;
   int _nEvt ;

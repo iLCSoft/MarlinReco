@@ -64,6 +64,11 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                             std::string("TPCTrackerHits") ) ;
 
 
+  registerProcessorParameter( "RejectCellID0" ,
+                              "whether or not to use hits without proper cell ID (pad row)"  ,
+                              _rejectCellID0 ,
+                               (int)1) ;
+
   registerProcessorParameter( "PointResolutionRPhi" ,
                               "R-Phi Resolution constant in TPC"  ,
                               _pointResoRPhi ,
@@ -184,7 +189,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos[2] = SimTHit->getPosition()[2] ;
       int layerNumber = SimTHit->getCellID();
 
-      if(layerNumber<1) continue;
+      if(_rejectCellID0 && (layerNumber<1)) continue;
 
       de_dx = SimTHit->getdEdx();
 

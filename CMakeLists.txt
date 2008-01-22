@@ -81,7 +81,7 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
         OUTPUT  "${PROJECT_SOURCE_DIR}/doc/manual_html"
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
-        COMMAND "${DVIPS_CONVERTER}" ARGS -q manual.dvi
+        COMMAND "${DVIPS_CONVERTER}" ARGS -q -o manual.ps manual.dvi
         COMMAND "${LATEX2HTML_CONVERTER}" ARGS
             -mkdir -dir ../manual_html -verbosity 0 -info 0 -no_auto_link -split 0 -no_navigation manual.tex
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/doc/manual"

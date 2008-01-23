@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.10 2007-12-12 13:40:35 aplin Exp $
+* $Id: tktrev.F,v 1.11 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.10  2007/12/12 13:40:35  aplin
+* Removed the Silicon track matching in LEPTracking. This is now done solely by FullLDCTracking in conjuction with SiliconTracking by Alexei Raspereza.
+*
 * Revision 1.9  2007/09/05 09:47:29  rasp
 * Updated version
 *
@@ -113,6 +116,7 @@ CCC        block tpcdims on the MARLIN side
 
 C.....Initalise TKTREV as error this will only be set to 0 if TKTREV exits normally      
       TKTREV = 1
+      IERROR = 0
 
       CALL TKINIT
       CALL VTXGEOM
@@ -404,7 +408,7 @@ C.....finally, some storage usage information for debugging purposes
         WRITE(6,*) 'TKTREV: needed NEXCL=',NEXCL,' of', MXEXCL
       END IF
 
-      TKTREV = 0
+      TKTREV = IERROR
 
   999 RETURN
       END

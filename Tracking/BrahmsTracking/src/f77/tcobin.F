@@ -1,7 +1,10 @@
 *  
-* $Id: tcobin.F,v 1.3 2005-08-09 10:27:50 aplin Exp $
+* $Id: tcobin.F,v 1.4 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/08/09 10:27:50  aplin
+* increased the maximum number of hits in one row to 1000 ( NMAXROW = 1000 in src/f77/include/my_tcrl.inc ) , and ensured the tracking is skipped in the event when this number of hits is exceeded (tcobin.F).
+*
 * Revision 1.2  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -45,6 +48,7 @@ C!
 C!-------------------------------------------------------------------
 C
 c
+#include "include/temp.inc"
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 c#include "gcflag.inc"

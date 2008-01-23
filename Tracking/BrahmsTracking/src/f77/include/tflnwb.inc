@@ -1,7 +1,10 @@
 *  
-* $Id: tflnwb.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tflnwb.inc,v 1.2 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -12,6 +15,12 @@
 * Brahms V308
 *
 *  
+
+#include "padrow.inc"
+
+C      INTEGER N32BITREG3
+C      PARAMETER(N32BITREG3=8)
+
       INTEGER*4 NBPWRK
-      COMMON/TFLNWB/NBPWRK(1000,7)
+      COMMON/TFLNWB/NBPWRK(1000,N32BITREG)
 

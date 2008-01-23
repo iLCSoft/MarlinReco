@@ -1,7 +1,10 @@
 *  
-* $Id: tplinc.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tplinc.inc,v 1.2 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:36  gaede
 * Initial local version
 *
@@ -12,8 +15,12 @@
 * Brahms V308
 *
 *  
-      INTEGER LMXZCR
-      PARAMETER (LMXZCR=200)
+
+#include "padrow.inc"
+
+c      INTEGER LMXZCR
+c      PARAMETER (LMXZCR=256)
+
       REAL ZCIRCL,SCIRCL,WLINEA
-      COMMON/TPLINC/ZCIRCL(LMXZCR),SCIRCL(LMXZCR),WLINEA(LMXZCR)
+      COMMON/TPLINC/ZCIRCL(LTPDRO),SCIRCL(LTPDRO),WLINEA(LTPDRO)
 

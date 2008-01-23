@@ -1,7 +1,13 @@
 *  
-* $Id: tflnks.F,v 1.4 2006-02-24 16:36:55 aplin Exp $
+* $Id: tflnks.F,v 1.5 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2006/02/24 16:36:55  aplin
+* increased NMXHTRW again by a factor of 2 in thitsrt.F
+* increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
+* set the minimum radius/pad ring for inward search in first track finding to MINMRG=120 in unmerge.F
+* reduced the maximum number of links NMAXLNK to 25000
+*
 * Revision 1.3  2006/02/22 12:19:21  owendt
 * merged new non-cvs versions of reco code (O.Wendt/F.Gaede)
 *
@@ -92,7 +98,7 @@ c(KH) PARAMETER(MPT=200)
       REAL RF(MPT),PF(MPT),ZF(MPT),WZF(MPT)
 
       REAL CHISZ
-      INTEGER ITSTL(7),ITSTU(7)
+      INTEGER ITSTL(N32BITREG),ITSTU(N32BITREG)
       DOUBLE PRECISION FLOAT2,FLOAT3,FLOAT4,FLOAT5,FLOAT6,FLOAT7
 C-----------------------------------------------------------------------
       INTEGER MCAND
@@ -112,7 +118,7 @@ c      INTEGER IBUF1(MCAND),IBUF2(MCAND),IPATL(MCAND)
 c GAB:
 c      INTEGER I1PAT(MCAND),I2PAT(MCAND)
 c(kh) INTEGER*4 I1PAT(MCAND,4),I2PAT(MCAND,4)
-      INTEGER*4 I1PAT(MCAND,7),I2PAT(MCAND,7)
+      INTEGER*4 I1PAT(MCAND,N32BITREG),I2PAT(MCAND,N32BITREG)
       LOGICAL LB2(MCAND)
       LOGICAL FIRST,LFUND
       DATA FIRST/.TRUE./
@@ -120,11 +126,12 @@ c(kh) INTEGER*4 I1PAT(MCAND,4),I2PAT(MCAND,4)
       INTEGER I,J,JJ,K1,K2,IF15,IL06,NCNDU,NCNDL,LSTPT,LB1PT,LSTCO,LB1CO
       INTEGER ICNDU,JCH1,JCH2,NHITS,ICNDL,ITEST1,ITEST2,ITEST3,ITEST4
       INTEGER ITEST5,ITEST6,ITEST7
+      INTEGER ITEST(N32BITREG)
       INTEGER ITOP,IBOT,LOOPL,NQL,NQU,IPT,NLILL,IDUM1,IDUM2,IDUM3,NCNDR
       INTEGER ICNDR,LOOPR,ISEL
       REAL CHMAX,CHTMX,CHPMX,OCUT,DROW,CHFRE,R1,R2,Z1,Z2,ZEXT,RMATK
       REAL DR1,DR2,FUDGE,DPHI,CHI2,CHX,RMINI,RLRGE,FUDG1,RMTRK
-      DOUBLE PRECISION FACTOR1,FACTOR2,FTMP(7)
+      DOUBLE PRECISION FACTOR1,FACTOR2,FTMP(N32BITREG)
 
 c      INTEGER LINK_BEST
 c      REAL CHI2_BEST
@@ -208,7 +215,11 @@ c(kh)   IOUT4 = 2**(LTPDRO-96-3)
         IOUT4 = 2**(NRTPC-(NRTPC/32)*32-3)
         IF15  = 2**15 - 1
 c(kh)   IL06  = (2**7-1) * (2**(LTPDRO-96-6))
-        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
+c(SJA)        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
+        IL06  = (2**N32BITREG-1) * 
+     &       (2**(NRTPC-(NRTPC/32)*32-(N32BITREG-1)))
+
+
 
         FLOAT2=2.D0**32
         FLOAT3=2.D0**64
@@ -272,7 +283,7 @@ C GAB:
 
         IBUF1(NCNDU) = I
 C GAB:
-        DO J=1,7
+        DO J=1,N32BITREG
          I1PAT(NCNDU,J) = MY_JTCHPI(I,J)
         ENDDO
    10 CONTINUE
@@ -345,7 +356,7 @@ C GAB:
         IBUF2(NCNDL) = I
 C GAB:
 C        I2PAT(NCNDL) = ITPTES
-        DO J=1,7
+        DO J=1,N32BITREG
          I2PAT(NCNDL,J) = MY_JTCHPI(I,J)
         ENDDO
         LB2(NCNDL)   = .FALSE.
@@ -365,7 +376,7 @@ C
         JCH1=IBUF1(ICNDU)
 C GAB:
 C        ITSTU = I1PAT(ICNDU)
-        DO J=1,7
+        DO J=1,N32BITREG
          ITSTU(J) = I1PAT(ICNDU,J)
         ENDDO
         FUDGE  = 1.E30
@@ -377,7 +388,7 @@ C        ITSTU = I1PAT(ICNDU)
           JCH2=IBUF2(ICNDL)
 C GAB:
 C          ITSTL = I2PAT(ICNDL)
-          DO J=1,7
+          DO J=1,N32BITREG
            ITSTL(J) = I2PAT(ICNDL,J)
           ENDDO
 
@@ -386,44 +397,66 @@ C-->      Check consistency of hit pattern
 C
 C GAB:
 C           IF (ITSTL.GT.ITSTU)                 GO TO 30
-          IF(ITSTL(7).GT.ITSTU(7))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(7).EQ.0).AND.
-     &             (ITSTL(6).GT.ITSTU(6)))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(6).EQ.0).AND.
-     &             (ITSTL(5).GT.ITSTU(5)))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(5).EQ.0).AND.
-     &             (ITSTL(4).GT.ITSTU(4)))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(4).EQ.0).AND.
-     &             (ITSTL(3).GT.ITSTU(3)))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(3).EQ.0).AND.
-     &             (ITSTL(2).GT.ITSTU(2)))THEN
-           GO TO 30
-          ELSE IF( (ITSTU(2).EQ.0).AND.
-     &             (ITSTL(1).GT.ITSTU(1)))THEN
-           GO TO 30
-          ENDIF
+
+
+          IF(ITSTL(N32BITREG).GT.ITSTU(N32BITREG)) GOTO 30
+                
+          DO J=N32BITREG,2,-1
+             IF( (ITSTU(J).EQ.0).AND.
+     &            (ITSTL(J-1).GT.ITSTU(J-1)))THEN
+                GO TO 30 
+             ENDIF
+          ENDDO
+
+          
+C          IF(ITSTL(7).GT.ITSTU(7))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(7).EQ.0).AND.
+C     &             (ITSTL(6).GT.ITSTU(6)))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(6).EQ.0).AND.
+C     &             (ITSTL(5).GT.ITSTU(5)))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(5).EQ.0).AND.
+C     &             (ITSTL(4).GT.ITSTU(4)))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(4).EQ.0).AND.
+C     &             (ITSTL(3).GT.ITSTU(3)))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(3).EQ.0).AND.
+C     &             (ITSTL(2).GT.ITSTU(2)))THEN
+C           GO TO 30
+C          ELSE IF( (ITSTU(2).EQ.0).AND.
+C     &             (ITSTL(1).GT.ITSTU(1)))THEN
+C           GO TO 30
+C          ENDIF
 
 C
           ITPTES = 0
 C GAB:
 C          ITPTES = IAND(ITSTL,ITSTU)
-          ITEST1 = IAND(ITSTL(1),ITSTU(1))
-          ITEST2 = IAND(ITSTL(2),ITSTU(2))
-          ITEST3 = IAND(ITSTL(3),ITSTU(3))
-          ITEST4 = IAND(ITSTL(4),ITSTU(4))
-          ITEST5 = IAND(ITSTL(5),ITSTU(5))
-          ITEST6 = IAND(ITSTL(6),ITSTU(6))
-          ITEST7 = IAND(ITSTL(7),ITSTU(7))
+
+          DO J=1,N32BITREG
+          ITEST(J) = IAND(ITSTL(J),ITSTU(J))
+          ENDDO
+
+C          ITEST1 = IAND(ITSTL(1),ITSTU(1))
+C          ITEST2 = IAND(ITSTL(2),ITSTU(2))
+C          ITEST3 = IAND(ITSTL(3),ITSTU(3))
+C          ITEST4 = IAND(ITSTL(4),ITSTU(4))
+C          ITEST5 = IAND(ITSTL(5),ITSTU(5))
+C          ITEST6 = IAND(ITSTL(6),ITSTU(6))
+C          ITEST7 = IAND(ITSTL(7),ITSTU(7))
+
 C GAB:
 C          IF (ITPTES.NE.0)                       GO TO 30
-          IF ((ITEST1.NE.0).OR.(ITEST2.NE.0).OR.(ITEST3.NE.0).OR.
-     &         (ITEST4.NE.0).OR.(ITEST5.NE.0).OR.(ITEST6.NE.0)
-     &         .OR.(ITEST7.NE.0))GO TO 30
+C          IF ((ITEST1.NE.0).OR.(ITEST2.NE.0).OR.(ITEST3.NE.0).OR.
+C     &         (ITEST4.NE.0).OR.(ITEST5.NE.0).OR.(ITEST6.NE.0)
+C     &         .OR.(ITEST7.NE.0))GO TO 30
+
+          DO J=1,N32BITREG
+             IF (ITEST(J).NE.0) GOTO 30
+          ENDDO
 
 C
 C-->      Check consistency of track parameters
@@ -454,21 +487,42 @@ C
 
           IF (CHI2.LT.CHMAX) THEN
 
-           DO I=1,7
+           DO I=1,N32BITREG
             FTMP(I)=DBLE(ITSTU(I))
-            IF(FTMP(I).LT.0)FTMP(I)=(FTMP(I)+FLOAT2)
+C            IF(FTMP(I).LT.0) FTMP(I)=(FTMP(I)+FLOAT2)
+            IF(FTMP(I).LT.0) FTMP(I)=(FTMP(I)+(2.D0**32))
            ENDDO
-           FACTOR1=FTMP(1)  +  FTMP(2)*FLOAT2 +
-     &             FTMP(3)*FLOAT3 + FTMP(4)*FLOAT4 +
-     &             FTMP(5)*FLOAT5+FTMP(6)*FLOAT6+FTMP(7)*FLOAT7
-           DO I=1,7
+
+C this should become a loop
+
+           FACTOR1 = 0
+           DO I=1,N32BITREG
+              FACTOR1 = FACTOR1 + FTMP(I)*(2.D0**(32*(I-1))) 
+           ENDDO
+
+C           FACTOR1=FTMP(1)  +  FTMP(2)*FLOAT2 +
+C     &             FTMP(3)*FLOAT3 + FTMP(4)*FLOAT4 +
+C     &             FTMP(5)*FLOAT5+FTMP(6)*FLOAT6+FTMP(7)*FLOAT7
+
+
+           DO I=1,N32BITREG
             FTMP(I)=DBLE(I2PAT(ICNDL,I))
-            IF(FTMP(I).LT.0)FTMP(I)=(FTMP(I)+FLOAT2)
+C            IF(FTMP(I).LT.0)FTMP(I)=(FTMP(I)+FLOAT2)
+            IF(FTMP(I).LT.0)FTMP(I)=(FTMP(I)+(2.D0**32))
            ENDDO
-           FACTOR2=FTMP(1)  +  FTMP(2)*FLOAT2 +
-     &             FTMP(3)*FLOAT3 + FTMP(4)*FLOAT4 +
-     &             FTMP(5)*FLOAT5+FTMP(6)*FLOAT6+FTMP(7)*FLOAT7
-            FUDG1 = CHI2*DLOG(0.5D0*FACTOR1/FACTOR2)
+
+C this should also become a loop
+
+           FACTOR2 = 0
+           DO I=1,N32BITREG
+              FACTOR2 = FACTOR2 + FTMP(I)*(2.D0**(32*(I-1))) 
+           ENDDO
+
+C           FACTOR2=FTMP(1)  +  FTMP(2)*FLOAT2 +
+C     &             FTMP(3)*FLOAT3 + FTMP(4)*FLOAT4 +
+C     &             FTMP(5)*FLOAT5+FTMP(6)*FLOAT6+FTMP(7)*FLOAT7
+     
+           FUDG1 = CHI2*DLOG(0.5D0*FACTOR1/FACTOR2)
 
 C
 C---->      Minimise SQRT( DELTA(R/MAX) ) * CHI**2
@@ -540,7 +594,7 @@ C
         IF (LFUND)THEN
           LB2(LOOPL)  = .TRUE.
 
-          DO J=1,7
+          DO J=1,N32BITREG
            IDUM1 = ITSTU(J)
            IDUM2 = I2PAT(LOOPL,J)
            IDUM3 = IOR(IDUM1,IDUM2)
@@ -1301,7 +1355,7 @@ c        IF (ITABL(KTLNK,I,JTLNDN).NE.0)              GO TO 410
         IBUF1(NCNDU) = I
 C GAB:
 C        I1PAT(NCNDU) = ITPTES
-        DO J=1,7
+        DO J=1,N32BITREG
          I1PAT(NCNDU,J) = MY_JTCHPI(I,J)
         ENDDO
   410 CONTINUE

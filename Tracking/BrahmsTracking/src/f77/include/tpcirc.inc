@@ -1,7 +1,10 @@
 *  
-* $Id: tpcirc.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tpcirc.inc,v 1.2 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:36  gaede
 * Initial local version
 *
@@ -12,9 +15,14 @@
 * Brahms V308
 *
 *  
+
+#include "padrow.inc"
+
       REAL XCIRCL,YCIRCL,WCIRCL,SIGCIR
-      INTEGER LMXCIR
-      PARAMETER (LMXCIR=200)
-      COMMON/TPCIRC/NCIRCL,XCIRCL(LMXCIR),YCIRCL(LMXCIR),
-     1    WCIRCL(LMXCIR),SIGCIR(LMXCIR)
+
+C      INTEGER LMXCIR
+C      PARAMETER (LMXCIR=256)
+
+      COMMON/TPCIRC/NCIRCL,XCIRCL(LTPDRO),YCIRCL(LTPDRO),
+     1    WCIRCL(LTPDRO),SIGCIR(LTPDRO)
 

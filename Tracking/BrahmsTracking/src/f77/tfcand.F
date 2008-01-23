@@ -1,7 +1,10 @@
 *  
-* $Id: tfcand.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
+* $Id: tfcand.F,v 1.3 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -81,7 +84,7 @@ c#include "gcflag.inc"
 #include "include/tcanwb.inc"
 
       INTEGER MY_ITCALW(NCHMAX),MY_JPLNKW(NCHMAX),MY_JTYPEW(NCHMAX)
-      INTEGER IBMAP(7),INEW
+      INTEGER IBMAP(N32BITREG),INEW
 c------------------------------------------------------------------------
       INTEGER MXFIT
       PARAMETER (MXFIT=LTPDRO+2)
@@ -504,7 +507,7 @@ C                            JCHA1 = 1st chain in IBUFF
 
 C GAB
 C        IBMAP = 0
-        DO I=1,7
+        DO I=1,N32BITREG
          IBMAP(I) = 0
         ENDDO
         NARC1 = 1
@@ -518,7 +521,7 @@ C
 C GAB:
 C          IBMAP = IOR(IBMAP,ITABL(KTCHA,JCH,JTCHPI))
 c          NPT = ITABL(KTCHA,JCH,JTCHNC)
-          DO I=1,7
+          DO I=1,N32BITREG
            IBMAP(I) = IOR(IBMAP(I),MY_JTCHPI(JCH,I))
           ENDDO
           NPT = MY_JTCHNC(JCH)
@@ -595,7 +598,7 @@ c  317       CONTINUE
             LTATC=LTATC+LPT
 C GAB:
 C            IW(KSARC+JTARPI)=IBMAP
-            DO I=1,7
+            DO I=1,N32BITREG
              MY_JTARPI(NARCS,I)=IBMAP(I)
             ENDDO
 C
@@ -655,7 +658,7 @@ C              IW(NPUT+IPT) = IBUFF(1+LPT-IPT)
           NSTOR= NSTOR+ LPT
           IORDR=-IORDR
           JCHA1= IPLNK(IPICE+1)
-          DO I=1,7
+          DO I=1,N32BITREG
            IBMAP(I)= 0
           ENDDO
 

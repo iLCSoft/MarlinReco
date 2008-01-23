@@ -1,7 +1,10 @@
 *  
-* $Id: tflnk2.F,v 1.4 2007-09-05 09:47:29 rasp Exp $
+* $Id: tflnk2.F,v 1.5 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.2  2005/07/29 15:06:17  aplin
 * Initialised number of tracks found to 0 in tpcrun.
 *
@@ -54,7 +57,7 @@ c#include "fconjj.h"
 C
 c----------------------------------------------------------------------
 c my stuff:
-
+#include "include/tpgeom.inc"
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 #include "include/my_tcal.inc"
@@ -69,6 +72,7 @@ c#include "gcflag.inc"
 #include "include/tflnwb.inc"
 #include "include/alcons.inc"
 #include "include/tpcmatpar.inc"
+#include "include/my_tcha.inc"
 C
 C---> Steering constants follow:
 C
@@ -81,6 +85,7 @@ C(KH) INTEGER IGNT(100)
 c      INTEGER IGNT(MAXCND+1)
 C--------------------------------------
 
+      INTEGER INDEX
       INTEGER MY_NBMWRK(1000)
       INTEGER N1A,N1B,N2A,N2B
 CC GAB NEW:
@@ -96,19 +101,21 @@ c(kh)      PARAMETER (MXGD=200)
 C GAB
 C      DIMENSION LIST1(21),LIST2(2),LIST3(2)
       INTEGER LIST1,LIST2,LIST3
-      DIMENSION LIST1(200),LIST2(2),LIST3(2)
+      DIMENSION LIST1(LTPDRO),LIST2(2),LIST3(2)
 C GAB:
 C      DIMENSION LGOOD(MXGD,27),QGOOD(MXGD,21)
       INTEGER LGOOD
       REAL QGOOD
 c(kh) DIMENSION LGOOD(MXGD,127),QGOOD(MXGD,22)
-      DIMENSION LGOOD(MXGD,209),QGOOD(MXGD,22)
+      DIMENSION LGOOD(MXGD,LTPDRO),QGOOD(MXGD,22)
 C GAB:
       LOGICAL FIRST
       DATA FIRST/.TRUE./
       REAL RF
       DATA RF/75./
 C
+
+
 c GAB:
       INTEGER IX
       INTEGER MAXGDHT,I,J,K,NTRI,KP1,NPT,NPT1,NPT2,ICO,NPAD,NG,I1,I2
@@ -152,7 +159,7 @@ c        NT1TL=NAMIND('T1TL')
 c        NT1CL=NAMIND('T1CL')
       ENDIF
       DO I=1,1000
-       DO J=1,7
+       DO J=1,N32BITREG
         NBPWRK(I,J)=0
        ENDDO
       ENDDO
@@ -242,6 +249,7 @@ C
 c      IW(1)=1
 c      CALL WBANK(IW,NBPWRK,NTRI,*848)
 
+c      write(*,*) "NTRI = " , NTRI
       DO 1 I=1,NTRI
 
 
@@ -254,6 +262,7 @@ c        NPT=ITABL(KT1TL,I,JT1TN1)
         KP1=MY_JT1TIO(I)
         NPT=MY_JT1TN1(I)
 
+C        write(*,*) "NPT=", NPT
         DO 11 J=1,NPT
 
 C GAB:
@@ -264,21 +273,29 @@ C          NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000+10
 
 C GAB:
 C           IF (NPAD.GT.10.AND.NPAD.LT.33) CALL SBIT1(IW(NBPWRK+I),NPAD)
-           IF(NPAD.LE.32)THEN
-            CALL SBIT1(NBPWRK(I,1),NPAD)
-           ELSE IF (NPAD.LE.64)THEN
-            CALL SBIT1(NBPWRK(I,2),NPAD-32)
-           ELSE IF (NPAD.LE.96)THEN
-            CALL SBIT1(NBPWRK(I,3),NPAD-64)
-           ELSE IF (NPAD.LE.128)THEN
-            CALL SBIT1(NBPWRK(I,4),NPAD-96)
-           ELSE IF (NPAD.LE.160)THEN
-            CALL SBIT1(NBPWRK(I,5),NPAD-128)
-           ELSE IF (NPAD.LE.192)THEN
-            CALL SBIT1(NBPWRK(I,6),NPAD-160)
-           ELSE
-            CALL SBIT1(NBPWRK(I,7),NPAD-192)
-           ENDIF
+
+          DO INDEX=1,N32BITREG
+             IF(NPAD.LE.INDEX*32) THEN
+                CALL SBIT1(NBPWRK(I,INDEX),NPAD-((INDEX-1)*32))
+             ENDIF
+          END DO
+
+C           IF(NPAD.LE.32)THEN
+C            CALL SBIT1(NBPWRK(I,1),NPAD)
+C           ELSE IF (NPAD.LE.64)THEN
+C            CALL SBIT1(NBPWRK(I,2),NPAD-32)
+C           ELSE IF (NPAD.LE.96)THEN
+C            CALL SBIT1(NBPWRK(I,3),NPAD-64)
+C           ELSE IF (NPAD.LE.128)THEN
+C            CALL SBIT1(NBPWRK(I,4),NPAD-96)
+C           ELSE IF (NPAD.LE.160)THEN
+C            CALL SBIT1(NBPWRK(I,5),NPAD-128)
+C           ELSE IF (NPAD.LE.192)THEN
+C            CALL SBIT1(NBPWRK(I,6),NPAD-160)
+C           ELSE
+C            CALL SBIT1(NBPWRK(I,7),NPAD-192)
+C           ENDIF
+
    11   CONTINUE
 
 c gab: tmp
@@ -286,6 +303,8 @@ c SJA  can't find this used anywhere
 ccc        IGNT(I)=IGNTRK(ICO)
 
     1 CONTINUE
+C
+C      write(*,*) "finished loops"
 C
 C     Loop over pairs of tracks to find candidates to link
 C
@@ -436,6 +455,8 @@ C          DO IJ=NTPC+1,21
           DO IJ=NTPC+1,NRTPC
             LIST1(IJ)=0
           ENDDO
+
+
 
 C
 C         Fit the track candidate. Remove upto LOMAX points to get a
@@ -708,6 +729,7 @@ c     +                       IW(KTGCL+LMHLEN+NCL+NTPC+NRT1+1),NRT2)
 C
 C++     Copy the unchanged tracks
 C
+
         NT=NT+1
 
 C GAB:
@@ -755,7 +777,7 @@ c        NCL=NCL+NTOT
         NCL=NCL+NTOT
 C
   567 CONTINUE
-
+c      write(*,*) "got this far"
 C
 C Update the pointers in TPCO to the TGFT bank
 C
@@ -776,6 +798,8 @@ c          IC=IW(KTGCL+IOFF+II)
 c          IW(KROW(KTPCO,IC)+JTPCTN)=-ITK
 c  742   CONTINUE
 c  756 CONTINUE
+
+
 
       DO 705 IC=1,NTPCO
         TPCO_TN(IC)=0

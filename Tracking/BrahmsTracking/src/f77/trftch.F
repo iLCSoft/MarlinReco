@@ -1,7 +1,10 @@
 *  
-* $Id: trftch.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
+* $Id: trftch.F,v 1.3 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -119,6 +122,7 @@ C      IF (KTCRL.EQ.0) GO TO 999
 C
 C  Clear dropped hit list
 C
+c      write(*,*) "starting trftch"
       CALL VZERO(MCHAIN,LTPDRO)
 C
       NTRY = 0
@@ -136,30 +140,36 @@ C
 C
 C  Transfer hits to fitter array in increasing R order
 C
+c      write(*,*) "Transfer hits to fitter array in increasing R order"
+c      write(*,*) "NHCHAI = ", NHCHAI
       DO 10 J=NHCHAI,1,-1
 C
          IF (MCHAIN(J).EQ.0) THEN
+
+c            write(*,*) "NCIRCL = ", NCIRCL
             NCIRCL = NCIRCL+1
+c            write(*,*) "NCIRCL = ", NCIRCL
 C GAB:
 C            XCIRCL(NCIRCL) = RTABL(INDCXY,ICPTR(IHCHAI(J)),1)
 C            YCIRCL(NCIRCL) = RTABL(INDCXY,ICPTR(IHCHAI(J)),2)
 C            ZCIRCL(NCIRCL) = RTABL(KTPCO,ICPTR(IHCHAI(J)),JTPCZV)
 C            RCIRCL(NCIRCL) = RTABL(KTPCO,ICPTR(IHCHAI(J)),JTPCRV)
 C            PHCIRC(NCIRCL) = RTABL(KTPCO,ICPTR(IHCHAI(J)),JTPCPH)
-
+c            write(*,*) "IHIT ", J
             IHIT=MY_JNDBCO(IHCHAI(J))
-
+c            write(*,*) "IHIT = ", IHIT
 C            XCIRCL(NCIRCL) = TPCHITS(1,IHIT)
 C            YCIRCL(NCIRCL) = TPCHITS(2,IHIT)
 C            ZCIRCL(NCIRCL) = TPCHITS(3,IHIT)
 C            RCIRCL(NCIRCL) = TPCR(IHIT)
 C            PHCIRC(NCIRCL) = TPCPHI(IHIT)
+
             XCIRCL(NCIRCL) = TPCO_XV(IHIT)
             YCIRCL(NCIRCL) = TPCO_YV(IHIT)
             ZCIRCL(NCIRCL) = TPCO_ZV(IHIT)
             RCIRCL(NCIRCL) = TPCO_RV(IHIT)
             PHCIRC(NCIRCL) = TPCO_PH(IHIT)
-            
+c            write(*,*) "PHCIRC(NCIRCL) = ", PHCIRC(NCIRCL)   
 C     SJAWRT
 c            write(90,*) "XCIRCL(NCIRCL) = ", XCIRCL(NCIRCL)  
 c            write(90,*) "YCIRCL(NCIRCL) = ", YCIRCL(NCIRCL)            
@@ -172,6 +182,7 @@ c            write(90,*) "PHCIRC(NCIRCL) = ", PHCIRC(NCIRCL)
                IR1 = IRCHAI(J)
             ENDIF
 C
+
             SIGRP = D2CHAI(J)
 C GAB:
 C            SIGZ =  RTABL(KTPCO,ICPTR(IHCHAI(J)),JTPCSZ)
@@ -185,6 +196,8 @@ C            SIGZ =  TPCHITS(7,IHIT)**2
             SSIGZ = SSIGZ + SIGZ
          ENDIF
    10 CONTINUE
+
+
 
 C
 C  Fit if more than 3 hits

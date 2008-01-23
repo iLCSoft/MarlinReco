@@ -1,7 +1,10 @@
 *  
-* $Id: my_tcha.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: my_tcha.inc,v 1.2 2008-01-23 17:22:22 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -12,9 +15,16 @@
 * Brahms V308
 *
 *  
+
+#include "padrow.inc"
+
       INTEGER NCHMAX
       PARAMETER(NCHMAX=2000)
-      INTEGER MY_NCHAIN,MY_JTCHNC,MY_JTCHOF
+
+C      INTEGER N32BITREG
+C      PARAMETER(N32BITREG=8)
+
+      INTEGER MY_NCHAIN,MY_JTCHNC,MY_JTCHOF      
       REAL  MY_JTCHIR,MY_JTCHTL,MY_JTCHP0
       REAL MY_JTCHD0,MY_JTCHZ0,MY_JTCHLC
       REAL MY_JTCHC1,MY_JTCHC2,MY_JTCHER
@@ -23,5 +33,5 @@
      & MY_JTCHIR(NCHMAX),MY_JTCHTL(NCHMAX),MY_JTCHP0(NCHMAX),
      & MY_JTCHD0(NCHMAX),MY_JTCHZ0(NCHMAX),MY_JTCHLC(NCHMAX),
      & MY_JTCHC1(NCHMAX),MY_JTCHC2(NCHMAX),MY_JTCHER(NCHMAX,15),
-     & MY_JTCHPI(NCHMAX,7),MY_JTCHOF(NCHMAX),MY_JTCHNC(NCHMAX)
+     & MY_JTCHPI(NCHMAX,N32BITREG),MY_JTCHOF(NCHMAX),MY_JTCHNC(NCHMAX)
 

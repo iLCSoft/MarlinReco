@@ -1,7 +1,24 @@
 *
-* $Id: tkfunc1.inc,v 1.4 2008-01-23 17:22:22 aplin Exp $
+* $Id: tkfunc1.inc,v 1.5 2008-01-24 17:21:50 aplin Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.3  2005/07/21 16:37:00  aplin
 * The itedat bank has been added with read and write interface.
 *
@@ -38,7 +55,7 @@
 *
 
 
-#include "temp.inc"
+
 #include "brlink.inc"
       REAL RTKHIT, TKMCTR
       INTEGER ITKHIT, ITKMCT

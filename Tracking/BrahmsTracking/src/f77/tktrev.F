@@ -1,7 +1,24 @@
 *  
-* $Id: tktrev.F,v 1.11 2008-01-23 17:22:22 aplin Exp $
+* $Id: tktrev.F,v 1.12 2008-01-24 17:21:50 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.11  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.10  2007/12/12 13:40:35  aplin
 * Removed the Silicon track matching in LEPTracking. This is now done solely by FullLDCTracking in conjuction with SiliconTracking by Alexei Raspereza.
 *
@@ -282,6 +299,11 @@ c ---   GAB's ALEPH-style TPC pattern recognition
 
 
         CALL TPCRUN(IERROR)
+        IF(IERROR.EQ.99) THEN
+           GOTO 888
+        ENDIF
+        
+
 C....  adjust size of hit banks in patrec
 c        CALL TKPUSH_TPC(1)
 c      END IF
@@ -323,9 +345,6 @@ c      TIME_TKMKEX =TIME_TKMKEX+(TEND-TSTART)
 
 C.....combine TEs to TSs (ambiguous full track candidates) using DELSEARCH.
 
-      write(*,*) "---------------------"
-      write(*,*) "About to start TPCRUN"
-      write(*,*) "---------------------"
 
       CALL FSFSTR
 
@@ -408,9 +427,10 @@ C.....finally, some storage usage information for debugging purposes
         WRITE(6,*) 'TKTREV: needed NEXCL=',NEXCL,' of', MXEXCL
       END IF
 
-      TKTREV = IERROR
+ 888  TKTREV = IERROR
 
-  999 RETURN
+ 999  RETURN
+      
       END
 
 

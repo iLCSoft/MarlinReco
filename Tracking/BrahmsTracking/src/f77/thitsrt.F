@@ -1,7 +1,13 @@
 *  
-* $Id: thitsrt.F,v 1.5 2006-02-24 16:36:55 aplin Exp $
+* $Id: thitsrt.F,v 1.6 2008-01-24 17:21:50 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2006/02/24 16:36:55  aplin
+* increased NMXHTRW again by a factor of 2 in thitsrt.F
+* increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
+* set the minimum radius/pad ring for inward search in first track finding to MINMRG=120 in unmerge.F
+* reduced the maximum number of links NMAXLNK to 25000
+*
 * Revision 1.4  2006/02/07 10:50:57  owendt
 * changed NMXHTRW from 600 to 1200 to ensure stable tracking with Mokka 5.04
 *
@@ -98,9 +104,13 @@ CCC       CALL TKVETO(1)
        IER=1
        RETURN
       ENDIF
-      IF (NRTPC.GT.NMAXRW)THEN
-       WRITE(*,*)'THITSRT: NMAXRW is too small'
-       IER=2
+      IF (NRTPC.GT.LTPDRO)THEN
+       WRITE(*,*)'THITSRT: the number of TPC padrows specified in the' 
+       WRITE(*,*)'GEAR file is larger than the max number of rows '
+       WRITE(*,*)'that the code can handle i.e. LTPDRO'
+       WRITE(*,*)'increase N32BITREG in ./src/f77/include/padrow.inc'
+       WRITE(*,*)'gmake clean and recompile'
+       IER=99
        RETURN
       ENDIF
 

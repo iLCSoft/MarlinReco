@@ -1,7 +1,24 @@
 *  
-* $Id: tcobin.F,v 1.4 2008-01-23 17:22:22 aplin Exp $
+* $Id: tcobin.F,v 1.5 2008-01-24 12:46:26 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.3  2005/08/09 10:27:50  aplin
 * increased the maximum number of hits in one row to 1000 ( NMAXROW = 1000 in src/f77/include/my_tcrl.inc ) , and ensured the tracking is skipped in the event when this number of hits is exceeded (tcobin.F).
 *
@@ -48,7 +65,7 @@ C!
 C!-------------------------------------------------------------------
 C
 c
-#include "include/temp.inc"
+
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 c#include "gcflag.inc"

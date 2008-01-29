@@ -6,9 +6,14 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.26 2007-09-13 07:39:04 rasp Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.27 2008-01-29 13:43:55 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.26  2007/09/13 07:39:04  rasp
+** Updated version of the LEPTracking processor. For each
+** digitized TPC hit spatial resolutions are accessed via
+** call to the TrackerHit::getCovMatrix method.
+**
 ** Revision 1.24  2007/09/05 09:47:29  rasp
 ** Updated version
 **
@@ -101,8 +106,11 @@
 PROTOCCALLSFFUN0(INT,TKTREV,tktrev)
 #define TKTREV() CCALLSFFUN0(TKTREV,tktrev)
 
+PROTOCCALLSFFUN0(INT,CHECKTPCROWS,checktpcrows)
+#define CHECKTPCROWS() CCALLSFFUN0(CHECKTPCROWS,checktpcrows)
+
   // FIXME:SJA: the namespace should be used explicitly
-  using namespace lcio ;
+using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
 using namespace std ; 
@@ -346,8 +354,24 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   }
   
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
 
-  
+  if (padLayout.getNRows()>CHECKTPCROWS()) 
+    {
+      std::stringstream errorMsg;
+      errorMsg << "\nProcessor: LEPTracking \n" <<
+        "The number of TPC padrows specified in the GEAR file is " << padLayout.getNRows() << "\n" 
+               << "This is larger than the max number of rows that the code can handle." << "\n"
+               << "The maximum number is determined by LTPDRO which is currently set to " 
+               << CHECKTPCROWS() << "\n"
+               << "LTPDRO must be a multiple of 32, and is defined as N32BITREG*32 \n"
+               << "Increase N32BITREG in ./src/f77/include/padrow.inc \n"
+               << "gmake clean and recompile"
+               << "\n" ;
+      throw gear::Exception(errorMsg.str());
+    }
+
+
   if( tpcTHcol != 0 ){
     
     LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
@@ -536,6 +560,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       cout << "the first hit for the sit has id " << sitsubid << endl ;
     }
     
+
+
     int errTKTREV = TKTREV(); 
 
     cout << "TKTREV returns:" << errTKTREV << endl;

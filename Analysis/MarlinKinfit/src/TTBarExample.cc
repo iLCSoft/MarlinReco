@@ -1,4 +1,4 @@
-#include "WW5CFit.h"
+#include "TTBarExample.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -17,14 +17,15 @@
 #include <EVENT/MCParticle.h>
 #include <EVENT/SimTrackerHit.h>
 #include <EVENT/ReconstructedParticle.h>
-//#include <root/TLorentzVector.h>
 #include <CLHEP/Vector/LorentzVector.h>
 #include "JetFitObject.h"
+#include "NeutrinoFitObject.h"
 #include "PxConstraint.h"
 #include "PyConstraint.h"
 #include "PzConstraint.h"
 #include "EConstraint.h"
 #include "OPALFitter.h"
+#include "TwoB4JPairing.h"
 #include "FourJetPairing.h"
 #include "MassConstraint.h"
 
@@ -34,22 +35,28 @@ using namespace std ;
 using namespace CLHEP ;
 
 
-WW5CFit aWW5CFit ;
+TTBarExample aTTBarExample ;
 
 
-WW5CFit::WW5CFit() : Processor("WW5CFit") {
+TTBarExample::TTBarExample() : Processor("TTBarExample") {
   
   // modify processor description
-  _description = "WW5CFit does a 5C fit on 4 jet events (Px, Py, Pz, E, M12 = M34 (for all three permutations))" ;
+  _description = "TTBarExample does a 6C fit on 6jet ttbar events (Px, Py, Pz, E, M12 = M34 = M_W (for all permutations assuming the b-jets are tagged))" ;
   
 
   // register steering parameters: name, description, class-variable, default value
 
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-			   "JetCollectionName" , 
-			   "Name of the Jet collection"  ,
-			   _jetcolName ,
-			   std::string("Durham2Jets") ) ;
+			   "LightJetCollectionName" , 
+			   "Name of the Light Jet collection"  ,
+			   _lightjetcolName ,
+			   std::string("DurhamLightJets") ) ;
+                           
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+			   "BJetCollectionName" , 
+			   "Name of the B Jet collection"  ,
+			   _bjetcolName ,
+			   std::string("DurhamBJets") ) ;
                            
   registerProcessorParameter( "ECM" ,
                               "Center-of-Mass Energy",
@@ -59,7 +66,7 @@ WW5CFit::WW5CFit() : Processor("WW5CFit") {
 }
 
 
-void WW5CFit::init() { 
+void TTBarExample::init() { 
 
   // usually a good idea to
   printParameters() ;
@@ -69,12 +76,12 @@ void WW5CFit::init() {
   
 }
 
-void WW5CFit::processRunHeader( LCRunHeader* run) { 
+void TTBarExample::processRunHeader( LCRunHeader* run) { 
 
   _nRun++ ;
 } 
 
-void WW5CFit::processEvent( LCEvent * evt ) { 
+void TTBarExample::processEvent( LCEvent * evt ) { 
 
     
     message<MESSAGE>( log() 
@@ -85,34 +92,34 @@ void WW5CFit::processEvent( LCEvent * evt ) {
   // usually the working horse ...
 
 #ifdef MARLIN_USE_AIDA
-    
+  
   // define a histogram pointer
-  static AIDA::IHistogram1D* hRecWMassBest ;    
-  static AIDA::IHistogram1D* hRecWMassAll ;    
-  static AIDA::IHistogram1D* hRecWMassNoFitBest ;    
-  static AIDA::IHistogram1D* hRecWMassNoFitAll ;    
+  static AIDA::IHistogram1D* hRecTopMassBest ;    
+  static AIDA::IHistogram1D* hRecTopMassAll ;    
+  static AIDA::IHistogram1D* hRecTopMassNoFitBest ;    
+  static AIDA::IHistogram1D* hRecTopMassNoFitAll ;    
   static AIDA::IHistogram1D* hFitProbBest ;    
   static AIDA::IHistogram1D* hFitProbAll ;    
              
-    message<DEBUG>( log() 
+    message<MESSAGE>( log() 
 		      << " processing event " << evt->getEventNumber() 
 		      << "  in run "          << evt->getRunNumber() 
 		      ) ;
   
   if( isFirstEvent() ) { 
     
-    hRecWMassBest = 
+    hRecTopMassBest = 
       AIDAProcessor::histogramFactory(this)->
-      createHistogram1D( "hRecWMassBest", "M_W", 200, 0., 200. ) ; 
-    hRecWMassAll = 
+      createHistogram1D( "hRecTopMassBest", "M_W", 200, 0., 200. ) ; 
+    hRecTopMassAll = 
       AIDAProcessor::histogramFactory(this)->
-      createHistogram1D( "hRecWMassAll", "M_W", 200, 0., 200. ) ; 
-    hRecWMassNoFitBest = 
+      createHistogram1D( "hRecTopMassAll", "M_W", 200, 0., 200. ) ; 
+    hRecTopMassNoFitBest = 
       AIDAProcessor::histogramFactory(this)->
-      createHistogram1D( "hRecWMassNoFitBest", "M_W", 200, 0., 200. ) ; 
-    hRecWMassNoFitAll = 
+      createHistogram1D( "hRecTopMassNoFitBest", "M_W", 200, 0., 200. ) ; 
+    hRecTopMassNoFitAll = 
       AIDAProcessor::histogramFactory(this)->
-      createHistogram1D( "hRecWMassNoFitAll", "M_W", 200, 0., 200. ) ; 
+      createHistogram1D( "hRecTopMassNoFitAll", "M_W", 200, 0., 200. ) ; 
     hFitProbBest = 
       AIDAProcessor::histogramFactory(this)->
       createHistogram1D( "hFitProb", "fit probability", 100, 0., 1. ) ; 
@@ -122,9 +129,9 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
   }
 
-#endif   
+#endif
    
-  message<DEBUG>( log() 
+  message<MESSAGE>( log() 
 		      << " processing event " << evt->getEventNumber() 
 		      << "  in run "          << evt->getRunNumber() 
 		      ) ;
@@ -137,39 +144,42 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
   //////////////////   JETS ///////////////////////////
    
-     LCCollection* jetcol = evt->getCollection( _jetcolName ) ;
-     if (jetcol != 0) {
+     LCCollection* lightjetcol = evt->getCollection( _lightjetcolName ) ;
+     LCCollection* bjetcol = evt->getCollection( _bjetcolName ) ;
+     if (lightjetcol != 0 && bjetcol != 0) {
   
-       int nJETS = jetcol->getNumberOfElements()  ;
+       int nlightJETS = lightjetcol->getNumberOfElements()  ;
        message<MESSAGE>( log() 
-                      << " found " << nJETS
-                      << " jets in event" << evt->getEventNumber() 
-                      << "  in run "          << evt->getRunNumber() 
+                      << " found " << nlightJETS
+                      << " light jets in event" << evt->getEventNumber() 
+                      << "  in run "           << evt->getRunNumber() 
                       ) ;
                    
-       float yminus = jetcol ->parameters().getFloatVal( "YMinus");              
+       int nbJETS = bjetcol->getNumberOfElements()  ;
        message<MESSAGE>( log() 
-                      << " yminus = " << yminus
+                      << " found " << nbJETS
+                      << " b jets in event" << evt->getEventNumber() 
+                      << "  in run "           << evt->getRunNumber() 
                       ) ;
-       float yplus = jetcol ->parameters().getFloatVal( "YPlus");              
-       message<MESSAGE>( log() 
-                      << " yplus = " << yplus
-                      ) ;
+                   
        
   // original fit objects - save for next permutation
        JetFitObject* j1 = 0;
        JetFitObject* j2 = 0;
        JetFitObject* j3 = 0;
        JetFitObject* j4 = 0;
+       // these are assumed to be the b-jets
+       JetFitObject* j5 = 0;
+       JetFitObject* j6 = 0;
        
        double erre = 1.0;        //   100%/sqrt(E)
        double errtheta = 0.01;   //   10mrad
        double errphi = 0.01;     //   10mrad
        
        
-       for(int i=0; i< nJETS ; i++){
+       for(int i=0; i< nlightJETS ; i++){
          
-          ReconstructedParticle* j = dynamic_cast<ReconstructedParticle*>( jetcol->getElementAt( i ) ) ;
+          ReconstructedParticle* j = dynamic_cast<ReconstructedParticle*>( lightjetcol->getElementAt( i ) ) ;
                
           if (j) {
              message<MESSAGE>( log() 
@@ -206,16 +216,43 @@ void WW5CFit::processEvent( LCEvent * evt ) {
           }
        }
        
-       const int NJETS = 4;
+       for(int i=0; i< nbJETS ; i++){
+         
+          ReconstructedParticle* j = dynamic_cast<ReconstructedParticle*>( bjetcol->getElementAt( i ) ) ;
+               
+          if (j) {
+             message<MESSAGE>( log() 
+                       << " found b-jet in event " << evt->getEventNumber() 
+                       << "  in run "          << evt->getRunNumber() 
+                       ) ;
+             lvec = HepLorentzVector ((j->getMomentum())[0],(j->getMomentum())[1],(j->getMomentum())[2],j->getEnergy()); 
+             erre *= std::sqrt(lvec.e());
+             if (i == 0) {
+               j5 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
+               message<MESSAGE>( log() 
+                       << " start four-vector of first b-jet: " << *j5 
+                       ) ;
+             }
+             else if (i == 1) {
+               j6 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
+               message<MESSAGE>( log() 
+                       << " start four-vector of second b-jet: " << *j6 
+                       ) ;
+             }
+           
+          }
+       }
+       
+       const int NJETS = 6;
        
        // these get changed by the fit -> reset after each permutation!
-       JetFitObject fitjets[NJETS] = {*j1, *j2, *j3, *j4};
+       JetFitObject fitjets[NJETS] = {*j1, *j2, *j3, *j4, *j5, *j6};
  
        // these point allways to the fitjets array, which gets reset.
        JetFitObject *jets[NJETS];
        for (int i = 0; i < NJETS; ++i) jets[i] = &fitjets[i];
 
-       FourJetPairing pairing (jets);
+       TwoB4JPairing pairing (jets);
        JetFitObject *permutedjets[NJETS];
        
        double bestprob = 0.;
@@ -237,12 +274,15 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          fitjets[1] = *j2;
          fitjets[2] = *j3;
          fitjets[3] = *j4;
+         fitjets[4] = *j5;
+         fitjets[5] = *j6;
 
          pairing.nextPermutation (permutedjets);
-         for (int i = 0; i < NJETS; ++i)
+         for (int i = 0; i < NJETS; ++i) {
             message<MESSAGE>( log() 
                        << "start four-vector of jet " << i << ": " << *(permutedjets[i])
                        ) ;
+         }              
         
          PxConstraint pxc;
          for (int i = 0; i < NJETS; ++i)
@@ -255,7 +295,7 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          PzConstraint pzc;
          for (int i = 0; i < NJETS; ++i)
             pzc.addToFOList (*(permutedjets[i]));
-        
+            
          message<MESSAGE>( log() 
                    << "ECM = " << _ecm
                        ) ;
@@ -263,36 +303,53 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          for (int i = 0; i < NJETS; ++i)
             ec.addToFOList (*(permutedjets[i]));
         
-            message<MESSAGE>( log() 
-                       << "Value of pxc before fit: " << pxc.getValue()
-                       ) ;
-            message<MESSAGE>( log() 
-                       << "Value of pyc before fit: " << pyc.getValue()
-                       ) ;
-            message<MESSAGE>( log() 
-                       << "Value of pzc before fit: " << pzc.getValue()
-                       ) ;
-            message<MESSAGE>( log() 
-                       << "Value of ec before fit: " << ec.getValue()
-                       ) ;
+         message<MESSAGE>( log() 
+                    << "Value of pxc before fit: " << pxc.getValue()
+                    ) ;
+         message<MESSAGE>( log() 
+                    << "Value of pyc before fit: " << pyc.getValue()
+                    ) ;
+         message<MESSAGE>( log() 
+                    << "Value of pzc before fit: " << pzc.getValue()
+                    ) ;
+         message<MESSAGE>( log() 
+                    << "Value of ec before fit: " << ec.getValue()
+                    ) ;
   
-         MassConstraint w(0.);
-         w.addToFOList (*(permutedjets[0]), 1);
-         w.addToFOList (*(permutedjets[1]), 1);
-         w.addToFOList (*(permutedjets[2]), 2);
-         w.addToFOList (*(permutedjets[3]), 2);
-        
-         startmass1 = w.getMass(1);
-         startmass2 = w.getMass(2);
+         MassConstraint w1(80.4);
+         MassConstraint w2(80.4);
+         w1.addToFOList (*(permutedjets[0]), 1);
+         w1.addToFOList (*(permutedjets[1]), 1);
+         w2.addToFOList (*(permutedjets[2]), 1);
+         w2.addToFOList (*(permutedjets[3]), 1);
+         
          message<MESSAGE>( log() 
-                       << "start mass of W 1: " << startmass1
+                       << "start mass of W 1: " << w1.getMass(1)
                        ) ;
          message<MESSAGE>( log() 
-                       << "start mass of W 2: " << startmass2
+                       << "start mass of W 2: " << w2.getMass(1)
+                       ) ;
+                       
+         // this is just a cheap way to monitor the resulting top mass:
+         MassConstraint t1(175.);
+         t1.addToFOList (*(permutedjets[0]), 1);
+         t1.addToFOList (*(permutedjets[1]), 1);
+         t1.addToFOList (*(permutedjets[4]), 1);
+         MassConstraint t2(175.);
+         t2.addToFOList (*(permutedjets[2]), 1);
+         t2.addToFOList (*(permutedjets[3]), 1);
+         t2.addToFOList (*(permutedjets[5]), 1);
+         startmass1 = t1.getMass(1);
+         startmass2 = t2.getMass(1);
+         message<MESSAGE>( log() 
+                       << "start mass of top 1: " << startmass1
+                       ) ;
+         message<MESSAGE>( log() 
+                       << "start mass of top 2: " << startmass2
                        ) ;
 #ifdef MARLIN_USE_AIDA
-         hRecWMassNoFitAll->fill( startmass1 ) ;
-         hRecWMassNoFitAll->fill( startmass2 ) ;
+         hRecTopMassNoFitAll->fill( startmass1 ) ;
+         hRecTopMassNoFitAll->fill( startmass2 ) ;
 #endif        
        
          OPALFitter fitter;
@@ -302,7 +359,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          fitter.addConstraint (pyc);
          fitter.addConstraint (pzc);
          fitter.addConstraint (ec);
-         fitter.addConstraint (w);
+         fitter.addConstraint (w1);
+         fitter.addConstraint (w2);
 
          double prob = fitter.fit();
          message<MESSAGE>( log() 
@@ -318,21 +376,27 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          }              
          
          message<MESSAGE>( log() 
-                       << "final mass of W 1: " << w.getMass(1)
+                       << "final mass of W 1: " << w1.getMass(1)
                        ) ;
          message<MESSAGE>( log() 
-                       << "final mass of W 2: " << w.getMass(2)
+                       << "final mass of W 2: " << w2.getMass(1)
+                       ) ;
+         message<MESSAGE>( log() 
+                       << "final mass of top 1: " << t1.getMass(1)
+                       ) ;
+         message<MESSAGE>( log() 
+                       << "final mass of top 2: " << t2.getMass(1)
                        ) ;
          if (fitter.getError() == 0) {
 #ifdef MARLIN_USE_AIDA
            hFitProbAll->fill( prob ) ;
-           hRecWMassAll->fill( w.getMass(1)) ;
-           hRecWMassAll->fill( w.getMass(2)) ;
-#endif        
-           if (prob > bestprob && w.getMass(1) > 50 && w.getMass(1) < 110) {
+           hRecTopMassAll->fill( t1.getMass(1)) ;
+           hRecTopMassAll->fill( t2.getMass(1)) ;
+#endif       
+           if (prob > bestprob) {
              bestprob = prob;
-             bestmass1 = w.getMass(1);
-             bestmass2 = w.getMass(2);
+             bestmass1 = t1.getMass(1);
+             bestmass2 = t2.getMass(1);
              beststartmass1 = startmass1;
              beststartmass2 = startmass2;
            }
@@ -348,22 +412,22 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 #ifdef MARLIN_USE_AIDA
        if (bestprob > 0) {
          hFitProbBest->fill( bestprob ) ;
-         hRecWMassBest->fill( bestmass1 ) ;
-         hRecWMassBest->fill( bestmass2 ) ;
-         hRecWMassNoFitBest->fill( beststartmass1 ) ;
-         hRecWMassNoFitBest->fill( beststartmass2 ) ;
+         hRecTopMassBest->fill( bestmass1 ) ;
+         hRecTopMassBest->fill( bestmass2 ) ;
+         hRecTopMassNoFitBest->fill( beststartmass1 ) ;
+         hRecTopMassNoFitBest->fill( beststartmass2 ) ;
 
        } 
-#endif
+#endif       
 
        delete j1;
        delete j2;
        delete j3;
        delete j4;
+       delete j5;
+       delete j6;
      }
     
-
-
 
 
   _nEvt ++ ;
@@ -371,12 +435,12 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
 
 
-void WW5CFit::check( LCEvent * evt ) { 
+void TTBarExample::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 
-void WW5CFit::end(){ 
+void TTBarExample::end(){ 
   
 }
 

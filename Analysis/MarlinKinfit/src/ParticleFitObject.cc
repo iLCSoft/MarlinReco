@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2007/10/30 15:51:14  gaede
+ * - initial version of MarlinKinfit
+ * -
  * - Revision 1.4  2007/09/17 12:50:15  blist
  * - Some parameters reordered
  * -
@@ -155,7 +158,7 @@ bool ParticleFitObject::calculateCovInv() const {
       }
     }
   }
-  int ierr = (idim == 0) ? 0 : dsinv(idim, &covinv[0][0], NPAR);
+  int ierr = (idim == 0) ? 0 : dsinv(idim+1, &covinv[0][0], NPAR);
   if (ierr != 0) {
     std::cerr << "ParticleFitObject::calculateCovInv: Error "
               << ierr << " from dsinv! Object " << getName() << std::endl;

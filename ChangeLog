@@ -1,3 +1,92 @@
+2008-01-31 14:01  listj
+
+	* Analysis/MarlinKinfit/: README, include/NeutrinoFitObject.h,
+	  include/TTBarExample.h, include/TwoB4JPairing.h,
+	  src/NeutrinoFitObject.cc, src/TTBarExample.cc,
+	  src/TwoB4JPairing.cc, src/WW5CFit.cc: Some changes to
+	  MarlinKinfit: improved readme, bug fix in NeutrinoFitObject and
+	  new tt->bbjjjj example
+
+2008-01-29 14:43  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/checktpcrows.F: Added GEAR Exception for the case that the
+	  number of TPC Padrows specified in the gear file exceeds that
+	  which can be dealt with by the Fortran Code's fixed arrays.
+
+2008-01-24 18:21  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: thitsrt.F, tktrev.F,
+	  include/padrow.inc, include/tkfunc1.inc: updated the error codes
+	  for the case of to many TPC padrows in the GEAR file error code
+	  returned by TKTREV = 99 this should be caught by LEPTracking and
+	  an exception thown.
+
+2008-01-24 13:46  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tcobin.F:
+	  removed the line used for private debug copy
+
+2008-01-23 18:22  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: tcobin.F, tfcand.F, tflnk2.F,
+	  tflnks.F, tktrev.F, trftch.F, trkfnd.F, include/my_tarc.inc,
+	  include/my_tcha.inc, include/padrow.inc, include/tflnwb.inc,
+	  include/tkfunc1.inc, include/tpcirc.inc, include/tpgeom.inc,
+	  include/tplinc.inc:
+	       The TPC Tracking code has been altered to cope with more
+	  than 224 pad rows
+	       the max number of pad rows can be changed in padrow.inc by
+	  changing
+
+	       The maximum number of TPC Padrows that the tracking code
+	       can accept must be a multiple of 32
+
+	       Note this is not the number of TPC Padrows in the dectector
+	       but the maximum allowed because of the predifined array
+	  sizes
+	       and a set of 32 bit registers
+
+	       Currently it is set to 512
+
+	       By increasing the value of N32BITREG in padrow.inc you can
+	  increase the max
+	       number of pad rows
+
+2008-01-22 16:08  engels
+
+	* CMakeLists.txt: bug fix: in some systems dvips sends output per
+	  default to printer instead to file
+
+2008-01-22 09:59  engels
+
+	* MarlinRecoConfig.cmake.in: set both variables INCLUDE_DIR and
+	  INCLUDE_DIRS for compatibility
+
+2008-01-16 13:53  engels
+
+	* Analysis/MarlinKinfit/README: updated (Jenny)
+
+2008-01-11 16:10  gaede
+
+	* ChangeLog, CaloDigi/LDCCaloDigi/include/SimpleLCalDigi.h,
+	  CaloDigi/LDCCaloDigi/include/SimpleMuonDigi.h,
+	  CaloDigi/LDCCaloDigi/src/SimpleLCalDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: new simple digitizers
+	  (by M.Thomson) for muon and lcal
+
+2008-01-11 15:38  harderk
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: introduce additional processor parameter
+	  to optionally use hits with cell ID 0 (necessary to digitise
+	  SimTrackerHits of the TPC04 and TPC05 Mokka drivers
+
+2008-01-10 16:49  engels
+
+	* MarlinRecoConfig.cmake.in: bug fix: MarlinReco_INCLUDE_DIRS
+	  variable was missing
+
 2007-12-21 12:24  gaede
 
 	* doc/release.notes: ------ release version v00-05 -------------

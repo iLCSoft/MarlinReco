@@ -32,7 +32,7 @@ SET( LCIO_HOME "${ILC_HOME}/lcio/v01-09"
     CACHE PATH "Path to LCIO" FORCE )
 
 # Path to GEAR
-SET( GEAR_HOME "${ILC_HOME}/gear/v00-07"
+SET( GEAR_HOME "${ILC_HOME}/gear/v00-08"
     CACHE PATH "Path to GEAR" FORCE )
 
 # Path to CLHEP

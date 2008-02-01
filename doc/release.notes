@@ -4,6 +4,23 @@
 
 ================================
 
+ -----------
+| v00-05-01 |
+ -----------
+       bug fix release
+
+        - MarlinKinfit improved and new example (J.List) 
+
+        - fixed LEPTracking for large #pad rows in TPC (S.Aplin)
+          ( currently 512 pad rows are allowed - increase by
+            setting the value of N32BITREG in padrow.inc )
+
+        - dvips for documentation does not send to printer (J.Engels)
+
+        - added simple digitizers SimpleLCalDigi and SimpleMuonDigi (by M.Thomson)
+
+        - ...
+
  --------
 | v00-05 |
  --------

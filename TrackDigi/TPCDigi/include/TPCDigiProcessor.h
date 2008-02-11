@@ -7,10 +7,28 @@
 #include <string>
 #include <gsl/gsl_rng.h>
 
+#ifdef MARLIN_USE_AIDA
+
+#include <marlin/AIDAProcessor.h>
+#include <AIDA/IHistogramFactory.h>
+#include <AIDA/ICloud1D.h>
+//#include <AIDA/IHistogram1D.h>
+
+#define STEVESCHECKPLOTS 0
+
+#ifdef STEVESCHECKPLOTS
+// includes all AIDA header files
+#include <AIDA/AIDA.h>
+#endif
+
+#endif
+
 
 using namespace lcio ;
 using namespace marlin ;
-
+#ifdef MARLIN_USE_AIDA
+using namespace AIDA ;
+#endif
 
 
 /** ====== TPCDigiProcessor ====== <br>
@@ -95,12 +113,23 @@ protected:
   gsl_rng * _random ;
 
 
-
+  float _pointResoPadPhi;
   float _pointResoRPhi;
   float _pointResoZ;
   float _diffRPhi;
+  int   _nEff;
   float _pixZ;
   float _pixRP;
+
+  IAnalysisFactory * AF;
+  ITreeFactory * TRF;
+  ITree * TREE;
+  IHistogramFactory * HF;
+  IHistogram1D * H1D_1;
+  IHistogram1D * H1D_2;
+  IHistogram1D * H1D_3;
+  IHistogram1D * H1D_4;
+
 } ;
 
 #endif

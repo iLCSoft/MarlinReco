@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.27 2008-01-29 13:43:55 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.28 2008-02-11 16:54:51 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
 ** Revision 1.26  2007/09/13 07:39:04  rasp
@@ -357,7 +357,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
   const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
 
   if (padLayout.getNRows()>CHECKTPCROWS()) 
-    {
+      {
       std::stringstream errorMsg;
       errorMsg << "\nProcessor: LEPTracking \n" <<
         "The number of TPC padrows specified in the GEAR file is " << padLayout.getNRows() << "\n" 
@@ -425,7 +425,12 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 //       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 
 
-      double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[2]);
+      // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
+      // For no error in r
+
+      double rSqrd = x*x + y*y;
+      double phi = atan(y/x); 
+      double tpcRPhiRes = sqrt((trkHitTPC->getCovMatrix()[2])/(rSqrd*cos(phi)*cos(phi)));
       double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
 
       tpcRPhiRes = 0.1 * tpcRPhiRes;

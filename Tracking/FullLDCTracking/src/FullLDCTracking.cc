@@ -664,8 +664,17 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 //       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
 //       hitExt->setResolutionRPhi(float(tpcRPhiRes));
 //       hitExt->setResolutionZ(float(tpcZRes));      
-      hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
-      hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
+
+      // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
+      // For no error in r
+      double rSqrd = hit->getPosition()[0] * hit->getPosition()[0] + hit->getPosition()[1] * hit->getPosition()[1];
+      double phi = atan(hit->getPosition()[1]/hit->getPosition()[0]); 
+      double tpcRPhiRes = sqrt((hit->getCovMatrix()[2])/(rSqrd*cos(phi)*cos(phi)));
+      double tpcZRes = sqrt(hit->getCovMatrix()[5]);
+
+      hitExt->setResolutionRPhi(float(tpcRPhiRes));
+      hitExt->setResolutionZ(float(tpcZRes));
+
       hitExt->setType(int(3));
       hitExt->setDet(int(1));
       _allTPCHits.push_back( hitExt );

@@ -36,11 +36,17 @@ using namespace AIDA ;
  *Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in r-phi and z. 
  * Double hits are identified but are currently not added to the collection. This may be change 
  * at a later date when criteria for their seperation is defined. The resolutions are defined in 
- * the GEAR stearing file. Resolution in r-phi is calculated according to the formular <br>
- * sigma(r-phi) = sqrt(const**2 + diffusion*z_drift) <br>
- * where 'const' stands for the constant term and 'diffusion' stands for the diffusion term,
- * 'z_drift' is the drift length <br>
+ * the GEAR stearing file. 
+ *
+ * Resolution in r-phi is calculated according to the formular <br>
+ * sigma_{point}^2 = sigma_0^2 + Cd^2/N_{eff} * L_{drift}
+ * Cd^2/N_{eff}} = 25^2/(22/sin(theta)*h/6mm)
+ * Cd = 25 ( microns / cm^(1/2) )
+ * (this is for B=4T, h is the pad height = pad-row pitch in mm,
+ * theta is the polar angle)       
+ *
  * At the moment resolution in z assumed to be independent of drift length. <br>
+ *
  * The type of TPC TrackerHit is set to 500 via method TrackerHitImpl::setType(int type) <br>
  * <h4>Input collections and prerequisites</h4> 
  * Processor requires collections of SimTrackerHits in TPC <br>

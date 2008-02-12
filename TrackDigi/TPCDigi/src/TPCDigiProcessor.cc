@@ -193,19 +193,19 @@ void TPCDigiProcessor::init()
   
 
 
-  H1D_1 = HF->createHistogram1D("Histograms/phi_diff",
+  phiDiffHisto = HF->createHistogram1D("Histograms/phi_diff",
                                                "Calculated Phi - Track Phi",
                                                201, -0.05, 0.05);
 
-  H1D_2 = HF->createHistogram1D("Histograms/theta_diff",
+  thetaDiffHisto = HF->createHistogram1D("Histograms/theta_diff",
                                                "Calculated Theta - Track Theta",
                                                201, -0.05, 0.05);
  
-  H1D_3 = HF->createHistogram1D("Histograms/padPhi",
+  phiRelHisto = HF->createHistogram1D("Histograms/padPhi",
                                                "Phi Relative to the Pad",
                                                201, 0.0, 6.3);
 
-  H1D_4 = HF->createHistogram1D("Histograms/padtheta",
+  thetaRelHisto = HF->createHistogram1D("Histograms/padtheta",
                                                "Theta Relative to the pad",
                                                201, 0.0, 6.3);
 
@@ -359,11 +359,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 
 #ifdef STEVESCHECKPLOTS
-        H1D_3->fill(padPhi);
+        phiRelHisto->fill(padPhi);
 #endif    
 
 #ifdef STEVESCHECKPLOTS
-        H1D_1->fill((fabs(localPhi - trackPhi))/trackPhi);
+        phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif        
 
         //        cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
@@ -394,11 +394,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //        cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
 
 #ifdef STEVESCHECKPLOTS
-        H1D_4->fill(padTheta);
+        thetaRelHisto->fill(padTheta);
 #endif    
 
 #ifdef STEVESCHECKPLOTS
-        H1D_2->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+        thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
 
 
@@ -451,11 +451,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
 
 #ifdef STEVESCHECKPLOTS
-        H1D_3->fill(padPhi);
+        phiRelHisto->fill(padPhi);
 #endif    
 
 #ifdef STEVESCHECKPLOTS
-          H1D_1->fill((fabs(localPhi - trackPhi))/trackPhi);
+          phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif          
           
           //          cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl;           
@@ -487,11 +487,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //          cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
   
 #ifdef STEVESCHECKPLOTS
-        H1D_4->fill(padTheta);
+        thetaRelHisto->fill(padTheta);
 #endif    
         
 #ifdef STEVESCHECKPLOTS
-        H1D_2->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+        thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
           
         }     
@@ -552,11 +552,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
 
 #ifdef STEVESCHECKPLOTS
-        H1D_3->fill(padPhi);
+        phiRelHisto->fill(padPhi);
 #endif    
 
 #ifdef STEVESCHECKPLOTS
-          H1D_1->fill((fabs(localPhi - trackPhi))/trackPhi);
+          phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif              
 
           //          cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
@@ -583,10 +583,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nMinus2SimHit->getPosition()[2] - SimTHit->getPosition()[2])) ) ;
           
 #ifdef STEVESCHECKPLOTS
-        H1D_4->fill(padTheta);
+        thetaRelHisto->fill(padTheta);
 #endif    
 #ifdef STEVESCHECKPLOTS
-        H1D_2->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+        thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
           
         //          cout << "Padtheta = " << padTheta << endl;
@@ -897,7 +897,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           trkHit->setType( 500 );
          
           
-          double aReso =_pointResoRPhi*_pointResoRPhi;
           double cathode = 5.0/2.0; // cathode is 5mm thick 
           double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-cathode);
           if (driftLength <0) { 

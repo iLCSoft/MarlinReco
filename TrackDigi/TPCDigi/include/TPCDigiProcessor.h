@@ -131,10 +131,10 @@ protected:
   ITreeFactory * TRF;
   ITree * TREE;
   IHistogramFactory * HF;
-  IHistogram1D * H1D_1;
-  IHistogram1D * H1D_2;
-  IHistogram1D * H1D_3;
-  IHistogram1D * H1D_4;
+  IHistogram1D * phiDiffHisto;
+  IHistogram1D * thetaDiffHisto;
+  IHistogram1D * phiRelHisto;
+  IHistogram1D * thetaRelHisto;
 
 } ;
 

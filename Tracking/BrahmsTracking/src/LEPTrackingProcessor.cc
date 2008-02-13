@@ -6,9 +6,15 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.28 2008-02-11 16:54:51 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.29 2008-02-13 10:23:30 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.28  2008/02/11 16:54:51  aplin
+** ntroduced smearing which depends on the parameterisation supplied by the LC-TPC group.
+** It is parameterised in phi and theta. Not yet in z.
+**
+** The Covariance matrix corrected so that it is set for XYZ and not r-phi as previously. The corresponding conversion back to r-phi has been set in LEPTracking and FullLDCTracking.
+**
 ** Revision 1.26  2007/09/13 07:39:04  rasp
 ** Updated version of the LEPTracking processor. For each
 ** digitized TPC hit spatial resolutions are accessed via
@@ -66,6 +72,7 @@
 #include <stdexcept>
 #include <cmath>
 
+
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
 #include <AIDA/IHistogramFactory.h>
@@ -85,6 +92,9 @@
 
 #include <cfortran.h>
 
+#include <gsl/gsl_randist.h>
+
+#include "f77histomanager.h"
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
@@ -114,6 +124,9 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
 using namespace std ; 
+
+int fill1dhist(string title, float value);
+FCALLSCFUN2(INT,fill1dhist,FILL1DHIST,fill1dhist,STRING,FLOAT)
 
 int subdetfirsthitindex(string subdet);
 
@@ -296,6 +309,9 @@ void LEPTrackingProcessor::init() {
 
   _nRun = 0 ;
   _nEvt = 0 ;
+  _random = gsl_rng_alloc(gsl_rng_ranlxs2);
+  f77histos = new f77HistoManager("thefile","Histograms");
+  f77histos->book1DHist("testhisto","just a test",100 , -10.0, 10.0);
   
 }
 
@@ -307,7 +323,9 @@ void LEPTrackingProcessor::processRunHeader( LCRunHeader* run) {
 void LEPTrackingProcessor::processEvent( LCEvent * evt ) { 
 
   static bool firstEvent = true ;
-    
+  
+  //  f77histos->fill1DHist("testhisto",gsl_ran_gaussian(_random,1.0));
+  
   // this gets called for every event 
   // usually the working horse ...
   
@@ -428,10 +446,11 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
       // For no error in r
 
-      double rSqrd = x*x + y*y;
-      double phi = atan(y/x); 
+      double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
+      double phi = atan(pos[1]/pos[0]); 
       double tpcRPhiRes = sqrt((trkHitTPC->getCovMatrix()[2])/(rSqrd*cos(phi)*cos(phi)));
       double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
+
 
       tpcRPhiRes = 0.1 * tpcRPhiRes;
       tpcZRes = 0.1 * tpcZRes;
@@ -1070,10 +1089,11 @@ void LEPTrackingProcessor::check( LCEvent * evt ) {
 
 
 void LEPTrackingProcessor::end(){ 
-  
-  //   std::cout << "LEPTrackingProcessor::end()  " << name() 
-  // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-  // 	    << std::endl ;
+
+  f77histos->close();  
+  std::cout << "LEPTrackingProcessor::end()  " << name() 
+            << " processed " << _nEvt << " events in " << _nRun << " runs "
+            << std::endl ;
 
 }
 

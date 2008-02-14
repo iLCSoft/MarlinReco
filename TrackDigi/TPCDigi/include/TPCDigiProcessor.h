@@ -14,7 +14,9 @@
 #include <AIDA/ICloud1D.h>
 //#include <AIDA/IHistogram1D.h>
 
+#ifdef MARLIN_USE_AIDA
 //#define STEVESCHECKPLOTS 
+#endif
 
 #ifdef STEVESCHECKPLOTS
 // includes all AIDA header files

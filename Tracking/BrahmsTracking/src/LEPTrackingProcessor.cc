@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.30 2008-02-14 14:43:30 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.31 2008-02-14 15:34:11 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.30  2008/02/14 14:43:30  aplin
+** removed spurious dev code
+**
 ** Revision 1.29  2008/02/13 10:23:30  aplin
 ** fixed mm->cm conversion bug
 **
@@ -310,7 +313,6 @@ void LEPTrackingProcessor::init() {
 
   _nRun = 0 ;
   _nEvt = 0 ;
-  _random = gsl_rng_alloc(gsl_rng_ranlxs2);
   
 }
 

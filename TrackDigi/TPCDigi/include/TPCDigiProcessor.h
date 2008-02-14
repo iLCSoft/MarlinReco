@@ -14,9 +14,9 @@
 #include <AIDA/ICloud1D.h>
 //#include <AIDA/IHistogram1D.h>
 
-#ifdef MARLIN_USE_AIDA
+
 //#define STEVESCHECKPLOTS 
-#endif
+
 
 #ifdef STEVESCHECKPLOTS
 // includes all AIDA header files
@@ -133,6 +133,7 @@ protected:
   float _pixZ;
   float _pixRP;
 
+#ifdef STEVESCHECKPLOTS
   IAnalysisFactory * AF;
   ITreeFactory * TRF;
   ITree * TREE;
@@ -145,6 +146,7 @@ protected:
   IHistogram1D * phiDistHisto;
   IHistogram1D * phiPullHisto;
   IHistogram1D * rDiffHisto;
+#endif
 
   //FIXME: Cathode is hard coded
   const static double _cathode;

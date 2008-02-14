@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.29 2008-02-13 10:23:30 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.30 2008-02-14 14:43:30 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.29  2008/02/13 10:23:30  aplin
+** fixed mm->cm conversion bug
+**
 ** Revision 1.28  2008/02/11 16:54:51  aplin
 ** ntroduced smearing which depends on the parameterisation supplied by the LC-TPC group.
 ** It is parameterised in phi and theta. Not yet in z.
@@ -92,9 +95,7 @@
 
 #include <cfortran.h>
 
-#include <gsl/gsl_randist.h>
 
-#include "f77histomanager.h"
 #include"tpchitbank.h"
 #include"tkhitbank.h"
 #include"tktebank.h"
@@ -310,8 +311,6 @@ void LEPTrackingProcessor::init() {
   _nRun = 0 ;
   _nEvt = 0 ;
   _random = gsl_rng_alloc(gsl_rng_ranlxs2);
-  f77histos = new f77HistoManager("thefile","Histograms");
-  f77histos->book1DHist("testhisto","just a test",100 , -10.0, 10.0);
   
 }
 
@@ -1090,10 +1089,9 @@ void LEPTrackingProcessor::check( LCEvent * evt ) {
 
 void LEPTrackingProcessor::end(){ 
 
-  f77histos->close();  
-  std::cout << "LEPTrackingProcessor::end()  " << name() 
-            << " processed " << _nEvt << " events in " << _nRun << " runs "
-            << std::endl ;
-
+//  std::cout << "LEPTrackingProcessor::end()  " << name() 
+//            << " processed " << _nEvt << " events in " << _nRun << " runs "
+//            << std::endl ;
+//
 }
 

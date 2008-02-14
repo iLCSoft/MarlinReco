@@ -14,7 +14,7 @@
 #include <AIDA/ICloud1D.h>
 //#include <AIDA/IHistogram1D.h>
 
-#define STEVESCHECKPLOTS 0
+//#define STEVESCHECKPLOTS 
 
 #ifdef STEVESCHECKPLOTS
 // includes all AIDA header files
@@ -32,6 +32,9 @@ using namespace AIDA ;
 
 
 /** ====== TPCDigiProcessor ====== <br>
+ *
+ * This Processor depends on Circle.h from MarlinUtil
+ * 
  * Caution: This digitiser presently does not process space-point like SimTrackerHits which have been flagged with CellIDs set to the negetive row number. This must be implemented in future. 
  *Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in r-phi and z. 
  * Double hits are identified but are currently not added to the collection. This may be change 
@@ -119,6 +122,7 @@ protected:
   gsl_rng * _random ;
 
 
+
   float _pointResoPadPhi;
   float _pointResoRPhi;
   float _pointResoZ;
@@ -136,7 +140,17 @@ protected:
   IHistogram1D * phiRelHisto;
   IHistogram1D * thetaRelHisto;
 
+  IHistogram1D * phiDistHisto;
+  IHistogram1D * phiPullHisto;
+  IHistogram1D * rDiffHisto;
+
+  //FIXME: Cathode is hard coded
+  const static double _cathode;
+
 } ;
+
+  //FIXME: Cathode is hard coded
+const double TPCDigiProcessor::_cathode=5.0/2.0; // cathode is 5mm thick 
 
 #endif
 

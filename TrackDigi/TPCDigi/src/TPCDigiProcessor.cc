@@ -209,6 +209,19 @@ void TPCDigiProcessor::init()
                                                "Theta Relative to the pad",
                                                201, 0.0, 6.3);
 
+  rDiffHisto = HF->createHistogram1D("Histograms/rDiff",
+                                               "R_rec - R_sim",
+                                               201, -1.0, 1.0);
+
+  phiDistHisto = HF->createHistogram1D("Histograms/phiDist",
+                                               "phi_rec - Phi_sim",
+                                               201, -1.0, 1.0);
+
+  phiPullHisto = HF->createHistogram1D("Histograms/phiPull",
+                                               "(Phi_rec - Phi_sim) / Sigma_phi",
+                                               201, -10.0, 10.0);
+
+
 #endif  
 
 
@@ -344,6 +357,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         padPhi = fabs(pointPhi - localPhi);
 
+#ifdef STEVESCHECKPLOTS
 
         const float * mcpMomentum = SimTHit->getMomentum() ;
 
@@ -357,12 +371,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         if(trackPhi>twopi) trackPhi=trackPhi-twopi;
         if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;
 
-
-#ifdef STEVESCHECKPLOTS
         phiRelHisto->fill(padPhi);
-#endif    
-
-#ifdef STEVESCHECKPLOTS
         phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif        
 
@@ -437,9 +446,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
           
           padPhi = fabs(pointPhi - localPhi);
-          
+
+#ifdef STEVESCHECKPLOTS                    
           const float * mcpMomentum = SimTHit->getMomentum() ;
-          
           CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
           
           //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
@@ -450,12 +459,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(trackPhi>twopi) trackPhi=trackPhi-twopi;
           if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
 
-#ifdef STEVESCHECKPLOTS
-        phiRelHisto->fill(padPhi);
-#endif    
 
-#ifdef STEVESCHECKPLOTS
-          phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
+        phiRelHisto->fill(padPhi);
+        
+        phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif          
           
           //          cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl;           
@@ -538,7 +545,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
 
           padPhi = fabs(pointPhi - localPhi);
-          
+
+#ifdef STEVESCHECKPLOTS          
           const float * mcpMomentum = SimTHit->getMomentum() ;
           
           CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
@@ -551,11 +559,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(trackPhi>twopi) trackPhi=trackPhi-twopi;
           if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
 
-#ifdef STEVESCHECKPLOTS
-        phiRelHisto->fill(padPhi);
-#endif    
-
-#ifdef STEVESCHECKPLOTS
+          
+          phiRelHisto->fill(padPhi);
           phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif              
 
@@ -650,15 +655,14 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       // sigma_{point}^2 = sigma_0^2 + Cd^2/N_{eff} * L_{drift}
 
+      // sigma_0^2 = (50micron)^2 + (900micron*sin(phi))^2
       // Cd^2/N_{eff}} = 25^2/(22/sin(theta)*h/6mm)
       // Cd = 25 ( microns / cm^(1/2) )
       // (this is for B=4T, h is the pad height = pad-row pitch in mm,
       // theta is the polar angle)       
 
       double aReso =_pointResoRPhi*_pointResoRPhi + (_pointResoPadPhi*sin(padPhi) * _pointResoPadPhi*sin(padPhi)) ;
-      //FIXME: Cathode is hard coded
-      double cathode = 5.0/2.0; // cathode is 5mm thick 
-      double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-cathode);
+      double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-_cathode);
       if (driftLength <0) { 
         std::cout << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
         std::cout << "Setting driftLength to 0.1" << std::endl;
@@ -672,6 +676,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       double tpcRPhiRes = sqrt(aReso + bReso*(driftLength/10.0)); // driftLength in cm
       double tpcZRes = _pointResoZ;
+
 //       std::cout << "aReso = " << aReso << std::endl;
 //       std::cout << "bReso = " << bReso << std::endl;
 //       std::cout << "_pointResoPadPhi = " <<_pointResoPadPhi << std::endl;
@@ -687,6 +692,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       // Get current hit radius
 
       double rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
+      double phi = atan2(pos[1],pos[0]);
+      if (phi<0.) phi=phi+twopi;
+
+      phi += randrp/rad;
 
       //
       //      cout << "x position before smearing " << pos[0] << endl;     
@@ -694,10 +703,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //      cout << "z position before smearing " << pos[2] << endl;     
       //
 
-      pos[0] = pos[0] - randrp * pos[1]/rad;
-      pos[1] = pos[1] + randrp * pos[0]/rad;
+      pos[0] = rad * cos(phi);
+      pos[1] = rad * sin(phi);
       pos[2] = pos[2] + randz;
-      
+
       //
       //      cout << "x position after smearing " << pos[0] << endl;     
       //      cout << "y position after smearing " << pos[1] << endl;     
@@ -706,15 +715,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       // At this point hits are mearly smeared now they must be digitised to trackerhits
 
-      rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
-      //get phi of current hit
-      float phi = atan2(pos[1],pos[0]);
-      if (phi<0.) phi=phi+twopi;
-
-
-      //get row index of current hit
-      
       // modified to ues GEAR
 
 
@@ -896,9 +897,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           trkHit->setdEdx(row_hits[j]->getdEdx());
           trkHit->setType( 500 );
          
-          
-          double cathode = 5.0/2.0; // cathode is 5mm thick 
-          double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-cathode);
+          double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-_cathode);
           if (driftLength <0) { 
             std::cout << " TPCDigiProcessor : Warning! driftLength < 0 "  
                       << driftLength << " --> Check out your GEAR file!!!! "<< std::endl; 
@@ -929,6 +928,20 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             trkhitVec->addElement( trkHit ); 
             rechits++;
           }
+
+#ifdef STEVESCHECKPLOTS
+          SimTrackerHit* theSimHit = tpcHitMap[row_hits[j]];
+          double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
+          double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
+          
+          double rDiff = (rSqrd - rSimSqrd);
+          double phiPull = (phi - phiSim)/(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
+
+          rDiffHisto->fill(rDiff);
+          phiPullHisto->fill(phiPull);
+          phiDistHisto->fill(phi - phiSim);
+
+#endif
 
         }
       }

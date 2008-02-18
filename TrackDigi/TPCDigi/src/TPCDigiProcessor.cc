@@ -516,7 +516,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         precedingPoint = new CLHEP::Hep2Vector(previousSimTHit->getPosition()[0],previousSimTHit->getPosition()[1]);
 
-        cout << "i = " << i << endl;
         SimTrackerHit* nMinus2SimHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i-2 ) ) ;
         EVENT::MCParticle* nMinus2MCP= nMinus2SimHit->getMCParticle() ;
 

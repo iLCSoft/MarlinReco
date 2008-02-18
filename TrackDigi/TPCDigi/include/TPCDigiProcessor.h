@@ -15,10 +15,10 @@
 //#include <AIDA/IHistogram1D.h>
 
 
-//#define STEVESCHECKPLOTS 
+//#define EXPERTCHECKPLOTS 
 
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
 // includes all AIDA header files
 #include <AIDA/AIDA.h>
 #endif
@@ -133,7 +133,7 @@ protected:
   float _pixZ;
   float _pixRP;
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
   IAnalysisFactory * AF;
   ITreeFactory * TRF;
   ITree * TREE;

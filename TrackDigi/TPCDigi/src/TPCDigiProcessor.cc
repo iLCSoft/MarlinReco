@@ -120,7 +120,7 @@ void TPCDigiProcessor::init()
   // more information about the terminating exception (if any) on stderr. Call ...
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
 /// Hook an AIDA implementation -----------------------------------------------
 
   // First create a pointer to the "IAnalysisFactory" of a specific AIDA
@@ -357,7 +357,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         padPhi = fabs(pointPhi - localPhi);
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
 
         const float * mcpMomentum = SimTHit->getMomentum() ;
 
@@ -402,11 +402,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //        cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
 //        cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaRelHisto->fill(padTheta);
 #endif    
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
 
@@ -447,7 +447,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           padPhi = fabs(pointPhi - localPhi);
 
-#ifdef STEVESCHECKPLOTS                    
+#ifdef EXPERTCHECKPLOTS                    
           const float * mcpMomentum = SimTHit->getMomentum() ;
           CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
           
@@ -493,11 +493,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //          cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
 //          cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
   
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaRelHisto->fill(padTheta);
 #endif    
         
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
           
@@ -511,11 +511,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         }
        
       }
-      else if(mcp!=nextMCP && n_sim_hits > 3) { // last hit with at least three sim hits in collection
+      else if(mcp!=nextMCP && i > 1 ) { // last hit with at least three sim hits in collection
         // if this is the last hit for this track take the last two hits
 
         precedingPoint = new CLHEP::Hep2Vector(previousSimTHit->getPosition()[0],previousSimTHit->getPosition()[1]);
 
+        cout << "i = " << i << endl;
         SimTrackerHit* nMinus2SimHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i-2 ) ) ;
         EVENT::MCParticle* nMinus2MCP= nMinus2SimHit->getMCParticle() ;
 
@@ -546,7 +547,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
           padPhi = fabs(pointPhi - localPhi);
 
-#ifdef STEVESCHECKPLOTS          
+#ifdef EXPERTCHECKPLOTS          
           const float * mcpMomentum = SimTHit->getMomentum() ;
           
           CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
@@ -587,10 +588,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nMinus2SimHit->getPosition()[2] - SimTHit->getPosition()[2])) ) ;
           
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaRelHisto->fill(padTheta);
 #endif    
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
         thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
 #endif     
           
@@ -929,7 +930,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             rechits++;
           }
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
           SimTrackerHit* theSimHit = tpcHitMap[row_hits[j]];
           double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
           double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
@@ -990,13 +991,13 @@ void TPCDigiProcessor::check( LCEvent * evt )
 void TPCDigiProcessor::end()
 { 
 
-#ifdef STEVESCHECKPLOTS
+#ifdef EXPERTCHECKPLOTS
   TREE->commit();
   TREE->cd("/Histograms");
   TREE->ls("..");
 
   TREE->close();  
-  cout << "STEVESCHECKPLOTS Finished" << endl;
+  cout << "EXPERTCHECKPLOTS Finished" << endl;
 #endif
 
   gsl_rng_free(_random);

@@ -1,11 +1,14 @@
 /*! \file 
- *  \brief Declares class MassConstraint
+ *  \brief Declares class SoftGaussMassConstraint
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 16:43:26  blist
+ * - First Version of Soft Constraints
+ * -
  * - Revision 1.2  2008/02/12 11:03:32  blist
  * - Added doxygen configuration
  * -
@@ -21,14 +24,14 @@
  *
  */ 
 
-#ifndef __MASSCONSTRAINT_H
-#define __MASSCONSTRAINT_H
+#ifndef __SOFTGAUSSMASSCONSTRAINT_H
+#define __SOFTGAUSSMASSCONSTRAINT_H
 
-#include "ParticleConstraint.h"
+#include "SoftGaussParticleConstraint.h"
 
 class ParticleFitObject;
 
-//  Class MassConstraint:
+//  Class SoftGaussMassConstraint:
 /// Implements constraint 0 = mass1 - mass2 - m
 /**
  * This class implements different mass constraints:
@@ -42,16 +45,17 @@ class ParticleFitObject;
  *
  */
 
-class MassConstraint : public ParticleConstraint {
+class SoftGaussMassConstraint : public SoftGaussParticleConstraint {
   public:
   
     /// Constructor
-    MassConstraint (double mass_ = 0.   ///< The mass difference between object sets 1 and 2
+    SoftGaussMassConstraint (double sigma_,    ///< The sigma value
+                             double mass_ = 0.   ///< The mass difference between object sets 1 and 2
                    );
     /// Virtual destructor             
-    virtual ~MassConstraint();
+    virtual ~SoftGaussMassConstraint();
     
-    /// Returns the value of the constraint
+    /// Returns the value of the constraint function
     virtual double getValue() const;
     
     /// Get first order derivatives. 
@@ -84,4 +88,4 @@ class MassConstraint : public ParticleConstraint {
                                   ) const;
 };
 
-#endif // __MASSCONSTRAINT_H
+#endif // __SOFTGAUSSMASSCONSTRAINT_H

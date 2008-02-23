@@ -6,6 +6,18 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.10  2008/02/07 08:15:25  blist
+ * - error calculation of constraints fixed
+ * -
+ * - Revision 1.9  2008/02/04 17:30:53  blist
+ * - NewtonFitter works now!
+ * -
+ * - Revision 1.8  2008/01/30 09:14:53  blist
+ * - Preparations for NewtonFitter
+ * -
+ * - Revision 1.7  2008/01/29 17:17:33  blist
+ * - implemented setname
+ * -
  * - Revision 1.6  2007/09/17 12:50:15  blist
  * - Some parameters reordered
  * -
@@ -76,8 +88,8 @@
  * 
  *
  * Author:  Benno List, Jenny Böhme
- * $Date: 2007-10-30 15:51:14 $
- * $Author: gaede $
+ * $Date: 2008-02-23 11:18:39 $
+ * $Author: listj $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov
@@ -87,18 +99,30 @@
 
 class BaseFitObject {
   public:
-    virtual ~BaseFitObject() {};
+    BaseFitObject();
+    /// Copy constructor
+    BaseFitObject (const BaseFitObject& rhs              ///< right hand side
+                   );
+    /// Assignment               
+    BaseFitObject& operator= (const BaseFitObject& rhs   ///< right hand side
+                             );
     
-    /// Set value and measured flag of parameter i; return: success
+    virtual ~BaseFitObject();
+    
+    /// Set value and measured flag of parameter i; return: significant change
     virtual bool setParam (int ilocal,         ///< Local parameter number
                            double par_,        ///< New parameter value
                            bool measured_,     ///< New "measured" flag
                            bool fixed_ = false ///< New "fixed" flag
                           ) = 0;  
-    /// Set value of parameter ilocal; return: success
+    /// Set value of parameter ilocal; return: significant change
     virtual bool setParam (int ilocal,    ///< Local parameter number
                            double par_    ///< New parameter value
                           ) = 0;  
+    /// Read values from global vector, readjust vector; return: significant change
+    virtual bool updateParams (double p[],   ///< The parameter vector
+                               int idim      ///< Length of the vector                         
+                              );  
     /// Set measured value of parameter ilocal; return: success
     virtual bool setMParam (int ilocal,    ///< Local parameter number
                             double mpar_   ///< New measured parameter value
@@ -138,9 +162,9 @@ class BaseFitObject {
     virtual const char *getParamName (int ilocal     ///< Local parameter number
                             ) const { return "???";}
     /// Get object's name
-    virtual const char *getName () const { return "???";}
+    virtual const char *getName () const { return name ? name : "???";}
     /// Set object's name
-    virtual void setName (const char * name_) {}
+    virtual void setName (const char * name_);
     /// Get measured value of parameter ilocal
     virtual double getMParam (int ilocal     ///< Local parameter number
                              ) const = 0;
@@ -186,11 +210,10 @@ class BaseFitObject {
     virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global covariance matrix
                                            int idim     ///< First dimension of global covariance matrix
                                            ) const = 0;
-    /// Add derivatives to global covariance matrix
-    virtual void addToGlobalDerMatrix (int idim,    ///< First dimension of global covariance matrix
-                                       double c,    ///< Constant by which to multiply derivatives
-                                       double *M    ///< First dimension of global covariance matrix
-                                      ) const = 0;
+    /// Add derivatives of chi squared to global derivative matrix
+    virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
+                                           int idim     ///< Vector size 
+                                           ) const = 0;
     /// print the parameters
     virtual std::ostream& printParams (std::ostream& os  ///< The output stream
                                       ) const;
@@ -198,6 +221,12 @@ class BaseFitObject {
     /// print object to ostream
     virtual std::ostream&  print (std::ostream& os       ///< The output stream
                                  ) const = 0;
+    /// invalidate any cached quantities
+    virtual void invalidateCache() const {};
+                                 
+    protected:
+      char *name;  
+      const static double eps2;                           
 };
 
 /** \relates BaseFitObject

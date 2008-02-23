@@ -20,10 +20,7 @@
 #include <CLHEP/Vector/LorentzVector.h>
 #include "JetFitObject.h"
 #include "NeutrinoFitObject.h"
-#include "PxConstraint.h"
-#include "PyConstraint.h"
-#include "PzConstraint.h"
-#include "EConstraint.h"
+#include "PConstraint.h"
 #include "OPALFitter.h"
 #include "TwoB4JPairing.h"
 #include "FourJetPairing.h"
@@ -284,22 +281,22 @@ void TTBarExample::processEvent( LCEvent * evt ) {
                        ) ;
          }              
         
-         PxConstraint pxc;
+         PConstraint pxc (1, 0);
          for (int i = 0; i < NJETS; ++i)
             pxc.addToFOList (*(permutedjets[i]));
         
-         PyConstraint pyc;
+         PConstraint pyc (0, 1);
          for (int i = 0; i < NJETS; ++i)
             pyc.addToFOList (*(permutedjets[i]));
         
-         PzConstraint pzc;
+         PConstraint pzc (0, 0, 1);
          for (int i = 0; i < NJETS; ++i)
             pzc.addToFOList (*(permutedjets[i]));
             
          message<MESSAGE>( log() 
                    << "ECM = " << _ecm
                        ) ;
-         EConstraint ec(_ecm);
+         PConstraint ec(0, 0, 0, 1, _ecm);
          for (int i = 0; i < NJETS; ++i)
             ec.addToFOList (*(permutedjets[i]));
         

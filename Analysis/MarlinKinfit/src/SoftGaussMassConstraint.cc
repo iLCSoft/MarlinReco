@@ -1,17 +1,20 @@
 /*! \file 
- *  \brief Implements class MassConstraint
+ *  \brief Implements class SoftGaussMassConstraint
  *
  * \b Changelog:
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 16:43:26  blist
+ * - First Version of Soft Constraints
+ * -
  * - Revision 1.2  2008/02/12 11:03:32  blist
  * - Added doxygen configuration
  * -
  *
  */ 
 
-#include "MassConstraint.h"
+#include "SoftGaussMassConstraint.h"
 #include "ParticleFitObject.h"
 
 #include<iostream>
@@ -23,17 +26,18 @@ using std::cout;
 using std::endl;
 
 // constructor
-MassConstraint::MassConstraint (double mass_) 
-: mass(mass_) 
+SoftGaussMassConstraint::SoftGaussMassConstraint (double sigma_, double mass_) 
+: SoftGaussParticleConstraint (sigma_),
+  mass(mass_) 
 {}
 
 // destructor
-MassConstraint::~MassConstraint () {
-  // std::cout << "destroying MassConstraint" << std::endl;
+SoftGaussMassConstraint::~SoftGaussMassConstraint () {
+  // std::cout << "destroying SoftGaussMassConstraint" << std::endl;
 }
 
 // calulate current value of constraint function
-double MassConstraint::getValue() const {
+double SoftGaussMassConstraint::getValue() const {
   double totE[2] = {0,0};
   double totpx[2] = {0,0}; 
   double totpy[2] = {0,0}; 
@@ -56,7 +60,7 @@ double MassConstraint::getValue() const {
 // here: d M /d par(j) 
 //          = d M /d p(i) * d p(i) /d par(j)
 //          =  +-1/M * p(i) * d p(i) /d par(j)
-void MassConstraint::getDerivatives(int idim, double der[]) const {
+void SoftGaussMassConstraint::getDerivatives(int idim, double der[]) const {
   double totE[2] = {0,0};
   double totpx[2] = {0,0}; 
   double totpy[2] = {0,0}; 
@@ -77,7 +81,7 @@ void MassConstraint::getDerivatives(int idim, double der[]) const {
                 - totpy[index]*totpy[index] - totpz[index]*totpz[index];
     if (m2[index] < 0 && m2[index]> -1E-9) m2[index]=0;
     if (m2[index] < 0 && valid[index]) {
-      cerr << "MassConstraint::getDerivatives: m2<0!" << endl;
+      cerr << "SoftGaussMassConstraint::getDerivatives: m2<0!" << endl;
       for (unsigned int j = 0; j < fitobjects.size(); j++) {
         int jndex = (flags[j]==1) ? 0 : 1; 
         if (jndex == index) {
@@ -111,7 +115,7 @@ void MassConstraint::getDerivatives(int idim, double der[]) const {
   }
 }
   
-double MassConstraint::getMass (int flag) {
+double SoftGaussMassConstraint::getMass (int flag) {
   double totE = 0;
   double totpx = 0; 
   double totpy = 0; 
@@ -127,13 +131,13 @@ double MassConstraint::getMass (int flag) {
   return std::sqrt(std::abs(totE*totE-totpx*totpx-totpy*totpy-totpz*totpz));
 }
 
-void MassConstraint::setMass (double mass_) {
+void SoftGaussMassConstraint::setMass (double mass_) {
   mass = mass_;
 }
 
-bool MassConstraint::secondDerivatives (int i, int j, double *derivatives) const 
+bool SoftGaussMassConstraint::secondDerivatives (int i, int j, double *derivatives) const 
 {
-  // cout << "MassConstraint::secondDerivatives: i=" << i << ", j=" << j << endl;
+  // cout << "SoftGaussMassConstraint::secondDerivatives: i=" << i << ", j=" << j << endl;
   int index = (flags[i] == 1) ? 0 : 1; // default is 1, but 2 may indicate fitobjects for a second W -> equal mass constraint!
   int jndex = (flags[j] == 1) ? 0 : 1; // default is 1, but 2 may indicate fitobjects for a second W -> equal mass constraint!
   if (index != jndex) return false;
@@ -154,7 +158,7 @@ bool MassConstraint::secondDerivatives (int i, int j, double *derivatives) const
   }
   
   if (totE <= 0) {
-    cerr << "MassConstraint::secondDerivatives: totE = " << totE << endl;
+    cerr << "SoftGaussMassConstraint::secondDerivatives: totE = " << totE << endl;
   }
   
   double m2 = std::abs(totE*totE-totpx*totpx-totpy*totpy-totpz*totpz);
@@ -178,7 +182,7 @@ bool MassConstraint::secondDerivatives (int i, int j, double *derivatives) const
   return true;
 }
 
-bool MassConstraint::firstDerivatives (int i, double *derivatives) const {
+bool SoftGaussMassConstraint::firstDerivatives (int i, double *derivatives) const {
   double totE = 0;
   double totpx = 0; 
   double totpy = 0; 
@@ -197,7 +201,7 @@ bool MassConstraint::firstDerivatives (int i, double *derivatives) const {
   }
   
   if (totE <= 0) {
-    cerr << "MassConstraint::firstDerivatives: totE = " << totE << endl;
+    cerr << "SoftGaussMassConstraint::firstDerivatives: totE = " << totE << endl;
   }
   
   double m = std::sqrt(std::abs(totE*totE-totpx*totpx-totpy*totpy-totpz*totpz));

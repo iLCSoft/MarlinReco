@@ -16,7 +16,7 @@
   <!-- input file (needs to have Durham2Jets collection or you have to run the jet finder in addition!): -->  
   <parameter name="LCIOInputFiles"> M-5-4_ww_500_noisr_sel_LDC00Sc_4.0T_r1690._l2730._QGSP_BERT_1_TBPflow.slcio</parameter>
   <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="3" />  
+  <parameter name="MaxRecordNumber" value="4" />  
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
   <parameter name="GearXMLFile"> gear_ldc.xml </parameter>  
@@ -28,7 +28,7 @@
   <!-- compression of output file 0: false >0: true (default) -->
   <parameter name="Compress" type="int">1 </parameter>
   <!-- filename without extension-->
-  <parameter name="FileName" type="string">WW5CFit </parameter>
+  <parameter name="FileName" type="string">WW5CFit_OPAL </parameter>
   <!-- type of output file xml (default) or root ( only OpenScientist)-->
   <parameter name="FileType" type="string">root </parameter>
 </processor>

@@ -20,11 +20,9 @@
 //#include <root/TLorentzVector.h>
 #include <CLHEP/Vector/LorentzVector.h>
 #include "JetFitObject.h"
-#include "PxConstraint.h"
-#include "PyConstraint.h"
-#include "PzConstraint.h"
-#include "EConstraint.h"
+#include "PConstraint.h"
 #include "OPALFitter.h"
+//#include "NewtonFitter.h"
 #include "FourJetPairing.h"
 #include "MassConstraint.h"
 
@@ -93,6 +91,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
   static AIDA::IHistogram1D* hRecWMassNoFitAll ;    
   static AIDA::IHistogram1D* hFitProbBest ;    
   static AIDA::IHistogram1D* hFitProbAll ;    
+  static AIDA::IHistogram1D* hNItBest ;    
+  static AIDA::IHistogram1D* hNItAll ;    
              
     message<DEBUG>( log() 
 		      << " processing event " << evt->getEventNumber() 
@@ -119,6 +119,12 @@ void WW5CFit::processEvent( LCEvent * evt ) {
     hFitProbAll = 
       AIDAProcessor::histogramFactory(this)->
       createHistogram1D( "hFitProbAll", "fit probability", 100, 0., 1. ) ; 
+    hNItBest = 
+      AIDAProcessor::histogramFactory(this)->
+      createHistogram1D( "hNItBest", "number of iterations", 200, 0., 200. ) ; 
+    hNItAll = 
+      AIDAProcessor::histogramFactory(this)->
+      createHistogram1D( "hNItAll", "number of iterations", 200, 0., 200. ) ; 
 
   }
 
@@ -146,6 +152,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
                       << " jets in event" << evt->getEventNumber() 
                       << "  in run "          << evt->getRunNumber() 
                       ) ;
+                      
+       if (nJETS != 4) return;               
                    
        float yminus = jetcol ->parameters().getFloatVal( "YMinus");              
        message<MESSAGE>( log() 
@@ -219,6 +227,7 @@ void WW5CFit::processEvent( LCEvent * evt ) {
        JetFitObject *permutedjets[NJETS];
        
        double bestprob = 0.;
+       int bestnit = 0;
        double bestmass1 = 0, bestmass2 = 0;
        double beststartmass1 = 0, beststartmass2 = 0;
        double startmass1 = 0, startmass2 = 0;
@@ -244,22 +253,22 @@ void WW5CFit::processEvent( LCEvent * evt ) {
                        << "start four-vector of jet " << i << ": " << *(permutedjets[i])
                        ) ;
         
-         PxConstraint pxc;
+         PConstraint pxc (1, 0);
          for (int i = 0; i < NJETS; ++i)
             pxc.addToFOList (*(permutedjets[i]));
         
-         PyConstraint pyc;
+         PConstraint pyc (0, 1);
          for (int i = 0; i < NJETS; ++i)
             pyc.addToFOList (*(permutedjets[i]));
         
-         PzConstraint pzc;
+         PConstraint pzc (0, 0, 1);
          for (int i = 0; i < NJETS; ++i)
             pzc.addToFOList (*(permutedjets[i]));
         
          message<MESSAGE>( log() 
                    << "ECM = " << _ecm
                        ) ;
-         EConstraint ec(_ecm);
+         PConstraint ec(0, 0, 0, 1,_ecm);
          for (int i = 0; i < NJETS; ++i)
             ec.addToFOList (*(permutedjets[i]));
         
@@ -295,6 +304,7 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          hRecWMassNoFitAll->fill( startmass2 ) ;
 #endif        
        
+ //        NewtonFitter fitter;
          OPALFitter fitter;
          for (int i = 0; i < NJETS; ++i)
             fitter.addFitObject (*(permutedjets[i]));
@@ -305,6 +315,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          fitter.addConstraint (w);
 
          double prob = fitter.fit();
+         double chi2 = fitter.getChi2();
+         int nit = fitter.getIterations();
          message<MESSAGE>( log() 
                        << "fit probability = " << prob 
                        ) ;
@@ -326,11 +338,13 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          if (fitter.getError() == 0) {
 #ifdef MARLIN_USE_AIDA
            hFitProbAll->fill( prob ) ;
+           hNItAll->fill( nit ) ;
            hRecWMassAll->fill( w.getMass(1)) ;
            hRecWMassAll->fill( w.getMass(2)) ;
 #endif        
            if (prob > bestprob && w.getMass(1) > 50 && w.getMass(1) < 110) {
              bestprob = prob;
+             bestnit  = nit;
              bestmass1 = w.getMass(1);
              bestmass2 = w.getMass(2);
              beststartmass1 = startmass1;
@@ -343,11 +357,13 @@ void WW5CFit::processEvent( LCEvent * evt ) {
                        ) ;
          }
 
+         message<MESSAGE>( log() << "end permutation ") ;
        }
 
 #ifdef MARLIN_USE_AIDA
        if (bestprob > 0) {
          hFitProbBest->fill( bestprob ) ;
+         hNItBest->fill( bestnit ) ;
          hRecWMassBest->fill( bestmass1 ) ;
          hRecWMassBest->fill( bestmass2 ) ;
          hRecWMassNoFitBest->fill( beststartmass1 ) ;

@@ -2,8 +2,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2007-10-30 15:51:14 $
-//          by: $Author: gaede $
+// Last update: $Date: 2008-02-23 11:18:39 $
+//          by: $Author: listj $
 // 
 // Description: kinematic fit a la WWFGO
 //               
@@ -86,6 +86,7 @@ class OPALFitter : public BaseFitter {
     virtual int getError() const;
     virtual double getProbability() const;
     virtual double getChi2() const;
+    virtual int    getDoF() const;
     virtual int  getIterations() const;
   
   protected:

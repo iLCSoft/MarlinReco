@@ -23,8 +23,8 @@ class JetFitObject;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2007-10-30 15:51:14 $
- *          by: $Author: gaede $
+ * Last update: $Date: 2008-02-23 11:18:39 $
+ *          by: $Author: listj $
  *
  */
 class BaseJetPairing {

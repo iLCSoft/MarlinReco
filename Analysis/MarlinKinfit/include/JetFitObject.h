@@ -6,6 +6,18 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.9  2008/02/04 17:30:53  blist
+ * - NewtonFitter works now!
+ * -
+ * - Revision 1.8  2008/01/30 21:48:02  blist
+ * - Newton Fitter still doesnt work :-(
+ * -
+ * - Revision 1.7  2008/01/30 09:14:53  blist
+ * - Preparations for NewtonFitter
+ * -
+ * - Revision 1.6  2008/01/29 17:23:00  blist
+ * - new addTo2ndDerivatives and setParam
+ * -
  * - Revision 1.5  2007/09/17 12:50:15  blist
  * - Some parameters reordered
  * -
@@ -25,8 +37,8 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2007-10-30 15:51:14 $
- * $Author: gaede $
+ * $Date: 2008-02-23 11:18:39 $
+ * $Author: listj $
  *
  * \b Changelog:
  * - 30.12.04 BL: addToGlobCov, getDChi2DParam, getDChi2DParam2, addToGlobalChi2DerMatrix
@@ -44,6 +56,20 @@ class JetFitObject : public ParticleFitObject {
     virtual const char *getParamName (int ilocal     ///< Local parameter number
                                      ) const;
  
+    /// Set value of parameter ilocal; return: significant change
+    virtual bool setParam (int ilocal,    ///< Local parameter number
+                           double par_    ///< New parameter value
+                          );  
+    /// Set value and measured flag of parameter ilocal; return=significant change
+    virtual bool   setParam (int ilocal,         ///< Local parameter number
+                             double par_,        ///< New parameter value
+                             bool measured_,     ///< New "measured" flag
+                             bool fixed_ = false ///< New "fixed" flag
+                            );  
+    /// Read values from global vector, readjust vector; return: significant change
+    virtual bool   updateParams (double p[],   ///< The parameter vector
+                                 int idim      ///< Length of the vector                         
+                                );  
     
     
     // these depend on actual parametrisation!
@@ -81,8 +107,29 @@ class JetFitObject : public ParticleFitObject {
                                         double pyfact,  ///< Factor for d^2py/dx_i dx_j
                                         double pzfact   ///< Factor for d^2pz/dx_i dx_j
                                        ) const;
+    /// Add second order derivatives to matrix M of size idim x idim
+    /// der[0]*d^2E/(dx_i dx_j) + der[1]*d^2px/(dx_i dx_j) + ...
+    virtual void   addTo2ndDerivatives (double M[],     ///< Global derivatives matrix size idim x idim
+                                        int    idim,    ///< First dimension of derivatives matrix
+                                        double lamda,   ///< Global factor
+                                        double der[]    ///< Factors for d^2(E,px,py,pz)/dx_i dx_j
+                                       ) const;
+    /// Add first order derivatives to matrix M of size idim x idim
+    /// der[0]*dE/dx_i + der[1]*dpx/dx_i + ...
+    virtual void   addTo1stDerivatives (double M[],     ///< Global derivatives matrix size idim x idim
+                                        int    idim,    ///< First dimension of derivatives matrix
+                                        double der[],   ///< Factors for d^2(E,px,py,pz)/dx_i dx_j
+                                        int kglobal     ///< Global parameter number of constraint
+                                       ) const;
     
-    virtual void addToGlobalDerMatrix (int idim, double c, double *M) const;
+    virtual void addToGlobalChi2DerVector (double *y,     ///< Vector of chi2 derivatives
+                                           int idim,      ///< Vector size 
+                                           double lambda, ///< The lambda value
+                                           double der[]   ///< 4-vector with dg/dE, dg/dpx, dg/dpy, dg/dpz
+                                           ) const;
+    /// Calculates the squared error for a quantity with derivatives w.r.t. E, dx, dy, dz
+    virtual double getError2 (double der[]    ///< Factors for d(E,px,py,pz)/dx_i
+                             ) const;
 
     virtual void invalidateCache() const;
   

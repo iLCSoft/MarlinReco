@@ -2,8 +2,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2007-10-30 15:51:14 $
-//          by: $Author: gaede $
+// Last update: $Date: 2008-02-23 11:18:39 $
+//          by: $Author: listj $
 // 
 // Description: kinematic fit a la WWFGO
 // DISCLAIMER: the only object oriented stuff in here is the
@@ -29,7 +29,7 @@
 #include "OPALFitter.h" 
 
 #include "BaseFitObject.h"
-#include "BaseConstraint.h"
+#include "BaseHardConstraint.h"
 #include "ftypes.h"
 #include "cernlib.h"
 
@@ -41,10 +41,10 @@ using std::abs;
 static int debug = 0;
 
 // constructor
-OPALFitter::OPALFitter() : npar(0), nmea(0), nunm(0), ncon(0), ierr (0), nit (0)  {}
+OPALFitter::OPALFitter() : npar(0), nmea(0), nunm(0), ncon(0), ierr (0), nit (0)  {};
 
 // destructor
-OPALFitter::~OPALFitter() {}
+OPALFitter::~OPALFitter() {std::cout << "destroying OPALFitter" << std::endl;};
 
 // do it (~ transcription of WWFGO as of ww113)
 double OPALFitter::fit() {
@@ -98,7 +98,7 @@ double OPALFitter::fit() {
   nit = 0;
   // convergence criteria (as in WWINIT)
   // int nitmax = 20;
-  int nitmax = 20;
+  int nitmax = 200;
   double chik0 = 100.;
   double chit0 = 100.;
   double dchikc = 1.0E-3;
@@ -599,7 +599,7 @@ double OPALFitter::fit() {
 
   return fitprob;
     
-}
+};
 
 bool OPALFitter::initialize() {
   // tell fitobjects the global ordering of their parameters:
@@ -644,30 +644,31 @@ bool OPALFitter::initialize() {
   
   return true;
 
-}
-
- 
+};
+  
 bool OPALFitter::updateFitObjects (double eta[]) {
   bool debug = false;
   bool result = true;
   for (unsigned int ifitobj = 0; ifitobj < fitobjects.size(); ++ifitobj) {
     for (int ilocal = 0; ilocal < fitobjects[ifitobj]->getNPar(); ++ilocal) {
-      int iglobal = fitobjects[ifitobj]->getGlobalParNum (ilocal); 
-      if (!fitobjects[ifitobj]->isParamFixed (ilocal) && iglobal >= 0) {
-        if (debug) cout << "Parameter " << iglobal 
-                        << " (" << fitobjects[ifitobj]->getName()
-                        << ": " << fitobjects[ifitobj]->getParamName(ilocal)
-                        << ") set to " << eta[iglobal];
-        result &= fitobjects[ifitobj]->setParam(ilocal, eta[iglobal]); 
-        eta[iglobal] = fitobjects[ifitobj]->getParam(ilocal);
-        if (debug) cout << " => " << eta[iglobal] << endl;
-      }
+      fitobjects[ifitobj]->updateParams (eta, NPARMAX);
+//       int iglobal = fitobjects[ifitobj]->getGlobalParNum (ilocal); 
+//       if (!fitobjects[ifitobj]->isParamFixed (ilocal) && iglobal >= 0) {
+//         if (debug) cout << "Parameter " << iglobal 
+//                         << " (" << fitobjects[ifitobj]->getName()
+//                         << ": " << fitobjects[ifitobj]->getParamName(ilocal)
+//                         << ") set to " << eta[iglobal];
+//         result &= fitobjects[ifitobj]->setParam(ilocal, eta[iglobal]); 
+//         eta[iglobal] = fitobjects[ifitobj]->getParam(ilocal);
+//         if (debug) cout << " => " << eta[iglobal] << endl;
+//       }
     }
   }
   return result;
-}
+};
 
 int OPALFitter::getError() const {return ierr;}
 double OPALFitter::getProbability() const {return fitprob;}
 double OPALFitter::getChi2() const {return chi2;}
+int OPALFitter::getDoF() const {return ncon-nunm;}
 int OPALFitter::getIterations() const {return nit;}

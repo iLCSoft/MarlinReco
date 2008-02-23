@@ -1,44 +1,26 @@
 /*! \file 
- *  \brief Declares class BaseConstraint
+ *  \brief Declares class BaseHardConstraint
  *
  * \b Changelog:
- * - 6.6.04 BL: First doxygen docu
- * - 12.2.08 BL: Part of functionality transferred to BaseHardConstraint
+ * - 12.2.08 First version
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.3  2008/02/18 09:59:34  blist
- * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
- * -
- * - Revision 1.2  2008/02/12 16:43:25  blist
+ * - Revision 1.1  2008/02/12 16:43:25  blist
  * - First Version of Soft Constraints
  * -
- * - Revision 1.1  2008/02/12 10:19:04  blist
- * - First version of MarlinKinfit
- * -
- * - Revision 1.8  2008/02/04 17:30:52  blist
- * - NewtonFitter works now!
- * -
- * - Revision 1.7  2008/01/30 09:14:53  blist
- * - Preparations for NewtonFitter
- * -
- * - Revision 1.6  2008/01/29 17:19:21  blist
- * - no change
- * -
- * - Revision 1.5  2007/09/14 10:58:42  blist
- * - Better documentation,
- * - added PyConstraint::add1stDerivativesToMatrix,
- * - fixed bug in PzConstraint::add1stDerivativesToMatrix
  * -
  *
  */ 
 
-#ifndef __BASECONSTRAINT_H
-#define __BASECONSTRAINT_H
+#ifndef __BASEHARDCONSTRAINT_H
+#define __BASEHARDCONSTRAINT_H
+
+#include "BaseConstraint.h"
 
 class BaseFitObject;
 
-//  Class BaseConstraint:
+//  Class BasehardConstraint:
 /// Abstract base class for constraints of kinematic fits
 /**
  * This class defines the minimal functionality any constraint class must provide. 
@@ -77,41 +59,32 @@ class BaseFitObject;
  *
  */
 
-class BaseConstraint {
+class BaseHardConstraint: public BaseConstraint {
   public:
-    /// Creates an empty BaseConstraint object
-    BaseConstraint();
+  
+    /// Adds first order derivatives to global covariance matrix M
+    virtual void add1stDerivativesToMatrix (double *M,      ///< Global covariance matrix, dimension at least idim x idim
+                                            int idim        ///< First dimension of array der
+                                            ) const = 0;
+       
+    /// Adds second order derivatives to global covariance matrix M
+    virtual void add2ndDerivativesToMatrix (double *M,      ///< Global covariance matrix, dimension at least idim x idim
+                                            int idim,       ///< First dimension of array der
+                                            double lambda   ///< Lagrange multiplier for this constraint
+                                            ) const = 0;
+    /// Add lambda times derivatives of chi squared to global derivative matrix
+    virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
+                                           int idim,    ///< Vector size 
+                                           double lambda //< The lambda value
+                                           ) const = 0;
     
-    /// Copy constructor
-    BaseConstraint (const BaseConstraint& rhs              ///< right hand side
-                   );
-    /// Assignment               
-    BaseConstraint& operator= (const BaseConstraint& rhs   ///< right hand side
-                              );
-    
-    /// Virtual destructor
-    virtual ~BaseConstraint();
-    
-    /// Returns the value of the constraint function
-    virtual double getValue() const = 0;
-    
-    /// Returns the error on the value of the constraint
-    virtual double getError() const;
-    
-    /// Returns the name of the constraint
-    virtual const char*getName() const;
-    /// Set object's name
-    virtual void setName (const char * name_);
-    
-    /// Get first order derivatives of the constraint function
-    /// Call this with a predefined array "der" with the necessary number of entries!
-    virtual void getDerivatives (int idim,                  ///< First dimension of array der
-                                 double der[]               ///< Array of derivatives, dimension at least idim x idim
-                                ) const = 0;
+    /// Accesses position of constraint in global constraint list
+    virtual int  getGlobalNum() const = 0;
+    /// Sets position of constraint in global constraint list
+    virtual void setGlobalNum (int iglobal                  ///< The global constraint number
+                              ) = 0;
                                  
-    protected:
-      char *name;  
 };
 
 
-#endif // __BASECONSTRAINT_H
+#endif // __BASEHARDCONSTRAINT_H

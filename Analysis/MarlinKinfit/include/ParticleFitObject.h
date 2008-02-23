@@ -50,8 +50,8 @@
  * setGlobalParNum. 
  *
  * Author: Benno List, Jenny List
- * $Date: 2007-10-30 15:51:14 $
- * $Author: gaede $
+ * $Date: 2008-02-23 11:18:39 $
+ * $Author: listj $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov
@@ -66,16 +66,17 @@ class ParticleFitObject: public BaseFitObject {
     /// Virtual destructor
     virtual ~ParticleFitObject();
     
-    /// Set value and measured flag of parameter ilocal; return=success
+    /// Set value and measured flag of parameter ilocal; return=significant change
     virtual bool   setParam (int ilocal,         ///< Local parameter number
                              double par_,        ///< New parameter value
                              bool measured_,     ///< New "measured" flag
                              bool fixed_ = false ///< New "fixed" flag
                             );  
-    /// Set value of parameter ilocal; return=success
+    /// Set value of parameter ilocal; return=significant change
     virtual bool   setParam (int ilocal,    ///< Local parameter number
                              double par_    ///< New parameter value
                              );  
+                             
     /// Set measured value of parameter ilocal; return=success
     virtual bool   setMParam (int i, double mpar_ );  
     /// Set error of parameter ilocal; return=success
@@ -89,6 +90,8 @@ class ParticleFitObject: public BaseFitObject {
                           );
     /// Set mass of particle; return=success
     virtual bool setMass (double mass_);
+    /// Get mass of particle
+    virtual double getMass () const;
     /// Set number of parameter ilocal in global list
     /// return true signals OK
     virtual bool setGlobalParNum (int ilocal, int iglobal); 
@@ -96,6 +99,7 @@ class ParticleFitObject: public BaseFitObject {
     virtual bool fixParam (int ilocal,    ///< Local parameter number
                            bool fix=true  ///< fix if true, release if false
                           );
+                          
     
     /// Get covariance matrix
     virtual double *getCovMatrix() {return cov[0];};
@@ -188,6 +192,23 @@ class ParticleFitObject: public BaseFitObject {
                                         double pyfact,  ///< Factor for d^2py/dx_i dx_j
                                         double pzfact   ///< Factor for d^2pz/dx_i dx_j
                                        ) const = 0;
+    /// Add second order derivatives to matrix M of size idim x idim
+    /// der[0]*d^2E/(dx_i dx_j) + der[1]*d^2px/(dx_i dx_j) + ...
+    virtual void   addTo2ndDerivatives (double M[],     ///< Global derivatives matrix size idim x idim
+                                        int    idim,    ///< First dimension of derivatives matrix
+                                        double lamda,   ///< Global factor
+                                        double der[]    ///< Factors for d^2(E,px,py,pz)/dx_i dx_j
+                                       ) const = 0;
+    /// Add first order derivatives to matrix M of size idim x idim
+    /// der[0]*dE/dx_i + der[1]*dpx/dx_i + ...
+    virtual void   addTo1stDerivatives (double M[],     ///< Global derivatives matrix size idim x idim
+                                        int    idim,    ///< First dimension of derivatives matrix
+                                        double der[],   ///< Factors for d^2(E,px,py,pz)/dx_i dx_j
+                                        int kglobal     ///< Global parameter number of constraint
+                                       ) const = 0;
+    /// Calculates the squared error for a quantity with derivatives w.r.t. E, dx, dy, dz
+    virtual double getError2 (double der[]    ///< Factors for d(E,px,py,pz)/dx_i
+                             ) const = 0;
     
     /// Get chi squared from measured and fitted parameters
     virtual double getChi2() const;
@@ -203,18 +224,49 @@ class ParticleFitObject: public BaseFitObject {
     virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global covariance matrix
                                            int idim     ///< First dimension of global covariance matrix
                                           ) const;
-    /// Add derivatives to global covariance matrix
-    virtual void addToGlobalDerMatrix (int idim,     ///< First dimension of global covariance matrix
-                                       double c,     ///< Constant by which to multiply derivatives
-                                       double *M     ///< Global covariance matrix
-                                      ) const = 0;
+                                      
+    /// Add  numerically determined derivatives of chi squared to global covariance matrix
+    virtual void addToGlobalChi2DerMatrixNum (double *M,   ///< Global covariance matrix
+                                           int idim,    ///< First dimension of global covariance matrix
+                                           double eps   ///< Parameter variation
+                                          );
+                                      
+    /// Add derivatives of chi squared to global derivative vector
+    virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
+                                           int idim     ///< Vector size 
+                                           ) const;
+    /// Add numerically determined derivatives of chi squared to global derivative vector
+    virtual void addToGlobalChi2DerVectorNum (double *y,    ///< Vector of chi2 derivatives
+                                              int idim,     ///< Vector size 
+                                              double eps    ///< Parameter variation
+                                             );
+
+
+    /// Add derivatives of momentum vector to global derivative vector
+    virtual void addToGlobalChi2DerVector (double *y,     ///< Vector of chi2 derivatives
+                                           int idim,      ///< Vector size 
+                                           double lambda, ///< The lambda value
+                                           double der[]   ///< 4-vector with dg/dE, dg/dpx, dg/dpy, dg/dpz
+                                           ) const = 0;
         
-    /// invalidate any cached quantities
-    virtual void invalidateCache() const {};
     
     /// print object to ostream
     virtual std::ostream& print (std::ostream& os    ///< The output stream
                                 ) const;
+                                
+    void test1stDerivatives ();
+    void test2ndDerivatives ();
+                                
+    /// Evaluates numerically the 1st derivative  of chi2 w.r.t. a parameter
+    double num1stDerivative (int ilocal,  ///< Local parameter number 
+                             double eps   ///< variation of  local parameter 
+                            );
+    /// Evaluates numerically the 2nd derivative of chi2 w.r.t. 2 parameters
+    double num2ndDerivative (int ilocal1, ///< 1st local parameter number 
+                             double eps1, ///< variation of 1st local parameter 
+                             int ilocal2, ///< 1st local parameter number 
+                             double eps2  ///< variation of 2nd local parameter 
+                            );
   
   protected:
     /// Calculate the inverse of the covariance matrix

@@ -1,77 +1,73 @@
 /*! \file 
- *  \brief Declares class MassConstraint
+ *  \brief Declares class PConstraint
  *
  * \b Changelog:
- * - 
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
  * - Revision 1.2  2008/02/12 11:03:32  blist
  * - Added doxygen configuration
  * -
- * - Revision 1.1  2008/02/12 10:19:05  blist
- * - First version of MarlinKinfit
- * -
- * - Revision 1.5  2008/01/29 17:21:52  blist
- * - added methods secondDerivatives and firstDerivatives
- * -
- * - Revision 1.4  2007/09/17 12:50:15  blist
- * - Some parameters reordered
- * -
  *
  */ 
+ 
+ 
+////////////////////////////////////////////////////////////////
+// Class PConstraint
+//
+// Author: Jenny Boehme, Bennmo List
+// Last update: $Date: 2008-02-23 11:18:39 $
+//          by: $Author: listj $
+// 
+// Description: constraint 
+// a*sum(px)+b*sum(py)+c*sum(pz)+d*sum(E)=e
+//               
+////////////////////////////////////////////////////////////////
 
-#ifndef __MASSCONSTRAINT_H
-#define __MASSCONSTRAINT_H
+#ifndef __PCONSTRAINT_H
+#define __PCONSTRAINT_H
 
 #include "ParticleConstraint.h"
 
 class ParticleFitObject;
 
-//  Class MassConstraint:
-/// Implements constraint 0 = mass1 - mass2 - m
+//  Class PConstraint:
+/// Implements a constraint of the form pxfact*sum(px)+pyfact*sum(py)+pzfact*sum(pz)+efact*sum(E)=value
 /**
- * This class implements different mass constraints:
- * - the invariant mass of several objects should be m
- * - the difference of the invariant masses between two 
- *   sets of objects should be m (normally m=0 in this case).
  *
  * Author: Jenny List, Benno List
  * Last update: $Date: 2008-02-23 11:18:39 $
  *          by: $Author: listj $
  *
  */
-
-class MassConstraint : public ParticleConstraint {
+class PConstraint : public ParticleConstraint {
   public:
-  
-    /// Constructor
-    MassConstraint (double mass_ = 0.   ///< The mass difference between object sets 1 and 2
-                   );
-    /// Virtual destructor             
-    virtual ~MassConstraint();
-    
-    /// Returns the value of the constraint
+    PConstraint (double pxfact_=1, double pyfact_=0, double pzfact_=0,
+                 double efact_=0, double value_ = 0);
+    virtual ~PConstraint();
     virtual double getValue() const;
-    
     /// Get first order derivatives. 
     /// Call this with a predefined array "der" with the necessary number of entries!
     virtual void getDerivatives(int idim,      ///< First dimension of the array
                                 double der[]   ///< Array of derivatives, at least idim x idim 
                                ) const;
+                                   
+    virtual void addToGlobalDerMatrix (double lambda, int idim, double *M) const;
     
-    /// Get the actual invariant mass of the fit objects with a given flag                         
-    virtual double getMass (int flag = 1       ///< The flag
-                           );
-    
-    /// Sets the target mass of the constraint
-    virtual void setMass (double mass_           ///< The new mass
-                         );
-    
+    virtual void invalidateCache() const;
   
   protected:
-    double mass;   ///< The mass difference between object sets 1 and 2
-
+    void updateCache() const;
+  
+  
+    double pxfact;
+    double pyfact;
+    double pzfact;
+    double efact;
+    double value;
+    
+    mutable bool cachevalid;
+    mutable int  nparams;
   
     /// Second derivatives with respect to the 4-vectors of Fit objects i and j; result false if all derivatives are zero 
     virtual bool secondDerivatives (int i,                        ///< number of 1st FitObject
@@ -84,4 +80,4 @@ class MassConstraint : public ParticleConstraint {
                                   ) const;
 };
 
-#endif // __MASSCONSTRAINT_H
+#endif // __PCONSTRAINT_H

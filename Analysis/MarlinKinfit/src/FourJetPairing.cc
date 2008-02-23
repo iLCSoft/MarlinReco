@@ -2,10 +2,10 @@
 // Class FourJetPairing
 //
 // Author: Jenny Boehme, Anca Siebel
-// Last update: $Date: 2007-10-30 15:51:14 $
-//          by: $Author: gaede $
+// Last update: $Date: 2008-02-23 11:18:39 $
+//          by: $Author: listj $
 // 
-// Description: handle permutations of 4 jets
+// Description: handle permutations of 2b jets and 4 light jets
 //               
 ////////////////////////////////////////////////////////////////
 

@@ -125,11 +125,16 @@ protected:
 
 
 
-  float _pointResoPadPhi;
-  float _pointResoRPhi;
-  float _pointResoZ;
-  float _diffRPhi;
-  int   _nEff;
+  float _pointResoRPhi0; // Coefficient for RPhi point res independant of drift length 
+  float _pointResoPadPhi; // Coefficient for the point res dependance on relative phi angle to the pad verticle 
+  float _diffRPhi; // Coefficient for the rphi point res dependance on diffusion 
+  int   _nEff; // number of effective electrons 
+
+
+  float _pointResoZ0; // Coefficient Z point res independant of drift length 
+  float _diffZ; // Coefficient for the Z point res dependance on diffusion 
+
+
   float _pixZ;
   float _pixRP;
 

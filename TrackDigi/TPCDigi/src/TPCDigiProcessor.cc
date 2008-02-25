@@ -78,11 +78,11 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
 
   registerProcessorParameter( "PointResolutionRPhi" ,
                               "R-Phi Resolution constant in TPC"  ,
-                              _pointResoRPhi ,
+                              _pointResoRPhi0 ,
                                (float)0.050) ;
 
   registerProcessorParameter( "DiffusionCoeffRPhi" ,
-                              "R-Phi Diffusion Co-efficent in TPC"  ,
+                              "R-Phi Diffusion Coefficent in TPC"  ,
                               _diffRPhi ,
                               (float)0.025) ;
 
@@ -92,9 +92,14 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                               (int)22) ;
 
   registerProcessorParameter( "PointResolutionZ" ,
-                              "Z Resolution constant in TPC"  ,
-                              _pointResoZ ,
+                              "TPC Z Resolution Coefficent independent of diffusion"  ,
+                              _pointResoZ0 ,
                                (float)0.4) ;
+
+  registerProcessorParameter( "DiffusionCoeffZ" ,
+                              "Z Diffusion Coefficent in TPC"  ,
+                              _diffZ ,
+                               (float)0.08) ;
 
  registerProcessorParameter( "PixZ" ,
                               "Defines spatial slice in Z"  ,
@@ -651,9 +656,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       //  SMEARING
       
-      // Calculate Point Resolution according to Ron's Formula 
+      // Calculate Point Resolutions according to Ron's Formula 
 
-      // sigma_{point}^2 = sigma_0^2 + Cd^2/N_{eff} * L_{drift}
+      // sigma_{RPhi}^2 = sigma_0^2 + Cd^2/N_{eff} * L_{drift}
 
       // sigma_0^2 = (50micron)^2 + (900micron*sin(phi))^2
       // Cd^2/N_{eff}} = 25^2/(22/sin(theta)*h/6mm)
@@ -661,7 +666,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       // (this is for B=4T, h is the pad height = pad-row pitch in mm,
       // theta is the polar angle)       
 
-      double aReso =_pointResoRPhi*_pointResoRPhi + (_pointResoPadPhi*sin(padPhi) * _pointResoPadPhi*sin(padPhi)) ;
+      // sigma_{z}^2 = (400microns)^2 + L_{drift}cm * (80micron/sqrt(cm))^2 
+
+      double aReso =_pointResoRPhi0*_pointResoRPhi0 + (_pointResoPadPhi*_pointResoPadPhi * sin(padPhi)*sin(padPhi)) ;
       double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-_cathode);
       if (driftLength <0) { 
         std::cout << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
@@ -675,7 +682,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double bReso = ((_diffRPhi*_diffRPhi)/_nEff) * sin(padTheta) * (6.0/(padheight));
 
       double tpcRPhiRes = sqrt(aReso + bReso*(driftLength/10.0)); // driftLength in cm
-      double tpcZRes = _pointResoZ;
+
+      double tpcZRes  = sqrt((_pointResoZ0*_pointResoZ0) 
+                             + 
+                             (_diffZ*_diffZ) *(driftLength/10.0)); // driftLength in cm 
 
 //       std::cout << "aReso = " << aReso << std::endl;
 //       std::cout << "bReso = " << bReso << std::endl;

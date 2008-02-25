@@ -2,8 +2,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008-02-23 11:18:39 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-02-25 08:23:56 $
+//          by: $Author: gaede $
 // 
 // Description: kinematic fit a la WWFGO
 // DISCLAIMER: the only object oriented stuff in here is the
@@ -41,10 +41,10 @@ using std::abs;
 static int debug = 0;
 
 // constructor
-OPALFitter::OPALFitter() : npar(0), nmea(0), nunm(0), ncon(0), ierr (0), nit (0)  {};
+OPALFitter::OPALFitter() : npar(0), nmea(0), nunm(0), ncon(0), ierr (0), nit (0)  {}
 
 // destructor
-OPALFitter::~OPALFitter() {std::cout << "destroying OPALFitter" << std::endl;};
+OPALFitter::~OPALFitter() {std::cout << "destroying OPALFitter" << std::endl;}
 
 // do it (~ transcription of WWFGO as of ww113)
 double OPALFitter::fit() {
@@ -599,7 +599,7 @@ double OPALFitter::fit() {
 
   return fitprob;
     
-};
+}
 
 bool OPALFitter::initialize() {
   // tell fitobjects the global ordering of their parameters:
@@ -644,10 +644,10 @@ bool OPALFitter::initialize() {
   
   return true;
 
-};
+}
   
 bool OPALFitter::updateFitObjects (double eta[]) {
-  bool debug = false;
+//  bool debug = false;
   bool result = true;
   for (unsigned int ifitobj = 0; ifitobj < fitobjects.size(); ++ifitobj) {
     for (int ilocal = 0; ilocal < fitobjects[ifitobj]->getNPar(); ++ilocal) {
@@ -665,7 +665,7 @@ bool OPALFitter::updateFitObjects (double eta[]) {
     }
   }
   return result;
-};
+}
 
 int OPALFitter::getError() const {return ierr;}
 double OPALFitter::getProbability() const {return fitprob;}

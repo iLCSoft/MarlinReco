@@ -2,8 +2,8 @@
 // Class FourVector
 //
 // Author: Benno List
-// Last update: $Date: 2008-02-23 11:18:39 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-02-25 08:23:56 $
+//          by: $Author: gaede $
 // 
 // Description: class for four-vectors
 //               
@@ -43,7 +43,7 @@ void FourVector::decayto (FourVector& d1, FourVector& d2) const {
   double m2 = d2.getM();
   
   FReal randoms[2];
-  FInteger ilen = 2;
+//  FInteger ilen = 2;
 //  ranmar_ (randoms, &ilen);
   ranmar (randoms, 2);
   

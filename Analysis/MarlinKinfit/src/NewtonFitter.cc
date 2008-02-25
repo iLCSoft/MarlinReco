@@ -2,8 +2,8 @@
 // Class NewtonFitter
 //
 // Author: Benno List
-// Last update: $Date: 2008-02-23 11:18:39 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-02-25 08:23:56 $
+//          by: $Author: gaede $
 // 
 // Description: kinematic fit using Newton method
 //               
@@ -33,7 +33,7 @@ NewtonFitter::NewtonFitter()
 {}
 
 // destructor
-NewtonFitter::~NewtonFitter() {};
+NewtonFitter::~NewtonFitter() {}
 
 double NewtonFitter::fit() {
 
@@ -339,7 +339,7 @@ double NewtonFitter::fit() {
 
   return fitprob = prob(chi ,ncon+nsoft-nunm);
     
-};
+}
 
 bool NewtonFitter::initialize() {
 //  bool debug = true;
@@ -381,7 +381,7 @@ bool NewtonFitter::initialize() {
   
   return true;
 
-};
+}
   
 double NewtonFitter::calcChi2() {
   chi2 = 0;

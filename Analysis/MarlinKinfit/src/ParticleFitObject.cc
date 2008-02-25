@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.3  2008/02/23 11:18:39  listj
+ * - added soft constraints
+ * -
  * - Revision 1.7  2008/02/04 17:30:54  blist
  * - NewtonFitter works now!
  * -
@@ -53,7 +56,7 @@ bool ParticleFitObject::setParam (int ilocal, double par_,
   measured[ilocal] = measured_;
   fixed[ilocal] = fixed_;
   return setParam (ilocal, par_);
-};  
+} 
 
 bool ParticleFitObject::setParam (int ilocal, double par_ ) {
   if (!isfinite(par_)) return true;
@@ -63,7 +66,7 @@ bool ParticleFitObject::setParam (int ilocal, double par_ ) {
   bool result = (par_-par[ilocal])*(par_-par[ilocal]) > eps2*cov[ilocal][ilocal]; 
   par[ilocal] = par_;
   return result;
-};  
+}  
 bool ParticleFitObject::setMParam (int ilocal, double mpar_ ) {
   if (!isfinite(mpar_)) return false;
   assert (ilocal >= 0 && ilocal < NPAR);
@@ -71,7 +74,7 @@ bool ParticleFitObject::setMParam (int ilocal, double mpar_ ) {
   invalidateCache();
   mpar[ilocal] = mpar_;
   return true;
-}; 
+} 
 bool ParticleFitObject::setError (int ilocal, double err_) {
   if (!isfinite(err_)) return false;
   assert (ilocal >= 0 && ilocal < NPAR);

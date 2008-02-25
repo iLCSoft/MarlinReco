@@ -105,7 +105,7 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 	  int cellid = hit->getCellID0();
 	  int cellid1 = hit->getCellID1();
 	  float calibr_coeff(1.);
-	  int layer = idDecoder(hit)["K-1"];
+	  //int layer = idDecoder(hit)["K-1"];
 	  calibr_coeff = _calibrCoeffMuon;
 	  calhit->setCellID0(cellid);
 	  calhit->setCellID1(cellid1);

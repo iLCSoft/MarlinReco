@@ -2,8 +2,8 @@
 // Class TopEventILCSoft
 //
 // Author: Benno List, Jenny Boehme
-// Last update: $Date: 2008-02-23 11:18:39 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-02-25 08:23:56 $
+//          by: $Author: gaede $
 // 
 // Description: class to generate and fit top pair events at ILC
 //               
@@ -42,7 +42,7 @@ TopEventILCSoft::TopEventILCSoft()
   w.setName ("top-equalmass");
   w1.setName ("w1-mass");
   w2.setName ("w2-mass");
-};
+}
 
 //destructor: 
 TopEventILCSoft::~TopEventILCSoft() {
@@ -51,7 +51,7 @@ TopEventILCSoft::~TopEventILCSoft() {
     delete bfo[i];
     delete bfosmear[i];
   }  
-};
+}
 
 // Generate Breit-Wigner Random number
 double TopEventILCSoft::bwrandom (double r, double e0, double gamma, double emin, double emax) const {
@@ -188,7 +188,7 @@ void TopEventILCSoft::genEvent(){
   w2.addToFOList (*bfosmear[4]);
   w2.addToFOList (*bfosmear[5]);
   
-};
+}
 
 // fit it!
 int TopEventILCSoft::fitEvent (BaseFitter& fitter){
@@ -306,4 +306,4 @@ int TopEventILCSoft::fitEvent (BaseFitter& fitter){
    return fitter.getError();
 
 
-};
+}

@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.2  2008/02/23 11:18:39  listj
+ * - added soft constraints
+ * -
  * - Revision 1.10  2008/02/07 08:15:25  blist
  * - error calculation of constraints fixed
  * -
@@ -91,7 +94,7 @@ bool JetFitObject::setParam (int ilocal, double par_,
 //  invalidateCache();                     done in constructor anyhow
   par[ilocal] = par_;
   return true;
-};  
+} 
 
 bool JetFitObject::setParam (int i, double par_ ) {
   invalidateCache();
@@ -115,7 +118,7 @@ bool JetFitObject::setParam (int i, double par_ ) {
     default: std::cerr << "JetFitObject::setParam: Illegal i=" << i << std::endl;
   }
   return result;
-}; 
+}
  
 bool JetFitObject::updateParams (double p[], int idim) {
   invalidateCache();

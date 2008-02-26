@@ -7,6 +7,13 @@
 #include <vector>
 #include <gsl/gsl_rng.h>
 
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/VXDParameters.h>
+#include <gear/VXDLayerLayout.h>
+
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -79,6 +86,12 @@ class VTXDigiProcessor : public Processor {
   /** Called after data processing for clean up.
    */
   virtual void end() ;
+
+
+  // find phi of point in projection 2D, taken from gear::VXDParameters
+  double getPhiPoint( gear::Vector3D p ) const ;
+  // find phi in correct range, taken from gear::VXDParameters
+  double correctPhiRange( double Phi ) const ;  
   
   
  protected:

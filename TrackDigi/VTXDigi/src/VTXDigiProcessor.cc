@@ -100,7 +100,6 @@ void VTXDigiProcessor::init() {
   _nRun = 0 ;
   _nEvt = 0 ;
   r = gsl_rng_alloc(gsl_rng_ranlxs2);
-  
 }
 
 void VTXDigiProcessor::processRunHeader( LCRunHeader* run) { 
@@ -155,30 +154,180 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           const double *pos ;
           pos =  SimTHit->getPosition() ;  
 
-          double xSmear;
-          double zSmear;
+          double newPos[3];
           
+          //VXD smearing
           if (iColl==0) {        
-            xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
-            zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
-            _pointResoRPhi = _pointResoRPhi_VTX;
-            _pointResoZ = _pointResoZ_VTX;
+          
+            //get VXD geometry info
+            const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
+            const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
+
+            gear::Vector3D hitvec(pos[0],pos[1],pos[2]);
+
+            if(_debug ==1)
+              {
+                cout<<"Position of hit before smearing = "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+                cout<<"Hit in sensitive volume? "<<gearVXD.isPointInSensitive(hitvec)<<endl;
+              }
+
+            //check detector geometry to decide how to smear hits    
+            //ladders in layer -> need to smear hits along ladder plane
+            bool UseLadders=true;
+            if(layerVXD.getNLadders(0) !=0){
+              
+              //find which layer hit is in - encoded in cell ID
+              int layer = SimTHit->getCellID() - 1;
+              
+              //check that this is a valid layer
+              if (layer < 0 || layer > layerVXD.getNLayers() ) 
+                {
+                  if(_debug == 1)
+                    cout<<"layer of hit not found, smearing in cylinder "<<endl;
+                  UseLadders=false;
+                }
+              //if the layer is valid, smear along the ladder
+              if(UseLadders){
+ 
+                //phi between each ladder
+                double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;
+                
+
+                // get phi of hit in projection 2D
+                double pPhi = getPhiPoint( hitvec ) ;
+
+                //find the ladder that the hit is in
+                int ladderIndex = -1;
+                double lPhi=999;
+                for (int ic=0; ic < layerVXD.getNLadders(layer); ++ic) 
+                  {
+                    lPhi = layerVXD.getPhi0( layer ) + ic*deltaPhi ;
+                    lPhi = correctPhiRange( lPhi ) ;
+
+                    float PhiInLocal = pPhi - lPhi;
+                    float RXY = sqrt((pos[0]*pos[0]+pos[1]*pos[1]));
+
+                    // check if point is in range of ladder
+                    if (RXY*cos(PhiInLocal)- layerVXD.getSensitiveDistance(layer) > -layerVXD.getSensitiveThickness(layer) && 
+                        RXY*cos(PhiInLocal)-layerVXD.getSensitiveDistance(layer) < layerVXD.getSensitiveThickness(layer) )
+                      {
+                        ladderIndex = ic;
+                        break;
+                      }
+                  }
+
+                //finding the smearing constant
+                double rSmear  = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
+                
+                //find smearing for x and y, so that hit is smeared along ladder plane
+                double xSmear = rSmear * cos(lPhi);
+                double ySmear = rSmear * sin(lPhi);
+
+                newPos[0] = pos[0] + xSmear;
+                newPos[1] = pos[1] - ySmear;
+
+                //smear in z
+                double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
+
+                newPos[2] = pos[2] + zSmear;
+
+                //check that hits are still on ladder, if they aren't put them on end of ladder. 
+                gear::Vector3D smearedhitvec(newPos[0],newPos[1],newPos[2]);
+
+                //info for debug
+                if(_debug==1)
+                  {
+                    cout<<"Position of hit after smearing = "<<newPos[0]<<" "<<newPos[1]<<" "<<newPos[2]<<endl;
+                    cout<<"Smeared hits on sensitive volume? "<<gearVXD.isPointInSensitive(smearedhitvec)<<endl;
+                  }
+
+                if(gearVXD.isPointInSensitive(smearedhitvec)==0)
+                  {
+                    
+                    //start phi for first ladder in layer
+                    double startPhi = layerVXD.getPhi0(layer) + atan( (-layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
+                    //end phi for first ladder in layer
+                    double endPhi = layerVXD.getPhi0(layer) +  atan( (layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
+
+                    // get start and end phi for the ladder that this hit is on 
+                    float sPhi = correctPhiRange( startPhi + ladderIndex*deltaPhi ) ;
+                    float ePhi = correctPhiRange( endPhi + ladderIndex*deltaPhi) ;
+
+                    pPhi = getPhiPoint( smearedhitvec ) ;
+
+                    //point in ladder where line perpendicular to ladder, from interaction point crosses ladder in x and y
+                    float xladder = sin(lPhi)*(layerVXD.getSensitiveDistance(layer)+(0.5*layerVXD.getSensitiveThickness(layer)));
+                    float yladder = cos(lPhi)*(layerVXD.getSensitiveDistance(layer)+(0.5*layerVXD.getSensitiveThickness(layer)));
+
+                    //end of ladder in z
+                    float endz = layerVXD.getSensitiveLength(layer);
+
+                    //if point has been smeared further than start of ladder move it to start of ladder in x and y
+                    if(pPhi < sPhi)
+                      {
+                        newPos[0] = xladder - (cos(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)-layerVXD.getSensitiveOffset( layer )));
+                        newPos[1] = yladder + (sin(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)-layerVXD.getSensitiveOffset( layer )));
+                      }
+                    //if point has been smeared further than end of ladder move it to end of ladder in x and y
+                    if(pPhi > ePhi)
+                      {
+                         newPos[0] = xladder + (cos(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)+layerVXD.getSensitiveOffset( layer )));
+                         newPos[1] = yladder - (sin(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)+layerVXD.getSensitiveOffset( layer )));
+                       }
+                    
+                  
+                    //if point has been smeared further than ends of ladder in z, move it to the nearest end.
+                    if(newPos[2] > endz)
+                      newPos[2] = endz;
+                    if(newPos[2] < -endz)
+                      newPos[2] = -endz;
+                
+                    //info for debug
+                    gear::Vector3D repohitvec(newPos[0],newPos[1],newPos[2]);
+                    if(_debug==1)
+                      {
+                        cout<<"Position of hit after repositioning = "<<newPos[0]<<" "<<newPos[1]<<" "<<newPos[2]<<endl;
+                        cout<<"repositioned hits on sensitive volume? "<<gearVXD.isPointInSensitive(repohitvec)<<endl;
+                      }
+
+                  }
+              }                       
+            }
+     
+
+            // no ladders in layers -> just smear around cylinders
+            if(layerVXD.getNLadders(0) ==0 || UseLadders==false){
+              
+              double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
+              double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
+              _pointResoRPhi = _pointResoRPhi_VTX;
+              _pointResoZ = _pointResoZ_VTX;
+              
+              
+              double phi = atan2(pos[1],pos[0]);
+              double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
+              double phi_new = phi + xSmear/rad;
+              newPos[0] = rad*cos(phi_new);
+              newPos[1] = rad*sin(phi_new);
+              newPos[2] = pos[2] + zSmear;
+            }
+
           }
+
+          //SIT Smearing
           else {
-            xSmear = gsl_ran_gaussian(r,_pointResoRPhi_SIT);
-            zSmear = gsl_ran_gaussian(r,_pointResoZ_SIT);
+            double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_SIT);
+            double zSmear = gsl_ran_gaussian(r,_pointResoZ_SIT);
             _pointResoRPhi = _pointResoRPhi_SIT;
             _pointResoZ = _pointResoZ_SIT; 
+
+            double phi = atan2(pos[1],pos[0]);
+            double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
+            double phi_new = phi + xSmear/rad;
+            newPos[0] = rad*cos(phi_new);
+            newPos[1] = rad*sin(phi_new);
+            newPos[2] = pos[2] + zSmear;      
           }
-
-
-          double newPos[3] ;
-          double phi = atan2(pos[1],pos[0]);
-          double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
-          double phi_new = phi + xSmear/rad;
-          newPos[0] = rad*cos(phi_new);
-          newPos[1] = rad*sin(phi_new);
-          newPos[2] = pos[2] + zSmear;        
         
           float de_dx ;
           float dedxSmear = 0.0 ;
@@ -227,9 +376,50 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
 void VTXDigiProcessor::end(){ 
   
-//   std::cout << "VTXDigiProcessor::end()  " << name() 
-// 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-// 	    << std::endl ;
-
+  std::cout << "VTXDigiProcessor::end()  " << name() 
+	    << " processed " << _nEvt << " events in " << _nRun << " runs "
+	    << std::endl ;
 }
 
+
+double VTXDigiProcessor::correctPhiRange( double Phi ) const {
+    
+    if( Phi > M_PI ) {
+      return ( Phi - 2 * M_PI ) ;
+    }
+    if( Phi <= -M_PI ) {
+      return ( Phi + 2 * M_PI ) ;
+    } 
+    
+    return Phi ;
+
+  } // function correctPhiRange
+
+
+double VTXDigiProcessor::getPhiPoint( gear::Vector3D p ) const {
+
+    //fg: definition of phi - seems like this is the the angle with the negative y-axis ????
+    //    return correctPhiRange( p.phi() ) ;
+
+    // get phi of point in projection 2D
+    double pPhi = 0. ;
+    if( ( p[0] >= 0 ) && ( p[1] == 0 ) )
+      pPhi = -M_PI/2 ;
+    
+    if( ( p[0] < 0 ) && ( p[1] == 0 ) )
+      pPhi = M_PI/2 ;
+    
+    if( ( p[0] == 0 ) && ( p[1] < 0 ) ) 
+      pPhi = 0 ;
+    
+    if( ( p[0] != 0 ) && ( p[1] < 0 ) )
+      pPhi = atan( p[0] / p[1] ) + M_PI ;
+    
+    else
+      pPhi = atan( p[0] / p[1] ) ;
+    
+    pPhi = correctPhiRange( pPhi ) ;  
+    
+    return pPhi ;
+    
+} // function getPhiPoint

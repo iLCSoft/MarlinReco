@@ -1,3 +1,158 @@
+2008-02-26 11:16  gaede
+
+	* TrackDigi/VTXDigi/: include/VTXDigiProcessor.h,
+	  src/VTXDigiProcessor.cc: vertex hits are now smeared on ladders -
+	  code from Clare Lynch, Bristol
+
+2008-02-25 18:17  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: included driftlength dependant z_point
+	  resolution
+
+2008-02-25 09:23  gaede
+
+	* Analysis/MarlinKinfit/src/FourVector.cc,
+	  Analysis/MarlinKinfit/src/JetFitObject.cc,
+	  Analysis/MarlinKinfit/src/NeutrinoFitObject.cc,
+	  Analysis/MarlinKinfit/src/NewtonFitter.cc,
+	  Analysis/MarlinKinfit/src/OPALFitter.cc,
+	  Analysis/MarlinKinfit/src/ParticleFitObject.cc,
+	  Analysis/MarlinKinfit/src/TopEventILC.cc,
+	  Analysis/MarlinKinfit/src/TopEventILCSoft.cc,
+	  Analysis/MarlinKinfit/src/WW5CFit.cc,
+	  CaloDigi/LDCCaloDigi/include/SimpleCaloDigi.h,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: removed extra ;
+	  (after {} blocks) and unused variables
+
+2008-02-23 12:18  listj
+
+	* Analysis/MarlinKinfit/: WW5CFit.xml, include/BaseConstraint.h,
+	  include/BaseEvent.h, include/BaseFitObject.h,
+	  include/BaseFitter.h, include/BaseHardConstraint.h,
+	  include/BaseJetPairing.h, include/BaseSoftConstraint.h,
+	  include/FourJetPairing.h, include/FourVector.h,
+	  include/JetFitObject.h, include/MassConstraint.h,
+	  include/MomentumConstraint.h, include/NeutrinoFitObject.h,
+	  include/NewtonFitter.h, include/OPALFitter.h,
+	  include/PConstraint.h, include/ParticleConstraint.h,
+	  include/ParticleFitObject.h, include/SoftGaussMassConstraint.h,
+	  include/SoftGaussMomentumConstraint.h,
+	  include/SoftGaussParticleConstraint.h, include/ThreeVector.h,
+	  include/TopEventILC.h, include/TopEventILCSoft.h,
+	  src/BaseConstraint.cc, src/BaseFitObject.cc, src/BaseFitter.cc,
+	  src/FourJetPairing.cc, src/FourVector.cc, src/JetFitObject.cc,
+	  src/Makefile, src/MassConstraint.cc, src/MomentumConstraint.cc,
+	  src/NeutrinoFitObject.cc, src/NewtonFitter.cc, src/OPALFitter.cc,
+	  src/PConstraint.cc, src/ParticleConstraint.cc,
+	  src/ParticleFitObject.cc, src/SoftGaussMassConstraint.cc,
+	  src/SoftGaussMomentumConstraint.cc,
+	  src/SoftGaussParticleConstraint.cc, src/TTBarExample.cc,
+	  src/TopEventILC.cc, src/TopEventILCSoft.cc, src/WW5CFit.cc: added
+	  soft constraints
+
+2008-02-18 17:12  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: removed debug cout
+
+2008-02-18 15:51  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: fixed array index bug, and changed ifdef
+	  for expert histos to EXPERTCHECKPLOTS
+
+2008-02-14 16:34  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: removed
+	  spurious dev code
+
+2008-02-14 15:43  aplin
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  src/LEPTrackingProcessor.cc: removed spurious dev code
+
+2008-02-14 13:18  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: Corrected ifdefs
+	  for expert histos. Thanks to Kristian
+
+2008-02-14 12:50  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: put ifdef for
+	  expert histos within AIDA ifdef
+
+2008-02-14 11:12  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: Cathode stored as Class constant.
+	  Cleaned up expert histgramming
+
+2008-02-13 11:49  aplin
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: fixed mm->cm
+	  conversion bug
+
+2008-02-13 11:23  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: fixed mm->cm
+	  conversion bug
+
+2008-02-12 10:21  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: updated histogram names
+
+2008-02-12 10:07  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: Updated Description
+	  Comments
+
+2008-02-11 17:54  aplin
+
+	* Tracking/: BrahmsTracking/src/LEPTrackingProcessor.cc,
+	  FullLDCTracking/src/FullLDCTracking.cc: ntroduced smearing which
+	  depends on the parameterisation supplied by the LC-TPC group.  It
+	  is parameterised in phi and theta. Not yet in z.
+
+	  The Covariance matrix corrected so that it is set for XYZ and not
+	  r-phi as previously. The corresponding conversion back to r-phi
+	  has been set in LEPTracking and FullLDCTracking.
+
+2008-02-11 17:51  aplin
+
+	* TrackDigi/TPCDigi/: include/TPCDigiProcessor.h,
+	  src/TPCDigiProcessor.cc: Introduced smearing which depends on the
+	  parameterisation supplied by the LC-TPC group.  It is
+	  parameterised in phi and theta. Not yet in z.
+
+	  The Covariance matrix has been corrected so that it is set for
+	  XYZ and not r-phi as previously.  The corresponding conversion
+	  back to r-phi has been set in LEPTracking and FullLDCTracking.
+
+	  Code also added to provide detailed histogramming, which can be
+	  enabled for complilation by setting the ifdef STEVESCHECKPLOTS 1
+	  in tpcdigiproccessor.h
+
+2008-02-11 17:21  aplin
+
+	* TrackDigi/TPCDigi/: include/voxel.h, src/voxel.cc: expanded the
+	  voxels to take the r-phi measurements plus assosiated
+	  uncertainties
+
+2008-02-11 17:14  aplin
+
+	* Tracking/BrahmsTracking/src/f77/include/padrow.inc: removed typo
+
+2008-02-01 11:41  listj
+
+	* Analysis/MarlinKinfit/src/ParticleFitObject.cc: dsinv(idim+1 ...
+	  ) thing fixed
+
+2008-02-01 11:05  gaede
+
+	* BuildSetup.cmake, CMakeLists.txt, ChangeLog, doc/release.notes:
+	  --------- release v00-05-01 ------------
+
 2008-01-31 14:01  listj
 
 	* Analysis/MarlinKinfit/: README, include/NeutrinoFitObject.h,

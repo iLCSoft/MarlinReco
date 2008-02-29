@@ -1,7 +1,10 @@
 #############################################################################
-# cmake build setup for MarlinReco
+# EXAMPLE cmake build setup for MarlinReco
 #
-# For building MarlinReco with cmake type:
+# For building MarlinUtil with cmake:
+#
+# (0) --  modify the pathes and versions of the software packages !!!!
+#
 # (1) $ mkdir build
 # (2) $ cd build
 # (3) $ cmake -C ../BuildSetup.cmake ..
@@ -10,9 +13,8 @@
 # @author Jan Engels, DESY
 #############################################################################
 
-
 #############################################################################
-# Setup path variables
+# Setup path variables  <<<< MODIFY ACCORDINGLY !!!!!!
 #############################################################################
 
 # ILC_HOME

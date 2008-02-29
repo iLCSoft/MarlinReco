@@ -5,6 +5,30 @@
 ================================
 
  -----------
+| v00-05-02 |
+ -----------
+  
+       bug fix release 
+
+          !!! requires MarlinUtil v00-06 !!!!
+
+
+	* TrackDigi/VTXDigi/VTXDigiProcessor: (C. Lynch)
+
+	  - vertex hits are now smeared on ladders 
+ 
+	* TrackDigi/BrahmsTracking    (S.Aplin)
+          - new parametrization of r-phi and z resolution smearing (from LC-TPC group) 
+          - bug fixes 
+          - added expert check histograms (enable w/ -D EXPERTCHECKPLOTS)
+          - covariance matrix of TrackerHit are now x,y,z (used to be cylindrical)
+
+	* Analysis/MarlinKinfit:  (J.List) 
+	  - added soft constraints
+          - added more example fitters
+          - bug fixes
+
+ -----------
 | v00-05-01 |
  -----------
        bug fix release

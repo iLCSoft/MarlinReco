@@ -63,23 +63,23 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
   registerOutputCollection( LCIO::TRACKERHIT,
                             "TPCTrackerHitsCol" , 
                             "Name of the digitized TrackerHit collection"  ,
-                           _TPCTrackerHitsCol ,
+                            _TPCTrackerHitsCol ,
                             std::string("TPCTrackerHits") ) ;
 
   registerProcessorParameter( "PointResolutionPadPhi" ,
                               "Pad Phi Resolution constant in TPC"  ,
                               _pointResoPadPhi ,
-                               (float)0.900) ;
+                              (float)0.900) ;
 
   registerProcessorParameter( "RejectCellID0" ,
                               "whether or not to use hits without proper cell ID (pad row)"  ,
                               _rejectCellID0 ,
-                               (int)1) ;
+                              (int)1) ;
 
   registerProcessorParameter( "PointResolutionRPhi" ,
                               "R-Phi Resolution constant in TPC"  ,
                               _pointResoRPhi0 ,
-                               (float)0.050) ;
+                              (float)0.050) ;
 
   registerProcessorParameter( "DiffusionCoeffRPhi" ,
                               "R-Phi Diffusion Coefficent in TPC"  ,
@@ -94,22 +94,22 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
   registerProcessorParameter( "PointResolutionZ" ,
                               "TPC Z Resolution Coefficent independent of diffusion"  ,
                               _pointResoZ0 ,
-                               (float)0.4) ;
+                              (float)0.4) ;
 
   registerProcessorParameter( "DiffusionCoeffZ" ,
                               "Z Diffusion Coefficent in TPC"  ,
                               _diffZ ,
-                               (float)0.08) ;
+                              (float)0.08) ;
 
- registerProcessorParameter( "PixZ" ,
+  registerProcessorParameter( "PixZ" ,
                               "Defines spatial slice in Z"  ,
                               _pixZ ,
-                               (float)1.4) ;
+                              (float)1.4) ;
 
- registerProcessorParameter( "PixRP" ,
+  registerProcessorParameter( "PixRP" ,
                               "Defines spatial slice in RP"  ,
                               _pixRP ,
-                               (float)1.0) ;
+                              (float)1.0) ;
 
 
 
@@ -126,7 +126,7 @@ void TPCDigiProcessor::init()
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
 
 #ifdef EXPERTCHECKPLOTS
-/// Hook an AIDA implementation -----------------------------------------------
+  /// Hook an AIDA implementation -----------------------------------------------
 
   // First create a pointer to the "IAnalysisFactory" of a specific AIDA
   // implementation. This factory can then be used to produce all other 
@@ -161,11 +161,11 @@ void TPCDigiProcessor::init()
   //                              const std::string & options = "") ;
 
   TREE = TRF->create("TPCDigi.root",
-                             "root",
-                             false,
-                             true);
+                     "root",
+                     false,
+                     true);
 
-/// Create an IHistogramFactory which is bound to the tree "*TREE". -----------
+  /// Create an IHistogramFactory which is bound to the tree "*TREE". -----------
 
   /*
    * Create an IHistogramFactory.
@@ -199,32 +199,32 @@ void TPCDigiProcessor::init()
 
 
   phiDiffHisto = HF->createHistogram1D("Histograms/phi_diff",
-                                               "Calculated Phi - Track Phi",
-                                               201, -0.05, 0.05);
+                                       "Calculated Phi - Track Phi",
+                                       201, -0.05, 0.05);
 
   thetaDiffHisto = HF->createHistogram1D("Histograms/theta_diff",
-                                               "Calculated Theta - Track Theta",
-                                               201, -0.05, 0.05);
+                                         "Calculated Theta - Track Theta",
+                                         201, -0.05, 0.05);
  
   phiRelHisto = HF->createHistogram1D("Histograms/padPhi",
-                                               "Phi Relative to the Pad",
-                                               201, 0.0, 6.3);
+                                      "Phi Relative to the Pad",
+                                      201, 0.0, 6.3);
 
   thetaRelHisto = HF->createHistogram1D("Histograms/padtheta",
-                                               "Theta Relative to the pad",
-                                               201, 0.0, 6.3);
+                                        "Theta Relative to the pad",
+                                        201, 0.0, 6.3);
 
   rDiffHisto = HF->createHistogram1D("Histograms/rDiff",
-                                               "R_rec - R_sim",
-                                               201, -1.0, 1.0);
+                                     "R_rec - R_sim",
+                                     201, -1.0, 1.0);
 
   phiDistHisto = HF->createHistogram1D("Histograms/phiDist",
-                                               "phi_rec - Phi_sim",
-                                               201, -1.0, 1.0);
+                                       "phi_rec - Phi_sim",
+                                       201, -1.0, 1.0);
 
   phiPullHisto = HF->createHistogram1D("Histograms/phiPull",
-                                               "(Phi_rec - Phi_sim) / Sigma_phi",
-                                               201, -10.0, 10.0);
+                                       "(Phi_rec - Phi_sim) / Sigma_phi",
+                                       201, -10.0, 10.0);
 
 
 #endif  
@@ -256,12 +256,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
 
-//     int skipToEvent = 0;
-//     if(_nEvt<skipToEvent) {
-//       cout << "skipping event " << _nEvt << endl;
-//      ++_nEvt;
-//       return;
-//     }
+  //     int skipToEvent = 0;
+  //     if(_nEvt<skipToEvent) {
+  //       cout << "skipping event " << _nEvt << endl;
+  //      ++_nEvt;
+  //       return;
+  //     }
 
   
   if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;
@@ -346,7 +346,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         // cout << "point x = " << SimTHit->getPosition()[0] << " point y = " << SimTHit->getPosition()[1] << endl; 
 
         double localPhi = 
-            atan2((thisPoint->y() - theCircle.GetCenter()->y()) ,(thisPoint->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
+          atan2((thisPoint->y() - theCircle.GetCenter()->y()) ,(thisPoint->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
         //          atan2((SimTHit->getPosition()[1] - theCircle.GetCenter()->y()) ,(SimTHit->getPosition()[0] - theCircle.GetCenter()->x())) + (twopi/4.0) ;
 
 
@@ -366,7 +366,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         const float * mcpMomentum = SimTHit->getMomentum() ;
 
-        CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
+        CLHEP::Hep3Vector* mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
+
         
         //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
         
@@ -378,11 +379,14 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         phiRelHisto->fill(padPhi);
         phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
-#endif        
 
         //        cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
         //        cout << "localPhi = " << localPhi * (360.0 / twopi) << endl; 
         //        cout << "pad Phi from track mom = " << ( pointPhi - trackPhi ) * (360.0 / twopi) << endl; 
+
+#endif        
+
+
 
         // Calculate thetaPad for current hit
 
@@ -402,10 +406,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nextSimTHit->getPosition()[2] - previousSimTHit->getPosition()[2])) ) ;
           
-        //        cout << "Padtheta = " << padTheta << endl;
-        //        cout << "Theta from track = " << mom->theta() << endl;
-//        cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
-//        cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
 
 #ifdef EXPERTCHECKPLOTS
         thetaRelHisto->fill(padTheta);
@@ -413,7 +413,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 #ifdef EXPERTCHECKPLOTS
         thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+        delete mom;
 #endif     
+
+        delete precedingPoint;
+        delete followingPoint; 
 
 
       }
@@ -465,15 +469,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
 
 
-        phiRelHisto->fill(padPhi);
-        
-        phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
+          phiRelHisto->fill(padPhi);
+          
+          phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif          
           
-          //          cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl;           
-          //          cout << "localPhi = " << localPhi * (360.0 / twopi) << endl; 
-
-          //        cout << "pad Phi from track mom = " << ( pointPhi - trackPhi ) * (360.0 / twopi) << endl; 
           
           // Calculate thetaPad for current hit
           
@@ -493,19 +493,19 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(SimTHit->getPosition()[2] - nPlus2SimHit->getPosition()[2])) ) ;
           
-          //          cout << "Padtheta = " << padTheta << endl;
-          //          cout << "Theta from track = " << mom->theta() << endl;
-//          cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
-//          cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
   
 #ifdef EXPERTCHECKPLOTS
-        thetaRelHisto->fill(padTheta);
+          thetaRelHisto->fill(padTheta);
 #endif    
-        
-#ifdef EXPERTCHECKPLOTS
-        thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
-#endif     
           
+#ifdef EXPERTCHECKPLOTS
+          thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+
+          delete mom;
+#endif     
+         
+
+ 
         }     
         
         else{ 
@@ -514,6 +514,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           padTheta = twopi/4.0 ;
           padPhi = twopi/4.0 ;    
         }
+
+        delete followingPoint;
+        delete nPlus2Point;
        
       }
       else if(mcp!=nextMCP && i > 1 ) { // last hit with at least three sim hits in collection
@@ -556,7 +559,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
           
-        //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
+          //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
           
           double trackPhi = mom->phi();
           
@@ -569,12 +572,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
 #endif              
 
-          //          cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
-          
-          //          cout << "localPhi = " << localPhi * (360.0 / twopi) << endl; 
-        //        cout << "pad Phi from track mom = " << ( pointPhi - trackPhi ) * (360.0 / twopi) << endl; 
 
-        // Calculate thetaPad for current hit
+          // Calculate thetaPad for current hit
           
           double pathlength1 = 2.0 * asin( ( sqrt (
                                                    (precedingPoint->x()-nMinus2Point->x()) * (precedingPoint->x()-nMinus2Point->x())
@@ -593,17 +592,22 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nMinus2SimHit->getPosition()[2] - SimTHit->getPosition()[2])) ) ;
           
 #ifdef EXPERTCHECKPLOTS
-        thetaRelHisto->fill(padTheta);
+          thetaRelHisto->fill(padTheta);
 #endif    
 #ifdef EXPERTCHECKPLOTS
-        thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
-#endif     
-          
-        //          cout << "Padtheta = " << padTheta << endl;
-        //          cout << "Theta from track = " << mom->theta() << endl;
+
+          thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
+          //          cout << "Padtheta = " << padTheta << endl;
+          //          cout << "Theta from track = " << mom->theta() << endl;
           //          cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
           //          cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
           //          
+          
+          delete mom;
+
+#endif     
+          
+          
         }
         
         else{ 
@@ -612,6 +616,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           padTheta = twopi/4.0 ;
           padPhi = twopi/4.0 ;    
         }    
+
+        delete precedingPoint;
+        delete nMinus2Point;
+
       }
 
       else {
@@ -630,8 +638,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 
 
-//       double *pos;
-//       pos = (double*) SimTHit->getPosition();  
+      //       double *pos;
+      //       pos = (double*) SimTHit->getPosition();  
       double pos[3] ; // fg: create a copy of the position in order to not modify the sim hit
       pos[0] = SimTHit->getPosition()[0] ;
       pos[1] = SimTHit->getPosition()[1] ; 
@@ -644,14 +652,14 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 
 
-//       cout << "x position for this hit is " << pos[0] << " - " << SimTHit->getPosition()[0] << endl; 
-//       cout << "y position for this hit is " << pos[1] << " - " << SimTHit->getPosition()[1] << endl; 
-//       cout << "z position for this hit is " << pos[2] << " - " << SimTHit->getPosition()[2] << endl; 
+      //       cout << "x position for this hit is " << pos[0] << " - " << SimTHit->getPosition()[0] << endl; 
+      //       cout << "y position for this hit is " << pos[1] << " - " << SimTHit->getPosition()[1] << endl; 
+      //       cout << "z position for this hit is " << pos[2] << " - " << SimTHit->getPosition()[2] << endl; 
 
 
 
-//       cout << "de/dx for this hit is " << de_dx << endl; 
-//       cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
+      //       cout << "de/dx for this hit is " << de_dx << endl; 
+      //       cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
       //      cout << "x =  " << x << endl; 
       
       //  SMEARING
@@ -687,13 +695,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
                              + 
                              (_diffZ*_diffZ) *(driftLength/10.0)); // driftLength in cm 
 
-//       std::cout << "aReso = " << aReso << std::endl;
-//       std::cout << "bReso = " << bReso << std::endl;
-//       std::cout << "_pointResoPadPhi = " <<_pointResoPadPhi << std::endl;
-//       std::cout << "_pointResoRPhi = " <<_pointResoRPhi << std::endl;
-//       std::cout << "_diffRPhi = " << _diffRPhi << std::endl;
-//       std::cout << "tpcRPhiRes = " << tpcRPhiRes << std::endl;
-//       std::cout << "_pointResoZ = " << _pointResoZ << std::endl;
+      //       std::cout << "aReso = " << aReso << std::endl;
+      //       std::cout << "bReso = " << bReso << std::endl;
+      //       std::cout << "_pointResoPadPhi = " <<_pointResoPadPhi << std::endl;
+      //       std::cout << "_pointResoRPhi = " <<_pointResoRPhi << std::endl;
+      //       std::cout << "_diffRPhi = " << _diffRPhi << std::endl;
+      //       std::cout << "tpcRPhiRes = " << tpcRPhiRes << std::endl;
+      //       std::cout << "_pointResoZ = " << _pointResoZ << std::endl;
 
       double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
       double randz =  gsl_ran_gaussian(_random,tpcZRes);
@@ -757,10 +765,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       int iRowHit = padLayout.getRowNumber(padIndex);
 
 
-//       cout << "padLayout.getPadWidth(0) = " <<padLayout.getPadWidth(0) << endl;  
-//       cout << "padLayout.getPadWidth(padIndex) = " <<padLayout.getPadWidth(padIndex) << endl;  
-//       cout << "padLayout.getPadHeight(0) = " <<padLayout.getPadHeight(0) << endl;  
-//       cout << "padLayout.getPadHeight(padIndex) = " <<padLayout.getPadHeight(padIndex) << endl;  
+      //       cout << "padLayout.getPadWidth(0) = " <<padLayout.getPadWidth(0) << endl;  
+      //       cout << "padLayout.getPadWidth(padIndex) = " <<padLayout.getPadWidth(padIndex) << endl;  
+      //       cout << "padLayout.getPadHeight(0) = " <<padLayout.getPadHeight(0) << endl;  
+      //       cout << "padLayout.getPadHeight(padIndex) = " <<padLayout.getPadHeight(padIndex) << endl;  
 
       //je: commented out next line as proposed by Kristian Harder
       //gear::Point2D padCoord = padLayout.getPadCenter(padIndex);
@@ -774,7 +782,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       //get z index of current hit
 
       int iZHit = (int) ( (float) NumberOfTimeSlices * 
-                         ( gearTPC.getMaxDriftLength() + pos[2] ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
+                          ( gearTPC.getMaxDriftLength() + pos[2] ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
 
 
       if(iZHit<0) iZHit=0;
@@ -796,7 +804,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       previousMCP = mcp ;
       previousSimTHit = SimTHit;
-    }    
+
+      delete atpcVoxel; 
+      delete thisPoint;
+
+   }    
 
     streamlog_out(DEBUG) << "finished looping over simhits" << endl;
     // Add background hits here
@@ -812,7 +824,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       //      sort(row_hits.begin(), row_hits.end(), compare_phi );
 
-//       cout << "row = " << i << "  row_hits.size() = " << row_hits.size() << endl;
+      //       cout << "row = " << i << "  row_hits.size() = " << row_hits.size() << endl;
 
       for (unsigned int j = 0; j<row_hits.size(); ++j){
         
@@ -831,53 +843,53 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           if(abs(row_hits[j]->getZIndex()-row_hits[k]->getZIndex())<=1){
 
-              if(abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())<=1||abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())==(int)padLayout.getPadsInRow(i).size()){
+            if(abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())<=1||abs(row_hits[j]->getPhiIndex()-row_hits[k]->getPhiIndex())==(int)padLayout.getPadsInRow(i).size()){
 
-                /*              
-                 cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
-                 cout << "double hit candidate found in row: " << i <<  endl;
+              /*              
+                              cout << "*&^*&*&*&*&*&*&*&**&*&*&*&*&&*&*&**&*&*&" << endl;
+                              cout << "double hit candidate found in row: " << i <<  endl;
 
-                 cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
-                 cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
+                              cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
+                              cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
                 
 
-                 cout << "row_hits dX^2 + dY^2 " << 
-                   ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
-                       ( row_hits[j]->getX() - row_hits[k]->getX() ) ) +
-                     ( ( row_hits[j]->getY() - row_hits[k]->getY() ) * 
-                       ( row_hits[j]->getY() - row_hits[k]->getY() ) ) )
-                      << endl;
-                 cout << "padLayout.getPadWidth(0)^2 " << padLayout.getPadWidth(0) * padLayout.getPadWidth(0)
-                      << endl;
-                */
+                              cout << "row_hits dX^2 + dY^2 " << 
+                              ( ( ( row_hits[j]->getX() - row_hits[k]->getX() ) * 
+                              ( row_hits[j]->getX() - row_hits[k]->getX() ) ) +
+                              ( ( row_hits[j]->getY() - row_hits[k]->getY() ) * 
+                              ( row_hits[j]->getY() - row_hits[k]->getY() ) ) )
+                              << endl;
+                              cout << "padLayout.getPadWidth(0)^2 " << padLayout.getPadWidth(0) * padLayout.getPadWidth(0)
+                              << endl;
+              */
 
-                if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < _pixZ ) {
+              if(fabs( row_hits[j]->getZ() - row_hits[k]->getZ() ) < _pixZ ) {
 
-                  if((((row_hits[j]->getX()-row_hits[k]->getX())*(row_hits[j]->getX()-row_hits[k]->getX()))
-                      +((row_hits[j]->getY()-row_hits[k]->getY())*(row_hits[j]->getY()-row_hits[k]->getY())))
-//                      <  padLayout.getPadWidth(0) *  padLayout.getPadWidth(0) ){
-// FIXME: SJA: the function getPadWidth does not return 2.2mm as set in gear_ldc.xml so use hard coded number for now
-                     <  2.2 *  2.2 ){
-
-
-                    //SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];
-                    //SimTrackerHit* Hit2 = tpcHitMap[row_hits[k]];
+                if((((row_hits[j]->getX()-row_hits[k]->getX())*(row_hits[j]->getX()-row_hits[k]->getX()))
+                    +((row_hits[j]->getY()-row_hits[k]->getY())*(row_hits[j]->getY()-row_hits[k]->getY())))
+                   //                      <  padLayout.getPadWidth(0) *  padLayout.getPadWidth(0) ){
+                   // FIXME: SJA: the function getPadWidth does not return 2.2mm as set in gear_ldc.xml so use hard coded number for now
+                   <  2.2 *  2.2 ){
 
 
-                    /*
+                  //SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];
+                  //SimTrackerHit* Hit2 = tpcHitMap[row_hits[k]];
+
+
+                  /*
                     
                     cout << "double hit found in row: " << i 
-                         << "    MCP1 : " << Hit1->getMCParticle()->id() 
-                         << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
-                         << "Energy : " << Hit1->getMCParticle()->getEnergy() << "     " 
-                         << "MCP2 : " << Hit2->getMCParticle()->id() 
-                         << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
-                         << "Energy : " << Hit2->getMCParticle()->getEnergy()
-                         << endl;
-                    */
+                    << "    MCP1 : " << Hit1->getMCParticle()->id() 
+                    << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
+                    << "Energy : " << Hit1->getMCParticle()->getEnergy() << "     " 
+                    << "MCP2 : " << Hit2->getMCParticle()->id() 
+                    << " (" <<  Hit1->getMCParticle()->getPDG() << ")   " 
+                    << "Energy : " << Hit2->getMCParticle()->getEnergy()
+                    << endl;
+                  */
 
 
-                    /*
+                  /*
                     float xd = (float)row_hits[j]->getX();
                     float yd = (float)row_hits[j]->getY();
                     float zd = (float)row_hits[j]->getZ();
@@ -885,13 +897,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
                     float xd2 = (float)row_hits[k]->getX();
                     float yd2 = (float)row_hits[k]->getY();
                     float zd2 = (float)row_hits[k]->getZ();
-                    */
+                  */
 
-                    row_hits[j]->setAdjacent(row_hits[k]);
-                    row_hits[k]->setAdjacent(row_hits[j]);
-                  }		  
-                }
+                  row_hits[j]->setAdjacent(row_hits[k]);
+                  row_hits[k]->setAdjacent(row_hits[j]);
+                }		  
               }
+            }
           }
         }
         
@@ -959,31 +971,31 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     
 
     streamlog_out(DEBUG) << "number of rec_hits = "  << rechits << endl ;
-    streamlog_out(DEBUG) << "finished row hits" << endl;    
+      streamlog_out(DEBUG) << "finished row hits" << endl;    
 
-    // set the parameters to decode the type information in the collection
-    // for the time being this has to be done manually
-    // in the future we should provide a more convenient mechanism to 
-    // decode this sort of meta information
-    StringVec typeNames ;
-    IntVec typeValues ;
-    typeNames.push_back( LCIO::TPCHIT ) ;
-    typeValues.push_back( 1 ) ;
-    trkhitVec->parameters().setValues("TrackerHitTypeNames" , typeNames ) ;
-    trkhitVec->parameters().setValues("TrackerHitTypeValues" , typeValues ) ;
+        // set the parameters to decode the type information in the collection
+        // for the time being this has to be done manually
+        // in the future we should provide a more convenient mechanism to 
+        // decode this sort of meta information
+        StringVec typeNames ;
+        IntVec typeValues ;
+        typeNames.push_back( LCIO::TPCHIT ) ;
+        typeValues.push_back( 1 ) ;
+        trkhitVec->parameters().setValues("TrackerHitTypeNames" , typeNames ) ;
+        trkhitVec->parameters().setValues("TrackerHitTypeValues" , typeValues ) ;
     
-    evt->addCollection( trkhitVec , _TPCTrackerHitsCol ) ;
+        evt->addCollection( trkhitVec , _TPCTrackerHitsCol ) ;
     
     
-    for (int i = 0; i<padLayout.getNRows(); ++i){
+        for (int i = 0; i<padLayout.getNRows(); ++i){
       
-      vector <Voxel_tpc *> current_row = tpcRowHits[i];
+          vector <Voxel_tpc *> current_row = tpcRowHits[i];
       
-      for (unsigned int j = 0; j<current_row.size(); ++j){
+          for (unsigned int j = 0; j<current_row.size(); ++j){
         
-        delete current_row[j];
-      }
-    }    
+            delete current_row[j];
+          }
+        }    
   }
   _nEvt++;
   
@@ -1013,5 +1025,5 @@ void TPCDigiProcessor::end()
   cout << "TPCDigiProcessor::end()  " << name() 
        << " processed " << _nEvt << " events in " << _nRun << " runs "
        << endl ;
-//  
+  //  
 }

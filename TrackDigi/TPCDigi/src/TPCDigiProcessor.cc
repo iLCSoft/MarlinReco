@@ -805,7 +805,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       previousMCP = mcp ;
       previousSimTHit = SimTHit;
 
-      delete atpcVoxel; 
       delete thisPoint;
 
    }    

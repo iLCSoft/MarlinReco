@@ -646,7 +646,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       pos[2] = SimTHit->getPosition()[2] ;
       int layerNumber = SimTHit->getCellID();
 
-      if(_rejectCellID0 && (layerNumber<1)) continue;
+      if(_rejectCellID0 && (layerNumber<1)) {
+        delete thisPoint;
+        continue;
+      }
 
       de_dx = SimTHit->getdEdx();
 

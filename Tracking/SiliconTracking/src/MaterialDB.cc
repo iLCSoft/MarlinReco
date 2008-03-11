@@ -1041,12 +1041,17 @@ void MaterialDB::init() {
 
   int nSITR = int(pSITDet.getDoubleVals("SITLayerRadius").size());
   int nSITHL = int(pSITDet.getDoubleVals("SITLayerHalfLength").size());
+  int SITModel = int(pSITDet.getIntVal("SITModel"));
   int nLayersSIT = 0;
 
   if (nSITR == nSITHL) {
     nLayersSIT = nSITR;
     _rSIT.resize(nLayersSIT);
     _halfZSIT.resize(nLayersSIT);
+    if (SITModel>0) {
+      _rSITSupport.resize(nLayersSIT);
+      _halfZSITSupport.resize(nLayersSIT);
+    }
   }
   else {
     std::cout << "Size of SITLayerRadius vector (" << nSITR 
@@ -1058,28 +1063,57 @@ void MaterialDB::init() {
   for (int iL=0;iL<nLayersSIT;++iL) {
     _rSIT[iL] = float(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
     _halfZSIT[iL] = float(pSITDet.getDoubleVals("SITLayerHalfLength")[iL]);
+    if (SITModel>0) {
+      _rSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerRadius")[iL]);
+      _halfZSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerHalfLength")[iL]);
+    }
   }
 
-  _radlen_si872 = 0.1*float(pSITDet.getDoubleVal("SITLayer_RadLen"));
-  _dedx_si872 = 10.*float(pSITDet.getDoubleVal("SITLayer_dEdx"));
-
+  _radlen_si = 0.1*float(pSITDet.getDoubleVal("SITLayer_RadLen"));
+  _dedx_si = 10.*float(pSITDet.getDoubleVal("SITLayer_dEdx"));
   _SITLayer_thickness =  float(pSITDet.getDoubleVal("SITLayerThickness"));
+
+  if (SITModel>0) {
+    _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
+    _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
+    _SITLayerSupport_thickness =  float(pSITDet.getDoubleVal("SITSupportLayerThickness"));
+  }
 
 
   for (int iL = 0; iL < nLayersSIT; ++iL) {
-      fkddes_.rcmat[Ncmat] = 0.1*(_rSIT[iL]+0.5*_SITLayer_thickness);
-      fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
-      fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
-      fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si872;
-      fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness*_dedx_si872;     
+    
+    float rmin = _rSIT[iL];
+    if (SITModel>0) {
+      if (_rSITSupport[iL]<rmin)
+	rmin = _rSITSupport[iL];      
+    }
 
-      fkexts_.itexts[Nexs] = 0;
-      fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat];
-      fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
-      fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+    rmin = rmin - 0.01; 
+
+    float halfZ = _halfZSIT[iL];
+
+    fkddes_.rcmat[Ncmat] = 0.1*_rSIT[iL];
+    fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
+    fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
+    fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness*_dedx_si;     
+    Ncmat++;
+
+    if (SITModel>0) {
+      fkddes_.rcmat[Ncmat] = 0.1*_rSITSupport[iL];
+      fkddes_.zcmin[Ncmat] = -0.1*_halfZSITSupport[iL];
+      fkddes_.zcmax[Ncmat] = 0.1*_halfZSITSupport[iL];
+      fkddes_.xrlc[Ncmat] = 0.1*_SITLayerSupport_thickness/_radlen_ber;
+      fkddes_.xelosc[Ncmat] = 0.1*_SITLayerSupport_thickness*_dedx_ber;
+      Ncmat++;
+    }
+
+    fkexts_.itexts[Nexs] = 0;
+    fkexts_.rzsurf[Nexs] = rmin;
+    fkexts_.zrmin[Nexs]  = -halfZ;
+    fkexts_.zrmax[Nexs]  = halfZ;
 
       Nexs++;
-      Ncmat++;
 
   } 
 

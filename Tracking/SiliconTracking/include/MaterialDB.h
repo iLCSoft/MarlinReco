@@ -32,7 +32,7 @@ using namespace marlin ;
  * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: MaterialDB.h,v 1.4 2007-11-22 09:24:23 rasp Exp $ 
+ * @version $Id: MaterialDB.h,v 1.5 2008-03-11 15:38:35 rasp Exp $ 
  */
 
 class MaterialDB : public Processor {
@@ -80,6 +80,8 @@ class MaterialDB : public Processor {
   std::vector<float> _rOutFTD;
   std::vector<float> _rSIT;
   std::vector<float> _halfZSIT;
+  std::vector<float> _rSITSupport;
+  std::vector<float> _halfZSITSupport;
 
   float _ladder_phi0, _ladder_distance, _ladder_thickness, _ladder_width, _ladder_length;
   float _ladder_offset, _ladder_radLength;
@@ -117,7 +119,7 @@ class MaterialDB : public Processor {
   float _bField;
 
   float _beamPipeRadius,_beamPipeHalfZ,_beamPipe_thickness,_beamPipe_radLength,_beamPipe_dedx;
-  float _SITLayer_thickness;
+  float _SITLayer_thickness, _SITLayerSupport_thickness;
 
   int _useExtrapolations;
   int _useMaterials;

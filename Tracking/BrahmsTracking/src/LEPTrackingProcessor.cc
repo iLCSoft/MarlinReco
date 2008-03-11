@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.31 2008-02-14 15:34:11 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.32 2008-03-11 15:19:18 engels Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.31  2008/02/14 15:34:11  aplin
+** removed spurious dev code
+**
 ** Revision 1.30  2008/02/14 14:43:30  aplin
 ** removed spurious dev code
 **
@@ -128,9 +131,6 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace constants ;
 using namespace std ; 
-
-int fill1dhist(string title, float value);
-FCALLSCFUN2(INT,fill1dhist,FILL1DHIST,fill1dhist,STRING,FLOAT)
 
 int subdetfirsthitindex(string subdet);
 

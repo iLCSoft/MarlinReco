@@ -822,11 +822,13 @@ void MaterialDB::init() {
   _FTD_kaptonCyl_thickness = float(pFTDDet.getDoubleVal("FTDOuterCylinderThickness"));
   int iLast = pFTDDet.getIntVal("LastHeavyLayer");
   _dedx_si = 10.0*float(pFTDDet.getDoubleVal("Silicon_dEdx"));
-  _dedx_si872 = 10.0*float(pFTDDet.getDoubleVal("Silicon872_dEdx"));
+  if (iLast>0) {
+    _dedx_si872 = 10.0*float(pFTDDet.getDoubleVal("Silicon872_dEdx"));
+    _radlen_si872 = 0.1*float(pFTDDet.getDoubleVal("Silicon872_RadLen"));
+  }
   _dedx_kapton = 10.0*float(pFTDDet.getDoubleVal("Kapton_dEdx"));
   _dedx_copper = 10.0*float(pFTDDet.getDoubleVal("Copper_dEdx"));
-  _radlen_si = 0.1*float(pFTDDet.getDoubleVal("Silicon_RadLen"));
-  _radlen_si872 = 0.1*float(pFTDDet.getDoubleVal("Silicon872_RadLen"));
+  _radlen_si = 0.1*float(pFTDDet.getDoubleVal("Silicon_RadLen"));  
   _radlen_kapton = 0.1*float(pFTDDet.getDoubleVal("Kapton_RadLen"));
   _radlen_copper = 0.1*float(pFTDDet.getDoubleVal("Copper_RadLen"));
 

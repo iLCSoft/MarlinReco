@@ -4,6 +4,22 @@
 
 ================================
 
+
+ -----------
+| v00-05-03 |
+ -----------
+
+       bug fix release 
+
+	* TrackDigi/TPCDigi/TPCDigiProcessor:    (S.Aplin)
+	  - fixed several memory leaks 
+
+	* Tracking/SiliconTracking/include/MaterialDB (A.Raspereza)
+	  - added support structures for SIT
+	  - included treatment of the first layer of heavy-weight Si for FTD
+     	    detector
+
+
  -----------
 | v00-05-02 |
  -----------
@@ -17,7 +33,7 @@
 
 	  - vertex hits are now smeared on ladders 
  
-	* TrackDigi/BrahmsTracking    (S.Aplin)
+	* TrackDigi/TPCDigi/TPCDigiProcessor:    (S.Aplin)
           - new parametrization of r-phi and z resolution smearing (from LC-TPC group) 
           - bug fixes 
           - added expert check histograms (enable w/ -D EXPERTCHECKPLOTS)

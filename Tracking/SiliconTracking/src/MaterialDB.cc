@@ -1078,7 +1078,7 @@ void MaterialDB::init() {
   if (SITModel>0) {
     _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
     _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
-    _SITLayerSupport_thickness =  float(pSITDet.getDoubleVal("SITSupportLayerThickness"));
+    _SITLayerSupport_thickness =  float(pSITDet.getDoubleVal("SITLayerSupportThickness"));
   }
 
 

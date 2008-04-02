@@ -517,18 +517,20 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
   _currentModule = module;
 
   double Momentum[3];
-//  if (_useMCPMomentum == 1) {
+  if (hit->getMCParticle()) {
     for (int j=0; j<3; ++j)
       Momentum[j] = hit->getMCParticle()->getMomentum()[j];
-//  }
-//  else {
-//    for (int j=0; j<3; ++j) {
-//      Momentum[j] = hit->getMomentum()[j];
+  }
+  else {
+    for (int j=0; j<3; ++j) {
+      Momentum[j] = hit->getMomentum()[j];
 
-//    }
-//  }
+    }
+  }
 
-  _currentParticleMass   = hit->getMCParticle()->getMass();
+  _currentParticleMass = 0;
+  if (hit->getMCParticle())
+    _currentParticleMass   = hit->getMCParticle()->getMass();
   if (_currentParticleMass < 0.510e-3) 
     _currentParticleMass = 0.510e-3;  
   _currentParticleMomentum = 0.0;

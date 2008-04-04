@@ -674,8 +674,8 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       double tpcZRes = sqrt(hit->getCovMatrix()[5]);
  
       // f77 tracking code works in cm
-      tpcRPhiRes = 0.1 * tpcRPhiRes;
-      tpcZRes = 0.1 * tpcZRes;
+//       tpcRPhiRes = 0.1 * tpcRPhiRes;
+//       tpcZRes = 0.1 * tpcZRes;
 
       hitExt->setResolutionRPhi(float(tpcRPhiRes));
       hitExt->setResolutionZ(float(tpcZRes));

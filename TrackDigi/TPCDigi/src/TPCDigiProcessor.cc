@@ -58,7 +58,7 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                            "CollectionName" , 
                            "Name of the SimTrackerHit collection"  ,
                            _colName ,
-                           std::string("STpc01_TPC") ) ;
+                           std::string("TPCCollection") ) ;
 
   registerOutputCollection( LCIO::TRACKERHIT,
                             "TPCTrackerHitsCol" , 
@@ -214,19 +214,38 @@ void TPCDigiProcessor::init()
                                         "Theta Relative to the pad",
                                         201, 0.0, 6.3);
 
-  rDiffHisto = HF->createHistogram1D("Histograms/rDiff",
-                                     "R_rec - R_sim",
+  rPhiDiffHisto = HF->createHistogram1D("Histograms/rPhiDiff",
+                                     "rPhi_rec - rPhi_sim",
                                      201, -1.0, 1.0);
+
+  zDiffHisto = HF->createHistogram1D("Histograms/zDiff",
+                                     "Z_rec - Z_sim",
+                                     201, -1.0, 1.0);
+
+  zPullHisto = HF->createHistogram1D("Histograms/zPull",
+                                       "(z_rec - z_sim) / Sigma_z",
+                                       201, -10.0, 10.0);
 
   phiDistHisto = HF->createHistogram1D("Histograms/phiDist",
                                        "phi_rec - Phi_sim",
                                        201, -1.0, 1.0);
 
-  phiPullHisto = HF->createHistogram1D("Histograms/phiPull",
-                                       "(Phi_rec - Phi_sim) / Sigma_phi",
+  rPhiPullHisto = HF->createHistogram1D("Histograms/rPhiPull",
+                                       "(rPhi_rec - rPhi_sim) / Sigma_rPhi",
                                        201, -10.0, 10.0);
 
+  zSigmaVsZHisto = HF->createHistogram2D("Histograms/zSigmaVsZ",
+                                     "z Sigma vs Z ",
+                                      3000, 0.0, 3000.0,
+                                      201, -0.20, 5.20);
 
+  zSigmaHisto = HF->createHistogram1D("Histograms/zSigma",
+                                     "z Sigma ",
+                                      201, -0.20, 5.20);
+
+  rPhiSigmaHisto = HF->createHistogram1D("Histograms/rPhiSigma",
+                                     "rPhi Sigma",
+                                         201, -0.20, 0.20);
 #endif  
 
 
@@ -680,7 +699,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       // sigma_{z}^2 = (400microns)^2 + L_{drift}cm * (80micron/sqrt(cm))^2 
 
       double aReso =_pointResoRPhi0*_pointResoRPhi0 + (_pointResoPadPhi*_pointResoPadPhi * sin(padPhi)*sin(padPhi)) ;
-      double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2])-_cathode);
+      double driftLength = gearTPC.getMaxDriftLength() - (fabs(pos[2]) - _cathode);
+
       if (driftLength <0) { 
         std::cout << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
         std::cout << "Setting driftLength to 0.1" << std::endl;
@@ -958,13 +978,23 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
           double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
           
-          double rDiff = (rSqrd - rSimSqrd);
-          double phiPull = (phi - phiSim)/(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
+          double rPhiDiff = (phi - phiSim)*sqrt(rSqrd);
+          double rPhiPull = ((phi - phiSim)*sqrt(rSqrd))/(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
 
-          rDiffHisto->fill(rDiff);
-          phiPullHisto->fill(phiPull);
+          double zDiff = row_hits[j]->getZ() - theSimHit->getPosition()[2];
+          double zPull = zDiff/sqrt(covMat[5]);
+
+          //          cout << << 
+
+          rPhiDiffHisto->fill(rPhiDiff);
+          rPhiPullHisto->fill(rPhiPull);
           phiDistHisto->fill(phi - phiSim);
-
+          zDiffHisto->fill(zDiff);
+          zPullHisto->fill(zPull);
+          
+          zSigmaVsZHisto->fill(row_hits[j]->getZ(),sqrt(covMat[5]));
+          rPhiSigmaHisto->fill(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
+          zSigmaHisto->fill(sqrt(covMat[5]));
 #endif
 
         }
@@ -972,8 +1002,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }
     
 
-    streamlog_out(DEBUG) << "number of rec_hits = "  << rechits << endl ;
-      streamlog_out(DEBUG) << "finished row hits" << endl;    
+    streamlog_out(DEBUG) << "number of rec_hits = "  << rechits << endl ;
+      streamlog_out(DEBUG) << "finished row hits" << endl;    
 
         // set the parameters to decode the type information in the collection
         // for the time being this has to be done manually

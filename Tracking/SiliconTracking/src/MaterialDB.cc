@@ -544,12 +544,12 @@ void MaterialDB::init() {
   //--The Ladder structure (cylinder or realistic ladder)--
   int nLadders;
   float Pi = acos(-1);
-  float deg2rad = Pi / 180.0;
+//  float deg2rad = Pi / 180.0;
 
   for (int i=0; i<nLayersVTX; ++i) {
     nLadders = pVXDLayerLayout.getNLadders(i);
 
-    _ladder_phi0 = deg2rad * float(pVXDLayerLayout.getPhi0(i));
+    _ladder_phi0 = float(pVXDLayerLayout.getPhi0(i));
     _ladder_distance = float(pVXDLayerLayout.getLadderDistance(i));
     _ladder_thickness = float(pVXDLayerLayout.getLadderThickness(i));
     _ladder_width = float(pVXDLayerLayout.getLadderWidth(i));

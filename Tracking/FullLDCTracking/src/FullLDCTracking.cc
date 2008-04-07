@@ -263,20 +263,20 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			     _sParIpReso,
 			     float(0.75));
 
-//   registerProcessorParameter("AssignVTXHits",
-// 			     "Assign left over VTX hits",
-// 			     _assignVTXHits,
-// 			     int(1));
+  registerProcessorParameter("AssignVTXHits",
+			     "Assign left over VTX hits",
+			     _assignVTXHits,
+			     int(1));
 
-//   registerProcessorParameter("AssignFTDHits",
-// 			     "Assign left over FTD hits",
-// 			     _assignFTDHits,
-// 			     int(1));
+  registerProcessorParameter("AssignFTDHits",
+			     "Assign left over FTD hits",
+			     _assignFTDHits,
+			     int(1));
 
-//   registerProcessorParameter("AssignSITHits",
-// 			     "Assign left over SIT hits",
-// 			     _assignSITHits,
-// 			     int(1));
+  registerProcessorParameter("AssignSITHits",
+			     "Assign left over SIT hits",
+			     _assignSITHits,
+			     int(1));
 
   registerProcessorParameter("AssignTPCHits",
 			     "Assign left over TPC hits",
@@ -289,22 +289,22 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			     int(0));
 
 
-//   registerProcessorParameter("VTXHitToTrackDistance",
-// 			     "Cut on distance between track and VTX hits",
-// 			     _distCutForVTXHits,
-// 			     float(1.5));
+  registerProcessorParameter("VTXHitToTrackDistance",
+			     "Cut on distance between track and VTX hits",
+			     _distCutForVTXHits,
+			     float(1.5));
 
 
-//   registerProcessorParameter("FTDHitToTrackDistance",
-// 			     "Cut on distance between track and FTD hits",
-// 			     _distCutForFTDHits,
-// 			     float(2.0));
+  registerProcessorParameter("FTDHitToTrackDistance",
+			     "Cut on distance between track and FTD hits",
+			     _distCutForFTDHits,
+			     float(2.0));
 
 
-//   registerProcessorParameter("SITHitToTrackDistance",
-// 			     "Cut on distance between track and SIT hits",
-// 			     _distCutForSITHits,
-// 			     float(2.0));
+  registerProcessorParameter("SITHitToTrackDistance",
+			     "Cut on distance between track and SIT hits",
+			     _distCutForSITHits,
+			     float(2.0));
 
 
   registerProcessorParameter("TPCHitToTrackDistance",
@@ -1935,90 +1935,81 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 
 void FullLDCTracking::AddNotAssignedHits() {
 
-//     const gear::VXDParameters& pVXDDet = Global::GEAR->getVXDParameters();
-//     const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDet.getVXDLayerLayout();
-//     int nLayersVTX = int(pVXDLayerLayout.getNLayers());
+    const gear::VXDParameters& pVXDDet = Global::GEAR->getVXDParameters();
+    const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDet.getVXDLayerLayout();
+    int nLayersVTX = int(pVXDLayerLayout.getNLayers());
 
-//     const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");  
-//     int nLayersFTD = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
+    const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");  
+    int nLayersFTD = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
 
-//     const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");  
-//     int nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
+    const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");  
+    int nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
 
-    //    std::cout << " Layers :VTX = " << nLayersVTX
-    //	      << " FTD = " << nLayersFTD
-    //	      << " SIT = " << nLayersSIT << std::endl;
 
-//     if (_assignSITHits>0) { // Treatment of left-over SIT hits 
-// 	std::vector<TrackerHitExtendedVec> nonAssignedSITHits;    
-// 	nonAssignedSITHits.resize(nLayersSIT);
-// 	int nSITHits = int(_allSITHits.size());
-// 	for (int iH=0;iH<nSITHits;++iH) {
-// 	    TrackerHitExtended * trkHitExt = _allSITHits[iH];
-// 	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
-// 	    if (trkExt == NULL) {
-// 		TrackerHit * trkHit = trkHitExt->getTrackerHit();
-// 		int layer = trkHit->getType() - 201;
-// 		if (layer >=0 && layer < nLayersSIT) {
-// 		    nonAssignedSITHits[layer].push_back(trkHitExt);
-// 		}
-// 	    }
-// 	}	
-// 	//	std::cout << "about to perform assignment of SIT left-overs " << std::endl;
-// 	for (int iL=nLayersSIT-1;iL>=0;--iL) { // loop over layers in Si
-// 	    TrackerHitExtendedVec hitVec = nonAssignedSITHits[iL];
-// 	    AssignSiHitsToTracks(hitVec,
-// 				 _distCutForSITHits);
-// 	}
-//     }
-    //    std::cout << "SIT left-overs assigned" << std::endl;
-
-//     if (_assignFTDHits>0) { // Treatment of left-over FTD hits
-// 	std::vector<TrackerHitExtendedVec> nonAssignedFTDHits;
-// 	nonAssignedFTDHits.resize(nLayersFTD);
-// 	int nFTDHits = int(_allFTDHits.size());
-// 	for (int iH=0;iH<nFTDHits;++iH) {
-// 	    TrackerHitExtended * trkHitExt = _allFTDHits[iH];
-// 	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
-// 	    if (trkExt == NULL) {
-// 		TrackerHit * trkHit = trkHitExt->getTrackerHit();
-// 		int layer = trkHit->getType() - 201;
-// 		if (layer >=0 && layer < nLayersFTD)
-// 		    nonAssignedFTDHits[layer].push_back(trkHitExt);
-// 	    }
-// 	}
-// 	//	std::cout << "about to perform assignment of FTD left-overs " << std::endl;	
-// 	for (int iL=nLayersFTD-1;iL>=0;--iL) {
-// 	    TrackerHitExtendedVec hitVec = nonAssignedFTDHits[iL];
-// 	    AssignSiHitsToTracks(hitVec,
-// 				 _distCutForFTDHits);	
-// 	}
-//     }
-    //    std::cout << "FTD left-overs assigned" << std::endl;
+    if (_assignSITHits>0) { // Treatment of left-over SIT hits 
+	std::vector<TrackerHitExtendedVec> nonAssignedSITHits;    
+	nonAssignedSITHits.resize(nLayersSIT);
+	int nSITHits = int(_allSITHits.size());
+	for (int iH=0;iH<nSITHits;++iH) {
+	    TrackerHitExtended * trkHitExt = _allSITHits[iH];
+	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
+	    if (trkExt == NULL) {
+		TrackerHit * trkHit = trkHitExt->getTrackerHit();
+		int layer = trkHit->getType() - 401;
+		if (layer >=0 && layer < nLayersSIT) {
+		    nonAssignedSITHits[layer].push_back(trkHitExt);
+		}
+	    }
+	}	
+	for (int iL=nLayersSIT-1;iL>=0;--iL) { // loop over layers in Si
+	    TrackerHitExtendedVec hitVec = nonAssignedSITHits[iL];
+	    AssignSiHitsToTracks(hitVec,
+				 _distCutForSITHits);
+	}
+    }
+    
+    if (_assignFTDHits>0) { // Treatment of left-over FTD hits
+	std::vector<TrackerHitExtendedVec> nonAssignedFTDHits;
+	nonAssignedFTDHits.resize(nLayersFTD);
+	int nFTDHits = int(_allFTDHits.size());
+	for (int iH=0;iH<nFTDHits;++iH) {
+	    TrackerHitExtended * trkHitExt = _allFTDHits[iH];
+	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
+	    if (trkExt == NULL) {
+		TrackerHit * trkHit = trkHitExt->getTrackerHit();
+		int layer = trkHit->getType() - 201;
+		if (layer >=0 && layer < nLayersFTD)
+		    nonAssignedFTDHits[layer].push_back(trkHitExt);
+	    }
+	}
+	for (int iL=nLayersFTD-1;iL>=0;--iL) {
+	    TrackerHitExtendedVec hitVec = nonAssignedFTDHits[iL];
+	    AssignSiHitsToTracks(hitVec,
+				 _distCutForFTDHits);	
+	}
+    }
     
 
-//     if (_assignVTXHits>0) { // Treatment of left-over VTX hits
-// 	std::vector<TrackerHitExtendedVec> nonAssignedVTXHits;
-// 	nonAssignedVTXHits.resize(nLayersVTX);
-// 	int nVTXHits = int(_allVTXHits.size());
-// 	for (int iH=0;iH<nVTXHits;++iH) {
-// 	    TrackerHitExtended * trkHitExt = _allVTXHits[iH];
-// 	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
-// 	    if (trkExt == NULL) {
-// 		TrackerHit * trkHit = trkHitExt->getTrackerHit();
-// 		int layer = trkHit->getType() - 101;
-// 		if (layer >=0 && layer < nLayersVTX)
-// 		    nonAssignedVTXHits[layer].push_back(trkHitExt);
-// 	    }
-// 	}
-// 	//	std::cout << "about to perform assignment of VTX left-overs " << std::endl;		
-// 	for (int iL=nLayersVTX-1;iL>=0;--iL) {
-// 	    TrackerHitExtendedVec hitVec = nonAssignedVTXHits[iL];
-// 	    AssignSiHitsToTracks(hitVec,
-// 				 _distCutForVTXHits);	
-// 	}
-//     }
-    //    std::cout << "VTX left-overs assigned" << std::endl;
+    if (_assignVTXHits>0) { // Treatment of left-over VTX hits
+	std::vector<TrackerHitExtendedVec> nonAssignedVTXHits;
+	nonAssignedVTXHits.resize(nLayersVTX);
+	int nVTXHits = int(_allVTXHits.size());
+	for (int iH=0;iH<nVTXHits;++iH) {
+	    TrackerHitExtended * trkHitExt = _allVTXHits[iH];
+	    TrackExtended * trkExt = trkHitExt->getTrackExtended();
+	    if (trkExt == NULL) {
+		TrackerHit * trkHit = trkHitExt->getTrackerHit();
+		int layer = trkHit->getType() - 101;
+		if (layer >=0 && layer < nLayersVTX)
+		    nonAssignedVTXHits[layer].push_back(trkHitExt);
+	    }
+	}
+	for (int iL=nLayersVTX-1;iL>=0;--iL) {
+	    TrackerHitExtendedVec hitVec = nonAssignedVTXHits[iL];
+	    AssignSiHitsToTracks(hitVec,
+				 _distCutForVTXHits);	
+	}
+    }
     
 	
     if (_assignTPCHits) {// Treatment of left-over TPC hits
@@ -2031,11 +2022,9 @@ void FullLDCTracking::AddNotAssignedHits() {
 		nonAssignedTPCHits.push_back(trkHitExt);
 	    }
 	}
-	//	std::cout << "about to perform assignment of TPC left-overs" << std::endl;
 	AssignTPCHitsToTracks(nonAssignedTPCHits,
 			      _distCutForTPCHits);
     }
-    //    std::cout << "TPC left-overs assigned" << std::endl;
 
 
 }
@@ -2212,7 +2201,7 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 		float * rR_h = new float[nHitsInFit+1];
 		float * rZ_h = new float[nHitsInFit+1];
 		int iHitInFit = 0;
-		for (int iHit=0;iHit<nHits;++iHit) {
+		for (int iHit=0;iHit<nTotH;++iHit) {
 		    TrackerHitExtended * hitInTrack = hitsInTrack[iHit];
 		    if (hitInTrack->getUsedInFit()) {
 			TrackerHit * hit = hitInTrack->getTrackerHit();
@@ -2250,12 +2239,6 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 					       chi2rphi,chi2z,lhits);	       
 		float chi2ndf = chi2_D/float(ndf_D);
 		if (ierr==0 && chi2ndf<_chi2FitCut) {
-		  if (_debug==3) {
-		    TrackerHit * assignedHit = trkHitExt->getTrackerHit();
-		    std::cout << "Si Hit is assigned-->  " 
-			      << assignedHit->getType() << std::endl;
-
-		  }
 		  trkExt->addTrackerHitExtended( trkHitExt );
 		  trkExt->setCovMatrix(epar);
 		  trkExt->setOmega(par[0]);	  

@@ -1216,11 +1216,6 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   // Check if track satisfies all conditions
 
 
-  std::cout << " Chi2/ndf = " << Chi2/float(ndf) << " Chi2Cut = " << _chi2FitCut << std::endl;
-  std::cout << " d0 = " << d0 << " " << "d0cut = " << _cutOnD0 << std::endl;
-  std::cout << " z0 = " << z0 << " " << "z0cut = " << _cutOnZ0 << std::endl;
-  std::cout << " omega = " << omega << " omegaCut = " << _cutOnOmega << std::endl;
-
   if ( Chi2/float(ndf) > _chi2FitCut || fabs(d0) > _cutOnD0 || fabs(z0) > _cutOnZ0 || fabs(omega)>_cutOnOmega)
     return trackAR;
 
@@ -2151,9 +2146,9 @@ void SiliconTracking::TrackingInFTD() {
 		for (int iInner=0;iInner<nInner;++iInner) {
 		  TrackerHitExtended * hitInner = hitVecInner[iInner];
 		  HelixClass helix;
-		  std::cout << hitOuter->getTrackerHit()->getType() << " " 
-			    << hitMiddle->getTrackerHit()->getType() << " " 
-			    << hitInner->getTrackerHit()->getType() << std::endl;
+		  //		  std::cout << hitOuter->getTrackerHit()->getType() << " " 
+		  //			    << hitMiddle->getTrackerHit()->getType() << " " 
+		  //			    << hitInner->getTrackerHit()->getType() << std::endl;
 		  TrackExtended * trackAR = TestTriplet(hitOuter,hitMiddle,hitInner,helix);
 		  if (trackAR != NULL) {
 		    //	  std::cout << "FTD triplet found" << std::endl;

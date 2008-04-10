@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.32 2008-03-11 15:19:18 engels Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.33 2008-04-10 21:49:14 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.32  2008/03/11 15:19:18  engels
+** removed spurious dev code (S. Aplin)
+**
 ** Revision 1.31  2008/02/14 15:34:11  aplin
 ** removed spurious dev code
 **
@@ -233,6 +236,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *npadrows = padLayout.getNRows() ;
   *maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
   //  *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
+  // FIXME:SJA: should this really be multiplied by 0.1 or has it just got caught up in the other mm->cm convertions 
   *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   //  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
   //  *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
@@ -447,12 +451,18 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
       // For no error in r
 
+
       double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
-      double phi = atan(pos[1]/pos[0]); 
-      double tpcRPhiRes = sqrt((trkHitTPC->getCovMatrix()[2])/(rSqrd*cos(phi)*cos(phi)));
+      double phi = atan2(pos[1],pos[0]); 
+      double tpcRPhiRes = sqrt((trkHitTPC->getCovMatrix()[2])/(cos(phi)*cos(phi)));
       double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
 
+//      cout << "row_hits->getY() = " <<  pos[1] << "  row_hits->getY() = " << pos[0] ; 
+//      cout << "  phi = " <<  phi ;  
+//      cout << "  tpcRPhiRes = " << tpcRPhiRes ;
+//      cout << "  cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes = " << trkHitTPC->getCovMatrix()[2] << endl;
 
+      // convert mm to cm 
       tpcRPhiRes = 0.1 * tpcRPhiRes;
       tpcZRes = 0.1 * tpcZRes;
 
@@ -514,7 +524,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         
         int mctrack = 0 ;
         
-        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
+        //        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
         
       }
       
@@ -559,7 +569,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         
         int mctrack = 0 ;
         
-        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,sitRPhiRes,sitZRes) ;
+        //        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,sitRPhiRes,sitZRes) ;
         
       }
       

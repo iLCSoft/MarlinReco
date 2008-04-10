@@ -17,7 +17,9 @@
 #include <IMPL/TrackerHitImpl.h>
 
 #include "Circle.h"
+#include "SimpleHelix.h"
 #include"constants.h"
+#include "LCCylinder.h"
 
 //stl exception handler
 #include <stdexcept>
@@ -29,6 +31,7 @@
 #include <gear/GEAR.h>
 #include <gear/TPCParameters.h>
 #include <gear/PadRowLayout2D.h>
+#include <gear/BField.h>
 //
 
 using namespace lcio ;
@@ -246,6 +249,15 @@ void TPCDigiProcessor::init()
   rPhiSigmaHisto = HF->createHistogram1D("Histograms/rPhiSigma",
                                      "rPhi Sigma",
                                          201, -0.20, 0.20);
+
+  radiusCheckHisto = HF->createHistogram1D("Histograms/radiusCheck",
+                                     "R_hit - TPC Rmin - ((RowIndex + 0.5 )* padheight)",
+                                         201, -0.20, 0.20);
+
+  ResidualsRPhiHisto = HF->createHistogram1D("Histograms/ResidualsRPhi",
+                                        "MC Track Phi - Hit Phi",
+                                        50, -0.001, 0.001);
+
 #endif  
 
 
@@ -349,6 +361,88 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       CLHEP::Hep2Vector *nPlus2Point = (NULL);
 
       thisPoint = new CLHEP::Hep2Vector(SimTHit->getPosition()[0],SimTHit->getPosition()[1]);
+
+#ifdef EXPERTCHECKPLOTS
+     
+      const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+      const double FCT = 2.99792458E-4;
+      double charge = mcp->getCharge();
+      const double *mom = mcp->getMomentum();
+      double pt = sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
+      double radius = pt / (FCT*bField);
+      double tanLambda = mom[2]/pt;
+      double omega = charge / radius;
+
+
+      if(pt>1.0) {
+
+        //FIXME SJA: this is only valid for tracks from the IP and should be done correctly for non prompt tracks
+        double Z0 = 0.;      
+        double D0  = 0.;
+        
+        LCVector3D refPoint(0.,0.,0);
+        
+        SimpleHelix* helix = new SimpleHelix(D0, 
+                                             atan2(mom[1],mom[0]), 
+                                             omega, 
+                                             Z0, 
+                                             tanLambda,
+                                             refPoint);
+        
+        
+        LCVector3D startCylinder(0.,0.,-1000000.0);
+        LCVector3D endCylinder(0.,0.,1000000.0);
+        bool endplane=true;
+        
+        LCCylinder cylinder(startCylinder,endCylinder,thisPoint->r(),endplane);
+        
+        bool pointExists = false;
+        
+        double pathlength = helix->getIntersectionWithCylinder( cylinder, pointExists);
+        
+        LCErrorMatrix* errors = new LCErrorMatrix();
+        
+        
+        if(pointExists){
+          LCVector3D intersection = helix->getPosition(pathlength, errors); 
+          
+          //          double intersectionRadius = sqrt(intersection[0]*intersection[0]+intersection[1]*intersection[1]);
+          double intersectionPhi = atan2(intersection[1],intersection[0]);
+          
+          //	      double residualRPhi = ((intersectionPhi-thisPoint->phi())*intersectionRadius) ;
+          double residualRPhi = ((intersectionPhi-thisPoint->phi())) ;
+          
+          ResidualsRPhiHisto->fill(residualRPhi);
+          
+          
+        }
+        
+        delete errors;
+        delete helix;
+
+        int row = padLayout.getRowNumber(padLayout.getNearestPad(thisPoint->r(),thisPoint->phi()));
+        int pad = padLayout.getNearestPad(thisPoint->r(),thisPoint->phi());
+        
+        double rHit_diff = thisPoint->r()  
+          - padLayout.getPlaneExtent()[0]  
+          - (( row + 0.5 ) 
+             //     * padLayout.getRowHeight(row)) ;
+             * padLayout.getPadHeight(pad)) ;
+        
+        radiusCheckHisto->fill(rHit_diff);
+        
+//      cout << "$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$" << endl;
+//      cout << "thisPoint->r() = " << thisPoint->r() << endl;
+//      cout << "TPC Sensitive rMin = " << padLayout.getPlaneExtent()[0] << endl;
+//      cout << "Row number + 0.5 = " <<  row + 0.5 << endl;
+//      cout << "Pad Height = " <<  padLayout.getPadHeight(pad) << endl;
+//      cout << "Row Height = " <<   padLayout.getRowHeight(row) << endl;
+//      cout << "R_hit - TPC Rmin - ((RowIndex + 0.5 )* padheight) = " << rHit_diff << endl;
+          
+      }
+      
+#endif    
+
 
       // Calculate difference in Phi for current hit with that of the pad
       
@@ -950,15 +1044,20 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             driftLength = 0.10;
           }
 
-          double rSqrd = row_hits[j]->getR()*row_hits[j]->getR();
           double phi = row_hits[j]->getPhi();
           double tpcRPhiRes = row_hits[j]->getRPhiRes();
           double tpcZRes = row_hits[j]->getZRes();
 
+//          cout << "row_hits->getY() = " << row_hits[j]->getY() << "  row_hits->getY() = " << row_hits[j]->getX() ;
+//          cout << "  phi = " <<  phi ;
+//          cout << "  tpcRPhiRes = " <<  tpcRPhiRes;
+//          cout << "  cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes = " << cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes ;
+//          cout << endl;
+
           // For no error in R
-          float covMat[TRKHITNCOVMATRIX]={rSqrd*sin(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
-                                          -(rSqrd)*cos(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
-                                          rSqrd*cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes,
+          float covMat[TRKHITNCOVMATRIX]={sin(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
+                                          -cos(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
+                                          cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes,
                                           0.,
                                           0.,
                                           float(tpcZRes*tpcZRes)};
@@ -966,7 +1065,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           trkHit->setCovMatrix(covMat);      
           
-          if(pos[0]*pos[0]+pos[1]*pos[1]>0.0 * 0.0){
+          if(pos[0]*pos[0]+pos[1]*pos[1]>0.0 * 0.0){ 
             // 	  push back the SimTHit for this TrackerHit
             trkHit->rawHits().push_back( tpcHitMap[row_hits[j]] );                        
             trkhitVec->addElement( trkHit ); 
@@ -978,13 +1077,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
           double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
           
-          double rPhiDiff = (phi - phiSim)*sqrt(rSqrd);
-          double rPhiPull = ((phi - phiSim)*sqrt(rSqrd))/(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
+          double rPhiDiff = (phi - phiSim)*sqrt(rSimSqrd);
+          double rPhiPull = ((phi - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(phi)*cos(phi))));
 
           double zDiff = row_hits[j]->getZ() - theSimHit->getPosition()[2];
           double zPull = zDiff/sqrt(covMat[5]);
 
-          //          cout << << 
 
           rPhiDiffHisto->fill(rPhiDiff);
           rPhiPullHisto->fill(rPhiPull);
@@ -993,7 +1091,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           zPullHisto->fill(zPull);
           
           zSigmaVsZHisto->fill(row_hits[j]->getZ(),sqrt(covMat[5]));
-          rPhiSigmaHisto->fill(sqrt((covMat[2])/(rSqrd*cos(phi)*cos(phi))));
+          rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(phi)*cos(phi))));
           zSigmaHisto->fill(sqrt(covMat[5]));
 #endif
 

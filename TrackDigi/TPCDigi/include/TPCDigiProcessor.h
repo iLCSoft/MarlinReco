@@ -15,7 +15,8 @@
 //#include <AIDA/IHistogram1D.h>
 
 
-//#define EXPERTCHECKPLOTS 
+
+#define EXPERTCHECKPLOTS 
 
 
 #ifdef EXPERTCHECKPLOTS
@@ -149,16 +150,24 @@ protected:
   IHistogram1D * thetaRelHisto;
 
   IHistogram1D * phiDistHisto;
-  IHistogram1D * phiPullHisto;
-  IHistogram1D * rDiffHisto;
+  IHistogram1D * rPhiPullHisto;
+  IHistogram1D * rPhiDiffHisto;
+  IHistogram1D * zDiffHisto;
+  IHistogram1D * zPullHisto;
+  IHistogram2D * zSigmaVsZHisto;
+  IHistogram1D * zSigmaHisto;
+  IHistogram1D * rPhiSigmaHisto;
+  IHistogram1D * radiusCheckHisto;
+  IHistogram1D * ResidualsRPhiHisto;
+
 #endif
 
-  //FIXME: Cathode is hard coded
+  //FIXME:SJA Cathode is hard coded
   const static double _cathode;
 
 } ;
 
-  //FIXME: Cathode is hard coded
+  //FIXME:SJA: Cathode is hard coded
 const double TPCDigiProcessor::_cathode=5.0/2.0; // cathode is 5mm thick 
 
 #endif

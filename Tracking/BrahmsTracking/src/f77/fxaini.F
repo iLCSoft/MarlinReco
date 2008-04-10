@@ -1,7 +1,10 @@
 *  
-* $Id: fxaini.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fxaini.F,v 1.2 2008-04-10 21:53:32 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -20,7 +23,7 @@
        CALL VZERO(ISTAT,1+NWSTAT)
        CALL VZERO(KSUMER,NECODE)
        CALL VZERO(KSUMWRN,NWCODE)
-       WRITE(6,1000)
+C       WRITE(6,1000)
  1000  FORMAT(' Ambiguity Processor initialised. Version ',
      +40HDELAMBI    0.5  991123  11.30                   ,
      +/)

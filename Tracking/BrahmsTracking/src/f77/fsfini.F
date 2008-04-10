@@ -1,7 +1,10 @@
 *  
-* $Id: fsfini.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fsfini.F,v 1.2 2008-04-10 21:53:32 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -33,7 +36,7 @@
       integer i,j
 
 * --- print version number from PATCHY title
-      WRITE (IPRNT,777)
+C      WRITE (IPRNT,777)
   777 FORMAT (/' Track search compiled from PAM file ',
      +20HDelsearch      1.10   ,
      +/)

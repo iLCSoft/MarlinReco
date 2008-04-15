@@ -8,6 +8,7 @@ SET( MarlinReco_PKGS
     "Analysis/EventShapes"
     "Analysis/SatoruJetFinder"
     "Analysis/MarlinKinfit"
+    "Analysis/RecoMCTruthLink"
     "Calibration/AbsCalibration"
     "CaloDigi/LDCCaloDigi"
     "Clustering/ClusterCheater" 
@@ -24,7 +25,6 @@ SET( MarlinReco_PKGS
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
     "Tracking/TrackCheater"
-    "Tracking/VertexTracking"
 )
 
 
@@ -71,6 +71,19 @@ SET_SOURCE_FILES_PROPERTIES( ${MarlinKinfit_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( MarlinKinfit_srcs ${MarlinKinfit_cxx_srcs} )
+
+
+####################################################################################################
+# RecoMCTruthLink
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Analysis/RecoMCTruthLink/src RecoMCTruthLink_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${RecoMCTruthLink_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( RecoMCTruthLink_srcs ${RecoMCTruthLink_cxx_srcs} )
 
 
 ####################################################################################################
@@ -297,19 +310,6 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackCheater_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
-
-####################################################################################################
-# VertexTracking
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/VertexTracking/src VertexTracking_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${VertexTracking_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( VertexTracking_srcs ${VertexTracking_cxx_srcs} )
-
 
 ####################################################################################################
 ### LIBRARY

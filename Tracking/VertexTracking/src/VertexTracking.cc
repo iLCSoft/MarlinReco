@@ -1637,7 +1637,7 @@ int VertexTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtended
   //  std::cout << "Chi2RPhi = " << chi2RPhi << "   Chi2Z = " << chi2Z << std::endl; 
 
   
-  float chi2; //je: this variable should be initialized! to zero?!
+  float chi2=0.0; //fg: init to zero - is this correct
   
   if (NPT == 3) {
     chi2 = chi2RPhi/_chi2WRPhiTriplet+chi2Z/_chi2WZTriplet;

@@ -1,0 +1,17 @@
+############################################
+#
+#  RecoMCTruthLink
+#
+############################################
+
+ 
+ RecoMCTruthLinker:  
+ processor that creates an LCRelation between ReconstructedParticles and MCParticles
+ and creates a skimmed MCParticle list
+
+-> see RecoMCTruthLinker.h for details
+ 
+
+ F.Gaede, DESY
+ 04/2008 
+

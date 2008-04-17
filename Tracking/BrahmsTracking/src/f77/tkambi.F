@@ -1,7 +1,10 @@
 *  
-* $Id: tkambi.F,v 1.1 2005-11-03 15:16:14 aplin Exp $
+* $Id: tkambi.F,v 1.2 2008-04-17 14:36:29 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2005/11/03 15:16:14  aplin
+* Added the Trackstring creation and the biulding of full Track candiates (TK's) which have passed the Delphi Ambiguity resolver fxambi. The material description of the vtx detector, as for the TPC, is hard coded in setmat. Presently the VTX and SIT resolutions are hard coded in LEPTrackingProcessor. The debug output has been reduced and can be controlled via TKSTDBG etc. in tkinit.F. delsolve contains the delphi ambuguity resolver written in C and is contained in the directory named C. The Tk's are written back into the C++ side in tktrev. The corresponding Tk bank structure analogous to the TE bank structure has been added in tktkbank whilst the access wrapper functions are contained in LEPTracking.
+*
 * Revision 1.2  2004/07/22 15:16:36  aplin
 * added tkfunc1.inc
 *
@@ -30,9 +33,9 @@ c#include "gcbank.inc"
 #include "include/tkfunc1.inc"
 #include "include/tkfunc.inc"
 
-      write(*,*) "---------------------"
-      write(*,*) "About to start TKAMBI" 
-      write(*,*) "---------------------"
+c      write(*,*) "---------------------"
+c      write(*,*) "About to start TKAMBI" 
+c      write(*,*) "---------------------"
 
       NACT = 0
       CALL VZERO (INDOK,NTKMX)
@@ -64,9 +67,9 @@ c ---     copy ITSDAT
       END DO
 
 
-      write(*,*) "-------------------------"
-      write(*,*) "About to call FXAMBI" 
-      write(*,*) "-------------------------"
+c      write(*,*) "-------------------------"
+c      write(*,*) "About to call FXAMBI" 
+c      write(*,*) "-------------------------"
 
 
 c --- now call ambiguity processor !!!

@@ -1,7 +1,12 @@
 *  
-* $Id: tktrev.F,v 1.12 2008-01-24 17:21:50 aplin Exp $
+* $Id: tktrev.F,v 1.13 2008-04-17 14:36:29 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.12  2008/01/24 17:21:50  aplin
+* updated the error codes for the case of to many TPC padrows in the GEAR file
+* error code returned by TKTREV = 99 this should be caught by LEPTracking
+* and an exception thown.
+*
 * Revision 1.11  2008/01/23 17:22:22  aplin
 *
 *      The TPC Tracking code has been altered to cope with more than 224 pad rows
@@ -293,9 +298,9 @@ c ---   dummy patrec
 c        CALL LP_TPC
 c      ELSE
 c ---   GAB's ALEPH-style TPC pattern recognition
-      write(*,*) "---------------------"
-      write(*,*) "About to start TPCRUN"
-      write(*,*) "---------------------"
+c      write(*,*) "---------------------"
+c      write(*,*) "About to start TPCRUN"
+c      write(*,*) "---------------------"
 
 
         CALL TPCRUN(IERROR)

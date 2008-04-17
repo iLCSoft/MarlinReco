@@ -1,8 +1,12 @@
 
 *  
-* $Id: tpcgeom.F,v 1.4 2006-11-02 11:49:01 rasp Exp $
+* $Id: tpcgeom.F,v 1.5 2008-04-17 14:36:29 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2006/11/02 11:49:01  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.3  2006/06/28 15:29:04  aplin
 * The B-Field is now variable for LEPTracking via the gear xml file. The B-Field is specified in the TPCParameters as follows: <parameter name="tpcBField" type="double"> 4.0  </parameter>
 *
@@ -99,10 +103,10 @@ c Radial pad size
       TPCPADR=(TPCACRO-TPCACRI)/REAL(NRTPC)
       BFIELD =  TPCBFIELD*10.0
 
-      write(*,*) 'NRTPC ', NRTPC
-      write(*,*) 'TPCACRO ', TPCACRO
-      write(*,*) 'TPCPADR ', TPCPADR 
-      write(*,*) 'RTPCOUT ', RTPCOUT
+C      write(*,*) 'NRTPC ', NRTPC
+C      write(*,*) 'TPCACRO ', TPCACRO
+C      write(*,*) 'TPCPADR ', TPCPADR 
+C      write(*,*) 'RTPCOUT ', RTPCOUT
 
 C----------------------------------------------------------------------
 C TPC Response:

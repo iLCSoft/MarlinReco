@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.33 2008-04-10 21:49:14 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.34 2008-04-17 14:36:29 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.33  2008/04/10 21:49:14  aplin
+** Corrected covariance matrix definition. Added extra Expert Histos in TPCDigi. Removed VTX and SIT Hits from LEPTracking
+**
 ** Revision 1.32  2008/03/11 15:19:18  engels
 ** removed spurious dev code (S. Aplin)
 **
@@ -582,30 +585,30 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       
     if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
       int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
-      cout << "the first hit for the TPC has id " << tpcsubid << endl ;
+      streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
     }
 
     if(TkHitBank->getNumOfSubDetHits("VTX") > 0) {
       int vtxsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("VTX")) ;
-      cout << "the first hit for the vtx has id " << vtxsubid << endl ;
+      streamlog_out(DEBUG) << "the first hit for the vtx has id " << vtxsubid << endl ;
     }
     
     if(TkHitBank->getNumOfSubDetHits("SIT") > 0) {
       int sitsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("SIT")) ;
-      cout << "the first hit for the sit has id " << sitsubid << endl ;
+      streamlog_out(DEBUG) << "the first hit for the sit has id " << sitsubid << endl ;
     }
     
 
 
     int errTKTREV = TKTREV(); 
 
-    cout << "TKTREV returns:" << errTKTREV << endl;
+    streamlog_out(DEBUG) << "TKTREV returns:" << errTKTREV << endl;
 
     
     if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
-    cout << "number of TE's = " << TkTeBank->size() << endl ;
+    streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
 
-    cout << "number of TK's = " << TkTkBank->size() << endl ;
+    streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;
 
 
 
@@ -623,7 +626,6 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         //         cout << "ref_r = " << ref_r << endl;
         //         cout << "ref_phi = " << ref_phi << endl;
       
-        //FIXME:SJA: B-field hard coded needs to redeemed
         // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
         // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       
@@ -851,7 +853,6 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       //         cout << "ref_r = " << ref_r << endl;
       //         cout << "ref_phi = " << ref_phi << endl;
       
-      //FIXME:SJA: B-field hard coded needs to redeemed
       // transformation from 1/p to 1/R = consb * (1/p) / sin(theta)
       // consb is given by 1/R = (c*B)/(pt*10^9) where B is in T and pt in GeV  
       

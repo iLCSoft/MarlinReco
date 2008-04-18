@@ -1,3 +1,160 @@
+2008-04-18 15:31  gaede
+
+	* CMakeLists.txt, doc/release.notes: ------------- version v00-06
+	  ------------------
+
+2008-04-18 15:31  gaede
+
+	* BuildSetup.cmake: added GEAR and RAIDA dependency
+
+2008-04-18 15:10  gaede
+
+	* Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc: removed
+	  WARNING  about missing clusters
+
+2008-04-17 16:36  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/fsfsts.F, f77/tkambi.F, f77/tktrev.F, f77/tpcgeom.F: reduced
+	  printoutlevel in f77 and moved cout to debug streamlog_out for
+	  C++
+
+2008-04-15 16:17  gaede
+
+	* src/CMakeLists.txt: removed package VertexTracking
+
+2008-04-15 16:14  gaede
+
+	* Tracking/VertexTracking/: doc/Doxyfile, include/VertexTracking.h,
+	  src/GNUmakefile, src/VertexTracking.cc: removed obsolete package
+	  VertexTracking -> use SiliconTracking
+
+2008-04-15 15:01  gaede
+
+	* Analysis/RecoMCTruthLink/: include/RecoMCTruthLinker.h,
+	  src/RecoMCTruthLinker.cc: removed namespace marlin
+
+2008-04-15 15:00  gaede
+
+	* Tracking/VertexTracking/src/VertexTracking.cc: initialized chi2
+	  to 0.0
+
+2008-04-15 12:54  gaede
+
+	* Analysis/RecoMCTruthLink/: README, include/RecoMCTruthLinker.h,
+	  src/RecoMCTruthLinker.cc: initial version of new subpackage
+
+2008-04-10 23:53  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: fsfini.F, fxaini.F, tksetr.F,
+	  tpcset.F: removed excessive printout
+
+2008-04-10 23:49  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc,
+	  Tracking/FullLDCTracking/src/FullLDCTracking.cc: Corrected
+	  covariance matrix definition. Added extra Expert Histos in
+	  TPCDigi. Removed VTX and SIT Hits from LEPTracking
+
+2008-04-07 16:54  rasp
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc: AR : Unnecessary
+	  printout statements are removed
+
+2008-04-07 16:37  rasp
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc: AR : Fast check
+	  of the hit triplet is substituted	 by explicit fitting of the
+	  triplet. The modifications	  improved Silicon track finding
+	  efficiency
+
+2008-04-07 16:33  rasp
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: AR : The bug,
+	  preventing left-over Silicon hits	 from correct assignment to
+	  the TPC tracks, is identified      and eliminated
+
+2008-04-04 12:11  gaede
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: removed
+	  conversion from cm to mm for hit covariance matrix
+
+2008-04-04 12:10  gaede
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: removed conversion
+	  from degrees to radians for gear vxd phi0
+
+2008-04-04 11:24  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: removed ^M characters
+	  from the end of each line
+
+2008-04-02 11:12  harderk
+
+	* TrackDigi/VTXDigi/src/VTXDigitizer.cc: prevent crashes when no
+	  MCParticle associated with SimTrackerHit
+
+2008-03-31 15:37  aplin
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: switched
+	  SITLayerSupportThickness -> SITSupportLayerThickness
+
+2008-03-18 18:52  aplin
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: corrected spelling
+	  mistake for SITLayerSupportThickness
+
+2008-03-17 17:05  aplin
+
+	* doc/release.notes: [no log message]
+
+2008-03-17 15:42  engels
+
+	* CMakeLists.txt: increased patch level version
+
+2008-03-13 15:47  rasp
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: AR : included
+	  treatment of the first layers of heavy-weight Si for FTD
+	  detector
+
+2008-03-11 16:38  rasp
+
+	* Tracking/SiliconTracking/include/MaterialDB.h: A.Raspereza : The
+	  support structures of SIT are added
+
+2008-03-11 16:38  rasp
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: A.Raspereza : the
+	  support SIT structures are added
+
+2008-03-11 16:19  engels
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: removed
+	  spurious dev code (S. Aplin)
+
+2008-03-09 15:55  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: added delete for layer
+	  number<0 continue statement
+
+2008-03-07 16:24  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: removed erroneous
+	  delete of tpcvoxel
+
+2008-03-07 15:22  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: fixed memory leaks for
+	  HEP2Vectors
+
+2008-02-29 12:16  gaede
+
+	* BuildSetup.cmake, CMakeLists.txt, ChangeLog, doc/release.notes:
+	  -------- ---- version  v00-05-02 -------------------------
+
 2008-02-26 11:16  gaede
 
 	* TrackDigi/VTXDigi/: include/VTXDigiProcessor.h,

@@ -4,6 +4,30 @@
 
 ================================
 
+ --------
+| v00-06 |
+ --------
+	 
+    * improved LEPTracking and TPCDigi(S.Aplin)
+	- reduced printout and moved cout to debug streamlog_out
+        - corrected covariance matrix definition of TrackerHits
+        - removed VTX and SIT Hits from LEPTracking
+
+    * removed obsolete package VertexTracking (use SiliconTracking)
+
+    * new package Analysis/RecoMCTruthLink (F.Gaede)
+       - create link between ReconstructedParticles and MCParticles 
+       - create skimmed MCparticle list
+
+    * improved SiliconTracking (A.Raspereza)
+       - reduced printout	
+       - improved Silicon track finding efficiency (hit triplet fitting)
+       - bug fix for correct assignment of left-over Silicon hits
+
+
+     * additional bug fixes
+
+       -> see Changelog for details
 
  -----------
 | v00-05-03 |

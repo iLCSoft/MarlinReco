@@ -53,6 +53,23 @@ SET( CERNLIB_HOME "${ILC_HOME}/cernlib/2006"
 SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/v01-05"
     CACHE PATH "Path to CMake Modules" FORCE )
 
+#############################################################################
+# Optional packages
+#############################################################################
+
+# if you want to build and link Marlin with one or more of these additional
+# tools you also have to define the corresponding "home" paths
+SET( BUILD_WITH "GEAR RAIDA"
+    CACHE STRING "Build Marlin with these optional packages" FORCE )
+
+# Path to GEAR
+SET( GEAR_HOME "${ILC_HOME}/gear/v00-07"
+    CACHE PATH "Path to GEAR" FORCE )
+
+# Path to RAIDA
+SET( RAIDA_HOME "${ILC_HOME}/RAIDA/v01-03"
+    CACHE PATH "Path to RAIDA" FORCE )
+
 ###############################################
 # Project Options
 ###############################################

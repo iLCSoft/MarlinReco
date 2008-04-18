@@ -313,16 +313,16 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
       if( eTot == 0.0 ){ // fixme - this might happen if clusters are from Lcal/Muon only
 	  
-	streamlog_out( WARNING ) << " no calorimeter energy found for " 
-				 << " reco particle: e:"  << rec->getEnergy()  
-				 << " charge: " << rec->getCharge() 
-				 << " px: " << rec->getMomentum()[0]
-				 << " py: " << rec->getMomentum()[1]
-				 << " pz: " << rec->getMomentum()[2]
-				 << " mass: " << rec->getMass() 
-				 <<  " *pdg " << rec->getParticleIDUsed()
-				 << std::endl ;
-	  
+	streamlog_out( DEBUG ) << " no calorimeter energy found for " 
+			       << " reco particle: e:"  << rec->getEnergy()  
+			       << " charge: " << rec->getCharge() 
+			       << " px: " << rec->getMomentum()[0]
+			       << " py: " << rec->getMomentum()[1]
+			       << " pz: " << rec->getMomentum()[2]
+			       << " mass: " << rec->getMass() 
+			       <<  " *pdg " << rec->getParticleIDUsed()
+			       << std::endl ;
+	
 	  
 	break ;  
       }
@@ -412,6 +412,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
 
     if ( ! mcp->isCreatedInSimulation() || mcp->getGeneratorStatus()  != 0 )  { 
+
       //FIXME: this is a workaround for a Mokka bug: the isCreatedInSimulation 
       // is set also for generated particles....
 

@@ -462,8 +462,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	const MCParticleVec& daughters = mcp->getDaughters() ;
 	  
 	streamlog_out( DEBUG0 ) << " keeping daughters of particle with pdg : " << mcp->getPDG() << " : " 
-				<< " [" << mcp->getGeneratorStatus() << "] :"
-				<< " parent pdg : " << mcp->getParents()[0]->getPDG() << " : " 
+				<< " [" << mcp->getGeneratorStatus() << "] :";
 	  // 				  << " e :" << mcp->getEnergy() 
 	  // 				  << " isCreatedInSimulation :" << mcp->isCreatedInSimulation()	<< std::endl
 	  // 				  << " isBackscatter :" << mcp->isBackscatter()	<< std::endl
@@ -472,6 +471,10 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	  // 				  << " isDecayedInCalorimeter :" << mcp->isDecayedInCalorimeter()	<< std::endl
 	  // 				  << " hasLeftDetector :" << mcp->hasLeftDetector()	<< std::endl
 	  // 				  << " isStopped :" << mcp->isStopped()    << "  : " 
+	if (mcp->getParents().size()) {
+	  streamlog_out( DEBUG0 ) << " parent pdg : " << mcp->getParents()[0]->getPDG() << " : ";
+	}
+	streamlog_out( DEBUG0 ) << std::endl;
 	  ;
 
 	//	<< std::endl ;

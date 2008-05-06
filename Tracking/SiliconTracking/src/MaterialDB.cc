@@ -1,5 +1,7 @@
 #include "MaterialDB.h"
 #include <iostream>
+#include <string>
+#include <stdexcept>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -517,20 +519,20 @@ void MaterialDB::init() {
 
   // Check values
   if (nLadderGaps != nLayersVTX) {
-    std::cout << "MaterialDB Processor : vector size of LadderGaps vector ("
-	      << nLadderGaps << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
-    exit(1);
+    _errorMsg << "MaterialDB Processor : vector size of LadderGaps vector ("
+	     << nLadderGaps << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
+    throw gear::Exception(_errorMsg.str());
   }
   if (nStripLines != nLayersVTX) {
-    std::cout << "MaterialDB Processor : vector size of StripLines vector ("
+    _errorMsg << "MaterialDB Processor : vector size of StripLines vector ("
 	      << nStripLines << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
-    exit(1);
+    throw gear::Exception(_errorMsg.str());
   }
   if (pVXDDetMain.getShellOuterRadius()<pVXDDetMain.getShellInnerRadius()) {
-    std::cout << "Outer Shell Radius (" << pVXDDetMain.getShellOuterRadius() 
+    _errorMsg << "Outer Shell Radius (" << pVXDDetMain.getShellOuterRadius() 
 	      << ") is smaller than inner Shell radius (" << pVXDDetMain.getShellInnerRadius()
 	      << ")" << std::endl;
-    exit(1);
+    throw gear::Exception(_errorMsg.str());
   }
 
   _shell_thickness = float(pVXDDetMain.getShellOuterRadius()-pVXDDetMain.getShellInnerRadius());
@@ -789,31 +791,41 @@ void MaterialDB::init() {
   int nFTDZ = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
   int nFTDRin = int(pFTDDet.getDoubleVals("FTDInnerRadius").size());
   int nFTDRout = int(pFTDDet.getDoubleVals("FTDOuterRadius").size());
+  int nFTDSi_dZ = int(pFTDDet.getDoubleVals("FTDDiskSiThickness").size());
+  int nFTDSupport_dZ = int(pFTDDet.getDoubleVals("FTDDiskSupportThickness").size());
   
 
-  if (nFTDZ == nFTDRin && nFTDRin == nFTDRout) {
+  if (nFTDZ == nFTDRin && nFTDRin == nFTDRout && nFTDRout == nFTDSi_dZ && nFTDSi_dZ == nFTDSupport_dZ) {
     nLayersFTD = nFTDZ;
     _zFTD.resize(nLayersFTD);
     _rInFTD.resize(nLayersFTD);
     _rOutFTD.resize(nLayersFTD);
+    _dzSiFTD.resize(nLayersFTD);
+    _dzSupportFTD.resize(nLayersFTD);
   }
   else {
-    std::cout << "Size of vectors FTDZCoordinate, FTDInnerRadius and  FTDInnerRadius are not equal --->" << std::endl;
-    std::cout << "# FTDZCoordinate : " << nFTDZ << std::endl;
-    std::cout << "# FTDInnerRadius : " << nFTDRin << std::endl;
-    std::cout << "# FTDOuterRadius : " << nFTDRout << std::endl;
-    exit(1);
+    _errorMsg << "Size of vectors FTDZCoordinate, FTDInnerRadius, FTDInnerRadius, FTDDiskSiThickness and FTDDiskSupportThickness are not equal --->" 
+	     << " # FTDZCoordinate : " << nFTDZ
+	     << " # FTDInnerRadius : " << nFTDRin
+	     << " # FTDOuterRadius : " << nFTDRout 
+	     << " # FTDDiskSiThickness : " << nFTDSi_dZ
+	     << " # FTDDiskSupportThickness : " << nFTDSupport_dZ
+	     << std::endl ;
+    throw gear::Exception(_errorMsg.str());
   }
   for (int i=0;i<nLayersFTD;++i) {
     _zFTD[i] = float(pFTDDet.getDoubleVals("FTDZCoordinate")[i]);
     _rInFTD[i] = float(pFTDDet.getDoubleVals("FTDInnerRadius")[i]);
     _rOutFTD[i] = float(pFTDDet.getDoubleVals("FTDOuterRadius")[i]);
+    _dzSiFTD[i] = float(pFTDDet.getDoubleVals("FTDDiskSiThickness")[i]);
+    _dzSupportFTD[i] = float(pFTDDet.getDoubleVals("FTDDiskSupportThickness")[i]);
   } 
-  _FTDdisk_thickness = float(pFTDDet.getDoubleVal("FTDDiskThickness"));
-  _FTD_innerSupport_dR = float(pFTDDet.getDoubleVal("FTDInnerSupportdR"));
-  _FTD_outerSupport_dR = float(pFTDDet.getDoubleVal("FTDOuterSupportdR"));
-  _FTD_innerSupport_thickness = float(pFTDDet.getDoubleVal("FTDInnerSupportThickness"));
-  _FTD_outerSupport_thickness = float(pFTDDet.getDoubleVal("FTDOuterSupportThickness"));
+  //  _FTDdisk_thickness = float(pFTDDet.getDoubleVal("FTDDiskThickness"));
+  //  _FTD_innerSupport_dR = float(pFTDDet.getDoubleVal("FTDInnerSupportdR"));
+  //  _FTD_outerSupport_dR = float(pFTDDet.getDoubleVal("FTDOuterSupportdR"));
+  //  _FTD_innerSupport_thickness = float(pFTDDet.getDoubleVal("FTDInnerSupportThickness"));
+  //  _FTD_outerSupport_thickness = float(pFTDDet.getDoubleVal("FTDOuterSupportThickness"));
+
   _zFTDOuterCyllinderStart = float(pFTDDet.getDoubleVal("zFTDOuterCylinderStart"));
   _zFTDOuterCyllinderEnd = float(pFTDDet.getDoubleVal("zFTDOuterCylinderEnd"));
   _zFTDInnerConeStart = float(pFTDDet.getDoubleVal("zFTDInnerConeStart"));
@@ -844,8 +856,8 @@ void MaterialDB::init() {
     fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
     fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
     fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
-    fkddes_.xrlp[Npmat] = 0.1*_FTDdisk_thickness/radlen;
-    fkddes_.xelosp[Npmat] = 0.1*_FTDdisk_thickness*dedx;
+    fkddes_.xrlp[Npmat] = 0.1*_dzSiFTD[i]/radlen;
+    fkddes_.xelosp[Npmat] = 0.1*_dzSiFTD[i]*dedx;
 
     fkexts_.itexts[Nexs] = 1;
     fkexts_.rzsurf[Nexs] = fkddes_.zpmat[Npmat];
@@ -859,8 +871,8 @@ void MaterialDB::init() {
     fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
     fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
     fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
-    fkddes_.xrlp[Npmat] = 0.1*_FTDdisk_thickness/radlen;
-    fkddes_.xelosp[Npmat] = 0.1*_FTDdisk_thickness*dedx;
+    fkddes_.xrlp[Npmat] = 0.1*_dzSiFTD[i]/radlen;
+    fkddes_.xelosp[Npmat] = 0.1*_dzSiFTD[i]*dedx;
 
     fkexts_.itexts[Nexs] = 1;
     fkexts_.rzsurf[Nexs] = fkddes_.zpmat[Npmat];
@@ -870,39 +882,39 @@ void MaterialDB::init() {
     Nexs++;
     Npmat++;
       
-    // Inner Support Rings
+    // Support Disks
     // right-hand part
-    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
-    fkddes_.rpmin[Npmat] = 0.1*(_rInFTD[i]-_FTD_innerSupport_dR);
-    fkddes_.rpmax[Npmat] = 0.1*_rInFTD[i];
-    fkddes_.xrlp[Npmat] = 0.1*_FTD_innerSupport_thickness/_radlen_kapton;
-    fkddes_.xelosp[Npmat] = 0.1*_FTD_innerSupport_thickness*_dedx_kapton;
+    fkddes_.zpmat[Npmat] = 0.1*(_zFTD[i]+(_dzSiFTD[i]/2.0)+(_dzSupportFTD[i]/2.0));
+    fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*(_dzSupportFTD[i]/_radlen_kapton);
+    fkddes_.xelosp[Npmat] = 0.1*(_dzSupportFTD[i]*_dedx_kapton);
     Npmat++;
    
     // left-hand part
-    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
-    fkddes_.rpmin[Npmat] = 0.1*(_rInFTD[i]-_FTD_innerSupport_dR);
-    fkddes_.rpmax[Npmat] = 0.1*_rInFTD[i];
-    fkddes_.xrlp[Npmat] = 0.1*_FTD_innerSupport_thickness/_radlen_kapton;
-    fkddes_.xelosp[Npmat] = 0.1*_FTD_innerSupport_thickness*_dedx_kapton;
+    fkddes_.zpmat[Npmat] = -0.1*(_zFTD[i]+(_dzSiFTD[i]/2.0)+(_dzSupportFTD[i]/2.0));
+    fkddes_.rpmin[Npmat] = 0.1*_rInFTD[i];
+    fkddes_.rpmax[Npmat] = 0.1*_rOutFTD[i];
+    fkddes_.xrlp[Npmat] = 0.1*_dzSupportFTD[i]/_radlen_kapton;
+    fkddes_.xelosp[Npmat] = 0.1*_dzSupportFTD[i]*_dedx_kapton;
     Npmat++;
    
-    // Outer Support
-    // right-hand part
-    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
-    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
-    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
-    fkddes_.xrlp[Npmat] = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
-    fkddes_.xelosp[Npmat] = 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
-    Npmat++;
-   
-     // left-hand part
-    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
-    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
-    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
-    fkddes_.xrlp[Npmat]  = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
-    fkddes_.xelosp[Npmat]= 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
-    Npmat++;
+//    // Outer Support
+//    // right-hand part
+//    fkddes_.zpmat[Npmat] = 0.1*_zFTD[i];
+//    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
+//    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
+//    fkddes_.xrlp[Npmat] = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
+//    fkddes_.xelosp[Npmat] = 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
+//    Npmat++;
+//   
+//     // left-hand part
+//    fkddes_.zpmat[Npmat] = -0.1*_zFTD[i];
+//    fkddes_.rpmin[Npmat] = 0.1*_rOutFTD[i];
+//    fkddes_.rpmax[Npmat] = 0.1*(_rOutFTD[i]+_FTD_outerSupport_dR);
+//    fkddes_.xrlp[Npmat]  = 0.1*_FTD_outerSupport_thickness/_radlen_kapton;
+//    fkddes_.xelosp[Npmat]= 0.1*_FTD_outerSupport_thickness*_dedx_kapton;
+//    Npmat++;
   }
 
   // Outer support cyllinders (FTD)
@@ -1056,10 +1068,10 @@ void MaterialDB::init() {
     }
   }
   else {
-    std::cout << "Size of SITLayerRadius vector (" << nSITR 
+    _errorMsg << "Size of SITLayerRadius vector (" << nSITR 
 	      << ") is not equal to the size of SITHalfLength vector ("
 	      << nSITHL << ")" << std::endl;
-    exit(1);
+    throw gear::Exception(_errorMsg.str());
   }
 
   for (int iL=0;iL<nLayersSIT;++iL) {

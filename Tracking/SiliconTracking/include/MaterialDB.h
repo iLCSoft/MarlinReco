@@ -3,6 +3,7 @@
 
 #include "marlin/Processor.h"
 #include "lcio.h"
+#include <iostream>
 #include <string>
 #include <marlin/Global.h>
 
@@ -32,7 +33,7 @@ using namespace marlin ;
  * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: MaterialDB.h,v 1.5 2008-03-11 15:38:35 rasp Exp $ 
+ * @version $Id: MaterialDB.h,v 1.6 2008-05-06 16:37:48 aplin Exp $ 
  */
 
 class MaterialDB : public Processor {
@@ -75,9 +76,14 @@ class MaterialDB : public Processor {
   int _nRun ;
   int _nEvt ;
 
+  std::stringstream _errorMsg;
+
   std::vector<float> _zFTD;
   std::vector<float> _rInFTD;
   std::vector<float> _rOutFTD;
+  std::vector<float> _dzSiFTD;
+  std::vector<float> _dzSupportFTD;
+
   std::vector<float> _rSIT;
   std::vector<float> _halfZSIT;
   std::vector<float> _rSITSupport;

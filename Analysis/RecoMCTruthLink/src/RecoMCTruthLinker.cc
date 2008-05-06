@@ -449,66 +449,68 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   //     the parameter vector 'KeepDaughtersPDG 
 
   for(int i=0; i< nMCP ; i++){
-      
+    
     MCParticle* mcp = dynamic_cast<MCParticle*> ( mcpCol->getElementAt( i ) ) ;
-      
+    
     // keep the daughters of all decays in flight of particles in the pdg list (default: gamma, pi0, K0s) 
     if( mcp->ext<MCPKeep>() == true &&  mcp->isDecayedInTracker()  ){ //&& !mcp->isStopped()  ){  
-	
+      
       unsigned thePDG = abs( mcp->getPDG() ) ;
-	
+      
       if( _pdgSet.find( thePDG ) != _pdgSet.end()  ) {
-	  
+	
 	const MCParticleVec& daughters = mcp->getDaughters() ;
-	  
+	
 	streamlog_out( DEBUG0 ) << " keeping daughters of particle with pdg : " << mcp->getPDG() << " : " 
 				<< " [" << mcp->getGeneratorStatus() << "] :";
-	  // 				  << " e :" << mcp->getEnergy() 
-	  // 				  << " isCreatedInSimulation :" << mcp->isCreatedInSimulation()	<< std::endl
-	  // 				  << " isBackscatter :" << mcp->isBackscatter()	<< std::endl
-	  // 				  << " vertexIsNotEndpointOfParent :" << mcp->vertexIsNotEndpointOfParent()	<< std::endl
-	  // 				  << " isDecayedInTracker :" << mcp->isDecayedInTracker()	<< std::endl
-	  // 				  << " isDecayedInCalorimeter :" << mcp->isDecayedInCalorimeter()	<< std::endl
-	  // 				  << " hasLeftDetector :" << mcp->hasLeftDetector()	<< std::endl
-	  // 				  << " isStopped :" << mcp->isStopped()    << "  : " 
-	if (mcp->getParents().size()) {
-	  streamlog_out( DEBUG0 ) << " parent pdg : " << mcp->getParents()[0]->getPDG() << " : ";
-	}
-	streamlog_out( DEBUG0 ) << std::endl;
-	  ;
+	// 				  << " e :" << mcp->getEnergy() 
+	// 				  << " isCreatedInSimulation :" << mcp->isCreatedInSimulation()	<< std::endl
+	// 				  << " isBackscatter :" << mcp->isBackscatter()	<< std::endl
+	// 				  << " vertexIsNotEndpointOfParent :" << mcp->vertexIsNotEndpointOfParent()	<< std::endl
+	// 				  << " isDecayedInTracker :" << mcp->isDecayedInTracker()	<< std::endl
+	// 				  << " isDecayedInCalorimeter :" << mcp->isDecayedInCalorimeter()	<< std::endl
+	// 				  << " hasLeftDetector :" << mcp->hasLeftDetector()	<< std::endl
+	// 				  << " isStopped :" << mcp->isStopped()    << "  : " 
 
+	streamlog_message( DEBUG0 , 
+			   if( mcp->getParents().size() ) ,
+			   " parent pdg : " << mcp->getParents()[0]->getPDG() << " : "  ;
+			   ) ;
+	
+	streamlog_out( DEBUG0 ) << std::endl ;
+	
 	//	<< std::endl ;
-	  
+	
 	for( MCParticleVec::const_iterator dIt = daughters.begin() ;
 	     dIt != daughters.end() ; ++dIt ){
-	    
+	  
 	  (*dIt)->ext<MCPKeep>() = true ;
-	    
+	  
 	  streamlog_out( DEBUG0 ) <<  (*dIt)->getPDG() << ", " ;
 	}
-	  
+	
 	streamlog_out( DEBUG0 ) << std::endl ;
-	  
+	
       }
     }
   }
-    
-    
+  
+  
   for(int i=0; i< nMCP ; i++){
-      
+    
     MCParticle* mcp = dynamic_cast<MCParticle*> ( mcpCol->getElementAt( i ) ) ;
-      
+    
     if( mcp->ext<MCPKeep>() == true ) {  
-	
+      
       skimVec->addElement( mcp ) ;
     }
   }    
-    
+  
   evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
 }
-  
-void  RecoMCTruthLinker::keepMCParticle( MCParticle* mcp ){
 
+void  RecoMCTruthLinker::keepMCParticle( MCParticle* mcp ){
+  
   mcp->ext<MCPKeep>() = true  ;
 	
 

@@ -404,13 +404,15 @@ void LDCCaloDigi::fillECALGaps( ) {
     for (int il=0; il < MAX_LAYERS; ++il) {
       if(_calHitsByStaveLayer[is][il].size()>1){
 	// compare all pairs of hits just once (j>i)
-	for (uint i=0;i<_calHitsByStaveLayer[is][il].size()-1;++i){
+
+	for (unsigned int i=0;i<_calHitsByStaveLayer[is][il].size()-1;++i){
 	  CalorimeterHitImpl* hiti = _calHitsByStaveLayer[is][il][i]; 
 	  int modulei = _calHitsByStaveLayerModule[is][il][i];
 	  float xi = hiti->getPosition()[0];
 	  float yi = hiti->getPosition()[1];
 	  float zi = hiti->getPosition()[2];
-	  for (uint j=i+1;j<_calHitsByStaveLayer[is][il].size();++j){
+
+	  for (unsigned int j=i+1;j<_calHitsByStaveLayer[is][il].size();++j){
 	    CalorimeterHitImpl* hitj = _calHitsByStaveLayer[is][il][j]; 
 	    int modulej = _calHitsByStaveLayerModule[is][il][j];
 	    float xj = hitj->getPosition()[0];

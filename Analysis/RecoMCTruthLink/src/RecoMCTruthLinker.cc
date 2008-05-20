@@ -1,6 +1,8 @@
 #include "RecoMCTruthLinker.h"
 #include <iostream>
 
+#include <cstdlib>
+
 // LCIO 
 #include <EVENT/LCCollection.h>
 #include <EVENT/Track.h>

@@ -21,7 +21,7 @@ public:
   
     /** Convenient constructor.
      */
-  Calibration(int nevt,  int n1,  int n1,  int n1, 
+  Calibration(int nevt,  int n1,  int n2,  int n3, 
 	      double en1, double  en2,double  en3, double enr );
 
   /** 'Copy constructor' needed to interpret LCCollection read from file/database.

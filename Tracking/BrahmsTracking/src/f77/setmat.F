@@ -1,7 +1,10 @@
 *  
-* $Id: setmat.F,v 1.7 2007-09-05 09:47:29 rasp Exp $
+* $Id: setmat.F,v 1.8 2008-05-20 08:48:06 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.5  2006/11/02 11:49:00  rasp
 *
 * Modified files adopted to FullLDCTracking processor
@@ -740,14 +743,14 @@ ccc      endif
          IF (TKSTDBG.GT.0) then
             print*
             print '('' material cylinders for track fit'')'
-            print '('' Nr    radius     z-min     z-max    X0     Eloss'')'
+            print '('' Nr   radius    z-min    z-max    X0     Eloss'')'
             do i=1,ncmat
                print '(i3,3f10.2,2f8.5)',
      $              i,rcmat(i),zcmin(i),zcmax(i),xrlc(i),xelosc(i)
             enddo
             print*
             print '('' material planes for track fit'')'
-            print '('' Nr       z       r-min     r-max    X0     Eloss'')'
+            print '('' Nr      z      r-min    r-max    X0     Eloss'')'
             do i=1,npmat
                print '(i3,3f10.2,2f8.5)',
      $              i,zpmat(i),rpmin(i),rpmax(i),xrlp(i),xelosp(i)

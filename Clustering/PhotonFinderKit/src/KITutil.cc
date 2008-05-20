@@ -1,3 +1,7 @@
+
+#include <algorithm>
+
+
 #include "KITutil.h"
 
 void CreateAllShits2(LCCollection* colt,CellIDDecoder<CalorimeterHit>& id,vector<Superhit2*>* calo)

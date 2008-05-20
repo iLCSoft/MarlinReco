@@ -3,6 +3,10 @@
 #include <string>
 #include <stdexcept>
 
+
+#include <cstdlib>
+
+
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
 #include <AIDA/IHistogramFactory.h>

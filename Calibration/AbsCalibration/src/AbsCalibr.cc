@@ -15,6 +15,9 @@
 #include "EVENT/MCParticle.h"
 #include "IMPL/LCCollectionVec.h"
 
+
+#include <cstdlib>
+
 //  To create collection can be output by LCIO 
 #include "UTIL/LCFixedObject.h"
 

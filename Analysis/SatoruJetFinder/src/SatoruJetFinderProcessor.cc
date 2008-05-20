@@ -6,13 +6,17 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.cc,v 1.7 2007-05-21 12:57:58 engels Exp $
+** $Id: SatoruJetFinderProcessor.cc,v 1.8 2008-05-20 08:48:06 aplin Exp $
 **
 **
 */ 
 
 #include "SatoruJetFinderProcessor.h"
 #include <iostream>
+
+
+#include <algorithm>
+
 #include "EVENT/LCIO.h"
 #include "EVENT/LCCollection.h"
 #include "IMPL/ReconstructedParticleImpl.h"

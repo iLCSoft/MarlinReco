@@ -13,6 +13,10 @@
 #include <vector>
 #include <stack>
 #include <math.h>
+
+
+#include <algorithm>
+
 // STUFF needed for GEAR
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
@@ -20,10 +24,12 @@
 #include <gear/CalorimeterParameters.h>
 //#include "MarlinCED.h"
 //#include "DrowUtil.h"
+
 #define MASK_K (unsigned int) 0x3F000000
 #define SHIFT_K 24
 #define SHIFT_M 0
 #define MASK_M (unsigned int) 0x00000007
+
 using namespace std ;
 using namespace lcio ;
 using namespace marlin ;

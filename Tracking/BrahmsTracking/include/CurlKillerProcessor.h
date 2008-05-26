@@ -32,7 +32,7 @@ using namespace marlin ;
  * @param PadWidth TPC PadWidth <br>
  * (default value is 2.2) <br>
  * @author S. Aplin, DESY
- * @version $Id: CurlKillerProcessor.h,v 1.2 2007-09-05 09:47:29 rasp Exp $ 
+ * @version $Id: CurlKillerProcessor.h,v 1.3 2008-05-26 13:23:08 aplin Exp $ 
  */
 
 class CurlKillerProcessor : public Processor {
@@ -75,8 +75,6 @@ class CurlKillerProcessor : public Processor {
   std::string _remainingColName ;
   int _binSize ;
   int _multiplicityCut ;
-  float _padHeight ;
-  float _padWidth ;
 
   int _nRun ;
   int _nEvt ;

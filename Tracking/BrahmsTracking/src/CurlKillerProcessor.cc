@@ -77,14 +77,6 @@ CurlKillerProcessor::CurlKillerProcessor() : Processor("CurlKillerProcessor") {
 			      "Cut for the number of hits allowed in one bin"  ,
 			      _multiplicityCut,
 			      int(4) ) ;
-  registerProcessorParameter( "PadHeight" , 
-			      "TPC PadHeight"  ,
-			      _padHeight,
-			      float(6.2) ) ;
-  registerProcessorParameter( "PadWidth" , 
-			      "TPC PadWidth"  ,
-			      _padWidth,
-			      float(2.2) ) ;
 }
 
 
@@ -145,12 +137,10 @@ void CurlKillerProcessor::processEvent( LCEvent * evt ) {
     double gearRMin = planeExt[0] ;
     double gearRMax = planeExt[1] ;
 
+    const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
+    double binHeight = padLayout.getRowHeight(1) * (double) _binSize ;
+    double binWidth = padLayout.getPadWidth(1) * padCoord[0] * (double) _binSize ;
 
-    // FIXME:SJA this gives strange values for the padwidth
-//     double binHeight = padLayout.getRowHeight(1) * (double) _binSize ;
-//     double binWidth = padLayout.getPadWidth(1)  * (double) _binSize ;
-    double binHeight = _padHeight * (double) _binSize ;
-    double binWidth = _padWidth * (double) _binSize ;
     
     // create bined pad layout
     const gear::FixedPadSizeDiskLayout padsAsBins(gearRMin, gearRMax, binHeight, binWidth) ;                                       

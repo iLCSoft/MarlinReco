@@ -1,7 +1,10 @@
 *  
-* $Id: tpcsav.F,v 1.3 2005-08-02 12:59:48 aplin Exp $
+* $Id: tpcsav.F,v 1.4 2008-05-27 16:04:57 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2005/08/02 12:59:48  aplin
+* write statements removed
+*
 * Revision 1.2  2005/07/29 15:06:17  aplin
 * Initialised number of tracks found to 0 in tpcrun.
 *
@@ -56,7 +59,7 @@ c#include "include/gcbank.inc"
 #include "include/tpcfunc.inc"
 
 
-      write(*,*) "Number of tracks found = " , NTGFT
+C      write(*,*) "Number of tracks found = " , NTGFT
       DO ITK=1,NTGFT
 
 c ---  skip if number of hits is zero

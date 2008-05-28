@@ -1,8 +1,25 @@
 
 *     
-*     $Id: trkfnd.F,v 1.8 2008-01-23 17:22:22 aplin Exp $
+*     $Id: trkfnd.F,v 1.9 2008-05-28 07:01:24 aplin Exp $
 *     
 *     $Log: not supported by cvs2svn $
+*     Revision 1.8  2008/01/23 17:22:22  aplin
+*
+*          The TPC Tracking code has been altered to cope with more than 224 pad rows
+*          the max number of pad rows can be changed in padrow.inc by changing
+*
+*          The maximum number of TPC Padrows that the tracking code
+*          can accept must be a multiple of 32
+*
+*          Note this is not the number of TPC Padrows in the dectector
+*          but the maximum allowed because of the predifined array sizes
+*          and a set of 32 bit registers
+*
+*          Currently it is set to 512
+*
+*          By increasing the value of N32BITREG in padrow.inc you can increase the max
+*          number of pad rows
+*
 *     Revision 1.7  2006/02/25 13:24:38  owendt
 *     commented out debug outputs
 *     
@@ -190,7 +207,7 @@ C     GAB:
          MINROW=4
       ENDIF
 
-      write(*,*) "MINROW = ", MINROW
+C      write(*,*) "MINROW = ", MINROW
 
       DO 30 IROW=NRTPC, MINROW, -1
          

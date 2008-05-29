@@ -297,6 +297,8 @@ class SiliconTracking : public Processor {
   float _angleCutForMerging;
 
   int _print;
+  int _checkForDelta;
+  float _minDistToDelta;
 
   float _distRPhi;
   float _distZ;

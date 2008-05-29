@@ -168,6 +168,14 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   combinations.push_back(3);
   combinations.push_back(2);
 
+  combinations.push_back(5);
+  combinations.push_back(3);
+  combinations.push_back(1);
+
+  combinations.push_back(5);
+  combinations.push_back(2);
+  combinations.push_back(1);
+
   combinations.push_back(4);
   combinations.push_back(3);
   combinations.push_back(2);
@@ -196,7 +204,10 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   combinationsFTD.push_back(5);
   combinationsFTD.push_back(4);
   
-
+  combinationsFTD.push_back(6);
+  combinationsFTD.push_back(5);
+  combinationsFTD.push_back(3);
+  
   combinationsFTD.push_back(5);
   combinationsFTD.push_back(4);
   combinationsFTD.push_back(3);
@@ -270,7 +281,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInPhi",
 			     "Number of divisions in Phi",
 			     _nDivisionsInPhi,
-			     int(40));
+			     int(60));
   
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
@@ -280,7 +291,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
 			     _nDivisionsInTheta,
-			     int(40));
+			     int(60));
   
   // Input Collections
   // ^^^^^^^^^^^^^^^^^
@@ -354,7 +365,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("Chi2FitCut",
 			     "Chi2 Fit Cut",
 			     _chi2FitCut,
-			     float(100.0));
+			     float(120.0));
 
   registerProcessorParameter("Chi2PrefitCut",
 			     "Chi2 Prefit Cut",
@@ -369,7 +380,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("MinDistCutAttach",
 			     "MinDistCutAttach",
 			     _minDistCutAttach,
-			     float(2.0));
+			     float(2.5));
    
   registerProcessorParameter("MinLayerToAttach",
 			     "MinLayerToAttach",
@@ -389,7 +400,7 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("CutOnPt",
 			     "cut on Pt",
 			     _cutOnPt,
-			     float(0.1));
+			     float(0.05));
 
   registerProcessorParameter("MinimalHits",
 			     "minimal hits",
@@ -437,6 +448,17 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
 			     "Print out debugging info?",
 			     _debug,
 			     int(1));
+
+
+  registerProcessorParameter("CheckForDelta",
+			     "Check for Delta rays hits in hit-to-track assignment",
+			     _checkForDelta,
+			     int(1));
+
+  registerProcessorParameter("MinDistToDelta",
+			     "Minimal distance of track hit to the delta electron hit",
+			     _minDistToDelta,
+			     float(0.25));
 
 }
 
@@ -517,25 +539,24 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
   _tracks3Hits.clear();
   _trackImplVec.clear();
 
-  int success = InitialiseVTX( evt );
-  int successFTD = InitialiseFTD( evt );
-
   std::cout << std::endl;
   std::cout << "SiliconTracking -> run = " << _nRun 
 	    << "  event = " << _nEvt << std::endl;
   std::cout << std::endl;
 
+  int success = InitialiseVTX( evt );
+  int successFTD = InitialiseFTD( evt );
 
   if (success == 1) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
       for (int iTheta=0; iTheta<_nDivisionsInTheta;++iTheta)
 	ProcessOneSector(iPhi,iTheta); // Process one VXD sector     
-    //    std::cout << "End of Processing VXD sectors" << std::endl;
+    std::cout << "End of Processing VXD sectors" << std::endl;
   }
 
   if (successFTD == 1) {
     TrackingInFTD(); // Perform tracking in the FTD
-    //    std::cout << "End of Processing FTD sectors" << std::endl;
+    std::cout << "End of Processing FTD sectors" << std::endl;
   }
 
   if (success == 1 || successFTD == 1) {
@@ -543,7 +564,7 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     Sorting( _tracks5Hits);
     Sorting( _tracks4Hits);
     Sorting( _tracks3Hits);
-    //    std::cout << "End of Sorting " << std::endl;
+    std::cout << "End of Sorting " << std::endl;
 
     int nTrk = int(_tracks5Hits.size());
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
@@ -783,6 +804,7 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_FTDHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
+    std::cout << "Number of FTD hits = " << nelem << std::endl;
     _nTotalFTDHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
@@ -839,6 +861,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_VTXHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
+    std::cout << "Number of VTX hits = " << nelem << std::endl;
     _nTotalVTXHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
@@ -1106,10 +1129,12 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
     }
   }
 
-  //  float dZ = FastTripletCheck(innerHit, middleHit, outerHit);
 
-  //  if (fabs(dZ) > _minDistCutAttach)
-  //    return trackAR;    
+  //    float dZ = FastTripletCheck(innerHit, middleHit, outerHit);
+
+  //    if (fabs(dZ) > _minDistCutAttach)
+  //      return trackAR;    
+    
 
   double * xh = new double[3];
   double * yh = new double[3];
@@ -1216,6 +1241,11 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   // Check if track satisfies all conditions
 
 
+//   std::cout << "Chi2/ndf = " << Chi2/float(ndf) << " , cut = " << _chi2FitCut << std::endl;
+//   std::cout << "d0 = " << d0 << " , cut = " << _cutOnD0  << std::endl;
+//   std::cout << "z0 = " << z0 << " , cut = " << _cutOnZ0  << std::endl;
+//   std::cout << "omega = " << omega << " , cut = " << _cutOnOmega << std::endl;
+
   if ( Chi2/float(ndf) > _chi2FitCut || fabs(d0) > _cutOnD0 || fabs(z0) > _cutOnZ0 || fabs(omega)>_cutOnOmega)
     return trackAR;
 
@@ -1236,6 +1266,10 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
   trackAR->setChi2( Chi2 );
   trackAR->setNDF( ndf );
   trackAR->setCovMatrix(epar);
+
+//   std::cout << "Success !!!!!!!" << std::endl;
+  
+
   return trackAR;
 
 }
@@ -1829,13 +1863,25 @@ void SiliconTracking::AttachRemainingVTXHitsFast() {
 	    for (int iTrk=0; iTrk<nTrk; ++iTrk) {	  
 	      TrackExtended * trackAR = trackVector[iCodeForTrack][iTrk];
 	      bool consider = true;
-	      TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
-	      int NHITS = int(hitVector.size());
-	      for (int IHIT=0;IHIT<NHITS;++IHIT) {
-		if (hit->getTrackerHit()->getType() == 
-		    hitVector[IHIT]->getTrackerHit()->getType()) {
-		  consider = false;
-		  break;
+	      if (_checkForDelta) {
+		TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+		int NHITS = int(hitVector.size());
+		for (int IHIT=0;IHIT<NHITS;++IHIT) {
+		  if (hit->getTrackerHit()->getType() == 
+		      hitVector[IHIT]->getTrackerHit()->getType()) {
+		    float distance = 0.;
+		    for (int iC=0;iC<3;++iC) {
+		      float posFirst = float(hit->getTrackerHit()->getPosition()[iC]);
+		      float posSecond = float(hitVector[IHIT]->getTrackerHit()->getPosition()[iC]);
+		      float deltaPos = posFirst - posSecond;
+		      distance += deltaPos*deltaPos;
+		    }
+		    distance = sqrt(distance);
+		    if (distance<_minDistToDelta) {
+		      consider = false;
+		      break;
+		    }
+		  }
 		}
 	      }
 	      if (consider) {	
@@ -1907,13 +1953,25 @@ void SiliconTracking::AttachRemainingVTXHitsSlow() {
       for (int iTrk=0; iTrk<nTrk; ++iTrk) {
 	TrackExtended * trackAR = _trackImplVec[iTrk];
 	bool consider = true;
-	TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
-	int NHITS = int(hitVector.size());
-	for (int IHIT=0;IHIT<NHITS;++IHIT) {
-	  if (hit->getTrackerHit()->getType() == 
-	      hitVector[IHIT]->getTrackerHit()->getType()) {
-	    consider = false;
-	    break;
+	if (_checkForDelta) {
+	  TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	  int NHITS = int(hitVector.size());
+	  for (int IHIT=0;IHIT<NHITS;++IHIT) {
+	    if (hit->getTrackerHit()->getType() == 
+		hitVector[IHIT]->getTrackerHit()->getType()) {
+	      float distance = 0.;
+	      for (int iC=0;iC<3;++iC) {
+		float posFirst = float(hit->getTrackerHit()->getPosition()[iC]);
+		float posSecond = float(hitVector[IHIT]->getTrackerHit()->getPosition()[iC]);
+		float deltaPos = posFirst - posSecond;
+		distance += deltaPos*deltaPos;
+	      }
+	      distance = sqrt(distance);
+	      if (distance<_minDistToDelta) {
+		consider = false;
+		break;
+	      }
+	    }	    
 	  }
 	}
 	if (consider) {
@@ -2105,15 +2163,15 @@ void SiliconTracking::TrackingInFTD() {
       //      int nI = int(hitVec.size());
       //      std::cout << nO << " " << nM << " " << nI << std::endl;
       for (int ipOuter=0;ipOuter<_nPhiFTD;++ipOuter) {
-	int ipMiddleLow = ipOuter - _nPhiFTD / 4 - 1;
-	int ipMiddleUp  = ipOuter + _nPhiFTD / 4 + 1;
+	int ipMiddleLow = ipOuter - 1;
+	int ipMiddleUp  = ipOuter + 1;
 	int iCodeOuter = iS + 2*nLS[0] + 2*_nLayersFTD*ipOuter;
 	TrackerHitExtendedVec hitVecOuter = _sectorsFTD[iCodeOuter];
 	int nOuter = int(hitVecOuter.size());
 	for (int iOuter=0;iOuter<nOuter;++iOuter) {
 	  TrackerHitExtended * hitOuter = hitVecOuter[iOuter];
-	  //	  for (int ipMiddle=ipMiddleLow;ipMiddle<=ipMiddleUp;++ipMiddle) {
-	  for(int ipMiddle=0;ipMiddle<_nPhiFTD;++ipMiddle) {
+	  for (int ipMiddle=ipMiddleLow;ipMiddle<=ipMiddleUp;++ipMiddle) {
+	  //for(int ipMiddle=0;ipMiddle<_nPhiFTD;++ipMiddle) {
 	    int ipM = ipMiddle;
 	    if (ipM < 0) 
 	      ipM = ipMiddle + _nPhiFTD;
@@ -2122,19 +2180,13 @@ void SiliconTracking::TrackingInFTD() {
 	    int iCodeMiddle = iS + 2*nLS[1] + 2*_nLayersFTD*ipM;
 	    TrackerHitExtendedVec hitVecMiddle = _sectorsFTD[iCodeMiddle];
 	    int ipInnerLow,ipInnerUp;	    
-	    if (ipMiddle < ipOuter) {
-	      ipInnerLow = ipMiddleLow;
-	      ipInnerUp =  ipOuter + 1;
-	    }
-	    else {
-	      ipInnerLow = ipOuter - 1;
-	      ipInnerUp  = ipMiddleUp;
-	    }
+	    ipInnerLow = ipMiddle - 1;
+	    ipInnerUp =  ipMiddle + 1;
 	    int nMiddle = int(hitVecMiddle.size());
 	    for (int iMiddle=0;iMiddle<nMiddle;++iMiddle) {
 	      TrackerHitExtended * hitMiddle = hitVecMiddle[iMiddle];
-	      //	      for (int ipInner=ipInnerLow;ipInner<=ipInnerUp;++ipInner) {
-	      for (int ipInner=0;ipInner<_nPhiFTD;++ipInner) {
+	      for (int ipInner=ipInnerLow;ipInner<=ipInnerUp;++ipInner) {
+	      //for (int ipInner=0;ipInner<_nPhiFTD;++ipInner) {
 		int ipI = ipInner;
 		if (ipI < 0)
 		  ipI = ipInner + _nPhiFTD;
@@ -2146,9 +2198,10 @@ void SiliconTracking::TrackingInFTD() {
 		for (int iInner=0;iInner<nInner;++iInner) {
 		  TrackerHitExtended * hitInner = hitVecInner[iInner];
 		  HelixClass helix;
-		  //		  std::cout << hitOuter->getTrackerHit()->getType() << " " 
-		  //			    << hitMiddle->getTrackerHit()->getType() << " " 
-		  //			    << hitInner->getTrackerHit()->getType() << std::endl;
+// 		  std::cout << std::endl;
+// 		  std::cout << hitOuter->getTrackerHit()->getType() << " " 
+// 			    << hitMiddle->getTrackerHit()->getType() << " " 
+// 			    << hitInner->getTrackerHit()->getType() << std::endl;
 		  TrackExtended * trackAR = TestTriplet(hitOuter,hitMiddle,hitInner,helix);
 		  if (trackAR != NULL) {
 		    //	  std::cout << "FTD triplet found" << std::endl;

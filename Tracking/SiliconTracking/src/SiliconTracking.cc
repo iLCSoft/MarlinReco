@@ -281,17 +281,17 @@ SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
   registerProcessorParameter("NDivisionsInPhi",
 			     "Number of divisions in Phi",
 			     _nDivisionsInPhi,
-			     int(60));
+			     int(80));
   
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
 			     _nPhiFTD,
-			     int(3));
+			     int(30));
   
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
 			     _nDivisionsInTheta,
-			     int(60));
+			     int(80));
   
   // Input Collections
   // ^^^^^^^^^^^^^^^^^
@@ -551,12 +551,12 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
       for (int iTheta=0; iTheta<_nDivisionsInTheta;++iTheta)
 	ProcessOneSector(iPhi,iTheta); // Process one VXD sector     
-    std::cout << "End of Processing VXD sectors" << std::endl;
+    //    std::cout << "End of Processing VXD sectors" << std::endl;
   }
 
   if (successFTD == 1) {
     TrackingInFTD(); // Perform tracking in the FTD
-    std::cout << "End of Processing FTD sectors" << std::endl;
+    //    std::cout << "End of Processing FTD sectors" << std::endl;
   }
 
   if (success == 1 || successFTD == 1) {
@@ -564,7 +564,7 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     Sorting( _tracks5Hits);
     Sorting( _tracks4Hits);
     Sorting( _tracks3Hits);
-    std::cout << "End of Sorting " << std::endl;
+    //    std::cout << "End of Sorting " << std::endl;
 
     int nTrk = int(_tracks5Hits.size());
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
@@ -804,7 +804,7 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_FTDHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
-    //    std::cout << "Number of FTD hits = " << nelem << std::endl;
+    std::cout << "Number of FTD hits = " << nelem << std::endl;
     _nTotalFTDHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
@@ -861,7 +861,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_VTXHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
-    //    std::cout << "Number of VTX hits = " << nelem << std::endl;
+    std::cout << "Number of VTX hits = " << nelem << std::endl;
     _nTotalVTXHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));

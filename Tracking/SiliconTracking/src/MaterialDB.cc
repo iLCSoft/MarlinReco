@@ -3,10 +3,6 @@
 #include <string>
 #include <stdexcept>
 
-
-#include <cstdlib>
-
-
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
 #include <AIDA/IHistogramFactory.h>
@@ -430,6 +426,11 @@ MaterialDB::MaterialDB() : Processor("MaterialDB") {
   registerProcessorParameter("UseMaterials",
 			     "Use material database",
 			     _useMaterials,
+			     int(1));
+
+  registerProcessorParameter("BuildSET",
+			     "Build SET detector?",
+			     _buildSET,
 			     int(1));
 
 }
@@ -1292,13 +1293,20 @@ void MaterialDB::init() {
   }
 
   // outer tube
-  //  fkddes_.rcmat[Ncmat] = RTPCOUT;
-  //  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
-  //  fkddes_.zcmax[Ncmat] = TPCHLFZ;
-  //  fkddes_.xrlc[Ncmat] = TPCTHBO/xralu;
-  //  fkddes_.xelosc[Ncmat] = TPCTHBO*dedxalu;
-  //  Ncmat++;
-    
+  fkddes_.rcmat[Ncmat] = RTPCOUT - TPCTHBO/2.;
+  fkddes_.zcmin[Ncmat] =  -TPCHLFZ;
+  fkddes_.zcmax[Ncmat] = TPCHLFZ;
+  fkddes_.xrlc[Ncmat] = TPCTHBO/xralu;
+  fkddes_.xelosc[Ncmat] = TPCTHBO*dedxalu;
+
+  fkexts_.itexts[Nexs] = 0;
+  fkexts_.rzsurf[Nexs] = fkddes_.rcmat[Ncmat]-0.1;
+  fkexts_.zrmin[Nexs] = fkddes_.zcmin[Ncmat];
+  fkexts_.zrmax[Nexs] = fkddes_.zcmax[Ncmat];
+  
+  Nexs++;
+  Ncmat++;
+  
   // endplates
   //  fkddes_.rpmin[Npmat] = RTPCINN;
   //  fkddes_.rpmax[Npmat] = RTPCOUT;
@@ -1314,6 +1322,50 @@ void MaterialDB::init() {
   //  fkddes_.xelosp[Npmat] = 0.35*xralu*dedxalu;
   //  Npmat++;
 
+
+  if (_buildSET==1) {
+    // **************************************** //
+    // ** Building Database for SET Detector ** //
+    // **************************************** //
+    const gear::GearParameters& pSETDet = Global::GEAR->getGearParameters("SET");
+    int nSETR = int(pSETDet.getDoubleVals("SETLayerRadius").size());
+    int nSETHL = int(pSETDet.getDoubleVals("SETLayerHalfLength").size());
+    if (nSETR!=nSETHL) {
+      std::cout << "SET detector : The size of vector SETLayerRadius = " << nSETR
+ 		<< "  does not match the size of vector SETLayerHalfLength = " << nSETHL << std::endl;
+      std::cout << "Check your Gear steering " << std::endl;
+      exit(-1);
+    }
+
+    float setSupportThickness = float(pSETDet.getDoubleVal("SETSupportLayerThickness"));
+    float setLayerThickness = float(pSETDet.getDoubleVal("SETLayerThickness"));
+    float setRadLenLayer    = float(pSETDet.getDoubleVal("SETLayer_RadLen"));
+    float setRadLenSupport  = float(pSETDet.getDoubleVal("SETSupportLayer_RadLen"));
+    float setdEdxLayer    = float(pSETDet.getDoubleVal("SETLayer_dEdx"));
+    float setdEdxSupport  = float(pSETDet.getDoubleVal("SETSupportLayer_dEdx"));
+
+    for (int iSETL=0;iSETL<nSETR;++iSETL) {
+      float radius = float(pSETDet.getDoubleVals("SETLayerRadius")[iSETL]);
+      float halfz  = float(pSETDet.getDoubleVals("SETLayerHalfLength")[iSETL]);
+      fkddes_.rcmat[Ncmat] = 0.1*radius;
+      fkddes_.zcmin[Ncmat] =  -0.1*halfz;
+      fkddes_.zcmax[Ncmat] = 0.1*halfz;
+      fkddes_.xrlc[Ncmat] = setLayerThickness/setRadLenLayer;
+      fkddes_.xelosc[Ncmat] = setLayerThickness*setdEdxLayer;      
+      Ncmat++;
+
+      radius = float(pSETDet.getDoubleVals("SETSupportLayerRadius")[iSETL]);
+      halfz  = float(pSETDet.getDoubleVals("SETSupportLayerHalfLength")[iSETL]);
+      fkddes_.rcmat[Ncmat] = 0.1*radius;
+      fkddes_.zcmin[Ncmat] = -0.1*halfz;
+      fkddes_.zcmax[Ncmat] = 0.1*halfz;
+      fkddes_.xrlc[Ncmat] = setSupportThickness/setRadLenSupport;
+      fkddes_.xelosc[Ncmat] = setSupportThickness*setdEdxSupport;
+      Ncmat++;
+
+    }
+
+  }
 
   // setting numbers of planar, cyllinder, conical and realistic ladder  shapes and extrapolation surfaces
   fkddes_.npmat = Npmat;

@@ -31,9 +31,12 @@ using namespace marlin ;
  * Otherwise track parameters can be calculated only at the measurement point and no
  * track extrapolations are possible <br>
  * (default value 1) <br>
+ * @param BuildSET When this flag is set to 1 the SET detector is built. BuildSET must be
+ * set to 0 for the Mokka models containing no SET device. <br> 
+ * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: MaterialDB.h,v 1.6 2008-05-06 16:37:48 aplin Exp $ 
+ * @version $Id: MaterialDB.h,v 1.7 2008-06-05 13:40:16 rasp Exp $ 
  */
 
 class MaterialDB : public Processor {
@@ -129,6 +132,8 @@ class MaterialDB : public Processor {
 
   int _useExtrapolations;
   int _useMaterials;
+
+  int _buildSET;
 
 } ;
 

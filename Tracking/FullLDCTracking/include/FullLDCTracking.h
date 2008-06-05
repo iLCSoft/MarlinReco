@@ -9,8 +9,10 @@
 #include "TrackerHitExtended.h"
 #include "TrackHitPair.h"
 #include "HelixClass.h"
+#include "ClusterShapes.h"
 #include "GroupTracks.h"
 #include "../../BrahmsTracking/include/MarlinTrackFit.h"
+#include <map>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -21,7 +23,7 @@ using namespace marlin ;
  * found by the SiliconTracking module in the silicon detectors
  * and by the LEPTracking module in TPC. 
  * <h4>Input collections and prerequisites</h4> 
- * Processor requires collection of digitized vertex, sit, ftd & tpc tracker hits 
+ * Processor requires collection of digitized vertex, sit, ftd, set, etd & tpc tracker hits 
  * and also the collections of tracks found in the silicon detectors
  * and in TPC.
  * <h4>Output</h4>
@@ -40,22 +42,30 @@ using namespace marlin ;
  * The number of hits in the different subdetectors associated
  * with each track can be accessed via method Track::getSubdetectorHitNumbers().
  * This method returns vector of integers : <br>
- * number of VTX hits used in the track fit is the first element in this vector  
+ * number of VTX hits used in the track fit is the 1st element in this vector  
  * (Track::getSubdetectorHitNumbers()[0]) <br>
- * number of FTD hits used in the track fit is the second element in this vector  
+ * number of FTD hits used in the track fit is the 2nd element in this vector  
  * (Track::getSubdetectorHitNumbers()[1]) <br>
- * number of SIT hits used in the track fit is the third element in this vector  
+ * number of SIT hits used in the track fit is the 3d element in this vector  
  * (Track::getSubdetectorHitNumbers()[2]) <br>
- * number of TPC hits used in the track fit is the forth element in this vector  
+ * number of TPC hits used in the track fit is the 4th element in this vector  
  * (Track::getSubdetectorHitNumbers()[3]) <br>
- * total number of VTX hits in track is the fifth element in this vector 
+ * number of SET hits used in the track fit is the 5th element in this vector  
  * (Track::getSubdetectorHitNumbers()[4]) <br>
- * total number of FTD hits in track is the sixth element in this vector
+ * number of ETD hits used in the track fit is the 6th element in this vector  
  * (Track::getSubdetectorHitNumbers()[5]) <br>
- * total number of SIT hits in track is the seventh element in this vector
+ * total number of VTX hits in track is the 7th element in this vector 
  * (Track::getSubdetectorHitNumbers()[6]) <br>
- * total number of TPC hits in track is the eighth element in this vector
+ * total number of FTD hits in track is the 8th element in this vector
  * (Track::getSubdetectorHitNumbers()[7]) <br>
+ * total number of SIT hits in track is the 9th element in this vector
+ * (Track::getSubdetectorHitNumbers()[8]) <br>
+ * total number of TPC hits in track is the 10th element in this vector
+ * (Track::getSubdetectorHitNumbers()[9]) <br>
+ * total number of SET hits in track is the 11th element in this vector
+ * (Track::getSubdetectorHitNumbers()[10]) <br>
+ * total number of ETD hits in track is the 12th element in this vector
+ * (Track::getSubdetectorHitNumbers()[11]) <br>
  * Output track collection has by default a name "LDCTracks". 
  * In addition collection of relations of the tracks to MCParticles is stored if flag CreateMap is set to 1. 
  * Collection of relations has by default a name "LDCTracksMCP" 
@@ -67,6 +77,10 @@ using namespace marlin ;
  * (default parameter value : "SITTrackerHits") <br>
  * @param TPCHitCollection name of input TPC TrackerHit collection <br>
  * (default parameter value : "TPCTrackerHits") <br>
+ * @param SETHitCollection name of input SET TrackerHit collection <br>
+ * (default parameter value : "SETTrackerHits") <br>
+ * @param ETDHitCollection name of input ETD TrackerHit collection <br>
+ * (default parameter value : "ETDTrackerHits") <br>
  * @param TPCTracks collection name of TPC tracks <br>
  * (default parameter value : "TPCTracks") <br>
  * @param TPCTracksMCPRelColl Name of input TPC track to MC particle relation collection <br>
@@ -185,9 +199,47 @@ using namespace marlin ;
  * TPC hits to the accepted track candidates. No track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
+ * @param AssignETDHits If this flag is set to 1, the code attempts to assign  
+ * ETD hits to the accepted track candidates. No track refit is done in case when hit is assigned
+ * to the existing track <br>
+ * (default parameter value : 1) <br>
+ * @param AssignVTXHits If this flag is set to 1, the code attempts to assign left-over 
+ * VTX hits to the accepted track candidates. Track refit is done in case when hit is assigned
+ * to the existing track <br>
+ * (default parameter value : 1) <br>
+ * @param AssignFTDHits If this flag is set to 1, the code attempts to assign left-over 
+ * FTD hits to the accepted track candidates. Track refit is done in case when hit is assigned
+ * to the existing track <br>
+ * (default parameter value : 1) <br>
+ * @param AssignSITHits If this flag is set to 1, the code attempts to assign left-over 
+ * SIT hits to the accepted track candidates. Track refit is done in case when hit is assigned
+ * to the existing track <br>
+ * (default parameter value : 1) <br>
+ * @param AssignSETHits If this flag is set to 1, the code attempts to assign  
+ * SET hits to the accepted track candidates. Track refit is done in case when hit is assigned
+ * to the existing track <br>
+ * (default parameter value : 1) <br>
  * @param TPCHitToTrackDistance Cut on the distance between left-over TPC hit and the track helix
  * to allow for assignment of the hit with a given track <br>
  * (default parameter value : 15.0) <br>
+ * @param VTXHitToTrackDistance Cut on the distance between left-over VTX hit and the track helix
+ * to allow for assignment of the hit with a given track <br>
+ * (default parameter value : 1.5) <br>
+ * @param FTDHitToTrackDistance Cut on the distance between left-over FTD hit and the track helix
+ * to allow for assignment of the hit with a given track <br>
+ * (default parameter value : 2.0) <br>
+ * @param SITHitToTrackDistance Cut on the distance between left-over SIT hit and the track helix
+ * to allow for assignment of the hit with a given track <br>
+ * (default parameter value : 2.0) <br>
+ * @param SETHitToTrackDistance Cut on the distance between SET hit and the track helix
+ * to allow for assignment of the hit with a given track <br>
+ * (default parameter value : 2.0) <br>
+ * @param ETDHitToTrackDistance Cut on the distance between ETD hit and the track helix
+ * to allow for assignment of the hit with a given track <br>
+ * (default parameter value : 10.0) <br>
+ * @param NHitsExtrapolation Number of the last track hits for extrapolating helix
+ * to the outer tracking detectors (SET, ETD) <br>
+ * (default parameter value : 35) <br>
  * @param CutOnTPCHits minimal number of TPC hits, used in the track fit, which is 
  * required for tracks which have no hits from the Si detectors <br>
  * (default parameter value : 35) <br> 
@@ -232,6 +284,7 @@ class FullLDCTracking : public Processor {
   virtual void processEvent( LCEvent * evt ) ; 
   virtual void check( LCEvent * evt ) ; 
   virtual void end() ;
+
  protected:
 
   void prepareVectors( LCEvent * evt );
@@ -258,8 +311,18 @@ class FullLDCTracking : public Processor {
   void AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 			     float dcut);
 
+  void AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, float dcut, int refit);
+
+  void CreateExtrapolations();
+
+  void CleanUpExtrapolations();
+  
+  HelixClass * GetExtrapolationHelix(TrackExtended * track);
+
   void PrintOutMerging(TrackExtended * firstTrackExt, TrackExtended * secondTrackExt, 
 		       int iopt);
+
+  void GeneralSorting(int * index, float * val, int direct, int nVal);
 
   int _nRun ;
   int _nEvt ;
@@ -268,12 +331,17 @@ class FullLDCTracking : public Processor {
   std::string _SiTrackCollection;
   std::string _TPCTrackMCPCollName;
   std::string _SiTrackMCPCollName;
+
   std::string _VTXTrackerHitCollection;
   std::string _SITTrackerHitCollection;
+  std::string _SETTrackerHitCollection;
   std::string _FTDTrackerHitCollection;
   std::string _TPCTrackerHitCollection;
+  std::string _ETDTrackerHitCollection;
+
   std::string _LDCTrackCollection;
   std::string _LDCTrackMCPCollection;
+
   std::string _RefittedTPCTrackCollection;
   std::string _RefittedTPCTrackMCPCollection;
   std::string _RefittedSiTrackCollection;
@@ -289,6 +357,8 @@ class FullLDCTracking : public Processor {
   TrackerHitExtendedVec _allVTXHits;
   TrackerHitExtendedVec _allFTDHits;
   TrackerHitExtendedVec _allSITHits;
+  TrackerHitExtendedVec _allSETHits;
+  TrackerHitExtendedVec _allETDHits;
 
   float _resolutionRPhi_TPC,_resolutionZ_TPC;
   float _resolutionRPhi_VTX,_resolutionZ_VTX;
@@ -333,13 +403,19 @@ class FullLDCTracking : public Processor {
   int _storeRefittedSiTracks;
   int _storeHitsInFit;
 
+  int _nHitsExtrapolation;
+
   int _cutOnTPCHits;
 
   float _aParIpReso,_bParIpReso,_sParIpReso;
 
   int _assignVTXHits,_assignFTDHits,_assignSITHits,_assignTPCHits;
 
+  int _assignSETHits, _assignETDHits;
+
   float _distCutForVTXHits,_distCutForFTDHits,_distCutForSITHits,_distCutForTPCHits;
+
+  float _distCutForSETHits, _distCutForETDHits;
 
   int _optFitTPC,_optFitSi;
 
@@ -348,6 +424,8 @@ class FullLDCTracking : public Processor {
   int _forbidOverlapInZTPC,_forbidOverlapInZComb;
 
   LCEvent * _evt;
+
+  std::map<TrackExtended*,HelixClass*> _trackExtrapolatedHelix;
 
 } ;
 

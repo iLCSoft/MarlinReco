@@ -98,15 +98,17 @@ class VTXDigiProcessor : public Processor {
 
   std::string _colNameVTX ;
   std::string _colNameSIT ;
-  std::string _outColNameVTX;
-  std::string _outColNameSIT;
+  std::string _colNameSET ;
+  std::string _outColNameVTX ;
+  std::string _outColNameSIT ;
+  std::string _outColNameSET ;
 
   int _nRun ;
   int _nEvt ;
   int _debug;
   int _removeDRays;
-  float _pointResoRPhi,_pointResoRPhi_VTX,_pointResoRPhi_SIT;
-	float _pointResoZ,_pointResoZ_VTX,_pointResoZ_SIT;
+  float _pointResoRPhi,_pointResoRPhi_VTX,_pointResoRPhi_SIT,_pointResoRPhi_SET;
+  float _pointResoZ,_pointResoZ_VTX,_pointResoZ_SIT,_pointResoZ_SET;
   float _momCut;
 
   gsl_rng * r ;

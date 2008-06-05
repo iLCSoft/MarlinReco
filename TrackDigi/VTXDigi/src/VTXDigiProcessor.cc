@@ -49,6 +49,16 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               _pointResoZ_SIT ,
                               float(0.010));
 
+  registerProcessorParameter( "PointResolutionRPhi_SET" ,
+                              "R-Phi Resolution in SET"  ,
+                              _pointResoRPhi_SET ,
+                               float(0.010)) ;
+	
+  registerProcessorParameter( "PointResolutionZ_SET" , 
+                              "Z Resolution in SET" ,
+                              _pointResoZ_SET ,
+                              float(0.010));
+
   registerProcessorParameter( "RemoveDrays" ,
                               "Remove D-rays ?",
                               _removeDRays,
@@ -64,30 +74,43 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               _debug,
                               int(0)); 
  
+  // Input collections
   registerInputCollection( LCIO::SIMTRACKERHIT,
                            "VTXCollectionName" , 
-                           "Name of the SimTrackerHit collection"  ,
+                           "Name of the VTX SimTrackerHit collection"  ,
                            _colNameVTX ,
-                           std::string("vxd00_VXD") ) ;
+                           std::string("VXDCollection") ) ;
   
   registerInputCollection( LCIO::SIMTRACKERHIT,
                            "SITCollectionName" , 
-                           "Name of the SimTrackerHit collection"  ,
+                           "Name of the SIT SimTrackerHit collection"  ,
                            _colNameSIT ,
-                           std::string("sit00_SIT") ) ;
+                           std::string("SITCollection") ) ;
   
+  registerInputCollection( LCIO::SIMTRACKERHIT,
+                           "SETCollectionName" , 
+                           "Name of the SET SimTrackerHit collection"  ,
+                           _colNameSET ,
+                           std::string("SETCollection") ) ;
+  
+  // Output collections
   registerOutputCollection( LCIO::TRACKERHIT,
                            "VTXHitCollection" , 
                            "Name of the vxd TrackerHit output collection"  ,
                            _outColNameVTX ,
                            std::string("VTXTrackerHits") ) ;
 
-
   registerOutputCollection( LCIO::TRACKERHIT,
                             "SITHitCollection" , 
                             "Name of the sit TrackerHit output collection"  ,
                             _outColNameSIT ,
                             std::string("SITTrackerHits") ) ;
+  
+  registerOutputCollection( LCIO::TRACKERHIT,
+                            "SETHitCollection" , 
+                            "Name of the set TrackerHit output collection"  ,
+                            _outColNameSET ,
+                            std::string("SETTrackerHits") ) ;
   
 }
 
@@ -108,21 +131,25 @@ void VTXDigiProcessor::processRunHeader( LCRunHeader* run) {
 
 void VTXDigiProcessor::processEvent( LCEvent * evt ) { 
 
-  for (int iColl=0;iColl<2;++iColl) {
+  for (int iColl=0;iColl<3;++iColl) {
 
     LCCollection* STHcol = 0 ;
     try{
       if (iColl==0)
         STHcol = evt->getCollection( _colNameVTX ) ;
-      else 
+      else if (iColl==1)
         STHcol = evt->getCollection( _colNameSIT ) ;
+      else 
+        STHcol = evt->getCollection( _colNameSET ) ;
     }
     catch(DataNotAvailableException &e){
       if (_debug == 1) {
         if (iColl==0)
           std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
-        else 
+        else if (iColl==1)
           std::cout << "Collection " << _colNameSIT.c_str() << " is unavailable in event " << _nEvt << std::endl;
+        else 
+          std::cout << "Collection " << _colNameSET.c_str() << " is unavailable in event " << _nEvt << std::endl;
       }
     }
 
@@ -188,6 +215,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                 }
               //if the layer is valid, smear along the ladder
               if(UseLadders){
+                float PhiInLocal = 0;
  
                 //phi between each ladder
                 double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;
@@ -204,7 +232,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                     lPhi = layerVXD.getPhi0( layer ) + ic*deltaPhi ;
                     lPhi = correctPhiRange( lPhi ) ;
 
-                    float PhiInLocal = pPhi - lPhi;
+                    PhiInLocal = pPhi - lPhi;
                     float RXY = sqrt((pos[0]*pos[0]+pos[1]*pos[1]));
 
                     // check if point is in range of ladder
@@ -215,6 +243,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                         break;
                       }
                   }
+                _pointResoRPhi = _pointResoRPhi_VTX/cos(PhiInLocal);
+                _pointResoZ    = _pointResoZ_VTX;
 
                 //finding the smearing constant
                 double rSmear  = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
@@ -245,9 +275,11 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                   {
                     
                     //start phi for first ladder in layer
-                    double startPhi = layerVXD.getPhi0(layer) + atan( (-layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
+                    double startPhi = layerVXD.getPhi0(layer) + 
+                      atan( (-layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
                     //end phi for first ladder in layer
-                    double endPhi = layerVXD.getPhi0(layer) +  atan( (layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
+                    double endPhi = layerVXD.getPhi0(layer) +  
+                      atan( (layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
 
                     // get start and end phi for the ladder that this hit is on 
                     float sPhi = correctPhiRange( startPhi + ladderIndex*deltaPhi ) ;
@@ -291,18 +323,19 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                       }
 
                   }
-              }                       
+              }
+              
             }
      
 
             // no ladders in layers -> just smear around cylinders
             if(layerVXD.getNLadders(0) ==0 || UseLadders==false){
               
-              double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
-              double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
               _pointResoRPhi = _pointResoRPhi_VTX;
               _pointResoZ = _pointResoZ_VTX;
-              
+
+              double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
+              double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
               
               double phi = atan2(pos[1],pos[0]);
               double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
@@ -314,12 +347,20 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
           }
 
-          //SIT Smearing
+          // SIT/SET Smearing
           else {
-            double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_SIT);
-            double zSmear = gsl_ran_gaussian(r,_pointResoZ_SIT);
-            _pointResoRPhi = _pointResoRPhi_SIT;
-            _pointResoZ = _pointResoZ_SIT; 
+
+            if (iColl==1) {
+              _pointResoRPhi = _pointResoRPhi_SIT;
+              _pointResoZ = _pointResoZ_SIT;               
+            }
+            else {
+              _pointResoRPhi = _pointResoRPhi_SET;
+              _pointResoZ = _pointResoZ_SET; 
+            }
+
+            double xSmear = gsl_ran_gaussian(r,_pointResoRPhi);
+            double zSmear = gsl_ran_gaussian(r,_pointResoZ);
 
             double phi = atan2(pos[1],pos[0]);
             double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
@@ -327,6 +368,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             newPos[0] = rad*cos(phi_new);
             newPos[1] = rad*sin(phi_new);
             newPos[2] = pos[2] + zSmear;      
+
           }
         
           float de_dx ;
@@ -347,8 +389,10 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           trkHit->setdEdx( de_dx ) ;
           if (iColl==0) 
             trkHit->setType(100+celId ); 
-          else
+          else {
             trkHit->setType(400+celId);
+          }
+
           float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
           trkHit->setCovMatrix(covMat);      
           // 	  push back the SimTHit for this TrackerHit
@@ -358,9 +402,11 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
       }
       if (iColl==0) 
-         evt->addCollection( trkhitVec , _outColNameVTX ) ;
+        evt->addCollection( trkhitVec , _outColNameVTX ) ;
+      else if (iColl == 1)
+        evt->addCollection( trkhitVec , _outColNameSIT ) ;
       else 
-        evt->addCollection( trkhitVec , _outColNameSIT) ;
+        evt->addCollection( trkhitVec , _outColNameSET );
     }
   }
 

@@ -3,6 +3,24 @@
  release notes for MarlinReco
 
 ================================
+ --------
+| v00-07 |
+ --------
+
+     * improved FullLDCTracking (A.Raspereza)
+       include SET and ETD in pattern recognition and fit
+
+     * improved SiliconTracking (A.Raspereza, S.Aplin))
+        - fixed/improved FTD geometry code 
+        - improved efficiency in patrec
+ 
+     * added LDCCaloDigi package (M.Thomson)
+       calo digi code with gap corrections
+
+
+     * additional bug fixes and code cleaning
+
+       -> see Changelog for details
 
  --------
 | v00-06 |

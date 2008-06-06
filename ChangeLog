@@ -1,3 +1,118 @@
+2008-06-05 15:42  rasp
+
+	* TrackDigi/VTXDigi/include/VTXDigiProcessor.h: Updated version of
+	  VTXDigiProcessor. Contains digitization of SET hits
+
+2008-06-05 15:41  rasp
+
+	* TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: Updated version of
+	  VTXDigiProcessor. Includes digitization of SET hits
+
+2008-06-05 15:40  rasp
+
+	* Tracking/SiliconTracking/: include/MaterialDB.h,
+	  src/MaterialDB.cc: Updated version of MaterialDB processor.
+	  Contains description of SET device
+
+2008-06-05 15:36  rasp
+
+	* Tracking/SiliconTracking/: include/SiliconTracking.h,
+	  src/SiliconTracking.cc: Updated version of SiliconTracking
+	  processor. A flag has been introduced to enable/disable fast
+	  procedure of hit assignment to helicies defined by hit triplets
+
+2008-06-05 15:32  rasp
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc: Updated version of FullLDCTracking. The
+	  SET and ETD devices are included in pattern recognition
+
+2008-05-29 23:33  aplin
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc: reduced
+	  verbosity
+
+2008-05-29 17:56  aplin
+
+	* Tracking/SiliconTracking/: include/SiliconTracking.h,
+	  src/SiliconTracking.cc: A.R.: Added phi binning in FTD Track
+	  Search
+
+2008-05-28 09:01  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trkfnd.F: reduced verbosity
+
+2008-05-27 18:10  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: removed stupid
+	  \^M\'s
+
+2008-05-27 18:04  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tpcsav.F: remove debug output
+
+2008-05-26 15:23  aplin
+
+	* Tracking/BrahmsTracking/: include/CurlKillerProcessor.h,
+	  src/CurlKillerProcessor.cc: pad sizes are no longer processor
+	  parameters, but are taken from GEAR
+
+2008-05-20 10:48  aplin
+
+	* Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc,
+	  Analysis/SatoruJetFinder/src/SatoruJetFinderProcessor.cc,
+	  Calibration/AbsCalibration/include/Calibration.h,
+	  Calibration/AbsCalibration/src/AbsCalibr.cc,
+	  CaloDigi/LDCCaloDigi/src/LDCCaloDigi.cc,
+	  Clustering/ClusterCheater5_3/src/ClusterCheater5_3.cc,
+	  Clustering/PhotonFinderKit/src/KITutil.cc,
+	  Tracking/BrahmsTracking/src/f77/setmat.F,
+	  Tracking/SiliconTracking/src/MaterialDB.cc: cleaned up and added
+	  includes to make gcc4.3 compliant
+
+2008-05-19 13:05  thomson
+
+	* CaloDigi/LDCCaloDigi/include/LDCCaloDigi.h: Header files for calo
+	  digi code with gap corrections
+
+2008-05-19 13:04  thomson
+
+	* CaloDigi/LDCCaloDigi/src/LDCCaloDigi.cc: New calorimeter
+	  digitisation which includes gap corrections for the ECAL
+
+2008-05-07 18:58  aplin
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: Provided the ability
+	  to deal with both the old SupportRing and new SupportDisk FTD
+	  detector options
+
+2008-05-06 18:37  aplin
+
+	* Tracking/SiliconTracking/: include/MaterialDB.h,
+	  src/MaterialDB.cc: Updated geometry of the FTD to represent that
+	  which is built by the SFtd03 Driver, i.e. with the Si disks
+	  supported by kapton disks and not the support rings as before.
+	  Also added gear exceptions for possible sources of error in the
+	  gear file.
+
+2008-05-06 12:15  gaede
+
+	* Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc: use
+	  streamlog_message() macro for efficiency
+
+2008-05-02 14:44  harderk
+
+	* Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc: prevent
+	  crashes in debug mode due to MCParticles without parents
+
+2008-04-29 10:00  engels
+
+	* src/CMakeLists.txt: added 64 bit path for g2c lib
+
+2008-04-18 15:51  gaede
+
+	* ChangeLog: ----------------- v00-06 --------------------
+
 2008-04-18 15:31  gaede
 
 	* CMakeLists.txt, doc/release.notes: ------------- version v00-06

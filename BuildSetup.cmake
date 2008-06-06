@@ -3,15 +3,20 @@
 #
 # For building MarlinUtil with cmake:
 #
-# (0) --  modify the pathes and versions of the software packages !!!!
+# (0) --  modify the pathes and versions of the software packages !!
 #
 # (1) $ mkdir build
 # (2) $ cd build
-# (3) $ cmake -C ../BuildSetup.cmake ..
+# (3) $ cmake -C ../BuildSetup.cmake -C ..
+#
+#     --   or use reference installation to overwrite w/ current versions  :
+#
+#    $ cmake -C ../BuildSetup.cmake -C /afs/desy.de/group/it/ilcsoft/vYY-XX/ILCSoft.cmake ..
 # (4) $ make install
 #
 # @author Jan Engels, DESY
 #############################################################################
+
 
 #############################################################################
 # Setup path variables  <<<< MODIFY ACCORDINGLY !!!!!!

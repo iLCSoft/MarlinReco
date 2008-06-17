@@ -732,10 +732,10 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
       // For no error in r
 
-      double rSqrd = hit->getPosition()[0] * hit->getPosition()[0] + hit->getPosition()[1] * hit->getPosition()[1];
-      double phi = atan(hit->getPosition()[1]/hit->getPosition()[0]); 
-      double tpcRPhiRes = sqrt((hit->getCovMatrix()[2])/(rSqrd*cos(phi)*cos(phi)));
+      double phi = atan2(hit->getPosition()[1],hit->getPosition()[0]); 
+      double tpcRPhiRes = sqrt((hit->getCovMatrix()[2])/(cos(phi)*cos(phi)));
       double tpcZRes = sqrt(hit->getCovMatrix()[5]);
+
  
       // f77 tracking code works in cm
 //       tpcRPhiRes = 0.1 * tpcRPhiRes;

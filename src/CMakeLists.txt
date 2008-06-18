@@ -18,8 +18,9 @@ SET( MarlinReco_PKGS
     "Clustering/PhotonFinderKit"
     "Pflow/Wolf"
     "Pflow/TrackBasedPFlow"
-    "TrackDigi/FTDDigi"
     "TrackDigi/TPCDigi"
+    "TrackDigi/FTDDigi"
+    "TrackDigi/ETDDigi"
     "TrackDigi/VTXDigi"
     "Tracking/BrahmsTracking"
     "Tracking/FullLDCTracking"
@@ -225,6 +226,18 @@ SET_SOURCE_FILES_PROPERTIES( ${FTDDigi_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( FTDDigi_srcs ${FTDDigi_cxx_srcs} )
+
+####################################################################################################
+# ETDDigi
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../TrackDigi/ETDDigi/src ETDDigi_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${ETDDigi_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( ETDDigi_srcs ${ETDDigi_cxx_srcs} )
 
 ####################################################################################################
 # TPCDigi

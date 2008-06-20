@@ -1,6 +1,6 @@
-/* cfortran.h  4.3 */
+/* cfortran.h  4.4 */
 /* http://www-zeus.desy.de/~burow/cfortran/                   */
-/* Burkhard Burow  burow@desy.de                 1990 - 2001. */
+/* Burkhard Burow  burow@desy.de                 1990 - 2002. */
 
 #ifndef __CFORTRAN_LOADED
 #define __CFORTRAN_LOADED
@@ -10,6 +10,29 @@
    SHOULD ALSO HAVE ACCESS TO CFORTRAN.DOC WHICH PROVIDES TERMS FOR USING,
    MODIFYING, COPYING AND DISTRIBUTING THE CFORTRAN.H PACKAGE.
 */
+
+/* The following modifications were made by the authors of CFITSIO. 
+ * I've flagged them below with "(CFITSIO)".
+ * PDW = Peter Wilson
+ * DM  = Doug Mink
+ * LEB = ??
+ * -- Kevin McCarty, for Debian (03/03/2003) */
+
+/*******
+   Modifications:
+      Oct 1997: Changed symbol name extname to appendus (PDW/HSTX)
+                (Conflicted with a common variable name in FTOOLS)
+      Nov 1997: If g77Fortran defined, also define f2cFortran (PDW/HSTX)
+      Feb 1998: Let VMS see the NUM_ELEMS code. Lets programs treat
+                single strings as vectors with single elements
+      Nov 1999: If macintoxh defined, also define f2cfortran (for Mac OS-X)
+      Apr 2000: If WIN32 defined, also define PowerStationFortran and
+                VISUAL_CPLUSPLUS (Visual C++)
+      Jun 2000: If __GNUC__ and linux defined, also define f2cFortran
+                (linux/gcc environment detection)
+      Apr 2002: If __CYGWIN__ is defined, also define f2cFortran
+      Nov 2002: If __APPLE__ defined, also define f2cfortran (for Mac OS-X)
+ *******/
 
 /* 
   Avoid symbols already used by compilers and system *.h:
@@ -90,6 +113,27 @@ only C calling FORTRAN subroutines will work using K&R style.*/
                            Support f2c or f77 with gcc, vcc with f2c. 
                            f77 with vcc works, missing link magic for f77 I/O.*/
 #endif
+/* 04/13/00 DM (CFITSIO): Add these lines for NT */
+/*   with PowerStationFortran and and Visual C++ */
+#if defined(WIN32) && !defined(__CYGWIN__)
+#define PowerStationFortran   
+#define VISUAL_CPLUSPLUS
+#endif
+#if defined(g77Fortran)                        /* 11/03/97 PDW (CFITSIO) */
+#define f2cFortran
+#endif
+#if        defined(__CYGWIN__)                 /* 04/11/02 LEB (CFITSIO) */
+#define       f2cFortran 
+#endif
+#if        defined(__GNUC__) && defined(linux) /* 06/21/00 PDW (CFITSIO) */
+#define       f2cFortran 
+#endif
+#if defined(macintosh)                         /* 11/1999 (CFITSIO) */
+#define f2cFortran
+#endif
+#if defined(__APPLE__)                         /* 11/2002 (CFITSIO) */
+#define f2cFortran
+#endif
 #if defined(__hpux)             /* 921107: Use __hpux instead of __hp9000s300 */
 #define       hpuxFortran       /*         Should also allow hp9000s7/800 use.*/
 #endif
@@ -131,6 +175,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 #if !(defined(mipsFortran)||defined(DECFortran)||defined(vmsFortran)||defined(CONVEXFortran)||defined(PowerStationFortran)||defined(AbsoftUNIXFortran)||defined(AbsoftProFortran)||defined(SXFortran))
 /* If your compiler barfs on ' #error', replace # with the trigraph for #     */
  #error "cfortran.h:  Can't find your environment among:\
+    - GNU gcc (g77) on Linux.                                            \
     - MIPS cc and f77 2.0. (e.g. Silicon Graphics, DECstations, ...)     \
     - IBM AIX XL C and FORTRAN Compiler/6000 Version 01.01.0000.0000     \
     - VAX   VMS CC 3.1 and FORTRAN 5.4.                                  \
@@ -164,7 +209,8 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 
 /* Throughout cfortran.h we use: UN = Uppercase Name.  LN = Lowercase Name.   */
 
-#if defined(f2cFortran) || defined(NAGf90Fortran) || defined(DECFortran) || defined(mipsFortran) || defined(apolloFortran) || defined(sunFortran) || defined(CONVEXFortran) || defined(SXFortran) || defined(extname)
+/* "extname" changed to "appendus" below (CFITSIO) */
+#if defined(f2cFortran) || defined(NAGf90Fortran) || defined(DECFortran) || defined(mipsFortran) || defined(apolloFortran) || defined(sunFortran) || defined(CONVEXFortran) || defined(SXFortran) || defined(appendus)
 #define CFC_(UN,LN)            _(LN,_)      /* Lowercase FORTRAN symbols.     */
 #define orig_fcallsc(UN,LN)    CFC_(UN,LN)
 #else 
@@ -268,7 +314,8 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 #endif
 
 #ifndef apolloFortran
-#define COMMON_BLOCK_DEF(DEFINITION, NAME) extern DEFINITION NAME
+/* "extern" removed (CFITSIO) */
+#define COMMON_BLOCK_DEF(DEFINITION, NAME) /* extern */ DEFINITION NAME
 #define CF_NULL_PROTO
 #else                                         /* HP doesn't understand #elif. */
 /* Without ANSI prototyping, Apollo promotes float functions to double.    */
@@ -512,7 +559,7 @@ typedef DSC$DESCRIPTOR_A(1) fstringvector;
                     *( (F).dsc$l_m[0]=(F).dsc$bounds[0].dsc$l_u=(ELEMNO)  ),   \
   (F).dsc$a_a0    =  ( (F).dsc$a_pointer=(C) ) - (F).dsc$w_length          ,(F))
 
-#else
+#endif      /* PDW: 2/10/98 (CFITSIO) -- Let VMS see NUM_ELEMS definitions */
 #define _NUM_ELEMS      -1
 #define _NUM_ELEM_ARG   -2
 #define NUM_ELEMS(A)    A,_NUM_ELEMS
@@ -540,7 +587,8 @@ for (num=0; ; num++) {
 }
 return (int)num;
 }
-#endif
+/* #endif removed 2/10/98 (CFITSIO) */
+
 /*-------------------------------------------------------------------------*/
 
 /*           UTILITIES FOR C TO USE STRINGS IN FORTRAN COMMON BLOCKS       */
@@ -651,8 +699,8 @@ typedef void (*cfCAST_FUNCTION)(CF_NULL_PROTO);
 #define   PSTRINGV_cfV(T,A,B,F) static fstringvector B =                       \
           {0,DSC$K_DTYPE_T,DSC$K_CLASS_A,NULL,0,0,{0,0,1,1,1},1,0,NULL,0,{1,0}};
 #else
-#define     STRING_cfV(T,A,B,F) struct {unsigned int clen, flen;} B;
-#define    STRINGV_cfV(T,A,B,F) struct {char *s, *fs; unsigned flen;} B;
+#define     STRING_cfV(T,A,B,F) struct {unsigned int clen, flen; char *nombre;} B;
+#define    STRINGV_cfV(T,A,B,F) struct {char *s, *fs; unsigned flen; char *nombre;} B;
 #define    PSTRING_cfV(T,A,B,F) int     B;
 #define   PSTRINGV_cfV(T,A,B,F) struct{char *fs; unsigned int sizeofA,flen;}B;
 #endif
@@ -770,7 +818,7 @@ typedef void (*cfCAST_FUNCTION)(CF_NULL_PROTO);
 #define  DEFAULT_cfW(A,B)
 #define  LOGICAL_cfW(A,B)
 #define PLOGICAL_cfW(A,B) *B=F2CLOGICAL(*B);
-#define   STRING_cfW(A,B) (A[B.clen]!='\0'?A[B.clen]='\0':0); /* A?="constnt"*/
+#define   STRING_cfW(A,B) (B.nombre=A,B.nombre[B.clen]!='\0'?B.nombre[B.clen]='\0':0); /* A?="constnt"*/
 #define  PSTRING_cfW(A,B) kill_trailing(A,' ');
 #ifdef vmsFortran
 #define  STRINGV_cfW(A,B) _cf_free(B.dsc$a_pointer);
@@ -1673,9 +1721,9 @@ do{VVCF(T1,A1,B1)  VVCF(T2,A2,B2)  VVCF(T3,A3,B3)  VVCF(T4,A4,B4)  VVCF(T5,A5,B5
              B.dsc$w_length=strlen(A):  (A[C-1]='\0',B.dsc$w_length=strlen(A), \
        memset((A)+B.dsc$w_length,' ',C-B.dsc$w_length-1), B.dsc$w_length=C-1));
 #else
-#define   STRING_cfC(M,I,A,B,C) (B.clen=strlen(A),                             \
+#define   STRING_cfC(M,I,A,B,C) (B.nombre=A,B.clen=strlen(A),                             \
                 C==sizeof(char*)||C==(unsigned)(B.clen+1)?B.flen=B.clen:       \
-                        (memset((A)+B.clen,' ',C-B.clen-1),A[B.flen=C-1]='\0'));
+                        (memset(B.nombre+B.clen,' ',C-B.clen-1),B.nombre[B.flen=C-1]='\0'));
 #define  PSTRING_cfC(M,I,A,B,C) (C==sizeof(char*)? B=strlen(A):                \
                     (A[C-1]='\0',B=strlen(A),memset((A)+B,' ',C-B-1),B=C-1));
 #endif

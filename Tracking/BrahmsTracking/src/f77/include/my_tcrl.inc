@@ -1,7 +1,10 @@
 *  
-* $Id: my_tcrl.inc,v 1.3 2006-02-07 10:55:12 owendt Exp $
+* $Id: my_tcrl.inc,v 1.4 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2006/02/07 10:55:12  owendt
+* changed NMAXROW from 1000 to 2000 to ensure stable tracking with Mokka 5.04
+*
 * Revision 1.2  2005/08/09 10:27:50  aplin
 * increased the maximum number of hits in one row to 1000 ( NMAXROW = 1000 in src/f77/include/my_tcrl.inc ) , and ensured the tracking is skipped in the event when this number of hits is exceeded (tcobin.F).
 *
@@ -18,6 +21,8 @@
 * Brahms V308
 *
 *  
+#include "padrow.inc"
+
       INTEGER NMAXROW
 *      PARAMETER(NMAXROW=1000)
 *      changed to 2000 because of released energy cut in Mokka	 	

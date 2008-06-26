@@ -1,7 +1,10 @@
 *  
-* $Id: fkster.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: fkster.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -153,7 +156,9 @@
         IRNKXY=MIN0(3,IRNKXY+NQXY)
         IRNKZ=MIN0(2,IRNKZ+NQZ)
       else
-         print*,'FKCTOW error',ierr
+         IF(IDEB.GE.2) THEN
+            print*,'FKCTOW error',ierr
+         ENDIF
       ENDIF
 *
       END

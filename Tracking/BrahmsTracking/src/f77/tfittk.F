@@ -1,7 +1,10 @@
 *  
-* $Id: tfittk.F,v 1.2 2005-08-08 07:09:13 aplin Exp $
+* $Id: tfittk.F,v 1.3 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/08 07:09:13  aplin
+* Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -70,6 +73,7 @@ C?    IF NEITHER MASSAGE HELPS, THE TRACK CANDIDATE (OR A PIECE
 C?    THEREOF IN CASE OF A KINK) IS THROWN AWAY.
 C?
 C-------------------------------------------------------------------
+#include "include/padrow.inc"
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 #include "include/tpgeom.inc"
@@ -88,14 +92,16 @@ C(KH) +SEQ,TFTKWB.
 c----------------------------------------------------------------------
       REAL VV0(5),EE0(15),CHI2
       INTEGER MLIST
-      PARAMETER (MLIST=300)
+      PARAMETER (MLIST=LTPDRO)
       INTEGER LIST(MLIST)
 C------------------------------------------------------------------------
       LOGICAL FIRST
-C(KH) REAL    DCHI2(LTPDRO)
-C(KH) INTEGER IBUFF(LTPDRO)
-      REAL    DCHI2(500)
-      INTEGER IBUFF(500)
+      REAL    DCHI2(LTPDRO)
+      INTEGER IBUFF(LTPDRO)
+C(SJA) DCHI2 and IBUFF should be of the same dimention as the max number of tpcrows
+C(SJA)      REAL    DCHI2(500)
+C(SJA)      INTEGER IBUFF(500)
+
       DATA FIRST/.TRUE./
 
       INTEGER IWORST(MAXCND)
@@ -108,6 +114,7 @@ C(KH) INTEGER IBUFF(LTPDRO)
 
       REAL PROB
       EXTERNAL PROB
+
 
 cC-----> OBTAIN LIST AND NUMBER OF POINTS FOR TRACK CANDIDATE 'I'
 c GAB:
@@ -136,6 +143,8 @@ c        NTTCC = NAMIND('TTCC')
 c        NTPCO = NAMIND('TPCO')
 c        FIRST = .FALSE.
 c      END IF
+
+
       IER = 0
 
        NT1FT=0

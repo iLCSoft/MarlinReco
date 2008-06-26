@@ -1,7 +1,10 @@
 *  
-* $Id: uctgft.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: uctgft.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -47,6 +50,7 @@ C
 C
 C----------------------------------------------------------------
 C My Stuff:
+#include "include/padrow.inc"
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 #include "include/my_tcal.inc"
@@ -57,7 +61,7 @@ C My Stuff:
 #include "include/tpcmatpar.inc"
 
        INTEGER J,NTR,NOFF,NTPC,K,LIST2(2),LIST3(2),IERR,IERR2
-       INTEGER LIST1(200),NMULT
+       INTEGER LIST1(LTPDRO),NMULT
 
        REAL CURSAVE,D0SAVE,CHI2
 C----------------------------------------------------------------
@@ -83,6 +87,8 @@ C       KT1FT=IW(NT1FT)
 c GAB:
 C       IF (KT1FT.EQ.0) RETURN
 C       NTR=LROWS(KT1FT)
+
+
        IF (NT1FT.EQ.0) RETURN
        NTR=NT1FT
 
@@ -96,6 +102,8 @@ C         CALL BDROP(IW,'T1FTT1TLT1CL')
 C         RETURN
 C       ENDIF
 
+      
+
        DO 1 J=1,NTR
 C GAB:
 C         IT1FT=KROW(KT1FT,J)
@@ -103,19 +111,24 @@ C         CURSAVE = RW(IT1FT+JT1FIR)
 C         D0SAVE  = RW(IT1FT+JT1FD0)
 C         NOFF=ITABL(KT1TL,J,JT1TIO)
 C         NTPC=ITABL(KT1TL,J,JT1TN1)
+
+c          write(*,*) "setting CURSAVE,D0SAVE,NOFF,NTPC"
          CURSAVE = MY_JT1FIR(J)
          D0SAVE  = MY_JT1FD0(J)
          NOFF=MY_JT1TIO(J)
          NTPC=MY_JT1TN1(J)
 c GAB:
+
          DO K=1,NTPC
           LIST1(K)=MY_T1CLT(NOFF+K)
          ENDDO
+
 
 C         CALL UFITMS(NTPC,0,0,IW(KT1CL+LMHLEN+NOFF+1),LIST2,LIST3,2,1
 C     &        ,29.6,.027,VV0,EE0,COV,CHI2,IERR)
 c
          NMULT=1
+
 
          CALL UFITMS(NTPC,0,0,LIST1,LIST2,LIST3,2,NMULT
      &        ,RMS,RADLEN,VV0,EE0,COV,CHI2,IERR)

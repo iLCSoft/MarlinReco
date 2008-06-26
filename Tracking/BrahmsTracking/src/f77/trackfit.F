@@ -1,7 +1,10 @@
 *  
-* $Id: trackfit.F,v 1.3 2007-09-05 09:47:29 rasp Exp $
+* $Id: trackfit.F,v 1.4 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.1  2006/11/02 12:04:59  rasp
 *
 * New fitting routine used in SiliconTracking and FullLDCTracking processors
@@ -73,6 +76,7 @@
 *
 **********************************************************************
       IMPLICIT NONE
+#include "include/padrow.inc"
 #include "include/bkgmode.inc"
 #include "include/tkconst.inc"
 #include "include/fkparm.inc"
@@ -90,7 +94,7 @@ c#include "gcbank.inc"
 C#include "include/fkcom.inc"
 C.....max number of hits per track
       INTEGER NHTMAX
-      PARAMETER (NHTMAX=400)
+      PARAMETER (NHTMAX=LTPDRO)
       INTEGER IH,NHITS
       REAL XHIT(*),YHIT(*),ZHIT(*)
       INTEGER ITYPE(*),IDET(*)
@@ -143,6 +147,8 @@ C.....max number of hits per track
 #include "include/tkfunc.inc"
 #include "include/fkddes.inc"
 
+c      write(*,*) "hello I'm about to run trackfit @$@#$#@$@#$@#$@#$"
+
       N = NHITS
 
 C.....check range
@@ -153,6 +159,7 @@ C.....check range
       END IF
       IF (N.LT.3) THEN
          WRITE(6,*) 'TKMKTE: too few hits'
+ 
          IERR=-2
          GOTO 999
       END IF
@@ -208,8 +215,8 @@ C.......calculate position and covariance matrix for desired detector type
           IMPNT=1     ! cylinder coordinates
      >        +4+8+16 ! 3 coordinates of reference point measured
      >        +32+64  ! covariance matrix for r and rphi
-c$$$          WRITE(*,23) ILOC,IDET(IH),HIT(1),HIT(2),HIT(3),
-c$$$     >                              COV(1),COV(3)
+c          WRITE(*,23) ILOC,IDET(IH),HIT(1),HIT(2),HIT(3),
+c     >                              COV(1),COV(3)
         ELSE
           ! forward detector (planar)
           POS(1)=SQRT(HIT(1)**2+HIT(2)**2)
@@ -225,8 +232,8 @@ c$$$     >                              COV(1),COV(3)
           IMPNT= 0     ! cartesian coordinates
      >         +4+8+16 ! 3 coordinates of reference point measured
      >         +32+64  ! covariance matrix for x and y
-c$$$          WRITE(*,24) ILOC,IDET(IH),HIT(1),HIT(2),HIT(3),
-c$$$     >                              COV(1),COV(3)
+c          WRITE(*,24) ILOC,IDET(IH),HIT(1),HIT(2),HIT(3),
+c     >                              COV(1),COV(3)
         END IF
  23     FORMAT(I4,' VTX HIT : IDET = ',I2,
      >                      ' R = ',F6.2,' P = ',F6.2,' Z = ',F6.2,
@@ -266,7 +273,7 @@ C.....reference trajectory
  100  IF (REF(1).EQ.0.0) THEN
 C       create one using FKREF
 CSJAWRT
-C        write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
+c        write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
         CALL FKREF(ILOC,RTELOC,RTSREF,ITSREF)
       ELSE
 C       use parameters given by calling function
@@ -534,6 +541,7 @@ c     >         RTELOC(10,I)*SIN(RTELOC(11,I)/RTELOC(10,I)),1.0)
         END DO
       END IF
 
+      call flush
       RETURN
       END
 

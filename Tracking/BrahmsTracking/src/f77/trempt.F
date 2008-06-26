@@ -1,7 +1,10 @@
 *  
-* $Id: trempt.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: trempt.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -44,8 +47,10 @@ C?    CHI**2 IS MINIMAL. THE INPUT ARGUMENTS REMAIN UNCHANGED
 C------------------------------------------------------------------
 C My stuff:
 
+#include "include/padrow.inc"
+
       INTEGER MPT
-      PARAMETER(MPT=500)
+      PARAMETER(MPT=LTPDRO)
       DOUBLE PRECISION XF(MPT),YF(MPT),WF(MPT)
       REAL RF(MPT),PF(MPT),ZF(MPT),WZF(MPT)
 

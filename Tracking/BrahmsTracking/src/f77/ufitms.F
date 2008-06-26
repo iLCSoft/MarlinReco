@@ -1,7 +1,10 @@
 *  
-* $Id: ufitms.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: ufitms.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -71,8 +74,9 @@ C                                   Newtonian step
 C?
 C!======================================================================
 c GAB
+#include "include/padrow.inc"
 c      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=80,NINT0=4)
-      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=500,NINT0=4)
+      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=LTPDRO,NINT0=4)
 
       PARAMETER (SCACO=.0160 , ALPD = .0141)
 #include "include/fndparms.inc"
@@ -132,9 +136,10 @@ C            WRITE(IW(6),*) 'DO NOT CALL FITMS WITHOUT MAGNETIG FIELD'
       N=N1+N2+N3
       NDIM = 5
       IF (IOPT.GT.2) NDIM=6
-
+      
       IF(N.GT.MPT) GOTO 999
       IF(N.LT.3)   GOTO 999
+
 
 C
 C-----> INPUT DATA
@@ -204,6 +209,8 @@ C           CIRCLE FIT IN THE [X,Y] PLANE                       C
 C           =============================                       C
 C                                                               C
 C***************************************************************C
+      
+      
       WSUM= 0.0
       RSS = 0.0
       PRO = 0.0
@@ -661,6 +668,7 @@ C-----> CALCULATION CHI**2
       GOTO 1000
  999  CHI2 = 1.E30
       IERR =  1
+
 1000  CALL VZERO(EE0,21)
       CALL VZERO(COV,21)
 
@@ -678,6 +686,7 @@ C     TAKING STANDAR ERRORS FOR A PARTICLE OF 3 GEV
       EE0(10)=1./COV(10)
       EE0(15)=1./COV(15)
       IF(NDIM.EQ.6) EE0(21)=1./COV(21)
+
       RETURN
       END
 C-----------------------------------------------------------------------

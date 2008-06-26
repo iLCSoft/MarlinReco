@@ -1,7 +1,24 @@
 *  
-* $Id: tflnks.F,v 1.5 2008-01-23 17:22:22 aplin Exp $
+* $Id: tflnks.F,v 1.6 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.4  2006/02/24 16:36:55  aplin
 * increased NMXHTRW again by a factor of 2 in thitsrt.F
 * increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
@@ -70,6 +87,8 @@ C!    a spiraling particle.
 C-------------------------------------------------------------------C
 
 C
+#include "include/tkffread.inc"
+#include "include/padrow.inc"
 #include "include/fndparms.inc"
 #include "include/alcons.inc"
 #include "include/tpco.inc"
@@ -93,7 +112,7 @@ C GAB: for fitting chains:
 
       INTEGER MPT
 c(KH) PARAMETER(MPT=200)
-      PARAMETER(MPT=500)
+      PARAMETER(MPT=LTPDRO)
       DOUBLE PRECISION XF(MPT),YF(MPT),WF(MPT)
       REAL RF(MPT),PF(MPT),ZF(MPT),WZF(MPT)
 
@@ -109,8 +128,8 @@ C      PARAMETER(MCAND=900,EPS=0.0000001)
 C(KH) INTEGER LILLY(LTPDRO)
 
 C changed LILLY(500) to LILLY(2000) because of released energy cut in Mokka 5.04
-C      INTEGER LILLY(500)
-      INTEGER LILLY(500)
+C(SJA) set back to LTPDRO to ensure control over all max row based arrays
+      INTEGER LILLY(LTPDRO)
       REAL VAL(5),ERR(15)
 c GAB:
 c      INTEGER IBUF1(MCAND),IBUF2(MCAND),IPATL(MCAND)
@@ -261,7 +280,7 @@ c GAB:
 C GAB:
       DO 10 I=1,MY_NCHAIN
         IF (NCNDU.EQ.MCAND) THEN
-         WRITE(*,*)' TFLNKS: MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)' TFLNKS: MCAND too small'
          CALL TKVETO(1)
          GO TO 11
         ENDIF
@@ -275,7 +294,7 @@ C GAB:
 
 C GAB:
         IF(NCNDU.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -304,7 +323,7 @@ c GAB:
 c      DO 20 I=1,LROWS(KTCHA)
       DO 20 I=1,MY_NCHAIN
         IF (NCNDL.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 21
         ENDIF
@@ -347,7 +366,7 @@ C GAB:
 C GAB:
         NCNDL = NCNDL+1
         IF(NCNDL.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -626,7 +645,7 @@ c GAB:
 c      DO 110 I=1,LROWS(KTCHA)
       DO 110 I=1,MY_NCHAIN
         IF (NCNDL.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 110
         ENDIF
@@ -646,7 +665,7 @@ c        IF (ITABL(KTLNK,I,JTLNUP).NE.0)            GO TO 110
 C GAB:
         NCNDL = NCNDL+1
         IF(NCNDL.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -811,7 +830,7 @@ c      DO 120 I=1,LROWS(KTCHA)
       DO 120 I=1,MY_NCHAIN
 
         IF (NCNDR.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 120
         ENDIF
@@ -832,7 +851,7 @@ c        IF (ITABL(KTLNK,I,JTLNUP).NE.0)            GO TO 120
 
 C GAB:
         IF(NCNDR.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -1001,8 +1020,10 @@ C
           K2     = IBUF2(ICNDR)
 C(KH)----bug workaround
           IF ((EALP(K1).EQ.0.0).OR.(EALP(K2).EQ.0.0)) THEN
+             IF(TKSTDBG.GT.0) THEN
              WRITE(6,*) 'TFLNKS: internal error. k1,k2,ealp(k1),'//
      >                  'ealp(k2)=',k1,k2,ealp(k1),ealp(k2)
+             ENDIF
              CALL TKVETO(1)
              GO TO 130
           END IF
@@ -1059,7 +1080,7 @@ C GAB:
 C      DO 210 I=1,LROWS(KTCHA)
       DO 210 I=1,MY_NCHAIN
         IF (NCNDL.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 210
         ENDIF
@@ -1080,7 +1101,7 @@ c        IF (ITABL(KTLNK,I,JTLNDN).NE.0)            GO TO 210
 
 C GAB:
         IF(NCNDL.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -1113,7 +1134,7 @@ c        IF (ITABL(KTLNK,I,JTLNDN).NE.0)             GO TO 220
 
 C GAB:
         IF(NCNDR.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -1142,13 +1163,18 @@ C
           K2     = IBUF2(ICNDR)
 C(KH) ---- bug workaround
           IF ((K1.EQ.0).OR.(K2.EQ.0)) THEN
-             WRITE(6,*) 'TFLNKS: internal error. k1,k2=',k1,k2
+             IF(TKSTDBG.GT.0) THEN
+                WRITE(6,*) 'TFLNKS: internal error. k1,k2=',k1,k2
+             ENDIF
              CALL TKVETO(1)
              GO TO 230
           END IF
           IF ((EDD0(K1).EQ.0.0).OR.(EDD0(K2).EQ.0.0)) THEN
-             WRITE(6,*) 'TFLNKS: internal error 230. k1,k2,edd0(k1),'//
-     >                  'edd0(k2)=',k1,k2,edd0(k1),edd0(k2)
+             IF(TKSTDBG.GT.0) THEN
+                WRITE(6,*) 'TFLNKS: internal error 230. '//
+     >               'k1,k2,edd0(k1),edd0(k2)='
+     >               ,k1,k2,edd0(k1),edd0(k2)
+                ENDIF
              CALL TKVETO(1)
              GO TO 230
           END IF
@@ -1202,7 +1228,7 @@ C GAB:
 C      DO 310 I=1,LROWS(KTCHA)
       DO 310 I=1,MY_NCHAIN
         IF (NCNDL.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+           IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 310
         ENDIF
@@ -1223,7 +1249,7 @@ C        IF (ITABL(KTLNK,I,JTLNDN).NE.0)             GO TO 310
 
 C GAB:
         IF(NCNDL.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -1256,7 +1282,7 @@ C        IF (ITABL(KTLNK,I,JTLNDN).NE.0)            GO TO 320
 
 C GAB:
         IF(NCNDR.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN
@@ -1281,8 +1307,11 @@ C
           K2 = IBUF2(ICNDR)
 C(KH)----bug workaround
           IF ((EDD0(K1).EQ.0.0).OR.(EDD0(K2).EQ.0.0)) THEN
-             WRITE(6,*) 'TFLNKS: internal error 330. k1,k2,edd0(k1),'//
-     >                  'edd0(k2)=',k1,k2,edd0(k1),edd0(k2)
+             IF(TKSTDBG.GT.0) THEN
+                WRITE(6,*) 'TFLNKS: internal error 330. '//
+     >               'k1,k2,edd0(k1),edd0(k2)='
+     >               ,k1,k2,edd0(k1),edd0(k2)
+             ENDIF
              CALL TKVETO(1)
              GO TO 330
           END IF
@@ -1335,7 +1364,7 @@ C GAB:
 C      DO 410 I=1,LROWS(KTCHA)
       DO 410 I=1,MY_NCHAIN
         IF (NCNDU.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS: MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS: MCAND too small'
          CALL TKVETO(1)
          GO TO 410
         ENDIF
@@ -1367,7 +1396,7 @@ C GAB:
 c      DO 420 I=1,LROWS(KTCHA)
       DO 420 I=1,MY_NCHAIN
         IF (NCNDL.EQ.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          GO TO 420
         ENDIF
@@ -1411,7 +1440,7 @@ C        Z2= TPCHITS(3,LSTCO)
         IF (ZEXT.GT.ZDRIFT)                             GO TO 420
         NCNDL = NCNDL + 1
         IF(NCNDL.GT.MCAND)THEN
-         WRITE(*,*)'TFLNKS:MCAND too small'
+         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
          CALL TKVETO(1)
          IER=1
          RETURN

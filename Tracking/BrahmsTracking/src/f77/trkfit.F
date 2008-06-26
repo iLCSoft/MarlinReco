@@ -1,7 +1,10 @@
 *  
-* $Id: trkfit.F,v 1.3 2007-09-05 09:47:29 rasp Exp $
+* $Id: trkfit.F,v 1.4 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.1  2006/11/02 12:04:59  rasp
 *
 * New fitting routine used in SiliconTracking and FullLDCTracking processors
@@ -61,6 +64,7 @@
 *
 **********************************************************************
       IMPLICIT NONE
+#include "include/padrow.inc"
 #include "include/bkgmode.inc"
 #include "include/tkconst.inc"
 #include "include/fkparm.inc"
@@ -77,7 +81,7 @@ c#include "gcbank.inc"
 
 C.....max number of hits per track
       INTEGER NHTMAX
-      PARAMETER (NHTMAX=500)
+      PARAMETER (NHTMAX=LTPDRO)
       INTEGER IH,NHITS
       REAL XHIT(*),YHIT(*),ZHIT(*)
       INTEGER ITYPE(*),IDET(*)

@@ -1,7 +1,10 @@
 *  
-* $Id: fkctow.F,v 1.2 2005-08-03 19:07:46 aplin Exp $
+* $Id: fkctow.F,v 1.3 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2005/08/03 19:07:46  aplin
+* expanded error message
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -66,10 +69,14 @@
       ELSE
         CALL FKMI5D(COV,WGP,IERR)
       ENDIF
+
       IF(IERR.NE.0) THEN
-         write(*,*) 'error in fkctow' 
-         PRINT*,NQ,COV(1),COV(2),COV(3)
-         write(*,*) 'ierr = ' , ierr 
+         IF (IDEB.GE.2) THEN
+            write(*,*) 'error in fkctow' 
+            PRINT*,NQ,COV(1),COV(2),COV(3)
+            write(*,*) 'ierr = ' , ierr 
+            call flush
+         ENDIF
          RETURN
       ENDIF
 *
@@ -155,4 +162,5 @@
         ENDIF
       ENDIF
 *
+      CALL FLUSH
       END

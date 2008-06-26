@@ -1,7 +1,10 @@
 *  
-* $Id: fk3trk.F,v 1.5 2007-09-05 09:47:29 rasp Exp $
+* $Id: fk3trk.F,v 1.6 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2007/09/05 09:47:29  rasp
+* Updated version
+*
 * Revision 1.3  2006/11/02 11:49:00  rasp
 *
 * Modified files adopted to FullLDCTracking processor
@@ -112,25 +115,21 @@ c      write(*,*) "DATTE(",i,1,") = ", DATTE(i,1)
 c      end do 
 
 
+
       IF(IDEB.GE.1) WRITE(IPRNT,
      &   '(/,'' *** Entering FK3TRK with IOUT= '',I8,/)') IOUT
       IF(IDEB.GE.1) WRITE(IPRNT,
      &   '(/,I3,'' TEs: ''/8(Z8,2X)/7(Z8,2X))')
      &   NDAT,(IDTER(III),III=1,NDAT)
 
-CSAJWRT
-c      WRITE(IPRNT,
-c     &   '(/,'' *** Entering FK3TRK with IOUT= '',I8,/)') IOUT
-CSAJWRT
-c      WRITE(IPRNT,
-c     &   '(/,I3,'' TEs: ''/8(Z8,2X)/7(Z8,2X))')
-c     &   NDAT,(IDTER(III),III=1,NDAT)
 
 *
       IERR=0
       IER1=0
 *
       NOUT=0
+
+
       CALL VZERO(IFLTE,NTEMX)
       CALL VZERO(IDOUT,NTEMX)
       CALL VZERO(IERTE,NTEMX)
@@ -152,47 +151,56 @@ c     &   NDAT,(IDTER(III),III=1,NDAT)
 *
       IRNKXY=0
       IRNKZ=0
+
+
+
       NTE=NDAT
 *
-      DO 5 ITE=1,NTE
-C(KH) ---begin
-        IF (IDEB.GE.2) THEN
-CSJAWRT
-        WRITE(6,*) 'FK3TRK: TE reference coordinates ',
-     >               DATTE(10,ITE),DATTE(11,ITE),DATTE(12,ITE),
-     >               DATTE(13,ITE),DATTE(14,ITE)
-        ENDIF
-C(KH) ---end
-        IBADCV=0
-        CALL UCOPY(DATTE(1,ITE),DATE(1),MXTE)
-*
-*       store length of TE (projected onto xy)
-*
-        IF(IBADCV.EQ.0)THEN
-          IF(ABS(DATE(13)).GT..001) THEN
-            ALRFTE(ITE)=DATE(9)*SIN(DATE(13))
-          ELSE
-            ALRFTE(ITE)=DATE(9)
-          ENDIF
-*
-*         store parameters and weight matrix from this TER
-*
-          CALL FKSTER(DATE,IDET(ITE),TYPE(ITE),MEASUR(ITE),NDTER(ITE),
-     &    CHTER(ITE),PARAM(1,ITE),WGTER(1,ITE),IERTE(ITE),IRNKXY,IRNKZ)
-*
-        ELSE
-          IERTE(ITE)=IBADCV
-          IDET(ITE)=IDATE(1)
-        ENDIF
-*
 
-        IF(IERTE(ITE).NE.0) THEN
-          WRITE(IPRNT,'('' FKSTER(TKF)FK3TRK :TER'',Z8,''  det.'','//
-     &         'I4,2X,A30)') IDTER(ITE),IDET(ITE),ERRMES(IERTE(ITE))
-        ENDIF
-*
+
+      DO 5 ITE=1,NTE
+C     (KH) ---begin
+         IF (IDEB.GE.2) THEN
+C     SJAWRT
+            WRITE(6,*) 'FK3TRK: TE reference coordinates ',
+     >           DATTE(10,ITE),DATTE(11,ITE),DATTE(12,ITE),
+     >           DATTE(13,ITE),DATTE(14,ITE)
+         ENDIF
+C     (KH) ---end
+         IBADCV=0
+         CALL UCOPY(DATTE(1,ITE),DATE(1),MXTE)
+*     
+*     store length of TE (projected onto xy)
+*     
+         IF(IBADCV.EQ.0)THEN
+            IF(ABS(DATE(13)).GT..001) THEN
+               ALRFTE(ITE)=DATE(9)*SIN(DATE(13))
+            ELSE
+               ALRFTE(ITE)=DATE(9)
+            ENDIF
+*     
+*     store parameters and weight matrix from this TER
+*     
+            CALL FKSTER(DATE,IDET(ITE),TYPE(ITE),MEASUR(ITE),NDTER(ITE),
+     &           CHTER(ITE),PARAM(1,ITE),
+     &           WGTER(1,ITE),IERTE(ITE),IRNKXY,IRNKZ)
+*     
+         ELSE
+            IERTE(ITE)=IBADCV
+            IDET(ITE)=IDATE(1)
+         ENDIF
+*     
+         IF (IDEB.GE.2) THEN
+            IF(IERTE(ITE).NE.0) THEN
+               WRITE(IPRNT,
+     &              '('' FKSTER(TKF)FK3TRK :TER'',Z8,''  det.'','//
+     &              'I4,2X,A30)') 
+     &              IDTER(ITE),IDET(ITE),ERRMES(IERTE(ITE))
+            ENDIF
+         ENDIF
+*     
     5 CONTINUE
-*
+*     
 *     do not try to fit if insufficient information in XY projection
       IF(IRNKXY.LT.3) THEN
         IF(IDEB.GE.2) THEN
@@ -205,6 +213,7 @@ C(KH) ---end
 *
          IER1=2
          IER2=2
+
          GO TO 999
 *
 *     if sufficient information in XY projection, but not in Z :
@@ -219,6 +228,7 @@ C(KH) ---end
 *
 *     Perform the fit
 *
+
       CALL FKTFIT(IDEB,IHIS,IOUTR,IRNKXY,IRNKZ,
      & NTEFIT,IPATTB,IPATTF,ISREFB,ISREFF,IER1,IER2,IERX,IDTER)
 *
@@ -397,7 +407,7 @@ C              CALL VZERO(DATX(22,IX),3) ! this line was uncommented in the orig
    11   CONTINUE
       ENDIF
 
-      IDEB = 0
+
 *
 *           build the list of rejected TER's
 *

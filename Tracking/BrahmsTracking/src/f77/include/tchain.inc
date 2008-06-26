@@ -1,7 +1,10 @@
 *  
-* $Id: tchain.inc,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: tchain.inc,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:35  gaede
 * Initial local version
 *
@@ -12,6 +15,9 @@
 * Brahms V308
 *
 *  
+
+#include "padrow.inc"
+
       INTEGER MXHTCH,NPARCH,NHCHAI,IRCHAI,IHCHAI,MCHAIN,ISTCHA
       REAL PCHAIN,D2CHAI
       PARAMETER (MXHTCH=LTPDRO,NPARCH=23)

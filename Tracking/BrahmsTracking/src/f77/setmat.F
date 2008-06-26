@@ -1,7 +1,10 @@
 *  
-* $Id: setmat.F,v 1.8 2008-05-20 08:48:06 aplin Exp $
+* $Id: setmat.F,v 1.9 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.8  2008/05/20 08:48:06  aplin
+* cleaned up and added includes to make gcc4.3 compliant
+*
 * Revision 1.7  2007/09/05 09:47:29  rasp
 * Updated version
 *
@@ -765,6 +768,8 @@ ccc      endif
       PRSMO(0) = 0.0001
       PRSMO(1) = 0.0001
 *
+   
+      call flush
   999 return
       end
 

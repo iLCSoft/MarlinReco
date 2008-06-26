@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.34 2008-04-17 14:36:29 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.35 2008-06-26 09:35:56 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.34  2008/04/17 14:36:29  aplin
+** reduced printoutlevel in f77 and moved cout to debug streamlog_out for C++
+**
 ** Revision 1.33  2008/04/10 21:49:14  aplin
 ** Corrected covariance matrix definition. Added extra Expert Histos in TPCDigi. Removed VTX and SIT Hits from LEPTracking
 **
@@ -605,7 +608,6 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     streamlog_out(DEBUG) << "TKTREV returns:" << errTKTREV << endl;
 
     
-    if(errTKTREV!=0) cout << "have you set the ionisation potential correctly in the gear xml file" << endl;    
     streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
 
     streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;

@@ -1,7 +1,11 @@
 *  
-* $Id: tkmkte.F,v 1.5 2006-11-02 11:49:01 rasp Exp $
+* $Id: tkmkte.F,v 1.6 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2006/11/02 11:49:01  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.3  2005/07/29 15:06:17  aplin
 * Initialised number of tracks found to 0 in tpcrun.
 *
@@ -45,6 +49,7 @@
 *
 **********************************************************************
       IMPLICIT NONE
+#include "include/padrow.inc"
 #include "include/bkgmode.inc"
 #include "include/tkconst.inc"
 #include "include/fkparm.inc"
@@ -60,25 +65,30 @@ c#include "gcbank.inc"
 #include "include/fkpipar.inc"
 
 C.....max number of hits per track
-      INTEGER NHTMAX
-      PARAMETER (NHTMAX=500)
+c      INTEGER NHTMAX
+c      PARAMETER (NHTMAX=LTPDRO)
 
       INTEGER K,ID,IERR1,IERR2,ITSREF(MXTS)
       INTEGER IDDET,N,N2,LIST1(*),LIST2(*),IERR,SUBMOD,INDEX
-      INTEGER I,J,IMPNT,NOUT,IDOU(NHTMAX),IFLTE(NHTMAX),IERX(NEXSMX)
+      INTEGER I,J,IMPNT,NOUT,IDOU(NTEMX),IFLTE(NTEMX),IERX(NEXSMX)
       INTEGER DELDET,NTRY,TKNUMB,ILOC,IDTE(NTEMX)
       REAL    POS(3),COV(3),PHI,REF(*),RTSREF(MXTS),PARAM(6)
-      INTEGER ITELOC(MXTE,NHTMAX),ITKLOC(MXTK),ITEFIT(MXTE)
-      REAL    RTELOC(MXTE,NHTMAX),RTKLOC(MXTK),RTEFIT(MXTE)
+
+      INTEGER ITELOC(MXTE,NTEMX),ITKLOC(MXTK),ITEFIT(MXTE)
+      REAL    RTELOC(MXTE,NTEMX),RTKLOC(MXTK),RTEFIT(MXTE)
+
       EQUIVALENCE (ITELOC,RTELOC)
       EQUIVALENCE (ITKLOC,RTKLOC)
       EQUIVALENCE (ITEFIT,RTEFIT)
       EQUIVALENCE (ITSREF,RTSREF)
+
       REAL    HIT(MXHT)
       INTEGER IHIT(MXHT)
       EQUIVALENCE (HIT,IHIT)
-      INTEGER ILIST(NHTMAX),LIST3(NHTMAX)
-      REAL    RLIST(NHTMAX),ZLIST(NHTMAX)
+
+      INTEGER ILIST(NTEMX),LIST3(NTEMX)
+      REAL    RLIST(NTEMX),ZLIST(NTEMX)
+
       LOGICAL FIRST
       DATA    FIRST /.TRUE./
       SAVE    FIRST
@@ -99,13 +109,17 @@ C.....max number of hits per track
 #include "include/tkfunc.inc"
 
 C.....check range
+      IF(TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: Nhits ',N
+
       IERR=0
-      IF (N.GT.NHTMAX) THEN
-         WRITE(6,*) 'TKMKTE: too many hits. increase NHTMAX to ',N
-         N=NHTMAX
+      IF (N.GT.NTEMX) THEN
+         IF(TKSTDBG.GT.0) THEN
+            WRITE(6,*) 'TKMKTE: too many hits. increase NTEMX to ',N
+         ENDIF
+         N=NTEMX
       END IF
       IF (N.LT.3) THEN
-         WRITE(6,*) 'TKMKTE: too few hits'
+         IF(TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: too few hits'
          IERR=-2
          GOTO 999
       END IF
@@ -116,16 +130,19 @@ C.....sort hits according to increasing r
       DO I=1,N
          CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IHIT,IERR)
       IF (IERR.NE.0) THEN
-         WRITE(6,*) 'TKMKTE: ERROR READING HIT.'
-         WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',LIST1(I),
-     >        ' of ',TKNUMB('HIT',LIST2(I))
-         WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
+         IF(TKSTDBG.GT.0) THEN
+            WRITE(6,*) 'TKMKTE: ERROR READING HIT.'
+            WRITE(6,*) '        det. ID ',LIST2(I),'; hit no. ',
+     >           LIST1(I),' of ',TKNUMB('HIT',LIST2(I))
+            WRITE(6,*) '        hit no. ',I,' of ',N,' in this TE.'
+         ENDIF
       ELSE
          J=J+1
          RLIST(J)=SQRT(HIT(1)**2+HIT(2)**2)
          ZLIST(J)=HIT(3)
       END IF
       END DO
+      
       N=J
       CALL SORTZV(RLIST,ILIST,N,1,0,0)
       DO I=1,N
@@ -165,15 +182,16 @@ C     larger |z|. (Only for TPC. Skip otherwise.)
       N=J
  101  CONTINUE
 
+
 C.....fill all associated hits into local TE structure for TK2FIT
       ILOC=0
       DO I=1,N
+
 
 C.......read hit
         CALL TKREAD('HIT',LIST2(I),LIST1(I),HIT,IHIT,IERR)
 
 C.......calculate position and covariance matrix for desired detector type
-
 
         IF (IHIT(9).EQ.3) THEN
            
@@ -204,6 +222,7 @@ C.......calculate position and covariance matrix for desired detector type
      >         +32+64  ! covariance matrix for x and y
         END IF
 
+
 C.......save in local TE array
         ILOC=ILOC+1
         ITELOC( 1,ILOC)=DELDET(LIST2(I)) ! module identifier
@@ -230,11 +249,9 @@ C.......save in local TE array
       END DO
 
 C.....reference trajectory
-      
+   
  100  IF (REF(1).EQ.0.0) THEN
 C       create one using FKREF
-CSJAWRT
-c      write(*,*) "hello I'm about to call fkref @$@#$#@$@#$@#$@#$"
         CALL FKREF(ILOC,RTELOC,RTSREF,ITSREF)
       ELSE
 C       use parameters given by calling function
@@ -254,6 +271,8 @@ c      write(*,*) "RTELOC(",i,1,") = ", RTELOC(i,1)
 c      end do 
 
 
+
+
 C.....track fit
       IF (ILOC.GT.NTEMX) THEN
          IF (TKSTDBG.GT.0) THEN
@@ -262,12 +281,21 @@ C.....track fit
          END IF
          ILOC=NTEMX
       END IF
+
+
+
       DO I=1,ILOC
         IDTE(I)=I
       END DO
+
+      IERR=2
+
       CALL FK3TRK(3,ILOC,IDTE,RTELOC,RTSREF,RTKLOC,
      >            NOUT,IDOU,IERR1,IERR2,IFLTE,IERX)
+
+
       IERR=IERR1+10*IERR2
+
 
 C.....debugging: compare reference trajectory, fit result and true parameters
 cccIF (REF(1).NE.0.0.AND.TKSTDBG.GT.1) THEN
@@ -293,6 +321,7 @@ ccc  WRITE(6,'(A)') 'TK: ------------------------------------------'
 cccEND IF
 
 C.....checks
+
       IF (IERR.NE.0) THEN
         IF (TKSTDBG.GT.0) THEN
           WRITE(6,*) 'TKMKTE: track fit failed with error ',IERR
@@ -324,19 +353,19 @@ c        hid=hid+10
 C----------------------
         ILOC=NINT(0.7*ILOC)
         IF ((ILOC.GT.N/3).AND.(ILOC.GE.3)) THEN
-           IF (TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: fit failed. retry.'
+           IF (TKSTDBG.GT.0) WRITE(*,*) 'TKMKTE: fit failed. retry.'
            GOTO 100
         END IF
-           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
+        
         IF (TKSTDBG.GT.0) THEN
-           WRITE(6,*) 'TKMKTE: fit failed. no retry.'
-ccc           WRITE(6,*) '  track properties of last hit: '
-ccc           PMAX=SQRT(TKMCTR(1,IHIT(6))**2+TKMCTR(2,IHIT(6))**2
-ccc     >          +TKMCTR(3,IHIT(6))**2)
-ccc           WRITE(6,*) '    momentum: ',PMAX
-ccc           IF (PMAX.GT.PFPCUT) WRITE(6,*) '    TKMKTE: good p failed'
-ccc           WRITE(6,*) '    theta   : ',ATAN2(SQRT(TKMCTR(1,IHIT(6))**2
-ccc     >          +TKMCTR(2,IHIT(6))**2),TKMCTR(3,IHIT(6)))
+           print *, 'TKMKTE: fit failed. no retry.'
+C           WRITE(6,*) '  track properties of last hit: '
+C           PMAX=SQRT(TKMCTR(1,IHIT(6))**2+TKMCTR(2,IHIT(6))**2
+C     >          +TKMCTR(3,IHIT(6))**2)
+C           WRITE(6,*) '    momentum: ',PMAX
+C           IF (PMAX.GT.PFPCUT) WRITE(6,*) '    TKMKTE: good p failed'
+C           WRITE(6,*) '    theta   : ',ATAN2(SQRT(TKMCTR(1,IHIT(6))**2
+C     >          +TKMCTR(2,IHIT(6))**2),TKMCTR(3,IHIT(6)))
         END IF
         GOTO 999
       END IF
@@ -414,7 +443,7 @@ C.....store TE
 
 
       IF (IERR.NE.0) THEN
-        WRITE(6,*) 'TKMKTE: TKSTOR FAILED.'
+         IF(TKSTDBG.GT.0) WRITE(6,*) 'TKMKTE: TKSTOR FAILED.'
         CALL TKVETO(1)
         GOTO 999
       END IF
@@ -443,6 +472,7 @@ c     >         RTELOC(10,I)*SIN(RTELOC(11,I)/RTELOC(10,I)),1.0)
         END DO
       END IF
 
+	call flush
       RETURN
       END
 

@@ -1,7 +1,10 @@
 *  
-* $Id: tktrev.F,v 1.13 2008-04-17 14:36:29 aplin Exp $
+* $Id: tktrev.F,v 1.14 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2008/04/17 14:36:29  aplin
+* reduced printoutlevel in f77 and moved cout to debug streamlog_out for C++
+*
 * Revision 1.12  2008/01/24 17:21:50  aplin
 * updated the error codes for the case of to many TPC padrows in the GEAR file
 * error code returned by TKTREV = 99 this should be caught by LEPTracking
@@ -434,6 +437,7 @@ C.....finally, some storage usage information for debugging purposes
 
  888  TKTREV = IERROR
 
+      call flush
  999  RETURN
       
       END

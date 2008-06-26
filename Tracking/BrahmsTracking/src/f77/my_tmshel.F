@@ -1,7 +1,10 @@
 *  
-* $Id: my_tmshel.F,v 1.1.1.1 2005-07-11 15:15:48 aplin Exp $
+* $Id: my_tmshel.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.1.1.1  2005/07/11 15:15:48  aplin
+* Initial version
+*
 * Revision 1.1.1.1  2005/06/18 10:05:34  gaede
 * Initial local version
 *
@@ -57,6 +60,7 @@ C?
 C!======================================================================
 C----------------------------------------------------------------------
 C my stuff:
+#include "include/padrow.inc"
 #include "include/fndparms.inc"
 #include "include/tpco.inc"
 c#include "gcflag.inc"
@@ -66,7 +70,7 @@ C(KH) +SEQ,VXDCHAIN.
 C----------------------------------------------------------------------
 C GAB:
 C      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=40)
-      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=500)
+      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=LTPDRO)
       REAL   PF(MPT),RF(MPT),PC(MPT),SP2(MPT),VV0(*),EE0(*),VV1(5),
      1       DEL(MPT),SXY(MPT),ZF(MPT),WZF(MPT),SS0(MPT),EEE(MPT),
      2       DELZ(MPT),GRAD(5),COV(15),DV(5),GGRAD(5),DRPHI(*),

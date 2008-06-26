@@ -1,7 +1,24 @@
 *  
-* $Id: tfcand.F,v 1.3 2008-01-23 17:22:22 aplin Exp $
+* $Id: tfcand.F,v 1.4 2008-06-26 09:35:56 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.2  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -90,8 +107,9 @@ c------------------------------------------------------------------------
       PARAMETER (MXFIT=LTPDRO+2)
       INTEGER IBUFF
       REAL XFT,YFT,EFT
-C(KH) DIMENSION IBUFF(LTPDRO),XFT(MXFIT),YFT(MXFIT),EFT(MXFIT)
-      DIMENSION IBUFF(500),XFT(MXFIT),YFT(MXFIT),EFT(MXFIT)
+      DIMENSION IBUFF(LTPDRO),XFT(MXFIT),YFT(MXFIT),EFT(MXFIT)
+cSJA      DIMENSION IBUFF(500),XFT(MXFIT),YFT(MXFIT),EFT(MXFIT)
+cSJA IBUFF should be the same dimention as the max number of tpcrows      
       LOGICAL FIRST,TAKEN,FSWAP
       INTEGER CDUMY,CTYPE
 

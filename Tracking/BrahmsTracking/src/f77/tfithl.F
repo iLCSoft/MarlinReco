@@ -1,7 +1,11 @@
 *  
-* $Id: tfithl.F,v 1.2 2006-11-02 11:49:00 rasp Exp $
+* $Id: tfithl.F,v 1.3 2008-06-26 16:22:25 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2006/11/02 11:49:00  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -60,9 +64,10 @@ C-----------------------------------------------------------------
 C
 #include "include/fndparms.inc"
 #include "include/alcons.inc"
+#include "include/fkparm.inc"
 
 Cnt/proj 100 10.ir_true abs(ir_true+0.01).lt.0.00002
-      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=500)
+      PARAMETER (EPS = 1.0E-16, ITMAX =15, MPT=NTEMX)
 c GAB:
 C      REAL   PF(MPT),RF(MPT),PC(MPT),SP2(MPT),VV0(*),EE0(*),VV1(5),
 C     1       DEL(MPT),SXY(MPT),ZF(MPT),WZF(MPT),SS0(MPT),EEE(MPT),
@@ -85,7 +90,7 @@ C GAB:
        SAVE
        DATA FIRST/.TRUE./
 
-*       WRITE(*,*) 'HERE WE ARE'
+
 
        IF(FIRST)THEN
         FIRST=.FALSE.
@@ -112,7 +117,7 @@ C     1      ' TFITHL: Cannot fit < 3 points! quitting...')
 C         CALL RERROR('TFITHL',2,
 C     1      ' TFITHL: Cannot fit > 40 points! quitting...')
 C       WRITE(*,*)' TFITHL: Cannot fit > 200 points! quitting...'
-          WRITE(*,*)' TFITHL: Cannot fit > 500 points! quitting...'
+          WRITE(*,*)' TFITHL: Cannot fit more points than ', MPT
          GOTO 999
       END IF
       WSUM= 0.0

@@ -1,7 +1,19 @@
 *  
-* $Id: trackfit.F,v 1.4 2008-06-26 09:35:56 aplin Exp $
+* $Id: trackfit.F,v 1.5 2008-06-26 16:22:25 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2008/06/26 09:35:56  aplin
+*
+* A clean up has been made of the arrays that hold the TE's/Hits for
+* track fitting. An effort has been made to ensure that both the arrays
+* are big enough to hold the required number of hits, and that the arrays
+* are all of the same dimensions between calling routines.
+*
+* All verbose output, except for the case where the tracking is dropped
+* for a complete event, has now been hidden behind debug IF
+* Statements. The level of verbosity can be controlled via the variables
+* TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 * Revision 1.3  2007/09/05 09:47:29  rasp
 * Updated version
 *
@@ -91,10 +103,12 @@ c#include "gcbank.inc"
       REAL PI,TWOPI
 #include "include/fkpipar.inc"
 #include "include/fkexts.inc"
+#include "include/brcntl.inc"
+
 C#include "include/fkcom.inc"
 C.....max number of hits per track
       INTEGER NHTMAX
-      PARAMETER (NHTMAX=LTPDRO)
+      PARAMETER (NHTMAX=NTEMX)
       INTEGER IH,NHITS
       REAL XHIT(*),YHIT(*),ZHIT(*)
       INTEGER ITYPE(*),IDET(*)
@@ -143,12 +157,19 @@ C.....max number of hits per track
      >               +128+256 ! track angles theta, phi measured
      >                   +512)! 1/p measured
 
+#include "include/fkddes.inc"
 #include "include/tkfunc1.inc"
 #include "include/tkfunc.inc"
-#include "include/fkddes.inc"
 
-c      write(*,*) "hello I'm about to run trackfit @$@#$#@$@#$@#$@#$"
 
+
+     
+C.....set debug verbosity level
+      FSFDBG=0
+      IDEB=0
+      TKSTDBG=0
+      DELADBG=0
+  
       N = NHITS
 
 C.....check range

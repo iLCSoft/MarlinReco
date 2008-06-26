@@ -1,7 +1,19 @@
 *  
-* $Id: fkparm.inc,v 1.3 2008-06-26 09:35:56 aplin Exp $
+* $Id: fkparm.inc,v 1.4 2008-06-26 16:22:25 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2008/06/26 09:35:56  aplin
+*
+* A clean up has been made of the arrays that hold the TE's/Hits for
+* track fitting. An effort has been made to ensure that both the arrays
+* are big enough to hold the required number of hits, and that the arrays
+* are all of the same dimensions between calling routines.
+*
+* All verbose output, except for the case where the tracking is dropped
+* for a complete event, has now been hidden behind debug IF
+* Statements. The level of verbosity can be controlled via the variables
+* TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 * Revision 1.2  2007/11/23 08:51:15  rasp
 * New version of parameters
 *
@@ -23,7 +35,7 @@
        integer ntemx,mxts,mxte,mxtk,nexsmx,ncmamx,npmamx,nsrfmx,
      $         nsegmx,npgrmx, nplmamx
 c(kh)  PARAMETER (NTEMX=150,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50)
-       PARAMETER (NTEMX=LTPDRO,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50,
+       PARAMETER (NTEMX=600,MXTS=37,MXTE=50,MXTK=37,NEXSMX=50,
      & NCMAMX=100,NPMAMX=50,NPLMAMX=200)
        PARAMETER (NSRFMX=NTEMX+NEXSMX+NCMAMX+NPMAMX)
        PARAMETER (NSEGMX=20,NPGRMX=200)

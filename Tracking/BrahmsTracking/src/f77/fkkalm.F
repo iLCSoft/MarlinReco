@@ -1,7 +1,19 @@
 *     
-*     $Id: fkkalm.F,v 1.2 2008-06-26 09:35:56 aplin Exp $
+*     $Id: fkkalm.F,v 1.3 2008-06-26 15:14:31 aplin Exp $
 *     
 *     $Log: not supported by cvs2svn $
+*     Revision 1.2  2008/06/26 09:35:56  aplin
+*
+*     A clean up has been made of the arrays that hold the TE's/Hits for
+*     track fitting. An effort has been made to ensure that both the arrays
+*     are big enough to hold the required number of hits, and that the arrays
+*     are all of the same dimensions between calling routines.
+*
+*     All verbose output, except for the case where the tracking is dropped
+*     for a complete event, has now been hidden behind debug IF
+*     Statements. The level of verbosity can be controlled via the variables
+*     TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 *     Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 *     Initial version
 *     
@@ -102,17 +114,18 @@
                   IRNKZT=JBIT(MEASUR(INUM),2)+JBIT(MEASUR(INUM),3)
                   IRANK=IRNKRF+IRNKZT
 *     
-                  IF(IDEB.GE.2) then
-                     WRITE(IPRNT,*)
-     &                    '(''       after 1st  : rank'',I2,''+'//
-     &                    ',I1,6X,''''deviat.'',T50,5F11.6,'//
-     &                    '  nd, chi2 '',I4,1X,G10.4)',
-     &                    IRNKRF,IRNKZT,DQKALM,NDEG,CHI2
 
-                     write(IPRNT,
-     $                    '(a,t10,e17.8,/t10,2e17.8,/t10,3e17.8,'//
-     $                    '/t10,4e17.8,/t10,5e17.8)') 'COV : ',wgkalm
-                  end if
+                  IF(IDEB.GE.2) then
+                     WRITE(IPRNT,     
+     &           '(''       after 1st  : rank'',I2,''+'',I1,6X,'//
+     &           '''deviat.'',T50,5F11.6,''  nd, chi2 '',I4,1X,G10.4)')
+     &           IRNKRF,IRNKZT,DQKALM,NDEG,CHI2
+
+              write(IPRNT,
+     $             '(a,t10,e17.8,/t10,2e17.8,/t10,3e17.8,'//
+     $             '/t10,4e17.8,/t10,5e17.8)') 'COV : ',wgkalm
+            end if
+
 *     
 *     if new information : add it to the fit
 *     
@@ -155,11 +168,10 @@
 *     
                   IF(KRANK.LT.5) THEN
 *     
-                     IF(IDEB.GE.2) 
-     &                    WRITE(IPRNT,*)
-     &                    '(''       Incomplete information '//
-     &                    'in first TEs : '',''''increase '  //
-     &                    'slightly the diagonal weights'')'
+                     IF(IDEB.GE.2) WRITE(IPRNT,
+     &           '(''       Incomplete information in first TEs : '','//
+     &           '''increase slightly the diagonal weights'')')
+
 *     
                      IF(KRNKRF.LE.0) WGKALM( 1)=WGKALM( 1)+1.
                      IF(KRNKZT.LE.0) THEN
@@ -205,12 +217,11 @@
                      IRNKZT=KRNKZT
                      IRANK=KRANK
 *     
-                     IF(IDEB.GE.2) WRITE(IPRNT,*)
-     &                    '(''       after add. : rank'',I2,'//
-     &                    '+'',I1,6X,'//
-     &                    '''deviat.'',T50,5F11.6,''   nd, chi2 '//
-     &                    ',I4,1X,G10.4)',
-     &                    IRNKRF,IRNKZT,DQKALM,NDEG,CHI2
+                     IF(IDEB.GE.2) WRITE(IPRNT,
+     &         '(''       after add. : rank'',I2,''+'',I1,6X,'//
+     &         '''deviat.'',T50,5F11.6,''   nd, chi2 '',I4,1X,G10.4)')
+     &         IRNKRF,IRNKZT,DQKALM,NDEG,CHI2
+
                   ELSE
                      IF(IDEB.GE.1) THEN
                         WRITE(IPRNT,*) ' FKKALM(TKF) : error in FKWGMN'

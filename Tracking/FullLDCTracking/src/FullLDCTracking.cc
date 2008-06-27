@@ -263,6 +263,47 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			     _PtCutToMergeTPC,
 			     float(1.2));
 
+
+
+  registerProcessorParameter("cosThetaCutHighPtMerge",
+			     "Cut on cos theta between the two momentum vectors when considering merger of high Pt tracks",
+			     _cosThetaCutHighPtMerge,
+			     float(0.99));
+
+  registerProcessorParameter("cosThetaCutSoftHighPtMerge",
+			     "cut on cos theta between the two momentum vectors when considering merger of high Pt tracks for softer dp/p cut",
+			     _cosThetaCutSoftHighPtMerge,
+			     float(0.998));
+
+  registerProcessorParameter("momDiffCutHighPtMerge",
+			     "cut on dp/p when considering merger of high Pt tracks",
+			     _momDiffCutHighPtMerge,
+			     float(0.01));
+
+  registerProcessorParameter("momDiffCutSoftHighPtMerge",
+			     "softer cut on dp/p when considering merger of high Pt tracks",
+			     _momDiffCutSoftHighPtMerge,
+			     float(0.25));
+
+  registerProcessorParameter("hitDistanceCutHighPtMerge",
+			     "cut on 3D distance between hit and helix extrapolation when considering merger of high Pt tracks",
+			     _hitDistanceCutHighPtMerge,
+			     float(25.0));
+
+  registerProcessorParameter("maxHitDistanceCutHighPtMerge",
+			     "cut for max 3D distance between any hit and helix extrapolation when considering merger of high Pt tracks",
+			     _maxHitDistanceCutHighPtMerge,
+			     float(50.0));
+
+  registerProcessorParameter("maxFractionOfOutliersCutHighPtMerge",
+			     "cut on maximum fraction of outliers when considering merger of high Pt tracks",
+			     _maxFractionOfOutliersCutHighPtMerge,
+			     float(0.95));
+
+
+
+
+
   registerProcessorParameter("CutOnTPCHits",
 			     "Cut on the number of the TPC hits for tracks with no Si hits",
 			     _cutOnTPCHits,
@@ -1975,42 +2016,45 @@ float FullLDCTracking::CompareTrkII(TrackExtended * first, TrackExtended * secon
 
 float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second, 
 				  float d0Cut, float z0Cut,int iopt) {
-
+  
   float result = 1.0e+20;
-
+  
   float d0First = first->getD0();
   float z0First = first->getZ0();
   float omegaFirst = first->getOmega();
   float tanLFirst = first->getTanLambda();
   float phiFirst = first->getPhi();
-
+  
   float d0Second = second->getD0();
   float z0Second = second->getZ0();
   float omegaSecond = second->getOmega();
   float tanLSecond = second->getTanLambda();
   float phiSecond = second->getPhi();
-
+  
   bool isCloseInIP = (fabs(d0First-d0Second)<d0Cut);
-  if (iopt>0) 
-    isCloseInIP = isCloseInIP || (fabs(d0First+d0Second)<d0Cut);
+  
+  if (iopt>0) isCloseInIP = isCloseInIP || (fabs(d0First+d0Second)<d0Cut);
+  
   isCloseInIP = isCloseInIP && (fabs(z0Second-z0First)<z0Cut);
+  
+  
+  HelixClass helixFirst;
+  helixFirst.Initialize_Canonical(phiFirst,d0First,z0First,omegaFirst,tanLFirst,_bField);
+  HelixClass helixSecond;
+  helixSecond.Initialize_Canonical(phiSecond,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
+  
+  float pFirst[3];
+  float pSecond[3];
+  float dPminus[3];
+  float dPplus[3];
+  float momFirst = 0;
+  float momSecond = 0;
+  float momMinus = 0;
+  float momPlus = 0;
 
   if ( isCloseInIP ) {
 
-    HelixClass helixFirst;
-    helixFirst.Initialize_Canonical(phiFirst,d0First,z0First,omegaFirst,tanLFirst,_bField);
-    HelixClass helixSecond;
-    helixSecond.Initialize_Canonical(phiSecond,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
-
-    float pFirst[3];
-    float pSecond[3];
-    float dPminus[3];
-    float dPplus[3];
-    float momFirst = 0;
-    float momSecond = 0;
-    float momMinus = 0;
-    float momPlus = 0;
-
+    
     for (int iC=0;iC<3;++iC) {
       pFirst[iC] = helixFirst.getMomentum()[iC];
       pSecond[iC] = helixSecond.getMomentum()[iC];
@@ -2021,6 +2065,7 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
       momMinus += dPminus[iC]*dPminus[iC];
       momPlus += dPplus[iC]*dPplus[iC];
     }
+    
     float ptFirst = sqrt(pFirst[0]*pFirst[0]+pFirst[1]*pFirst[1]);
     float ptSecond = sqrt(pSecond[0]*pSecond[0]+pSecond[1]*pSecond[1]);
 
@@ -2038,6 +2083,154 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 	
 	result = nom/den;
     }
+    
+  }
+  else {
+
+    // check for cases where PatRec splits non-looping TPC tracks 
+    // look for two tracks where total tpc hits are not more than total number
+    // of pad rows and that the hits on one track are close to the helix of the
+    // other track
+    momFirst = sqrt(momFirst);
+    momSecond = sqrt(momSecond);
+
+    float pdot = (pFirst[0]*pSecond[0] + pFirst[1]*pSecond[1]+ 
+		  pFirst[2]*pSecond[2])/momFirst/momSecond;
+    float dpOverP = 2.0*fabs(momFirst-momSecond)/(momFirst+momSecond);
+
+
+    //compare angle between the two vectors (cos theta) and their momentum
+    //    if( ( pdot>0.99 && dpOverP<0.01 ) || ( pdot>0.998 && dpOverP<0.25 ) ){
+    if( ( pdot>_cosThetaCutHighPtMerge && dpOverP<_momDiffCutHighPtMerge ) 
+	|| 
+	( pdot>_cosThetaCutSoftHighPtMerge && dpOverP<_momDiffCutSoftHighPtMerge ) ){
+  
+      int nTrkGrpFirst = 0;
+      int nTrkGrpSecond = 0;
+      TrackerHitVec hitvecFirst;
+      TrackerHitVec hitvecSecond;
+      GroupTracks * groupFirst = first->getGroupTracks();
+      GroupTracks * groupSecond = second->getGroupTracks();
+     
+      if(groupFirst!=NULL){
+	
+	TrackExtendedVec tracksInGroupFirst = groupFirst->getTrackExtendedVec();
+	nTrkGrpFirst = int(tracksInGroupFirst.size());
+	
+	for (int iTrkGrp=0;iTrkGrp<nTrkGrpFirst;++iTrkGrp) {
+	
+	  TrackExtended * trkGrp = tracksInGroupFirst[iTrkGrp];
+	  TrackerHitExtendedVec hitVec = trkGrp->getTrackerHitExtendedVec();
+	  
+	  for(unsigned int i =0; i<hitVec.size(); ++i){
+	    hitvecFirst.push_back(hitVec[i]->getTrackerHit());	  
+	  }
+	}
+      }
+      
+      if(groupSecond!=NULL){
+
+	TrackExtendedVec tracksInGroupSecond = groupSecond->getTrackExtendedVec();
+	nTrkGrpSecond = int(tracksInGroupSecond.size());
+	
+	for (int iTrkGrp=0;iTrkGrp<nTrkGrpSecond;++iTrkGrp) {
+	  TrackExtended * trkGrp = tracksInGroupSecond[iTrkGrp];
+	  TrackerHitExtendedVec hitVec = 
+	    trkGrp->getTrackerHitExtendedVec();
+	
+	  for(unsigned int i=0;i<hitVec.size();++i){
+	    hitvecSecond.push_back(hitVec[i]->getTrackerHit());
+	  }
+	}
+      }
+      
+      const gear::TPCParameters& pTPC = Global::GEAR->getTPCParameters();
+      const gear::PadRowLayout2D& pTPCpads = pTPC.getPadLayout();
+      
+      std::vector<double>tpcExtent = pTPCpads.getPlaneExtent();
+      
+      float tpcInnerR = tpcExtent[0]; 
+      int tpcMaxRow = pTPCpads.getNRows();
+      
+      // for non-looping tracks 
+      int nhitsFirst  = (int)hitvecFirst.size();
+      int nhitsSecond = (int)hitvecSecond.size();
+      int ntpcFirst   = 0;
+      int ntpcSecond  = 0;
+      float hitxyz[3];
+      float dist[3];
+      float maxdistFirst=0;
+      float maxdistSecond=0;
+      int ncloseFirst = 0;
+      int ncloseSecond = 0;
+      float zminFirst = 99999;
+      float zminSecond = 99999;
+      float zmaxFirst = -99999;
+      float zmaxSecond = -99999;
+      
+      for(int ih =0;ih<nhitsFirst;++ih){
+	
+	float x = (float) hitvecFirst[ih]->getPosition()[0];
+	float y = (float) hitvecFirst[ih]->getPosition()[1];
+	float z = (float) hitvecFirst[ih]->getPosition()[2];
+	
+	if(fabs(z)<zminFirst) zminFirst=fabs(z);
+	if(fabs(z)>zmaxFirst) zmaxFirst=fabs(z);
+	
+	float r = sqrt(x*x+y*y);
+	
+	if(r>tpcInnerR) ntpcFirst++;
+
+	hitxyz[0]=x;
+	hitxyz[1]=y;
+	hitxyz[2]=z;
+	helixSecond.getDistanceToPoint(hitxyz, dist);
+	
+	// compare 3D distance between hit and extrapolation
+	if(dist[2]>maxdistFirst) maxdistFirst=dist[2];
+	if(dist[2]<_hitDistanceCutHighPtMerge) ncloseFirst++;
+      }
+
+      for(int ih =0;ih<nhitsSecond;++ih){
+	
+	float x = (float)hitvecSecond[ih]->getPosition()[0];
+	float y = (float)hitvecSecond[ih]->getPosition()[1];
+	float z = (float)hitvecSecond[ih]->getPosition()[2];
+	
+	if(fabs(z)<zminSecond) zminSecond=fabs(z);
+	if(fabs(z)>zmaxSecond) zmaxSecond=fabs(z);
+	
+	float r = sqrt(x*x+y*y);
+	
+	if(r>tpcInnerR) ntpcSecond++;
+
+	hitxyz[0]=x;
+	hitxyz[1]=y;
+	hitxyz[2]=z;
+	helixFirst.getDistanceToPoint(hitxyz, dist);
+	
+	// compare 3D distance between hit and extrapolation
+	if(dist[2]>maxdistSecond) maxdistSecond=dist[2];
+	if(dist[2]<_hitDistanceCutHighPtMerge) ncloseSecond++;
+      }
+
+      float fcloseFirst  = (float)ncloseFirst/(float)nhitsFirst;
+      float fcloseSecond = (float)ncloseSecond/(float)nhitsSecond;
+      bool split = false;
+      
+      if( maxdistSecond < _maxHitDistanceCutHighPtMerge && maxdistFirst < _maxHitDistanceCutHighPtMerge 
+	  && 
+	  fcloseSecond > _maxFractionOfOutliersCutHighPtMerge && fcloseFirst > _maxFractionOfOutliersCutHighPtMerge 
+	  && 
+	  ntpcFirst+ntpcSecond < tpcMaxRow+10.)
+	split = true;
+      
+      if(split){
+	result = dpOverP;
+      }
+
+    }
+  }
 
 //     if (momMinus<0.1 || momPlus <0.1) {
 //       std::cout << pFirst[0] << " "
@@ -2049,10 +2242,8 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 //       std::cout << result << std::endl;	
 //     }
 
-  }
-
   return result;
-
+  
 }
 
 void FullLDCTracking::AddNotAssignedHits() {

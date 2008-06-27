@@ -270,6 +270,29 @@ using namespace marlin ;
  * @param StoreHitsInFit if set to 1 only hits used in the track fit are stored in the 
  * corresponding associated vector of TrackerHits <br>
  * (default is 0) <br>
+ * @param cosThetaCutHighPtMerge cut on cos theta between the two momentum vectors 
+ * when considering merger of high Pt tracks <br>
+ * (default is 0.99) <br>
+ * @param cosThetaCutSoftHighPtMerge cut on the cos theta between the two momentum vectors 
+ * when considering merger of high Pt tracks for softer dp/p cut <br>
+ * (default is 0.998) <br>
+ * @param momDiffCutHighPtMerge cut on dp/p 
+ * when considering merger of high Pt tracks <br>
+ * (default is 0.01 [1/GeV]) <br>
+ * @param momDiffCutSoftHighPtMerge softer cut on dp/p  
+ * when considering merger of high Pt tracks <br>
+ * (default is 0.25 [1/GeV]) <br>
+ * @param hitDistanceCutHighPtMerge cut on 3D distance between hit 
+ * and helix extrapolation when considering merger of high Pt tracks <br>
+ * (default is 25.0 [mm]) <br>
+ * @param maxHitDistanceCutHighPtMerge cut for max 3D distance between any hit 
+ * and helix extrapolation when considering merger of high Pt tracks <br>
+ * (default is 50.0 [mm]) <br>
+ * @param maxFractionOfOutliersCutHighPtMerge cut on maximum fraction of outliers 
+ * when considering merger of high Pt tracks <br>
+ * (default is 0.95 ) <br>
+
+
  * @author A. Raspereza (MPI Munich)<br>
  */
 
@@ -394,6 +417,14 @@ class FullLDCTracking : public Processor {
   float _PtCutToMergeTPC;
   float _d0CutToMergeTPC;
   float _z0CutToMergeTPC;
+
+  float _cosThetaCutHighPtMerge;
+  float _cosThetaCutSoftHighPtMerge;
+  float _momDiffCutHighPtMerge;
+  float _momDiffCutSoftHighPtMerge;
+  float _hitDistanceCutHighPtMerge;
+  float _maxHitDistanceCutHighPtMerge;
+  float _maxFractionOfOutliersCutHighPtMerge;
 
   MarlinTrackFit _trackFit;
 

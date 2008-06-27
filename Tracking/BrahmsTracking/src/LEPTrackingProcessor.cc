@@ -6,9 +6,21 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.35 2008-06-26 09:35:56 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.36 2008-06-27 15:32:27 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.35  2008/06/26 09:35:56  aplin
+**
+** A clean up has been made of the arrays that hold the TE's/Hits for
+** track fitting. An effort has been made to ensure that both the arrays
+** are big enough to hold the required number of hits, and that the arrays
+** are all of the same dimensions between calling routines.
+**
+** All verbose output, except for the case where the tracking is dropped
+** for a complete event, has now been hidden behind debug IF
+** Statements. The level of verbosity can be controlled via the variables
+** TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+**
 ** Revision 1.34  2008/04/17 14:36:29  aplin
 ** reduced printoutlevel in f77 and moved cout to debug streamlog_out for C++
 **
@@ -88,6 +100,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include "marlin/Exceptions.h"
 #include <cmath>
 
 
@@ -346,7 +359,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 //     return;
 //   }
 
-  if(firstEvent==true) cout << "LEPTrackingProcessor called for first event" << endl;
+  if(firstEvent==true) streamlog_out(MESSAGE) << "LEPTrackingProcessor called for first event" << endl;
 
   firstEvent = false ;
 
@@ -460,7 +473,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
       double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
       double phi = atan2(pos[1],pos[0]); 
-      double tpcRPhiRes = sqrt((trkHitTPC->getCovMatrix()[2])/(cos(phi)*cos(phi)));
+      double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0]+trkHitTPC->getCovMatrix()[2]);
       double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
 
 //      cout << "row_hits->getY() = " <<  pos[1] << "  row_hits->getY() = " << pos[0] ; 
@@ -608,6 +621,16 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     streamlog_out(DEBUG) << "TKTREV returns:" << errTKTREV << endl;
 
     
+    if(errTKTREV==99){
+      streamlog_out(ERROR) << endl;
+      streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+      streamlog_out(ERROR) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
+      streamlog_out(ERROR) << "   LEPTrackingProcessor: TPC-Tracking FAILED NO TPC TRACKS are reconstructed in this event" << endl;
+      streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+      streamlog_out(ERROR) << endl;
+
+    } 
+
     streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
 
     streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;

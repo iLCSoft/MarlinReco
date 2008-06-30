@@ -117,6 +117,7 @@ protected:
   std::string _TPCTrackerHitsCol ;
 
   int _rejectCellID0;
+  float _padWidth;
 
   int _nRun ;
   int _nEvt ;

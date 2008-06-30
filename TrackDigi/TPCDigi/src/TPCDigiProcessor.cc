@@ -295,7 +295,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   //     }
 
   
-  if(firstEvent==true) cout << "TPCDigiProcessor called for first event" << endl;
+  if(firstEvent==true) streamlog_out(MESSAGE) << "TPCDigiProcessor called for first event" << endl;
 
   firstEvent = false ;
 
@@ -319,6 +319,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     //
     const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
     const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+    const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
+
+    _padWidth = padLayout.getPadWidth(0)*padCoord[0];
+
 
     vector< vector <Voxel_tpc *> > tpcRowHits;
 
@@ -882,11 +886,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       int iRowHit = padLayout.getRowNumber(padIndex);
 
 
-      //       cout << "padLayout.getPadWidth(0) = " <<padLayout.getPadWidth(0) << endl;  
-      //       cout << "padLayout.getPadWidth(padIndex) = " <<padLayout.getPadWidth(padIndex) << endl;  
-      //       cout << "padLayout.getPadHeight(0) = " <<padLayout.getPadHeight(0) << endl;  
-      //       cout << "padLayout.getPadHeight(padIndex) = " <<padLayout.getPadHeight(padIndex) << endl;  
-
       //je: commented out next line as proposed by Kristian Harder
       //gear::Point2D padCoord = padLayout.getPadCenter(padIndex);
 
@@ -983,9 +982,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
                 if((((row_hits[j]->getX()-row_hits[k]->getX())*(row_hits[j]->getX()-row_hits[k]->getX()))
                     +((row_hits[j]->getY()-row_hits[k]->getY())*(row_hits[j]->getY()-row_hits[k]->getY())))
-                   //                      <  padLayout.getPadWidth(0) *  padLayout.getPadWidth(0) ){
-                   // FIXME: SJA: the function getPadWidth does not return 2.2mm as set in gear_ldc.xml so use hard coded number for now
-                   <  2.2 *  2.2 ){
+                   <  _padWidth *  _padWidth ){
 
 
                   //SimTrackerHit* Hit1 = tpcHitMap[row_hits[j]];

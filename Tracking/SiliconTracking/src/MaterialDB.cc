@@ -3,6 +3,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <cstdlib>
+
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
 #include <AIDA/IHistogramFactory.h>
@@ -819,7 +821,7 @@ void MaterialDB::init() {
 
   if(has_SupportDisks==true && has_si872==false) {
  
-    std::cout << "build FTD according to the SupportDisk structure" << std::endl;
+    streamlog_out(DEBUG) << "build FTD according to the SupportDisk structure" << std::endl;
 
     int nLayersFTD = 0;
     int nFTDZ = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
@@ -968,7 +970,7 @@ void MaterialDB::init() {
   
   else if(has_si872==true && has_SupportDisks==false) {
 
-    std::cout << "build FTD according to the SupportRing structure" << std::endl;
+    streamlog_out(DEBUG) << "build FTD according to the SupportRing structure" << std::endl;
 
     int nLayersFTD = 0;
     int nFTDZ = int(pFTDDet.getDoubleVals("FTDZCoordinate").size());
@@ -983,10 +985,10 @@ void MaterialDB::init() {
       _rOutFTD.resize(nLayersFTD);
     }
     else {
-      std::cout << "Size of vectors FTDZCoordinate, FTDInnerRadius and  FTDInnerRadius are not equal --->" << std::endl;
-      std::cout << "# FTDZCoordinate : " << nFTDZ << std::endl;
-      std::cout << "# FTDInnerRadius : " << nFTDRin << std::endl;
-      std::cout << "# FTDOuterRadius : " << nFTDRout << std::endl;
+      streamlog_out(DEBUG) << "Size of vectors FTDZCoordinate, FTDInnerRadius and  FTDInnerRadius are not equal --->" << std::endl;
+      streamlog_out(DEBUG) << "# FTDZCoordinate : " << nFTDZ << std::endl;
+      streamlog_out(DEBUG) << "# FTDInnerRadius : " << nFTDRin << std::endl;
+      streamlog_out(DEBUG) << "# FTDOuterRadius : " << nFTDRout << std::endl;
       exit(1);
     }
     for (int i=0;i<nLayersFTD;++i) {

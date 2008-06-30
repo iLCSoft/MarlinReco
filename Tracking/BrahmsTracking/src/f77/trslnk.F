@@ -1,7 +1,13 @@
 *  
-* $Id: trslnk.F,v 1.6 2006-02-24 16:36:55 aplin Exp $
+* $Id: trslnk.F,v 1.7 2008-06-30 10:01:36 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2006/02/24 16:36:55  aplin
+* increased NMXHTRW again by a factor of 2 in thitsrt.F
+* increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
+* set the minimum radius/pad ring for inward search in first track finding to MINMRG=120 in unmerge.F
+* reduced the maximum number of links NMAXLNK to 25000
+*
 * Revision 1.5  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -450,7 +456,7 @@ c a more ellegant solution is needed
                      WRITE(6,*) 'METHOD IS FOUND FOR CURLERS'
                      WRITE(6,*) 'EVENT DROPPED'
                      CALL TKVETO(1) 
-                     IER = 1
+                     IER = 99
                      GO TO 999
                      NLNK=NLNK-1
                   END IF

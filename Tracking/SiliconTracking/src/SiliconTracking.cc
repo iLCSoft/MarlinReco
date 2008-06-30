@@ -501,7 +501,7 @@ void SiliconTracking::processRunHeader( LCRunHeader* run) {
     _nRun++ ;
     _nEvt = 0;
 
-    std::cout << "SiliconTracking ---> new run : run number = " << _nRun << std::endl;
+    streamlog_out(MESSAGE) << "SiliconTracking ---> new run : run number = " << _nRun << std::endl;
 
     // Intitialization of some constants and cuts
     _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
@@ -539,10 +539,8 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
   _tracks3Hits.clear();
   _trackImplVec.clear();
 
-  std::cout << std::endl;
-  std::cout << "SiliconTracking -> run = " << _nRun 
+  streamlog_out(MESSAGE) << "SiliconTracking -> run = " << _nRun 
 	    << "  event = " << _nEvt << std::endl;
-  std::cout << std::endl;
 
   int success = InitialiseVTX( evt );
   int successFTD = InitialiseFTD( evt );
@@ -551,12 +549,12 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
       for (int iTheta=0; iTheta<_nDivisionsInTheta;++iTheta)
 	ProcessOneSector(iPhi,iTheta); // Process one VXD sector     
-    //    std::cout << "End of Processing VXD sectors" << std::endl;
+    streamlog_out(DEBUG) << "End of Processing VXD sectors" << std::endl;
   }
 
   if (successFTD == 1) {
     TrackingInFTD(); // Perform tracking in the FTD
-    //    std::cout << "End of Processing FTD sectors" << std::endl;
+    streamlog_out(DEBUG) << "End of Processing FTD sectors" << std::endl;
   }
 
   if (success == 1 || successFTD == 1) {
@@ -564,14 +562,14 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     Sorting( _tracks5Hits);
     Sorting( _tracks4Hits);
     Sorting( _tracks3Hits);
-    //    std::cout << "End of Sorting " << std::endl;
+    streamlog_out(DEBUG) <<  "End of Sorting " << std::endl;
 
     int nTrk = int(_tracks5Hits.size());
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
       TrackExtended * trackAR = _tracks5Hits[iTrk];
       CreateTrack( trackAR );
     }
-    //    std::cout << "End of creating 5 hits tracks " << std::endl;
+    streamlog_out(DEBUG) <<  "End of creating 5 hits tracks " << std::endl;
     
 
     nTrk = int(_tracks4Hits.size());
@@ -579,14 +577,14 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
       TrackExtended * trackAR = _tracks4Hits[iTrk];
       CreateTrack( trackAR );
     }
-    //    std::cout << "End of creating 4 hits tracks " << std::endl;
+    streamlog_out(DEBUG) << "End of creating 4 hits tracks " << std::endl;
 
     nTrk = int(_tracks3Hits.size());
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
       TrackExtended * trackAR = _tracks3Hits[iTrk];
       CreateTrack( trackAR );
     }
-    //    std::cout << "End of creating 3 hits tracks " << std::endl;
+    streamlog_out(DEBUG) << "End of creating 3 hits tracks " << std::endl;
 
     if (_attachFast == 0) {
       AttachRemainingVTXHitsSlow();
@@ -596,7 +594,7 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
       AttachRemainingVTXHitsFast();
       AttachRemainingFTDHitsFast();
     }
-    //    std::cout << "End of picking up remaining hits " << std::endl;
+    streamlog_out(DEBUG) <<  "End of picking up remaining hits " << std::endl;
 
     if (_finalRefit > 0) {
       FinalRefit();
@@ -718,16 +716,15 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
       }
     }        
 
-    if (_debug == 1) {
-      std::cout << "SiliconTracking -> run " << _nRun
+      streamlog_out(DEBUG) << "SiliconTracking -> run " << _nRun
 		<< " event " << _nEvt << std::endl;
-      std::cout << "Number of Si tracks = " << nSiSegments << std::endl;
-      std::cout << "Total 4-momentum of Si tracks : E = " << eTot
+      streamlog_out(DEBUG) << "Number of Si tracks = " << nSiSegments << std::endl;
+      streamlog_out(DEBUG) << "Total 4-momentum of Si tracks : E = " << eTot
 		<< " Px = " << pxTot
 		<< " Py = " << pyTot
 		<< " Pz = " << pzTot << std::endl;
     
-    }
+
 
 	
     evt->addCollection(trkCol,_siTrkCollection.c_str());     
@@ -804,7 +801,7 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_FTDHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
-    std::cout << "Number of FTD hits = " << nelem << std::endl;
+    streamlog_out(DEBUG) << "Number of FTD hits = " << nelem << std::endl;
     _nTotalFTDHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
@@ -823,7 +820,7 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
       if (Phi < 0.) Phi = Phi + TWOPI;
       int layer = hit->getType() - 201;
       if (layer < 0 || layer > _nLayersFTD-1) {
-	std::cout << "SiliconTracking => fatal error in FTD : layer is outside allowed range : " << layer << std::endl;
+	streamlog_out(ERROR) << "SiliconTracking => fatal error in FTD : layer is outside allowed range : " << layer << std::endl;
 	exit(1);
       }
       int iPhi = int(Phi/_dPhiFTD);
@@ -861,7 +858,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
   try {
     LCCollection * hitCollection = evt->getCollection(_VTXHitCollection.c_str());
     int nelem = hitCollection->getNumberOfElements();
-    std::cout << "Number of VTX hits = " << nelem << std::endl;
+    streamlog_out(DEBUG) << "Number of VTX hits = " << nelem << std::endl;
     _nTotalVTXHits = nelem;
     for (int ielem=0; ielem<nelem; ++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
@@ -886,7 +883,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
       if (Phi < 0.) Phi = Phi + TWOPI;
       int layer = hit->getType() - 101;
       if (layer < 0 || layer >= _nLayers) {
-	std::cout << "SiliconTracking => fatal error in VTX : layer is outside allowed range : " << layer << std::endl;
+	streamlog_out(ERROR) << "SiliconTracking => fatal error in VTX : layer is outside allowed range : " << layer << std::endl;
 	exit(1);
       }
       int iPhi = int(Phi/_dPhi);
@@ -933,7 +930,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
 	//		  << " Type = " << hit->getType() 
 	//		  << " Layer = " << layer << std::endl;
 	if (layer < 0 || layer >= _nLayers) {
-	  std::cout << "SiliconTracking => fatal error in SIT : layer is outside allowed range : " << layer << std::endl;
+	  streamlog_out(ERROR) << "SiliconTracking => fatal error in SIT : layer is outside allowed range : " << layer << std::endl;
 	  exit(1);
 	}
 	int iPhi = int(Phi/_dPhi);
@@ -1551,7 +1548,7 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
 	float rR = hitVec[ih]->getResolutionRPhi();
 	float rZ = hitVec[ih]->getResolutionZ();
 	if (int(hitVec[ih]->getTrackExtendedVec().size()) != 0)
-	  std::cout << "WARNING : HIT POINTS TO TRACK " << std::endl;
+	  streamlog_out(DEBUG) << "WARNING : HIT POINTS TO TRACK " << std::endl;
 	xh[ih] = trkHit->getPosition()[0];
 	yh[ih] = trkHit->getPosition()[1];
 	xh_fl[ih] = float(xh[ih]);
@@ -1813,7 +1810,7 @@ void SiliconTracking::AttachRemainingVTXHitsFast() {
 	    if (Phi < 0.) Phi = Phi + TWOPI;
 	    int layer = hit->getType() - 1;
 	    if (layer < 0) {
-	      std::cout << "Fatal error; layer < 0 : " << layer << std::endl;
+	      streamlog_out(ERROR) << "Fatal error; layer < 0 : " << layer << std::endl;
 	      exit(1);
 	    }
 	    int iPhi = int(Phi/_dPhi);

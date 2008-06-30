@@ -108,7 +108,7 @@ void CurlKillerProcessor::processEvent( LCEvent * evt ) {
 
   static bool firstEvent = true ;  
 
-  if(firstEvent==true) cout << "CurlKillerProcessor called for first event" << endl;
+  if(firstEvent==true) streamlog_out(MESSAGE) << "CurlKillerProcessor called for first event" << endl;
 
   firstEvent = false ;
 

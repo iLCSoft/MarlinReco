@@ -19,6 +19,11 @@ Tk_Te_Bank::~Tk_Te_Bank()
 {
 }
 
+void Tk_Te_Bank::clear(){
+  te_bank.clear();
+  itedat_bank.clear();
+}
+
 void Tk_Te_Bank::add_te(int subid,int submod,int unused,int MesrCode,int PnteTE,int Q,int ndf,float chi2,float L,float cord1,float cord2,float cord3,float theta,float phi,float invp,float dedx,float cov1,float cov2,float cov3,float cov4,float cov5,float cov6,float cov7,float cov8,float cov9,float cov10,float cov11,float cov12,float cov13,float cov14,float cov15)
 {
 

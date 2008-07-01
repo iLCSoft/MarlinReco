@@ -1,7 +1,10 @@
 *  
-* $Id: trslnk.F,v 1.7 2008-06-30 10:01:36 aplin Exp $
+* $Id: trslnk.F,v 1.8 2008-07-01 10:34:39 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2008/06/30 10:01:36  aplin
+* change error message for too many links to 99
+*
 * Revision 1.6  2006/02/24 16:36:55  aplin
 * increased NMXHTRW again by a factor of 2 in thitsrt.F
 * increased the minimum number of hits to form a chain in trkfnd.F from MNLNK=4 to MNLNK=7
@@ -447,19 +450,14 @@ c                  RW(KLNK +13) = CHI2Z
 C GAB:
                   NLNK = NLNK + 1
 C(KH)-------begin
-c FIXME: SJA: drop event for to many link, 
-c a more ellegant solution is needed   
-                  
+
+
                   IF (NLNK.GT.NMAXLNK) THEN
-                     WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL, NLNK =',NLNK 
-                     WRITE(6,*) 'THIS IS FATAL UNTIL A BETTER' 
-                     WRITE(6,*) 'METHOD IS FOUND FOR CURLERS'
-                     WRITE(6,*) 'EVENT DROPPED'
+c                     WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL, NLNK =',NLNK 
                      CALL TKVETO(1) 
-                     IER = 99
+                     IER = 911
                      GO TO 999
-                     NLNK=NLNK-1
-                  END IF
+                   END IF
 C(KH)-------end
 
                   RLNK(NLNK , 1) = REAL(IR3)

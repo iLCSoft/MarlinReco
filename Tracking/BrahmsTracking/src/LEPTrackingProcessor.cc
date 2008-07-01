@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.36 2008-06-27 15:32:27 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.37 2008-07-01 10:34:39 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.36  2008/06/27 15:32:27  aplin
+** corrected conversion of covariance matrix, and made more use of streamlog
+**
 ** Revision 1.35  2008/06/26 09:35:56  aplin
 **
 ** A clean up has been made of the arrays that hold the TE's/Hits for
@@ -137,6 +140,7 @@
 #include <gear/GEAR.h>
 #include <gear/TPCParameters.h>
 #include <gear/PadRowLayout2D.h>
+#include <gearimpl/FixedPadSizeDiskLayout.h>
 #include <gear/BField.h>
 //
 
@@ -276,6 +280,21 @@ FCALLSCFUN9(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT,
 
   // end of cfortran.h definitions
 
+// function to generate a unique key for each [r][phi] bin based on a 64bit bitfield
+// the most significant 32 bits are used for r 
+unsigned long long make_keyNew( unsigned r, unsigned phi ){
+
+  unsigned long long temp = 0xffffffff & r ;
+
+  temp = temp << 32 ;
+
+  return  ( temp )  |  ( 0xffffffff & phi )  ;
+} 
+
+
+// Map to store the enteries for a 2D(r-phi) projection of the Tracker hits 
+typedef std::map< unsigned long long  , std::vector<EVENT::TrackerHit*> >  HitMap ; 
+
   LEPTrackingProcessor aLEPTrackingProcessor ;
 
 LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor") {
@@ -326,6 +345,21 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                             "Name of the Track MC Relation collection"  ,
                             _colNameMCTracksRel ,
                             std::string("TracksMCP") ) ;
+
+  registerProcessorParameter( "BinHeight" , 
+                              "Bin Height in pad multiples"  ,
+                              _binHeight ,
+                              int(1) ) ;
+
+  registerProcessorParameter( "BinWidth" , 
+                              "Bin Width in pad multiples"  ,
+                              _binWidth ,
+                              int(3) ) ;
+
+  registerProcessorParameter( "MultiplicityCut" , 
+                              "Cut on the number of hits in r-phi bin"  ,
+                              _multiplicityCut ,
+                              int(4) ) ;
 }
 
 
@@ -418,218 +452,106 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     
     LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
     LCCollectionVec* TrackVec = new LCCollectionVec( LCIO::TRACK )  ;
-
+    
     // if we want to point back to the hits we need to set the flag
     LCFlagImpl trkFlag(0) ;
     trkFlag.setBit( LCIO::TRBIT_HITS ) ;
     tpcTrackVec->setFlag( trkFlag.getFlag()  ) ;
     TrackVec->setFlag( trkFlag.getFlag()  ) ;
-
+    
     LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
     LCCollectionVec* tpclcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
+    
+    LCCollectionVec* cutCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+    cutCol->setSubset() ; 
+    
+    LCCollectionVec* remainingCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+    remainingCol->setSubset() ; 
+
 
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
+    streamlog_out(DEBUG) << "Number of TPCHit before filtering: " << nTPCHits << endl;
     
     TkHitBank->setFirstHitIndex("TPC"); 
     
-    for(int i=0; i< nTPCHits; i++){
-      
-      TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
-      
-      double *pos;
-      float  de_dx;
-      float  time;
-  
-      //      cellId = 	trkHitTPC->getCellID();
-      pos = (double*) trkHitTPC->getPosition(); 
-      de_dx = trkHitTPC->getdEdx();
-      time = trkHitTPC->getTime();
-      
-      // convert to cm needed for BRAHMS(GEANT)
-      float x = 0.1*pos[0];
-      float y = 0.1*pos[1];
-      float z = 0.1*pos[2];
-      
-      // convert de/dx from GeV (LCIO) to number of electrons 
-      
-      double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
-      de_dx = de_dx/tpcIonisationPotential;
+    _goodHits.reserve(nTPCHits);
 
-//       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
-//       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
-//       double aReso = tpcRPhiResConst*tpcRPhiResConst;
-//       double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
-//       if (driftLenght <0) { 
-//         driftLenght = 0.10;
-//       }
-//       double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
-//       double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
-//       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+    _goodHits.clear();
 
+    selectTPCHits(tpcTHcol);
+    
+    streamlog_out(DEBUG) << "Number of TPCHit passed to PATREC: " << _goodHits.size() << endl;
 
-      // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
-      // For no error in r
-
-
-      double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
-      double phi = atan2(pos[1],pos[0]); 
-      double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0]+trkHitTPC->getCovMatrix()[2]);
-      double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
-
-//      cout << "row_hits->getY() = " <<  pos[1] << "  row_hits->getY() = " << pos[0] ; 
-//      cout << "  phi = " <<  phi ;  
-//      cout << "  tpcRPhiRes = " << tpcRPhiRes ;
-//      cout << "  cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes = " << trkHitTPC->getCovMatrix()[2] << endl;
-
-      // convert mm to cm 
-      tpcRPhiRes = 0.1 * tpcRPhiRes;
-      tpcZRes = 0.1 * tpcZRes;
-
-
-      // Brahms resolution code for TPC = 3 REF tkhtpc.F
-      int icode = 3;
-      int subid = 500;
-
-      int mctrack = 0;
-      
-
-      TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
-      
-
-
-      TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
-
-    }
+    FillTPCHitBanks();
 
     TkHitBank->setLastHitIndex("TPC"); 
     
     //    cout << "the number of tpc hits sent to brahms = " << TPCHitBank->size() << endl;
     //    CNTPC.ntphits = TPCHitBank->size();
- 
-    //_____________________________________________________________________
-
-    if( vtxTHcol != 0 ) { 
-
-      int nVTXHits = vtxTHcol->getNumberOfElements()  ;   
-      
-      TkHitBank->setFirstHitIndex("VTX"); 
-      
-      for(int i=0; i< nVTXHits; i++){
-        
-        TrackerHit* trkHitVTX = dynamic_cast<TrackerHit*>( vtxTHcol->getElementAt( i ) ) ;
     
-        double *pos;
-        float  de_dx;
-        float  time;
-        
-        //      cellId = 	trkHitVTX->getCellID();
-        pos = (double*) trkHitVTX->getPosition(); 
-        de_dx = trkHitVTX->getdEdx() ;
-        time = trkHitVTX->getTime() ;
-        
-        // convert to cm needed for BRAHMS(GEANT)
-        float x = 0.1*pos[0] ;
-        float y = 0.1*pos[1] ;
-        float z = 0.1*pos[2] ;
-        
-        
-        // Brahms resolution code for VTX = 3 REF tkhtpc.F
-        
-        int subid = trkHitVTX->getType() ;
-        
-        // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
-        float vtxRes = 0.007 ;
-        int resCode = 3 ;
-        
-        int mctrack = 0 ;
-        
-        //        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,vtxRes,vtxRes) ;
-        
-      }
-      
-      TkHitBank->setLastHitIndex("VTX"); 
-      
-      
-    }
-    
-    if( sitTHcol != 0 ) { 
-
-      int nSITHits = sitTHcol->getNumberOfElements()  ;   
-      
-      TkHitBank->setFirstHitIndex("SIT"); 
-      
-      for(int i=0; i< nSITHits; i++){
-        
-        TrackerHit* trkHitSIT = dynamic_cast<TrackerHit*>( sitTHcol->getElementAt( i ) ) ;
-        
-        double *pos;
-        float  de_dx;
-        float  time;
-        
-        //      cellId = 	trkHitSIT->getCellID();
-        pos = (double*) trkHitSIT->getPosition(); 
-        de_dx = trkHitSIT->getdEdx() ;
-        time = trkHitSIT->getTime() ;
-        
-        // convert to cm needed for BRAHMS(GEANT)
-        float x = 0.1*pos[0] ;
-        float y = 0.1*pos[1] ;
-        float z = 0.1*pos[2] ;
-        
-        
-        // Brahms resolution code for SIT = 3 REF tkhtpc.F
-        
-        int subid = trkHitSIT->getType() ;
-        
-        // brsimu/brgeom/brtrac/code_f/vxpgeom.F:      VXDPPNT=7.0E-4
-        float sitRPhiRes = 0.01 ;
-        float sitZRes = 0.05 ;
-        int resCode = 3 ;
-        
-        int mctrack = 0 ;
-        
-        //        TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,resCode,sitRPhiRes,sitZRes) ;
-        
-      }
-      
-      TkHitBank->setLastHitIndex("SIT"); 
-      
-    }
-        
-      
-      //_____________________________________________________________________
-      
     if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
       int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
       streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
     }
-
-    if(TkHitBank->getNumOfSubDetHits("VTX") > 0) {
-      int vtxsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("VTX")) ;
-      streamlog_out(DEBUG) << "the first hit for the vtx has id " << vtxsubid << endl ;
-    }
     
-    if(TkHitBank->getNumOfSubDetHits("SIT") > 0) {
-      int sitsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("SIT")) ;
-      streamlog_out(DEBUG) << "the first hit for the sit has id " << sitsubid << endl ;
-    }
-    
-
-
     int errTKTREV = TKTREV(); 
+  
+    if(errTKTREV==911){
 
-    streamlog_out(DEBUG) << "TKTREV returns:" << errTKTREV << endl;
+      
+      streamlog_out(DEBUG) << endl;
+      streamlog_out(DEBUG) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
+      streamlog_out(DEBUG) << "   LEPTrackingProcessor: Try Again with CurlKiller" << endl;
+      streamlog_out(DEBUG) << endl;
+      
+      for(int i=2;i<5;++i){
 
+        streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
+      
+        streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;
+
+        _goodHits.clear();
+        TkMCBank->clear();
+        TkTeBank->clear();
+        TkTkBank->clear();
+
+        selectTPCHits(tpcTHcol,remainingCol, cutCol,_binHeight*i,_binWidth*i);
+        
+        FillTPCHitBanks();
+        
+        streamlog_out(DEBUG) << "Number of TPCHit after filtering: " << _goodHits.size() << endl;
+
+        if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
+          int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
+          streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
+        }
+        
+        errTKTREV = TKTREV();  
+
+        if(errTKTREV!=911) {
+          break;
+        }
+        else if(i==4){
+          streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+          streamlog_out(ERROR) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
+          streamlog_out(ERROR) << "   LEPTrackingProcessor: CurlKiller Failed to resolve the problem" << endl;          
+          streamlog_out(ERROR) << "   LEPTrackingProcessor: This event contains NO TPC TRACKS" << endl;          
+          streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        }
+        else {
+          streamlog_out(DEBUG) << "TKTREV return:" << errTKTREV << " trying to remove more hits using bigger bins for Curlkiller" << endl;
+        }
     
-    if(errTKTREV==99){
-      streamlog_out(ERROR) << endl;
-      streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-      streamlog_out(ERROR) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
-      streamlog_out(ERROR) << "   LEPTrackingProcessor: TPC-Tracking FAILED NO TPC TRACKS are reconstructed in this event" << endl;
-      streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-      streamlog_out(ERROR) << endl;
+      }
+    }
 
-    } 
+
+    // add these collections so that the effect of the removed hits can be monitored in the case that any are removed
+    // to save unecessary duplication both collections will be empty if no hits are killed
+    evt->addCollection( remainingCol , "usedTPCTrackerHits" ) ;
+    evt->addCollection( cutCol , "droppedTPCTrackeHits" ) ;
+          
+    streamlog_out(DEBUG) << "TKTREV return:" << errTKTREV << endl;
 
     streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
 
@@ -1131,5 +1053,184 @@ void LEPTrackingProcessor::end(){
 //            << " processed " << _nEvt << " events in " << _nRun << " runs "
 //            << std::endl ;
 //
+}
+
+void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol){
+  if( tpcTHcol != 0 ){
+    
+    int n_THits = tpcTHcol->getNumberOfElements()  ;
+    for(int i=0; i< n_THits; i++){
+      TrackerHit* THit = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
+      _goodHits.push_back(THit);
+    }
+  }
+}
+
+void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* remainingCol, LCCollectionVec* cutCol, int nbinHeight, int nbinWidth){
+
+  if( tpcTHcol != 0 ){
+    
+    int n_THits = tpcTHcol->getNumberOfElements()  ;
+    
+    
+    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+    const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+    
+    const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
+    
+    double gearRMin = planeExt[0] ;
+    double gearRMax = planeExt[1] ;
+    
+    const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
+
+    double binHeight = padLayout.getRowHeight(1) * (double) nbinHeight ;
+    double binWidth = padLayout.getPadWidth(1) * padCoord[0] * (double) nbinWidth ;
+        
+
+    // create bined pad layout
+    const gear::FixedPadSizeDiskLayout padsAsBins(gearRMin, gearRMax, binHeight, binWidth) ;                                       
+
+    // create hit map
+    HitMap hitMap ; 
+    
+
+    for(int i=0; i< n_THits; i++){
+      
+      TrackerHit* THit = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
+      
+      double *pos;
+      pos = (double*) THit->getPosition(); 
+      
+      double rad = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);      
+      
+      //get phi of current hit
+      float phi = atan2(pos[1],pos[0]);
+      if (phi<0.) phi=phi+twopi;     
+      
+      int padIndex = padsAsBins.getNearestPad(rad,phi);
+      unsigned int iRowHit = padsAsBins.getRowNumber(padIndex);      
+      unsigned int iPhiHit = padsAsBins.getPadNumber(padIndex);
+      
+      // enter hit into hitMap
+      hitMap[  make_keyNew( iRowHit, iPhiHit ) ].push_back(  THit ) ;      
+
+    }
+
+    //loop over hitmap and fill both collections of cut and remaining hits
+
+    for( HitMap::iterator it = hitMap.begin() ;it != hitMap.end() ;  ++it ) {
+      
+      const std::vector<EVENT::TrackerHit*>& v = it->second ;
+      
+      if(   v.size() >=  (unsigned) _multiplicityCut ) {
+
+        for( unsigned i = 0 ; i < v.size() ; i++){
+          cutCol->addElement(  v[i] ) ;
+        } 
+
+        //                 int color = 0x88ff88 ;
+        //                 int layer = 6 ;
+//                 int marker = 2 ;
+//                 int size = 1 ;
+        
+        //                MarlinCED::drawObjectsWithPosition( v.begin(), v.end() , marker, size , color, layer) ;  
+        
+      }
+
+      if(   v.size() < (unsigned) _multiplicityCut  ) {
+        
+        for( unsigned i = 0 ; i < v.size() ; i++){
+          remainingCol->addElement(  v[i] ) ;
+
+          _goodHits.push_back(v[i]);
+          
+        }            
+        
+//                  int color = 0x88ffff ;
+//                  int layer = 7 ;
+//                  int marker = 2 ;
+//                  int size = 1 ;
+        
+        //                 MarlinCED::drawObjectsWithPosition( v.begin(), v.end() , marker, size , color, layer) ; 
+      }
+      
+    }   
+        
+  }
+
+}
+
+
+void LEPTrackingProcessor::FillTPCHitBanks(){
+
+  TPCHitBank->clear();
+  TkHitBank->clear();
+
+  for(int i=0; i< _goodHits.size(); ++i){
+      
+    TrackerHit* trkHitTPC = _goodHits[i];
+    
+    double *pos;
+    float  de_dx;
+    float  time;
+    
+    //      cellId = 	trkHitTPC->getCellID();
+    pos = (double*) trkHitTPC->getPosition(); 
+    de_dx = trkHitTPC->getdEdx();
+    time = trkHitTPC->getTime();
+    
+      // convert to cm needed for BRAHMS(GEANT)
+    float x = 0.1*pos[0];
+    float y = 0.1*pos[1];
+    float z = 0.1*pos[2];
+    
+    // convert de/dx from GeV (LCIO) to number of electrons 
+    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+    double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
+    de_dx = de_dx/tpcIonisationPotential;
+    
+//       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
+//       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
+//       double aReso = tpcRPhiResConst*tpcRPhiResConst;
+//       double driftLenght = gearTPC.getMaxDriftLength() - fabs(pos[2]);
+//       if (driftLenght <0) { 
+//         driftLenght = 0.10;
+//       }
+//       double bReso = tpcRPhiResDiff*tpcRPhiResDiff;
+//       double tpcRPhiRes = sqrt(aReso + bReso*driftLenght);
+//       double tpcZRes = gearTPC.getDoubleVal("tpcZRes");
+    
+
+    // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
+    // For no error in r
+    
+    
+    double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
+    double phi = atan2(pos[1],pos[0]); 
+    double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0]+trkHitTPC->getCovMatrix()[2]);
+    double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
+    
+      //      cout << "row_hits->getY() = " <<  pos[1] << "  row_hits->getY() = " << pos[0] ; 
+//      cout << "  phi = " <<  phi ;  
+//      cout << "  tpcRPhiRes = " << tpcRPhiRes ;
+//      cout << "  cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes = " << trkHitTPC->getCovMatrix()[2] << endl;
+
+    // convert mm to cm 
+    tpcRPhiRes = 0.1 * tpcRPhiRes;
+    tpcZRes = 0.1 * tpcZRes;
+    
+    
+    // Brahms resolution code for TPC = 3 REF tkhtpc.F
+    int icode = 3;
+    int subid = 500;
+    
+    int mctrack = 0;
+    
+
+    TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
+    
+    TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
+    
+  }
 }
 

@@ -17,6 +17,7 @@ class TPC_Hit_Bank
   TPC_Hit_Bank();
   ~TPC_Hit_Bank();
   //  void add_hit(float, float, float, float, int, int, int, int, int, float, float);
+  void clear();
   void add_hit(float, float, float, float, int, float, float, int);
   void remove_hit(int);
   void setX(float X, int hit){hit_bank[hit].x = X;};

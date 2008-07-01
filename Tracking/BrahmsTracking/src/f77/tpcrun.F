@@ -1,9 +1,12 @@
 
 
 *     
-* $Id: tpcrun.F,v 1.5 2005-07-29 15:06:17 aplin Exp $
+* $Id: tpcrun.F,v 1.6 2008-07-01 10:34:39 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2005/07/29 15:06:17  aplin
+* Initialised number of tracks found to 0 in tpcrun.
+*
 * Revision 1.4  2005/07/26 17:56:21  aplin
 * Removed unecessary initialisation of hit arrays which is now done in
 * tktrev. Corrected (finaly) the calculation of d0 in LEPTrackingProcessor.
@@ -76,6 +79,7 @@ C#include "tpcdims.inc"
 C
       IMPLICIT NONE
 
+#include "include/tpcdbg.inc"
 #include "include/fndparms.inc"
 #include "include/tpcdims.inc"
 #include "include/tpcfunc2.inc"
@@ -123,7 +127,9 @@ CCC SJA the number of hits is set from the MARLIN side
 CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
       IF(NTPHITS.GT.NTPMAX)THEN
         IER = 1
-        WRITE(*,*)'TPCRUN: Too many hits - increase NTPMAX'
+        IF(TPCDBG.GT.0) THEN
+           WRITE(*,*)'TPCRUN: Too many hits - increase NTPMAX'
+        ENDIF
         CALL TKVETO(1)
         GOTO 999
       ENDIF
@@ -155,14 +161,18 @@ c      ENDIF
 c --- order TPC hits according to (a) padrow and (b) phi within padrow
       CALL THITSRT(ITPDGT,IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: THITSRT returned IER=',IER
+         IF(TPCDBG.GT.0) THEN
+            WRITE(*,*)'TPCRUN: THITSRT returned IER=',IER
+         ENDIF
         GOTO 999
       ENDIF
 
 c --- attempt to remove hits which are probably merged:
       CALL UNMERGE(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: UNMERGE returned IER=',IER
+         IF(TPCDBG.GT.0) THEN
+            WRITE(*,*)'TPCRUN: UNMERGE returned IER=',IER
+         ENDIF
         GOTO 999
       ENDIF
 
@@ -170,35 +180,45 @@ c --- now that merges have been flagged, return to normal track finder:
 c --- find links and chains:
       CALL TRKFND(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: TRKFND returned IER=',IER
+        IF(TPCDBG.GT.0) THEN
+           WRITE(*,*)'TPCRUN: TRKFND returned IER=',IER
+        ENDIF
         GOTO 999
       ENDIF
 
 c --- join up chains where possible:
       CALL TFLNKS(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: TFLNKS returned IER=',IER
-        GOTO 999
+         IF(TPCDBG.GT.0) THEN
+            WRITE(*,*)'TPCRUN: TFLNKS returned IER=',IER
+         ENDIF
+         GOTO 999
       ENDIF
 
 c --- assemble track candidates:
       CALL TFCAND(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: TFCAND returned IER=',IER
-        GOTO 999
+         IF(TPCDBG.GT.0) THEN
+            WRITE(*,*)'TPCRUN: TFCAND returned IER=',IER
+         ENDIF
+         GOTO 999
       ENDIF
 
 c --- fit the candidates:
       CALL TFITTK(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: TFITTK returned IER=',IER
-        GOTO 999
+         IF(TPCDBG.GT.0) THEN
+            WRITE(*,*)'TPCRUN: TFITTK returned IER=',IER
+         ENDIF
+         GOTO 999
       ENDIF
 
 c --- link up any broken tracks:
       CALL TFLNK2(IER)
       IF(IER.NE.0)THEN
-        WRITE(*,*)'TPCRUN: TFLNK2 returned IER=',IER
+        IF(TPCDBG.GT.0) THEN
+           WRITE(*,*)'TPCRUN: TFLNK2 returned IER=',IER
+        ENDIF
         GOTO 999
       ENDIF
 

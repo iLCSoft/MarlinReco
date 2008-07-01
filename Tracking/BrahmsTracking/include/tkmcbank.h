@@ -12,6 +12,7 @@ class Tk_MC_Bank
  public:
   Tk_MC_Bank();
   ~Tk_MC_Bank();
+  void clear();
   // this class uses PTRTYPE which is defined in cpointer.h as of type long
   void add_mc(float, float, float, float, float, float, float, int, int, int, int);
   void remove_mc(int);

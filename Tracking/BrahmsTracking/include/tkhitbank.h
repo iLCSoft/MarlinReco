@@ -15,6 +15,7 @@ class Tk_Hit_Bank
  public:
   Tk_Hit_Bank();
   ~Tk_Hit_Bank();
+  void clear();
   void add_hit(float, float, float, float, int, int, int, int, int, float, float);
   //void add_hit(float, float, float, float, int, float, float, int);
   //  void remove_hit(int);

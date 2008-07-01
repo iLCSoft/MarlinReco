@@ -15,6 +15,7 @@ class Tk_Te_Bank
  public:
   Tk_Te_Bank() ;
   ~Tk_Te_Bank() ;
+  void clear();
   void add_te(int,int,int,int,int,int,int,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float) ; 
 
   void remove_te(int) ;

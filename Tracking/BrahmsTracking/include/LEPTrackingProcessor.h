@@ -4,7 +4,8 @@
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
-
+#include <EVENT/TrackerHit.h>
+#include <IMPL/LCCollectionVec.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -104,7 +105,18 @@ class LEPTrackingProcessor : public Processor {
    */
   virtual void end() ;
   
-  
+  /** Used to remove problematic TPC hits from Curlers
+   */
+  void selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* remainingCol, LCCollectionVec* cutCol, int binHeight, int binWidth);
+
+  /** Used to send all hits to the patrec
+   */
+  void selectTPCHits(LCCollection* tpcTHcol);
+
+  /**  Used to fill TPC hits into the hit banks for F77
+   */
+  void FillTPCHitBanks();
+
  protected:
 
   /** Input collections name.
@@ -120,6 +132,11 @@ class LEPTrackingProcessor : public Processor {
   int _nRun ;
   int _nEvt ;
 
+  int _binHeight ;
+  int _binWidth ;
+  int _multiplicityCut ;
+
+  std::vector<EVENT::TrackerHit*> _goodHits;
 
 } ;
 

@@ -1,7 +1,19 @@
 *  
-* $Id: tktrev.F,v 1.14 2008-06-26 09:35:56 aplin Exp $
+* $Id: tktrev.F,v 1.15 2008-07-01 10:34:39 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.14  2008/06/26 09:35:56  aplin
+*
+* A clean up has been made of the arrays that hold the TE's/Hits for
+* track fitting. An effort has been made to ensure that both the arrays
+* are big enough to hold the required number of hits, and that the arrays
+* are all of the same dimensions between calling routines.
+*
+* All verbose output, except for the case where the tracking is dropped
+* for a complete event, has now been hidden behind debug IF
+* Statements. The level of verbosity can be controlled via the variables
+* TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 * Revision 1.13  2008/04/17 14:36:29  aplin
 * reduced printoutlevel in f77 and moved cout to debug streamlog_out for C++
 *
@@ -307,7 +319,7 @@ c      write(*,*) "---------------------"
 
 
         CALL TPCRUN(IERROR)
-        IF(IERROR.EQ.99) THEN
+        IF(IERROR.NE.0) THEN
            GOTO 888
         ENDIF
         

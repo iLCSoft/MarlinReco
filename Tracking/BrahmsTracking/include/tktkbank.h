@@ -15,6 +15,8 @@ class Tk_Tk_Bank
  public:
   Tk_Tk_Bank() ;
   ~Tk_Tk_Bank() ;
+
+  void clear();
   void add_tk(int,int,int,int,int,int,int,int,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float) ; 
 
   void remove_tk(int) ;

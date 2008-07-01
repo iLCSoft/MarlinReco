@@ -20,6 +20,11 @@ Tk_Hit_Bank::~Tk_Hit_Bank()
 {
 }
 
+void Tk_Hit_Bank::clear()
+{
+  hit_bank.clear();
+}
+
 void Tk_Hit_Bank::add_hit(float X, float Y, float Z, float E, int SubID,  int TrkID, int PntToEx, int NEx, int ResC, float Res1, float Res2)
   //void Tk_Hit_Bank::add_hit(float X, float Y, float Z, float E, int SubID, float Res1, float Res2, int TrkID)
 {

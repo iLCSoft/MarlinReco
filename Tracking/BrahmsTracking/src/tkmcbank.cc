@@ -19,7 +19,9 @@ Tk_MC_Bank::~Tk_MC_Bank()
 {
 }
 
-
+void Tk_MC_Bank::clear(){
+  mc_bank.clear();
+}
 
 void Tk_MC_Bank::add_mc(float PX, float PY, float PZ, float E, float X, float Y, float Z, int GEANT_PID, int MCTRACK, int NHITS, int HEPEVT_NUM)
 

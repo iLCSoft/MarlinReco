@@ -1,7 +1,23 @@
 *  
-* $Id: trslnk.F,v 1.8 2008-07-01 10:34:39 aplin Exp $
+* $Id: trslnk.F,v 1.9 2008-07-01 15:08:31 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.8  2008/07/01 10:34:39  aplin
+* The functionality of CurlKiller has been moved into LEPTracking. It is
+* now operated at increasing levels of aggression in order to try to
+* save the event from not not having ANY TPC Tracks, due to too many links in
+* trslnk.
+*
+* As a first try, all hits are passed to the PATREC. If this fails three
+* more attempts are made where the size of the bins used to find high
+* levels of multiplicity in r-phi are increased by factors of 2, 3 and
+* finally 4. If this still fails an error message is printed warning
+* that NO TPC Tracks will be reconstructed for this event.
+*
+* The verbosity of LEPTracking is now controlled completely via
+* streamlog on the C++ side, and via flags set in tkinit on the F77
+* side.
+*
 * Revision 1.7  2008/06/30 10:01:36  aplin
 * change error message for too many links to 99
 *
@@ -450,8 +466,6 @@ c                  RW(KLNK +13) = CHI2Z
 C GAB:
                   NLNK = NLNK + 1
 C(KH)-------begin
-
-
                   IF (NLNK.GT.NMAXLNK) THEN
 c                     WRITE(6,*) 'TRSLNK: NMAXLNK TOO SMALL, NLNK =',NLNK 
                      CALL TKVETO(1) 

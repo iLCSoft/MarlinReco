@@ -111,7 +111,7 @@ class LEPTrackingProcessor : public Processor {
 
   /** Used to send all hits to the patrec
    */
-  void selectTPCHits(LCCollection* tpcTHcol);
+  void selectTPCHits(LCCollection* tpcTHcol, LCCollection* usedCol);
 
   /**  Used to fill TPC hits into the hit banks for F77
    */
@@ -128,7 +128,8 @@ class LEPTrackingProcessor : public Processor {
   std::string _colNameTracks ;
   std::string _colNameMCTPCTracksRel ;
   std::string _colNameMCTracksRel ;
-
+  std::string _usedColName;
+  std::string _droppedColName;
   int _nRun ;
   int _nEvt ;
 

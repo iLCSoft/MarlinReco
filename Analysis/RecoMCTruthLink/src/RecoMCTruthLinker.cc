@@ -178,38 +178,38 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     if( fabs( charge ) > .01 ) {   // charged particle -> use track
 	
       MCPMap mcpMap ;
-
+      
       const TrackVec& trkVec = rec->getTracks() ;
-
+      
       unsigned nTrk = trkVec.size() ;
-	
+      
       streamlog_out( DEBUG0 ) << " loop over " <<  nTrk << " tracks " << std::endl ;
-	
+      
       int nHit = 0 ;
-	
+      
       for( TrackVec::const_iterator trkIt = trkVec.begin() ;
 	   trkIt != trkVec.end() ; ++trkIt ) {
-	  
+	
 	const Track* trk = *trkIt ;
-	  
+	
 	const TrackerHitVec& trkHits = trk->getTrackerHits() ;
-	  
+	
 	for( TrackerHitVec::const_iterator hitIt = trkHits.begin() ;
 	     hitIt != trkHits.end() ; ++hitIt ) { 
-	    
+	  
 	  const TrackerHit* hit = * hitIt ;
-	    
+	  
 	  const LCObjectVec& simHits  = hit->getRawHits() ;
-	    
+	  
 	  for( LCObjectVec::const_iterator objIt = simHits.begin() ;
 	       objIt != simHits.end() ; ++objIt ){
-	      
+	    
 	    SimTrackerHit* simHit = dynamic_cast<SimTrackerHit*>( *objIt ) ;
-
+	    
 	    MCParticle* mcp = simHit->getMCParticle() ; 
-
+	    
 	    mcpMap[ mcp ]++ ;   // count the hit caused by this particle
-
+	    
 	    ++nHit ; // total hit count
 
 	  }
@@ -220,17 +220,18 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	  
 	streamlog_out( WARNING ) << " charged particle without tracks   " <<  std::endl ;
 	  
-	if( nHit == 0 ){
-
-	  streamlog_out( WARNING ) << " no tracker hits found " <<  std::endl ;
-	}
-
 	break ;  // won't find a particle 
       }
 
-
-      // find the mc particle with the largest #hits 
+      if( nHit == 0 ){
 	
+	streamlog_out( WARNING ) << " no simulated tracker hits found " <<  std::endl ;
+	
+	break ;  // won't find a particle 
+      }
+      
+      
+      // find the mc particle with the largest #hits 
       int maxHit = 0 ;
       MCParticle* theMCP = 0 ;
       for( MCPMap::iterator it = mcpMap.begin() ;

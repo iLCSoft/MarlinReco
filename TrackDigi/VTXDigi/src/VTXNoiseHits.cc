@@ -111,10 +111,11 @@ void VTXNoiseHits::processEvent( LCEvent * evt ) {
   if( (unsigned) layerVXD.getNLayers() !=   _densities.size()  ){
     
     
-    streamlog_out( ERROR  ) << " wrong number of hit densities: " <<  _densities.size() 
+    streamlog_out( ERROR  ) << " *************************************************** " << std::endl 
+                            << " wrong number of hit densities: " <<  _densities.size() 
                             << " for " << layerVXD.getNLayers() << " VXD layers "
-                            << "  - do nothing ! " << std::endl ;
-    
+                            << "  - do nothing ! " << std::endl 
+                            << " *************************************************** " << std::endl  ;
     
     return ;
     

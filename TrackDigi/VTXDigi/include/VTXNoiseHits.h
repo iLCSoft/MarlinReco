@@ -20,8 +20,8 @@ using namespace marlin ;
 
 /** ======= VTXNoiseHits ========== <br>
  * Adds random noise hits to collection of TrackerHits of the vertex detector.
- * The number of noise hits are given by the paramater HitDensityPerLayer.
- * The noise hits are created with a  uniform distribution over the ladder
+ * The number of noise hits are given by the parameter HitDensityPerLayer (hits/cm^2).
+ * The noise hits are created with a uniform distribution over the ladder
  * surface.
  * 
  * @param HitDensityPerLayer  hit densities (hits/cm^2) per VXD layer
@@ -31,7 +31,8 @@ using namespace marlin ;
  * (default value 0.0027) <br>
  * 
  * <br>
- * @author F.Gaede 
+ * @version $Id: VTXNoiseHits.h,v 1.2 2008-07-01 15:07:35 gaede Exp $
+ * @author F.Gaede, DESY
  */
 class VTXNoiseHits : public Processor {
   

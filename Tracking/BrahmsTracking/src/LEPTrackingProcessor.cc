@@ -6,9 +6,14 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.39 2008-07-02 09:01:23 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.40 2008-07-02 11:09:27 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.39  2008/07/02 09:01:23  aplin
+** Changed default binning for the removal of hits alla CurlKiller
+**
+** Fixed bug which caused the hit removal to start at the second level of aggression
+**
 ** Revision 1.38  2008/07/01 15:08:31  aplin
 ** An Error message has been added as an event parameter for the case where the PATREC fails due to too many links.
 **
@@ -331,17 +336,17 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                            _colNameTPC ,
                            std::string("TPCTrackerHits") ) ;
 
-  registerInputCollection( LCIO::TRACKERHIT,
-                           "VTXTrackerHitCollectionName" , 
-                           "Name of the VTX TrackerHit collection"  ,
-                           _colNameVTX ,
-                           std::string("VTXTrackerHits") ) ;
+//  registerInputCollection( LCIO::TRACKERHIT,
+//                           "VTXTrackerHitCollectionName" , 
+//                           "Name of the VTX TrackerHit collection"  ,
+//                           _colNameVTX ,
+//                           std::string("VTXTrackerHits") ) ;
   
-  registerInputCollection( LCIO::TRACKERHIT,
-                           "SITTrackerHitCollectionName" , 
-                           "Name of the SIT TrackerHit collection"  ,
-                           _colNameSIT ,
-                           std::string("SITTrackerHits") ) ;
+//  registerInputCollection( LCIO::TRACKERHIT,
+//                           "SITTrackerHitCollectionName" , 
+//                           "Name of the SIT TrackerHit collection"  ,
+//                           _colNameSIT ,
+//                           std::string("SITTrackerHits") ) ;
   
   registerOutputCollection( LCIO::TRACK,
                             "TPCTrackCollectionName" , 
@@ -361,11 +366,11 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                             _colNameMCTPCTracksRel ,
                             std::string("TPCTracksMCP") ) ;
   
-  registerOutputCollection( LCIO::LCRELATION,
-                            "MCTrackRelCollectionName" , 
-                            "Name of the Track MC Relation collection"  ,
-                            _colNameMCTracksRel ,
-                            std::string("TracksMCP") ) ;
+//  registerOutputCollection( LCIO::LCRELATION,
+//                            "MCTrackRelCollectionName" , 
+//                            "Name of the Track MC Relation collection"  ,
+//                            _colNameMCTracksRel ,
+//                            std::string("TracksMCP") ) ;
 
   registerOutputCollection( LCIO::TRACKERHIT,
                             "DroppedCollectionName" , 
@@ -726,7 +731,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
         for(unsigned int tehit=0; tehit<hits->size();tehit++){
 
-          TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( hits->at(tehit) ) ) ;
+          TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( usedCol->getElementAt( hits->at(tehit) ) ) ;
 
           tpcTrack->addHit(trkHitTPC) ;
         
@@ -977,7 +982,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 //          if(TkHitBank->getSubdetectorID(hits->at(tkhit))==500){
 //            
 //            int tpchitindex = hits->at(tkhit) - TkHitBank->getFirstHitIndex("TPC") ;
-//            trkHit = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( tpchitindex ) ) ;
+//            trkHit = dynamic_cast<TrackerHit*>( usedCol->getElementAt( tpchitindex ) ) ;
 //          }
 //          
 //          if(TkHitBank->getSubdetectorID(hits->at(tkhit))>99

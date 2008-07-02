@@ -6,9 +6,14 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.38 2008-07-01 15:08:31 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.39 2008-07-02 09:01:23 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.38  2008/07/01 15:08:31  aplin
+** An Error message has been added as an event parameter for the case where the PATREC fails due to too many links.
+**
+** Only one track collection is now produced, namely "TPCTracks", as LEPTracking now only produces hits from the TPC. FullLDCTracking is now responsible for creating tracks including hits from the silicon detectors.
+**
 ** Revision 1.37  2008/07/01 10:34:39  aplin
 ** The functionality of CurlKiller has been moved into LEPTracking. It is
 ** now operated at increasing levels of aggression in order to try to
@@ -388,7 +393,7 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
   registerProcessorParameter( "MultiplicityCut" , 
                               "Cut on the number of hits in r-phi bin"  ,
                               _multiplicityCut ,
-                              int(4) ) ;
+                              int(8) ) ;
 }
 
 
@@ -532,7 +537,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       streamlog_out(DEBUG) << "   LEPTrackingProcessor: Trying to remove hits alla CurlKiller" << endl;
       streamlog_out(DEBUG) << endl;
       
-      for(int i=2;i<5;++i){
+      for(int i=1;i<4;++i){
 
         streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
         streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;
@@ -569,7 +574,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
           break;
         }
 
-        else if(i==4){
+        else if(i==3){
           streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
           streamlog_out(ERROR) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
           streamlog_out(ERROR) << "   LEPTrackingProcessor: Removing hits failed to resolve the problem" << endl;          

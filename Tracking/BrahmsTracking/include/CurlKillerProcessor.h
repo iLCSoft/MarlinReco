@@ -32,7 +32,8 @@ using namespace marlin ;
  * @param PadWidth TPC PadWidth <br>
  * (default value is 2.2) <br>
  * @author S. Aplin, DESY
- * @version $Id: CurlKillerProcessor.h,v 1.3 2008-05-26 13:23:08 aplin Exp $ 
+ * @version $Id: CurlKillerProcessor.h,v 1.4 2008-07-02 09:01:23 aplin Exp $ 
+ * @deprecated As of ilcsoft v01-03-06 the functionality of CurlKiller has been moved into LEPTracking 
  */
 
 class CurlKillerProcessor : public Processor {

@@ -4,6 +4,33 @@
 
 ================================
  --------
+| v00-08 |
+ --------
+     
+    * TrackDigi: 
+       - new processor VTXNoiseHits.cc   (F.Gaede)
+       -> creates random noise hits with layer dependent density
+          
+       - added  ETDDigiProcessor (copy of FTDDigiProcessor w/simple
+	  gaussian smearing in x-y )
+
+    * improved LEPTracking (S.Aplin)	
+      - error flag in LCIO event if patrec fails
+      - produce only TPCTracks collection
+      - functionality of CurlKiller moved into LEPTracking
+      - improved log messages (streamlog/debug flags f77)
+      - increased f77 array sizes for hits
+
+    * improved FullLDCTracking (S.Aplin, M.Thomson)
+       - correction for non looping split tracks
+       - bug fixes
+
+    
+    * additional bug fixes
+
+       -> see Changelog for details
+ 
+ --------
 | v00-07 |
  --------
 

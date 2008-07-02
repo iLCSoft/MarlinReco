@@ -1,3 +1,176 @@
+2008-07-01 17:18  gaede
+
+	* TrackDigi/VTXDigi/src/VTXNoiseHits.cc: make error message more
+	  visible
+
+2008-07-01 17:08  aplin
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  src/LEPTrackingProcessor.cc, src/f77/trslnk.F: An Error message
+	  has been added as an event parameter for the case where the
+	  PATREC fails due to too many links.
+
+	  Only one track collection is now produced, namely "TPCTracks", as
+	  LEPTracking now only produces hits from the TPC. FullLDCTracking
+	  is now responsible for creating tracks including hits from the
+	  silicon detectors.
+
+2008-07-01 17:07  gaede
+
+	* TrackDigi/VTXDigi/include/VTXNoiseHits.h: updated documentation
+
+2008-07-01 17:05  gaede
+
+	* TrackDigi/VTXDigi/: include/VTXNoiseHits.h, src/VTXNoiseHits.cc:
+	  new processor to add random noise hits to the VXD
+
+2008-07-01 17:04  gaede
+
+	* Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc: protected
+	  against non-existing SimTrackerHits, e.g. from noise hits
+
+2008-07-01 12:34  aplin
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  include/tkhitbank.h, include/tkmcbank.h, include/tktebank.h,
+	  include/tktkbank.h, include/tpchitbank.h,
+	  src/LEPTrackingProcessor.cc, src/tkhitbank.cc, src/tkmcbank.cc,
+	  src/tktebank.cc, src/tktkbank.cc, src/tpchitbank.cc,
+	  src/f77/tksetr.F, src/f77/tktrev.F, src/f77/tpcrun.F,
+	  src/f77/trslnk.F: The functionality of CurlKiller has been moved
+	  into LEPTracking. It is now operated at increasing levels of
+	  aggression in order to try to save the event from not not having
+	  ANY TPC Tracks, due to too many links in trslnk.
+
+	  As a first try, all hits are passed to the PATREC. If this fails
+	  three more attempts are made where the size of the bins used to
+	  find high levels of multiplicity in r-phi are increased by
+	  factors of 2, 3 and finally 4. If this still fails an error
+	  message is printed warning that NO TPC Tracks will be
+	  reconstructed for this event.
+
+	  The verbosity of LEPTracking is now controlled completely via
+	  streamlog on the C++ side, and via flags set in tkinit on the F77
+	  side.
+
+2008-06-30 15:53  aplin
+
+	* TrackDigi/TPCDigi/: src/TPCDigiProcessor.cc,
+	  include/TPCDigiProcessor.h: removed hard coded number for padwith
+
+2008-06-30 14:24  aplin
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc: made use of
+	  streamlog
+
+2008-06-30 12:22  aplin
+
+	* Tracking/SiliconTracking/src/MaterialDB.cc: made use of streamlog
+
+2008-06-30 12:01  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trslnk.F: change error message
+	  for too many links to 99
+
+2008-06-30 11:59  aplin
+
+	* Tracking/BrahmsTracking/src/CurlKillerProcessor.cc: use streamlog
+
+2008-06-27 17:32  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: corrected
+	  conversion of covariance matrix, and made more use of streamlog
+
+2008-06-27 15:41  aplin
+
+	* Tracking/BrahmsTracking/src/f77/setmat.F: removed BFIELD write
+	  statement
+
+2008-06-27 13:13  aplin
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc: check for cases where PatRec splits
+	  non-looping TPC tracks look for two tracks where total tpc hits
+	  are not more than total number of pad rows and that the hits on
+	  one track are close to the helix of the other track. (Code
+	  Supplied by Mark Thomson)
+
+2008-06-26 18:22  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: tfithl.F, trackfit.F,
+	  include/fkparm.inc: arrays and printout, once again
+
+2008-06-26 17:14  aplin
+
+	* Tracking/BrahmsTracking/src/f77/fkkalm.F: corrected debug fromat
+	  statement
+
+2008-06-26 11:35  aplin
+
+	* Tracking/BrahmsTracking/src/: LEPTrackingProcessor.cc,
+	  f77/fk3trk.F, f77/fkctow.F, f77/fkkalm.F, f77/fkster.F,
+	  f77/my_tmshel.F, f77/setmat.F, f77/tfcand.F, f77/tfittk.F,
+	  f77/tflnks.F, f77/tkink.F, f77/tkmkte.F, f77/tktrev.F,
+	  f77/tpcsav.F, f77/trackfit.F, f77/trempt.F, f77/trkfit.F,
+	  f77/uctgft.F, f77/ufitms.F, f77/include/fkparm.inc,
+	  f77/include/my_tcrl.inc, f77/include/tcbins.inc,
+	  f77/include/tchain.inc, f77/include/tpccon.inc,
+	  f77/include/ufitcb.inc:
+	  A clean up has been made of the arrays that hold the TE's/Hits
+	  for track fitting. An effort has been made to ensure that both
+	  the arrays are big enough to hold the required number of hits,
+	  and that the arrays are all of the same dimensions between
+	  calling routines.
+
+	  All verbose output, except for the case where the tracking is
+	  dropped for a complete event, has now been hidden behind debug IF
+	  Statements. The level of verbosity can be controlled via the
+	  variables TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+
+2008-06-20 12:34  aplin
+
+	* Tracking/BrahmsTracking/include/cfortran.h: new version of
+	  cfortran.h 4.4, improves cross platform compatibility
+
+2008-06-18 11:45  gaede
+
+	* src/CMakeLists.txt: added ETDDigiProcessor
+
+2008-06-18 09:59  gaede
+
+	* TrackDigi/ETDDigi/: include/ETDDigiProcessor.h,
+	  src/ETDDigiProcessor.cc: copy of FTDDigiProcessor w/	simple
+	  gaussian smearing in x-y
+
+2008-06-17 16:34  aplin
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: reverted bug fix
+	  from r1.17 concerning the covariance matrix which was lost in
+	  r1.18
+
+2008-06-16 12:41  engels
+
+	* doc/Doxyfile: removed VertexTracking from INPUT field
+
+2008-06-16 12:09  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h: expert root file by
+	  is no longer created by default
+
+2008-06-06 09:26  gaede
+
+	* BuildSetup.cmake: fixed documentation for cmake
+
+2008-06-06 09:11  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: --------------
+	  version v00-07 -----------------------
+
+2008-06-06 09:11  gaede
+
+	* examples/steer_ldctracking.xml: updated tracking example steering
+	  file
+
 2008-06-05 15:42  rasp
 
 	* TrackDigi/VTXDigi/include/VTXDigiProcessor.h: Updated version of

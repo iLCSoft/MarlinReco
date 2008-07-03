@@ -566,7 +566,8 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
     //std::cout<<"laddered structure "<<std::endl;
     int iLadder=0;
     for (int ic=0; ic<nLadders; ++ic) {
-      PhiLadder = - PI2 + double(ic)*dPhi + Phi0;
+      //      PhiLadder = - PI2 + double(ic)*dPhi + Phi0;
+      PhiLadder = double(ic)*dPhi + Phi0;
       PhiInLocal = PhiInLab - PhiLadder;
       //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
       if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 

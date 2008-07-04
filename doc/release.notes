@@ -4,6 +4,21 @@
 
 ================================
  --------
+| v00-09 |
+ --------
+
+    * RecoMCTruthLink:   (M.Beckmann, F.Gaede)
+      - new processor MCTruthJetEnergy: adds colleciton parameter 'MCTruthJetEnergies'
+
+    * TrackDigi/VTXDigitizer  (A.Raspereza)
+      - bug fix for phi0 of gear::VXDParameters
+
+    * BrahmsTracking/LEPTrackingProcessor 
+      - bug fix w/ wrong TPCHit collection
+      - changed default binning for the emoval of hits ala CurlKiller
+      - bug fix for iteration of CurlKiller
+
+ --------
 | v00-08 |
  --------
      

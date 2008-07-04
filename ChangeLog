@@ -1,3 +1,38 @@
+2008-07-03 16:50  gaede
+
+	* Analysis/RecoMCTruthLink/README: updated comment
+
+2008-07-03 16:48  gaede
+
+	* Analysis/RecoMCTruthLink/: README, include/MCTruthJetEnergy.h,
+	  src/MCTruthJetEnergy.cc: initial version of MCTruthJetEnergy
+
+2008-07-03 11:00  rasp
+
+	* TrackDigi/VTXDigi/src/VTXDigitizer.cc: New version of the
+	  VTXDigitizer processor. The bug related to the computation of the
+	  global rotation angle phi0, is fixed
+
+2008-07-02 13:09  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: fixed bug
+	  where the wrong TPCHit collection was used to created relations
+	  to Tracks
+
+2008-07-02 11:01  aplin
+
+	* Tracking/BrahmsTracking/: include/CurlKillerProcessor.h,
+	  src/LEPTrackingProcessor.cc: Changed default binning for the
+	  removal of hits alla CurlKiller
+
+	  Fixed bug which caused the hit removal to start at the second
+	  level of aggression
+
+2008-07-02 09:52  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: ---------- version
+	  v00-08 ---------------------
+
 2008-07-01 17:18  gaede
 
 	* TrackDigi/VTXDigi/src/VTXNoiseHits.cc: make error message more

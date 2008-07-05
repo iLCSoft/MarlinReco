@@ -3,7 +3,14 @@
  release notes for MarlinReco
 
 ================================
- --------
+
+ ----------
+| v00-09-01 |
+ ----------
+      fixed bug in RecoMCTruthLinker
+	  and recover missing MCParticle link for Lcal clusters
+
+--------
 | v00-09 |
  --------
 

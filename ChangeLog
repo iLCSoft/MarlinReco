@@ -1,3 +1,15 @@
+2008-07-05 09:44  gaede
+
+	* Analysis/RecoMCTruthLink/: include/RecoMCTruthLinker.h,
+	  src/MCTruthJetEnergy.cc, src/RecoMCTruthLinker.cc: fixed bug in
+	  RecoMCTruthLinker; recover missing MCParticle link for Lcal
+	  clusters
+
+2008-07-04 10:50  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: -------------
+	  version v00-09 --------------------
+
 2008-07-03 16:50  gaede
 
 	* Analysis/RecoMCTruthLink/README: updated comment

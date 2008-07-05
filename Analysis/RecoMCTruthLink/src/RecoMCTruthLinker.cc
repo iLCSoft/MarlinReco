@@ -16,6 +16,8 @@
 #include <IMPL/LCCollectionVec.h>
 #include <UTIL/LCRelationNavigator.h>
 
+#include "gearimpl/Vector3D.h"
+
 #include <math.h>
 #include <map>
 
@@ -151,6 +153,9 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   // loop over reconstructed particles
   int nReco = recoCol->getNumberOfElements() ;
 
+  std::vector<ReconstructedParticle*> missingMC ;
+  missingMC.reserve( nReco ) ;
+  
   for(int i=0;i<nReco;++i){
       
     ReconstructedParticle* rec = dynamic_cast<ReconstructedParticle*> ( recoCol->getElementAt(i) ) ;
@@ -183,7 +188,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
       
       unsigned nTrk = trkVec.size() ;
       
-      streamlog_out( DEBUG0 ) << " loop over " <<  nTrk << " tracks " << std::endl ;
+     // streamlog_out( DEBUG0 ) << " loop over " <<  nTrk << " tracks " << std::endl ;
       
       int nHit = 0 ;
       
@@ -220,14 +225,14 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	  
 	streamlog_out( WARNING ) << " charged particle without tracks   " <<  std::endl ;
 	  
-	break ;  // won't find a particle 
+	continue ;  // won't find a particle 
       }
 
       if( nHit == 0 ){
 	
 	streamlog_out( WARNING ) << " no simulated tracker hits found " <<  std::endl ;
 	
-	break ;  // won't find a particle 
+	continue ;  // won't find a particle 
       }
       
       
@@ -265,7 +270,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
       unsigned nClu = cluVec.size() ;
 	
-      streamlog_out( DEBUG0 ) << " loop over " <<  nClu << " clusters " << std::endl ;
+      //streamlog_out( DEBUG0 ) << " loop over " <<  nClu << " clusters " << std::endl ;
 	
       double eTot = 0 ;
 	
@@ -297,7 +302,10 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	      MCParticle* mcp = simHit->getParticleCont( j ) ;
 		
 	      double e  = simHit->getEnergyCont( j ) ;
-		
+	     
+//	      if( e == 0.0 )
+//		streamlog_out( WARNING ) << " zero energy in MCContribution " << mcp->getPDG()  << std::endl ;
+
 	      mcpEnergy[ mcp ] +=  e ;
 		
 	      eTot += e ; 
@@ -311,12 +319,16 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	  
 	streamlog_out( WARNING ) << " neutral particle without clusters   " <<  std::endl ;
 	  
-	break ;  // won't find a particle 
+	continue ;  // won't find a particle 
       }  
 
       if( eTot == 0.0 ){ // fixme - this might happen if clusters are from Lcal/Muon only
 	  
-	streamlog_out( DEBUG ) << " no calorimeter energy found for " 
+
+		  // save reco particle in missingMC 
+		  missingMC.push_back( rec  ) ;
+		  
+		  streamlog_out( DEBUG ) << " no calorimeter energy found for " 
 			       << " reco particle: e:"  << rec->getEnergy()  
 			       << " charge: " << rec->getCharge() 
 			       << " px: " << rec->getMomentum()[0]
@@ -327,7 +339,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 			       << std::endl ;
 	
 	  
-	break ;  
+	continue ;  
       }
 
 
@@ -351,11 +363,11 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
       if( theMCP == 0 ) {
 
-	streamlog_out( ERROR ) << " reco particle has " << eMax << " GeV of " << eTot 
+ 	streamlog_out( ERROR ) << " reco particle has " << eMax << " GeV of " << eTot 
 			       << " GeV [ " << weight << " ] true energy in " << nClu << " clusters "  
-			       << std::endl ;
+			       << " but no MCParticle " << std::endl ;
 	  
-	break ;
+	continue ;
 
       }
 
@@ -370,8 +382,72 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     }
       
   }
+ // recover missing MCParticles for neutrals :
+ // attach the MCParticle with smallest angle to cluster
+ for( unsigned i=0 ; i < missingMC.size() ; ++i ) {
+	 
+	 int nMCP  = mcpCol->getNumberOfElements() ;
+     
+	 ReconstructedParticle* rec = missingMC[i] ;
+	 
+	 const ClusterVec& cluVec = rec->getClusters() ;
+	 unsigned nClu = cluVec.size() ;
+	 if( nClu != 1 )   // don't know how to recover compund clusters 
+		 continue ;
 
-  evt->addCollection(  truthRelNav.createLCCollection() , _recoMCTruthLinkName  ) ;
+	 gear::Vector3D recP( cluVec[0]->getPosition()[0] , cluVec[0]->getPosition()[1] ,cluVec[0]->getPosition()[2] ) ;
+	 
+	 double recTheta = recP.theta() ;
+	 
+     double maxProd = 0.0 ;
+     MCParticle* closestMCP = 0 ;
+	 
+	 for(int j=0; j< nMCP ; j++){
+		 
+		 MCParticle* mcp = dynamic_cast<MCParticle*> ( mcpCol->getElementAt( j ) ) ;
+		  
+		if( fabs( mcp->getCharge() ) > 0.01 )
+			continue ;
+
+		gear::Vector3D mcpP( mcp->getMomentum()[0] , mcp->getMomentum()[1] ,mcp->getMomentum()[2] ) ;
+
+		if( fabs( recTheta - mcpP.theta() ) > 0.3 ) // fixme : proc param...
+			continue ;
+
+ 
+		double prod  = mcpP.unit().dot(  recP.unit() ) ;
+
+		if( prod > maxProd ) {
+			maxProd = prod ;
+		    closestMCP = mcp ;
+		}
+	 }
+	if( maxProd > 0. ) {
+	
+		streamlog_out( DEBUG ) << "  neutral reco particle recovered"  << rec->getEnergy()
+			<< " px: " << rec->getMomentum()[0]
+			<< " py: " << rec->getMomentum()[1]
+			<< " pz: " << rec->getMomentum()[2]
+			<< " maxProd: " << maxProd 
+            << " px: " << closestMCP->getMomentum()[0]
+			<< " py: " << closestMCP->getMomentum()[1]                                           
+			<< " pz: " << closestMCP->getMomentum()[2]
+			<< std::endl ;
+		  
+		truthRelNav.addRelation(   rec , closestMCP ,  -maxProd ) ;
+	}
+  } 
+  
+  
+  
+  LCCollection* trlcol = truthRelNav.createLCCollection() ;
+ 
+  if( trlcol->getNumberOfElements() != nReco ) 
+
+    streamlog_out( WARNING ) << " found only " << trlcol->getNumberOfElements() << " MCParticles for " 
+			     << nReco << " ReconstructedParticles " << std::endl ;
+
+  evt->addCollection(  trlcol  , _recoMCTruthLinkName  ) ;
 
   //-------------- create skimmed MCParticle collection ------------------------
 

@@ -10,6 +10,7 @@
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
 #include <EVENT/ReconstructedParticle.h>
+#include <gearimpl/Vector3D.h>
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -83,9 +84,9 @@ void MCTruthJetEnergy::init() {
   }
 
   _jetEnergyTruthReco =  AIDAProcessor::histogramFactory(this)->
-    createHistogram2D( "EJetTruthVsRec ", " jet energy McTruth vs. Reconstructed ",
-		       500 , 0. , 500. , 
-		       500 , 0. , 500.  ) ; 
+    createHistogram2D( "EJetTruthVsRec ", " jet energy Reconstructed vs MCTruth",
+		       500 , 0. , 300. , 
+		       500 , 0. , 300.  ) ; 
   
   
 #endif
@@ -154,9 +155,28 @@ void MCTruthJetEnergy::processEvent( LCEvent * evt ) {
 	
 	const LCObjectVec& mcpvec = rel.getRelatedToObjects( jet->getParticles()[k] ) ;
 	
-	MCParticle* mcp = dynamic_cast<MCParticle*>( mcpvec[0] ) ;
+
+	if( mcpvec.size() > 0  && mcpvec[0] != 0 ){
+
+	  MCParticle* mcp = dynamic_cast<MCParticle*>( mcpvec[0] ) ;
 	
-	mcpset.insert( mcp );
+	  mcpset.insert( mcp );
+	}
+	else {
+
+		ReconstructedParticle* p = dynamic_cast<ReconstructedParticle*>( jet->getParticles()[k]  ) ;
+
+		gear::Vector3D  v( p->getMomentum()[0] , p->getMomentum()[1] , p->getMomentum()[2] ) ;
+			
+		streamlog_out(DEBUG) << " found broken MCParticle link for particle [E:" 
+			        << p->getEnergy()  << "]"
+					<< " theta: " << ( v.theta() * 180. / 3.141592 ) 
+					<< " charge: " << p->getCharge() 
+					<< " nDaught: " << p->getParticles().size()
+					<< std::endl ;
+
+	
+	}
       }
       
       double mcJetEnergy = 0;
@@ -242,7 +262,7 @@ void MCTruthJetEnergy::check( LCEvent * evt ) {
       
       _jetEnergyHists[ i ]->fill(  jet->getEnergy() ) ;
 
-      _jetEnergyTruthReco->fill( jetEnergies[j] ,  jet->getEnergy() ) ;
+      _jetEnergyTruthReco->fill( jetEnergies[j] , jet->getEnergy() ) ;
 
     }    
 

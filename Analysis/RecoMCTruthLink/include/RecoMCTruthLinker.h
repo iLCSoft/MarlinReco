@@ -22,6 +22,11 @@ using namespace lcio ;
  *  stored in the weight of the Relation.
  *  For example a weight of 0.95 for a charged particle link implies that 95 percent of the 
  *  SimTrackerHits used in the particles' track fit have been caused by the linked MCParticle.<br>
+ *  If a neutral particle with one cluster has no MC contribution assigned the MCParticle 
+ *  pointing closest to the cluster is assigned and the weight is set to the negative scalar product
+ *  of the MCParticle's momentum direction and the direction to the Cluster position. 
+ *  (This fixes a bug in the Mokka LCal driver ov mokka-v06-06-p03).
+ *
  *  <p>
  *  A skimmed MCParticle subset collection is created. It containes all particles created by the generator 
  *  program and all particles that have been reconstructed including all their parents.
@@ -50,7 +55,7 @@ using namespace lcio ;
  * @param MCParticlesSkimmedName     skimmed MCParticle collection - optional 
  * 
  *  @author F. Gaede, DESY
- *  @version $Id: RecoMCTruthLinker.h,v 1.2 2008-04-15 13:01:20 gaede Exp $ 
+ *  @version $Id: RecoMCTruthLinker.h,v 1.3 2008-07-05 07:44:44 gaede Exp $ 
  */
 
 class RecoMCTruthLinker : public marlin::Processor {

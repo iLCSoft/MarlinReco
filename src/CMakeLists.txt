@@ -26,6 +26,7 @@ SET( MarlinReco_PKGS
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
     "Tracking/TrackCheater"
+    "Tracking/V0Finder"
 )
 
 
@@ -323,6 +324,20 @@ SET_SOURCE_FILES_PROPERTIES( ${TrackCheater_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
+
+####################################################################################################
+# V0Finder
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Tracking/V0Finder/src V0Finder_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${V0Finder_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( V0Finder_srcs ${V0Finder_cxx_srcs} )
+
+
 
 ####################################################################################################
 ### LIBRARY

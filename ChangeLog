@@ -1,3 +1,20 @@
+2008-07-08 11:08  rasp
+
+	* src/CMakeLists.txt: New CMake file includes package
+	  Tracking/V0Finder
+
+2008-07-08 11:05  rasp
+
+	* Tracking/V0Finder/: include/V0Finder.h, src/V0Finder.cc: New
+	  processor to perform identification of neutral vertices,
+	  originating from photon conversions and decays of K0S and
+	  Lambda0.
+
+2008-07-05 10:57  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: -------------------
+	  version v00-09-01 --------------------
+
 2008-07-05 09:44  gaede
 
 	* Analysis/RecoMCTruthLink/: include/RecoMCTruthLinker.h,

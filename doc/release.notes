@@ -3,6 +3,14 @@
  release notes for MarlinReco
 
 ================================
+ --------
+| v00-10 |
+ --------
+
+    * new package Tracking/V0Finder  (A.Raspereza)
+      processor to perform identification of neutral vertices,
+      originating from photon conversions and decays of K0S and
+      Lambda0
 
  ----------
 | v00-09-01 |
@@ -10,7 +18,7 @@
       fixed bug in RecoMCTruthLinker
 	  and recover missing MCParticle link for Lcal clusters
 
---------
+ --------
 | v00-09 |
  --------
 

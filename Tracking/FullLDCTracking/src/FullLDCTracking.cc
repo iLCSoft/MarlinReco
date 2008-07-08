@@ -1360,7 +1360,7 @@ TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackEx
 				 chi2rphi,chi2z,lhits);
   
   float chiQ = chi2_D/float(ndf_D);
-  if (ierr >= 0 && chiQ > 0.001) {
+  if (ierr == 0 && chiQ > 0.001) {
     float omega = par[0];
     float tanlambda = par[1];
     float phi0 = par[2];

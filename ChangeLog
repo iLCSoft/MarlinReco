@@ -1,3 +1,14 @@
+2008-07-08 17:57  rasp
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: Si and TPC
+	  tracks are allowed to be merged if fit error = 0 ( proposed by
+	  Mark ).
+
+2008-07-08 12:46  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: --------- version
+	  v00-10 -----------------
+
 2008-07-08 11:08  rasp
 
 	* src/CMakeLists.txt: New CMake file includes package

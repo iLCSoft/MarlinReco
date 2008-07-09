@@ -3,6 +3,15 @@
  release notes for MarlinReco
 
 ================================
+
+ -----------
+| v00-10-01 |
+ -----------
+
+    * Tracking/FullLDCTracking/src/FullLDCTracking.cc: Si and TPC
+      tracks are allowed to be merged if fit error = 0 ( proposed by
+      Mark ).
+
  --------
 | v00-10 |
  --------

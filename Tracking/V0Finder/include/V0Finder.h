@@ -36,13 +36,19 @@ using namespace marlin ;
  *  @param CutOnRadius cut on the vertex radius vector. If vertex radius sqrt(x**2+y**2) <br>
  *  is less than cut value, the candidate vertex is discarded. In this case two tracks are assumed to <br>
  *  originate from the primary interaction vertex. <br>
- *  (default value 50 mm) <br>
+ *  (default value 6.0 mm) <br>
  *  @param CutOnTrkDistance cut on the distance between tracks constituting neutral vertex <br>
  *  If the 3D distance between two tracks with opposite charge is less that cut value, <br>
  *  the two tracks are regarded as constituting neutral vertex <br>
- *  (default value 1 mm) <br>
+ *  (default value 1.5 mm) <br>
+ *  @param MassRangeGamma maximal allowed deviation in mass for gamma hypothesis <br>
+ *  (default value 0.01 GeV) <br>
+ *  @param MassRangeK0S maximal allowed deviation in mass for K0S hypothesis <br>
+ *  (default value 0.01 GeV) <br>
+ *  @param MassRangeL0 maximal allowed deviation in mass for L0 hypothesis <br>
+ *  (default value 0.008 GeV) <br>
  *  @author A.Raspereza, DESY
- *  @version $Id: V0Finder.h,v 1.1 2008-07-08 09:05:12 rasp Exp $ 
+ *  @version $Id: V0Finder.h,v 1.2 2008-07-10 11:36:24 rasp Exp $ 
  */
 class V0Finder : public Processor {
   
@@ -84,6 +90,10 @@ class V0Finder : public Processor {
   float MASSLambda0;
   float MASSK0S;
   float MASSGamma;
+
+  float _deltaMassK0S;
+  float _deltaMassL0;
+  float _deltaMassGamma;
 
 } ;
 

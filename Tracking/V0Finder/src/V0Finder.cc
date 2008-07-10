@@ -39,16 +39,43 @@ V0Finder::V0Finder() : Processor("V0Finder") {
 			  _vertexColName,
 			  std::string("V0Vertices"));
 
-  registerProcessorParameter("CutOnRadius",
-			     "Cut on V0 radius",
-			     _rVertCut,
-			     float(50.));
+//   std::vector<float> rVertCut;
+//   rVertCut.push_back(14.);
+//   rVertCut.push_back(60.);
+//   rVertCut.push_back(320.);
+//   rVertCut.push_back(1600.);
 
+  registerProcessorParameter("CutOnRadius",
+			     "Cuts on V0 radius",
+			     _rVertCut,
+			     float(5.0));
+
+//   std::vector<float> dVertCut;
+//   dVertCut.push_back(0.2);
+//   dVertCut.push_back(1.0);
+//   dVertCut.push_back(1.5);
+
+  
   registerProcessorParameter("CutOnTrkDistance",
 			     "Cut on two track distance",
 			     _dVertCut,
-			     float(1.0));
+			     float(1.5));
 
+
+  registerProcessorParameter("MassRangeGamma",
+			     "Maximal deviation in mass for photon candidate",
+			     _deltaMassGamma,
+			     float(0.01));
+
+  registerProcessorParameter("MassRangeK0S",
+			     "Maximal deviation in mass for K0S candidate",
+			     _deltaMassK0S,
+			     float(0.01));
+
+  registerProcessorParameter("MassRangeL0",
+			     "Maximal deviation in mass for Lamda0 candidate",
+			     _deltaMassL0,
+			     float(0.008));
 
 
 }
@@ -142,20 +169,24 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  
 	  float radV0 = sqrt(vertex[0]*vertex[0]+vertex[1]*vertex[1]);
 	  
-	  if (distV0 < _dVertCut && radV0 > _rVertCut) { // cut on vertex radius and track misdistance
-	    
-	    TrackPair * trkPair = new TrackPair();
-	    trkPair->setFirstTrack( firstTrack );
-	    trkPair->setSecondTrack( secondTrack );
-	    trkPair->setDistance( distV0 );
-	    trkPair->setVertex( vertex );
-	    trkPair->setMomentum( momentum );
+// 	  int nRV = int(_rVertCut.size())-1;	  
+// 	  float dCut = _dVertCut[0];
+// 	  for (int iRV=0;iRV<nRV;++iRV) {
+// 	    if (radV0>=_rVertCut[iRV]&&radV0<_rVertCut[iRV+1]) {
+// 	      dCut =  _dVertCut[iRV];
+// 	      break;
+// 	    }
+// 	  }
+
+	  
+
+	  if (distV0 < _dVertCut && radV0 > _rVertCut ) { // cut on vertex radius and track misdistance
 	    
 	    // Testing K0 hypothesis
 	    float energy1 = sqrt(pp1*pp1+MASSPion*MASSPion);
 	    float energy2 = sqrt(pp2*pp2+MASSPion*MASSPion);
 	    float energyV0 = energy1 + energy2;	  
-	    float massK02 = energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2];
+	    float massK0 = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
 	    
 	    // Testing L0 hypothesis
 	    if (charge1<0) {
@@ -167,30 +198,53 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	      energy2 = sqrt(pp2*pp2+MASSPion*MASSPion);
 	    }
 	    energyV0 = energy1 + energy2;	  
-	    float massL02 = energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2];
+	    float massL0 = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
 	  
 	    // Testing photon hypothesis	  
 	    energyV0 = pp1 + pp2;
-	    float massGamma2 = energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2];
+	    float massGamma = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
 
-	    float deltaK0 = fabs(massK02 - MASSK0S*MASSK0S);
-	    float deltaL0 = fabs(massL02 - MASSLambda0*MASSLambda0);
-	    float deltaGm = fabs(massGamma2 - MASSGamma*MASSGamma);
+	    float deltaK0 = fabs(massK0 - MASSK0S);
+	    float deltaL0 = fabs(massL0 - MASSLambda0);
+	    float deltaGm = fabs(massGamma - MASSGamma);
 	    
 	    int code = 22;
+	    bool massCondition = false;
 
 	    if (deltaGm<deltaL0&&deltaGm<deltaK0) {
 	      code = 22;
+	      massCondition = deltaGm < _deltaMassGamma;
 	    }
 	    else if (deltaK0<deltaL0) {
 	      code = 310;
+	      massCondition = deltaK0 < _deltaMassK0S;
 	    }
 	    else {
 	      code = 3122;
+	      massCondition = deltaL0 < _deltaMassL0;
 	    }
-	    trkPair->setCode( code );
+
+	    if (massCondition) {
+	      TrackPair * trkPair = new TrackPair();
+	      trkPair->setFirstTrack( firstTrack );
+	      trkPair->setSecondTrack( secondTrack );
+	      trkPair->setDistance( distV0 );
+	      trkPair->setVertex( vertex );
+	      trkPair->setMomentum( momentum );	    
+	      trkPair->setCode( code );
+	      trkPairs.push_back( trkPair );
+	    }
+	    else {
+// 	      std::cout << "Rejected vertex : V = (" 
+// 			<< vertex[0] << ","
+// 			<< vertex[1] << ","
+// 			<< vertex[2] << ")" << std::endl;
+	    }
 	    
-	    trkPairs.push_back( trkPair );
+// 	    std::cout << "Code = " << code << std::endl;
+// 	    std::cout << "Vertex = " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
+// 	    std::cout << "Momentum = " << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+
 	    
 	  } 
 	}
@@ -199,11 +253,15 @@ void V0Finder::processEvent( LCEvent * evt ) {
       delete firstHelix;
     }
     
+//     std::cout << std::endl;
+
     // Sorting of all vertices in ascending order of the track misdistance
     
     int nTrkPairs = int(trkPairs.size());
     
     if (nTrkPairs>0) { // V0s are present in event
+
+      //      std::cout << "Number of track pairs = " << nTrkPairs << std::endl;
       
       Sorting( trkPairs );
       
@@ -235,6 +293,18 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  part->setMomentum( momentum );
 	  part->setType( code );
 	  
+// 	  std::cout << "Code = " << code << "  Distance = " << distance << std::endl;
+// 	  std::cout << "Vertex = (" 
+// 		    << vertex[0] << "," 
+// 		    << vertex[1] << ","
+// 		    << vertex[2] << ")" << std::endl;
+
+// 	  std::cout << "Momentum = ("
+// 		    << momentum[0] << ","
+// 		    << momentum[1] << ","
+// 		    << momentum[2] << ")" << std::endl;
+// 	  std::cout << firstTrack << " " << secondTrack << std::endl;
+
 	  
 	  float mass = 0;
 	  if ( code == 22)
@@ -247,7 +317,9 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  part->setMass( mass );	
 	  vtx->setAssociatedParticle( part );
 	  part->setStartVertex( vtx );
-	  
+	  part->addTrack( firstTrack );
+	  part->addTrack( secondTrack );
+
 	  colRecoPart->addElement( part );
 	  colVertex->addElement( vtx );
 	  
@@ -267,9 +339,13 @@ void V0Finder::processEvent( LCEvent * evt ) {
       delete trkPair;
     }
     trkPairs.clear();
+
+    //    getchar();
     
   }
   catch(DataNotAvailableException &e) {}
+
+
 
   _nEvt++;
 

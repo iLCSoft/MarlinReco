@@ -1,8 +1,11 @@
 
 *     
-*     $Id: trkfnd.F,v 1.9 2008-05-28 07:01:24 aplin Exp $
+*     $Id: trkfnd.F,v 1.10 2008-07-15 10:18:07 aplin Exp $
 *     
 *     $Log: not supported by cvs2svn $
+*     Revision 1.9  2008/05/28 07:01:24  aplin
+*     reduced verbosity
+*
 *     Revision 1.8  2008/01/23 17:22:22  aplin
 *
 *          The TPC Tracking code has been altered to cope with more than 224 pad rows
@@ -399,6 +402,8 @@ c     write(*,*) "IRCHAI(J) = ", IRCHAI(J)
                   ELSE
                      WRITE(6,*) 'FATAL INTERNAL ERROR IN TRKFND:'
                      WRITE(6,*) ' TOO MANY PAD ROWS IN THE TPC!'
+                     WRITE(6,*) ' ROW NUMBER = ', IRCHAI(J)
+                     WRITE(6,*) ' MAX ROW NUMBER = ', 32*N32BITREG 
                      IER = 99
                      GOTO 999
                   ENDIF

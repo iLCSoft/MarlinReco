@@ -1,3 +1,23 @@
+2008-07-15 15:37  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trkfnd.F: removed unnecessary
+	  check code
+
+2008-07-15 12:18  aplin
+
+	* Tracking/BrahmsTracking/src/f77/trkfnd.F: added row numbers to
+	  error message
+
+2008-07-10 13:36  rasp
+
+	* Tracking/V0Finder/: include/V0Finder.h, src/V0Finder.cc: added
+	  cut on the mass of the candidate vertices
+
+2008-07-09 11:51  aplin
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: -------- v00-10-01
+	  --------
+
 2008-07-08 17:57  rasp
 
 	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: Si and TPC

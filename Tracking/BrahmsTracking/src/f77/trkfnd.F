@@ -1,8 +1,11 @@
 
 *     
-*     $Id: trkfnd.F,v 1.10 2008-07-15 10:18:07 aplin Exp $
+*     $Id: trkfnd.F,v 1.11 2008-07-15 13:37:15 aplin Exp $
 *     
 *     $Log: not supported by cvs2svn $
+*     Revision 1.10  2008/07/15 10:18:07  aplin
+*     added row numbers to error message
+*
 *     Revision 1.9  2008/05/28 07:01:24  aplin
 *     reduced verbosity
 *
@@ -408,146 +411,146 @@ c     write(*,*) "IRCHAI(J) = ", IRCHAI(J)
                      GOTO 999
                   ENDIF
 
-                  IF(IRCHAI(J).LE.32)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,1).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 1
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                     IER = 99
-                     GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-1).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 1
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999   
-                     ENDIF
-                     
-                  ELSE IF(IRCHAI(J).LE.64)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,2).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 2
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-33).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 33
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF(IRCHAI(J).LE.96)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,3).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 3
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-65).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 65
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF (IRCHAI(J).LE.128)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,4).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 4
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-97).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 97
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF (IRCHAI(J).LE.160)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,5).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 5
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        STOP
-                     ENDIF
-                     IF((IRCHAI(J)-129).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 129
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF (IRCHAI(J).LE.192)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,6).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 6
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-161).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 161
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF (IRCHAI(J).LE.224)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,7).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 7
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-193).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 193
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-
-                  ELSE IF (IRCHAI(J).LE.256)THEN
-                     IF(MY_JTCHPI(MY_NCHAIN,8).NE.
-     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
-                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
-                        WRITE(*,*) "INDEX OLD = ", 8
-                        WRITE(*,*) "INDEX NEW = ", BITREG
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                     IF((IRCHAI(J)-225).NE.IRCHAI(J)-BITPOS) THEN
-                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
-                        WRITE(*,*) "INDEX OFFSET OLD = ", 225
-                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
-                        IER = 99
-                        GOTO 999
-                     ENDIF
-                  ELSE
-                     WRITE(6,*) 'FATAL INTERNAL ERROR IN TRKFND:'
-                     WRITE(6,*) ' TOO MANY PAD ROWS IN THE TPC!'
-                     IER = 99
-                     GOTO 999
-                  ENDIF
+C                  IF(IRCHAI(J).LE.32)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,1).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 1
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                     IER = 99
+C                     GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-1).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 1
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999   
+C                     ENDIF
+C                     
+C                  ELSE IF(IRCHAI(J).LE.64)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,2).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 2
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-33).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 33
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF(IRCHAI(J).LE.96)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,3).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 3
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-65).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 65
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF (IRCHAI(J).LE.128)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,4).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 4
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-97).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 97
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF (IRCHAI(J).LE.160)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,5).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 5
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        STOP
+C                     ENDIF
+C                     IF((IRCHAI(J)-129).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 129
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF (IRCHAI(J).LE.192)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,6).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 6
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-161).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 161
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF (IRCHAI(J).LE.224)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,7).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 7
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-193).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 193
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C
+C                  ELSE IF (IRCHAI(J).LE.256)THEN
+C                     IF(MY_JTCHPI(MY_NCHAIN,8).NE.
+C     &                    MY_JTCHPI(MY_NCHAIN,BITREG)) THEN 
+C                        WRITE(*,*) "DIFFERENCE IN MY_JTCHPI"
+C                        WRITE(*,*) "INDEX OLD = ", 8
+C                        WRITE(*,*) "INDEX NEW = ", BITREG
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                     IF((IRCHAI(J)-225).NE.IRCHAI(J)-BITPOS) THEN
+C                        WRITE(*,*) "DIFFERENCE IN IRCHAI"
+C                        WRITE(*,*) "INDEX OFFSET OLD = ", 225
+C                        WRITE(*,*) "INDEX OFFSET NEW = ", BITPOS
+C                        IER = 99
+C                        GOTO 999
+C                     ENDIF
+C                  ELSE
+C                     WRITE(6,*) 'FATAL INTERNAL ERROR IN TRKFND:'
+C                     WRITE(6,*) ' TOO MANY PAD ROWS IN THE TPC!'
+C                     IER = 99
+C                     GOTO 999
+C                  ENDIF
 
                   NHITS = NHITS + 1
 c     GAB:

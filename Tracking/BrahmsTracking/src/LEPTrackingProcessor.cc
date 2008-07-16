@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.40 2008-07-02 11:09:27 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.41 2008-07-16 08:39:46 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.40  2008/07/02 11:09:27  aplin
+** fixed bug where the wrong TPCHit collection was used to created relations to Tracks
+**
 ** Revision 1.39  2008/07/02 09:01:23  aplin
 ** Changed default binning for the removal of hits alla CurlKiller
 **
@@ -778,7 +781,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
       
         
-        tpcTrack->subdetectorHitNumbers().resize(8);
+        tpcTrack->subdetectorHitNumbers().resize(12);
         tpcTrack->subdetectorHitNumbers()[0] = int(0);
         tpcTrack->subdetectorHitNumbers()[1] = int(0);
         tpcTrack->subdetectorHitNumbers()[2] = int(0);
@@ -786,8 +789,11 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         tpcTrack->subdetectorHitNumbers()[4] = int(0);
         tpcTrack->subdetectorHitNumbers()[5] = int(0);
         tpcTrack->subdetectorHitNumbers()[6] = int(0);
-        tpcTrack->subdetectorHitNumbers()[7] = int(hits->size());
-
+        tpcTrack->subdetectorHitNumbers()[7] = int(0);
+        tpcTrack->subdetectorHitNumbers()[8] = int(0);
+        tpcTrack->subdetectorHitNumbers()[9] = int(hits->size());
+        tpcTrack->subdetectorHitNumbers()[10] = int(0);
+        tpcTrack->subdetectorHitNumbers()[11] = int(0);
 
         tpcTrackVec->addElement( tpcTrack );
 

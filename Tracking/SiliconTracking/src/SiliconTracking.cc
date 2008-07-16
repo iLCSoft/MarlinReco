@@ -674,15 +674,19 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
 	  }
 	}
 
-	trackImpl->subdetectorHitNumbers().resize(8);
+	trackImpl->subdetectorHitNumbers().resize(12);
 	trackImpl->subdetectorHitNumbers()[0] = nHitsVTX;
 	trackImpl->subdetectorHitNumbers()[1] = nHitsFTD;
 	trackImpl->subdetectorHitNumbers()[2] = nHitsSIT;
 	trackImpl->subdetectorHitNumbers()[3] = nHitsTPC;
-	trackImpl->subdetectorHitNumbers()[4] = nHitsVTX;
-	trackImpl->subdetectorHitNumbers()[5] = nHitsFTD;
-	trackImpl->subdetectorHitNumbers()[6] = nHitsSIT;
-	trackImpl->subdetectorHitNumbers()[7] = nHitsTPC;
+	trackImpl->subdetectorHitNumbers()[4] = 0;
+	trackImpl->subdetectorHitNumbers()[5] = 0;
+	trackImpl->subdetectorHitNumbers()[6] = nHitsVTX;
+	trackImpl->subdetectorHitNumbers()[7] = nHitsFTD;
+	trackImpl->subdetectorHitNumbers()[8] = nHitsSIT;
+	trackImpl->subdetectorHitNumbers()[9] = nHitsTPC;
+	trackImpl->subdetectorHitNumbers()[10] = 0;
+	trackImpl->subdetectorHitNumbers()[11] = 0;
 	
 	nSiSegments++;
 	float omega = trackAR->getOmega();

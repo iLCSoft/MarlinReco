@@ -6,8 +6,20 @@
 
 
  -----------
-| v00-10-02 |
+| v00-10-03 |
  -----------
+
+2008-07-16 10:41  aplin
+
+        * Tracking/SiliconTracking/src/SiliconTracking.cc: made
+          subdetectorHitNumbers for SiTracks consistent with
+          FullLDCTracking which has implemented ETD and SET hits
+
+2008-07-16 10:39  aplin
+
+        * Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: made
+          subdetectorHitNumbers for TPCTracks consistent with
+          FullLDCTracking which has implemented ETD and SET hits
 
 2008-07-15 15:37  aplin
 

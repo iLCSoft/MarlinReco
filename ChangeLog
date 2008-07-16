@@ -1,3 +1,20 @@
+2008-07-16 10:41  aplin
+
+	* Tracking/SiliconTracking/src/SiliconTracking.cc: made
+	  subdetectorHitNumbers for SiTracks consistent with
+	  FullLDCTracking which has implemented ETD and SET hits
+
+2008-07-16 10:39  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: made
+	  subdetectorHitNumbers for TPCTracks consistent with
+	  FullLDCTracking which has implemented ETD and SET hits
+
+2008-07-15 16:02  aplin
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: --------- versions
+	  v10-02 ------------
+
 2008-07-15 15:37  aplin
 
 	* Tracking/BrahmsTracking/src/f77/trkfnd.F: removed unnecessary

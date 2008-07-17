@@ -136,7 +136,7 @@ class LEPTrackingProcessor : public Processor {
   int _binHeight ;
   int _binWidth ;
   int _multiplicityCut ;
-
+  int _AlwaysRunCurlKiller ;
   std::vector<EVENT::TrackerHit*> _goodHits;
 
 } ;

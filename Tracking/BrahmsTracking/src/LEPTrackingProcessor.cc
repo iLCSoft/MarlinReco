@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.41 2008-07-16 08:39:46 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.42 2008-07-17 16:53:30 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.41  2008/07/16 08:39:46  aplin
+** made subdetectorHitNumbers for TPCTracks consistent with FullLDCTracking which has implemented ETD and SET hits
+**
 ** Revision 1.40  2008/07/02 11:09:27  aplin
 ** fixed bug where the wrong TPCHit collection was used to created relations to Tracks
 **
@@ -402,6 +405,12 @@ LEPTrackingProcessor::LEPTrackingProcessor() : Processor("LEPTrackingProcessor")
                               "Cut on the number of hits in r-phi bin"  ,
                               _multiplicityCut ,
                               int(8) ) ;
+
+  registerProcessorParameter( "AlwaysRunCurlKiller" , 
+                              "No attempt will be made to run without CurlKiller functionallity"  ,
+                              _AlwaysRunCurlKiller,
+                              int(0) ) ;
+
 }
 
 
@@ -513,42 +522,27 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
     streamlog_out(DEBUG) << "Number of TPCHit before filtering: " << nTPCHits << endl;
     
-    TkHitBank->setFirstHitIndex("TPC"); 
-    
     _goodHits.reserve(nTPCHits);
 
     _goodHits.clear();
 
-    selectTPCHits(tpcTHcol,usedCol);
+    int errTKTREV = 0;
     
-    streamlog_out(DEBUG) << "Number of TPCHit passed to PATREC: " << _goodHits.size() << endl;
-
-    FillTPCHitBanks();
-
-    TkHitBank->setLastHitIndex("TPC"); 
-    
-    //    cout << "the number of tpc hits sent to brahms = " << TPCHitBank->size() << endl;
-    //    CNTPC.ntphits = TPCHitBank->size();
-    
-    if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
-      int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
-      streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
+    if( _AlwaysRunCurlKiller == 0 ) {
+      selectTPCHits(tpcTHcol,usedCol);      
+      streamlog_out(DEBUG) << "Number of TPCHit passed to PATREC: " << _goodHits.size() << endl;
+      FillTPCHitBanks();            
+      errTKTREV = TKTREV();       
     }
     
-    int errTKTREV = TKTREV(); 
-
-    if(errTKTREV==911){
-
+    if( errTKTREV==911 || _AlwaysRunCurlKiller != 0 ){
       
       streamlog_out(DEBUG) << endl;
-      streamlog_out(DEBUG) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
+      if( _AlwaysRunCurlKiller == 0 ) streamlog_out(DEBUG) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;
       streamlog_out(DEBUG) << "   LEPTrackingProcessor: Trying to remove hits alla CurlKiller" << endl;
       streamlog_out(DEBUG) << endl;
       
-      for(int i=1;i<4;++i){
-
-        streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
-        streamlog_out(DEBUG) << "number of TK's = " << TkTkBank->size() << endl ;
+      for(int i=1 ; i<4; ++i){
 
         _goodHits.clear();
         TkMCBank->clear();
@@ -557,25 +551,18 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
         delete droppedCol;
         delete usedCol;
-
-
+        
         droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
         droppedCol->setSubset() ;     
         usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
         usedCol->setSubset() ; 
 
-
-        selectTPCHits(tpcTHcol, usedCol, droppedCol, _binHeight*i,_binWidth*i);
+        selectTPCHits(tpcTHcol, usedCol, droppedCol, _binHeight*(i),_binWidth*(i));
         
         FillTPCHitBanks();
         
         streamlog_out(DEBUG) << "Number of TPCHit after filtering: " << _goodHits.size() << endl;
 
-        if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
-          int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
-          streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
-        }
-        
         errTKTREV = TKTREV();  
 
         if(errTKTREV!=911) {
@@ -673,7 +660,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         if (DCA<0.) phiOfPCA = phiOfPCA + twopi/2. ;
         
         if ( phiOfPCA < -twopi/2. ) phiOfPCA = twopi + phiOfPCA ;
-        else if ( phiOfPCA > twopi/2. ) phiOfPCA = phiOfPCA = twopi + phiOfPCA ;   
+        else if ( phiOfPCA > twopi/2. ) phiOfPCA = -twopi + phiOfPCA ;   
         
         const double x0 = fabs( DCA ) * cos( phiOfPCA ) ;
         const double y0 = fabs( DCA ) * sin( phiOfPCA ) ;
@@ -1230,6 +1217,8 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
   TPCHitBank->clear();
   TkHitBank->clear();
 
+  TkHitBank->setFirstHitIndex("TPC");
+
   for(int i=0; i< _goodHits.size(); ++i){
       
     TrackerHit* trkHitTPC = _goodHits[i];
@@ -1271,7 +1260,7 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     
     double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
     double phi = atan2(pos[1],pos[0]); 
-    double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0]+trkHitTPC->getCovMatrix()[2]);
+    double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0] + trkHitTPC->getCovMatrix()[2]);
     double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
     
       //      cout << "row_hits->getY() = " <<  pos[1] << "  row_hits->getY() = " << pos[0] ; 
@@ -1295,6 +1284,15 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     
     TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
     
+  }
+  
+  TkHitBank->setLastHitIndex("TPC"); 
+
+  if(TkHitBank->getNumOfSubDetHits("TPC") > 0) {
+    int tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getFirstHitIndex("TPC")) ;
+    streamlog_out(DEBUG) << "the first hit for the TPC has id " << tpcsubid << endl ;
+    tpcsubid = TkHitBank->getSubdetectorID(TkHitBank->getLastHitIndex("TPC")) ;
+    streamlog_out(DEBUG) << "the last hit for the TPC has id " << tpcsubid << endl ;
   }
 }
 

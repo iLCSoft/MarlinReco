@@ -181,7 +181,7 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
   registerProcessorParameter("Debug",
 			     "Activate debugging?",
 			     _debug,
-			     int(1));
+			     int(0));
 
   registerProcessorParameter("UseExtraPoint",
 			     "Use Extra Point in Fit",
@@ -774,7 +774,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       // For no error in r
 
       double phi = atan2(hit->getPosition()[1],hit->getPosition()[0]); 
-      double tpcRPhiRes = sqrt((hit->getCovMatrix()[2])/(cos(phi)*cos(phi)));
+      double tpcRPhiRes = sqrt(hit->getCovMatrix()[0] + hit->getCovMatrix()[2]);
       double tpcZRes = sqrt(hit->getCovMatrix()[5]);
 
  
@@ -920,7 +920,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     for (int iTrk=0; iTrk<nelem; ++iTrk) {
       Track * tpcTrack = dynamic_cast<Track*>(col->getElementAt(iTrk));
       TrackExtended * trackExt = new TrackExtended( tpcTrack );
-           TrackerHitVec hitVec = tpcTrack->getTrackerHits();
+      TrackerHitVec hitVec = tpcTrack->getTrackerHits();
       int nHits = int(hitVec.size());
       trackExt->setOmega(tpcTrack->getOmega());
       trackExt->setTanLambda(tpcTrack->getTanLambda());
@@ -946,8 +946,10 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       trackExt->setChi2(tpcTrack->getChi2());            
       char strg[200];
       HelixClass helixTPC;
+      //      std::cout << "NHits = " << nHits << std::endl;
       for (int iHit=0;iHit<nHits;++iHit) {
 	TrackerHit * hit = hitVec[iHit];
+	//	std::cout << "trackerhit:" <<  iHit << " has id = " << hit->id() << std::endl;
 	TrackerHitExtended * hitExt = mapTrackerHits[hit];
 	hitExt->setTrackExtended( trackExt );
 	trackExt->addTrackerHitExtended( hitExt );	

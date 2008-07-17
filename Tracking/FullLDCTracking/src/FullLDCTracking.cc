@@ -181,7 +181,7 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
   registerProcessorParameter("Debug",
 			     "Activate debugging?",
 			     _debug,
-			     int(1));
+			     int(0));
 
   registerProcessorParameter("UseExtraPoint",
 			     "Use Extra Point in Fit",
@@ -774,7 +774,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       // For no error in r
 
       double phi = atan2(hit->getPosition()[1],hit->getPosition()[0]); 
-      double tpcRPhiRes = sqrt((hit->getCovMatrix()[2])/(cos(phi)*cos(phi)));
+      double tpcRPhiRes = sqrt(hit->getCovMatrix()[0] + hit->getCovMatrix()[2]);
       double tpcZRes = sqrt(hit->getCovMatrix()[5]);
 
  

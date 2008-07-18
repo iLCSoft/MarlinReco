@@ -100,6 +100,16 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			    std::string("MCParticlesSkimmed") ) ;
     
     
+  registerProcessorParameter( "daughtersECutMeV" , 
+			      "energy cut for daughters that are kept from KeepDaughtersPDG"  ,
+			      _eCutMeV,
+			      float( 10. )  
+			      ) ;
+  
+
+  
+
+
 }
 
 
@@ -563,9 +573,15 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 	for( MCParticleVec::const_iterator dIt = daughters.begin() ;
 	     dIt != daughters.end() ; ++dIt ){
 	  
-	  (*dIt)->ext<MCPKeep>() = true ;
-	  
-	  streamlog_out( DEBUG0 ) <<  (*dIt)->getPDG() << ", " ;
+
+	  MCParticle* dau = dynamic_cast<MCParticle*>( *dIt ) ;
+
+	  if( dau->getEnergy()*1000. >  _eCutMeV ) {
+	    
+	    (*dIt)->ext<MCPKeep>() = true ;
+	    
+	    streamlog_out( DEBUG0 ) <<  (*dIt)->getPDG() << ", " ;
+	  }
 	}
 	
 	streamlog_out( DEBUG0 ) << std::endl ;

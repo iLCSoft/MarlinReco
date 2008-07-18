@@ -55,7 +55,7 @@ using namespace lcio ;
  * @param MCParticlesSkimmedName     skimmed MCParticle collection - optional 
  * 
  *  @author F. Gaede, DESY
- *  @version $Id: RecoMCTruthLinker.h,v 1.3 2008-07-05 07:44:44 gaede Exp $ 
+ *  @version $Id: RecoMCTruthLinker.h,v 1.4 2008-07-18 13:15:03 gaede Exp $ 
  */
 
 class RecoMCTruthLinker : public marlin::Processor {
@@ -109,6 +109,8 @@ protected:
   /**  ouput collection name */
   std::string _recoMCTruthLinkName;
   std::string _mcParticlesSkimmedName;
+  
+  float _eCutMeV ;
   
   IntVec _pdgVec ;
 

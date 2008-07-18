@@ -1,3 +1,49 @@
+2008-07-18 15:15  gaede
+
+	* Analysis/RecoMCTruthLink/: include/RecoMCTruthLinker.h,
+	  src/RecoMCTruthLinker.cc: added paramater daughtersECutMeV for
+	  supressing low energy deltas
+
+2008-07-18 13:00  aplin
+
+	* Tracking/BrahmsTracking/: include/tkhitbank.h,
+	  src/LEPTrackingProcessor.cc, src/tkhitbank.cc: corrected bug in
+	  the clear function of hitbanks
+
+2008-07-18 10:26  rasp
+
+	* Tracking/V0Finder/src/GNUmakefile: Makefile for the V0Finder
+	  processor
+
+2008-07-17 18:53  aplin
+
+	* Tracking/BrahmsTracking/: include/LEPTrackingProcessor.h,
+	  src/LEPTrackingProcessor.cc: added steering parameter
+	  AlwaysRunCurlKiller which allows the CurlKiller functionality to
+	  be usedfor every event, not just those for whom the F77 tracking
+	  code fails
+
+2008-07-17 17:51  aplin
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: reestablished
+	  changes lost from r1.22
+
+2008-07-17 17:29  rasp
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: Merging of
+	  splitted non-looping tracks based on the hit-helix proximity
+	  criterion.
+
+2008-07-17 14:59  aplin
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: corrected
+	  conversion of covariance matrix, and set default debug level to 0
+
+2008-07-16 16:06  aplin
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: --------- version
+	  v00-10-03 ------------
+
 2008-07-16 10:41  aplin
 
 	* Tracking/SiliconTracking/src/SiliconTracking.cc: made

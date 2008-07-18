@@ -4,38 +4,30 @@
 
 ================================
 
+ -----------
+| v00-10-04 |
+ -----------
+      
+      * RecoMCTruthLinker (F.Gaede)
+	  added paramater daughtersECutMeV for supressing low energy deltas od decays in flight
+
+      * bug fixes and improvements in BrahmsTracking FullLDCTracking (S.Aplin)
+        - splitted non-looping tracks based on hit-helix proximity 
+        - corrected conversion of covariance matrix
+        - added steering parameter AlwaysRunCurlKiller in BrahmsTracking
+        - bug fix in  clear function of tkhitbank
+
+        -> see Changelog for details 
 
  -----------
 | v00-10-03 |
  -----------
 
-2008-07-16 10:41  aplin
+	* bug fix SiliconTracking/LEPTrackingProcessor (S. Aplin)
+          subdetectorHitNumbers  for ETD and SET hits
 
-        * Tracking/SiliconTracking/src/SiliconTracking.cc: made
-          subdetectorHitNumbers for SiTracks consistent with
-          FullLDCTracking which has implemented ETD and SET hits
-
-2008-07-16 10:39  aplin
-
-        * Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: made
-          subdetectorHitNumbers for TPCTracks consistent with
-          FullLDCTracking which has implemented ETD and SET hits
-
-2008-07-15 15:37  aplin
-
-        * Tracking/BrahmsTracking/src/f77/trkfnd.F: removed unnecessary
-          check code concerning max number of TPC pad rows
-
-2008-07-15 12:18  aplin
-
-        * Tracking/BrahmsTracking/src/f77/trkfnd.F: added row numbers to
-          error message
-
-2008-07-10 13:36  rasp
-
-        * Tracking/V0Finder/: include/V0Finder.h, src/V0Finder.cc: added
-          cut on the mass of the candidate vertices
-
+        * improved V0Finder (A.Raspereza)
+          added cut on the mass of the candidate vertices
 
  -----------
 | v00-10-01 |

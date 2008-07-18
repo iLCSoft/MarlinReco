@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.42 2008-07-17 16:53:30 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.43 2008-07-18 11:00:54 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.42  2008/07/17 16:53:30  aplin
+** added steering parameter AlwaysRunCurlKiller which allows the CurlKiller functionality to be usedfor every event, not just those for whom the F77 tracking code fails
+**
 ** Revision 1.41  2008/07/16 08:39:46  aplin
 ** made subdetectorHitNumbers for TPCTracks consistent with FullLDCTracking which has implemented ETD and SET hits
 **
@@ -534,7 +537,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
       FillTPCHitBanks();            
       errTKTREV = TKTREV();       
     }
-    
+
     if( errTKTREV==911 || _AlwaysRunCurlKiller != 0 ){
       
       streamlog_out(DEBUG) << endl;
@@ -558,7 +561,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         usedCol->setSubset() ; 
 
         selectTPCHits(tpcTHcol, usedCol, droppedCol, _binHeight*(i),_binWidth*(i));
-        
+
         FillTPCHitBanks();
         
         streamlog_out(DEBUG) << "Number of TPCHit after filtering: " << _goodHits.size() << endl;
@@ -568,7 +571,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         if(errTKTREV!=911) {
           break;
         }
-
+        
         else if(i==3){
           streamlog_out(ERROR) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
           streamlog_out(ERROR) << "   LEPTrackingProcessor: TKTREV returns:" << errTKTREV << endl;

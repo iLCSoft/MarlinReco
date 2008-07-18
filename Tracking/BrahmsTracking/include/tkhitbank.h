@@ -53,19 +53,19 @@ class Tk_Hit_Bank
 
   void setFirstHitIndex(std::string subdet)
     { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {firstHitEntry[subdet]=hit_bank.size();}
-    else { throw std::runtime_error("subdetector does not exit") ;}};
+    else { throw std::runtime_error("setFirstHitIndex:subdetector does not exit") ;}};
 
   unsigned int getFirstHitIndex(std::string subdet)
     { if(firstHitEntry.find(subdet) != firstHitEntry.end()) {return firstHitEntry[subdet];}
-    else { throw std::runtime_error("subdetector does not exit") ;}}; 
+    else { throw std::runtime_error("getFirstHitIndex:subdetector does not exit") ;}}; 
   
   void setLastHitIndex(std::string subdet)
    { if(lastHitEntry.find(subdet) == lastHitEntry.end()) {lastHitEntry[subdet]=hit_bank.size()-1;}
-    else { throw std::runtime_error("subdetector does not exit") ;}};
+    else { throw std::runtime_error("setLastHitIndex:subdetector does not exit") ;}};
 
   unsigned int getLastHitIndex(std::string subdet)
   { if(lastHitEntry.find(subdet) != lastHitEntry.end()) {return  lastHitEntry[subdet];}
-  else { throw std::runtime_error("subdetector does not exit") ;}};  
+  else { throw std::runtime_error("getLastHitIndex:subdetector does not exit") ;}};  
   
   int getNumOfSubDetHits(std::string subdet)
     { if(firstHitEntry.find(subdet) == firstHitEntry.end()) {return 0;} 

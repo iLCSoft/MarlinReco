@@ -437,6 +437,7 @@ class FullLDCTracking : public Processor {
   int _nHitsExtrapolation;
 
   int _cutOnTPCHits;
+  int _cutOnSiHits;
 
   float _aParIpReso,_bParIpReso,_sParIpReso;
 

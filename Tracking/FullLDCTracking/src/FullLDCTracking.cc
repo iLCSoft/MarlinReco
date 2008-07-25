@@ -308,6 +308,10 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			     "Cut on the number of the TPC hits for tracks with no Si hits",
 			     _cutOnTPCHits,
 			     int(35));
+  registerProcessorParameter("CutOnSiHits",
+			     "Cut on the number of the Si hits for tracks with no TPC hits",
+			     _cutOnSiHits,
+			     int(4));
 
   registerProcessorParameter("aParameterForIPError",
 			     "Parameter a to define minimal IP error",
@@ -675,6 +679,7 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
     
     int nHitsSiInFit = nHitsVTXInFit+nHitsFTDInFit+nHitsSITInFit;
     bool rejectTrack = (nHitsTPCInFit<_cutOnTPCHits) && (nHitsSiInFit<=0);
+    rejectTrack = rejectTrack || ( (nHitsTPCInFit<=0) && (nHitsSiInFit<_cutOnSiHits) );
     rejectTrack = rejectTrack || ( fabs(d0TrkCand) > _d0TrkCut ) || ( fabs(z0TrkCand) > _z0TrkCut );
 
     if ( rejectTrack ) {

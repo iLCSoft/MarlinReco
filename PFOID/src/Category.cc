@@ -9,20 +9,20 @@ Category::Category(std::string Name, int NoOfHist){
     exit(-1);
   }
   
-};
+}
 
 
 Category::~Category(){
   for(unsigned int i=0; i<hists.size(); i++) delete hists[i];
   hists.clear();
-};
+}
 
 
 std::string Category::GetName(){
   return catName;
-};
+}
 
 
 unsigned int Category::GetNoOfHists(){
   return nHists;
-};
+}

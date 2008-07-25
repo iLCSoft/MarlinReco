@@ -1,3 +1,27 @@
+2008-07-25 14:38  rasp
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc: Added cut on the number of Si hits
+
+2008-07-24 18:04  rasp
+
+	* PFOID/: npdf_n.txt, pdf_n.txt, steer_ldc_01Sc_gauge.xml: PDF
+	  files for particle identification processor. example steering
+	  file
+
+2008-07-24 18:01  rasp
+
+	* PFOID/: src/Category.cc, src/CreatePDFs.cc, src/GNUmakefile,
+	  src/Histogram.cc, src/PDF.cc, src/PFOID.cc, src/VObject.cc,
+	  include/Category.h, include/Configure.h, include/CreatePDFs.h,
+	  include/Histogram.h, include/PDF.h, include/PFOID.h,
+	  include/VObject.h: PFOID processor
+
+2008-07-18 15:40  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: ----------- version
+	  v00-10-04 -------------------------
+
 2008-07-18 15:15  gaede
 
 	* Analysis/RecoMCTruthLink/: include/RecoMCTruthLinker.h,

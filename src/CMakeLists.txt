@@ -27,6 +27,7 @@ SET( MarlinReco_PKGS
     "Tracking/SiliconTracking"
     "Tracking/TrackCheater"
     "Tracking/V0Finder"
+	"PFOID"
 )
 
 
@@ -336,6 +337,18 @@ SET_SOURCE_FILES_PROPERTIES( ${V0Finder_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( V0Finder_srcs ${V0Finder_cxx_srcs} )
+
+####################################################################################################
+# PFOID
+
+# cxx sources
+#AUX_SOURCE_DIRECTORY( ../PFOID/src PFOID_cxx_srcs )
+
+#SET_SOURCE_FILES_PROPERTIES( ${PFOID_cxx_srcs} PROPERTIES
+    # require proper c++
+#	    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+#SET( PFOID_srcs ${PFOID_cxx_srcs} )
 
 
 

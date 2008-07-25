@@ -5,6 +5,16 @@
 ================================
 
  -----------
+| v00-11-00 |
+ -----------
+     * FullLDCTracking: (A.Raspereza)
+        added cut on #Silicon hits if no TPC hits present - default: >=4
+
+     * added code for PFOID  (M.Ohlerich et. al)
+       particle id package
+       -> experimental - does not compile and is not built into library
+
+ -----------
 | v00-10-04 |
  -----------
       

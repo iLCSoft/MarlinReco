@@ -1,5 +1,6 @@
 #include "Category.h"
 #include <iostream>
+#include <cstdlib>
 
 Category::Category(std::string Name, int NoOfHist){
   catName = Name ;

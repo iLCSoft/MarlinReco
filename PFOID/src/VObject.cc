@@ -11,12 +11,12 @@ VObject::VObject(int NoOfVars){
     varNames[i] = "";
     varValues[i] = 0.;
   }
-};
+}
 
 VObject::~VObject(){
   delete [] varNames;
   delete [] varValues;
-};
+}
 
 int VObject::SetName(int VarNo, std::string VarName){
   if(VarNo<0 || VarNo>=vn){
@@ -31,7 +31,7 @@ int VObject::SetName(int VarNo, std::string VarName){
 
   varNames[VarNo] = VarName;
   return 0;
-};
+}
 
 int VObject::SetNames(std::string *Names){
   for(int i=0; i<vn; i++)
@@ -43,13 +43,13 @@ int VObject::SetNames(std::string *Names){
   for (int i=0; i<vn; i++) varNames[i] = Names[i];
 
   return 0;
-};
+}
 
 int VObject::SetValue(int VarNo, double Value){
   if(VarNo<0 || VarNo>=vn) return -1;
   varValues[VarNo] = Value;
   return 0;
-};
+}
 
 int VObject::SetValue(std::string VarName, double Value){
   for(int i=0; i<vn; i++)
@@ -60,7 +60,7 @@ int VObject::SetValue(std::string VarName, double Value){
 
   std::cout << " No variable with that name '" << VarName << "' found!" << std::endl;
   return -1;
-};
+}
 
 double VObject::GetValue(int VarNo) const{
   if(VarNo<0 || VarNo>=vn){
@@ -68,7 +68,7 @@ double VObject::GetValue(int VarNo) const{
     return 0;
   }
   return varValues[VarNo];
-};
+}
 
 double VObject::GetValue(std::string VarName) const{
   for(int i=0; i<vn; i++)
@@ -76,11 +76,11 @@ double VObject::GetValue(std::string VarName) const{
 
   std::cout << " No variable with that name '" << VarName << "' found!" << std::endl;
   return 0;
-};
+}
 
 int VObject::GetNoOfVariables() const{
   return vn;
-};
+}
 
 std::string VObject::GetName(int VarNo) const{
   if(VarNo<0 || VarNo>=vn){
@@ -88,8 +88,8 @@ std::string VObject::GetName(int VarNo) const{
     return "";
   }
   return varNames[VarNo];
-};
+}
 
 std::string* VObject::GetNames() const{
   return varNames;
-};
+}

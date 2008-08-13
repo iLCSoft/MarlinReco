@@ -1,8 +1,10 @@
 #include <iostream>
+#include <cstdlib>
 #include <iomanip>
 #include <string>
 #include <math.h>
 #include "Histogram.h"
+
 
 int cindex(int *index, int* maxima, int N){
   int ind = index[N-1];
@@ -40,7 +42,7 @@ Histogram::Histogram(std::string HistName, int Dimension){
   norm = content[0];
   vol = 1. ;
   for (int i=0; i<3; i++) density[i]=content[0];
-};
+}
 
 Histogram::Histogram(std::string HistName, int Dimension, std::string *VarName, double *StartVal, double *BinWidth, int *NoOfBins){
   dim      = Dimension ;
@@ -69,7 +71,7 @@ Histogram::Histogram(std::string HistName, int Dimension, std::string *VarName, 
   content[0] = 1.e-20;
   norm = totNoOfBins*content[0];
   for (int i=0; i<3; i++) density[i]=content[0];
-};
+}
 
 
 Histogram::~Histogram(){
@@ -78,7 +80,7 @@ Histogram::~Histogram(){
   delete [] width;
   delete [] bins;
   delete [] content;
-};
+}
 
 
 int Histogram::SetVariable(int VarNo, std::string VarName, double StartVal, double BinWidth, int NoOfBins){
@@ -110,7 +112,7 @@ int Histogram::SetVariable(int VarNo, std::string VarName, double StartVal, doub
   //  std::cout << "histogram new initialized - empty!" << std::endl;
 
   return 0;
-};
+}
 
 
 int Histogram::SetVariables(std::string *VarName, double *StartVal, double *BinWidth, int *NoOfBins){
@@ -141,7 +143,7 @@ int Histogram::SetVariables(std::string *VarName, double *StartVal, double *BinW
   //  std::cout << "histogram new initialized - empty!" << std::endl;
   
   return 0;
-};
+}
 
 
 int Histogram::Fill(VObject *VO) {
@@ -159,7 +161,13 @@ int Histogram::Fill(VObject *VO) {
   
   std::cerr << "Hist DBG: start looking for bin " << dim << std::endl;
   double val;
-  int index[dim];
+
+  //FIXED:SJA  int index[dim]; //change the variable size array to dynamic memory 
+  int *index ;
+  index = new int[dim];
+  
+
+
   for(int i=0; i<dim; i++){
     val=VO->GetValue(varNames[i]);
 
@@ -199,8 +207,9 @@ int Histogram::Fill(VObject *VO) {
   density[1]=mini;
   density[2]=norm/(vol*totNoOfBins);
 
+  delete[] index; 
   return 0;  
-};
+}
 
 int Histogram::SetBinContent(int BinInd, double Value){
   if(BinInd<0 || BinInd>=totNoOfBins){
@@ -222,25 +231,25 @@ int Histogram::SetBinContent(int BinInd, double Value){
   density[2]=norm/(vol*totNoOfBins);
 
   return 0;
-};
+}
 
 
 double Histogram::GetNorm(){
   return norm;
-};
+}
 
 double Histogram::GetVolume(){
   return vol;
-};
+}
 
 std::string Histogram::GetHistName(){
   return histName;
-};
+}
 
 
 double* Histogram::GetDensities(){
   return density;
-};
+}
 
 
 double Histogram::GetContent(VObject *VO){
@@ -257,7 +266,11 @@ double Histogram::GetContent(VObject *VO){
   }
   
   double val;
-  int index[dim];
+
+  //FIXED:SJA  int index[dim]; //change the variable size array to dynamic memory 
+  int *index ;
+  index = new int[dim];
+
   for(int i=0; i<dim; i++){
     val=VO->GetValue(varNames[i]);
     if ( val<start[i] ){                   // 0-th bin:  |.x.|...|... at underflow
@@ -280,9 +293,10 @@ double Histogram::GetContent(VObject *VO){
   
   int mind = cindex(index,bins,dim);
 
+  delete[] index;
   return content[mind];
 
-};
+}
 
 
 double Histogram::GetNormContent(VObject *VO){
@@ -299,7 +313,11 @@ double Histogram::GetNormContent(VObject *VO){
   }
   
   double val;
-  int index[dim];
+
+  //FIXED:SJA  int index[dim]; //change the variable size array to dynamic memory 
+  int *index ;
+  index = new int[dim];
+
   for(int i=0; i<dim; i++){
     val=VO->GetValue(varNames[i]);
     if ( val<start[i] ){                   // 0-th bin:  |.x.|...|... at underflow
@@ -322,8 +340,9 @@ double Histogram::GetNormContent(VObject *VO){
   
   int mind = cindex(index,bins,dim);
 
+  delete[] index;
   return content[mind]/norm;
-};
+}
 
 
 double Histogram::GetBinContent(int BinInd){
@@ -332,34 +351,34 @@ double Histogram::GetBinContent(int BinInd){
     return 0;
   }
   return content[BinInd];
-}; 
+} 
 
 int Histogram::GetDimension(){
   return dim;
-}; 
+} 
  
 int Histogram::GetTotNoOfBins(){
   return totNoOfBins;
-};
+}
 
 std::string * Histogram::GetVarNames(){
   return varNames;
-};
+}
 
 
 double * Histogram::GetVarStart(){
   return start;
-};
+}
 
 
 double * Histogram::GetVarWidth(){
   return width;
-};
+}
 
 
 int * Histogram::GetVarBins(){
   return bins;
-};
+}
 
 
 double Histogram::CompareHist(Histogram *hist){
@@ -393,5 +412,5 @@ double Histogram::CompareHist(Histogram *hist){
   }
 
   return sqrt(totDiff)/(vol*totNoOfBins);
-};
+}
 

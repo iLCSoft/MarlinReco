@@ -43,7 +43,7 @@ PFOID::PFOID() : Processor("PFOID") {
   registerProcessorParameter("FilePDFName","Name of file containing pdfs",_filename,std::string("pdf.txt")) ;
 
   registerProcessorParameter("neutralFilePDFName","Name of file containing pdfs for neutral particle",_filename1,std::string("npdf.txt")) ;
-};
+}
 
 
 void PFOID::init() {
@@ -68,12 +68,12 @@ void PFOID::init() {
   his_g = new TH1D("lh_g","Likelihood gamma",50,0.,1.);
   his_nh = new TH1D("lh_nh","Likelihood neutral hadron",50,0.,1.);
 #endif
-};
+}
 
 
 void PFOID::processRunHeader( LCRunHeader * run ) {
   _nRun++ ;
-};
+}
 
 
 void PFOID::processEvent( LCEvent * evt ) {
@@ -271,12 +271,12 @@ void PFOID::processEvent( LCEvent * evt ) {
   std::cout << "%% PFOID: End of PFOID\n" << std::endl; 
   _nEvt++ ;
 
-};
+}
 
 
 
 
-void PFOID::check( LCEvent * evt ) {};
+void PFOID::check( LCEvent * evt ) {}
 
 
 
@@ -288,7 +288,7 @@ void PFOID::end() {
 #endif
   delete pdf;
   delete npdf;
-};
+}
 
 
 
@@ -549,4 +549,4 @@ void PFOID::fill_info(int i, ReconstructedParticle *rp){
     }
   }
 
-};
+}

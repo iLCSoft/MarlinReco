@@ -1,5 +1,6 @@
 #include "PDF.h"
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <math.h>
@@ -32,7 +33,7 @@ PDF::PDF(std::string PDFname, int NoOfCats, std::string* CatNames, int NoOfHists
   };
 
   std::cout << " PDF created with categories and non-initialized histograms" << std::endl;
-};
+}
 
 
 PDF::PDF(std::string Filename){
@@ -48,15 +49,23 @@ PDF::PDF(std::string Filename){
   in >> nCats;                                               //  number of categories in pdf
   if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   
-  std::string CatNames[nCats];                               //  names of the categories
+  //FIXED:SJA std::string CatNames[nCats];                               //  names of the categories
+  //replaced variable length array
+  std::string *CatNames = new std::string[nCats];
+
   for (int i=0; i<nCats; i++){
     in >> CatNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
+
   int NoOfVar;
   in >> NoOfVar;                                             // number of variables
   if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
-  std::string VarNames[NoOfVar];                             // array with names of variables
+
+  //FIXED:SJA std::string VarNames[NoOfVar];                             // array with names of variables
+  //replaced variable length array
+  std::string *VarNames = new std::string[NoOfVar];
+
   for(int i=0; i<NoOfVar; i++){
     in >> VarNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
@@ -89,22 +98,42 @@ PDF::PDF(std::string Filename){
 
   // -----------------
 
-  int dims[NoOfHists];                                       // dimensions of the histograms
+  //FIXED:SJA int dims[NoOfHists];                                       // dimensions of the histograms
+  //replaced variable length array
+  int *dims = new int[NoOfHists];
+
   for (int i=0; i<NoOfHists; i++){
     in >> dims[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
 
-  std::string HistNames[NoOfHists];                          // Names of the histograms
+  //FIXED:SJA std::string HistNames[NoOfHists];                          // Names of the histograms
+  //replaced variable length array
+  std::string *HistNames = new std::string[NoOfHists];
+   
   for (int i=0; i<NoOfHists; i++){
     in >> HistNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
 
   for (int i=0; i<NoOfHists; i++){                           // Read histogram structure
-    std::string VarName[dims[i]];
-    double start[dims[i]], binWidth[dims[i]];
-    int bins[dims[i]];
+
+    //FIXED:SJA std::string VarName[dims[i]];
+    //replaced variable length array
+    std::string *VarName = new std::string[dims[i]];
+
+    //FIXED:SJA double start[dims[i]];
+    //replaced variable length array
+    double *start = new double[dims[i]];
+    
+    //FIXED:SJA double binWidth[dims[i]];
+    //replaced variable length array
+    double *binWidth = new double [dims[i]];
+    
+    //FIXED:SJA int bins[dims[i]];
+    //replaced variable length array
+    int *bins = new int[dims[i]];
+
     for (int j=0; j<dims[i]; j++){
       in >> VarName[j];
       if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
@@ -115,6 +144,12 @@ PDF::PDF(std::string Filename){
       Histogram *h = new Histogram(HistNames[i],dims[i],VarName,start,binWidth,bins);
       cat[j]->hists.push_back(h);
     }
+    
+    delete [] VarName;
+    delete [] start;
+    delete [] binWidth;
+    delete [] bins;
+
   }
 
   double value;
@@ -131,14 +166,18 @@ PDF::PDF(std::string Filename){
 
   in.close();
 
-};
+  delete [] VarNames;
+  delete [] dims;
+  delete [] HistNames;
+
+}
 
 
 PDF::~PDF(){
   for(unsigned int i=0; i<cat.size(); i++) delete cat[i];
   cat.clear();
   delete VO;
-};
+}
  
 int PDF::InitHistogram(std::string HistName, int Dim, std::string *VarName, double *StartVal, double *BinWidth, int *NoOfBins){
   int ret=0;
@@ -149,12 +188,13 @@ int PDF::InitHistogram(std::string HistName, int Dim, std::string *VarName, doub
       std::cout << " Histograms are already initialized!" << std::endl;
       return -1;
     }
+
     for(unsigned int j=0; j<cat[i]->hists.size(); j++)
       if(cat[i]->hists[j]->GetHistName()==HistName){
 	std::cout << " There is already a histogram with name '" << HistName << "'!\n";
 	return -1;
       }
-
+    
     if(Dim>VO->GetNoOfVariables()){
       std::cout << " Dimension of histogram can be at most the # of variables in VObject " << VO->GetNoOfVariables() << std::endl;
       return -1;
@@ -185,7 +225,7 @@ int PDF::InitHistogram(std::string HistName, int Dim, std::string *VarName, doub
   }
   
   return ret;
-};
+}
 
 
 int PDF::FillHistograms(std::string CatName){
@@ -206,7 +246,7 @@ int PDF::FillHistograms(std::string CatName){
   }
   if (ret==-2) std::cout << " Error when Filling the histogram: No matching histogram found!" << std::endl;
   return ret;
-};
+}
 
 
 Histogram * PDF::GetHistogram(std::string CatName, std::string HistName){
@@ -224,9 +264,12 @@ Histogram * PDF::GetHistogram(std::string CatName, std::string HistName){
 
 
 double PDF::GetLikelihood(std::string CatName){
+  
+  //FIXED:SJA:removed variable array:  double p [nCats][cat[0]->GetNoOfHists()];
+  std::vector < std::vector < double > > p(nCats,std::vector < double >(cat[0]->GetNoOfHists()));  
 
-  double p [nCats][cat[0]->GetNoOfHists()];
-  double sum [cat[0]->GetNoOfHists()];
+  //FIXED:SJA:removed variable array:  double sum [cat[0]->GetNoOfHists()];
+  double *sum = new double[cat[0]->GetNoOfHists()];
 
    for(unsigned int j_his=0; j_his<cat[0]->GetNoOfHists(); j_his++){
      sum[j_his]=0.;
@@ -236,7 +279,9 @@ double PDF::GetLikelihood(std::string CatName){
      }
    }
 
-   double prod [nCats];
+   //FIXED:SJA:removed variable array:  double prod [nCats];
+   double *prod = new double[nCats];
+
    for(int i_cat=0; i_cat<nCats; i_cat++){
      prod[i_cat] = 1.;
      for(unsigned int j_his=0; j_his<cat[0]->GetNoOfHists(); j_his++){
@@ -245,7 +290,12 @@ double PDF::GetLikelihood(std::string CatName){
      }
    }
 
-   double LH [nCats], sum2=0.;
+   
+   //FIXED:SJA:removed variable array:  double LH [nCats];
+   double *LH = new double [nCats];
+
+   double sum2=0.;
+
    int index=-2;
    for(int i_cat=0; i_cat<nCats; i_cat++){
      LH[i_cat] = prod[i_cat];
@@ -257,6 +307,9 @@ double PDF::GetLikelihood(std::string CatName){
 
    if(index<0 || index>nCats-1){
      std::cout << " Error in Likelihood " << std::endl;
+     delete[] sum;
+     delete[] prod;
+     delete[] LH;
      return -1;
    }
 
@@ -267,11 +320,17 @@ double PDF::GetLikelihood(std::string CatName){
     sum3/=sum2;
     if(fabs(sum3-1.)>1.e-10){
       std::cout << " Error in Likelihood : total LH not 1!" << std::endl;
+      delete[] sum;
+      delete[] prod;
+      delete[] LH;
       return -1;
     }
 
-   return LH[index]/sum2;
-};
+    delete[] sum;
+    delete[] prod;
+    delete[] LH;
+    return LH[index]/sum2;
+}
 
 
 // ------  PDF::ReadPDF  ------------
@@ -289,15 +348,21 @@ int PDF::ReadPDF(std::string Filename){
   in >> nCats;                                               //  number of categories in pdf
   if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   
-  std::string CatNames[nCats];                               //  names of the categories
+  //FIXED:SJA:removed variable array:    std::string CatNames[nCats];                               //  names of the categories
+  std::string *CatNames = new std::string[nCats];
+
   for (int i=0; i<nCats; i++){
     in >> CatNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
+
   int NoOfVar;
   in >> NoOfVar;                                             // number of variables
   if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
-  std::string VarNames[NoOfVar];                             // array with names of variables
+
+  //FIXED:SJA:removed variable array:  std::string VarNames[NoOfVar];                             // array with names of variables
+  std::string *VarNames = new std::string[NoOfVar];                             // array with names of variables
+
   for(int i=0; i<NoOfVar; i++){
     in >> VarNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
@@ -330,22 +395,35 @@ int PDF::ReadPDF(std::string Filename){
 
   // -----------------
 
-  int dims[NoOfHists];                                       // dimensions of the histograms
+  //FIXED:SJA:removed variable array:    int dims[NoOfHists];                                       // dimensions of the histograms
+  int *dims = new int[NoOfHists];
+  
+
   for (int i=0; i<NoOfHists; i++){
     in >> dims[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
 
-  std::string HistNames[NoOfHists];                          // Names of the histograms
+  //FIXED:SJA:removed variable array:    std::string HistNames[NoOfHists];                          // Names of the histograms
+  std::string *HistNames = new std::string[NoOfHists];                          // Names of the histograms
+
+
   for (int i=0; i<NoOfHists; i++){
     in >> HistNames[i];
     if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
   }
 
   for (int i=0; i<NoOfHists; i++){                           // Read histogram structure
-    std::string VarName[dims[i]];
-    double start[dims[i]], binWidth[dims[i]];
-    int bins[dims[i]];
+
+    
+    //FIXED:SJA:removed variable array:    std::string VarName[dims[i]];
+    std::string *VarName = new std::string[dims[i]];
+
+    //FIXED:SJA:removed variable array:        double start[dims[i]], binWidth[dims[i]];
+    double *start = new double[dims[i]];
+    double *binWidth = new double[dims[i]];
+    int *bins = new int[dims[i]];
+
     for (int j=0; j<dims[i]; j++){
       in >> VarName[j];
       if(!in.good()){ std::cout << " Error in reading PDF file" << std::endl;  exit(1); }
@@ -356,6 +434,10 @@ int PDF::ReadPDF(std::string Filename){
       Histogram *h = new Histogram(HistNames[i],dims[i],VarName,start,binWidth,bins);
       cat[j]->hists.push_back(h);
     }
+    delete[] VarName;
+    delete[] start;
+    delete[] binWidth;
+    delete[] bins;
   }
 
   double value;
@@ -372,8 +454,12 @@ int PDF::ReadPDF(std::string Filename){
   in.close();
   std::cout << " PDF complete" << std::endl;
 
+  delete[] CatNames;
+  delete[] VarNames;
+  delete[] dims;
+  delete[] HistNames;
   return 0;
-};
+}
 
 
 // ------  PDF::WritePDF  ------------
@@ -421,12 +507,12 @@ int PDF::WritePDF(std::string Filename){
   of.close();
   
   return 0;
-};
+}
 
 
 int PDF::GetNCats(){ 
   return nCats; 
-};
+}
 
 std::string PDF::GetCatName(int CatNo){
   if(CatNo<0 || CatNo>=nCats){
@@ -434,4 +520,4 @@ std::string PDF::GetCatName(int CatNo){
     return "";
   }
   return cat[CatNo]->GetName();
-};
+}

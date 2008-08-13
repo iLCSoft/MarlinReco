@@ -55,7 +55,7 @@ CreatePDFs::CreatePDFs() : Processor("CreatePDFs") {
   registerProcessorParameter("RelCollection","Name of relation collection",_relCol,std::string("RelationCaloHit")) ;
 
   registerProcessorParameter("MCTracksRelCollection","Name of MC to Tracks Relation collection",_MCTracksRelCol,std::string("LDCTracksMCP"))
-;};
+;}
 
 
 //****************************************************//
@@ -168,7 +168,7 @@ void CreatePDFs::init() {
     MyPidCol.push_back(_pidCol[j]);
 
   noClusterParticle=0;  
-};
+}
 
 
 
@@ -221,7 +221,7 @@ void CreatePDFs::processRunHeader( LCRunHeader * run ) {
 
   _nRun++ ;
 
-};
+}
 
 
 //***********************************************************//
@@ -580,10 +580,10 @@ void CreatePDFs::processEvent( LCEvent * evt ) {
   std::cout << "%% CreatePDFs: End of CreatePDFs\n" << std::endl; 
   _nEvt++ ;
 
-};
+}
 
 void CreatePDFs::check( LCEvent * evt ) {
-};
+}
 
 void CreatePDFs::end() {
   std::cout << "%% CreatePDFs: " << _nParticle << " written to category " << curr_cat << std::endl;
@@ -596,7 +596,7 @@ void CreatePDFs::end() {
     npdf->WritePDF(_filename_n);
     delete npdf;
   }
-};
+}
 
 
 void CreatePDFs::init_info(){

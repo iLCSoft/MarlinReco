@@ -274,9 +274,7 @@ void CCDDigitizer::init() {
 
  
 
- //diagnostics
- //parts used for diagnostic purposes only are written in between //diagnostics and //diagnostics//
-  //diagnostics
+#ifdef CCD_diagnostics
   AIDA::IHistogramFactory* pHistogramFactory=marlin::AIDAProcessor::histogramFactory( this );
  
   histdist=  pHistogramFactory->createHistogram1D( "dist","distance (mm) between rawhits and reconstructed hits",100, 0, 0.05 );  
@@ -288,14 +286,12 @@ void CCDDigitizer::init() {
   // histzcoord= pHistogramFactory->createHistogram1D( "locraw-z-coordinate","locraw-z-coordinate",100,-0.01,+0.01);
 
  histenergy= pHistogramFactory->createHistogram1D( "energyloss","energy loss per hit",100,0,10);
-  //diagnostics//
 
  histsignal= pHistogramFactory->createHistogram1D( "signal","electronnumber per pixel",100,0,500);
  histsignalframe= pHistogramFactory->createHistogram1D( "signalframe","electronnumber per pixel",100,0,1000);
 
  histenergycentre= pHistogramFactory->createHistogram1D( "signalcentre","electronnumber per pixel",100,0,5000);
-
-  //diagnostics//
+#endif
 
 
  //table
@@ -685,12 +681,12 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
 //     cout<<"y: "<<localPosition[1]<<"  ";
 //     cout<<"z: "<<localPosition[2]<<"  "<<endl;
 
-//diagnostics
+#ifdef CCD_diagnostics
   for(int i=0;i<3;i++){
     dirraw[i]=localDirection[i];
     posraw[i]=localPosition[i];
   }
-//diagnostics//
+#endif
   
 }  
 
@@ -761,10 +757,10 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
     }
 
 
-  //diagnostics
+#ifdef CCD_diagnostics
   histNionpoint->fill(_numberOfSegments,1);
   Nionpoint=_numberOfSegments;
-  //diagnostics//
+#endif
 
 
 
@@ -774,9 +770,9 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
   _segmentDepth =epitaxdep/((double)_numberOfSegments);
   //_segmentDepth =_layerThickness[_currentLayer]/((double)_numberOfSegments);//code without bulk
 
-  //diagnostics
+#ifdef CCD_diagnostics
   double energy=0;
-  //diagnostics//
+#endif
 
 
 
@@ -791,9 +787,9 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
                                               _cutOnDeltaRays,segmentLength,
                                               double(1000.*dEmean))/1000.;
     // if(_debug) std::cout << "segment " << i << " dE = " << de << std::endl;
-    //diagnostics   
+#ifdef CCD_diagnostics
     energy+=1e+6*de;
-    //diagnostics//
+#endif
 
     ipoint.eloss = de;
     ipoint.x = x;
@@ -803,10 +799,10 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
   }
 
 
-  //diagnostics
+#ifdef CCD_diagnostics
   energy=energy/(trackLength)*epitaxdep;
   histenergy->fill(energy,1);
-  //diagnostics//
+#endif
 
   //std::cout << "Amplitude = " << _ampl << std::endl;
 
@@ -1126,9 +1122,9 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         ycentre = cellID - 100000 * xcentre;
       }
     }
-    //diagnostics
+#ifdef CCD_diagnostics
     histenergycentre->fill(emax,1);//number of electrons in pixel with highest amplitude
-    //diagnostics//
+#endif
     
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];
@@ -1146,10 +1142,10 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         pos[0]+=xCurrent* hit->getdEdx();
         pos[1]+=yCurrent* hit->getdEdx();
 
-        //diagnostics
+#ifdef CCD_diagnostics
         double a=hit->getdEdx();
         histsignalframe->fill(a,1);
-        //diagnostics//
+#endif
       }
       
     }
@@ -1183,7 +1179,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     pos[2] += bulkthickness/2;
     
                 
-    // diagnostics 
+#ifdef CCD_diagnostics
     //shift along the track back to direction initial interaction plane to make results comparable      
     double shift[3];
     shift[2]=-bulkthickness/2;
@@ -1282,7 +1278,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     // char q = getchar();
     // }
     
-    //diagnostics//
+#endif
     
         
     recoHit->setPosition( pos );

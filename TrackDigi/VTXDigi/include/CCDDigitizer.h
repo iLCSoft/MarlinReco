@@ -34,7 +34,7 @@ Processor requires collection of simulated vertex tracker hits. If such a collec
 
 
 
-//stuff for diagnostics
+#ifdef CCD_diagnostics
 #include <AIDA/IHistogramFactory.h>
 #include <AIDA/IHistogram1D.h>
 #include <AIDA/IHistogram2D.h>
@@ -44,7 +44,8 @@ Processor requires collection of simulated vertex tracker hits. If such a collec
 #include <marlin/Global.h>
 #include <marlin/VerbosityLevels.h>
 #include <marlin/AIDAProcessor.h>
-//diagnostics//
+#endif
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -244,7 +245,7 @@ class CCDDigitizer : public Processor {
   double TanLorentzAngle;
 
 
-  //diagnostics
+#ifdef CCD_diagnostics
   double dirraw[3];
   double posraw[3];
   AIDA::IHistogram1D* histdist;
@@ -259,7 +260,7 @@ class CCDDigitizer : public Processor {
   AIDA::IHistogram1D* histsignalframe;
   AIDA::IHistogram1D* histenergycentre;
   int Nionpoint; 
- //diagnostics//
+#endif
 
  // table
  //  double sigstep;

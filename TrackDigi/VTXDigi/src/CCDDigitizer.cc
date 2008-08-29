@@ -300,11 +300,6 @@ void CCDDigitizer::init() {
    // settable();
  //table//
   
-}
-
-void CCDDigitizer::processRunHeader( LCRunHeader* run) { 
-  _nRun++ ;
-
   //------Get the geometry from the gear file-----//
 
   const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
@@ -390,6 +385,11 @@ void CCDDigitizer::processRunHeader( LCRunHeader* run) {
       cout<<" _layerHalfThickness "<<_layerHalfThickness[i]<<endl;
 
     }
+
+}
+
+void CCDDigitizer::processRunHeader( LCRunHeader* run) { 
+  _nRun++ ;
 
 
 } 

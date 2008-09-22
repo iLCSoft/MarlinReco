@@ -616,11 +616,20 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
 
   double Momentum[3];
 
+  if (hit->getMCParticle()) {
     for (int j=0; j<3; ++j)
       Momentum[j] = hit->getMCParticle()->getMomentum()[j];
-
-
-  _currentParticleMass   = hit->getMCParticle()->getMass();
+  }
+  else {
+    for (int j=0; j<3; ++j) {
+      Momentum[j] = hit->getMomentum()[j];
+    }
+  }
+  
+  
+  _currentParticleMass = 0;
+  if (hit->getMCParticle())
+    _currentParticleMass   = hit->getMCParticle()->getMass();
   if (_currentParticleMass < 0.510e-3) 
     _currentParticleMass = 0.510e-3;  
   _currentParticleMomentum = 0.0;
@@ -628,7 +637,14 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
     _currentParticleMomentum += Momentum[i]*Momentum[i];
   _currentParticleMomentum = sqrt(_currentParticleMomentum);
   
+  if(_currentParticleMomentum==0.){
+    for (int i=0; i<3; ++i){
+      Momentum[i] = 0.001;
+      _currentParticleMomentum += Momentum[i]*Momentum[i];
+    }
+    _currentParticleMomentum = sqrt(_currentParticleMomentum);
 
+  }
 
   double PXY = sqrt(Momentum[0]*Momentum[0]+
                     Momentum[1]*Momentum[1]);
@@ -655,7 +671,7 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
 
   int iLadder=0;
   for (int ic=0; ic<nLadders; ++ic) {
-    PhiLadder = - PI2 + double(ic)*dPhi + Phi0;
+    PhiLadder = double(ic)*dPhi + Phi0;
     PhiInLocal = PhiInLab - PhiLadder;
     //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
     if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 
@@ -736,7 +752,7 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
  
   double tanx = dir[0]/dir[2];
   double tany = dir[1]/dir[2];  
-  double trackLength = min(1.0e+3,epitaxdep*sqrt(1.0+tanx*tanx+tany*tany));
+  double trackLength = min(10.,epitaxdep*sqrt(1.0+tanx*tanx+tany*tany));
   // double trackLength = min(1.0e+3,_layerThickness[_currentLayer]*sqrt(1.0+tanx*tanx+tany*tany));//code without bulk
 
   double dEmean = 1e-6*_energyLoss * trackLength;  

@@ -131,7 +131,9 @@ void VTXNoiseHits::processEvent( LCEvent * evt ) {
     double 	thick = layerVXD.getSensitiveThickness (i) ;
     double 	offs =  layerVXD.getSensitiveOffset (i) ;
     double 	width = layerVXD.getSensitiveWidth (i) ;
-    double 	len =   layerVXD.getSensitiveLength (i) ; 
+
+    // -----fg:  gear length is half length really !!!!!
+    double 	len =   2 * layerVXD.getSensitiveLength (i) ; 
       
  
     int nLad  = layerVXD.getNLadders(i) ;

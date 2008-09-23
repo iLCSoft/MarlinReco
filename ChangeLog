@@ -1,3 +1,39 @@
+2008-08-29 11:51  harderk
+
+	* TrackDigi/VTXDigi/src/CCDDigitizer.cc: move geometry
+	  initialisation to from processRunHeader() to init() so we can
+	  skip events without screwing up
+
+2008-08-26 11:54  harderk
+
+	* TrackDigi/VTXDigi/: include/CCDDigitizer.h, src/CCDDigitizer.cc:
+	  oops, need to disable diagnostic histograms by default
+
+2008-08-26 11:38  harderk
+
+	* TrackDigi/VTXDigi/: include/CCDDigitizer.h, src/CCDDigitizer.cc:
+	  development version of vertex digitizier specific for CCD
+	  technology. written by Stefan Uebelacker (RAL) based on
+	  VTXDigitizer and on CCD digitizer code by Nick Sinev. not
+	  recommended for general use yet.
+
+2008-08-13 10:12  aplin
+
+	* PFOID/src/: Category.cc, CreatePDFs.cc, Histogram.cc, PDF.cc,
+	  PFOID.cc, VObject.cc: replaced 1-Dim variable size arrays with
+	  dynamically assigned arrays, 2-Dim arrays replaced with stl
+	  vectors. removed superfluous trailing semi-colons. added cstdlib
+	  to make use of exit under gcc 4.x
+
+2008-07-25 14:57  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes, src/CMakeLists.txt:
+	  -------------------- v00-11-00 ----------------------------
+
+2008-07-25 14:56  gaede
+
+	* PFOID/src/Category.cc: removed extra ;'s
+
 2008-07-25 14:38  rasp
 
 	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,

@@ -13,48 +13,67 @@
 #include <string>
 #include <fstream>
 
-#ifdef root_out
-#include "TFile.h"
-#include "TH1D.h"
-#endif
-
 using namespace lcio ;
 using namespace marlin ;
 
 
 /** === PFOID Processor === <br>
- *
- * What it does: For a set of reconstructed particle (by Wolf) it <br>
- *               continues to identify particles with the help of <br>
- *               the likelihood methode. The according histograms<br>
- *               (probability density functions PDF) must be available<br>
- *               in an ASCII file. <br>
- * What it needs: It needs a collection of reconstructed particles <br>
- *               created for example by Wolf and the PDF file. <br>
- * What' the Output: A new reconstracted particle collection. Each <br>
- *               particle has now an ParticleID object - i.e. a PDG. <br>
- *               The types, which are accessible via getType(), are now <br>
- *                      0  :  electron / positron (PDG: +-11) <br>
- *                      1  :  muon / antimuon (PDG: +-13) <br>
- *                      2  :  pion / antipion (PDG: +-211) <br>
- *                      3  :  gamma (PDG: 22) <br>
- *                      4  :  neutral Kaon (PDG: 130) <br>
- *              according the PDGs they have the corresponding masses. <br>
- * What can be adjusted: <br>
- *              "RecoParticleCollection" type="string" <br>
- *                                            default: RecoParticles <br>
- *                  from Wolf
- *              "NewRecoParticleCollection" type="string" <br>
- *                                            default: NewRecoParticles <br>
- *                  name of the new reconstructed particle collection <br>
- *              "FilePDFName" type="string" default: pdf.txt <br>
- *                  name of the ASCII file containing the PDFs <br>
- *                  for particles with track (charged). <br>
- *              "neutralFilePDFName" type="string" default: npdf.txt <br>
- *                  name of the ASCII file containing the PDFs <br>
- *                  for neutral particles. <br>
- *
- * written by Martin Ohlerich and Aliaksei Raspiareza (okt. 2006)
+ * Processor performs particle identification and discriminates between 
+ * electrons, muons and charged hadrons in the case when calorimeter
+ * cluster has an associated track and between photons and neutral hadrons 
+ * in the case when no track is associated to cluster. 
+ * Particle identification is based solely on the calorimeter information.
+ * The likelihoods for different particle hypotheses are constructed from the 
+ * variables which distinguish between various particle types. Highest likelihood
+ * defines particle type. The following variables are used to construct likelihoods : <br>
+ * - mean distance of hits to the associated track extrapolated into 
+ * calorimeter volume (this variable is used only for charged particles); <br>
+ * - ratio of energy deposited in ECAL to the total cluster energy; <br>
+ * - cluster eccentricity (ratio of the cluster width to the cluster length); <br>
+ * - average hit energy in ECAL; <br>
+ * - average hit energy in HCAL; <br>
+ * - number of hits in the last three layers of ECAL; <br>
+ * - number of hits in the last three layers of HCAL. <br>
+ * For each particle reconstructed by particle flow algorithm, processor 
+ * assigned ParticleID object, containing information about particle type.
+ * The type of particle,  PDG code and likelihood can be accessed using
+ * corresponding getter methods of the class ParticleID. Example below illustrates
+ * how the information about particle ID can be accessed. <br>
+ * ...
+ * ReconstructedParticle * part = dynamic_cast<ReconstructedParticle*>(col->getElementAt(i));
+ * ParticleIDVec partIDVec = part->getParticleIDs();
+ * ParticleID * partID = partIDVec[0];
+ * float likelihood = partID->getLikelihood();
+ * int type = partID->getType();
+ * int pdg  = partID->getPDG();
+ * ...
+ * Types of the particles and their PDG codes are listed below:  <br>
+ *   0  :  electron / positron (PDG: +-11) <br>
+ *   1  :  muon- / muon+ (PDG: +-13) <br>
+ *   2  :  pion+ / pion- (PDG: +-211) <br>
+ *   3  :  gamma (PDG: 22) <br>
+ *   4  :  neutral Kaon (PDG: 130) <br>
+ * Note that every charged hadron is declared pion and every neutral   
+ * hadron - long lived kaon.
+ * <h4>Input collections and prerequisites</h4> 
+ * Processor requires collection of reconstructed particles. The name
+ * of collection is specified via processor parameter "RecoParticleCollection".
+ * Furthermore, ASCII files, containing PDF's of variables entering likelihood
+ * must be provided separately for charged and neutral particles. 
+ * The name of ASCII files are provided by processor parameters
+ * "FilePDFName" (for charged particles) and neutralFilePDFName (for neutral particles). <br>
+ * <h4>Output</h4>
+ * Processor assigns ParticleID objects to all reconstructed particles in event. <br>
+ * @param RecoParticleCollection name of input collection of particles reconstructed by PFA (e.g. PandoraPFA) <br>
+ * (default parameter value : "RecoParticles") <br>
+ * @param FilePDFName name of ASCII file with pdf's of charged particles<br>
+ * (default parameter value : "pdf_n.txt") <br>
+ * @param neutralFilePDFName name of ASCII file with pdf's of neutral particles<br>
+ * (default parameter value : "npdf_n.txt") <br> 
+ * @param Debug  debugging option <br>
+ * (default parameter value : 0) <br>
+ * <br>
+ * @author M. Ohlerich (DESY Zeuthen) and A. Raspereza (MPI Munich)<br>
  */
 
 
@@ -83,6 +102,7 @@ class PFOID : public Processor {
 
   int _nRun ;
   int _nEvt ;
+  int _debug;
 
   std::string _recoCol ;    // reconstructed particle Collection
   std::string _newrecoCol ;
@@ -100,7 +120,7 @@ class PFOID : public Processor {
     double Necal, Nhcal;    // numbers of hits in subdetectors
     double L1,L2,L3;        // deepest Layers of HCal with hits
     double EtoN_ecal, EtoN_hcal, EecalToEtot; // ratios
-    bool withTrack;   // flag wether it is 
+    bool withTrack;   // flag whether it is with track
     double EL1,EL2,EL3;        // first Layers of ECal with hits
   };
   info_t info;
@@ -110,14 +130,6 @@ class PFOID : public Processor {
 
   PDF *pdf, *npdf;
 
-#ifdef root_out
-  TFile *file;
-  TH1D *his_e;
-  TH1D *his_mu;
-  TH1D *his_pi;
-  TH1D *his_g;
-  TH1D *his_nh;
-#endif
 };
 
 #endif

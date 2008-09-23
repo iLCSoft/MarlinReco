@@ -16,17 +16,15 @@
 #include <EVENT/ReconstructedParticle.h>
 #include <EVENT/Track.h>
 #include <EVENT/Cluster.h>
+#include <EVENT/LCFloatVec.h>
 
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <IMPL/ParticleIDImpl.h>
 #include <IMPL/LCCollectionVec.h>
+
+#include <UTIL/PIDHandler.h>
  
 #include "PDF.h"
-
-#ifdef root_out 
-#include "TFile.h"
-#include "TH1D.h"
-#endif
 
 using namespace lcio ;
 using namespace marlin ;
@@ -34,15 +32,27 @@ using namespace marlin ;
 PFOID aPFOID ;
 
 PFOID::PFOID() : Processor("PFOID") {
-  _description = "PFOID looks for reconstructed particles and checks wether there are muons" ;
+  _description = "Performs particle identification" ;
 
-  registerProcessorParameter("RecoParticleCollection","Name of the by Wolf reconstructed Particle collection",_recoCol,std::string("RecoParticles")) ;
+  registerProcessorParameter("RecoParticleCollection",
+			     "Name of the PFO collection",
+			     _recoCol,
+			     std::string("RecoParticles")) ;
 
-  registerProcessorParameter("NewRecoParticleCollection","Name of the new reconstructed Particle collection",_newrecoCol,std::string("NewRecoParticles")) ;
+  registerProcessorParameter("FilePDFName",
+			     "Name of file containing pdfs",
+			     _filename,std::string("pdf_n.txt")) ;
 
-  registerProcessorParameter("FilePDFName","Name of file containing pdfs",_filename,std::string("pdf.txt")) ;
+  registerProcessorParameter("neutralFilePDFName",
+			     "Name of file containing pdfs for neutral particle",
+			     _filename1,
+			     std::string("npdf_n.txt")) ;
 
-  registerProcessorParameter("neutralFilePDFName","Name of file containing pdfs for neutral particle",_filename1,std::string("npdf.txt")) ;
+  registerProcessorParameter("Debug",
+			     "Debugging?",
+			     _debug,
+			     int(0));
+
 }
 
 
@@ -59,15 +69,6 @@ void PFOID::init() {
 
   noClusterParticle=0;
 
-  // temporary
-#ifdef root_out
-  file = new TFile("likelihood.root","RECREATE");
-  his_e = new TH1D("lh_e","Likelihood electron",50,0.,1.);
-  his_mu = new TH1D("lh_mu","Likelihood muon",50,0.,1.);
-  his_pi = new TH1D("lh_pi","Likelihood pion",50,0.,1.);
-  his_g = new TH1D("lh_g","Likelihood gamma",50,0.,1.);
-  his_nh = new TH1D("lh_nh","Likelihood neutral hadron",50,0.,1.);
-#endif
 }
 
 
@@ -77,198 +78,206 @@ void PFOID::processRunHeader( LCRunHeader * run ) {
 
 
 void PFOID::processEvent( LCEvent * evt ) {
-  std::cout << "%% PFOID: Event " << _nEvt << std::endl;
+
+  if (_debug>0)
+    std::cout << "%% PFOID: Event " << _nEvt << std::endl;
+
   const gear::BField& gearBField = Global::GEAR->getBField();
   _bField = float(gearBField.at(gear::Vector3D(0.0,0.0,0.0)).z()); //BField should be constant and point in z direction
-  //const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  //_bField = float(gearTPC.getDoubleVal("BField"));
-
-  LCCollectionVec * recparcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
 
   try{
 
+
     LCCollection *col = evt->getCollection(_recoCol.c_str());
+    PIDHandler partID ( col );
+
+    StringVec pNames;
+    pNames.push_back("Eccentricity");
+    pNames.push_back("DMean");
+    pNames.push_back("EtoN_ecal");
+    pNames.push_back("EtoN_hcal");
+    pNames.push_back("EecalToEtotal");
+    pNames.push_back("L1");
+    pNames.push_back("L2");
+    pNames.push_back("L3");
+    pNames.push_back("EL1");
+    pNames.push_back("EL2");
+    pNames.push_back("EL3");
+
+    int algo = partID.addAlgorithm("PFOID",pNames);
     int nRecos = col->getNumberOfElements() ;
     for(int i=0; i<nRecos; i++){  // over all reco. particles
       ReconstructedParticle *recopart = dynamic_cast<ReconstructedParticle*>(col->getElementAt(i));
 
+
       fill_info(i,recopart); // fills also pdf->VO or npdf->VO
-
-      ReconstructedParticleImpl *rcpi = new ReconstructedParticleImpl();
-      rcpi->setType(recopart->getType());
-      rcpi->setMomentum(recopart->getMomentum());
-      rcpi->setEnergy(recopart->getEnergy());
-      rcpi->setCharge(recopart->getCharge());
-      rcpi->setMass(recopart->getMass());
-      rcpi->setCovMatrix(recopart->getCovMatrix());
-      rcpi->setReferencePoint(recopart->getReferencePoint());
-
       ClusterVec clv = recopart->getClusters();
-      for(unsigned int cls=0; cls<clv.size(); cls++)
-	rcpi->addCluster(clv[cls]);
-      TrackVec trv = recopart->getTracks();
-      for(unsigned int trk=0; trk<trv.size(); trk++)
-	rcpi->addTrack(trv[trk]);
-      ReconstructedParticleVec rpv = recopart->getParticles();
-      for(unsigned int rps=0; rps<rpv.size(); rps++)
-	rcpi->addParticle(rpv[rps]);
 
+      LCFloatVec params;
+      params.clear();
 
       if(clv.size()>0){
 	if(info.withTrack){
 
-	  // potential for automizing
-	  std::cout << " RecoParticle " << i << std::endl;
-	  std::cout << "  likelihood(electron) : ";
-	  std::cout << pdf->GetLikelihood("electron") << std::endl;
-	  std::cout << "  likelihood(myon)     : ";
-	  std::cout << pdf->GetLikelihood("muon") << std::endl;
-	  std::cout << "  likelihood(pion)     : ";
-	  std::cout << pdf->GetLikelihood("pion") << std::endl;
-	  
-	  
-	  ParticleIDImpl *pIDe = new ParticleIDImpl();
-	  
-	  double maxv=0., lhd;
-	  
-	  // PID to recopart: electron
-	  if(rcpi->getCharge()<0){
-	    pIDe->setPDG(11);
-	  }else{
-	    pIDe->setPDG(-11);
-	  }
-	  pIDe->setType(0);
-	  lhd=pdf->GetLikelihood("electron");
-	  pIDe->setLikelihood((float)lhd);
-	  pIDe->setAlgorithmType(0);
-	  rcpi->addParticleID(pIDe);
-	  maxv=lhd;
-	  rcpi->setType(0);
-	  rcpi->setMass(0.000511);
-	  rcpi->setParticleIDUsed(pIDe);
-	  rcpi->setGoodnessOfPID((float)lhd);
-	  
-	  ParticleIDImpl *pIDm = new ParticleIDImpl();
-	  // PID to recopart: muon
-	  if(rcpi->getCharge()<0){
-	    pIDm->setPDG(13);
-	  }else{
-	    pIDm->setPDG(-13);
-	  }
-	  pIDm->setType(1);
-	  lhd=pdf->GetLikelihood("muon");
-	  pIDm->setLikelihood((float)lhd);
-	  pIDm->setAlgorithmType(0);
-	  rcpi->addParticleID(pIDm);
-	  if(lhd>maxv){
-	    maxv=lhd;
-	    rcpi->setType(1);
-	    rcpi->setMass(0.1056);
-	    rcpi->setParticleIDUsed(pIDm);
-	    rcpi->setGoodnessOfPID((float)lhd);
+	  if (_debug>0) {
+	    std::cout << " RecoParticle " << i << std::endl;
+	    std::cout << "  likelihood(electron) : ";
+	    std::cout << pdf->GetLikelihood("electron") << std::endl;
+	    std::cout << "  likelihood(muon)     : ";
+	    std::cout << pdf->GetLikelihood("muon") << std::endl;
+	    std::cout << "  likelihood(pion)     : ";
+	    std::cout << pdf->GetLikelihood("pion") << std::endl;
 	  }
 	  
-	  ParticleIDImpl *pIDh = new ParticleIDImpl();
-	  // PID to recopart: charged hadron
-	  if(rcpi->getCharge()<0.){
-	    pIDh->setPDG(-211);
-	  }else{
-	    pIDh->setPDG(211);
-	  }
-	  pIDh->setType(2);
-	  lhd=pdf->GetLikelihood("pion");
-	  pIDh->setLikelihood((float)lhd);
-	  pIDh->setAlgorithmType(0);
-	  rcpi->addParticleID(pIDh);
-	  if(lhd>maxv){
-	    rcpi->setMass(0.1396);
-	    rcpi->setType(2);
-	    maxv=lhd;
-	    rcpi->setParticleIDUsed(pIDh);
-	    rcpi->setGoodnessOfPID((float)lhd);	  
-	  }
+	  if (_debug>1) {
+	    std::cout << "  Ecal/Etot : " << info.EecalToEtot;
+	    std::cout << "  EtoN_ecal : " << info.EtoN_ecal;
+	    std::cout << "  EtoN_hcal : " << info.EtoN_hcal;
+	    std::cout << "  dmean : " << info.dmean << std::endl;
+	    std::cout << "  ex : " << info.ex;
+	    std::cout << "  L1 : " << info.L1;
+	    std::cout << "  L2 : " << info.L2;
+	    std::cout << "  L3 : " << info.L3 << std::endl;
+	  }	  
 	  
-#ifdef root_out
-	  his_e->Fill(pdf->GetLikelihood("electron"));
-	  his_mu->Fill(pdf->GetLikelihood("muon"));
-	  his_pi->Fill(pdf->GetLikelihood("pion"));
-#endif
+	  double maxv=0.;
+	  double lhde, lhdm, lhdp;
+
+	  int pdg = 0;
+	  int type = 0;
+	  const int pdge = -11;
+	  const int pdgm = -13;
+	  const int pdgp = 211;
+	  
+
+	  lhde = pdf->GetLikelihood("electron");
+	  lhdm = pdf->GetLikelihood("muon");
+	  lhdp = pdf->GetLikelihood("pion");
+
+	  pdg  = pdge;
+	  maxv = lhde;
+	  type = 0;
+
+	  if (lhdm>maxv) {
+	    maxv = lhdm;
+	    pdg = pdgm;
+	    type = 1;
+	  }
+
+	  if (lhdp>maxv) {
+	    maxv = lhdp;
+	    pdg = pdgp;
+	    type = 2;
+	  }
+
+	  if (recopart->getCharge()<0)
+	    pdg = -pdg;
+
+	  params.push_back( float(info.ex) ) ;
+	  params.push_back( float(info.dmean) ) ;
+	  params.push_back( float(info.EtoN_ecal) );
+	  params.push_back( float(info.EtoN_hcal) );
+	  params.push_back( float(info.EecalToEtot) );
+	  params.push_back( float(info.L1) );
+	  params.push_back( float(info.L2) );
+	  params.push_back( float(info.L3) );
+	  params.push_back( float(info.EL1) );
+	  params.push_back( float(info.EL2) );
+	  params.push_back( float(info.EL3) );	  
+	  
+	  partID.setParticleID(recopart, type, pdg, float(maxv), algo, params );
+
+
 	}else{
 
-	  std::cout << " RecoParticle " << i << std::endl;
-	  std::cout << "  likelihood(photon) : " ;
-	  std::cout << npdf->GetLikelihood("photon") << std::endl;
-	  std::cout << "  likelihood(kaon/neutron)     : " ;
-	  std::cout << npdf->GetLikelihood("kaon/neutron") << std::endl;
+	  if (_debug>0) {
+	    std::cout << " RecoParticle " << i << std::endl;
+	    std::cout << "  likelihood(photon) : " ;
+	    std::cout << npdf->GetLikelihood("photon") << std::endl;
+	    std::cout << "  likelihood(kaon/neutron)     : " ;
+	    std::cout << npdf->GetLikelihood("kaon/neutron") << std::endl;
+	  }
 	  
+	  if (_debug>1) {
+	    std::cout << "  Ecal/Etot : " << info.EecalToEtot;
+	    std::cout << "  EtoN_ecal : " << info.EtoN_ecal;
+	    std::cout << "  EtoN_hcal : " << info.EtoN_hcal;
+	    std::cout << "  dmean : " << info.dmean << std::endl;
+	    std::cout << "  ex : " << info.ex;
+	    std::cout << "  L1 : " << info.L1;
+	    std::cout << "  L2 : " << info.L2;
+	    std::cout << "  L3 : " << info.L3 << std::endl;
+	  }	  
+
+	  int pdg,type;
+
+	  const int pdg_gamma = 22;
+	  const int pdg_k0l   = 130;
 	  
-	  ParticleIDImpl *pIDg = new ParticleIDImpl();
-	  double maxv=0., lhd;
-	  // PID to recopart: gamma
-	  pIDg->setPDG(22);
-	  pIDg->setType(3);
-	  lhd=npdf->GetLikelihood("photon");
-	  pIDg->setLikelihood((float)lhd);
-	  pIDg->setAlgorithmType(0);
-	  rcpi->addParticleID(pIDg);
-	  maxv=lhd;
-	  rcpi->setMass(0.0);
-	  rcpi->setType(3);
-	  rcpi->setParticleIDUsed(pIDg);
-	  rcpi->setGoodnessOfPID((float)lhd);
-	  
-	  ParticleIDImpl *pIDnh = new ParticleIDImpl();
-	  // PID to recopart: neutral hadron
-	  pIDnh->setPDG(130);
-	  pIDnh->setType(4);
-	  lhd=npdf->GetLikelihood("kaon/neutron");
-	  pIDnh->setLikelihood((float)lhd);
-	  pIDnh->setAlgorithmType(0);
-	  rcpi->addParticleID(pIDnh);
-	  if(lhd>maxv){
-	    maxv=lhd;
-	    rcpi->setType(4);
-	    rcpi->setMass(0.495);
-	    rcpi->setParticleIDUsed(pIDnh);
-	    rcpi->setGoodnessOfPID((float)lhd);
+	  double maxv;
+	  double lhd_gamma;
+	  double lhd_k0l;
+
+	  lhd_gamma = npdf->GetLikelihood("photon");
+	  lhd_k0l   = npdf->GetLikelihood("kaon/neutron");
+
+	  pdg = pdg_gamma;
+	  type = 3;
+	  maxv = lhd_gamma;
+
+	  if (lhd_k0l>maxv) {
+	    maxv = lhd_k0l;
+	    pdg = pdg_k0l;
+	    type = 4;
 	  }
 
-	  std::cout << "  EtoN_ecal : " << info.EtoN_ecal;
-	  std::cout << "  EtoN_hcal : " << info.EtoN_hcal;
-	  std::cout << "  dmean : " << info.dmean << std::endl;
-	  std::cout << "  ex : " << info.ex;
-	  std::cout << "  L1 : " << info.L1;
-	  std::cout << "  L2 : " << info.L2;
-	  std::cout << "  L3 : " << info.L3 << std::endl;
-	  
-#ifdef root_out
-	  his_g->Fill(npdf->GetLikelihood("photon"));
-	  his_nh->Fill(npdf->GetLikelihood("kaon/neutron"));
-#endif
+	  params.push_back( float(info.ex) ) ;
+	  params.push_back( float(info.dmean) ) ;
+	  params.push_back( float(info.EtoN_ecal) );
+	  params.push_back( float(info.EtoN_hcal) );
+	  params.push_back( float(info.EecalToEtot) );
+	  params.push_back( float(info.L1) );
+	  params.push_back( float(info.L2) );
+	  params.push_back( float(info.L3) );
+	  params.push_back( float(info.EL1) );
+	  params.push_back( float(info.EL2) );
+	  params.push_back( float(info.EL3) );	  
+
+	  partID.setParticleID(recopart, type, pdg, float(maxv), algo, params );
+
+
 	}// if ( withTrack ...
       
-      }else{
+      }else{ // unknown particle (no cluster)
 
-	ParticleIDImpl *pID = new ParticleIDImpl();
-	pID->setPDG(666);
-	pID->setType(5);
-	double lhd=1;
-	pID->setLikelihood((float)lhd);
-	pID->setAlgorithmType(0);
-	rcpi->addParticleID(pID);
-	rcpi->setType(5);
-	rcpi->setMass(0.0);
-	rcpi->setParticleIDUsed(pID);
-	rcpi->setGoodnessOfPID((float)lhd);
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+	params.push_back( 0. );
+
+	int pdg  = 999999;
+	float lhd = 0.0;
+	int type = 5;
+
+	partID.setParticleID(recopart, type, pdg, lhd, algo, params );
+
       }
 
-      recparcol->addElement( rcpi );
     }// for i ...
   }catch(DataNotAvailableException &e){ }
 
-  evt->addCollection( recparcol , _newrecoCol.c_str());
 
-  std::cout << "%% PFOID: End of PFOID\n" << std::endl; 
+  if (_debug>0) {
+    std::cout << "%% PFOID: End of PFOID\n" << std::endl; 
+    std::cout << std::endl;
+  }
   _nEvt++ ;
 
 }
@@ -282,10 +291,7 @@ void PFOID::check( LCEvent * evt ) {}
 
 
 void PFOID::end() {
-#ifdef root_out
-  file->Write();
-  file->Close();
-#endif
+
   delete pdf;
   delete npdf;
 }
@@ -326,7 +332,8 @@ void PFOID::fill_info(int i, ReconstructedParticle *rp){
   HelixClass * helix = new HelixClass();
   TrackVec tv = rp->getTracks();
   ClusterVec cv = rp->getClusters();
-  std::cout << " RP: " << i << " #Tracks: " << tv.size() << " #Cluster: " << cv.size() << std::endl;
+  if (_debug > 0)
+    std::cout << " RP: " << i << " #Tracks: " << tv.size() << " #Cluster: " << cv.size() << std::endl;
 
   // Cluster Layers and energies
   int nClusters = cv.size();

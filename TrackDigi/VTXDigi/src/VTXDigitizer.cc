@@ -185,11 +185,6 @@ void VTXDigitizer::init() {
   _nEvt = 0 ;
   _totEntries = 0;
   _fluctuate = new MyG4UniversalFluctuationForSi();
-}
-
-void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
-
-  _nRun++ ;
 
   //------Get the geometry from the gear file-----//
 
@@ -277,6 +272,12 @@ void VTXDigitizer::processRunHeader( LCRunHeader* run) {
 
 
     }
+
+}
+
+void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
+
+  _nRun++ ;
 
 
   SCALING = 25000.;
@@ -1074,6 +1075,29 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     }
   }
 
+  // if this cluster is spread out over too many cells, then
+  // restrict it to a range around the seed
+  if (ixmax-ixmin>=20) {
+    if (ixmax-ixSeed<20) {
+      ixmin=ixmax-19;
+    } else if (ixSeed-ixmin<20) {
+      ixmax=ixmin+19;
+    } else {
+      ixmax=ixSeed+9;
+      ixmin=ixSeed-10;
+    }
+  }
+  if (iymax-iymin>=20) {
+    if (iymax-iySeed<20) {
+      iymin=iymax-19;
+    } else if (iySeed-iymin<20) {
+      iymax=iymin+19;
+    } else {
+      iymax=iySeed+9;
+      iymin=iySeed-10;
+    }
+  }
+
   //cout<<"charge "<<charge<<endl;
   if (charge > 0.) {
     for (int j=0; j<2; ++j)
@@ -1122,6 +1146,8 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         int cellID = hit->getCellID();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix;
+        if (iy<iymin || iy>iymax) continue;
+        if (ix<ixmin || ix>ixmax) continue;
         if ((iy - iymin) < 20)
           _amplY[iy-iymin] = _amplY[iy-iymin] + hit->getdEdx();
         if ((ix - ixmin) < 20) 

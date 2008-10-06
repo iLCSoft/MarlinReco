@@ -150,8 +150,9 @@ using namespace marlin ;
  * if OptFit=2 - initial track parameters d0, z0, phi0 and tan(lambda) are taken from the Si 
  * and parameter Omega for the TPC track segments <br>
  * if OptFit=3 - sophisticated iterative prefit, improving cov matrix estimate <br>
- * if OptFit=4 - track parameters are determined from the two separate fits of the Si
- * and TPC track segments (recommended) <br>
+ * if OptFit=4 - track parameters are determined from the two separate fits of the Si track segment
+ * and the combined Si-TPC track (recommended). Track parameters d0 and z0 are taken from the fit of 
+ * the Silicon track segment, all other parameters are taken from the fit of combined track. <br>
  * (default parameter value : 4) <br>
  * @param OptFitTPC option for TPC track refit. Options are the same as for the combined LDC track prefit <br>
  * (default parameter value : 2) <br>

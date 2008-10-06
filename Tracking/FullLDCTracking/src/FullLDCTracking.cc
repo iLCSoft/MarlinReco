@@ -116,6 +116,7 @@ FullLDCTracking::FullLDCTracking() : Processor("FullLDCTracking") {
 			   _LDCTrackMCPCollection,
 			   std::string("LDCTracksMCP"));
 
+  // Refitted track collection
   registerOutputCollection(LCIO::TRACK,
 			   "ReffitedTPCTrackCollection",
 			   "Refitted TPC track collection name",
@@ -742,6 +743,8 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
   _allVTXHits.clear();
   _allFTDHits.clear();
   _allSITHits.clear();
+  _allSETHits.clear();
+  _allETDHits.clear();
   _allTPCTracks.clear();
   _allSiTracks.clear();
   _allCombinedTracks.clear();
@@ -778,7 +781,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
       // Covariance Matrix in LCIO is defined in XYZ convert to R-Phi-Z
       // For no error in r
 
-      double phi = atan2(hit->getPosition()[1],hit->getPosition()[0]); 
+      //      double phi = atan2(hit->getPosition()[1],hit->getPosition()[0]); 
       double tpcRPhiRes = sqrt(hit->getCovMatrix()[0] + hit->getCovMatrix()[2]);
       double tpcZRes = sqrt(hit->getCovMatrix()[5]);
 
@@ -868,16 +871,28 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
   }
 
   // Reading SET Hits
+//    printf("SET hits ----->\n");
+//    printf(" id    r_hit   phi_hit    z_hit  e(r-phi)  e(z)  \n");
+  //     "  0   1807.64   -1.97     26.45   0.010   0.010
+  //     "  1   1812.64   -1.97     26.51   0.010   0.010
   try {
     LCCollection * col = event->getCollection(_SETTrackerHitCollection.c_str());
     int nelem = col->getNumberOfElements();
     for (int ielem=0;ielem<nelem;++ielem) {
       TrackerHit * hit = dynamic_cast<TrackerHit*>(col->getElementAt(ielem));
       TrackerHitExtended * hitExt = new TrackerHitExtended(hit);
-       hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
-       hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
-//      hitExt->setResolutionRPhi(_resolutionRPhi_SIT);
-//      hitExt->setResolutionZ(_resolutionZ_SIT);
+      hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[2])));
+      hitExt->setResolutionZ(float(sqrt(hit->getCovMatrix()[5])));
+//       float x_hit = float(hit->getPosition()[0]);
+//       float y_hit = float(hit->getPosition()[1]);
+//       float z_hit = float(hit->getPosition()[2]);
+//       float phi_hit = atan2( y_hit, x_hit );
+//       float r_hit = sqrt( x_hit*x_hit + y_hit*y_hit );
+//       printf("%3i  %8.2f  %6.3f  %8.2f  %6.3f  %6.3f   ", 
+//  	     ielem, r_hit, phi_hit, z_hit, 
+//  	     hitExt->getResolutionRPhi(), 
+//  	     hitExt->getResolutionZ() );
+//       std::cout << hit << std::endl;
       hitExt->setType(int(3));
       hitExt->setDet(int(8));
       _allSETHits.push_back( hitExt );
@@ -1363,6 +1378,7 @@ TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackEx
 				 xh,yh,zh,rphi_reso,z_reso,
 				 par,epar,refPoint,chi2_D,ndf_D,
 				 chi2rphi,chi2z,lhits);
+
   
   float chiQ = chi2_D/float(ndf_D);
   if (ierr == 0 && chiQ > 0.001) {
@@ -1395,25 +1411,26 @@ TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackEx
     OutputTrack->setD0(d0);
     OutputTrack->setChi2(chi2_D);
     OutputTrack->setNDF(ndf_D);
-    if (_optFit == 4) {
-	float eOmg = epar[5];
-	float scaling = sqrt(eOmg/
-			     siTrack->getCovMatrix()[5]);
-	for (int iC=0;iC<15;++iC) {
-	    epar[iC] = siTrack->getCovMatrix() [iC];
-	}
-	epar[5] = eOmg;
-	epar[3] = scaling*epar[3];
-	epar[4] = scaling*epar[4];
-	epar[8] = scaling*epar[8];
-	epar[12] = scaling*epar[12];	      
-	OutputTrack->setOmega(par[0]);
-	OutputTrack->setTanLambda(siTrack->getTanLambda());
-	OutputTrack->setPhi(siTrack->getPhi());
-	OutputTrack->setZ0(siTrack->getZ0());
-	OutputTrack->setD0(siTrack->getD0());	
-    }
     OutputTrack->setCovMatrix(epar);
+    if (_optFit == 4) {
+      // Preserving positiveness of cov. matrix
+      float eD0 = siTrack->getCovMatrix()[0];
+      float eZ0 = siTrack->getCovMatrix()[9];
+      float sD0 = sqrt(eD0/epar[0]);
+      float sZ0 = sqrt(eZ0/epar[9]);
+      epar[0]  = eD0;
+      epar[9]  = eZ0;
+      epar[1]  = sD0*epar[1];
+      epar[3]  = sD0*epar[3];
+      epar[10] = sD0*epar[10];
+      epar[7]  = sZ0*epar[7];
+      epar[8]  = sZ0*epar[8];
+      epar[13] = sZ0*epar[13];
+      epar[6]  = sD0*sZ0*epar[6];
+      OutputTrack->setZ0(siTrack->getZ0());
+      OutputTrack->setD0(siTrack->getD0());
+      OutputTrack->setCovMatrix(epar);
+    }
     int iLH = 0;
     for (int i=0;i<nSiHits;++i) {
       TrackerHitExtended * hitExt = siHitVec[i];
@@ -2292,7 +2309,7 @@ void FullLDCTracking::AddNotAssignedHits() {
 	if (layer>=0&&layer<nLayersSET) 
 	  SETHits[layer].push_back(trkHit);	
       }
-      for (int iL=nLayersSET-1;iL>=0;--iL) { // loop over SET layers
+      for (int iL=0; iL<nLayersSET; ++iL) { // loop over SET layers
 	TrackerHitExtendedVec hitVec = SETHits[iL];
 	int refit = 1;
 	AssignOuterHitsToTracks(hitVec,_distCutForSETHits,refit);
@@ -2315,7 +2332,7 @@ void FullLDCTracking::AddNotAssignedHits() {
 	if (layer>=0 && layer < nLayersETD) 
 	  ETDHits[layer].push_back(trkHit);
       }
-      for (int iL=nLayersETD-1;iL>=0;--iL) { // loop over ETD layers
+      for (int iL=0; iL<nLayersETD; ++iL) { // loop over ETD layers
 	TrackerHitExtendedVec hitVec = ETDHits[iL];
 	int refit = 0;
 	AssignOuterHitsToTracks( hitVec, _distCutForETDHits, refit );
@@ -2432,6 +2449,7 @@ void FullLDCTracking::CleanUpExtrapolations() {
     HelixClass * helix =  _trackExtrapolatedHelix[trk];
     delete helix;
   }  
+  _trackExtrapolatedHelix.clear();
 
 }
 
@@ -2449,28 +2467,37 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
     pairs.clear();
 
     for (int iH=0;iH<nHits;++iH) {
-	float pos[3];
-	float dist[3];
-	TrackerHitExtended * trkHitExt = hitVec[iH];
-	TrackerHit * hit = trkHitExt->getTrackerHit();
-	for (int ip=0;ip<3;++ip)
-	    pos[ip] = float(hit->getPosition()[ip]);
-	for (int iT=0;iT<nTrk;++iT) {
-	    TrackExtended * trkExt = _trkImplVec[iT];
-	    float tanLambda = trkExt->getTanLambda();	    
-	    float product = pos[2]*tanLambda;
-	    if (product>0) {
-		HelixClass * helix = _trackExtrapolatedHelix[trkExt];
-		helix->getDistanceToPoint(pos,dist);
-		if (dist[2]<dcut) {
-		    TrackHitPair * trkHitPair = 
-			new TrackHitPair(trkExt,trkHitExt,dist[2]);
-		    pairs.push_back(trkHitPair);
-		    flagTrack[trkExt] = true;
-		    flagHit[trkHitExt] = true;
-		}
-	    }
+      float pos[3];
+      float dist[3];
+      TrackerHitExtended * trkHitExt = hitVec[iH];
+      TrackerHit * hit = trkHitExt->getTrackerHit();
+      for (int ip=0;ip<3;++ip)
+	pos[ip] = float(hit->getPosition()[ip]);
+      //      float r_hit = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
+      //      float phi_hit = atan2(pos[1],pos[0]);
+      //      float z_hit = pos[2];
+      //      std::cout << r_hit << " " << phi_hit << " "
+      // 		<< z_hit << " " 
+      // 		<< trkHitExt->getResolutionRPhi() << " "
+      // 		<< trkHitExt->getResolutionZ() << std::endl;
+
+      for (int iT=0;iT<nTrk;++iT) {
+	TrackExtended * trkExt = _trkImplVec[iT];
+	float tanLambda = trkExt->getTanLambda();	    
+	float product = pos[2]*tanLambda;
+	if (product>0) {
+	  HelixClass * helix = _trackExtrapolatedHelix[trkExt];
+	  helix->getDistanceToPoint(pos,dist);
+	  //	  std::cout << "Dist = " << dist[2] << std::endl;
+	  if (dist[2]<dcut) {
+	    TrackHitPair * trkHitPair = 
+	      new TrackHitPair(trkExt,trkHitExt,dist[2]);
+	    pairs.push_back(trkHitPair);
+	    flagTrack[trkExt] = true;
+	    flagHit[trkHitExt] = true;
+	  }
 	}
+      }
     }
 
     int nPairs = int(pairs.size());
@@ -2527,8 +2554,9 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 	    idet_h[iHitInFit] = trkHitExt->getDet();
 	    ityp_h[iHitInFit] = trkHitExt->getType();
 	    rR_h[iHitInFit] = trkHitExt->getResolutionRPhi();
-	    rZ_h[iHitInFit] = trkHitExt->getResolutionZ();		
+	    rZ_h[iHitInFit] = trkHitExt->getResolutionZ();	    
 	    iHitInFit++;
+
 	    int NPT = iHitInFit;
 	    float chi2_D;
 	    int ndf_D;
@@ -2536,12 +2564,14 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 	    float par[5];
 	    float epar[15];
 	    float refPoint[3];
-	    int ierr = _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,
-					   _bField,idet_h,ityp_h,
-					   _chi2PrefitCut,
-					   x_h,y_h,z_h,rR_h,rZ_h,
-					   par,epar,refPoint,chi2_D,ndf_D,
-					   chi2rphi,chi2z,lhits);	       
+
+ 	    int ierr = _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,
+ 					   _bField,idet_h,ityp_h,
+ 					   _chi2PrefitCut,
+ 					   x_h,y_h,z_h,rR_h,rZ_h,
+ 					   par,epar,refPoint,chi2_D,ndf_D,
+ 					   chi2rphi,chi2z,lhits);	       
+
 	    float chi2ndf = chi2_D/float(ndf_D);
 	    if (ierr==0 && chi2ndf<_chi2FitCut) {
 	      trkExt->addTrackerHitExtended( trkHitExt );
@@ -2557,7 +2587,34 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 	      trkHitExt->setUsedInFit( true );
 	      flagTrack[trkExt] = false;
 	      flagHit[trkHitExt] = false;
-	    }
+	      if (_optFit == 4) {
+		GroupTracks * groupTracks = trkExt->getGroupTracks();
+		if (groupTracks!=NULL) {
+		  TrackExtendedVec group = groupTracks->getTrackExtendedVec();
+		  int nTracks = int(group.size());
+		  if (nTracks>0) {
+		    TrackExtended * siTrack = group[0];
+		    // preserving positiveness of matrix
+		    float eD0 = siTrack->getCovMatrix()[0];
+		    float eZ0 = siTrack->getCovMatrix()[9];
+		    float sD0 = sqrt(eD0/epar[0]);
+		    float sZ0 = sqrt(eZ0/epar[9]);
+		    epar[0]  = eD0;
+		    epar[9]  = eZ0;
+		    epar[1]  = sD0*epar[1];
+		    epar[3]  = sD0*epar[3];
+		    epar[10] = sD0*epar[10];
+		    epar[7]  = sZ0*epar[7];
+		    epar[8]  = sZ0*epar[8];
+		    epar[13] = sZ0*epar[13];
+		    epar[6]  = sD0*sZ0*epar[6];
+		    trkExt->setZ0(siTrack->getZ0());
+		    trkExt->setD0(siTrack->getD0());
+		    trkExt->setCovMatrix(epar);
+		  }
+		}
+	      }
+ 	    }
 	    delete[] x_h;
 	    delete[] y_h;
 	    delete[] z_h;
@@ -2898,6 +2955,33 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 		  trkExt->setZ0(par[4]);
 		  trkExt->setChi2(chi2_D);
 		  trkExt->setNDF(ndf_D);
+		  if (_optFit == 4) {
+		    GroupTracks * group = trkExt->getGroupTracks();
+		    if (group!=NULL) {
+		      TrackExtendedVec trks = group->getTrackExtendedVec();
+		      int nTrks = int(trks.size());
+		      if (nTrks > 0) {
+			TrackExtended * siTrack = trks[0];
+			// preserving positiveness of cov. matrix
+			float eD0 = siTrack->getCovMatrix()[0];
+			float eZ0 = siTrack->getCovMatrix()[9];
+			float sD0 = sqrt(eD0/epar[0]);
+			float sZ0 = sqrt(eZ0/epar[9]);
+			epar[0]  = eD0;
+			epar[9]  = eZ0;
+			epar[1]  = sD0*epar[1];
+			epar[3]  = sD0*epar[3];
+			epar[10] = sD0*epar[10];
+			epar[7]  = sZ0*epar[7];
+			epar[8]  = sZ0*epar[8];
+			epar[13] = sZ0*epar[13];
+			epar[6]  = sD0*sZ0*epar[6];
+			trkExt->setZ0(siTrack->getZ0());
+			trkExt->setD0(siTrack->getD0());
+			trkExt->setCovMatrix(epar);			
+		      }
+		    }
+		  }
 		  trkHitExt->setTrackExtended( trkExt );
 		  trkHitExt->setUsedInFit( true );
 		  flagTrack[trkExt] = false;

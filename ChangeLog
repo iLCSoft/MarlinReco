@@ -1,3 +1,39 @@
+2008-10-14 14:36  engels
+
+	* CMakeLists.txt, MarlinRecoConfig.cmake.in, src/CMakeLists.txt:
+	  added 32 bit compatibility option
+
+2008-10-06 13:24  rasp
+
+	* Tracking/FullLDCTracking/: include/FullLDCTracking.h,
+	  src/FullLDCTracking.cc: New option for track fit included
+
+2008-09-24 14:19  harderk
+
+	* TrackDigi/VTXDigi/src/VTXDigitizer.cc: bug fix: protect against
+	  clusters wider or longer than hardcoded limit of 20 pixels. also
+	  move GEAR initialization from run header to processor
+	  initialisation to allow event skipping
+
+2008-09-23 12:18  gaede
+
+	* ChangeLog, TrackDigi/VTXDigi/src/VTXNoiseHits.cc: bug fix: gear
+	  ladder length is half lenght really
+
+2008-09-23 12:07  rasp
+
+	* PFOID/: include/PFOID.h, src/PFOID.cc: Updated version of PFOID
+	  processor. Output particle collection dropped.  Each particle in
+	  existing ReconstructedParticle collection is assigned with
+	  ParticleID object.  Documentation is improved.
+
+2008-09-23 00:08  harderk
+
+	* TrackDigi/VTXDigi/src/CCDDigitizer.cc: bug fixes from
+	  VTXDigitizer: proper ladder phi and protection against missing
+	  mcparticle. also, reduce path length cap in silicon from 1000mm
+	  to 10mm for CPU speed increase
+
 2008-08-29 11:51  harderk
 
 	* TrackDigi/VTXDigi/src/CCDDigitizer.cc: move geometry

@@ -27,7 +27,7 @@ SET( MarlinReco_PKGS
     "Tracking/SiliconTracking"
     "Tracking/TrackCheater"
     "Tracking/V0Finder"
-    #"PFOID"
+    "PFOID"
 )
 
 

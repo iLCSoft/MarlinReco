@@ -5,6 +5,18 @@
 ================================
 
  -----------
+| v00-12-00 |
+ -----------
+    PFOID:   dynamic memory allocation improved, collections cleaned up, documentation improved
+    VTXDigi: development version of vertex digitizier specific for CCD technology (CCDDigitizer.cc)
+                protect against clusters wider or longer than hardcoded limit of 20 pixels (VTXDigitizer.cc)
+    FullLDCTracking: New option for track fit included
+
+    * made cmake 2.6 compliant
+    * added 32 bit compatibility build option
+    * added LIBRARY_DIRS
+                                    
+ -----------
 | v00-11-00 |
  -----------
      * FullLDCTracking: (A.Raspereza)

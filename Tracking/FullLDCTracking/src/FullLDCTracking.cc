@@ -2319,7 +2319,7 @@ void FullLDCTracking::AddNotAssignedHits() {
     if (_assignETDHits>0) { // Assignment of ETD Hits
       
       const gear::GearParameters& pETDDet = Global::GEAR->getGearParameters("ETD");  
-      int nLayersETD = int(pETDDet.getDoubleVals("ETDLayerHalfLength").size());
+      int nLayersETD = int(pETDDet.getDoubleVals("ETDLayerZ").size());
 
       int nETDHits = _allETDHits.size();
       std::vector<TrackerHitExtendedVec> ETDHits;

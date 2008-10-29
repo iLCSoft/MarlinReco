@@ -1,7 +1,19 @@
 *  
-* $Id: tflnks.F,v 1.6 2008-06-26 09:35:56 aplin Exp $
+* $Id: tflnks.F,v 1.7 2008-10-29 18:40:30 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2008/06/26 09:35:56  aplin
+*
+* A clean up has been made of the arrays that hold the TE's/Hits for
+* track fitting. An effort has been made to ensure that both the arrays
+* are big enough to hold the required number of hits, and that the arrays
+* are all of the same dimensions between calling routines.
+*
+* All verbose output, except for the case where the tracking is dropped
+* for a complete event, has now been hidden behind debug IF
+* Statements. The level of verbosity can be controlled via the variables
+* TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 * Revision 1.5  2008/01/23 17:22:22  aplin
 *
 *      The TPC Tracking code has been altered to cope with more than 224 pad rows
@@ -109,6 +121,7 @@ C GAB: for fitting chains:
 
       INTEGER IER
       INTEGER*4 ITPTES,IOUT1,IOUT2,IOUT3,IOUT4
+      INTEGER*4 ITPTES1,ITPTES2,ITPTES3,ITPTES4
 
       INTEGER MPT
 c(KH) PARAMETER(MPT=200)
@@ -219,6 +232,10 @@ cC
 cC------------------------------------------------------------------
 cC
       IER=0
+ 
+c      write(*,*) "SJA:TAG: Start TFLNKS"
+      
+
       IF (FIRST) THEN
         CHMAX = 100.0
         CHTMX = 500.0
@@ -228,10 +245,28 @@ c(kh)   IOUT1 = 2**(LTPDRO-96)
 c(kh)   IOUT2 = 2**(LTPDRO-96-1)
 c(kh)   IOUT3 = 2**(LTPDRO-96-2)
 c(kh)   IOUT4 = 2**(LTPDRO-96-3)
-        IOUT1 = 2**(NRTPC-(NRTPC/32)*32)
-        IOUT2 = 2**(NRTPC-(NRTPC/32)*32-1)
-        IOUT3 = 2**(NRTPC-(NRTPC/32)*32-2)
-        IOUT4 = 2**(NRTPC-(NRTPC/32)*32-3)
+
+
+c        write(*,*) "Number of N32BITREG:",N32BITREG        
+c        write(*,*) "Number of NRTPC:", NRTPC
+c        write(*,*) "Number of full bitfields used",NRTPC/32
+
+        IOUT1 = 2**( NRTPC - ( ( (NRTPC-1)/32 ) *32) - 1 )
+        IOUT2 = 2**( NRTPC - ( ( (NRTPC-1)/32 ) *32) - 2 ) 
+        IOUT3 = 2**( NRTPC - ( ( (NRTPC-1)/32 ) *32) - 3 )
+        IOUT4 = 2**( NRTPC - ( ( (NRTPC-1)/32 ) *32) - 4 )
+        
+        if(NRTPC-(((NRTPC-1)/32)*32)-2.LT.0) THEN 
+           IOUT2 = 2**(32+NRTPC-(((NRTPC-1)/32)*32)-2) 
+        ENDIF
+        if(NRTPC-(((NRTPC-1)/32)*32)-3.LT.0) THEN 
+           IOUT3 = 2**(32+NRTPC-(((NRTPC-1)/32)*32)-3) 
+        ENDIF
+        if(NRTPC-(((NRTPC-1)/32)*32)-4.LT.0) THEN 
+           IOUT4 = 2**(32+NRTPC-(((NRTPC-1)/32)*32)-4) 
+        ENDIF
+
+
         IF15  = 2**15 - 1
 c(kh)   IL06  = (2**7-1) * (2**(LTPDRO-96-6))
 c(SJA)        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
@@ -239,19 +274,23 @@ c(SJA)        IL06  = (2**7-1) * (2**(NRTPC-(NRTPC/32)*32-6))
      &       (2**(NRTPC-(NRTPC/32)*32-(N32BITREG-1)))
 
 
-
-        FLOAT2=2.D0**32
-        FLOAT3=2.D0**64
-        FLOAT4=2.D0**96
-        FLOAT5=2.D0**128
-        FLOAT6=2.D0**160
-        FLOAT7=2.D0**192
+C(SJA)        FLOAT2=2.D0**32
+C(SJA)        FLOAT3=2.D0**64
+C(SJA)        FLOAT4=2.D0**96
+C(SJA)        FLOAT5=2.D0**128
+C(SJA)        FLOAT6=2.D0**160
+C(SJA)        FLOAT7=2.D0**192
 
         OCUT= 1.0/(5.0*TPCACRO)
 
         FIRST = .FALSE.
       END IF
+
       DROW= TPDRST(1)
+
+c      write(*,*) "SJA:TAG:MY_NCHAIN " , MY_NCHAIN
+
+
 
 C
 C-->  Get steering constants from the TTRC bank
@@ -286,9 +325,9 @@ C GAB:
         ENDIF
 
 C GAB:
-         ITPTES = MY_JTCHPI(I,1)
+        ITPTES = MY_JTCHPI(I,1)
         NHITS = IAND(ITPTES,32)/32 +IAND(ITPTES,16)/16 +
-     $          IAND(ITPTES,8)/8   +IAND(ITPTES,4)/4   +IAND(ITPTES,2)/2
+     $       IAND(ITPTES,8)/8   +IAND(ITPTES,4)/4   +IAND(ITPTES,2)/2
         IF (NHITS.GT.2) GO TO 10
         NCNDU = NCNDU+1
 
@@ -307,6 +346,9 @@ C GAB:
         ENDDO
    10 CONTINUE
    11 CONTINUE
+
+c      write(*,*) "SJA:TAG: IBUF1 now contains the chains"
+c      write(*,*) "SJA:TAG: NCNDU = " , NCNDU 
 C
 C---> IBUF1 now contains the chains which might be an upper
 C     part of a set of linked chains
@@ -322,21 +364,68 @@ C
 c GAB:
 c      DO 20 I=1,LROWS(KTCHA)
       DO 20 I=1,MY_NCHAIN
-        IF (NCNDL.EQ.MCAND)THEN
-         IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
-         CALL TKVETO(1)
-         GO TO 21
-        ENDIF
+         IF (NCNDL.EQ.MCAND)THEN
+            IF(TKSTDBG.GT.0) WRITE(*,*)'TFLNKS:MCAND too small'
+            CALL TKVETO(1)
+            GO TO 21
+         ENDIF
 
 C GAB:
 C        ITPTES = ITABL(KTCHA,I,JTCHPI)
-        ITPTES = MY_JTCHPI(I,NRTPC/32+1)
 
-        NHITS = IAND(ITPTES,IOUT1)/IOUT1 +IAND(ITPTES,IOUT2)/IOUT2
-     1         +IAND(ITPTES,IOUT3)/IOUT3 +IAND(ITPTES,IOUT4)/IOUT4
-        IF (NHITS.GT.2)  THEN
-         GO TO 20
-        ENDIF
+C         write(*,*) "SJA:TAG: About to get ITPTES "
+C         write(*,*) "SJA:TAG: NRTPC = " , NRTPC
+C         write(*,*) "SJA:TAG: I = " , I
+
+         IF(NRTPC-(NRTPC/32)*32.LT.0) THEN
+
+         ELSE
+            ITPTES1 = MY_JTCHPI(I,(NRTPC-1)/32+1)
+         ENDIF
+
+         ITPTES1 = MY_JTCHPI(I,(NRTPC-1)/32+1)
+
+         IF(NRTPC-(((NRTPC-1)/32)*32)-3.LT.0) THEN 
+            ITPTES2 = MY_JTCHPI(I,(NRTPC-1)/32)
+         ELSE
+            ITPTES2 = MY_JTCHPI(I,(NRTPC-1)/32+1)
+         ENDIF
+
+         IF(NRTPC-(((NRTPC-1)/32)*32)-3.LT.0) THEN 
+            ITPTES3 = MY_JTCHPI(I,(NRTPC-1)/32)
+         ELSE
+            ITPTES3 = MY_JTCHPI(I,(NRTPC-1)/32+1)
+         ENDIF
+
+         IF(NRTPC-(((NRTPC-1)/32)*32)-4.LT.0) THEN 
+            ITPTES4 = MY_JTCHPI(I,(NRTPC-1)/32)
+         ELSE
+            ITPTES4 = MY_JTCHPI(I,(NRTPC-1)/32+1)
+         ENDIF
+
+
+C         write(*,*) "SJA:TAG: About to get NHITS "
+C         write(*,*) "SJA:TAG: ITPTES = " , ITPTES
+C         write(*,*) "SJA:TAG: IOUT1 = " , IOUT1 
+C         write(*,*) "SJA:TAG: IOUT2 = " , IOUT2
+C         write(*,*) "SJA:TAG: IOUT3 = " , IOUT3
+C         write(*,*) "SJA:TAG: IOUT4 = " , IOUT4
+C
+         
+
+ 
+        NHITS = IAND(ITPTES1,IOUT1)/IOUT1 +IAND(ITPTES2,IOUT2)/IOUT2
+     1        +IAND(ITPTES3,IOUT3)/IOUT3 +IAND(ITPTES4,IOUT4)/IOUT4
+
+c        NHITS = IAND(ITPTES,IOUT1)/IOUT1 +IAND(ITPTES,IOUT2)/IOUT2
+c     1        +IAND(ITPTES,IOUT3)/IOUT3 +IAND(ITPTES,IOUT4)/IOUT4
+
+
+         IF (NHITS.GT.2)  THEN
+            GO TO 20
+         ENDIF
+
+c         IF(NHITS.GT.0) write(*,*) "SJA:TAG: NHITS", NHITS
 C GAB:
 C        LSTPT = ITABL(KTCHA,I,JTCHOF) + ITABL(KTCHA,I,JTCHNC)
         LSTPT=MY_JTCHOF(I)+MY_JTCHNC(I)
@@ -390,6 +479,8 @@ C              DEFINE UP/DOWN LINKS BETWEEN CANDIDATES              C
 C              ***************************************              C
 C-------------------------------------------------------------------C
 C
+
+
       DO 40 ICNDU = 1,NCNDU
 
         JCH1=IBUF1(ICNDU)

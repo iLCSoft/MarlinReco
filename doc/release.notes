@@ -5,20 +5,47 @@
 ================================
 
  -----------
+| v00-12-01 |
+ -----------
+     - bug fix release:
+
+      BrahmsTracking (S.Aplin)
+       tflnks.F:  fixed a bug where a
+	  number of TPC padrows between N*32+1 and N*32+4 caused division
+	  by 0 when looking for hits in the last four padrows
+
+       FullLDCTracking corrected the GEAR definition for the disk z positions
+
+ -----------
 | v00-12-00 |
  -----------
-    PFOID:   dynamic memory allocation improved, collections cleaned up, documentation improved
-    VTXDigi: development version of vertex digitizier specific for CCD technology (CCDDigitizer.cc)
-                protect against clusters wider or longer than hardcoded limit of 20 pixels (VTXDigitizer.cc)
-    FullLDCTracking: New option for track fit included
 
-    * made cmake 2.6 compliant
-    * added 32 bit compatibility build option
-    * added LIBRARY_DIRS
+   * improved PFOID  (S.Aplin, A.Rasperezza) 
+    - fixed to compile w/ gcc4.x 
+    - output particle collection dropped - ParticleID object is assigned
+      directly to ReconstructedParticle
+    - improved documentation 
+
+   TrackDigi/VTXDigi:
+   * fixed bug in VTXNoiseHits (F.Gaede)
+
+   * new processor CCDDigitizer (K.Harder)
+     development version of vertex digitizier specific for CCD
+     technology. written by Stefan Uebelacker (RAL) based on
+     VTXDigitizer and on CCD digitizer code by Nick Sinev. not
+     recommended for general use yet.
+
+   * FullLDCTracking: New option for track fit included
+
+   * made cmake 2.6 compliant
+   * added 32 bit compatibility build option
+   * added LIBRARY_DIRS
+
                                     
  -----------
 | v00-11-00 |
  -----------
+
      * FullLDCTracking: (A.Raspereza)
         added cut on #Silicon hits if no TPC hits present - default: >=4
 

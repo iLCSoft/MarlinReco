@@ -1,3 +1,19 @@
+2008-10-29 19:40  aplin
+
+	* Tracking/BrahmsTracking/src/f77/tflnks.F: fixed a bug where a
+	  number of TPC padrows between N*32+1 and N*32+4 caused division
+	  by 0 when looking for hits in the last four padrows
+
+2008-10-29 15:29  aplin
+
+	* Tracking/FullLDCTracking/src/FullLDCTracking.cc: corrected the
+	  GEAR definition for the disk z positions
+
+2008-10-23 18:36  engels
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes, src/CMakeLists.txt:
+	  ---------- v00-12-00 ----------
+
 2008-10-14 14:36  engels
 
 	* CMakeLists.txt, MarlinRecoConfig.cmake.in, src/CMakeLists.txt:

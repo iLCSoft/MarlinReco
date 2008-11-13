@@ -6,9 +6,12 @@
 ** For the latest version download from Web CVS:
 ** www.blah.de
 **
-** $Id: LEPTrackingProcessor.cc,v 1.43 2008-07-18 11:00:54 aplin Exp $
+** $Id: LEPTrackingProcessor.cc,v 1.44 2008-11-13 10:18:17 aplin Exp $
 **
 ** $Log: not supported by cvs2svn $
+** Revision 1.43  2008/07/18 11:00:54  aplin
+** corrected bug in the clear function of hitbanks
+**
 ** Revision 1.42  2008/07/17 16:53:30  aplin
 ** added steering parameter AlwaysRunCurlKiller which allows the CurlKiller functionality to be usedfor every event, not just those for whom the F77 tracking code fails
 **
@@ -600,7 +603,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     evt->addCollection( usedCol , _usedColName ) ;
     evt->addCollection( droppedCol , _droppedColName ) ;
    
-    streamlog_out(DEBUG) << "TKTREV return:" << errTKTREV << endl;
+    streamlog_out(DEBUG) << "For Event:" << _nEvt << "TKTREV return:" << errTKTREV << endl;
 
     streamlog_out(DEBUG) << "number of TE's = " << TkTeBank->size() << endl ;
 

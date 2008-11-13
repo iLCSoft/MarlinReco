@@ -1,7 +1,10 @@
 *     
-*     $Id: fkkalm.F,v 1.3 2008-06-26 15:14:31 aplin Exp $
+*     $Id: fkkalm.F,v 1.4 2008-11-13 10:17:33 aplin Exp $
 *     
 *     $Log: not supported by cvs2svn $
+*     Revision 1.3  2008/06/26 15:14:31  aplin
+*     corrected debug fromat statement
+*
 *     Revision 1.2  2008/06/26 09:35:56  aplin
 *
 *     A clean up has been made of the arrays that hold the TE's/Hits for
@@ -93,7 +96,9 @@
 *     if measurement, add information (weighted mean) and update chi2
 
 *     
-         IF(INUM.GT.0.AND.IFLAG(INUM).EQ.0) THEN
+C         IF(INUM.GT.0.AND.IFLAG(INUM).EQ.0) THEN
+         IF(INUM.GT.0) THEN 
+            IF(IFLAG(INUM).EQ.0) THEN
 *     
 *     if first information found : copy deviations, weight matrix, rank and chi2
 *     
@@ -114,17 +119,17 @@
                   IRNKZT=JBIT(MEASUR(INUM),2)+JBIT(MEASUR(INUM),3)
                   IRANK=IRNKRF+IRNKZT
 *     
-
+                  
                   IF(IDEB.GE.2) then
                      WRITE(IPRNT,     
-     &           '(''       after 1st  : rank'',I2,''+'',I1,6X,'//
-     &           '''deviat.'',T50,5F11.6,''  nd, chi2 '',I4,1X,G10.4)')
+     &            '(''       after 1st  : rank'',I2,''+'',I1,6X,'//
+     &            '''deviat.'',T50,5F11.6,''  nd, chi2 '',I4,1X,G10.4)')
      &           IRNKRF,IRNKZT,DQKALM,NDEG,CHI2
 
-              write(IPRNT,
-     $             '(a,t10,e17.8,/t10,2e17.8,/t10,3e17.8,'//
-     $             '/t10,4e17.8,/t10,5e17.8)') 'COV : ',wgkalm
-            end if
+                     write(IPRNT,
+     $                    '(a,t10,e17.8,/t10,2e17.8,/t10,3e17.8,'//
+     $                    '/t10,4e17.8,/t10,5e17.8)') 'COV : ',wgkalm
+                  end if
 
 *     
 *     if new information : add it to the fit
@@ -258,6 +263,7 @@ c            ENDIF
 *     if interpolation/extrapolation requested, store deviations from
 *     reference trajectory and weight matrix
 *     
+            ENDIF
          ELSE IF(INUM.LT.0) THEN
             IF(IDIR.EQ.-1) THEN
                CALL FKDPCO(DQKALM,DQBCKE(1,-INUM),5)

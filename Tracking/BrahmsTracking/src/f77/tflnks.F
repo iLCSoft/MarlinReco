@@ -1,7 +1,10 @@
 *  
-* $Id: tflnks.F,v 1.7 2008-10-29 18:40:30 aplin Exp $
+* $Id: tflnks.F,v 1.8 2008-11-13 10:17:33 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2008/10/29 18:40:30  aplin
+* fixed a bug where a number of TPC padrows between N*32+1 and N*32+4 caused division by 0 when looking for hits in the last four padrows
+*
 * Revision 1.6  2008/06/26 09:35:56  aplin
 *
 * A clean up has been made of the arrays that hold the TE's/Hits for
@@ -142,7 +145,9 @@ C(KH) INTEGER LILLY(LTPDRO)
 
 C changed LILLY(500) to LILLY(2000) because of released energy cut in Mokka 5.04
 C(SJA) set back to LTPDRO to ensure control over all max row based arrays
-      INTEGER LILLY(LTPDRO)
+c      INTEGER LILLY(LTPDRO)
+c(SJA) this may not have anything to do with TPC rows? So let's increase it for now it will need protection though
+      INTEGER LILLY(1000)
       REAL VAL(5),ERR(15)
 c GAB:
 c      INTEGER IBUF1(MCAND),IBUF2(MCAND),IPATL(MCAND)

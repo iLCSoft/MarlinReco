@@ -412,14 +412,25 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
 
 # libg2c
 SET( G2C_LIB G2C_LIB-NOTFOUND )
-FIND_LIBRARY( G2C_LIB NAMES g2c PATHS
-    /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3
-    /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4
-    /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5
-    /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 64bit
-    /usr/lib64
-    NO_DEFAULT_PATH # prevent static library to be detected instead of shared one
-)
+IF( BUILD_32BIT_COMPATIBLE )
+    SET( G2C_LIB_PATHS
+        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
+        /usr/lib
+    )
+ELSE()
+    SET( G2C_LIB_PATHS
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
+        /usr/lib64
+    )
+ENDIF()
+# prevent static library to be detected instead of shared one
+FIND_LIBRARY( G2C_LIB NAMES g2c PATHS ${G2C_LIB_PATHS} NO_DEFAULT_PATH )
+# if previous find fails, try to find in system paths..
 FIND_LIBRARY( G2C_LIB NAMES g2c )
 
 IF( NOT G2C_LIB )

@@ -6,8 +6,20 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.3  2008/02/23 11:18:39  listj
- * - added soft constraints
+ * - Revision 1.5  2008/11/23 17:53:41  mbeckman
+ * - Fixed minor bug in ParticleFitObject.cc
+ * -
+ * - Revision 1.4  2008/10/17 13:17:17  blist
+ * - Avoid variable-size arrays
+ * -
+ * - Revision 1.3  2008/10/16 08:13:44  blist
+ * - New versions of OPALfitter and Newtonfitter using GSL
+ * -
+ * - Revision 1.2  2008/09/26 09:58:11  boehmej
+ * - removed ~100 semicolons after } at end of function implementation :)
+ * -
+ * - Revision 1.1  2008/02/12 10:19:09  blist
+ * - First version of MarlinKinfit
  * -
  * - Revision 1.7  2008/02/04 17:30:54  blist
  * - NewtonFitter works now!
@@ -44,6 +56,8 @@ using std::endl;
 ParticleFitObject::ParticleFitObject() {
   for (int ilocal = 0; ilocal < NPAR; ++ilocal) globalParNum[ilocal] = -1;
   for (int ilocal = 0; ilocal < NPAR; ++ilocal) fixed[ilocal] = false;
+  for (int ilocal = 0; ilocal < NPAR; ++ilocal) 
+    for (int jlocal = 0; jlocal < NPAR; ++jlocal) cov[ilocal][jlocal] = 0; 
 }
 
 ParticleFitObject::~ParticleFitObject()
@@ -56,7 +70,7 @@ bool ParticleFitObject::setParam (int ilocal, double par_,
   measured[ilocal] = measured_;
   fixed[ilocal] = fixed_;
   return setParam (ilocal, par_);
-} 
+}  
 
 bool ParticleFitObject::setParam (int ilocal, double par_ ) {
   if (!isfinite(par_)) return true;
@@ -66,7 +80,8 @@ bool ParticleFitObject::setParam (int ilocal, double par_ ) {
   bool result = (par_-par[ilocal])*(par_-par[ilocal]) > eps2*cov[ilocal][ilocal]; 
   par[ilocal] = par_;
   return result;
-}  
+}
+  
 bool ParticleFitObject::setMParam (int ilocal, double mpar_ ) {
   if (!isfinite(mpar_)) return false;
   assert (ilocal >= 0 && ilocal < NPAR);
@@ -74,7 +89,8 @@ bool ParticleFitObject::setMParam (int ilocal, double mpar_ ) {
   invalidateCache();
   mpar[ilocal] = mpar_;
   return true;
-} 
+}
+
 bool ParticleFitObject::setError (int ilocal, double err_) {
   if (!isfinite(err_)) return false;
   assert (ilocal >= 0 && ilocal < NPAR);
@@ -250,7 +266,7 @@ void ParticleFitObject::addToGlobalChi2DerVectorNum (double *y, int idim, double
 double ParticleFitObject::getD2Chi2DParam2(int ilocal, int jlocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   assert (jlocal >= 0 && jlocal < NPAR);
-  if (isParamFixed(ilocal) || !isParamMeasured(ilocal) && 
+  if (isParamFixed(ilocal) || !isParamMeasured(ilocal) || 
       isParamFixed(jlocal) || !isParamMeasured(jlocal))
     return 0;
   if (!covinvvalid) calculateCovInv();
@@ -336,7 +352,8 @@ void ParticleFitObject::test1stDerivatives () {
 void ParticleFitObject::test2ndDerivatives () {
   cout << "ParticleFitObject::test2ndDerivatives, object " << getName() << "\n";
   const int idim=100;
-  double Mnum[idim*idim], Mcalc[idim*idim];
+  double *Mnum = new double[idim*idim];
+  double *Mcalc = new double[idim*idim];
   for (int i = 0; i < idim*idim; ++i) Mnum[i]=Mcalc[i]=0;
   addToGlobalChi2DerMatrix (Mcalc, idim);
   double eps = 0.0001;
@@ -356,6 +373,8 @@ void ParticleFitObject::test2ndDerivatives () {
            << endl;
     }
   }
+  delete[] Mnum;
+  delete[] Mcalc;
 }
 
 double ParticleFitObject::num1stDerivative (int ilocal, double eps) {

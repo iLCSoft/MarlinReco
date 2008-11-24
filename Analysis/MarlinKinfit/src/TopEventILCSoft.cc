@@ -2,8 +2,8 @@
 // Class TopEventILCSoft
 //
 // Author: Benno List, Jenny Boehme
-// Last update: $Date: 2008-02-25 08:23:56 $
-//          by: $Author: gaede $
+// Last update: $Date: 2008-11-24 11:01:01 $
+//          by: $Author: beckmann $
 // 
 // Description: class to generate and fit top pair events at ILC
 //               
@@ -21,6 +21,14 @@ using std::cout;
 using std::endl;
 using std::abs;
 using std::sqrt;
+static  double mtop = 174;
+static  double gammatop = 1.4;
+static  double mW   = 80.4;
+static  double gammaW = 2.1;
+static  double mb   = 5.0;
+static  double mj   = 1.0;
+static  double Ecm = 500;
+      
 
 // constructor: 
 TopEventILCSoft::TopEventILCSoft()
@@ -28,10 +36,10 @@ TopEventILCSoft::TopEventILCSoft()
   pxc (1, 0),
   pyc (0, 1),
   pzc (0, 0, 1),
-  ec  (0, 0, 0, 1, 500),
-  w1 (2.1, 80.4),
-  w2 (2.1, 80.4),
-  w (2.0)
+  ec  (0, 0, 0, 1, Ecm),
+  w1 (gammaW, mW),
+  w2 (gammaW, mW),
+  w (2*gammatop)
   {
   for (int i = 0; i < NFV; ++i) fv[i] = 0;
   for (int i = 0; i < NBFO; ++i) bfo[i] = bfosmear[i] = 0;
@@ -39,9 +47,9 @@ TopEventILCSoft::TopEventILCSoft()
   pyc.setName ("py=0");
   pzc.setName ("pz=0");
   ec.setName  ("E=500");
-  w.setName ("top-equalmass");
-  w1.setName ("w1-mass");
-  w2.setName ("w2-mass");
+  w1.setName ("m(W1)=80.4");
+  w2.setName ("m(W1)=80.4");
+  w.setName ("m(top1)-m(top2)=0");
 }
 
 //destructor: 
@@ -76,14 +84,6 @@ void TopEventILCSoft::genEvent(){
   // 9: j21
   //10: j22 or neutrino
   
-  double mtop = 174;
-  double gammatop = 1.4;
-  double mW   = 80.4;
-  double gammaW = 2.1;
-  double mb   = 5.0;
-  double mj   = 1.0;
-  double Ecm = 500;
-      
   FReal rw[4];
   ranmar (rw, 4);
   
@@ -202,9 +202,9 @@ int TopEventILCSoft::fitEvent (BaseFitter& fitter){
   // reset lists of constraints and fitobjects
   fitter.reset();
   
-  int debug = 0;
+  int debug = 1;
   
-  if (debug) {
+  if (debug>1) {
     cout << "TopEventILCSoft::fitEvent: ==================================================\n";
     cout << "True vectors: \n";
     for (int i = 0; i<6; ++i) {
@@ -263,8 +263,16 @@ int TopEventILCSoft::fitEvent (BaseFitter& fitter){
 //   cout << "Constraint w:   " << w.getValue() << ", top mass: " << w.getMass() << endl;
 //   cout << "Constraint w1:  " << w1.getValue() << ", W mass: " << w1.getMass() << endl;
 //   cout << "Constraint w2:  " << w2.getValue() << ", W mass: " << w2.getMass() << endl;
-   cout << "fit probability = " << prob << ", top mass: " << w.getMass() << ", dof: " << fitter.getDoF() 
-        << ", iterations: " << fitter.getIterations() << endl;
+   cout << "prob = " << prob 
+        << ", m(top1): " << w.getMass(1) 
+        << ", m(top2): " << w.getMass(2) 
+        << ", chi2(top): " << w.getChi2()
+        << ", m(w1): " << w1.getMass()
+        << ", chi2(w1): " << w1.getChi2()
+        << ", m(w2): " << w2.getMass()
+        << ", chi2(w2): " << w2.getChi2()
+//        << ", dof: " << fitter.getDoF() 
+        << ", its: " << fitter.getIterations() << endl;
 
   for (int j = 0; j < 6; ++j) {
     int i = j+5;
@@ -277,7 +285,7 @@ int TopEventILCSoft::fitEvent (BaseFitter& fitter){
   fvfinal[2] = new FourVector (*fvfinal[4]+*fvfinal[8]);
   fvfinal[0] = new FourVector (*fvfinal[1]+*fvfinal[2]);
   
-  if (debug) {
+  if (debug>0) {
     cout << "===============After Fiting ===================================\n";
     cout << "Final vectors: \n";
     for (int i = 0; i<6; ++i) {

@@ -6,6 +6,12 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.2  2008/10/17 13:17:16  blist
+ * - Avoid variable-size arrays
+ * -
+ * - Revision 1.1  2008/02/12 10:19:09  blist
+ * - First version of MarlinKinfit
+ * -
  * - Revision 1.2  2008/02/07 08:21:07  blist
  * - ParticleConstraint.C fixed
  * -
@@ -225,7 +231,7 @@ void ParticleConstraint::test1stDerivatives () {
 void ParticleConstraint::test2ndDerivatives () {
   cout << "ParticleConstraint::test2ndDerivatives for " << getName() << "\n";
   const int idim=100;
-  double M[idim*idim];
+  double *M = new double[idim*idim];
   for (int i = 0; i < idim*idim; ++i) M[i]=0;
   add2ndDerivativesToMatrix (M, idim, 1);
   double eps = 0.0001;
@@ -253,6 +259,7 @@ void ParticleConstraint::test2ndDerivatives () {
       }
     }
   }
+  delete[] M;
 }
 
 

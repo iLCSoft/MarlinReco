@@ -5,6 +5,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 10:19:05  blist
+ * - First version of MarlinKinfit
+ * -
  * - Revision 1.2  2007/09/14 10:58:42  blist
  * - Better documentation,
  * - added PyConstraint::add1stDerivativesToMatrix,
@@ -23,8 +26,8 @@ class JetFitObject;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008-02-23 11:18:39 $
- *          by: $Author: listj $
+ * Last update: $Date: 2008-11-24 11:01:01 $
+ *          by: $Author: beckmann $
  *
  */
 class BaseJetPairing {

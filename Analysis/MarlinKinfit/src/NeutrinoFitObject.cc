@@ -2,8 +2,8 @@
 // Class NeutrinoFitObject
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008-02-25 08:23:56 $
-//          by: $Author: gaede $
+// Last update: $Date: 2008-11-24 11:01:01 $
+//          by: $Author: beckmann $
 // 
 // Description: class for neutrinos with (E, theta, phi) in kinematic fits
 //               
@@ -53,7 +53,7 @@ bool NeutrinoFitObject::setParam (int ilocal, double par_,
   measured[ilocal] = measured_;
   fixed[ilocal] = fixed_;
   return setParam (ilocal, par_);
-}
+}  
 
 bool NeutrinoFitObject::setParam (int i, double par_ ) {
   invalidateCache();
@@ -72,7 +72,7 @@ bool NeutrinoFitObject::setParam (int i, double par_ ) {
     default: std::cerr << "NeutrinoFitObject::setParam: Illegal i=" << i << std::endl;
   }
   return result;
-} 
+}  
  
 bool NeutrinoFitObject::updateParams (double p[], int idim) {
 

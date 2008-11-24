@@ -50,8 +50,8 @@
  * setGlobalParNum. 
  *
  * Author: Benno List, Jenny List
- * $Date: 2008-02-23 11:18:39 $
- * $Author: listj $
+ * $Date: 2008-11-24 11:01:01 $
+ * $Author: beckmann $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov

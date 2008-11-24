@@ -26,7 +26,7 @@ using namespace marlin ;
  * @param CollectionName Name of the ReconstructedParticle collection for b-jets
  * 
  * @author J. List, DESY
- * @version $Id: TTBarExample.h,v 1.1 2008-01-31 13:01:55 listj Exp $ 
+ * @version $Id: TTBarExample.h,v 1.2 2008-11-24 11:01:01 beckmann Exp $ 
  */
 
 class TTBarExample : public Processor {

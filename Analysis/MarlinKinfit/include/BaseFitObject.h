@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 10:19:05  blist
+ * - First version of MarlinKinfit
+ * -
  * - Revision 1.10  2008/02/07 08:15:25  blist
  * - error calculation of constraints fixed
  * -
@@ -88,8 +91,8 @@
  * 
  *
  * Author:  Benno List, Jenny Böhme
- * $Date: 2008-02-23 11:18:39 $
- * $Author: listj $
+ * $Date: 2008-11-24 11:01:01 $
+ * $Author: beckmann $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov

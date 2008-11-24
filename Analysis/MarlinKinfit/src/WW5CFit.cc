@@ -315,10 +315,13 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          fitter.addConstraint (w);
 
          double prob = fitter.fit();
-//         double chi2 = fitter.getChi2();
+         double chi2 = fitter.getChi2();
          int nit = fitter.getIterations();
          message<MESSAGE>( log() 
                        << "fit probability = " << prob 
+                       ) ;
+         message<MESSAGE>( log() 
+                       << "fit chi2 = " << chi2 
                        ) ;
          message<MESSAGE>( log() 
                        << "error code: " << fitter.getError() 

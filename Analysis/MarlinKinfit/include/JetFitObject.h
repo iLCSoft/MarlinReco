@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 10:19:05  blist
+ * - First version of MarlinKinfit
+ * -
  * - Revision 1.9  2008/02/04 17:30:53  blist
  * - NewtonFitter works now!
  * -
@@ -37,8 +40,8 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2008-02-23 11:18:39 $
- * $Author: listj $
+ * $Date: 2008-11-24 11:01:01 $
+ * $Author: beckmann $
  *
  * \b Changelog:
  * - 30.12.04 BL: addToGlobCov, getDChi2DParam, getDChi2DParam2, addToGlobalChi2DerMatrix

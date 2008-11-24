@@ -1,37 +1,25 @@
 /*! \file 
- *  \brief Declares class SoftGaussMassConstraint
+ *  \brief Declares class SoftBWMassConstraint
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.1  2008/02/12 16:43:26  blist
- * - First Version of Soft Constraints
- * -
- * - Revision 1.2  2008/02/12 11:03:32  blist
- * - Added doxygen configuration
- * -
- * - Revision 1.1  2008/02/12 10:19:05  blist
- * - First version of MarlinKinfit
- * -
- * - Revision 1.5  2008/01/29 17:21:52  blist
- * - added methods secondDerivatives and firstDerivatives
- * -
- * - Revision 1.4  2007/09/17 12:50:15  blist
- * - Some parameters reordered
+ * - Revision 1.1  2008/10/21 08:36:50  blist
+ * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
  *
  */ 
 
-#ifndef __SOFTGAUSSMASSCONSTRAINT_H
-#define __SOFTGAUSSMASSCONSTRAINT_H
+#ifndef __SOFTBWMASSCONSTRAINT_H
+#define __SOFTBWMASSCONSTRAINT_H
 
-#include "SoftGaussParticleConstraint.h"
+#include "SoftBWParticleConstraint.h"
 
 class ParticleFitObject;
 
-//  Class SoftGaussMassConstraint:
+//  Class SoftBWMassConstraint:
 /// Implements constraint 0 = mass1 - mass2 - m
 /**
  * This class implements different mass constraints:
@@ -45,15 +33,15 @@ class ParticleFitObject;
  *
  */
 
-class SoftGaussMassConstraint : public SoftGaussParticleConstraint {
+class SoftBWMassConstraint : public SoftBWParticleConstraint {
   public:
   
     /// Constructor
-    SoftGaussMassConstraint (double sigma_,    ///< The sigma value
-                             double mass_ = 0.   ///< The mass difference between object sets 1 and 2
+    SoftBWMassConstraint (double gamma_,    ///< The Gamma value
+                          double mass_ = 0.   ///< The mass difference between object sets 1 and 2
                    );
     /// Virtual destructor             
-    virtual ~SoftGaussMassConstraint();
+    virtual ~SoftBWMassConstraint();
     
     /// Returns the value of the constraint function
     virtual double getValue() const;
@@ -88,4 +76,4 @@ class SoftGaussMassConstraint : public SoftGaussParticleConstraint {
                                   ) const;
 };
 
-#endif // __SOFTGAUSSMASSCONSTRAINT_H
+#endif // __SOFTBWMASSCONSTRAINT_H

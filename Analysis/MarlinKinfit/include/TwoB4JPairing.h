@@ -2,8 +2,8 @@
 // Class TwoB4JPairing
 //
 // Author: Jenny Boehme, Anca Siebel
-// Last update: $Date: 2008-01-31 13:01:55 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-11-24 11:01:01 $
+//          by: $Author: beckmann $
 // 
 // Description: handle permutations of 2b jets and 4 light jets
 //               

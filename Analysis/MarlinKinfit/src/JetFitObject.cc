@@ -2,12 +2,21 @@
  *  \brief Implements class JetFitObject
  *
  * \b Changelog:
- * - 
+ * - 26.09.2008 mbeckman: Minor bug fixes, dodged possible division by zero
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.2  2008/02/23 11:18:39  listj
- * - added soft constraints
+ * - Revision 1.4  2008/10/16 08:13:44  blist
+ * - New versions of OPALfitter and Newtonfitter using GSL
+ * -
+ * - Revision 1.3  2008/09/26 15:26:39  mbeckman
+ * - Added fit objects for pseudo-measured photons, minor changes/bug fixes in fitters and JetFitObject
+ * -
+ * - Revision 1.2  2008/09/26 09:58:10  boehmej
+ * - removed ~100 semicolons after } at end of function implementation :)
+ * -
+ * - Revision 1.1  2008/02/12 10:19:08  blist
+ * - First version of MarlinKinfit
  * -
  * - Revision 1.10  2008/02/07 08:15:25  blist
  * - error calculation of constraints fixed
@@ -94,7 +103,7 @@ bool JetFitObject::setParam (int ilocal, double par_,
 //  invalidateCache();                     done in constructor anyhow
   par[ilocal] = par_;
   return true;
-} 
+}  
 
 bool JetFitObject::setParam (int i, double par_ ) {
   invalidateCache();
@@ -118,7 +127,7 @@ bool JetFitObject::setParam (int i, double par_ ) {
     default: std::cerr << "JetFitObject::setParam: Illegal i=" << i << std::endl;
   }
   return result;
-}
+} 
  
 bool JetFitObject::updateParams (double p[], int idim) {
   invalidateCache();
@@ -161,7 +170,7 @@ bool JetFitObject::updateParams (double p[], int idim) {
                 ((ph-par[2])*(ph-par[2]) > eps2*cov[2][2]);
   
   par[0] = (e >= mass) ? e : mass;
-  par[1] = (th >= 0 && th < M_PI) ? 
+  par[1] = (th >= 0 && th <= M_PI) ? 
             th : std::acos (std::cos (th));
   double dphi = ph-mpar[2];
   if (std::abs(dphi) > M_PI) dphi = atan2 (sin(dphi), cos (dphi));
@@ -266,7 +275,7 @@ void   JetFitObject::addToDerivatives (double der[], int idim,
   
   if (pxfact != 0) {
     der_E     += pxfact*dpxdE;
-    der_theta += pxfact*dpydtheta;
+    der_theta += pxfact*dpxdtheta;
     der_phi   -= pxfact*py;
   }
   if (pyfact != 0) {
@@ -407,14 +416,21 @@ void JetFitObject::updateCache() const {
   cphi   = cos(phi);
   sphi   = sin(phi);
 
-  p2 = std::abs(e*e-mass*mass);
-  p = std::sqrt(p2);
+  if (mass > 0) {
+    p2 = std::abs(e*e-mass*mass);
+    p = std::sqrt(p2);
+    dpdE = e/p;
+  }
+  else {
+    p2 = e*e;
+    p = e;
+    dpdE = 1;
+  }
   pt = p*stheta;
 
   px = pt*cphi;
   py = pt*sphi;
   pz = p*ctheta;
-  dpdE = e/p;
   dptdE = dpdE*stheta;
   dpxdE = dptdE*cphi;
   dpydE = dptdE*sphi;

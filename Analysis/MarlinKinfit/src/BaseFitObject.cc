@@ -5,6 +5,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 10:19:08  blist
+ * - First version of MarlinKinfit
+ * -
  * - Revision 1.8  2008/02/04 17:30:53  blist
  * - NewtonFitter works now!
  * -

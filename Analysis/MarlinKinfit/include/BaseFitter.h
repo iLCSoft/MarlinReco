@@ -47,8 +47,8 @@ class BaseSoftConstraint;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008-02-23 11:18:39 $
- *          by: $Author: listj $
+ * Last update: $Date: 2008-11-24 11:01:01 $
+ *          by: $Author: beckmann $
  *
  */
 class BaseFitter {

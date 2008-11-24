@@ -3,13 +3,14 @@
 #========================================================
 .SUFFIXES : .o .c .C .h
 
-CC = g++ -g -Wall
+CC = g++ -g -Wall -pg
 CFLAGS= -I`root-config --incdir` -I ../..
 CLIBS= -L/cern/pro/lib -lmathlib -lkernlib -lpacklib -L /usr/lib -lshift -lnsl -lcrypt -ldl
-LDFLAGS= $(CFLAGS)  `root-config --libs`
+LDFLAGS= $(CFLAGS)  `root-config --libs` -lgsl
 FLIBS= -lg2c -lm 
 F77=g77
 # CLIBS=`cernlib`
+GSLINCDIR=/opt/products/gsl/1.9/include
 INCDIR=../include
 LIBDIR=./
 
@@ -52,13 +53,17 @@ LIB_OBJS= BaseFitObject.o \
              ParticleFitObject.o JetFitObject.o NeutrinoFitObject.o \
              BaseConstraint.o \
              ParticleConstraint.o  \
-             PConstraint.o  \
+             PConstraint.o MomentumConstraint.o  \
              MassConstraint.o \
              BaseFitter.o \
              NewtonFitter.o OPALFitter.o  \
+             OPALFitterGSL.o NewtonFitterGSL.o  \
              TopEventILC.o TopEventILCSoft.o FourVector.o \
              TwoB4JPairing.o  FourJetPairing.o \
-             SoftGaussParticleConstraint.o SoftGaussMassConstraint.o
+             SoftGaussParticleConstraint.o SoftGaussMassConstraint.o \
+             SoftGaussMomentumConstraint.o \
+             SoftBWParticleConstraint.o SoftBWMassConstraint.o \
+             dgesvd.o
              
 lib:libkinfit.a
         
@@ -67,5 +72,5 @@ libkinfit.a: $(LIB_OBJS)
 
 
 .cc.o:
-	$(CC) $< $(CFLAGS) -I ${INCDIR} -c -o $@
+	$(CC) $< $(CFLAGS) -I ${INCDIR} -I ${GSLINCDIR} -c -o $@
 

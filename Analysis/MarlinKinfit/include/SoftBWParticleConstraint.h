@@ -1,53 +1,27 @@
 /*! \file 
- *  \brief Declares class ParticleConstraint
+ *  \brief Declares class SoftBWParticleConstraint
  *
  * \b Changelog:
- * - 17.11.04 BL: First version (refactured from BaseConstraint)
+ * - 12.2.08 BL: First version
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.2  2008/02/12 16:43:26  blist
- * - First Version of Soft Constraints
- * -
- * - Revision 1.1  2008/02/12 10:19:06  blist
- * - First version of MarlinKinfit
- * -
- * - Revision 1.8  2008/02/04 17:30:54  blist
- * - NewtonFitter works now!
- * -
- * - Revision 1.7  2008/01/30 21:48:03  blist
- * - Newton Fitter still doesnt work :-(
- * -
- * - Revision 1.6  2008/01/30 09:14:54  blist
- * - Preparations for NewtonFitter
- * -
- * - Revision 1.5  2008/01/29 17:21:12  blist
- * - added methods secondDerivatives and firstDerivatives
- * -
- * - Revision 1.4  2007/09/14 10:58:42  blist
- * - Better documentation,
- * - added PyConstraint::add1stDerivativesToMatrix,
- * - fixed bug in PzConstraint::add1stDerivativesToMatrix
- * -
- * - Revision 1.3  2007/09/13 13:09:04  blist
- * - Better docs for ParticleConstraint
- * -
- * - Revision 1.2  2007/09/13 08:09:51  blist
- * - Updated 2nd derivatives for px,py,pz,E constraints, improved header documentation
+ * - Revision 1.1  2008/10/21 08:36:50  blist
+ * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
  *
  */ 
 
-#ifndef __PARTICLECONSTRAINT_H
-#define __PARTICLECONSTRAINT_H
+#ifndef __SOFTBWPARTICLECONSTRAINT_H
+#define __SOFTBWPARTICLECONSTRAINT_H
 
 #include<vector>
 #include<cassert>
-#include "BaseHardConstraint.h"
+#include "BaseSoftConstraint.h"
 
 class ParticleFitObject;
 
-//  Class ParticleConstraint:
+//  Class SoftBWParticleConstraint:
 /// Abstract base class for constraints of kinematic fits
 /**
  * This class defines the minimal functionality any constraint class must provide. 
@@ -86,12 +60,13 @@ class ParticleFitObject;
  *
  */
 
-class ParticleConstraint: public BaseHardConstraint {
+class SoftBWParticleConstraint: public BaseSoftConstraint {
   public:
-    /// Creates an empty ParticleConstraint object
-    inline ParticleConstraint();
+    /// Creates an empty SoftBWParticleConstraint object
+    SoftBWParticleConstraint(double gamma_     ///< The Gamma value
+                               );
     /// Virtual destructor
-    virtual ~ParticleConstraint() {};
+    virtual ~SoftBWParticleConstraint() {};
     
     /// Adds several ParticleFitObject objects to the list
     virtual void setFOList(std::vector <ParticleFitObject*> *fitobjects_ ///< A list of BaseFitObject objects
@@ -107,40 +82,38 @@ class ParticleConstraint: public BaseHardConstraint {
       fitobjects.push_back (&fitobject);
       flags.push_back (flag);
     }; 
-    /// Returns the value of the constraint
+    
+    /// Returns the value of the constraint function
     virtual double getValue() const = 0;
+    
+    /// Returns the chi2
+    virtual double getChi2() const;
     
     /// Returns the error on the value of the constraint
     virtual double getError() const;
+    
+    /// Returns the Gamma
+    virtual double getGamma() const;
+    
+    /// Sets the Gamma
+    virtual double setGamma(double gamma_     ///< The new Gamma value
+                           );
     
     /// Get first order derivatives. 
     /// Call this with a predefined array "der" with the necessary number of entries!
     virtual void getDerivatives(int idim,      ///< First dimension of the array
                                 double der[]   ///< Array of derivatives, at least idim x idim 
                                ) const = 0;
-    /// Adds first order derivatives to global covariance matrix M
-    virtual void add1stDerivativesToMatrix(double *M,      ///< Covariance matrix, at least idim x idim 
-                                           int idim        ///< First dimension of the array
-                                           ) const;
-    /// Adds second order derivatives, multiplied by lambda, to global covariance matrix M
+    /// Adds second order derivatives to global covariance matrix M
     virtual void add2ndDerivativesToMatrix(double *M,     ///< Covariance matrix, at least idim x idim 
-                                           int idim,      ///< First dimension of the array
-                                           double lambda  ///< Factor for derivatives
+                                           int idim       ///< First dimension of the array
                                           ) const;
 
-    /// Add lambda times derivatives of chi squared to global derivative matrix
+    /// Add derivatives of chi squared to global derivative matrix
     virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
-                                           int idim,    ///< Vector size 
-                                           double lambda //< The lambda value
+                                           int idim     ///< Vector size 
                                            ) const;
     
-    /// Accesses position of constraint in global constraint list
-    virtual int  getGlobalNum() const 
-    {return globalNum;}
-    /// Sets position of constraint in global constraint list
-    virtual void setGlobalNum (int iglobal                ///< Global constraint number
-                              ) 
-    {globalNum = iglobal;}
     
     /// Invalidates any cached values for the next event
     virtual void invalidateCache() const 
@@ -163,6 +136,21 @@ class ParticleConstraint: public BaseHardConstraint {
                              double eps2  ///< variation of 2nd local parameter 
                             );
                               
+  
+    /// Approximation of the inverse error function
+    /** See
+      * Sergey Winitzki: "A handy approximation for the error function and its inverse,"
+      * http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf.
+      */
+    static double erfinv (double x);
+    
+    /// Penalty function h(g), g is the value of the constraint
+    static double penalty (double g, double gam);
+    /// 1st derivative of penalty function h'(g), g is the value of the constraint
+    static double penalty1stder (double g, double gam);
+    /// 2nd derivative of penalty function h''(g), g is the value of the constraint
+    static double penalty2ndder (double g, double gam);
+    
   
   protected:
   
@@ -191,13 +179,9 @@ class ParticleConstraint: public BaseHardConstraint {
     ///  used for example to implement an equal mass constraint (see MassConstraint). 
     std::vector <int> flags;
     
-    /// Position of constraint in global constraint list
-    int globalNum;
+    /// The Gamma of the BW function
+    double gamma;
 
 };
 
-ParticleConstraint::ParticleConstraint() {
-  invalidateCache();
-}
-
-#endif // __PARTICLECONSTRAINT_H
+#endif // __SOFTBWPARTICLECONSTRAINT_H

@@ -2,8 +2,8 @@
 // Class TopEventILCSoft
 //
 // Author: Benno List, Jenny Boehme
-// Last update: $Date: 2008-02-23 11:18:39 $
-//          by: $Author: listj $
+// Last update: $Date: 2008-11-24 11:01:01 $
+//          by: $Author: beckmann $
 // 
 // Description: class to generate and fit top pair events at ILC
 //               
@@ -17,6 +17,7 @@
 // #include "PxConstraint.h"
 // #include "PyConstraint.h"
 #include "SoftGaussMassConstraint.h"
+#include "SoftBWMassConstraint.h"
 
 class TopEventILCSoft : public BaseEvent {
   public: 
@@ -55,9 +56,9 @@ class TopEventILCSoft : public BaseEvent {
     PConstraint pyc;
     PConstraint pzc;
     PConstraint ec;
-    SoftGaussMassConstraint w1;
-    SoftGaussMassConstraint w2;
-    SoftGaussMassConstraint w;
+    SoftBWMassConstraint w1;
+    SoftBWMassConstraint w2;
+    SoftBWMassConstraint w;
     
     
 

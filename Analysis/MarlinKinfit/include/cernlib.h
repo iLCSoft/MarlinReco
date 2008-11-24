@@ -6,6 +6,12 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/02/12 10:19:07  blist
+ * - First version of MarlinKinfit
+ * -
+ * - Revision 1.1  2007/10/30 15:51:14  gaede
+ * - initial version of MarlinKinfit
+ * -
  * - Revision 1.4  2007/09/14 10:58:42  blist
  * - Better documentation,
  * - added PyConstraint::add1stDerivativesToMatrix,

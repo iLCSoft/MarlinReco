@@ -1,54 +1,43 @@
 /*! \file 
- *  \brief Implements class SoftGaussParticleConstraint
+ *  \brief Implements class SoftBWParticleConstraint
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.4  2008/10/17 13:17:17  blist
- * - Avoid variable-size arrays
- * -
- * - Revision 1.3  2008/02/18 09:59:35  blist
- * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
- * -
- * - Revision 1.2  2008/02/13 12:37:38  blist
- * - new file BaseFitter.cc
- * -
- * - Revision 1.1  2008/02/12 16:43:27  blist
- * - First Version of Soft Constraints
- * -
+ * - Revision 1.1  2008/10/21 08:37:00  blist
+ * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
  */ 
 
-#include "SoftGaussParticleConstraint.h"
+#include "SoftBWParticleConstraint.h"
 #include "ParticleFitObject.h"
 #include <iostream>
 #include <cmath>
 using namespace std;
-SoftGaussParticleConstraint::SoftGaussParticleConstraint(double sigma_)
-: sigma (sigma_)
+SoftBWParticleConstraint::SoftBWParticleConstraint(double gamma_)
+: gamma (gamma_)
 {
   invalidateCache();
 }
 
-double SoftGaussParticleConstraint::getSigma() const
+double SoftBWParticleConstraint::getGamma() const
 {
-  return sigma;
+  return gamma;
 }
 
-double SoftGaussParticleConstraint::setSigma(double sigma_) 
+double SoftBWParticleConstraint::setGamma(double gamma_) 
 {
-  if (sigma_ != 0) sigma = std::abs(sigma_);
-  return sigma;
+  if (gamma_ != 0) gamma = std::abs(gamma_);
+  return gamma;
 }
     
-double SoftGaussParticleConstraint::getChi2() const {
-  double r = getValue()/getSigma();
-  return r*r;
+double SoftBWParticleConstraint::getChi2() const {
+  return penalty (getValue(), getGamma());
 }
   
-double SoftGaussParticleConstraint::getError() const {
+double SoftBWParticleConstraint::getError() const {
   double dgdpi[4];
   double error2 = 0;
   for (unsigned int i = 0; i < fitobjects.size(); ++i) {
@@ -84,17 +73,20 @@ double SoftGaussParticleConstraint::getError() const {
  */
  
  
-void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim) const
+void SoftBWParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim) const
 {
 
   /** First, treat the part 
-   * $$
+   * $$ 
+   *    \frac{\partial h}{\partial g}
    *    \frac{\partial ^2 g}{\partial P_i \partial P_j}  \cdot 
    *     \frac{\partial P_i}{\partial a_k} \cdot \frac{\partial P_j}{\partial a_l}
    * $$
    */
-  double s = getSigma();
-  double fact = 2*getValue()/(s*s); 
+  double g = getValue();
+  double gam = getGamma();
+  double fact = penalty1stder (g, gam);
+  double fact2 = penalty2ndder (g, gam);
    
   // Derivatives $\frac{\partial ^2 g}{\partial P_i \partial P_j}$ at fixed i, j
   // d2GdPidPj[4*ii+jj] is derivative w.r.t. P_i,ii and P_j,jj, where ii=0,1,2,3 for E,px,py,pz
@@ -115,6 +107,8 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
   double d2GdPdAl[4*KMAX];
   // Derivatives $\frac{\partial ^2 g}{\partial a_k \partial a_l}$ 
   double d2GdAkdAl[KMAX*KMAX];
+  
+  
   
   // Global parameter numbers: parglobal[KMAX*i+klocal] 
   // is global parameter number of local parameter klocal of i-th Fit object
@@ -188,18 +182,27 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
       }
     }
   }
-  /** Second, treat the part 
+  /** Second, treat the parts
    * $$
+   * \frac{\partial h}{\partial g}
    * \sum_i \frac{\partial g}{\partial P_i} \cdot 
    *        \frac{\partial^2 P_i}{\partial a_k \partial a_l}
    * $$
+   * and
+   * $$
+   * \frac{\partial^2 h}{\partial g^2}
+   * \sum_i \frac{\partial g}{\partial P_i} \cdot 
+   *        \frac{\partial P_i}{\partial a_k}
+   * \sum_j \frac{\partial g}{\partial P_j} \cdot 
+   *        \frac{\partial P_j}{\partial a_l}
+   * $$
+   *
    * Here, $\frac{\partial g}{\partial P_i}$ is a 4-vector, which we pass on to 
    * the FitObject
    */
   
   double *v = new double[idim];
   for (int i = 0; i < idim; ++i) v[i] = 0;
-  double fact2 = sqrt(2.0)/s;
   
   double dgdpi[4];
   for (int i = 0; i < n; ++i) {
@@ -207,7 +210,7 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
     assert (foi);
     if (firstDerivatives (i, dgdpi)) {
       foi->addTo2ndDerivatives (M, idim, fact, dgdpi);
-      foi->addToGlobalChi2DerVector (v, idim, fact2, dgdpi);
+      foi->addToGlobalChi2DerVector (v, idim, 1, dgdpi);
     }
   }
   
@@ -215,7 +218,7 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
     if (double vi = v[i]) {
       int ioffs = i*idim;
       for (double *pvj = v; pvj < v+idim; ++pvj) {
-        M[ioffs++] += vi*(*pvj);
+        M[ioffs++] += fact2*vi*(*pvj);
       }
     }
   }
@@ -227,10 +230,11 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
   delete[] v;
 }
 
-void SoftGaussParticleConstraint::addToGlobalChi2DerVector (double *y, int idim) const {
+void SoftBWParticleConstraint::addToGlobalChi2DerVector (double *y, int idim) const {
   double dgdpi[4];
-  double s = getSigma();
-  double r = 2*getValue()/(s*s);
+  double g = getGamma();
+  double v = getValue();
+  double r = 1.5*v/(g*g+v*v);
   for (unsigned int i = 0; i < fitobjects.size(); ++i) {
     const ParticleFitObject *foi = fitobjects[i];
     assert (foi);
@@ -240,8 +244,8 @@ void SoftGaussParticleConstraint::addToGlobalChi2DerVector (double *y, int idim)
   }
 }
 
-void SoftGaussParticleConstraint::test1stDerivatives () {
-  cout << "SoftGaussParticleConstraint::test1stDerivatives for " << getName() << "\n";
+void SoftBWParticleConstraint::test1stDerivatives () {
+  cout << "SoftBWParticleConstraint::test1stDerivatives for " << getName() << "\n";
   double y[100];
   for (int i = 0; i < 100; ++i) y[i]=0;
   addToGlobalChi2DerVector (y, 100);
@@ -260,8 +264,8 @@ void SoftGaussParticleConstraint::test1stDerivatives () {
     }
   }
 }
-void SoftGaussParticleConstraint::test2ndDerivatives () {
-  cout << "SoftGaussParticleConstraint::test2ndDerivatives for " << getName() << "\n";
+void SoftBWParticleConstraint::test2ndDerivatives () {
+  cout << "SoftBWParticleConstraint::test2ndDerivatives for " << getName() << "\n";
   const int idim=100;
   double *M = new double[idim*idim];
   for (int i = 0; i < idim*idim; ++i) M[i]=0;
@@ -295,7 +299,7 @@ void SoftGaussParticleConstraint::test2ndDerivatives () {
 }
 
 
-double SoftGaussParticleConstraint::num1stDerivative (int ifo, int ilocal, double eps) {
+double SoftBWParticleConstraint::num1stDerivative (int ifo, int ilocal, double eps) {
     ParticleFitObject *fo = fitobjects[ifo];
     assert (fo);
     double save = fo->getParam (ilocal);
@@ -308,7 +312,7 @@ double SoftGaussParticleConstraint::num1stDerivative (int ifo, int ilocal, doubl
     return result;
 }
 
-double SoftGaussParticleConstraint::num2ndDerivative (int ifo1, int ilocal1, double eps1,
+double SoftBWParticleConstraint::num2ndDerivative (int ifo1, int ilocal1, double eps1,
                                              int ifo2, int ilocal2, double eps2) {
   double result;
 
@@ -345,4 +349,36 @@ double SoftGaussParticleConstraint::num2ndDerivative (int ifo1, int ilocal1, dou
     fo2->setParam (ilocal2, save2);
   }
   return result;
+}
+
+double SoftBWParticleConstraint::erfinv (double x) {
+  static const double a = 8*(M_PI-3)/(3*M_PI*(4-M_PI));
+  static const double aa = 3*(4-M_PI)/(4*(M_PI-3));  // = 2/(M_PI*a);
+  double s = (x<0) ? -1 : 1;
+  x *= s;
+  if (x >= 1) return s*HUGE_VAL;
+  double ll = std::log (1 - x*x);
+  double xx = aa + 0.5*ll;
+  return s * std::sqrt(-xx + std::sqrt (xx*xx - ll/a));
+}
+
+double SoftBWParticleConstraint::penalty (double g, double gam) {
+  double x = g/gam;
+  // x is distributed according to the Cauchy distribution
+  // f(x) = 1/pi 1/(1 + x^2)
+  // The integral pdf is
+  // F(x) = 1/2 + 1/pi arctan (x)
+  // So, chi2 = 2 (erf^-1 (1 + 2 F(x)) )^2
+  //double chi = erfinv (2/M_PI *std:arctan (x));
+  //return 2*chi*chi;;
+  
+  // anyway, a very good and much simpler approximation is
+  return 0.75*std::log (1 + x*x);
+}
+
+double SoftBWParticleConstraint::penalty1stder (double g, double gam) {
+  return 2*0.75*g/(gam*gam+g*g);
+}
+double SoftBWParticleConstraint::penalty2ndder (double g, double gam) {
+  return 2*0.75*(gam*gam-g*g)/((gam*gam+g*g)*(gam*gam+g*g));
 }

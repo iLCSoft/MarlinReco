@@ -21,7 +21,7 @@
 #include "JetFitObject.h"
 #include "NeutrinoFitObject.h"
 #include "PConstraint.h"
-#include "OPALFitter.h"
+#include "OPALFitterGSL.h"
 #include "TwoB4JPairing.h"
 #include "FourJetPairing.h"
 #include "MassConstraint.h"
@@ -349,7 +349,7 @@ void TTBarExample::processEvent( LCEvent * evt ) {
          hRecTopMassNoFitAll->fill( startmass2 ) ;
 #endif        
        
-         OPALFitter fitter;
+         OPALFitterGSL fitter;
          for (int i = 0; i < NJETS; ++i)
             fitter.addFitObject (*(permutedjets[i]));
          fitter.addConstraint (pxc);

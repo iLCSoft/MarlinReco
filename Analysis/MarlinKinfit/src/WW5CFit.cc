@@ -21,8 +21,8 @@
 #include <CLHEP/Vector/LorentzVector.h>
 #include "JetFitObject.h"
 #include "PConstraint.h"
-#include "OPALFitter.h"
-//#include "NewtonFitter.h"
+#include "OPALFitterGSL.h"
+//#include "NewtonFitterGSL.h"
 #include "FourJetPairing.h"
 #include "MassConstraint.h"
 
@@ -304,8 +304,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          hRecWMassNoFitAll->fill( startmass2 ) ;
 #endif        
        
- //        NewtonFitter fitter;
-         OPALFitter fitter;
+ //        NewtonFitterGSL fitter;
+         OPALFitterGSL fitter;
          for (int i = 0; i < NJETS; ++i)
             fitter.addFitObject (*(permutedjets[i]));
          fitter.addConstraint (pxc);

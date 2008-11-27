@@ -1,7 +1,11 @@
 *  
-* $Id: fkexts.inc,v 1.2 2006-11-02 11:49:01 rasp Exp $
+* $Id: fkexts.inc,v 1.3 2008-11-27 17:08:22 engels Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2006/11/02 11:49:01  rasp
+*
+* Modified files adopted to FullLDCTracking processor
+*
 * Revision 1.1.1.1  2005/07/11 15:15:48  aplin
 * Initial version
 *
@@ -25,4 +29,3 @@
        CHARACTER*4 TYPX
        COMMON /FKEXTY/ TYPX(NEXSMX)
 
-	

@@ -55,6 +55,11 @@ using namespace marlin ;
  * @param Debug When this flag is set to one, debugging regime is enabled with a lot of printouts <br>
  * (default value is 0) <br>
  * <br>
+ * 
+ * F.Gaede: 2008-11-28
+ *    added parameter ActiveSETLayers: only SET hits from these layers will be digitized
+ *    -> used to mimic the stereo layers strip detectors (eg. use only hits from layer 1 )
+ * 
  * @author A. Raspereza, MPI (Munich)
  */
 class VTXDigiProcessor : public Processor {
@@ -102,6 +107,8 @@ class VTXDigiProcessor : public Processor {
   std::string _outColNameVTX ;
   std::string _outColNameSIT ;
   std::string _outColNameSET ;
+
+  std::vector<int> _activeSETLayers ;
 
   int _nRun ;
   int _nEvt ;

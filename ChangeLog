@@ -1,3 +1,103 @@
+2008-11-27 18:08  engels
+
+	* Tracking/BrahmsTracking/: include/cfortran.h,
+	  src/f77/include/fkexts.inc: added newline to EOF for removing
+	  compiler warnings
+
+2008-11-26 16:07  thomson
+
+	* CaloDigi/LDCCaloDigi/include/: NewLDCCaloDigi.h,
+	  SimpleLHCalDigi.h: [no log message]
+
+2008-11-26 16:06  thomson
+
+	* CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: Fix default cell id
+	  encoding
+
+2008-11-26 16:05  thomson
+
+	* CaloDigi/LDCCaloDigi/src/SimpleLHCalDigi.cc: Does what it says...
+
+2008-11-26 16:05  thomson
+
+	* CaloDigi/LDCCaloDigi/src/NewLDCCaloDigi.cc: Improved Calo
+	  digitiser for ECAL and HCAL which writes out a single collection
+	  for each input collection to allow for possible CellID encoding
+
+2008-11-25 14:39  beckmann
+
+	* Analysis/MarlinKinfit/src/: TTBarExample.cc, WW5CFit.cc: Fixed
+	  obsolete include (OPALFitter -> OPALFitterGSL)
+
+2008-11-24 12:01  beckmann
+
+	* Analysis/MarlinKinfit/: include/BaseConstraint.h,
+	  include/BaseEvent.h, include/BaseFitObject.h,
+	  include/BaseFitter.h, include/BaseHardConstraint.h,
+	  include/BaseJetPairing.h, include/BaseSoftConstraint.h,
+	  include/EConstraint.h, include/FourJetPairing.h,
+	  include/FourVector.h, include/JetFitObject.h,
+	  include/MassConstraint.h, include/MomentumConstraint.h,
+	  include/NeutrinoFitObject.h, include/NewtonFitter.h,
+	  include/NewtonFitterGSL.h, include/OPALFitter.h,
+	  include/OPALFitterGSL.h, include/PConstraint.h,
+	  include/ParticleConstraint.h, include/ParticleFitObject.h,
+	  include/PhotonFitObject.h, include/PxConstraint.h,
+	  include/PyConstraint.h, include/PzConstraint.h,
+	  include/SoftBWMassConstraint.h,
+	  include/SoftBWParticleConstraint.h,
+	  include/SoftGaussMassConstraint.h,
+	  include/SoftGaussMomentumConstraint.h,
+	  include/SoftGaussParticleConstraint.h, include/TTBarExample.h,
+	  include/ThreeVector.h, include/TopEventILC.h,
+	  include/TopEventILCSoft.h, include/TwoB4JPairing.h,
+	  include/WW5CFit.h, include/cernlib.h, src/BaseFitObject.cc,
+	  src/BaseFitter.cc, src/EConstraint.cc, src/FourJetPairing.cc,
+	  src/FourVector.cc, src/JetFitObject.cc, src/Makefile,
+	  src/MassConstraint.cc, src/MomentumConstraint.cc,
+	  src/NeutrinoFitObject.cc, src/NewtonFitter.cc,
+	  src/NewtonFitterGSL.cc, src/OPALFitter.cc, src/OPALFitterGSL.cc,
+	  src/PConstraint.cc, src/ParticleConstraint.cc,
+	  src/ParticleFitObject.cc, src/PhotonFitObject.cc,
+	  src/PxConstraint.cc, src/PyConstraint.cc, src/PzConstraint.cc,
+	  src/SoftBWMassConstraint.cc, src/SoftBWParticleConstraint.cc,
+	  src/SoftGaussMassConstraint.cc,
+	  src/SoftGaussMomentumConstraint.cc,
+	  src/SoftGaussParticleConstraint.cc, src/TopEventILC.cc,
+	  src/TopEventILCSoft.cc, src/TwoB4JPairing.cc, src/WW5CFit.cc:
+	  Replaced OPALFitter and NewtonFitter by OPALFitterGSL and
+	  NewtonFitterGSL. New PhotonFitObject to describe ISR photons.
+	  Several Bug Fixes.
+
+2008-11-21 13:00  engels
+
+	* MarlinRecoConfig.cmake.in, src/CMakeLists.txt: bug fix: libg2c in
+	  64 bit
+
+2008-11-21 11:52  engels
+
+	* CMakeLists.txt: bug fix: added -m32 to global link flags
+
+2008-11-13 11:18  aplin
+
+	* Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: added the
+	  event number to the debug output statment
+
+2008-11-13 11:17  aplin
+
+	* Tracking/BrahmsTracking/src/f77/: fkkalm.F, tfcand.F, tflnks.F:
+	  changed some "IF(X.NE.0.AND.Y(X).EQ.Z)" to "IF(A.NE.0) THEN
+	  IF(Y(A).EQ.Z)", this allows the array out of bounds checking to
+	  funtion properly, for an acceptable small overhead in performace.
+	  As a temporary fix increased LILLY in tflnks and IBUFF in tfcand
+	  to 1000. This will stop the crashes for now but some protection
+	  is needed.
+
+2008-10-31 17:54  gaede
+
+	* CMakeLists.txt, ChangeLog, doc/release.notes: --------------
+	  version v00-12-01 ---------------
+
 2008-10-29 19:40  aplin
 
 	* Tracking/BrahmsTracking/src/f77/tflnks.F: fixed a bug where a

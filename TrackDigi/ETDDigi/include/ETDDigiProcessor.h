@@ -38,6 +38,9 @@ using namespace marlin ;
  * <br>
  * 
  * [F.Gaede: this is a one to one copy of the original FTDDigiProcessor]
+ * F.Gaede: 2008-11-28
+ *    added parameter ActiveLayers: only hits from these layers will be digitized
+ *    -> used to mimic the stereo layers strip detectors (eg. use only hits from layers -2,2)
  * 
  * @author A. Raspereza, MPI (Munich)
  */
@@ -80,6 +83,8 @@ class ETDDigiProcessor : public Processor {
    */
   std::string _colName ;
   std::string _outColName ;
+
+  std::vector<int> _activeLayers ;
 
   int _nRun ;
   int _nEvt ;

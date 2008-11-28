@@ -59,6 +59,14 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               _pointResoZ_SET ,
                               float(0.010));
 
+  std::vector<int> activeSETLayers ;
+  activeSETLayers.push_back( 1 ) ;
+  
+  registerProcessorParameter( "ActiveSETLayers",
+                              "only SET hits from active layers are digitized (mimic stereo layers)",
+                              _activeSETLayers,
+                              activeSETLayers );
+  
   registerProcessorParameter( "RemoveDrays" ,
                               "Remove D-rays ?",
                               _removeDRays,
@@ -163,7 +171,19 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
       for(int i=0; i< nSimHits; i++){
       
         SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
-
+        
+        //fg: --- accept only activeSETLayers :
+        if( iColl==2 ) { // SET 
+          
+          // fg: the layer number is the cellID (for Mokka at least) 
+          int cellID = SimTHit->getCellID() ;
+          
+          if( find(_activeSETLayers.begin(),_activeSETLayers.end(),cellID)==_activeSETLayers.end() ) {
+            
+            continue ;   // ----------------- ignore hit 
+          } 
+        }
+        
         bool accept = 1;
         if (_removeDRays) { // check if hit originates from delta-electron 
           float totMomentum = 0;

@@ -4,6 +4,28 @@
 
 ================================
 
+ --------
+| v00-13 |
+ --------
+  * LDCCaloDigi  (M.Thomson)
+     - SimpleMuonDigi:  fix default cell id encoding
+     - SimpleLHCalDigi: new digitizer
+     - NewLDCCaloDigi: improved Calo
+       digitiser for ECAL and HCAL which writes out a single collection
+       for each input collection to allow for possible CellID encoding
+
+  * MarlinKinfit (M.Beckmann)
+     - Replaced OPALFitter and NewtonFitter by OPALFitterGSL and
+       NewtonFitterGSL. New PhotonFitObject to describe ISR photons.
+       Several Bug Fixes.
+
+
+  * bug fixes (J.Engels,S.Aplin)
+    - removed compiler warnings in BrahmsTracking (cfortran.h,fkexts.inc)
+    - CMake: bug fix: libg2c in 64 bit, added -m32 to global link flags
+    - BrahmsTracking: fixed of bounds checking, buffer sizes
+
+
  -----------
 | v00-12-01 |
  -----------

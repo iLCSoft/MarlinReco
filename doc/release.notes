@@ -7,6 +7,10 @@
  --------
 | v00-13 |
  --------
+  * TrackDigi (F.Gaede)
+    - ETDDigiProcessor/VTXDigiProcessor: 
+      added active(SET)Layers parameter to mimic stereo layer readout by ignoring some layers
+
   * LDCCaloDigi  (M.Thomson)
      - SimpleMuonDigi:  fix default cell id encoding
      - SimpleLHCalDigi: new digitizer
@@ -18,7 +22,6 @@
      - Replaced OPALFitter and NewtonFitter by OPALFitterGSL and
        NewtonFitterGSL. New PhotonFitObject to describe ISR photons.
        Several Bug Fixes.
-
 
   * bug fixes (J.Engels,S.Aplin)
     - removed compiler warnings in BrahmsTracking (cfortran.h,fkexts.inc)

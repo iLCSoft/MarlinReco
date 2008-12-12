@@ -5,6 +5,12 @@
 ================================
 
  --------
+| v00-14 |
+ --------
+   * modified calorimeter digitizers to encode CalorimeterHit types
+     with CalorimeterHitType class from MarlinUtil ( need v00-13 or higher )
+
+ --------
 | v00-13 |
  --------
   * TrackDigi (F.Gaede)

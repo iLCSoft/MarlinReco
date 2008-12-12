@@ -1,3 +1,17 @@
+2008-11-28 17:06  gaede
+
+	* CMakeLists.txt, doc/release.notes: -------------- version v00-13
+	  ------------
+
+2008-11-28 17:03  gaede
+
+	* ChangeLog, TrackDigi/ETDDigi/include/ETDDigiProcessor.h,
+	  TrackDigi/ETDDigi/src/ETDDigiProcessor.cc,
+	  TrackDigi/VTXDigi/include/VTXDigiProcessor.h,
+	  TrackDigi/VTXDigi/src/VTXDigiProcessor.cc, doc/release.notes:
+	  added active(SET)Layers parameter to mimic stereo layer readout
+	  by ignoring some layers
+
 2008-11-27 18:08  engels
 
 	* Tracking/BrahmsTracking/: include/cfortran.h,

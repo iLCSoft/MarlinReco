@@ -7,8 +7,12 @@
 #include <IMPL/LCRelationImpl.h>
 #include <EVENT/LCParameters.h>
 #include <UTIL/CellIDDecoder.h>
-#include <iostream>
+
+#include <algorithm>
 #include <string>
+#include <cctype> 
+
+#include "CalorimeterHitType.h"
 
 using namespace std;
 using namespace lcio ;
@@ -17,6 +21,13 @@ using namespace marlin ;
 
 SimpleMuonDigi aSimpleMuonDigi ;
 
+
+// helper struct for string comparision
+struct ToLower{
+  int operator() ( int ch ) {
+    return std::tolower ( ch );
+  }  
+}; 
 
 SimpleMuonDigi::SimpleMuonDigi() : Processor("SimpleMuonDigi") {
 
@@ -91,6 +102,23 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
   // 
   string initString;
   for (unsigned int i(0); i < _muonCollections.size(); ++i) {
+
+    std::string colName =  _muonCollections[i] ;
+    std::transform( colName.begin() , colName.end() , colName.begin(), ToLower() ) ;
+    
+    //fg: need to establish the yoke subdetetcor part here 
+    //    use collection name as cellID does not seem to have that information
+    CHT::Layout caloLayout = CHT::any ;
+    if( colName == "barrel" )
+      caloLayout = CHT::barrel ;
+    else 
+      if( colName == "endcap" )
+	caloLayout = CHT::endcap ;
+      else
+	if( colName == "plug" )
+	  caloLayout = CHT::plug ;
+    
+    
     try{
       LCCollection * col = evt->getCollection( _muonCollections[i].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -99,7 +127,7 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
       for (int j(0); j < numElements; ++j) {
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	float energy = hit->getEnergy();
-
+	
 	if (energy > _thresholdMuon) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 	  int cellid = hit->getCellID0();
@@ -111,7 +139,10 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 	  calhit->setCellID1(cellid1);
 	  calhit->setEnergy(calibr_coeff*energy);
 	  calhit->setPosition(hit->getPosition());
-	  calhit->setType((int)0);
+
+	  calhit->setType( CHT( CHT::muon, CHT::yoke, caloLayout ,  idDecoder(hit)["K-1"] ) );
+
+
 	  calhit->setRawHit(hit);
 	  muoncol->addElement(calhit);
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);

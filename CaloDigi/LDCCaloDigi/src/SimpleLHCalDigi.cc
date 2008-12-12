@@ -11,6 +11,8 @@
 #include <string>
 #include <math.h>
 
+#include "CalorimeterHitType.h"
+
 using namespace std;
 using namespace lcio ;
 using namespace marlin ;
@@ -113,7 +115,9 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
 	  pos[1] = hit->getPosition()[1];
 	  pos[2] = hit->getPosition()[2];
 	  calhit->setPosition(pos);
-	  calhit->setType((int)0);
+
+	  calhit->setType( CHT( CHT::had, CHT::lhcal, CHT::endcap ,  idDecoder(hit)["K-1"] ) );
+
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);

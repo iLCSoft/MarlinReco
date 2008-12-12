@@ -16,7 +16,11 @@
 #include <UTIL/CellIDDecoder.h>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <cmath>
+
+#include "CalorimeterHitType.h"
+
 
 using namespace std;
 using namespace lcio ;
@@ -30,6 +34,14 @@ const float twopi = 2.0*pi;
 
 NewLDCCaloDigi aNewLDCCaloDigi ;
 
+
+
+// helper struct for string comparision
+struct ToLower{
+  int operator() ( int ch ) {
+    return std::tolower ( ch );
+  }  
+}; 
 
 NewLDCCaloDigi::NewLDCCaloDigi() : Processor("NewLDCCaloDigi") {
 
@@ -259,6 +271,22 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
   // * Reading Collections of ECAL Simulated Hits * 
   // 
   for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
+
+    std::string colName =  _ecalCollections[i] ;
+    std::transform( colName.begin() , colName.end() , colName.begin(), ToLower() ) ;
+    
+    //fg: need to establish the subdetetcor part here 
+    //    use collection name as cellID does not seem to have that information
+    CHT::Layout caloLayout = CHT::any ;
+    if( colName == "barrel" )
+      caloLayout = CHT::barrel ;
+    else 
+      if( colName == "endcap" )
+	caloLayout = CHT::endcap ;
+      else
+	if( colName == "plug" )
+	  caloLayout = CHT::plug ;
+    
     try{
       LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -324,7 +352,9 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 	  }
 	  // set other ECAL quanties
 	  calhit->setPosition(hit->getPosition());
-	  calhit->setType((int)0);
+
+	  calhit->setType( CHT( CHT::em, CHT::ecal, caloLayout ,  layer ) );
+
 	  calhit->setRawHit(hit);
 	  calhit->setCellID0(cellid);
 	  calhit->setCellID1(cellid1);
@@ -350,6 +380,22 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
   //
 
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
+
+    std::string colName =  _hcalCollections[i] ;
+    std::transform( colName.begin() , colName.end() , colName.begin(), ToLower() ) ;
+
+    //fg: need to establish the subdetetcor part here 
+    //    use collection name as cellID does not seem to have that information
+    CHT::Layout caloLayout = CHT::any ;
+    if( colName == "barrel" )
+      caloLayout = CHT::barrel ;
+    else 
+      if( colName == "endcap" )
+	caloLayout = CHT::endcap ;
+      else
+	if( colName == "ring" )
+	  caloLayout = CHT::plug ;
+    
     try{
       LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -388,7 +434,10 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 	    calhit->setEnergy(calibr_coeff*energy);
 	  }
 	  calhit->setPosition(hit->getPosition());
-	  calhit->setType(int(1));
+
+	  calhit->setType( CHT( CHT::had, CHT::hcal , caloLayout ,  layer ) );
+
+
 	  calhit->setRawHit(hit);
 	  hcalcol->addElement(calhit);
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);

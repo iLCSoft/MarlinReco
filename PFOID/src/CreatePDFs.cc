@@ -22,6 +22,8 @@
 #include <UTIL/LCRelationNavigator.h>
 #include <EVENT/MCParticle.h>
 
+#include <gear/BField.h>
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -75,11 +77,13 @@ void CreatePDFs::init() {
   if(_chStart.size()==0){
     std::cout << " [CreatePDFs : WARN] - No charged PDF file is created;";
     std::cout << " No category event start numbers are specified!\n";
+    exit(-1);
   }
 
   if(_nStart.size()==0){
     std::cout << " [CreatePDFs : WARN] - No neutral PDF file is created;";
     std::cout << " No category event start numbers are specified!\n";
+    exit(-1);
   }
 
   for(unsigned int i=1; i<_chStart.size(); i++){
@@ -158,9 +162,13 @@ void CreatePDFs::init() {
   }
 
 
-  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  _bField = float(gearTPC.getDoubleVal("BField"));
+  //  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+  //  _bField = float(gearTPC.getDoubleVal("BField"));
   
+  // Intitialization of some constants and cuts
+  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+
+
 
   myindex=0;
   MyPidCol.clear();

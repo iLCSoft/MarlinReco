@@ -39,14 +39,35 @@ PFOID::PFOID() : Processor("PFOID") {
 			     _recoCol,
 			     std::string("RecoParticles")) ;
 
+  std::vector<std::string> filenamesC;
+  filenamesC.push_back(std::string("pdf_charged_lt10.txt"));
+  filenamesC.push_back(std::string("pdf_charged_ge10.txt"));
+  
   registerProcessorParameter("FilePDFName",
-			     "Name of file containing pdfs",
-			     _filename,std::string("pdf_n.txt")) ;
+			     "Name of files containing pdfs for charged particles",
+			     _filesCharged,
+			     filenamesC) ;
+
+  std::vector<std::string> filenamesN;
+  filenamesN.push_back(std::string("pdf_neutral_lt10.txt"));
+  filenamesN.push_back(std::string("pdf_neutral_ge10.txt"));
+
 
   registerProcessorParameter("neutralFilePDFName",
-			     "Name of file containing pdfs for neutral particle",
-			     _filename1,
-			     std::string("npdf_n.txt")) ;
+			     "Name of files containing pdfs for neutral particles",
+			     _filesNeutral,
+			     filenamesN) ;
+
+  std::vector<float> energies;
+  energies.push_back(0.);
+  energies.push_back(10.);
+  energies.push_back(10000000.);
+  
+  registerProcessorParameter("EnergyBoundaries",
+			     "Boundary for energy binning",
+			     _energyBoundaries,
+			     energies);
+  
 
   registerProcessorParameter("Debug",
 			     "Debugging?",
@@ -64,8 +85,41 @@ void PFOID::init() {
   std::cout << "         PFOID            " << std::endl ;
   std::cout << " ************************** " << std::endl ;
 
-  pdf = new PDF(_filename.c_str());
-  npdf = new PDF(_filename1.c_str());
+  int nB  = int(_energyBoundaries.size());
+
+  int nFC = int(_filesCharged.size());
+
+  int nFN = int(_filesNeutral.size());
+
+  bool consistency = (nFC==(nB-1));
+  consistency = consistency && nFC==nFN;
+
+  if (!consistency) {
+    std::cout << "Inconsistency in the number of energy bins and/or number of pdf files" << std::endl;
+    std::cout << "Number of boundaries should be equal to number of pdf files plus one" << std::endl;
+    std::cout << "Number of pdf files for neutral particles should be equal to the number of pdf files for charged particles" << std::endl;
+    std::cout << "Check your steering file" << std::endl;
+    exit(-1);
+  }
+
+  for (int i=0;i<nB-1;++i) {
+    if (_energyBoundaries[i]>=_energyBoundaries[i+1]) {
+      std::cout << "energy boundaries should be specified in ascending order" << std::endl;
+      std::cout << "Check your steering file" << std::endl;
+      exit(-2);
+    }
+
+  }
+
+  _nEnergyBins = nFC;
+
+  for (int i=0;i<nFC;++i) {
+    _pdfCharged.push_back(new PDF(_filesCharged[i]));
+    _pdfNeutral.push_back(new PDF(_filesNeutral[i]));
+  }
+
+  //  pdf = new PDF(_filename.c_str());
+  //  npdf = new PDF(_filename1.c_str());
 
   noClusterParticle=0;
 
@@ -109,6 +163,20 @@ void PFOID::processEvent( LCEvent * evt ) {
     for(int i=0; i<nRecos; i++){  // over all reco. particles
       ReconstructedParticle *recopart = dynamic_cast<ReconstructedParticle*>(col->getElementAt(i));
 
+      float energy = recopart->getEnergy();
+
+      int eBin = 0;
+
+      for (int iBin=0;iBin<_nEnergyBins;++iBin) {
+	if ( energy >= _energyBoundaries[iBin] && 
+	     energy <  _energyBoundaries[iBin+1]) {
+	  eBin = iBin;
+	  break;
+	}
+      }
+
+      pdf = _pdfCharged[eBin];
+      npdf = _pdfNeutral[eBin];
 
       fill_info(i,recopart); // fills also pdf->VO or npdf->VO
       ClusterVec clv = recopart->getClusters();

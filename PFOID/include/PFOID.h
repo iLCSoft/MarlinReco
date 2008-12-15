@@ -32,8 +32,9 @@ using namespace marlin ;
  * - cluster eccentricity (ratio of the cluster width to the cluster length); <br>
  * - average hit energy in ECAL; <br>
  * - average hit energy in HCAL; <br>
- * - number of hits in the last three layers of ECAL; <br>
- * - number of hits in the last three layers of HCAL. <br>
+ * - first ECAL layer index in the calorimeter cluster 
+ * (this variable is used only for neutral particles); <br>
+ * - last HCAL layer index in the calorimeter cluster. <br>
  * For each particle reconstructed by particle flow algorithm, processor 
  * assigned ParticleID object, containing information about particle type.
  * The type of particle,  PDG code and likelihood can be accessed using
@@ -58,18 +59,25 @@ using namespace marlin ;
  * <h4>Input collections and prerequisites</h4> 
  * Processor requires collection of reconstructed particles. The name
  * of collection is specified via processor parameter "RecoParticleCollection".
- * Furthermore, ASCII files, containing PDF's of variables entering likelihood
- * must be provided separately for charged and neutral particles. 
- * The name of ASCII files are provided by processor parameters
+ * Furthermore, a set of ASCII files, containing PDF's of variables entering likelihood
+ * must be provided separately for charged and neutral particles for different 
+ * energy bins. Ranges of energy bins are defined via processor parameter "EnergyBoundaries".
+ * The names of ASCII files are provided by processor parameters
  * "FilePDFName" (for charged particles) and neutralFilePDFName (for neutral particles). <br>
  * <h4>Output</h4>
  * Processor assigns ParticleID objects to all reconstructed particles in event. <br>
  * @param RecoParticleCollection name of input collection of particles reconstructed by PFA (e.g. PandoraPFA) <br>
  * (default parameter value : "RecoParticles") <br>
- * @param FilePDFName name of ASCII file with pdf's of charged particles<br>
- * (default parameter value : "pdf_n.txt") <br>
- * @param neutralFilePDFName name of ASCII file with pdf's of neutral particles<br>
- * (default parameter value : "npdf_n.txt") <br> 
+ * @param FilePDFName names of ASCII files with pdf's of charged particles. Each file corresponds to certain energy bin. 
+ * The order of files must be consistent with the energy bins. <br>
+ * (default parameter value : "pdf_ILD00.txt") <br>
+ * @param neutralFilePDFName names of ASCII files with pdf's of neutral particles. Each file corresponds to certain energy bin. 
+ * The order of files must be consistent with the energy bins. <br>
+ * (default parameter value : "npdf_ILD00.txt" . Only one energy bin, covering entire energy range, is assumed) <br> 
+ * @param EnergyBoundaries the vector of energy boundaries, corresponding to different pdf files. The number of ranges 
+ * should be consistent with the number of ASCII pdf files for charged and neutral particles (The number of boundaries equals
+ * to the number of ASCII pdf files plus one). <br>
+ * (default parameter values : 0.0 10000000.0 . Only one energy bin, covering the whole energy range, is assumed) <br>
  * @param Debug  debugging option <br>
  * (default parameter value : 0) <br>
  * <br>
@@ -105,9 +113,9 @@ class PFOID : public Processor {
   int _debug;
 
   std::string _recoCol ;    // reconstructed particle Collection
-  std::string _newrecoCol ;
-  std::string _filename ;   // Name of file containing the pdfs (charged)
-  std::string _filename1 ;  // Name of file containing the pdfs (neautral)
+  //  std::string _newrecoCol ;
+  //  std::string _filename ;   // Name of file containing the pdfs (charged)
+  //  std::string _filename1 ;  // Name of file containing the pdfs (neautral)
   float _bField;
   int noClusterParticle;
 
@@ -127,6 +135,16 @@ class PFOID : public Processor {
 
   void init_info();
   void fill_info(int i, ReconstructedParticle *rp);
+
+  std::vector<std::string> _filesCharged; // Names of files, containing pdfs (charged) 
+  std::vector<std::string> _filesNeutral; // Names of files, containing pdfs (neutral)
+
+  std::vector<PDF*> _pdfCharged; // set of PDFs for various energy bins (charged)
+  std::vector<PDF*> _pdfNeutral; // set of PDFs for various energy bins (neutral)
+
+  std::vector<float> _energyBoundaries; // energy boundaries defining binning in energy for PDFs
+
+  int _nEnergyBins;
 
   PDF *pdf, *npdf;
 

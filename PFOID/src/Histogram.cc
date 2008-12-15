@@ -294,7 +294,15 @@ double Histogram::GetContent(VObject *VO){
   int mind = cindex(index,bins,dim);
 
   delete[] index;
-  return content[mind];
+
+  if (mind>totNoOfBins-1)
+    mind = totNoOfBins-1;
+
+  double result = content[mind];
+
+  if (result <=0 ) result = 1e-20;
+  
+  return result;
 
 }
 
@@ -341,7 +349,16 @@ double Histogram::GetNormContent(VObject *VO){
   int mind = cindex(index,bins,dim);
 
   delete[] index;
-  return content[mind]/norm;
+
+  if (norm < 1e-20) norm = 1e-20;
+
+  if (mind>totNoOfBins-1)
+    mind = totNoOfBins-1;
+
+  double result = content[mind]/norm;
+  if (result <= 0 ) result = 1e-20;
+  return result;
+
 }
 
 

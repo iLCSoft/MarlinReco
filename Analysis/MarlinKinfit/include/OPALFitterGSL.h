@@ -3,16 +3,19 @@
  *  \brief Declares class OPALFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2008-11-24 11:01:01 $
- *          by: $Author: beckmann $
- * $Date: 2008-11-24 11:01:01 $
- * $Author: beckmann $
+ * Last update: $Date: 2008-12-17 15:42:48 $
+ *          by: $Author: gaede $
+ * $Date: 2008-12-17 15:42:48 $
+ * $Author: gaede $
  *
  * \b Changelog:
  * - 2.10.08 BL: First version, based on OPALFitter
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2008/11/24 11:01:01  beckmann
+ * - Replaced OPALFitter and NewtonFitter by OPALFitterGSL and NewtonFitterGSL. New PhotonFitObject to describe ISR photons. Several Bug Fixes.
+ * -
  * - Revision 1.1  2008/10/16 08:13:36  blist
  * - New versions of OPALfitter and Newtonfitter using GSL
  * -
@@ -23,8 +26,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008-11-24 11:01:01 $
-//          by: $Author: beckmann $
+// Last update: $Date: 2008-12-17 15:42:48 $
+//          by: $Author: gaede $
 // 
 // Description: kinematic fit a la WWFGO
 //               
@@ -58,11 +61,11 @@ class BaseConstraint;
  * OPALFitter::fit first initializes the global parameter numbering
  * using OPALFitter::initialize.
  *
- * Then it initializes vectors etaxi (\f$ \etaxi\f$)  and y (\f$ \vec y\f$)
+ * Then it initializes vectors etaxi (\f$ \eta\xi\f$)  and y (\f$ \vec y\f$)
  * with the current  parameter values.
  *
  * Next it initializes the matrix Feta that represents 
- * \f$d \vec F / d \vec \etaxi\f$
+ * \f$d \vec F / d \vec \eta\xi\f$
  *
  * Used methods in OPALFitter::initialize:
  * - BaseFitObject::getNPar

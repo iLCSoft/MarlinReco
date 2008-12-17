@@ -1,3 +1,39 @@
+2008-12-15 17:13  rasp
+
+	* PFOID/src/Histogram.cc: Bug fix : Protection against situation
+	  when array index is outside array range.
+
+2008-12-15 12:04  rasp
+
+	* PFOID/src/CreatePDFs.cc: BField is defined via gear parameter.
+
+2008-12-15 09:01  rasp
+
+	* PFOID/: include/PFOID.h, src/PFOID.cc: Updated version of PFOID
+	  processor. Energy dependent scheme of particle identification is
+	  implemented.
+
+2008-12-15 08:55  rasp
+
+	* PFOID/: pdf_charged_ge10.txt, pdf_charged_lt10.txt,
+	  pdf_neutral_ge10.txt, pdf_neutral_lt10.txt: New pdf files for
+	  particle ID procedure.
+
+2008-12-12 18:38  gaede
+
+	* CMakeLists.txt, doc/release.notes: ------------- version v00-14
+	  -----------------
+
+2008-12-12 18:35  gaede
+
+	* ChangeLog, CaloDigi/LDCCaloDigi/src/NewLDCCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleLCalDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleLHCalDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: use class
+	  CalorimeterHitType (CHT) from MarlinUtil to encode CalorimeterHit
+	  types
+
 2008-11-28 17:06  gaede
 
 	* CMakeLists.txt, doc/release.notes: -------------- version v00-13

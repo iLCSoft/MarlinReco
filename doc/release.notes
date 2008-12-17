@@ -5,6 +5,15 @@
 ================================
 
  --------
+| v00-15 |
+ --------
+     * PFOID (A.Raspereza) 
+       - Updated version of PFOID processor. Energy dependent scheme of 
+         particle identification is implemented.
+       - bug fix in Histogram.cc (array out of bounds)
+       -  New pdf files for energy dependent particle ID procedure
+
+ --------
 | v00-14 |
  --------
    * modified calorimeter digitizers to encode CalorimeterHit types

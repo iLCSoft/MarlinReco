@@ -63,7 +63,7 @@ const int MAX_STAVES =  16;
  *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
  *  @author M. Thomson (DESY) <br>
- *  @version $Id: NewLDCCaloDigi.h,v 1.1 2008-11-26 15:07:04 thomson Exp $ <br>
+ *  @version $Id: NewLDCCaloDigi.h,v 1.2 2009-01-23 14:35:07 thomson Exp $ <br>
  */
 class NewLDCCaloDigi : public Processor {
   
@@ -107,7 +107,7 @@ class NewLDCCaloDigi : public Processor {
   std::string _outputRelCollection;
 
   float _thresholdEcal;
-  float _thresholdHcal;
+  std::vector<float> _thresholdHcal;
 
   int _digitalEcal;
   int _digitalHcal;
@@ -122,6 +122,7 @@ class NewLDCCaloDigi : public Processor {
   float _ecalGapCorrectionFactor;
   float _ecalModuleGapCorrectionFactor;
   float _ecalEndcapCorrectionFactor;
+  float _hcalEndcapCorrectionFactor;
 
   std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
   std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];

@@ -122,10 +122,14 @@ NewLDCCaloDigi::NewLDCCaloDigi() : Processor("NewLDCCaloDigi") {
 			     _thresholdEcal,
 			     (float)5.0e-5);
 
+
+
+  std::vector<float> hcalThresholds;
+  hcalThresholds.push_back(0.00004);
   registerProcessorParameter("HCALThreshold" , 
 			     "Threshold for HCAL Hits in GeV" ,
 			     _thresholdHcal,
-			     (float)2.5e-5);
+			     hcalThresholds);
 
 
   std::vector<int> ecalLayers;
@@ -185,9 +189,14 @@ NewLDCCaloDigi::NewLDCCaloDigi() : Processor("NewLDCCaloDigi") {
 			     _ecalGapCorrection,
 			     (int)1);
 
-  registerProcessorParameter("ECAlEndcapCorrectionFactor" , 
-			     "Energy correction for endcap" ,
+  registerProcessorParameter("ECALEndcapCorrectionFactor" , 
+			     "Energy correction for ECAL endcap" ,
 			     _ecalEndcapCorrectionFactor,
+			     (float)1.025);
+
+  registerProcessorParameter("HCALEndcapCorrectionFactor" , 
+			     "Energy correction for HCAL endcap" ,
+			     _hcalEndcapCorrectionFactor,
 			     (float)1.025);
 
   registerProcessorParameter("ECALGapCorrectionFactor" , 
@@ -406,33 +415,52 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
       for (int j(0); j < numElements; ++j) {
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	float energy = hit->getEnergy();
-	if (energy > _thresholdHcal) {
+	//std::cout << " Hit energy " << energy << std::endl;
+	if (energy > _thresholdHcal[0]) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 	  int cellid = hit->getCellID0();
 	  int cellid1 = hit->getCellID1();
 	  float calibr_coeff(1.);
-	  int layer =idDecoder(hit)["K-1"]; 
-	  for (unsigned int k(0); k < _hcalLayers.size(); ++k) {
-	    int min,max;
-	    if (k == 0) 
-	      min = 0;
-	    else 
-	      min = _hcalLayers[k-1];
-	    max = _hcalLayers[k];
-	    if (layer >= min && layer < max) {
-	      calibr_coeff = _calibrCoeffHcal[k];
-	      break;
+	  int layer =idDecoder(hit)["K-1"];
+	  // NOTE : for a digital HCAL this does not allow for varying layer thickness
+	  // with depth - would need a simple mod to make response proportional to layer thickness
+	  if(_digitalHcal){
+	    int ilevel = 0;
+	    for(unsigned int ithresh=1;ithresh<_thresholdHcal.size();ithresh++){
+	      // Assume!!!  hit energies are stored as floats, i.e. 1, 2 or 3
+	      if(energy>_thresholdHcal[ithresh])ilevel=ithresh;   // ilevel = 0 , 1, 2
 	    }
-	  } 
-
+	    if(ilevel>_calibrCoeffHcal.size()-1){
+	      streamlog_out(ERROR)  << " Semi-digital level " << ilevel  << " greater than number of HCAL Calibration Constants (" <<_calibrCoeffHcal.size() << ")" << std::endl;
+	    }else{
+	      calibr_coeff = _calibrCoeffHcal[ilevel];
+	    }
+	  }else{
+	    for (unsigned int k(0); k < _hcalLayers.size(); ++k) {
+	      int min,max;
+	      if (k == 0) 
+		min = 0;
+	      else 
+		min = _hcalLayers[k-1];
+	      max = _hcalLayers[k];
+	      if (layer >= min && layer < max) {
+		calibr_coeff = _calibrCoeffHcal[k];
+		break;
+	      }
+	    } 
+	  }
+	  
 	  calhit->setCellID0(cellid);		  
 	  calhit->setCellID1(cellid1);
 	  if (_digitalHcal) {
 	    calhit->setEnergy(calibr_coeff); 
-	  }
-	  else {
+	  } else{ 
+	    if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)energy=energy*_hcalEndcapCorrectionFactor;
 	    calhit->setEnergy(calibr_coeff*energy);
 	  }
+	  
+	
+
 	  calhit->setPosition(hit->getPosition());
 
 	  calhit->setType( CHT( CHT::had, CHT::hcal , caloLayout ,  layer ) );
@@ -443,7 +471,7 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
 	  relcol->addElement( rel );
 	}
-
+	
       }
       // add HCAL collection to event
       hcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);

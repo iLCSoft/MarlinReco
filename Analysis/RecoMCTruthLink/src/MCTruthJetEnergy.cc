@@ -160,7 +160,8 @@ void MCTruthJetEnergy::processEvent( LCEvent * evt ) {
 
 	  MCParticle* mcp = dynamic_cast<MCParticle*>( mcpvec[0] ) ;
 	
-	  mcpset.insert( mcp );
+	  if( mcp != 0 ) 
+		  mcpset.insert( mcp );
 	}
 	else {
 

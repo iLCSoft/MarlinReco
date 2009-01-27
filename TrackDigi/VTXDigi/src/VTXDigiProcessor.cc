@@ -416,7 +416,13 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
           trkHit->setCovMatrix(covMat);      
           // 	  push back the SimTHit for this TrackerHit
-          trkHit->rawHits().push_back( SimTHit ) ;
+          // fg: only if we have a sim hit with proper link to MC truth
+          if( mcp != 0 )  {
+            trkHit->rawHits().push_back( SimTHit ) ;
+		  }
+		  //else{
+		  //  streamlog_out( DEBUG ) << " ignore simhit pointer as MCParticle pointer is NULL ! " << std::endl ;
+		  //}
           trkhitVec->addElement( trkHit ) ; 
         }      
 

@@ -294,7 +294,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
     LCCollectionVec * STHLocCol = NULL;
     //    LCCollectionVec * THLocCol = NULL;
     //    LCCollectionVec * RelLocCol = NULL;
-    if (_produceFullPattern == 1) {
+    if (_produceFullPattern != 0) {
       STHLocCol = new LCCollectionVec(LCIO::SIMTRACKERHIT);
       //      THLocCol = new LCCollectionVec(LCIO::TRACKERHIT);
       //      RelLocCol = new LCCollectionVec(LCIO::LCRELATION);
@@ -407,7 +407,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 
     evt->addCollection(THcol,_outputCollectionName.c_str());
     //    evt->addCollection(RelCol, _colVTXRelation );
-    if (_produceFullPattern == 1) {
+    if (_produceFullPattern != 0) {
       evt->addCollection(STHLocCol,"VTXPixels");
       //      evt->addCollection(THLocCol,"VTXLocalTrackerHits");
       //      evt->addCollection(RelLocCol,"VTXLocalRelation");

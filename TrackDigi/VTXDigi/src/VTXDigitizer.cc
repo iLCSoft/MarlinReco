@@ -43,7 +43,7 @@ VTXDigitizer::VTXDigitizer() : Processor("VTXDigitizer") {
                            "CollectionName" , 
                            "Name of the SimTrackerHit collection"  ,
                            _colName ,
-                           std::string("vxd01_VXD") ) ;
+                           std::string("VXDCollection") ) ;
 
   registerOutputCollection( LCIO::TRACKERHIT,
                             "OutputCollectionName" , 
@@ -143,8 +143,8 @@ VTXDigitizer::VTXDigitizer() : Processor("VTXDigitizer") {
                              _electronicNoise,
                              100.);
 
-  registerProcessorParameter("AdditionalCollections",
-                             "Additional Collections to store hit position in the local ladder frame",
+  registerProcessorParameter("StoreFiredPixels",
+                             "Store fired pixels",
                              _produceFullPattern,
                              int(0));
 
@@ -185,6 +185,11 @@ void VTXDigitizer::init() {
   _nEvt = 0 ;
   _totEntries = 0;
   _fluctuate = new MyG4UniversalFluctuationForSi();
+}
+
+void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
+
+  _nRun++ ;
 
   //------Get the geometry from the gear file-----//
 
@@ -273,12 +278,6 @@ void VTXDigitizer::init() {
 
     }
 
-}
-
-void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
-
-  _nRun++ ;
-
 
   SCALING = 25000.;
 } 
@@ -287,18 +286,18 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 
   try{
     LCCollection * STHcol = evt->getCollection( _colName ) ;
- //   LCFlagImpl flag;
-//    flag.setBit(LCIO::THBIT_MOMENTUM);
-//    STHcol->setFlag(flag.getFlag());
+    //   LCFlagImpl flag;
+    //   flag.setBit(LCIO::THBIT_MOMENTUM);
+    //   STHcol->setFlag(flag.getFlag());
     LCCollectionVec * THcol = new LCCollectionVec(LCIO::TRACKERHIT);
-    LCCollectionVec * RelCol = new LCCollectionVec(LCIO::LCRELATION);
+    //    LCCollectionVec * RelCol = new LCCollectionVec(LCIO::LCRELATION);
     LCCollectionVec * STHLocCol = NULL;
-    LCCollectionVec * THLocCol = NULL;
-    LCCollectionVec * RelLocCol = NULL;
+    //    LCCollectionVec * THLocCol = NULL;
+    //    LCCollectionVec * RelLocCol = NULL;
     if (_produceFullPattern == 1) {
       STHLocCol = new LCCollectionVec(LCIO::SIMTRACKERHIT);
-      THLocCol = new LCCollectionVec(LCIO::TRACKERHIT);
-      RelLocCol = new LCCollectionVec(LCIO::LCRELATION);
+      //      THLocCol = new LCCollectionVec(LCIO::TRACKERHIT);
+      //      RelLocCol = new LCCollectionVec(LCIO::LCRELATION);
     }
 
 
@@ -338,8 +337,6 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 //           SimTrackerHit * hit = simTrkHitVec[iHit];
 //           //cout<<"hit 1"<<iHit <<" "<<hit->getdEdx()<<endl;
 //         }
-        // std::cout << "E
-
 
         // std::cout << "End of ProduceHits( ) " << std::endl;
         // Apply Poisson Smearing to deposited charges
@@ -349,25 +346,6 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
         TrackerHitImpl * recoHit = ReconstructTrackerHit( simTrkHitVec );
         //std::cout << "Amplitude 7 = " << _ampl << std::endl;
         // std::cout << "End of ReconstructTrackerHit( ) " << std::endl;
-        if (_produceFullPattern == 1 && recoHit !=0 ) {
-          SimTrackerHitImpl * sth = new SimTrackerHitImpl();
-          sth->setCellID(simTrkHit->getCellID());
-          sth->setdEdx(simTrkHit->getdEdx());
-          double currentPosition[3];
-          for (int j=0; j<3; ++j)
-            currentPosition[j] = 0.5*(_currentExitPoint[j] + _currentEntryPoint[j]);
-          sth->setPosition(currentPosition);
-          TrackerHitImpl * th = new TrackerHitImpl();
-          th->setdEdx(recoHit->getdEdx());
-          double xp[3];
-          for (int j=0; j<3; ++j)
-            xp[j] = recoHit->getPosition()[j];
-          th->setPosition(xp);          
-          STHLocCol->addElement(sth); 
-          THLocCol->addElement(th);
-          LCRelationImpl * rel = new LCRelationImpl(th,sth,float(1.0));
-          RelLocCol->addElement(rel);
-        }
         if (recoHit != NULL) {
           TrackerHitToLab( recoHit );
         }
@@ -382,36 +360,57 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 
 
           recoHit->rawHits().push_back(simTrkHit);
-
+          if (_produceFullPattern == 0) {
+            recoHit->rawHits().push_back(simTrkHit);
+          }
+          else {
+            int nSimHits = int( simTrkHitVec.size() );
+            for (int iS=0;iS<nSimHits;++iS) {
+              SimTrackerHitImpl * sth = simTrkHitVec[iS];
+              float charge = sth->getdEdx();
+              if ( charge >_threshold) {
+                SimTrackerHitImpl * newsth = new SimTrackerHitImpl();
+                double spos[3];
+                double sLab[3];
+                for (int iC=0;iC<3;++iC) 
+                  spos[iC] = sth->getPosition()[iC];
+                TransformToLab(spos,sLab);
+                newsth->setPosition(sLab);
+                newsth->setdEdx(charge);
+                STHLocCol->addElement(newsth);
+                recoHit->rawHits().push_back( newsth );
+              }
+            }
+          }
 
           float pointResoRPhi=0.004;
           float pointResoZ=0.004;
           float covMat[TRKHITNCOVMATRIX]={0.,0.,pointResoRPhi*pointResoRPhi,0.,0.,pointResoZ*pointResoZ};
           recoHit->setCovMatrix(covMat);      
-
-
+          
+          
           recoHit->setType(100+simTrkHit->getCellID());
           THcol->addElement( recoHit );
-          //          std::cout << "Hit is added to collection " << _nEvt << std::endl;
-          LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
-          RelCol->addElement(rel);
-        }
-// Clean Up        
-        for (int i=0; i < int(simTrkHitVec.size()); ++i) {
-          SimTrackerHit * hit = simTrkHitVec[i];
-          delete hit;
-        }     
-      } 
+          // std::cout << "Hit is added to collection " << _nEvt << std::endl;
+          // LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
+          // RelCol->addElement(rel);
+          // Clean Up                
+          for (int i=0; i < int(simTrkHitVec.size()); ++i) {
+            SimTrackerHit * hit = simTrkHitVec[i];
+            delete hit;
+          }     
+        }          
+      }
     }
     if (_generateBackground == 1) 
       generateBackground( THcol );
 
     evt->addCollection(THcol,_outputCollectionName.c_str());
-    evt->addCollection(RelCol, _colVTXRelation );
+    //    evt->addCollection(RelCol, _colVTXRelation );
     if (_produceFullPattern == 1) {
-      evt->addCollection(STHLocCol,"VTXLocalSimTrackerHits");
-      evt->addCollection(THLocCol,"VTXLocalTrackerHits");
-      evt->addCollection(RelLocCol,"VTXLocalRelation");
+      evt->addCollection(STHLocCol,"VTXPixels");
+      //      evt->addCollection(THLocCol,"VTXLocalTrackerHits");
+      //      evt->addCollection(RelLocCol,"VTXLocalRelation");
     }
   }
   catch(DataNotAvailableException &e){}
@@ -421,7 +420,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
   
   if (_nEvt % 100 == 0)
    std::cout << "Processed " << _nEvt << "events " << std::endl;
-
+  
 }
 
 
@@ -1075,29 +1074,6 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     }
   }
 
-  // if this cluster is spread out over too many cells, then
-  // restrict it to a range around the seed
-  if (ixmax-ixmin>=20) {
-    if (ixmax-ixSeed<20) {
-      ixmin=ixmax-19;
-    } else if (ixSeed-ixmin<20) {
-      ixmax=ixmin+19;
-    } else {
-      ixmax=ixSeed+9;
-      ixmin=ixSeed-10;
-    }
-  }
-  if (iymax-iymin>=20) {
-    if (iymax-iySeed<20) {
-      iymin=iymax-19;
-    } else if (iySeed-iymin<20) {
-      iymax=iymin+19;
-    } else {
-      iymax=iySeed+9;
-      iymin=iySeed-10;
-    }
-  }
-
   //cout<<"charge "<<charge<<endl;
   if (charge > 0.) {
     for (int j=0; j<2; ++j)
@@ -1146,8 +1122,6 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         int cellID = hit->getCellID();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix;
-        if (iy<iymin || iy>iymax) continue;
-        if (ix<ixmin || ix>ixmax) continue;
         if ((iy - iymin) < 20)
           _amplY[iy-iymin] = _amplY[iy-iymin] + hit->getdEdx();
         if ((ix - ixmin) < 20) 
@@ -1286,7 +1260,7 @@ void VTXDigitizer::generateBackground(LCCollectionVec * col) {
       double Phi0 = _layerPhiOffset[ilayer];
       double dPhi = 2.0*_layerHalfPhi[ilayer];
       int nPhi = int(RandFlat::shoot(xLadders));
-      _currentPhi = - PI2 + double(nPhi)*dPhi + Phi0;
+      _currentPhi = double(nPhi)*dPhi + Phi0;
       double xLab[3];
       TransformToLab(pos,xLab);
       TrackerHitImpl * trkHit = new TrackerHitImpl();

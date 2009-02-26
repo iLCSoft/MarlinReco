@@ -6,6 +6,12 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.7  2009/02/17 12:46:35  blist
+ * - Improved version of NewtonFitterGSL, JetFitObject changed
+ * -
+ * - Revision 1.6  2009/02/11 15:33:49  mbeckman
+ * - Bug fixes: mass initialization in ParticleFitObject, parameter handling in PhotonFitObjectPxyg
+ * -
  * - Revision 1.5  2008/11/23 17:53:41  mbeckman
  * - Fixed minor bug in ParticleFitObject.cc
  * -
@@ -53,7 +59,9 @@ using std::cout;
 using std::endl;
 
 
-ParticleFitObject::ParticleFitObject() {
+ParticleFitObject::ParticleFitObject()
+: mass (0)
+{
   for (int ilocal = 0; ilocal < NPAR; ++ilocal) globalParNum[ilocal] = -1;
   for (int ilocal = 0; ilocal < NPAR; ++ilocal) fixed[ilocal] = false;
   for (int ilocal = 0; ilocal < NPAR; ++ilocal) 

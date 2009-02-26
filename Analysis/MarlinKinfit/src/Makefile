@@ -9,6 +9,7 @@ CLIBS= -L/cern/pro/lib -lmathlib -lkernlib -lpacklib -L /usr/lib -lshift -lnsl -
 LDFLAGS= $(CFLAGS)  `root-config --libs` -lgsl
 FLIBS= -lg2c -lm 
 F77=g77
+FC=g77
 # CLIBS=`cernlib`
 GSLINCDIR=/opt/products/gsl/1.9/include
 INCDIR=../include

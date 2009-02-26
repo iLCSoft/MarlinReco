@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.2  2009/02/17 12:46:34  blist
+ * - Improved version of NewtonFitterGSL, JetFitObject changed
+ * -
  * - Revision 1.1  2008/02/12 10:19:05  blist
  * - First version of MarlinKinfit
  * -
@@ -40,7 +43,7 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2008-11-24 11:01:01 $
+ * $Date: 2009-02-26 18:35:17 $
  * $Author: beckmann $
  *
  * \b Changelog:
@@ -133,6 +136,8 @@ class JetFitObject : public ParticleFitObject {
     /// Calculates the squared error for a quantity with derivatives w.r.t. E, dx, dy, dz
     virtual double getError2 (double der[]    ///< Factors for d(E,px,py,pz)/dx_i
                              ) const;
+    /// Get chi squared from measured and fitted parameters
+    virtual double getChi2() const;
 
     virtual void invalidateCache() const;
   
@@ -149,7 +154,13 @@ class JetFitObject : public ParticleFitObject {
                    dpxdE, dpydE, dpzdE, dpxdtheta, dpydtheta,
                    chi2;
                    // d2pdE2, d2ptsE2;
-  
+                   
+    /// Adjust E, theta and phi such that E>=m, 0<=theta<=pi, -pi <= phi < pi; returns true if anything was changed             
+    static bool adjustEThetaPhi (double& m, double &E, double& theta, double& phi);
+    
+    /// Calculate chi2 
+    double calcChi2 () const;
+    
 };
 
 

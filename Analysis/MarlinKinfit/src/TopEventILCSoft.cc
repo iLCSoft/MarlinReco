@@ -2,7 +2,7 @@
 // Class TopEventILCSoft
 //
 // Author: Benno List, Jenny Boehme
-// Last update: $Date: 2008-11-24 11:01:01 $
+// Last update: $Date: 2009-02-26 18:35:17 $
 //          by: $Author: beckmann $
 // 
 // Description: class to generate and fit top pair events at ILC

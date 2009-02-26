@@ -1,11 +1,17 @@
  
-#ifndef __PHOTONFITOBJECT_H
-#define __PHOTONFITOBJECT_H
+#ifndef __PHOTONFITOBJECTPXYG_H
+#define __PHOTONFITOBJECTPXYG_H
 
 #include "ParticleFitObject.h"
 
-// Class PhotonFitObject
+// Class PhotonFitObjectPxyg
 /// Class for ISR/Beamstrahlung photons with (p_x,p_y (both fix),  p_z (free)) in kinematic fits
+/// p_z is internally replaced by a parameter p_g
+///
+/// This class assumes a photon p_z distribution according to dN/d|p_z| = c*|p_z|^(b-1), where the total number of photons should be given by N = \int_{PzMin}^{PzMax} dN/d|p_z| d|p_z|
+/// Only |p_z| values in [PzMin,PzMax[ can be used as start values (assertion in PgFromPz(...)) and will occur in the fit
+/// The parameters b, PzMaxB:=PzMax^b and PzMinB:=PzMin^b are required
+
 /**
  *
  * Author: Moritz Beckmann
@@ -17,20 +23,21 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
- * - Revision 1.3  2009/02/23 12:03:18  mbeckman
+ * - Revision 1.5  2009/02/23 12:03:18  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
  * -
- * - Revision 1.2  2009/02/18 11:53:42  mbeckman
+ * - Revision 1.4  2009/02/18 11:53:42  mbeckman
  * - documentation, debug output
  * -
  *
  */ 
-class PhotonFitObject : public ParticleFitObject {
+class PhotonFitObjectPxyg : public ParticleFitObject {
   public:
-    PhotonFitObject(double px, double py, double pz,   /// initial values for photon (p_x,p_y fix)
-                 double Dpz);                          /// sigma for pz
-    virtual ~PhotonFitObject();
+    PhotonFitObjectPxyg(double px, double py, double pz,                 /// initial values for photon (p_x,p_y fix)
+                        double b_, double PzMaxB_, double PzMinB_ = 0.,  /// photon spectrum parametrization (see above)
+                        int debug_ = 0);                                 /// 0: no output,   1: cout << parameters
+    virtual ~PhotonFitObjectPxyg();
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number
@@ -115,21 +122,25 @@ class PhotonFitObject : public ParticleFitObject {
   
   protected:
     
+    virtual double PgFromPz(double pz);
+    
     virtual void initCov();
     
     void updateCache() const;
   
     mutable bool cachevalid;
     
-    mutable double pt2, p2, p,
-                   dE0, dE1, dE2, 
-                   chi2;
+    mutable double pt2, p2, p, pz,
+                   dpx0, dpy0, dpz0, dE0, dpx1, dpy1, dpz1, dE1,
+                   dpx2, dpy2, dpz2, dE2, d2pz22, d2E22,
+                   chi2,                   
+                   b, PzMinB, PzMaxB, dp2zFact;
+                   
+    int debug;
 
-//     mutable double dpx0, dpy0, dpz0, dpx1, dpy1, dpz1, dpx2, dpy2, dpz2;
-  
 };
 
 
 
-#endif // __PHOTONFITOBJECT_H
+#endif // __PHOTONFITOBJECTPXYG_H
 

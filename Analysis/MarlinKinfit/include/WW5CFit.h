@@ -25,7 +25,7 @@ using namespace marlin ;
  * @param CollectionName Name of the ReconstructedParticle collection
  * 
  * @author J. List, DESY
- * @version $Id: WW5CFit.h,v 1.2 2008-11-24 11:01:01 beckmann Exp $ 
+ * @version $Id: WW5CFit.h,v 1.3 2009-02-26 18:35:17 beckmann Exp $ 
  */
 
 class WW5CFit : public Processor {

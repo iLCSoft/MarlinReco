@@ -40,7 +40,7 @@ class ParticleFitObject;
  *   sets of objects should be m (normally m=0 in this case).
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008-11-24 11:01:01 $
+ * Last update: $Date: 2009-02-26 18:35:17 $
  *          by: $Author: beckmann $
  *
  */

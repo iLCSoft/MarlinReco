@@ -2,7 +2,7 @@
 // Class NeutrinoFitObject
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008-11-24 11:01:01 $
+// Last update: $Date: 2009-02-26 18:35:17 $
 //          by: $Author: beckmann $
 // 
 // Description: class for neutrinos with (E, theta, phi) in kinematic fits

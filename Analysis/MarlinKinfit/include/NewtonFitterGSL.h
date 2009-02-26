@@ -3,9 +3,9 @@
  *  \brief Declares class NewtonFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2008-11-24 11:01:01 $
+ * Last update: $Date: 2009-02-26 18:35:17 $
  *          by: $Author: beckmann $
- * $Date: 2008-11-24 11:01:01 $
+ * $Date: 2009-02-26 18:35:17 $
  * $Author: beckmann $
  *
  * \b Changelog:
@@ -13,6 +13,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.2  2009/02/17 12:46:34  blist
+ * - Improved version of NewtonFitterGSL, JetFitObject changed
+ * -
  * - Revision 1.1  2008/10/16 08:13:36  blist
  * - New versions of OPALfitter and Newtonfitter using GSL
  * -
@@ -72,18 +75,29 @@ class NewtonFitterGSL : public BaseFitter {
     /// Initialize the fitter
     virtual bool initialize();
   
+    /// Set the Debug Level
+    virtual void setDebug (int debuglevel);
+  
   protected:
     /// Calculate the chi2
     virtual double calcChi2();
     
     /// Calculate the vector dx to update the parameters; returns fail code, 0=OK
-    int calcDx () const;
+    int calcDx ();
     
     /// Calculate the vector dx to update the parameters; returns fail code, 0=OK
-    int calcDxSVD () const;
+    int calcDxSVD ();
     
     /// Print a Matrix M and a vector y of dimension idim
     void printMy (double M[], double y[], int idim);
+    
+    bool updateParams (gsl_vector *xnew);
+    void fillxold();
+    void fillperr();
+    int calcM();
+    int calcy();
+    int optimizeScale();
+    int invertM();
     
     enum {NPARMAX=50, NCONMAX=10, NUNMMAX=10};
     
@@ -105,22 +119,47 @@ class NewtonFitterGSL : public BaseFitter {
     static void debug_print (gsl_vector *v, const char *name);
 
   private:
+    unsigned int idim;
     gsl_vector *x;
+    gsl_vector *xold;
+    gsl_vector *xbest;
     gsl_vector *dx;
+    gsl_vector *dxscal;
+    gsl_vector *grad;
     gsl_vector *y;
+    gsl_vector *yscal;
     gsl_vector *perr;
     gsl_vector *v1;
     gsl_vector *v2;
     gsl_vector *Meval;
   
     gsl_matrix *M;
+    gsl_matrix *Mscal;
     gsl_matrix *M1;
+    gsl_matrix *M2;
+    gsl_matrix *M3;
     gsl_matrix *Mevec;
+    gsl_matrix *CC;
+    gsl_matrix *CC1;
+    gsl_matrix *CCinv;
 
     gsl_permutation *permM;
     gsl_eigen_symmv_workspace *ws; 
     unsigned int wsdim;
-    unsigned int idim;
+    
+    double chi2best;
+    double chi2new;
+    double chi2old;
+    double fvalbest;
+    double scale;
+    double scalebest;
+    double stepsize;
+    double stepbest;
+    enum {NITMAX = 100};
+    double scalevals[NITMAX];
+    double fvals[NITMAX];
+    
+    int debug;
 };
 
 #endif // __NEWTONFITTERGSL_H

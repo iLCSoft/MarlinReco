@@ -6,6 +6,19 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.7  2009/02/23 12:04:05  mbeckman
+ * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
+ * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
+ * - - JetFitObject:        added start parameter check (inf, nan)
+ * -
+ * - Revision 1.6  2009/02/18 11:56:21  mbeckman
+ * - PhotonFitObject*.cc: documentation, debug output
+ * - NewtonFitterGSL.cc:  bug fix (Lagrange multipliers not initialized), debug output
+ * - JetFitObject.cc:     bug fix: division by 0, if energy <= mass
+ * -
+ * - Revision 1.5  2009/02/17 12:46:34  blist
+ * - Improved version of NewtonFitterGSL, JetFitObject changed
+ * -
  * - Revision 1.4  2008/10/16 08:13:44  blist
  * - New versions of OPALfitter and Newtonfitter using GSL
  * -
@@ -58,6 +71,15 @@ JetFitObject::JetFitObject(double E, double theta, double phi,
                            double DE, double Dtheta, double Dphi, 
                            double m) {
   initCov();                         
+  assert( !isinf(E) );        assert( !isnan(E) );
+  assert( !isinf(theta) );    assert( !isnan(theta) );
+  assert( !isinf(phi) );      assert( !isnan(phi) );
+  assert( !isinf(DE) );       assert( !isnan(DE) );
+  assert( !isinf(Dtheta) );   assert( !isnan(Dtheta) );
+  assert( !isinf(Dphi) );     assert( !isnan(Dphi) );
+  assert( !isinf(m) );        assert( !isnan(m) );
+  setMass (m);
+  adjustEThetaPhi (m, E, theta, phi);
   setParam (0, E, true);
   setParam (1, theta, true);
   setParam (2, phi, true);
@@ -67,7 +89,6 @@ JetFitObject::JetFitObject(double E, double theta, double phi,
   setError (0, DE);
   setError (1, Dtheta);
   setError (2, Dphi);
-  setMass (m);
   invalidateCache();
 //   std::cout << "JetFitObject::JetFitObject: E = " << E << std::endl;
 //   std::cout << "JetFitObject::JetFitObject: getParam(0) = " << getParam(0) << std::endl;
@@ -94,13 +115,6 @@ bool JetFitObject::setParam (int ilocal, double par_,
   if (measured[ilocal] != measured_ || fixed[ilocal] != fixed_) invalidateCache();
   measured[ilocal] = measured_;
   fixed[ilocal] = fixed_;
-// this doesn't work inn constructor, since par[i], mass etc are not initialized yet!!!!  
-//  return setParam (ilocal, par_);
-// old version of bool ParticleFitObject::setParam (int ilocal, double par_ )
-//  if (!isfinite(par_)) return false;  doesn't exist anymore?
-//  assert (ilocal >= 0 && ilocal < NPAR);   done before
-//  if (par[ilocal] == par_) return true;    
-//  invalidateCache();                     done in constructor anyhow
   par[ilocal] = par_;
   return true;
 }  
@@ -118,8 +132,7 @@ bool JetFitObject::setParam (int i, double par_ ) {
             //std::cout << "setParam: par[0] = " << par[0] << endl;
             break;
     // theta: between 0 and pi
-    case 1: par[1] = (par_ >= 0 && par_ < M_PI) ? 
-                      par_ : std::acos (std::cos (par_));
+    case 1: par[1] = par_;
             break;          
     // phi: any value
     case 2: par[2] = par_;
@@ -142,6 +155,9 @@ bool JetFitObject::updateParams (double p[], int idim) {
   double e  = p[iE];
   double th = p[ith];
   double ph = p[iph];
+  assert( !isinf(e) );    assert( !isnan(e) );
+  assert( !isinf(th) );   assert( !isnan(th) );
+  assert( !isinf(ph) );   assert( !isnan(ph) );
   
   if (e<0) {
     // cout << "JetFitObject::updateParams: mirrored E!\n";
@@ -149,32 +165,23 @@ bool JetFitObject::updateParams (double p[], int idim) {
     th = M_PI-th;
     ph = M_PI+ph;
   }
-  if (th<0 || th>M_PI) {
-    // cout << "JetFitObject::updateParams: mirrored theta!\n";
-    th = M_PI-th;
-    ph = M_PI+ph;
-  }
-  
-//   if ((e -par[0])*(e -par[0]) > eps2*cov[0][0])
-//     cout << getName() << ": significant change of E: " << par[0] << "->" << e 
-//          << ", diff=" << e -par[0] << ", error: " << std::sqrt(cov[0][0]) << endl;
-//   if ((th-par[1])*(th-par[1]) > eps2*cov[1][1])
-//     cout << getName() << ": significant change of theta: " << par[1] << "->" << th 
-//          << ", diff=" << th -par[1]<< ", error: " << std::sqrt(cov[1][1]) << endl;
-//   if ((ph-par[2])*(ph-par[2]) > eps2*cov[2][2])
-//     cout << getName() << ": significant change of phi: " << par[2] << "->" << ph 
-//          << ", diff=" << ph -par[2]<< ", error: " << std::sqrt(cov[2][2]) << endl;
+  double massPlusEpsilon = mass*(1.0000001);
+  if (e < massPlusEpsilon) e = massPlusEpsilon;
   
   bool result = ((e -par[0])*(e -par[0]) > eps2*cov[0][0]) ||
                 ((th-par[1])*(th-par[1]) > eps2*cov[1][1]) ||
                 ((ph-par[2])*(ph-par[2]) > eps2*cov[2][2]);
+                
+//   if (result)
+//     cout << "JetFitObject::updateParams " << getName() 
+//          << "  e: " <<  par[0] << "->" << e            
+//          << "  th: " <<  par[1] << "->" << th            
+//          << "  ph: " <<  par[2] << "->" << ph
+//          << endl;           
   
-  par[0] = (e >= mass) ? e : mass;
-  par[1] = (th >= 0 && th <= M_PI) ? 
-            th : std::acos (std::cos (th));
-  double dphi = ph-mpar[2];
-  if (std::abs(dphi) > M_PI) dphi = atan2 (sin(dphi), cos (dphi));
-  par[2] = mpar[2]+dphi;
+  par[0] = e;
+  par[1] = th;
+  par[2] = ph;
   p[iE]  = par[0];         
   p[ith] = par[1];         
   p[iph] = par[2];         
@@ -407,6 +414,8 @@ void JetFitObject::addToGlobalChi2DerVector (double *y, int idim,
 
 void JetFitObject::updateCache() const {
   // std::cout << "JetFitObject::updateCache" << std::endl;
+  chi2 = calcChi2 ();
+  
   double e     = par[0];
   double theta = par[1];
   double phi   = par[2];
@@ -420,6 +429,7 @@ void JetFitObject::updateCache() const {
     p2 = std::abs(e*e-mass*mass);
     p = std::sqrt(p2);
     dpdE = e/p;
+    assert (p != 0);
   }
   else {
     p2 = e*e;
@@ -442,6 +452,7 @@ void JetFitObject::updateCache() const {
   // dpydphi  =  pt*cphi  = px
 //   d2pdE2 
 //   d2ptsE2
+
 
   cachevalid = true;
 }
@@ -478,3 +489,73 @@ double JetFitObject::getError2 (double der[]) const {
                                                    + der[2]*(der[2]*cov4[2][2] + 2*der[3]*cov4[2][3])
                                                                           + der[3]*der[3]*cov4[3][3];
 }
+
+double JetFitObject::getChi2 () const {
+  if (!cachevalid) updateCache();
+  return chi2;
+}
+
+bool JetFitObject::adjustEThetaPhi (double& m, double &E, double& theta, double& phi) {
+  bool result = false;
+  
+  if (E<0) {
+    // cout << "JetFitObject::adjustEThetaPhi: mirrored E!\n";
+    E  = -E;
+    theta = M_PI-theta;
+    phi = M_PI+phi;
+    result = true;
+  }
+  if (E < m) {
+    E = m;
+    result = true;
+  }
+  if (theta < -M_PI || theta > M_PI) {
+    while (theta < -M_PI) theta += 2*M_PI;
+    while (theta >  M_PI) theta -= 2*M_PI;
+    result = true;
+  }
+  
+  if (theta<0) {
+    // cout << "JetFitObject::adjustEThetaPhi: mirrored theta!\n";
+    theta = -theta;
+    phi = phi > 0 ? phi-M_PI : phi+M_PI;
+    result = true;
+  }
+  else if (theta>M_PI) {
+    // cout << "JetFitObject::adjustEThetaPhi: mirrored theta!\n";
+    theta = 2*M_PI-theta;
+    phi = phi > 0 ? phi-M_PI : phi+M_PI;
+    result = true;
+  }
+  if (phi < -M_PI || phi > M_PI) {
+    while (phi < -M_PI) phi += 2*M_PI;
+    while (phi >  M_PI) phi -= 2*M_PI;
+    result = true;
+  }
+
+  return result;
+}
+
+double JetFitObject::calcChi2 () const {
+  if (!covinvvalid) calculateCovInv();
+  if (!covinvvalid) return -1;
+  
+  double chi2 = 0;
+  static double resid[3];
+  static bool chi2contr[3];
+  resid[0] = isParamMeasured(0) && !isParamFixed(0) ? par[0]-mpar[0] : 0;
+  resid[1] = isParamMeasured(1) && !isParamFixed(1) ? par[1]-mpar[1] : 0;
+  resid[2] = isParamMeasured(2) && !isParamFixed(2) ? par[2]-mpar[2] : 0;
+  if      (resid[2] >  M_PI) resid[2] -= 2*M_PI;
+  else if (resid[2] < -M_PI) resid[2] += 2*M_PI;
+    
+  chi2 =     resid[0]*covinv[0][0]*resid[0] 
+         + 2*resid[0]*covinv[0][1]*resid[1] 
+         + 2*resid[0]*covinv[0][2]*resid[2] 
+         +   resid[1]*covinv[1][1]*resid[1] 
+         + 2*resid[1]*covinv[1][2]*resid[2] 
+         +   resid[2]*covinv[2][2]*resid[2]; 
+         
+  return chi2;
+}
+

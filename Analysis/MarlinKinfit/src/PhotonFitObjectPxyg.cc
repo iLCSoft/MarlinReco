@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: not supported by cvs2svn $
+ * - Revision 1.1  2009/02/26 18:35:17  beckmann
+ * - Bug fixes in MarlinKinFit
+ * -
  * - Revision 1.6  2009/02/23 12:04:05  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
@@ -31,7 +34,7 @@ using std::pow;
 using std::cout; 
 using std::endl;
 
-const double static pi_ = 3.14159265358979323846264338328,
+static const double pi_ = 3.14159265358979323846264338328,
                     a   = 8./3./pi_*(pi_-3.)/(4.-pi_);      // avoid multiple calculation of constant values
 
 // constructor

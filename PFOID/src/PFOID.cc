@@ -3,6 +3,7 @@
 #include <fstream>
 #include "math.h"
 
+#include "CalorimeterHitType.h"
 #include "HelixClass.h"
 #include "ClusterShapes.h"
 // GEAR include files
@@ -421,7 +422,11 @@ void PFOID::fill_info(int i, ReconstructedParticle *rp){
       for(int k=0; k<nCalHits; k++){  // over each hit in cluster
 	int cellid = chv[k]->getCellID0();
 	int layer = cellid >> 24;
-	if(chv[k]->getType()==1){
+        //SJA:AR:FIXED: change the extraction of the hit type to use the  
+        //           Helper class for decoding/encoding lcio::CalorimeterHit types for the ILD
+        CHT cht = chv[k]->getType() ;
+        if ( cht.is(CHT::had ) ){
+        //	if(chv[k]->getType()==1){
 	  info.Nhcal +=1 ;
 	  if(layer>=info.L1){
 	    info.L3=info.L2 ;

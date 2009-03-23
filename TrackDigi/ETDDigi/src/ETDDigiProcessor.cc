@@ -7,7 +7,9 @@
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <EVENT/MCParticle.h>
-#include <math.h>
+//#include <math.h>
+#include <cmath>
+#include <algorithm>
 
 #include <gsl/gsl_randist.h>
 

@@ -6,13 +6,25 @@
 SET( @PROJECT_NAME@_FOUND FALSE )
 MARK_AS_ADVANCED( @PROJECT_NAME@_FOUND )
 
-# libg2c.so
-SET( G2C_LIB @G2C_LIB@ )
+# check if g2c/gfortran lib is available
+# if somehow the library is in a different location you can tell cmake to
+# also search in other locations for finding libraries.
+# this can be done by setting a shell environment variable:
+# $ export CMAKE_LIBRARY_PATH="/bla/bla:/foo/bar"
+# or by calling:
+# $ cmake -DCMAKE_LIBRARY_PATH="/bla/bla;/foo/bar" ...
+# notice the path's separators! ( ':' for shell and ';' for cmake !! )
+FIND_LIBRARY( G2C_LIB NAMES @G2C_LIBNAME@
+    PATHS @G2C_LIB_PATHS@;@CMAKE_INSTALL_PREFIX@/lib
+    NO_DEFAULT_PATH )
+
+# if previous find fails, try to find in system paths..
+FIND_LIBRARY( G2C_LIB NAMES @G2C_LIBNAME@ )
 
 IF( NOT G2C_LIB )
-    MESSAGE( STATUS "Check for @PROJECT_NAME@: failed to find g2c library!!" )
+    MESSAGE( STATUS "Check for @PROJECT_NAME@: failed to find @G2C_LIBNAME@ library!!" )
 ELSE( NOT G2C_LIB )
-    MESSAGE( STATUS "Check for libg2c: ${G2C_LIB}" )
+    MESSAGE( STATUS "Check for lib@G2C_LIBNAME@: ${G2C_LIB}" )
     MARK_AS_ADVANCED( G2C_LIB )
 ENDIF( NOT G2C_LIB )
 

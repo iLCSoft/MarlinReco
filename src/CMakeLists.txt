@@ -410,40 +410,20 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
-### TODO gfortran
-# libg2c
 SET( G2C_LIB G2C_LIB-NOTFOUND )
-IF( BUILD_32BIT_COMPATIBLE )
-    SET( G2C_LIB_PATHS
-        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
-        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
-        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
-        /usr/osxws/lib                              # OSX
-        /usr/lib
-    )
-ELSE()
-    SET( G2C_LIB_PATHS
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
-        /usr/osxws/lib                              # OSX
-        /usr/lib64
-    )
-ENDIF()
 # prevent static library to be detected instead of shared one
-FIND_LIBRARY( G2C_LIB NAMES g2c PATHS ${G2C_LIB_PATHS} NO_DEFAULT_PATH )
+FIND_LIBRARY( G2C_LIB NAMES ${G2C_LIBNAME} PATHS ${G2C_LIB_PATHS} NO_DEFAULT_PATH )
 # if previous find fails, try to find in system paths..
-FIND_LIBRARY( G2C_LIB NAMES g2c )
+FIND_LIBRARY( G2C_LIB NAMES ${G2C_LIBNAME} )
 
 IF( NOT G2C_LIB )
-    MESSAGE( FATAL_ERROR "Check for libg2c: failed to find g2c library!!" )
+    MESSAGE( FATAL_ERROR "Check for lib${G2C_LIBNAME}: failed to find ${G2C_LIBNAME} library!!" )
 ELSE()
-    MESSAGE( STATUS "Check for libg2c: ${G2C_LIB}" )
+    MESSAGE( STATUS "Check for lib${G2C_LIBNAME}: ${G2C_LIB}" )
 ENDIF()
 MARK_AS_ADVANCED( G2C_LIB )
 
-# link MarlinReco library to lib g2c
+# link MarlinReco library to libg2c/libgfortran
 TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${G2C_LIB} )
 
 # install library

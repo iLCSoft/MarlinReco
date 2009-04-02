@@ -14,7 +14,11 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 ########################################################
 
 
-# set fortran compiler
+# you can change the fortran compiler by setting the variable
+# FC in your shell _before_ calling cmake !!
+# e.g.  $ export FC=gfortran
+#       $ cmake ....
+#       $ make install
 SET( CMAKE_Fortran_COMPILER_INIT g77 )
 
 ####################################################################################################
@@ -39,6 +43,10 @@ SET( CMAKE_Fortran_FLAGS "-ff2c" CACHE STRING
 GET_FILENAME_COMPONENT( FORTRAN_COMPILER "${CMAKE_Fortran_COMPILER}" NAME_WE )
 IF( FORTRAN_COMPILER STREQUAL "g77" )
     SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" )
+    SET( G2C_LIBNAME "g2c" )
+ENDIF()
+IF( FORTRAN_COMPILER STREQUAL "gfortran" )
+    SET( G2C_LIBNAME "gfortran" )
 ENDIF()
 SET( CMAKE_Fortran_FLAGS_DEBUG "-g" CACHE STRING
     "Flags used by the compiler during debug builds." )
@@ -66,6 +74,34 @@ ENDIF()
 # set default install prefix to project root directory
 IF( CMAKE_INSTALL_PREFIX STREQUAL "/usr/local" )
     SET( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}" )
+ENDIF()
+
+
+#---------------- libg2c/gfortran issues ---------------------------------
+# if somehow the library is in a different location you can tell cmake to
+# also search in other locations for finding libraries.
+# this can be done by setting a shell environment variable:
+# $ export CMAKE_LIBRARY_PATH="/bla/bla:/foo/bar"
+# or by calling:
+# $ cmake -DCMAKE_LIBRARY_PATH="/bla/bla;/foo/bar" ...
+# notice the path's separators! ( ':' for shell and ';' for cmake !! )
+IF( BUILD_32BIT_COMPATIBLE )
+    SET( G2C_LIB_PATHS
+        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
+        /usr/osxws/lib                              # OSX
+        /usr/lib
+    )
+ELSE()
+    SET( G2C_LIB_PATHS
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
+        /usr/osxws/lib                              # OSX
+        /usr/lib64
+    )
 ENDIF()
 
 #---------------- 32/64 bit issues ---------------------------------------

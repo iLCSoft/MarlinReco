@@ -1,6 +1,10 @@
 #ifndef VTXNoiseClusters_h
 #define VTXNoiseClusters_h 1
 
+
+#ifdef USE_ROOT 
+// we need some root histograms with cluster size distribution for this processor
+
 #include "marlin/Processor.h"
 #include "marlin/EventModifier.h"
 #include "lcio.h"
@@ -8,6 +12,14 @@
 #include <vector>
 #include <gsl/gsl_rng.h>
 
+#include "TH2F.h"
+#include "TFile.h"
+
+#ifdef MARLIN_USE_AIDA
+#include <AIDA/AIDA.h>
+typedef std::vector< AIDA::IHistogram1D* > Hist1DVec ;
+typedef std::vector< AIDA::IHistogram2D* > Hist2DVec ;
+#endif
 
 using namespace lcio ;
 using namespace marlin ;
@@ -21,16 +33,15 @@ class VXDGeometry ;
  * The noise hits are created with a uniform distribution over the ladder
  * surface. An object of type VXDClusterParameters is added to every hit to describe the 
  * extension of the cluster on the ladder surface. 
+ * The distribution of the cluster sizes is read from ROOT histograms - one per layer.
  * 
- * 
+ * @param RootHistograms      root file name and histogram names (one per layer)
  * @param HitDensityPerLayer  hit densities (hits/cm^2) per VXD layer
- * @param PointResolutionRPhi_VTX Point resolution in r-phi for the vertex detector (in mm) <br>
- * (default value 0.0027) <br>
- * @param PointResolutionZ_VTX Point resolution in z for the vertex detector (in mm) <br>
- * (default value 0.0027) <br>
+ * @param VTXCollectionName   collection of VXD SimTrackerhits
+ * @param RandomSeed          random number seed
  * 
  * <br>
- * @version $Id: VTXNoiseClusters.h,v 1.1 2009-05-14 07:24:19 gaede Exp $
+ * @version $Id: VTXNoiseClusters.h,v 1.2 2009-05-15 15:53:41 gaede Exp $
  * @author F.Gaede, DESY
  */
 
@@ -73,6 +84,7 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
 
   std::string _colNameVTX ;
   FloatVec _densities ;
+  StringVec _rootNames ;  
 //   float _pointResoRPhiVTX ;
 //   float _pointResoZVTX ;
   int   _ranSeed  ;
@@ -81,13 +93,20 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
   int _nEvt ;
 
   gsl_rng* _rng ;
-
   VXDGeometry* _vxdGeo ;
 
+  std::vector<TH2F*> _hist ;
+  TFile* _hfile ;
+
+#ifdef MARLIN_USE_AIDA
+   Hist1DVec _hist1DVec ;
+   Hist2DVec _hist2DVec ;
+#endif
 
 } ;
 
 #endif
+#endif // USE_ROOT
 
 
 

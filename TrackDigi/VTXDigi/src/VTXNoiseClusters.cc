@@ -1,7 +1,13 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+#ifdef USE_ROOT
 #include "VTXNoiseClusters.h"
+#include "VXDClusterParameters.h"
 
 #include "VXDGeometry.h"
+
+#ifdef MARLIN_USE_AIDA
+#include <marlin/AIDAProcessor.h>
+#endif 
 
 // STUFF needed for GEAR
 #include <marlin/Global.h>
@@ -10,7 +16,7 @@
 #include <gear/VXDLayerLayout.h>
 
 #include <iostream>
-
+#include <sstream>
 
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
@@ -21,6 +27,8 @@
 
 #include <cmath>
 #include <math.h>
+
+#include "TFile.h" 
 
 using namespace lcio ;
 using namespace marlin ;
@@ -48,6 +56,22 @@ VTXNoiseClusters::VTXNoiseClusters() : Processor("VTXNoiseClusters") {
                               densityDefault ) ;
 	
   
+
+  StringVec rootDefault(7) ;
+  rootDefault[0] = "sap2VXD05_1.root" ;
+  rootDefault[1] = "hst1" ;
+  rootDefault[2] = "hst2" ;
+  rootDefault[3] = "hst3" ;
+  rootDefault[4] = "hst4" ;
+  rootDefault[5] = "hst5" ;
+  rootDefault[6] = "hst6" ;
+
+  registerProcessorParameter( "RootHistograms" ,
+                              "root file name and histogram names (one per layer)"  ,
+                              _rootNames ,
+                              rootDefault ) ;
+	
+
   // Input collection
   registerInputCollection( LCIO::SIMTRACKERHIT,
                            "VTXCollectionName" , 
@@ -55,15 +79,6 @@ VTXNoiseClusters::VTXNoiseClusters() : Processor("VTXNoiseClusters") {
                            _colNameVTX ,
                            std::string("VXDCollection") ) ;
   
-  
-//   registerProcessorParameter( "PointResolutionRPhi_VTX" ,
-//                               "R-Phi Resolution in VTX"  ,
-//                               _pointResoRPhiVTX ,
-//                               float(0.0027)) ;
-//   registerProcessorParameter( "PointResolutionZ_VTX" , 
-//                               "Z Resolution in VTX" ,
-//                               _pointResoZVTX ,
-//                               float(0.0027));
   
   registerProcessorParameter( "RandomSeed" , 
                               "random seed - default 42" ,
@@ -88,6 +103,58 @@ void VTXNoiseClusters::init() {
   _rng = gsl_rng_alloc(gsl_rng_ranlxs2) ;
 
   gsl_rng_default_seed = _ranSeed ;
+
+
+
+
+  const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
+  const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
+  
+  if( (unsigned) layerVXD.getNLayers() != _rootNames.size() - 1 ){
+    
+    streamlog_out( ERROR  ) << " *************************************************** " << std::endl 
+                            << " wrong number of histograms: " <<  _rootNames.size() 
+                            << " for " << layerVXD.getNLayers() << " VXD layers "
+                            << "  - do nothing ! " << std::endl 
+                            << " *************************************************** " << std::endl  ;
+
+  }
+
+
+  const std::string& filename = _rootNames[0] ;
+  
+  _hfile = new TFile( filename.c_str() );
+
+  if( ! _hfile->IsOpen() ) {
+    
+    std::string mess(" can't open root file :") ;
+    mess +=  _rootNames[0] ;
+    
+    throw Exception( mess ) ;
+  }
+  
+  streamlog_out(DEBUG4) << "Read histograms from file : " << filename << endl;
+  
+  
+  //  _hfile->ls()  ;
+  
+  _hist.resize( layerVXD.getNLayers() ) ;
+  
+  for(int i=0;i<layerVXD.getNLayers(); ++i ){
+    
+    
+    streamlog_out(DEBUG4) <<  "    " << _rootNames[i+1].c_str() << ":  .... "  ;
+    
+    _hist[i] = dynamic_cast<TH2F*> (  _hfile->Get( _rootNames[i+1].c_str()  ) ) ;
+    
+    if( !_hist[i] ) {
+      std::string mess(" can't read  histogram :") ;
+      mess +=  _rootNames[i+1] ;
+      throw Exception( mess ) ;
+    }
+    streamlog_out(DEBUG4) <<  " OK  at :"  <<  _hist[i]  << std::endl ;
+    
+  }
 
 }
 
@@ -121,36 +188,23 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
   
 //   //fg ++++++++++++++ test and debug code ++++++++++++++++++++++
 //   _vxdGeo->test() ;
-  
 //   if( col != 0 ){
-    
 //     for( int i=0 ; i < col->getNumberOfElements() ; ++i ){
-
 //       SimTrackerHit* sth = dynamic_cast<SimTrackerHit*>( col->getElementAt(i) ) ; 
-      
 //       gear::Vector3D pos( sth->getPosition()[0], sth->getPosition()[1], sth->getPosition()[2]  ) ;
-
 //       std::pair<int,int> id = _vxdGeo->getLadderID( pos ) ;
-
 //       if( id.first < 0 ) {
-        
 //         streamlog_out( WARNING ) <<  " VTX hit outside sensitive : " 
 //                                  <<  pos 
 //                                  << " in gear: " 
 //                                  << Global::GEAR->getVXDParameters().isPointInSensitive( pos ) 
 //                                  << std::endl ;
-
-        
-
 //       } else {
-
 //          gear::Vector3D lad = _vxdGeo->lab2Ladder( pos , id.first, id.second )  ;
 //          streamlog_out( DEBUG4 ) << " %%% " << lad ;
 //       }
 //     } 
 //   }
-
-
 //   return ;
 //   //fg ++++++++++++++ test and debug code ++++++++++++++++++++++
   
@@ -182,7 +236,6 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
 
     // area of one double ladder (+z and -z)
     double area = 2 * len * width / 100. ;  // mm^2 to cm^2
-    
     
     int nLad  = layerVXD.getNLadders(i) ;
     
@@ -229,20 +282,30 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
         hit->setCellID(  i + 1  ) ; // fg: here we'd like to have ladder id as well ....
 
 
+        // now we need to add some cluster parameters  to the hit :
+        double cluZ, cluRPhi ;
 
 
-        // TODO : now we need to add some cluster paramaters  to the hit :
+       _hist[i]->GetRandom2( cluZ, cluRPhi ) ;
+        
 
-        // ...
+       // --- cluster axes in ladder frame
+       gear::Vector3D axisAlad( 0, cluRPhi , 0    ) ;
+       gear::Vector3D axisBlad( 0,   0     , cluZ ) ;
+       
+       // --- cluster axes in lab frame
+       gear::Vector3D axisAlab = _vxdGeo->ladder2Lab( lad + axisAlad , i , j )  ;
+       gear::Vector3D axisBlab = _vxdGeo->ladder2Lab( lad + axisBlad, i , j )  ;
+       
+       hit->ext< ClusterParams >() = new VXDClusterParameters( axisAlab , axisBlab )  ;
 
-        // ...
 
-
-        col->addElement( hit ) ; 
-
+       col->addElement( hit ) ; 
+       
       }
     }
   }
+
 
   _nEvt ++ ;
 }
@@ -250,7 +313,164 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
 
 
   void VTXNoiseClusters::check( LCEvent * evt ) { 
-  // nothing to check here - could be used to fill checkplots in reconstruction processor
+
+
+#ifdef MARLIN_USE_AIDA
+  struct H1D{
+    enum { 
+      hitsLayer1,
+      hitsLayer2,
+      hitsLayer3,
+      hitsLayer4,
+      hitsLayer5,
+      hitsLayer6,
+      size 
+    }  ;
+  };
+//   struct H2D{
+//     enum { 
+//       clusLayer1,
+//       clusLayer2,
+//       clusLayer3,
+//       clusLayer4,
+//       clusLayer5,
+//       clusLayer6,
+//       size 
+//     }  ;
+//   };
+
+  if( isFirstEvent() ) {
+    
+    _hist1DVec.resize( H1D::size )   ;
+    
+    float  hitMax =  100000. ;
+    _hist1DVec[ H1D::hitsLayer1 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer1", 
+											      "hits Layer 1", 
+											      100, 0. ,hitMax ) ; 
+    _hist1DVec[ H1D::hitsLayer2 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer2", 
+											      "hits Layer 2", 
+											      100, 0. , hitMax ) ; 
+    _hist1DVec[ H1D::hitsLayer3 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer3", 
+											      "hits Layer 3", 
+											      100, 0. , hitMax ) ; 
+    _hist1DVec[ H1D::hitsLayer4 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer4", 
+											      "hits Layer 4", 
+											      100, 0. ,hitMax ) ; 
+    _hist1DVec[ H1D::hitsLayer5 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer5", 
+											      "hits Layer 5", 
+											      100, 0. , hitMax ) ; 
+    _hist1DVec[ H1D::hitsLayer6 ] = AIDAProcessor::histogramFactory(this)->createHistogram1D( "hitsLayer6", 
+											      "hits Layer 6", 
+											      100, 0. , hitMax ) ; 
+
+
+    _hist2DVec.resize( H1D::size )   ;
+    
+    for(int i=0 ; i < H1D::size ; ++i ){
+
+      std::stringstream name("clusSizLayer") ;
+      name << i ;
+      
+       std::stringstream comment("cluster sizes in layer ") ;
+      comment << i ;
+      
+      _hist2DVec[i] = AIDAProcessor::histogramFactory(this)
+        ->createHistogram2D( name.str() , 
+                             comment.str() , 
+                             200, 0. , 5.,
+                             200, 0. , 5. ) ; // fixme - should be read from root histos .... 
+
+    }
+
+
+
+  }
+#endif
+
+
+
+  LCCollection* vxdCol = 0 ; 
+
+  int nhit = 0 ;
+  int nHitL1 = 0 ;
+  int nHitL2 = 0 ;
+  int nHitL3 = 0 ;
+  int nHitL4 = 0 ;
+  int nHitL5 = 0 ;
+  int nHitL6 = 0 ;
+
+  
+  try { 
+    vxdCol = evt->getCollection( _colNameVTX ) ;
+
+    int nH = vxdCol->getNumberOfElements() ;
+    
+
+    streamlog_out( MESSAGE4 ) <<  "  ++++ " << evt->getEventNumber() << "  " <<  nH << std::endl ; 
+
+
+    for(int i=0; i<nH ; ++i){
+      
+      SimTrackerHit* sth = dynamic_cast<SimTrackerHit*>(  vxdCol->getElementAt(i) ) ;
+      
+      int layer = ( sth->getCellID() & 0xff )  ;
+     
+      // --- cluster axes in lab frame
+      VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;
+      
+
+      gear::Vector3D pos(  sth->getPosition()[0] , sth->getPosition()[1] , sth->getPosition()[2] ) ; 
+
+      if( cluP != 0 ) { // physics hits have no cluster parameters
+
+        // no get cluster axis vector:
+
+        gear::Vector3D axisAlab = cluP->getClusterAxisA() - pos ;
+        gear::Vector3D axisBlab = cluP->getClusterAxisB() - pos ;
+        
+        double cluA = axisAlab.r() ;
+        double cluB = axisBlab.r() ;
+
+//         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
+//                                << " axisBlab " << axisBlab  << std::endl ;
+
+        _hist2DVec[ layer-1 ]->fill( cluA, cluB ) ;
+      }
+      
+      switch (layer) {
+        
+      case 1 :
+        nHitL1++ ; 
+        break ;      
+      case 2 :
+        nHitL2++ ; 
+        break ;      
+      case 3 :
+        nHitL3++ ; 
+        break ;      
+      case 4 :
+        nHitL4++ ; 
+        break ;      
+      case 5 :
+        nHitL5++ ; 
+        break ;      
+      case 6 :
+        nHitL6++ ; 
+        break ;      
+      }
+      
+    }
+  } catch( DataNotAvailableException& e) {}
+  
+#ifdef MARLIN_USE_AIDA
+  _hist1DVec[ H1D::hitsLayer1 ]->fill( nHitL1 ) ;
+  _hist1DVec[ H1D::hitsLayer2 ]->fill( nHitL2 ) ;
+  _hist1DVec[ H1D::hitsLayer3 ]->fill( nHitL3 ) ;
+  _hist1DVec[ H1D::hitsLayer4 ]->fill( nHitL4 ) ;
+  _hist1DVec[ H1D::hitsLayer5 ]->fill( nHitL5 ) ;
+  _hist1DVec[ H1D::hitsLayer6 ]->fill( nHitL6 ) ;
+#endif
+  
 }
 
 
@@ -262,3 +482,4 @@ void VTXNoiseClusters::end(){
 }
 
 
+#endif // USE_ROOT

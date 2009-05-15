@@ -1,7 +1,24 @@
 *  
-* $Id: tflnk2.F,v 1.5 2008-01-23 17:22:22 aplin Exp $
+* $Id: tflnk2.F,v 1.6 2009-05-15 15:12:30 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2008/01/23 17:22:22  aplin
+*
+*      The TPC Tracking code has been altered to cope with more than 224 pad rows
+*      the max number of pad rows can be changed in padrow.inc by changing
+*
+*      The maximum number of TPC Padrows that the tracking code
+*      can accept must be a multiple of 32
+*
+*      Note this is not the number of TPC Padrows in the dectector
+*      but the maximum allowed because of the predifined array sizes
+*      and a set of 32 bit registers
+*
+*      Currently it is set to 512
+*
+*      By increasing the value of N32BITREG in padrow.inc you can increase the max
+*      number of pad rows
+*
 * Revision 1.4  2007/09/05 09:47:29  rasp
 * Updated version
 *
@@ -141,9 +158,9 @@ c      LOGICAL LNEW,LTHCND(3)
 
       SAVE
 
+
+
 C-------------------------------------------------------------------------
-
-
 
       IF(FIRST) THEN
         FIRST=.FALSE.
@@ -250,9 +267,8 @@ c      IW(1)=1
 c      CALL WBANK(IW,NBPWRK,NTRI,*848)
 
 c      write(*,*) "NTRI = " , NTRI
+
       DO 1 I=1,NTRI
-
-
 C GAB:
 c        IW(NBPWRK+I)=0
           MY_NBMWRK(I)=0
@@ -477,12 +493,22 @@ c          NTPC=NPT1+NPT2
           CALL UFITMS(NTPC,NITC,NVDET,LIST1,LIST2,LIST3,IOPT,NMULT
      +                              ,RMS,RADLEN,VV0,EE0,COV,CHI2,IERR)
 
+
+C SJA:Commented out the hard coded CHI2 condition inserted below, and reinstated the original value of PPP
+          IF ( CHI2.GT.0 .AND. (2*NPT-5).GT.0 .AND. NPT.GT.0 ) THEN
+             PPP = PROB(CHI2,(2*NPT-5))
+          ELSE
+             WRITE(*,*) 
+     +            "tflnk2: CHI2 or NDF sent to CERNLIB PROB() are zero"
+             PPP = 1e-25
+          ENDIF
+          
 c MVL          PPP=PROB(CHI2,2*NTPC-5)
-      IF(CHI2.GT.0.0.and.CHI2.lT.300.0.and.2*NTPC-5.GT.0)THEN
-        PPP=max(PROB(CHI2,(2*NTPC-5)),1.e-25)
-      ELSE
-        PPP=1.e-25
-      ENDIF
+C      IF(CHI2.GT.0.0.and.CHI2.lT.300.0.and.2*NTPC-5.GT.0)THEN
+C        PPP=max(PROB(CHI2,(2*NTPC-5)),1.e-25)
+C      ELSE
+C        PPP=1.e-25
+C      ENDIF
 c MVL
           IF (PPP.LT.PMIN) THEN
             IF (NTPC.GT.MINPT.AND.LOST.LT.LOMAX) THEN
@@ -610,6 +636,10 @@ c      IW(KTGCL+LMHROW)=NTGCL
 C
 C++   Loop over all tracks
 C
+      
+
+
+
       DO 567 I0=1,NTRI
 C
 C++     Look for a link
@@ -731,41 +761,41 @@ C++     Copy the unchanged tracks
 C
 
         NT=NT+1
-
-C GAB:
-c        IT1FT=KROW(KT1FT,I0)
-c        IW(IT1FT+JT1FTG) = NT
-c        ITGFT=KROW(KTGFT,NT)
-c        CALL UCOPY(RW(IT1FT+JTGFIR),RW(ITGFT+JTGFIR),5)
-c        CALL UCOPY(RW(IT1FT+JTGFEM),RW(ITGFT+JTGFEM),15)
-c        RW(ITGFT+JTGFCD)=RW(IT1FT+JTGFCD)
-c        IW(ITGFT+JTGFDF)=IW(IT1FT+JTGFDF)
-c        IW(ITGFT+JTGFTC)=IW(IT1FT+JT1FTC)
+        
+C     GAB:
+c     IT1FT=KROW(KT1FT,I0)
+c     IW(IT1FT+JT1FTG) = NT
+c     ITGFT=KROW(KTGFT,NT)
+c     CALL UCOPY(RW(IT1FT+JTGFIR),RW(ITGFT+JTGFIR),5)
+c     CALL UCOPY(RW(IT1FT+JTGFEM),RW(ITGFT+JTGFEM),15)
+c     RW(ITGFT+JTGFCD)=RW(IT1FT+JTGFCD)
+c     IW(ITGFT+JTGFDF)=IW(IT1FT+JTGFDF)
+c     IW(ITGFT+JTGFTC)=IW(IT1FT+JT1FTC)
         IT1FT=I0
         MY_JT1FTG(IT1FT) = NT
         ITGFT=NT
-         MY_JTGFIR(ITGFT)=MY_JT1FIR(IT1FT)
-         MY_JTGFTL(ITGFT)=MY_JT1FTL(IT1FT)
-         MY_JTGFP0(ITGFT)=MY_JT1FP0(IT1FT)
-         MY_JTGFD0(ITGFT)=MY_JT1FD0(IT1FT)
-         MY_JTGFZ0(ITGFT)=MY_JT1FZ0(IT1FT)
-         DO  K=1,15
-          MY_JTGFEM(ITGFT,K)=MY_JT1FEM(IT1FT,K)
-         ENDDO
-         MY_JTGFCD(ITGFT)=MY_JT1FCD(IT1FT)
-         MY_JTGFDF(ITGFT)=MY_JT1FDF(IT1FT)
-         MY_JTGFTC(ITGFT)=MY_JT1FTC(IT1FT)
-
+        MY_JTGFIR(ITGFT)=MY_JT1FIR(IT1FT)
+        MY_JTGFTL(ITGFT)=MY_JT1FTL(IT1FT)
+        MY_JTGFP0(ITGFT)=MY_JT1FP0(IT1FT)
+        MY_JTGFD0(ITGFT)=MY_JT1FD0(IT1FT)
+        MY_JTGFZ0(ITGFT)=MY_JT1FZ0(IT1FT)
+        DO  K=1,15
+           MY_JTGFEM(ITGFT,K)=MY_JT1FEM(IT1FT,K)
+        ENDDO
+        MY_JTGFCD(ITGFT)=MY_JT1FCD(IT1FT)
+        MY_JTGFDF(ITGFT)=MY_JT1FDF(IT1FT)
+        MY_JTGFTC(ITGFT)=MY_JT1FTC(IT1FT)
+        
 C GAB:
-c        IT1TL=KROW(KT1TL,I0)
-c        ITGTL=KROW(KTGTL,NT)
-c        IW(ITGTL+JTGTIO)=NCL
-c        IW(ITGTL+JTGTN1)=IW(IT1TL+JTGTN1)
-c        IW(ITGTL+JTGTNR)=IW(IT1TL+JTGTNR)
-c        KP=ITABL(KT1TL,I0,JTGTIO)
-c        NTOT=IW(ITGTL+JTGTN1)+IW(ITGTL+JTGTNR)
-c        CALL UCOPY(IW(KT1CL+LMHLEN+KP+1),IW(KTGCL+LMHLEN+NCL+1),NTOT)
-c        NCL=NCL+NTOT
+c     IT1TL=KROW(KT1TL,I0)
+c     ITGTL=KROW(KTGTL,NT)
+c     IW(ITGTL+JTGTIO)=NCL
+c     IW(ITGTL+JTGTN1)=IW(IT1TL+JTGTN1)
+c     IW(ITGTL+JTGTNR)=IW(IT1TL+JTGTNR)
+c     KP=ITABL(KT1TL,I0,JTGTIO)
+c     NTOT=IW(ITGTL+JTGTN1)+IW(ITGTL+JTGTNR)
+c     CALL UCOPY(IW(KT1CL+LMHLEN+KP+1),IW(KTGCL+LMHLEN+NCL+1),NTOT)
+c     NCL=NCL+NTOT
         IT1TL=I0
         ITGTL=NT
         MY_JTGTIO(ITGTL)=NCL
@@ -775,8 +805,9 @@ c        NCL=NCL+NTOT
         NTOT=MY_JTGTN1(ITGTL)+MY_JTGTNR(ITGTL)
         CALL UCOPY(MY_T1CLT(KP+1),MY_TGCLT(NCL+1),NTOT)
         NCL=NCL+NTOT
-C
-  567 CONTINUE
+C     
+
+ 567  CONTINUE
 c      write(*,*) "got this far"
 C
 C Update the pointers in TPCO to the TGFT bank

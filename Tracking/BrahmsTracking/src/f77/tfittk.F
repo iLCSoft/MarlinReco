@@ -1,7 +1,19 @@
 *  
-* $Id: tfittk.F,v 1.3 2008-06-26 09:35:56 aplin Exp $
+* $Id: tfittk.F,v 1.4 2009-05-15 15:12:29 aplin Exp $
 *  
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2008/06/26 09:35:56  aplin
+*
+* A clean up has been made of the arrays that hold the TE's/Hits for
+* track fitting. An effort has been made to ensure that both the arrays
+* are big enough to hold the required number of hits, and that the arrays
+* are all of the same dimensions between calling routines.
+*
+* All verbose output, except for the case where the tracking is dropped
+* for a complete event, has now been hidden behind debug IF
+* Statements. The level of verbosity can be controlled via the variables
+* TPCDBG, TKSTDBG, FSFDBG and IDEB  in tkinit.F
+*
 * Revision 1.2  2005/08/08 07:09:13  aplin
 * Made f77 tracking code use GEAR to define the geomtery of the TPC. LTPDRO now defines the maximum number of rows is used to define the size of arrays, this is limited to 224 due the use of 7 '32 bit' bit registers in trkfnd.F increased, though at present it is not likely that anybody would want more. The number of TPC padrows is defined at run time by NRTPC which should of course not exceed LTPDRO, although this is checked and the programe exits with a verbose error message. A wrapper function gettpcgeom is used to pass the GEAR TPC parameters from C++ to f77. MarlinUtil/include/marlin_tpcgeom.h have MarlinUtil/src/marlin_tpcgeom.cc consequently been removed as they are no longer needed.
 *
@@ -257,90 +269,105 @@ c(kh)
            RETURN
         END IF
 c GAB:
-         DO I=1,NPT
-          LIST(I)= MY_JTCCIT(MY_JTCAIO(ICAND)+I)
-         ENDDO
+        DO I=1,NPT
+           LIST(I)= MY_JTCCIT(MY_JTCAIO(ICAND)+I)
+        ENDDO
 
-c GAB:
-c        CALL TMSHEL('TPCO',NPT,IW(KSTCC+1),2,RW(JT1FT+JT1FIR),
+
+        
+c     GAB:
+c     CALL TMSHEL('TPCO',NPT,IW(KSTCC+1),2,RW(JT1FT+JT1FIR),
 c     &                           RW(JT1FT+JT1FEM),RW(JT1FT+JT1FCD))
 
         CALL MY_TMSHEL(NPT,LIST,2,VV0,EE0,CHI2)
-
+        
         MY_JT1FIR(JT1FT)=VV0(1)
         MY_JT1FTL(JT1FT)=VV0(2)
+
         DO I=1,15
-         MY_JT1FEM(JT1FT,I)=EE0(I)
+           MY_JT1FEM(JT1FT,I)=EE0(I)
         ENDDO
+
         MY_JT1FCD(JT1FT)=CHI2
-
+        
 c GAB:
-c        IW(JT1FT+JT1FDF) = 2*NPT-5
-c        PPP = PROB(RW(JT1FT+JT1FCD),(2*NPT-5))
+c     IW(JT1FT+JT1FDF) = 2*NPT-5
+c     PPP = PROB(RW(JT1FT+JT1FCD),(2*NPT-5))
+        
+        MY_JT1FDF(JT1FT)= 2*NPT-5
 
-         MY_JT1FDF(JT1FT)= 2*NPT-5
-         PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT-5))
-
-C---->  Protect against hopeless fits
-C GAB:
-C        CALL TFCHEK(RW(JT1FT+JT1FIR),.TRUE.,IERR)
+C SJA:Protection again zero values which have no meaning        
+        IF (MY_JT1FCD(JT1FT).GT.0.AND.(2*NPT-5).GT.0.AND.NPT.GT.0) THEN
+           PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT-5))
+        ELSE
+           WRITE(*,*) 
+     +          "tfittk: CHI2 or NDF sent to CERNLIB PROB() are zero"
+           PPP = 1e-25
+        ENDIF
+        
+C---- >  Protect against hopeless fits
+C     GAB:
+C     CALL TFCHEK(RW(JT1FT+JT1FIR),.TRUE.,IERR)
 
         CALL TFCHEK(VV0,.TRUE.,IERR)
-
+        
         IF (PPP.GT.PMIN .AND. IERR.EQ.0) THEN
-          NTKOK = NTKOK+1
-C GAB:
-c          IW(IWORST+ICAND)=0
-c          IW(JT1FT+JT1FTC)=ICAND
-c          IW(JT1FT+JT1FTG)=0
-          IWORST(ICAND)=0
-          MY_JT1FTC(JT1FT)=ICAND
-          MY_JT1FTG(JT1FT)=0
+           NTKOK = NTKOK+1
+
+C     GAB:
+c     IW(IWORST+ICAND)=0
+c     IW(JT1FT+JT1FTC)=ICAND
+c     IW(JT1FT+JT1FTG)=0
+           IWORST(ICAND)=0
+           MY_JT1FTC(JT1FT)=ICAND
+           MY_JT1FTG(JT1FT)=0
 
 C GAB
-cC----->   Candidate -> 'T1TL'
-c          KSCAL = KROW(KTCAL,ICAND)
-c          KSGTL = KROW(KT1TL,NTKOK)
-          KSCAL = ICAND
-          KSGTL = NTKOK
-          NT1TL=KSGTL
+c     C----->   Candidate -> 'T1TL'
+c     KSCAL = KROW(KTCAL,ICAND)
+c     KSGTL = KROW(KT1TL,NTKOK)
+           KSCAL = ICAND
+           KSGTL = NTKOK
+           NT1TL=KSGTL
 
-c          IW(KSGTL+JT1TIO) = NPTOK
-c          IW(KSGTL+JT1TN1) = IW(KSCAL+JTCANF)
-c          IW(KSGTL+JT1TNR) = IW(KSCAL+JTCANR)
-          MY_JT1TIO(KSGTL) = NPTOK
-          MY_JT1TN1(KSGTL) = MY_JTCANF(KSCAL)
-          MY_JT1TNR(KSGTL) = MY_JTCANR(KSCAL)
+c     IW(KSGTL+JT1TIO) = NPTOK
+c     IW(KSGTL+JT1TN1) = IW(KSCAL+JTCANF)
+c     IW(KSGTL+JT1TNR) = IW(KSCAL+JTCANR)
+           MY_JT1TIO(KSGTL) = NPTOK
+           MY_JT1TN1(KSGTL) = MY_JTCANF(KSCAL)
+           MY_JT1TNR(KSGTL) = MY_JTCANR(KSCAL)
 C----->   Candidate -> 'T1CL'
-          KSGCL = KKT1CL(NTKOK)
+           KSGCL = KKT1CL(NTKOK)
 
-C GAB:
-c          NLONG = IW(KSGTL+JT1TN1)+IW(KSGTL+JT1TNR)
-c          DO 80 I=1,NLONG
-c            IW(KSGCL+I) = IW(KSTCC+I)
-c   80     CONTINUE
-          NLONG = MY_JT1TN1(KSGTL)+MY_JT1TNR(KSGTL)
-          DO 80 I=1,NLONG
-           MY_T1CLT(KSGCL+I)=MY_JTCCIT(MY_JTCAIO(ICAND)+I)
-   80     CONTINUE
-          NPTOK = NPTOK+NLONG
+           
+C     GAB:
+c     NLONG = IW(KSGTL+JT1TN1)+IW(KSGTL+JT1TNR)
+c     DO 80 I=1,NLONG
+c     IW(KSGCL+I) = IW(KSTCC+I)
+c     80     CONTINUE
+           NLONG = MY_JT1TN1(KSGTL)+MY_JT1TNR(KSGTL)
+           DO 80 I=1,NLONG
+              MY_T1CLT(KSGCL+I)=MY_JTCCIT(MY_JTCAIO(ICAND)+I)
+ 80        CONTINUE
+           NPTOK = NPTOK+NLONG
+
         ELSE
 C-----> Else, determine which was the worst point
-          CHI2  = 0.0
+           CHI2  = 0.0
+           
 
-          CALL TMSHEC(DCHI2)
-
-          DO 90 IPT =1,NPT
-          IF(DCHI2(IPT).GT.CHI2) THEN
-            CHI2 = DCHI2(IPT)
+           CALL TMSHEC(DCHI2)
+           
+           DO 90 IPT =1,NPT
+              IF(DCHI2(IPT).GT.CHI2) THEN
+                 CHI2 = DCHI2(IPT)
 C GAB:
-C            IW(IWORST+ICAND)=IPT
-            IWORST(ICAND)=IPT
-          END IF
-   90     CONTINUE
+C     IW(IWORST+ICAND)=IPT
+                 IWORST(ICAND)=IPT
+              END IF
+ 90        CONTINUE
         END IF
-
-  100 CONTINUE
+ 100  CONTINUE
 
 C
 C*******************************************************************C
@@ -384,36 +411,46 @@ c          DO 112 IPT=IW(IWORST+ICAND)+1,NPT
         END IF
         NPT = NPT-1
         LOST= LOST+1
-C---->  Now fit again
+C---- >  Now fit again
 C GAB:
-C        CALL TMSHEL('TPCO',NPT,IBUFF,2,RW(JT1FT+JT1FIR),
+C     CALL TMSHEL('TPCO',NPT,IBUFF,2,RW(JT1FT+JT1FIR),
 C     &                     RW(JT1FT+JT1FEM),RW(JT1FT+JT1FCD))
         CALL MY_TMSHEL(NPT,IBUFF,2,VV0,EE0,CHI2)
-
+        
         MY_JT1FIR(JT1FT)=VV0(1)
         MY_JT1FTL(JT1FT)=VV0(2)
         DO I=1,15
-         MY_JT1FEM(JT1FT,I)=EE0(I)
+           MY_JT1FEM(JT1FT,I)=EE0(I)
         ENDDO
         MY_JT1FCD(JT1FT)=CHI2
-C GAB:
-c        IW(JT1FT+JT1FDF) = 2*NPT-5
-c        PPP = PROB(RW(JT1FT+JT1FCD),(2*NPT-5))
+C     GAB:
+c     IW(JT1FT+JT1FDF) = 2*NPT-5
+c     PPP = PROB(RW(JT1FT+JT1FCD),(2*NPT-5))
 
-         MY_JT1FDF(JT1FT) = 2*NPT-5
-c MVL        PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT-5))
-      IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
-     > .and.2*NPT-5.GT.0)THEN
-        PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT-5)),1e-25)
-      ELSE
-        PPP=1e-25
-      ENDIF
-c MVL
-C---->  Take out the garbage
-C GAB:
-c        CALL TFCHEK(RW(JT1FT+JT1FIR),.TRUE.,IERR)
+        MY_JT1FDF(JT1FT) = 2*NPT-5
+
+C SJA:Commented out the hard coded CHI2 condition inserted below, and reinstated the original value of PPP
+        IF (MY_JT1FCD(JT1FT).GT.0.AND.(2*NPT-5).GT.0.AND.NPT.GT.0) THEN
+           PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT-5))
+        ELSE
+           WRITE(*,*) 
+     +          "tfittk: CHI2 or NDF sent to CERNLIB PROB() are zero"
+           PPP = 1e-25
+        ENDIF
+
+c     MVL        PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT-5))
+c        IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
+c     >       .and.2*NPT-5.GT.0)THEN
+c           PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT-5)),1e-25)
+c        ELSE
+c           PPP=1e-25
+c        ENDIF
+c     MVL
+C---- >  Take out the garbage
+C     GAB:
+c     CALL TFCHEK(RW(JT1FT+JT1FIR),.TRUE.,IERR)
         CALL TFCHEK(VV0,.TRUE.,IERR)
-
+ 
         IF (PPP.GT.PMIN .AND. IERR.EQ.0) THEN
           NTKOK = NTKOK+1
 
@@ -568,15 +605,24 @@ C            IW(ICAND+IWORST) = 0
 C GAB:
 c        IW(JT1FT+JT1FDF) = 2*NPT1-5
 c        PPP = PROB(RW(JT1FT+JT1FCD),(2*NPT1-5))
+
          MY_JT1FDF(JT1FT) = 2*NPT1-5
+C SJA:Commented out the hard coded CHI2 condition inserted below, and reinstated the original value of PPP
+         IF(MY_JT1FCD(JT1FT).GT.0.AND.(2*NPT1-5).GT.0.AND.NPT1.GT.0)THEN
+            PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT1-5))
+         ELSE
+            WRITE(*,*) 
+     +           "tfittk: CHI2 or NDF sent to CERNLIB PROB() are zero"
+            PPP = 1e-25
+         ENDIF
 
 c MVL         PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT1-5))
-      IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
-     > .and.2*NPT1-5.GT.0)THEN
-        PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT1-5)),1e-25)
-      ELSE
-        PPP=1e-25
-      ENDIF
+C      IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
+C     > .and.2*NPT1-5.GT.0)THEN
+C        PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT1-5)),1e-25)
+C      ELSE
+C        PPP=1e-25
+C      ENDIF
 c MVL
 
 C GAB:
@@ -661,13 +707,22 @@ c        IW(JT1FT+JT1FDF) = 2*NPT2-5
           MY_JT1FDF(JT1FT) = 2*NPT2-5
 
 C GAB:
+C SJA:Commented out the hard coded CHI2 condition inserted below, and reinstated the original value of PPP
+         IF(MY_JT1FCD(JT1FT).GT.0.AND.(2*NPT2-5).GT.0.AND.NPT2.GT.0)THEN
+             PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT2-5))
+          ELSE
+            WRITE(*,*) 
+     +           "tfittk: CHI2 or NDF sent to CERNLIB PROB() are zero"
+             PPP = 1e-25
+          ENDIF
+
 C MVL          PPP = PROB(MY_JT1FCD(JT1FT),(2*NPT2-5))
-      IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
-     > .and.2*NPT2-5.GT.0)THEN
-        PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT2-5)),1e-25)
-      ELSE
-        PPP=1e-25
-      ENDIF
+C      IF(MY_JT1FCD(JT1FT).GT.0.0.and.MY_JT1FCD(JT1FT).lT.300.0
+C     > .and.2*NPT2-5.GT.0)THEN
+C        PPP=max(PROB(MY_JT1FCD(JT1FT),(2*NPT2-5)),1e-25)
+C      ELSE
+C        PPP=1e-25
+C      ENDIF
 c MVL
          IF(PPP.GT.PMIN)THEN
 
@@ -902,12 +957,22 @@ C            IW(IWORST+ICAND) = 0
              GOTO 500
          ENDIF
 C GAB:
+
+C SJA:Commented out the hard coded CHI2 condition inserted below, and reinstated the original value of PPP
+        IF ( CHI2.GT.0.AND.(2*NPT-5).GT.0.AND.NPT.GT.0) THEN
+           PPP = PROB(CHI2,(2*NPT-5))
+        ELSE
+           WRITE(*,*) 
+     +          "tfittk: CHI2 or NDF sent to CERNLIB PROB() are zero"
+           PPP = 1e-25
+        ENDIF
+
 c MVL         PPP=PROB(CHI2,2*NPT-5)
-      IF(CHI2.GT.0.0.and.CHI2.lT.300.0.and.2*NPT-5.GT.0)THEN
-        PPP=max(PROB(CHI2,(2*NPT-5)),1.e-25)
-      ELSE
-        PPP=1.e-25
-      ENDIF
+C      IF(CHI2.GT.0.0.and.CHI2.lT.300.0.and.2*NPT-5.GT.0)THEN
+C        PPP=max(PROB(CHI2,(2*NPT-5)),1.e-25)
+C      ELSE
+C        PPP=1.e-25
+C      ENDIF
 c MVL
          IF(PPP.GE.PMIN)THEN
 C GAB:

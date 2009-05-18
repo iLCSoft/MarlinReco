@@ -153,6 +153,17 @@ void VTXNoiseClusters::init() {
       throw Exception( mess ) ;
     }
     streamlog_out(DEBUG4) <<  " OK  at :"  <<  _hist[i]  << std::endl ;
+
+    streamlog_out(DEBUG) <<  " 2D histo - bins (x,y): "  
+                         << _hist[i]->GetNbinsX() <<   ", "  
+                         << _hist[i]->GetXaxis()->GetBinLowEdge(1) << ", "
+                         << _hist[i]->GetXaxis()->GetBinLowEdge( _hist[i]->GetNbinsX() ) 
+      +  _hist[i]->GetXaxis()->GetBinWidth(  _hist[i]->GetNbinsX() )  << " , " 
+                         << _hist[i]->GetNbinsY() <<   ", "  
+                         << _hist[i]->GetYaxis()->GetBinLowEdge(1) << ", "
+                         << _hist[i]->GetYaxis()->GetBinLowEdge( _hist[i]->GetNbinsY() ) 
+      +  _hist[i]->GetYaxis()->GetBinWidth(  _hist[i]->GetNbinsY() ) 
+                               << std::endl ;
     
   }
 
@@ -327,17 +338,6 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
       size 
     }  ;
   };
-//   struct H2D{
-//     enum { 
-//       clusLayer1,
-//       clusLayer2,
-//       clusLayer3,
-//       clusLayer4,
-//       clusLayer5,
-//       clusLayer6,
-//       size 
-//     }  ;
-//   };
 
   if( isFirstEvent() ) {
     
@@ -374,15 +374,27 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
        std::stringstream comment("cluster sizes in layer ") ;
       comment << i ;
       
+
+      int nx =  _hist[i]->GetNbinsX() ;
+      float xMin = _hist[i]->GetXaxis()->GetBinLowEdge(1)  ;
+      float xMax = _hist[i]->GetXaxis()->GetBinLowEdge( _hist[i]->GetNbinsX() ) 
+        +  _hist[i]->GetXaxis()->GetBinWidth(  _hist[i]->GetNbinsX() ) ;
+
+      int ny =  _hist[i]->GetNbinsY() ;
+      float yMin = _hist[i]->GetYaxis()->GetBinLowEdge(1)  ;
+      float yMax = _hist[i]->GetYaxis()->GetBinLowEdge( _hist[i]->GetNbinsY() ) 
+        +  _hist[i]->GetYaxis()->GetBinWidth(  _hist[i]->GetNbinsY() ) ;
+      
+      
       _hist2DVec[i] = AIDAProcessor::histogramFactory(this)
         ->createHistogram2D( name.str() , 
                              comment.str() , 
-                             200, 0. , 5.,
-                             200, 0. , 5. ) ; // fixme - should be read from root histos .... 
-
+                             nx, xMin, xMax ,
+                             ny, yMin, yMax ) ; // fixme - should be read from root histos .... 
+      
     }
-
-
+    
+    
 
   }
 #endif
@@ -405,9 +417,6 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
 
     int nH = vxdCol->getNumberOfElements() ;
     
-
-    streamlog_out( MESSAGE4 ) <<  "  ++++ " << evt->getEventNumber() << "  " <<  nH << std::endl ; 
-
 
     for(int i=0; i<nH ; ++i){
       
@@ -434,7 +443,7 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
 //         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
 //                                << " axisBlab " << axisBlab  << std::endl ;
 
-        _hist2DVec[ layer-1 ]->fill( cluA, cluB ) ;
+        _hist2DVec[ layer-1 ]->fill( cluB , cluA) ;
       }
       
       switch (layer) {

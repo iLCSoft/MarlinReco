@@ -138,7 +138,7 @@ void VXDGeometry::init() {
 }
 
 
-gear::Vector3D VXDGeometry::lab2Ladder( gear::Vector3D labPos, int layerID, int ladderID) {
+gear::Vector3D VXDGeometry::lab2LadderPos( gear::Vector3D labPos, int layerID, int ladderID) {
   
   gear::Vector3D u = labPos -  _vxdLadders[layerID][ladderID].trans ;
   
@@ -148,7 +148,7 @@ gear::Vector3D VXDGeometry::lab2Ladder( gear::Vector3D labPos, int layerID, int 
                          gear::Vector3D::cylindrical ) ;
 }
 
-gear::Vector3D VXDGeometry::ladder2Lab( gear::Vector3D ladderPos, int layerID, int ladderID){
+gear::Vector3D VXDGeometry::ladder2LabPos( gear::Vector3D ladderPos, int layerID, int ladderID){
 
   gear::Vector3D r( ladderPos.rho(), 
                     ladderPos.phi() + _vxdLadders[layerID][ladderID].phi, 
@@ -157,6 +157,23 @@ gear::Vector3D VXDGeometry::ladder2Lab( gear::Vector3D ladderPos, int layerID, i
 
   return r + _vxdLadders[layerID][ladderID].trans ;
 
+}
+
+gear::Vector3D VXDGeometry::lab2LadderDir( gear::Vector3D labDir, int layerID, int ladderID) {
+  
+  return gear::Vector3D( labDir.rho(), 
+                         labDir.phi() - _vxdLadders[layerID][ladderID].phi, 
+                         labDir.z(),  
+                         gear::Vector3D::cylindrical ) ;
+}
+
+gear::Vector3D VXDGeometry::ladder2LabDir( gear::Vector3D ladderDir, int layerID, int ladderID){
+
+  return gear::Vector3D( ladderDir.rho(), 
+                         ladderDir.phi() + _vxdLadders[layerID][ladderID].phi, 
+                         ladderDir.z(),  
+                         gear::Vector3D::cylindrical ) ;
+  
 }
   
 
@@ -177,7 +194,7 @@ std::pair<int,int> VXDGeometry::getLadderID( gear::Vector3D labPos, int layerID 
 
         for(unsigned j = 0 ; j < m ;  ++j ) { // check 
           
-          gear::Vector3D l = lab2Ladder( labPos , i , j ) ;
+          gear::Vector3D l = lab2LadderPos( labPos , i , j ) ;
           
           double z_abs = std::abs( l.z() ) - _vxdLayers[i].gap / 2. ;
           
@@ -197,7 +214,7 @@ std::pair<int,int> VXDGeometry::getLadderID( gear::Vector3D labPos, int layerID 
   
   for(unsigned j = 0 ; j < m ;  ++j ) { // check 
     
-    gear::Vector3D l = lab2Ladder( labPos , layerID , j ) ;
+    gear::Vector3D l = lab2LadderPos( labPos , layerID , j ) ;
     
     double z_abs = std::abs( l.z() ) - _vxdLayers[layerID].gap / 2. ;
     
@@ -255,9 +272,9 @@ void VXDGeometry::test() {
         
         gear::Vector3D ladRnd( 0 , k1 * width, k2 * len + hgap ) ;  
         
-        gear::Vector3D lab = ladder2Lab( ladRnd, i , j )  ;
+        gear::Vector3D lab = ladder2LabPos( ladRnd, i , j )  ;
         
-        gear::Vector3D ladder = lab2Ladder( lab, i , j )  ;
+        gear::Vector3D ladder = lab2LadderPos( lab, i , j )  ;
         
 
 

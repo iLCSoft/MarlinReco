@@ -274,7 +274,7 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
 
         gear::Vector3D lad( 0 , k1 * width, k2 * len + hgap ) ;  
         
-        gear::Vector3D lab = _vxdGeo->ladder2Lab( lad, i , j )  ;
+        gear::Vector3D lab = _vxdGeo->ladder2LabPos( lad, i , j )  ;
 
         // double check if point is in sensitive
         if( ! gearVXD.isPointInSensitive( lab ) ){
@@ -301,12 +301,12 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
         
 
        // --- cluster axes in ladder frame
-       gear::Vector3D axisAlad( 0, cluRPhi , 0    ) ;
-       gear::Vector3D axisBlad( 0,   0     , cluZ ) ;
+       gear::Vector3D axisAlad( 0, cluRPhi/2. , 0    ) ;
+       gear::Vector3D axisBlad( 0,   0     , cluZ/2. ) ;
        
        // --- cluster axes in lab frame
-       gear::Vector3D axisAlab = _vxdGeo->ladder2Lab( lad + axisAlad , i , j )  ;
-       gear::Vector3D axisBlab = _vxdGeo->ladder2Lab( lad + axisBlad, i , j )  ;
+       gear::Vector3D axisAlab = _vxdGeo->ladder2LabDir( axisAlad , i , j )  ;
+       gear::Vector3D axisBlab = _vxdGeo->ladder2LabDir( axisBlad, i , j )  ;
        
        hit->ext< ClusterParams >() = new VXDClusterParameters( axisAlab , axisBlab )  ;
 
@@ -390,7 +390,7 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
         ->createHistogram2D( name.str() , 
                              comment.str() , 
                              nx, xMin, xMax ,
-                             ny, yMin, yMax ) ; // fixme - should be read from root histos .... 
+                             ny, yMin, yMax ) ; 
       
     }
     
@@ -428,22 +428,22 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
       VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;
       
 
-      gear::Vector3D pos(  sth->getPosition()[0] , sth->getPosition()[1] , sth->getPosition()[2] ) ; 
+      //      gear::Vector3D pos(  sth->getPosition()[0] , sth->getPosition()[1] , sth->getPosition()[2] ) ; 
 
       if( cluP != 0 ) { // physics hits have no cluster parameters
 
-        // no get cluster axis vector:
+        // now get cluster axis vector:
 
-        gear::Vector3D axisAlab = cluP->getClusterAxisA() - pos ;
-        gear::Vector3D axisBlab = cluP->getClusterAxisB() - pos ;
+        gear::Vector3D axisAlab = cluP->getClusterAxisA() ; //- pos ;
+        gear::Vector3D axisBlab = cluP->getClusterAxisB() ; //- pos ;
         
         double cluA = axisAlab.r() ;
         double cluB = axisBlab.r() ;
-
-//         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
-//                                << " axisBlab " << axisBlab  << std::endl ;
-
-        _hist2DVec[ layer-1 ]->fill( cluB , cluA) ;
+        
+        //         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
+        //                                << " axisBlab " << axisBlab  << std::endl ;
+        
+        _hist2DVec[ layer-1 ]->fill( cluB *2. , cluA * 2. ) ;
       }
       
       switch (layer) {

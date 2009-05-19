@@ -43,7 +43,7 @@ typedef std::vector< VXDLayer >  VXDLayers ;
  * width. The z coordinate is the same as in the lab frame. 
  *  
  * <br>
- * @version $Id: VXDGeometry.h,v 1.1 2009-05-14 07:24:19 gaede Exp $
+ * @version $Id: VXDGeometry.h,v 1.2 2009-05-19 09:22:20 gaede Exp $
  * @author F.Gaede, DESY
  */
 class VXDGeometry  {
@@ -61,12 +61,22 @@ public:
   /** Convert a position in the lab frame to local ladder coordinates 
    *  (x_ladder==0 is the middle of the sensitive).
    */
-  gear::Vector3D lab2Ladder( gear::Vector3D labPos, int layerID, int ladderID) ;
+  gear::Vector3D lab2LadderPos( gear::Vector3D labPos, int layerID, int ladderID) ;
   
   /** Convert a position in local ladder coordinates 
    *  (x_ladder==0 is the middle of the sensitive) to the lab frame.
    */
-  gear::Vector3D ladder2Lab( gear::Vector3D ladderPos, int layerID, int ladderID) ;
+  gear::Vector3D ladder2LabPos( gear::Vector3D ladderPos, int layerID, int ladderID) ;
+
+  /** Convert a direction in the lab frame to local ladder coordinates 
+   *  (x_ladder==0 is the middle of the sensitive). 
+   */
+  gear::Vector3D lab2LadderDir( gear::Vector3D labPos, int layerID, int ladderID) ;
+  
+  /** Convert a direction in local ladder coordinates 
+   *  (x_ladder==0 is the middle of the sensitive) to the lab frame.
+   */
+  gear::Vector3D ladder2LabDir( gear::Vector3D ladderPos, int layerID, int ladderID) ;
 
   void test() ;
 

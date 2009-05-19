@@ -177,7 +177,10 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
         sma*=0.001; //in mm
         SMA*=0.001; //in mm
 
-        streamlog_out( DEBUG ) << " eff. path length : " << effpl << " SMA " << SMA << std::endl ;
+        streamlog_out( DEBUG ) << " eff. path length : " << effpl 
+                               << " SMA " << SMA 
+                               << " sma " << sma 
+                               << std::endl ;
 
 
         //calculate the ladder where the hit has taken place
@@ -311,7 +314,7 @@ void VTXBgClusters::check( LCEvent * evt ) {
       
       SimTrackerHit* sth = dynamic_cast<SimTrackerHit*>(  vxdCol->getElementAt(i) ) ;
       
-      int layer = ( sth->getCellID() & 0xff )  ;
+      int layer = ( sth->getCellID() & 0xff ) - 1 ;
      
       // --- cluster axes in lab frame
       VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;
@@ -326,33 +329,37 @@ void VTXBgClusters::check( LCEvent * evt ) {
         gear::Vector3D axisAlab = cluP->getClusterAxisA() ; //- pos ;
         gear::Vector3D axisBlab = cluP->getClusterAxisB() ; //- pos ;
         
+        
         double cluA = axisAlab.r() ;
         double cluB = axisBlab.r() ;
         
-        //         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
-        //                                << " axisBlab " << axisBlab  << std::endl ;
+        // use projection of longer axis
+
+        const gear::Vector3D& mainAxis = ( cluA > cluB ? axisAlab : axisBlab  ) ; 
         
-        _hist2DVec[ layer-1 ]->fill( cluB *2. , cluA * 2. ) ; // vector lengths are cluster half lengths
+
+        _hist2DVec[ layer ]->fill( mainAxis.z() ,  mainAxis.rho()  ) ; 
+
       }
       
       switch (layer) {
         
-      case 1 :
+      case 0 :
         nHitL1++ ; 
         break ;      
-      case 2 :
+      case 1 :
         nHitL2++ ; 
         break ;      
-      case 3 :
+      case 2 :
         nHitL3++ ; 
         break ;      
-      case 4 :
+      case 3 :
         nHitL4++ ; 
         break ;      
-      case 5 :
+      case 4 :
         nHitL5++ ; 
         break ;      
-      case 6 :
+      case 5 :
         nHitL6++ ; 
         break ;      
       }

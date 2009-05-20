@@ -163,7 +163,7 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
 
         const int cellId = SimTHit->getCellID() ;
         //fg: cellId is 'layer + 1' - we need layerId 
-        const int layerId = ( cellId && 0xff ) - 1 ;
+        const int layerId = ( cellId & 0xff ) - 1 ;
 
         //calculate the two axis of the ellipse that approximate the cluster
         double effpl = SimTHit->getPathLength()*_epi; //effective path length on the ladder surface
@@ -177,15 +177,18 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
         sma*=0.001; //in mm
         SMA*=0.001; //in mm
 
-        streamlog_out( DEBUG ) << " eff. path length : " << effpl 
-                               << " SMA " << SMA 
-                               << " sma " << sma 
-                               << std::endl ;
-
-
+ 
         //calculate the ladder where the hit has taken place
         gear::Vector3D pos(SimTHit->getPosition()[0],SimTHit->getPosition()[1],SimTHit->getPosition()[2]) ;
         int ladderId = (_vxdGeo->getLadderID(pos,layerId)).second;
+
+       streamlog_out( DEBUG ) << " eff. path length : " << effpl 
+                               << " SMA " << SMA 
+                               << " sma " << sma 
+                               << " layerId :  " <<   layerId 
+                               << " ladderId :  " <<   ladderId 
+                               << std::endl ;
+
 
         //calculate the momentum of the hit in the ladder ref.syst.
         gear::Vector3D mom(SimTHit->getMomentum()[0],SimTHit->getMomentum()[1],SimTHit->getMomentum()[2]); 
@@ -204,8 +207,9 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
         //calculate the direction of the sma in the lab frame
         gear::Vector3D dsma = _vxdGeo->ladder2LabDir(dsmaladder,layerId,ladderId);
 
-
-        SimTHit->ext< ClusterParams >() = new VXDClusterParameters( dSMA , dsma )  ;
+        SimTHit->ext< ClusterParams >() = new VXDClusterParameters( dSMA , dsma , layerId,ladderId)  ;
+        //FIXME: debug ...
+        //SimTHit->ext< ClusterParams >() = new VXDClusterParameters(dSMAladder, dsmaladder, layerId,ladderId )  ;
       }      
       
     }
@@ -329,17 +333,30 @@ void VTXBgClusters::check( LCEvent * evt ) {
         gear::Vector3D axisAlab = cluP->getClusterAxisA() ; //- pos ;
         gear::Vector3D axisBlab = cluP->getClusterAxisB() ; //- pos ;
         
-        
-        double cluA = axisAlab.r() ;
-        double cluB = axisBlab.r() ;
-        
-        // use projection of longer axis
+//         std::pair<int,int> ids =  _vxdGeo->getLadderID(  axisAlab, layer ) ;
+//         streamlog_out( DEBUG ) << " layerId : "  << ids.first << " ladderId : " << ids.second 
+//                                << " layerId : "  << cluP->getLayerId() << " ladderId : " << cluP->getLadderId() 
+//                                << " layer " << layer
+//                                << std::endl ;
 
-        const gear::Vector3D& mainAxis = ( cluA > cluB ? axisAlab : axisBlab  ) ; 
+        gear::Vector3D axisAlad =   _vxdGeo->lab2LadderDir(axisAlab , layer , cluP->getLadderId() ) ;
+        gear::Vector3D axisBlad =   _vxdGeo->lab2LadderDir(axisBlab , layer , cluP->getLadderId() ) ;
         
 
-        _hist2DVec[ layer ]->fill( mainAxis.z() ,  mainAxis.rho()  ) ; 
+        // debug ....
+        //  gear::Vector3D axisAlad = cluP->getClusterAxisA() ; //- pos ;
+        //  gear::Vector3D axisBlad = cluP->getClusterAxisB() ; //- pos ;
 
+        double za = std::abs( axisAlad.z() ) ;
+        double zb = std::abs( axisBlad.z() ) ;
+        double ya = std::abs( axisAlad.y() ) ;
+        double yb = std::abs( axisBlad.y() ) ;
+
+        double zPro = ( za > zb ?  za : zb ) ;
+        double yPro = ( ya > yb ?  ya : yb ) ;
+        
+        _hist2DVec[ layer ]->fill( zPro ,  yPro  ) ; 
+        
       }
       
       switch (layer) {

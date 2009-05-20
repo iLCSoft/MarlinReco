@@ -1,7 +1,7 @@
 #ifndef VXDClusterParameters_h
 #define VXDClusterParameters_h 1
 
-
+#include "lcio.h"
 #include "LCRTRelations.h"
 #include "gear/GEAR.h"
 
@@ -9,7 +9,7 @@
  * Holds cluster parameters for a VXD hit - to be attached at runtime to the SimTrackerHit.
  * Cluster is defined by two  (principal component) axis and the corresponding extensions (eigenvalues).
  * 
- * @version $Id: VXDClusterParameters.h,v 1.2 2009-05-20 08:41:53 gaede Exp $
+ * @version $Id: VXDClusterParameters.h,v 1.3 2009-05-20 17:21:50 gaede Exp $
  * @author F.Gaede, DESY
  */
 
@@ -17,28 +17,40 @@ class VXDClusterParameters {
   
 public:
   
-  VXDClusterParameters() : 
-    _cluAxisA(0,0,0),
-    _cluAxisB(0,0,0),
-    _layerId (-1) ,
-    _ladderId(-1) {
-  }
+  /** The standard constructor: takes the position of the hit in ladder coordinates 
+   *  and the cluster axes in  ladder coordinates. Also store the layerId and ladderId for saving cpu
+   *  time later.
+   */
+  VXDClusterParameters(const gear::Vector3D& localPos, 
+		       const gear::Vector3D& a, const gear::Vector3D& b, 
+		       int lay,int lad) ; 
   
-  VXDClusterParameters(const gear::Vector3D& a, const gear::Vector3D& b, int lay=-1,int lad=-1) : 
-    _cluAxisA(a),
-    _cluAxisB(b),
-    _layerId (lay) ,
-    _ladderId(lad){
-  }
   
+  gear::Vector3D getClusterPosition() {return _localPos ; }
   gear::Vector3D getClusterAxisA() {return _cluAxisA ; }
   gear::Vector3D getClusterAxisB() {return _cluAxisB ; }
   
   int getLayerId() { return _layerId ; }
   int getLadderId() { return _ladderId ; }
   
+
+
+  /** True, if the 2D projection to the ladder surface of the given position is within the ellipse
+   *  defined by the two cluster axes.
+   */
+  bool isPointInClusterEllipse(const gear::Vector3D& pos) ;
   
 protected:
+
+  VXDClusterParameters() : 
+    _localPos(0,0,0),
+    _cluAxisA(0,0,0),
+    _cluAxisB(0,0,0),
+    _layerId (-1) ,
+    _ladderId(-1) {
+  }
+
+  gear::Vector3D _localPos ; // position of hit on ladder
   gear::Vector3D _cluAxisA ;
   gear::Vector3D _cluAxisB ;
   int _layerId ;

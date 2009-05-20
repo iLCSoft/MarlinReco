@@ -305,10 +305,13 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
        gear::Vector3D axisBlad( 0,   0     , cluZ/2. ) ;
        
        // --- cluster axes in lab frame
-       gear::Vector3D axisAlab = _vxdGeo->ladder2LabDir( axisAlad , i , j )  ;
-       gear::Vector3D axisBlab = _vxdGeo->ladder2LabDir( axisBlad, i , j )  ;
+       //        gear::Vector3D axisAlab = _vxdGeo->ladder2LabDir( axisAlad , i , j )  ;
+       //        gear::Vector3D axisBlab = _vxdGeo->ladder2LabDir( axisBlad, i , j )  ;
        
-       hit->ext< ClusterParams >() = new VXDClusterParameters( axisAlab , axisBlab )  ;
+       // hit position in ladder frame:
+
+       
+       hit->ext< ClusterParams >() = new VXDClusterParameters( lad, axisAlad , axisBlad , i , j )  ;
 
 
        col->addElement( hit ) ; 

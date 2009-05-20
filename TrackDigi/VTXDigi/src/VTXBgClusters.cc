@@ -174,8 +174,8 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
         else sma=4*_pitch[layerId];
 
         double SMA = ((int)(effpl*1000/_pitch[layerId] -1/4) +4)*_pitch[layerId]; //ellipse major axis - effpl in mm
-        sma*=0.001; //in mm
-        SMA*=0.001; //in mm
+        sma*= (0.001 / 2.) ; //in mm and half axis
+        SMA*= (0.001 / 2.) ; //in mm and half axis
 
  
         //calculate the ladder where the hit has taken place
@@ -201,15 +201,19 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
         //calculate the direction of the sma (orthogonal to SMA on the y-z plane)
         gear::Vector3D dsmaladder(0,sma*laddermom[2]/modladdermom,sma*laddermom[1]/modladdermom);
 
-        //calculate the direction of the SMA in the lab frame
-        gear::Vector3D dSMA = _vxdGeo->ladder2LabDir(dSMAladder,layerId,ladderId);
+//         //calculate the direction of the SMA in the lab frame
+//         gear::Vector3D dSMA = _vxdGeo->ladder2LabDir(dSMAladder,layerId,ladderId);
+//         //calculate the direction of the sma in the lab frame
+//         gear::Vector3D dsma = _vxdGeo->ladder2LabDir(dsmaladder,layerId,ladderId);
+//        SimTHit->ext< ClusterParams >() = new VXDClusterParameters( dSMA , dsma , layerId, ladderId)  ;
 
-        //calculate the direction of the sma in the lab frame
-        gear::Vector3D dsma = _vxdGeo->ladder2LabDir(dsmaladder,layerId,ladderId);
+        // compute the hit position in ladder coordinates:
+        gear::Vector3D locPos = _vxdGeo->lab2LadderPos(pos,layerId,ladderId);
 
-        SimTHit->ext< ClusterParams >() = new VXDClusterParameters( dSMA , dsma , layerId,ladderId)  ;
-        //FIXME: debug ...
-        //SimTHit->ext< ClusterParams >() = new VXDClusterParameters(dSMAladder, dsmaladder, layerId,ladderId )  ;
+        SimTHit->ext< ClusterParams >() = new VXDClusterParameters(locPos, 
+                                                                   dSMAladder, dsmaladder, 
+                                                                   layerId,ladderId )  ;
+        
       }      
       
     }
@@ -324,29 +328,15 @@ void VTXBgClusters::check( LCEvent * evt ) {
       VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;
       
 
-      //      gear::Vector3D pos(  sth->getPosition()[0] , sth->getPosition()[1] , sth->getPosition()[2] ) ; 
 
       if( cluP != 0 ) { // physics hits have no cluster parameters
 
         // now get cluster axis vector:
-
-        gear::Vector3D axisAlab = cluP->getClusterAxisA() ; //- pos ;
-        gear::Vector3D axisBlab = cluP->getClusterAxisB() ; //- pos ;
         
-//         std::pair<int,int> ids =  _vxdGeo->getLadderID(  axisAlab, layer ) ;
-//         streamlog_out( DEBUG ) << " layerId : "  << ids.first << " ladderId : " << ids.second 
-//                                << " layerId : "  << cluP->getLayerId() << " ladderId : " << cluP->getLadderId() 
-//                                << " layer " << layer
-//                                << std::endl ;
+        gear::Vector3D axisAlad = cluP->getClusterAxisA() ; 
+        gear::Vector3D axisBlad = cluP->getClusterAxisB() ; 
 
-        gear::Vector3D axisAlad =   _vxdGeo->lab2LadderDir(axisAlab , layer , cluP->getLadderId() ) ;
-        gear::Vector3D axisBlad =   _vxdGeo->lab2LadderDir(axisBlab , layer , cluP->getLadderId() ) ;
-        
-
-        // debug ....
-        //  gear::Vector3D axisAlad = cluP->getClusterAxisA() ; //- pos ;
-        //  gear::Vector3D axisBlad = cluP->getClusterAxisB() ; //- pos ;
-
+        // fg: fixme this is not the exact projection of the rectangle....
         double za = std::abs( axisAlad.z() ) ;
         double zb = std::abs( axisBlad.z() ) ;
         double ya = std::abs( axisAlad.y() ) ;
@@ -357,6 +347,30 @@ void VTXBgClusters::check( LCEvent * evt ) {
         
         _hist2DVec[ layer ]->fill( zPro ,  yPro  ) ; 
         
+
+
+        //====== uncomment for  testing  the isPointInClusterEllipse method ============================
+        /*
+          gear::Vector3D pos(  sth->getPosition()[0] , sth->getPosition()[1] , sth->getPosition()[2] ) ; 
+          gear::Vector3D ladPos  =  _vxdGeo->lab2LadderPos(pos , layer , cluP->getLadderId() ) ;
+          
+          if( ! cluP->isPointInClusterEllipse( ladPos ) )
+          
+          streamlog_out( ERROR ) << " point " << ladPos << "   is not in ellipse " 
+          << " a: " << axisAlad << " b: " << axisBlad 
+          << " at " << cluP->getClusterPosition()
+          << std::endl ;
+          
+          if( cluP->isPointInClusterEllipse( ladPos + 1.01 * axisAlad ) )
+          
+          streamlog_out( ERROR ) << " point " << ladPos + 1.01 * axisAlad << "   is in ellipse " 
+          << " a: " << axisAlad << " b: " << axisBlad 
+          << " at " << cluP->getClusterPosition()
+          << std::endl ;
+        */ 
+        //====== uncomment for  testing  the isPointInClusterEllipse method ============================
+        
+
       }
       
       switch (layer) {

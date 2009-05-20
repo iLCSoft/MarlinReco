@@ -207,7 +207,7 @@ std::pair<int,int> VXDGeometry::getLadderID( gear::Vector3D labPos, int layerID 
         }
       }
     }
-    return std::make_pair(  -1 , -1  )  ;
+    return std::make_pair(  -1, -1  )  ;
   }
 
   unsigned m = _vxdLadders[layerID].size() ;
@@ -225,7 +225,7 @@ std::pair<int,int> VXDGeometry::getLadderID( gear::Vector3D labPos, int layerID 
       return std::make_pair( layerID , j )  ;
     }
   }
-  return std::make_pair(  -1 , -1  )  ;
+  return std::make_pair(  layerID , -1  )  ;
 }
   
 

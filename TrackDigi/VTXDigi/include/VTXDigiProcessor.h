@@ -43,6 +43,8 @@ using namespace marlin ;
  * (default value 0.004) <br>
  * @param PointResolutionZ_VTX Point resolution in z for the vertex detector (in mm) <br>
  * (default value 0.004) <br>
+ * @param HitEfficiencyPerLayer_VTX  hit efficiencies per layer in the VTX<br>
+ * (default value 1. 1. 1. 1. 1. 1.) <br>
  * @param PointResolutionRPhi_SIT Point resolution in r-phi for SIT (in mm) <br>
  * (default value 0.01) <br>
  * @param PointResolutionZ_SIT Point resolution in z for SIT (in mm) <br>
@@ -118,7 +120,11 @@ class VTXDigiProcessor : public Processor {
   float _pointResoZ,_pointResoZ_VTX,_pointResoZ_SIT,_pointResoZ_SET;
   float _momCut;
 
-  gsl_rng * r ;
+  FloatVec _vxdEff ;
+  std::vector< std::pair<long, long> > _vxdCount ;
+
+  int _ranSeed ;
+  gsl_rng * _rng ;
 
 
 } ;

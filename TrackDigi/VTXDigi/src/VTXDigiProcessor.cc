@@ -13,7 +13,7 @@
 
 #include <cmath>
 #include <algorithm>
-//#include <math.h>
+#include <sstream>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -83,6 +83,23 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               _debug,
                               int(0)); 
  
+
+  FloatVec effDefault(6) ;
+  for(int i=0 ;i<6; i++ ) 
+    effDefault[i] = 1.0 ;
+  
+  
+  registerProcessorParameter( "HitEfficiencyPerLayer_VTX" ,
+                              "hit efficiencies per VXD layer (default: 1.0)"  ,
+                              _vxdEff ,
+                               effDefault ) ;
+
+  registerProcessorParameter( "RandomSeed" , 
+                              "random seed - default 42" ,
+                              _ranSeed ,
+                              int(42) ) ;
+
+
   // Input collections
   registerInputCollection( LCIO::SIMTRACKERHIT,
                            "VTXCollectionName" , 
@@ -131,7 +148,26 @@ void VTXDigiProcessor::init() {
 
   _nRun = 0 ;
   _nEvt = 0 ;
-  r = gsl_rng_alloc(gsl_rng_ranlxs2);
+
+  // initialize gsl random generator
+  _rng = gsl_rng_alloc(gsl_rng_ranlxs2);
+  gsl_rng_default_seed = _ranSeed ;
+
+  // check that we have the efficiencies for all layers
+  const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
+  const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
+  int nLayer = layerVXD.getNLayers() ;
+  
+  if( _vxdEff.size() < nLayer ){
+
+    std::stringstream s ;
+    s << " VTXDigiProcessor::init - wrong number of VXD efficiencies given : " << _vxdEff.size()
+      << " expected one for every " <<  nLayer  << " layers " << std::endl ;
+    throw Exception( s.str() ) ;
+    
+  }
+
+  _vxdCount.resize( nLayer ) ;
 }
 
 void VTXDigiProcessor::processRunHeader( LCRunHeader* run) { 
@@ -169,8 +205,12 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
     
       int nSimHits = STHcol->getNumberOfElements()  ;
     
+      if (iColl==0)
+        streamlog_out( DEBUG ) << " processing collection " << _colNameVTX 
+                               << " with " <<  nSimHits  << " hits ... " << std::endl ;
+
       for(int i=0; i< nSimHits; i++){
-      
+        
         SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
         
         //fg: --- accept only activeSETLayers :
@@ -207,6 +247,21 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           //VXD smearing
           if (iColl==0) {        
           
+            //find which layer hit is in - encoded in cell ID
+            int layer = SimTHit->getCellID() - 1;
+
+
+            _vxdCount[layer].second++ ;
+            // drop hit due to inefficiency ?
+            double urand = gsl_rng_uniform( _rng ) ;
+
+            if( urand > _vxdEff[  layer ] ){
+              //streamlog_out( DEBUG ) << " dropping hit in layer " << layer << std::endl ;
+              continue ;  // ----------------- ignore hit 
+            } 
+            _vxdCount[layer].first++ ;
+
+
             //get VXD geometry info
             const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
             const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
@@ -224,8 +279,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             bool UseLadders=true;
             if(layerVXD.getNLadders(0) !=0){
               
-              //find which layer hit is in - encoded in cell ID
-              int layer = SimTHit->getCellID() - 1;
+//               //find which layer hit is in - encoded in cell ID
+//               int layer = SimTHit->getCellID() - 1;
               
               //check that this is a valid layer
               if (layer < 0 || layer > layerVXD.getNLayers() ) 
@@ -268,7 +323,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                 _pointResoZ    = _pointResoZ_VTX;
 
                 //finding the smearing constant
-                double rSmear  = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
+                double rSmear  = gsl_ran_gaussian(_rng,_pointResoRPhi_VTX);
                 
                 //find smearing for x and y, so that hit is smeared along ladder plane
                 double xSmear = rSmear * cos(lPhi);
@@ -278,7 +333,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                 newPos[1] = pos[1] - ySmear;
 
                 //smear in z
-                double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
+                double zSmear = gsl_ran_gaussian(_rng,_pointResoZ_VTX);
 
                 newPos[2] = pos[2] + zSmear;
 
@@ -355,8 +410,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
               _pointResoRPhi = _pointResoRPhi_VTX;
               _pointResoZ = _pointResoZ_VTX;
 
-              double xSmear = gsl_ran_gaussian(r,_pointResoRPhi_VTX);
-              double zSmear = gsl_ran_gaussian(r,_pointResoZ_VTX);
+              double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi_VTX);
+              double zSmear = gsl_ran_gaussian(_rng,_pointResoZ_VTX);
               
               double phi = atan2(pos[1],pos[0]);
               double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
@@ -370,7 +425,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
           // SIT/SET Smearing
           else {
-
+            
             if (iColl==1) {
               _pointResoRPhi = _pointResoRPhi_SIT;
               _pointResoZ = _pointResoZ_SIT;               
@@ -379,25 +434,25 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
               _pointResoRPhi = _pointResoRPhi_SET;
               _pointResoZ = _pointResoZ_SET; 
             }
-
-            double xSmear = gsl_ran_gaussian(r,_pointResoRPhi);
-            double zSmear = gsl_ran_gaussian(r,_pointResoZ);
-
+            
+            double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
+            double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
+            
             double phi = atan2(pos[1],pos[0]);
             double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
             double phi_new = phi + xSmear/rad;
             newPos[0] = rad*cos(phi_new);
             newPos[1] = rad*sin(phi_new);
             newPos[2] = pos[2] + zSmear;      
-
+            
           }
-        
+          
           float de_dx ;
           float dedxSmear = 0.0 ;
           de_dx = SimTHit->getdEdx() ;
-        
+          
           de_dx = de_dx + dedxSmear ; 
-        
+          
           MCParticle *mcp ;
           mcp = SimTHit->getMCParticle() ;
           
@@ -413,20 +468,22 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           else {
             trkHit->setType(400+celId);
           }
-
+          
           float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
           trkHit->setCovMatrix(covMat);      
           // 	  push back the SimTHit for this TrackerHit
           // fg: only if we have a sim hit with proper link to MC truth
           if( mcp != 0 )  {
             trkHit->rawHits().push_back( SimTHit ) ;
-		  }
-		  //else{
-		  //  streamlog_out( DEBUG ) << " ignore simhit pointer as MCParticle pointer is NULL ! " << std::endl ;
-		  //}
+          }
+          //else{
+          //  streamlog_out( DEBUG ) << " ignore simhit pointer as MCParticle pointer is NULL ! " << std::endl ;
+          //}
+
+
           trkhitVec->addElement( trkHit ) ; 
         }      
-
+        
       }
       if (iColl==0) 
         evt->addCollection( trkhitVec , _outColNameVTX ) ;
@@ -449,9 +506,20 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
 void VTXDigiProcessor::end(){ 
   
-  std::cout << "VTXDigiProcessor::end()  " << name() 
-	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-	    << std::endl ;
+  streamlog_out(MESSAGE) << " end()  " << name() 
+                         << " processed " << _nEvt << " events in " << _nRun << " runs "
+                         << std::endl ;
+
+  streamlog_out(MESSAGE) << " VXD hits - efficiency : "  << std::endl ;
+  for(unsigned i=0 ; i<_vxdCount.size(); ++i) {
+    
+    streamlog_out(MESSAGE) << "     layer " << i << " kept " 
+                           << _vxdCount[i].first << " hits of " 
+                           << _vxdCount[i].second << " -> eff = " 
+                           <<  double(_vxdCount[i].first)/ double(_vxdCount[i].second) 
+                           << std::endl ;
+      
+  }
 }
 
 

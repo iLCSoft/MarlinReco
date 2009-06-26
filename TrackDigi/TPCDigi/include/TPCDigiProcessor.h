@@ -1,4 +1,21 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
+/*
+Evolved version of TPCDigi that provides additional functionality to deal with background. Couple to the Mokka Sensitive Detector Driver TPCSD03.cc
+
+SJA:FIXME: Still needs to be tidied up for production release.
+
+Three cases can be consider in the treatment of SimTrackerHits
+i)   A clean isolated hit; this will be smeared according to the parametric point resolution and converted to a TrackerHit
+ii)  Two or Three hits which are considered to be closer than the double hit resolution and which therefore cannot be viewed as seperable hits. These will be merged and be assigned a large associated measurement error.
+iii) A continuous set of hits within one pad row which cannot be resolved as single hits, these are condidered to be charaterisable as background hits created by extremely low pt charged particles (pt < 10MeV) and therefore are removed from the hit collection.
+
+The Driver has been modified to take an additional collection of SimTrackerHits which are produced by the Mokka TPC Sensitive Driver TPCSD03.cc. These hits are produced for particles which have very low pt and often do not move outside of the dimensions of a single pad row. These hits need to be treated differently as they do not cross any geometric boundaries in a Padrow based TPC Geometry. This negates the need to voxalise the TPC in Geant4 which has proved in the past to be prohibitive in terms of processing time due to the vastly increased number of geometric volumes. 
+
+Steve Aplin 26 June 2009 (DESY)
+
+*/
+
 #ifndef TPCDigiProcessor_h
 #define TPCDigiProcessor_h 1
 
@@ -15,16 +32,30 @@
 //#include <AIDA/IHistogram1D.h>
 
 
-
 //#define EXPERTCHECKPLOTS 
+#define DIGIPLOTS
 
 
-#ifdef EXPERTCHECKPLOTS
+
+//#ifdef EXPERTCHECKPLOTS
+#ifdef DIGIPLOTS
 // includes all AIDA header files
 #include <AIDA/AIDA.h>
 #endif
 
 #endif
+
+#include <vector>
+#include <map>
+
+#include <EVENT/LCCollection.h>
+#include <IMPL/LCCollectionVec.h>
+#include <EVENT/MCParticle.h>
+#include <EVENT/SimTrackerHit.h>
+#include <IMPL/TrackerHitImpl.h>
+
+class Voxel_tpc;
+
 
 
 using namespace lcio ;
@@ -32,6 +63,7 @@ using namespace marlin ;
 #ifdef MARLIN_USE_AIDA
 using namespace AIDA ;
 #endif
+
 
 
 /** ====== TPCDigiProcessor ====== <br>
@@ -108,13 +140,20 @@ public:
    */
   virtual void end() ;
   
+  void writeVoxelToHit( Voxel_tpc* aVoxel) ;  
+  void writeMergedVoxelsToHit( std::vector <Voxel_tpc*>* hitList ) ;  
+
   
+
 protected:
 
   /** Input collection name.
    */
-  std::string _colName ;
+  std::string _padRowHitColName ;
+  std::string _spacePointColName ;
+  std::string _lowPtHitscolName ;
   std::string _TPCTrackerHitsCol ;
+  
 
   int _rejectCellID0;
   float _padWidth;
@@ -136,30 +175,71 @@ protected:
   float _pointResoZ0; // Coefficient Z point res independant of drift length 
   float _diffZ; // Coefficient for the Z point res dependance on diffusion 
 
+  float _binningZ;
+  float _binningRPhi;
+  float _doubleHitResZ;
+  float _doubleHitResRPhi;
+  int _maxMerge;
 
-  float _pixZ;
-  float _pixRP;
+  int _nRechits;
 
-#ifdef EXPERTCHECKPLOTS
-  IAnalysisFactory * AF;
-  ITreeFactory * TRF;
-  ITree * TREE;
-  IHistogramFactory * HF;
-  IHistogram1D * phiDiffHisto;
-  IHistogram1D * thetaDiffHisto;
-  IHistogram1D * phiRelHisto;
-  IHistogram1D * thetaRelHisto;
+  std::vector< std::vector <Voxel_tpc *> > _tpcRowHits;
+  std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap;
 
-  IHistogram1D * phiDistHisto;
-  IHistogram1D * rPhiPullHisto;
-  IHistogram1D * rPhiDiffHisto;
-  IHistogram1D * zDiffHisto;
-  IHistogram1D * zPullHisto;
-  IHistogram2D * zSigmaVsZHisto;
-  IHistogram1D * zSigmaHisto;
-  IHistogram1D * rPhiSigmaHisto;
-  IHistogram1D * radiusCheckHisto;
-  IHistogram1D * ResidualsRPhiHisto;
+  LCCollectionVec* _trkhitVec;
+
+  //#ifdef EXPERTCHECKPLOTS
+#ifdef DIGIPLOTS
+  IAnalysisFactory * _AF;
+  ITreeFactory * _TRF;
+  ITree * _TREE;
+  IHistogramFactory * _HF;
+  IHistogram1D * _phiDiffHisto;
+  IHistogram1D * _thetaDiffHisto;
+  IHistogram1D * _phiRelHisto;
+  IHistogram1D * _thetaRelHisto;
+
+  IHistogram1D * _phiDistHisto;
+  IHistogram1D * _rPhiPullHisto;
+  IHistogram1D * _rPhiDiffHisto;
+  IHistogram1D * _zDiffHisto;
+  IHistogram1D * _zPullHisto;
+  IHistogram2D * _zSigmaVsZHisto;
+  IHistogram1D * _zSigmaHisto;
+  IHistogram1D * _rPhiSigmaHisto;
+  IHistogram1D * _radiusCheckHisto;
+  IHistogram1D * _ResidualsRPhiHisto;
+
+  IHistogram1D * _NSimTPCHitsHisto;
+  IHistogram1D * _NBackgroundSimTPCHitsHisto;
+  IHistogram1D * _NPhysicsSimTPCHitsHisto;
+  IHistogram1D * _NPhysicsAbove02GeVSimTPCHitsHisto;
+  IHistogram1D * _NPhysicsAbove1GeVSimTPCHitsHisto;
+  IHistogram1D * _NRecTPCHitsHisto;
+
+  IHistogram1D * _NLostPhysicsTPCHitsHisto;
+  IHistogram1D * _NLostPhysicsAbove02GeVPtTPCHitsHisto;
+  IHistogram1D * _NLostPhysicsAbove1GeVPtTPCHitsHisto;
+  IHistogram1D * _NRevomedHitsHisto;
+
+  IHistogram1D * _NKeptPhysicsTPCHitsHistoPercent;
+  IHistogram1D * _NKeptPhysicsAbove02GeVPtTPCHitsHistoPercent;
+  IHistogram1D * _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent;
+
+
+
+  int  _NSimTPCHits;
+  int  _NBackgroundSimTPCHits;
+  int  _NPhysicsSimTPCHits;
+  int  _NPhysicsAbove02GeVSimTPCHits;
+  int  _NPhysicsAbove1GeVSimTPCHits;
+  int  _NRecTPCHits;
+  
+  int  _NLostPhysicsTPCHits;
+  int  _NLostPhysicsAbove02GeVPtTPCHits;
+  int  _NLostPhysicsAbove1GeVPtTPCHits;
+  int  _NRevomedHits;
+
 
 #endif
 
@@ -170,6 +250,8 @@ protected:
 
   //FIXME:SJA: Cathode is hard coded
 const double TPCDigiProcessor::_cathode=5.0/2.0; // cathode is 5mm thick 
+
+
 
 #endif
 

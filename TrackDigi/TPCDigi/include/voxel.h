@@ -1,5 +1,10 @@
+#ifndef _voxel_included_
+#define _voxel_included_
+
 // A header file which defines a voxel class for the TPC
 #include <vector>
+//#include "ThreeVector.h"
+#include <CLHEP/Vector/ThreeVector.h>
 
 using namespace std;
 
@@ -11,33 +16,46 @@ class Voxel_tpc{
   // the array xyz[3] here with pos[3], for the mean time the constructor will be put in the .cc file
   //  Voxel_tpc(int row, int phi, int z, double pos[3]) : row_index(row), phi_index(phi), z_index(z){}
   Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double dedx, double rPhiRes, double zRes);
+  Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double dedx, double rPhiRes, double zRes);
   ~Voxel_tpc();
-  void setAdjacent(Voxel_tpc *); 
-  int getRowIndex() {return row_index;};
-  int getPhiIndex() {return phi_index;};
-  int getZIndex() {return z_index;};
-  Voxel_tpc * getFirstAdjacent();
-  int getNumberOfAdjacent(); 
-  double getX() {return xyz[0];};
-  double getY() {return xyz[1];};
-  double getZ() {return xyz[2];};
-  double getR() {return rphi[0];};
-  double getPhi() {return rphi[1];};
-  double getdEdx() {return dE_dx;};
-  double getRPhiRes() {return rPhiRes;};
-  double getZRes() {return zRes;};
+
+  void setAdjacent(Voxel_tpc * p_voxel) { _adjacent_voxels.push_back(p_voxel);}; 
+  void setIsClusterHit() { _isClusterHit = true;};
+  void setIsMerged() { _isMerged = true;};
+  bool IsClusterHit() { return _isClusterHit;};
+  bool IsMerged() { return _isMerged;};
+  int clusterFind(vector <Voxel_tpc*>* hitList);
+  
+
+  int getRowIndex() {return _row_index;};
+  int getPhiIndex() {return _phi_index;};
+  int getZIndex() {return _z_index;};
+  Voxel_tpc * getFirstAdjacent() {return *(_adjacent_voxels.begin());};
+  Voxel_tpc * getAdjacent(int i) {return _adjacent_voxels[i];};
+  int getNumberOfAdjacent() {return _adjacent_voxels.size();}; 
+  double getX() {return _coord.x();};
+  double getY() {return _coord.y();};
+  double getZ() {return _coord.z();};
+  double getR() {return _coord.perp();};
+  double getPhi() {return _coord.phi();};
+  double getdEdx() {return _dE_dx;};
+  double getRPhiRes() {return _rPhiRes;};
+  double getZRes() {return _zRes;};
+  const CLHEP::Hep3Vector getHep3Vector() {return _coord;};
   //  bool compare_phi( Voxel_tpc * & a, Voxel_tpc * & b);
 
 
 
  private:
-  int row_index; 
-  int phi_index;
-  int z_index;
-  vector <Voxel_tpc *> adjacent_voxel;
-  double xyz[3];   
-  double rphi[2];   
-  double dE_dx;
-  double rPhiRes;
-  double zRes;
+  int _row_index; 
+  int _phi_index;
+  int _z_index;
+  vector <Voxel_tpc *> _adjacent_voxels;
+  CLHEP::Hep3Vector _coord;
+  double _dE_dx;
+  double _rPhiRes;
+  double _zRes;
+  bool _isMerged;
+  bool _isClusterHit;
 };
+#endif

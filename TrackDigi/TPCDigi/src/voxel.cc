@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 #include "voxel.h"
 
@@ -7,36 +9,34 @@ Voxel_tpc::Voxel_tpc(){
 }
 Voxel_tpc::Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double dedx, double RPhiRes, double ZRes)
 {
-  row_index = row;
-  phi_index = phi;
-  z_index = z;
-  xyz[0] = pos[0];
-  xyz[1] = pos[1];
-  xyz[2] = pos[2];
-  rphi[0] = posRPhi[0];
-  rphi[1] = posRPhi[1];
-  dE_dx = dedx;
-  rPhiRes = RPhiRes;
-  zRes = ZRes;
+  _row_index = row;
+  _phi_index = phi;
+  _z_index = z;
+  _coord.setX(pos[0]);
+  _coord.setY(pos[1]);
+  _coord.setZ(pos[2]);
+  _dE_dx = dedx;
+  _rPhiRes = RPhiRes;
+  _zRes = ZRes;
+  _isMerged = false;
+  _isClusterHit = false;
+}
+
+Voxel_tpc::Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double dedx, double RPhiRes, double ZRes)
+{
+  _row_index = row;
+  _phi_index = phi;
+  _z_index = z;
+  _coord=coord;
+  _dE_dx = dedx;
+  _rPhiRes = RPhiRes;
+  _zRes = ZRes;
+  _isMerged = false;
+  _isClusterHit = false;
 }
 
 Voxel_tpc::~Voxel_tpc()
 {
-}
-
-void Voxel_tpc::setAdjacent(Voxel_tpc * p_voxel)
-{
-  adjacent_voxel.push_back(p_voxel);
-}
-
-Voxel_tpc * Voxel_tpc::getFirstAdjacent()
-{
-  return *(adjacent_voxel.begin());
-}
-
-int  Voxel_tpc::getNumberOfAdjacent()
-{
-  return adjacent_voxel.size();
 }
 
 //bool Voxel_tpc::compare_phi( Voxel_tpc * & a, Voxel_tpc * & b){
@@ -44,3 +44,17 @@ int  Voxel_tpc::getNumberOfAdjacent()
 //  return ( a->getPhiIndex() < b->getPhiIndex());
   
 //}
+
+int Voxel_tpc::clusterFind(vector <Voxel_tpc*>* hitList){
+  
+  if(!this->IsClusterHit()){
+    hitList->push_back(this);
+    this->setIsClusterHit();
+    for(int i=0; i<this->getNumberOfAdjacent();++i){
+      int clusterSize = getAdjacent(i)->clusterFind(hitList);
+    }
+  }
+
+  return hitList->size();
+}
+

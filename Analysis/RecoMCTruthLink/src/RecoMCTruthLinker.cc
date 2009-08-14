@@ -190,7 +190,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
       continue ;
     }
       
-    if( fabs( charge ) > .01 ) {   // charged particle -> use track
+    if( fabs( charge ) > .01  ||  nTrk>1 ) {   // charged particle  or V0  -> use track
 	
       MCPMap mcpMap ;
       

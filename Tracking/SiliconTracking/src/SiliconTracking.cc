@@ -549,7 +549,9 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     for (int iPhi=0; iPhi<_nDivisionsInPhi; ++iPhi) 
       for (int iTheta=0; iTheta<_nDivisionsInTheta;++iTheta)
 	ProcessOneSector(iPhi,iTheta); // Process one VXD sector     
+
     streamlog_out(DEBUG) << "End of Processing VXD sectors" << std::endl;
+
   }
 
   if (successFTD == 1) {
@@ -617,7 +619,7 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     float pzTot = 0.;
     for (int iTrk=0; iTrk<nTrk;++iTrk) {
       TrackExtended * trackAR = _trackImplVec[iTrk];
-      TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
+      TrackerHitExtendedVec& hitVec = trackAR->getTrackerHitExtendedVec();
       int nh = int(hitVec.size());
       if (nh >= _minimalHits) {
 	TrackImpl * trackImpl = new TrackImpl();
@@ -763,7 +765,7 @@ void SiliconTracking::CleanUp() {
     for (int ip=0;ip<_nDivisionsInPhi;++ip) {
       for (int it=0;it<_nDivisionsInTheta; ++it) {
 	int iCode = il + _nLayers*ip + _nLayers*_nDivisionsInPhi*it;      
-	TrackerHitExtendedVec hitVec = _sectors[iCode];
+	TrackerHitExtendedVec& hitVec = _sectors[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];
@@ -777,7 +779,7 @@ void SiliconTracking::CleanUp() {
     for (int layer=0;layer<_nLayersFTD;++layer) {
       for (int ip=0;ip<_nPhiFTD;++ip) {
 	int iCode = iS + 2*layer + 2*_nLayersFTD*ip;
-	TrackerHitExtendedVec hitVec = _sectorsFTD[iCode];
+	TrackerHitExtendedVec& hitVec = _sectorsFTD[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];
@@ -794,11 +796,13 @@ int SiliconTracking::InitialiseFTD(LCEvent * evt) {
   _nTotalFTDHits = 0;
   _sectorsFTD.clear();
   _sectorsFTD.resize(2*_nLayersFTD*_nPhiFTD);
-  for (int i=0; i<2*_nLayersFTD*_nPhiFTD;++i) {
-    TrackerHitExtendedVec hitVec;
-    hitVec.clear();
-    _sectorsFTD.push_back(hitVec);    
-  }
+
+  //fg: not needed - resize already did the job....
+  //   for (int i=0; i<2*_nLayersFTD*_nPhiFTD;++i) {
+  //     TrackerHitExtendedVec hitVec;
+  //     hitVec.clear();
+  //     _sectorsFTD.push_back(hitVec);    
+  //   }
 
   // Reading out FTD Hits Collection
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -851,11 +855,12 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
   _sectors.clear();
   _sectors.resize(_nLayers*_nDivisionsInPhi*_nDivisionsInTheta);
 
-  for (int i=0; i<_nLayers*_nDivisionsInPhi*_nDivisionsInTheta; ++i) {
-    TrackerHitExtendedVec hitVec;
-    hitVec.clear();
-    _sectors.push_back(hitVec);
-  }
+  //fg: not needed - resize already did the job....
+  //   for (int i=0; i<_nLayers*_nDivisionsInPhi*_nDivisionsInTheta; ++i) {
+  //     TrackerHitExtendedVec hitVec;
+  //     hitVec.clear();
+  //     _sectors.push_back(hitVec);
+  //   }
 
   // Reading out VTX Hits Collection
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
@@ -897,6 +902,7 @@ int SiliconTracking::InitialiseVTX(LCEvent * evt) {
     }
   }
   catch(DataNotAvailableException &e) {
+    streamlog_out( DEBUG0 ) << " collection not found : " << _VTXHitCollection.c_str() << std::endl ;
     success = 0;
   }
 
@@ -959,7 +965,9 @@ void SiliconTracking::end() {
 
 
 void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
-  
+
+  int counter = 0 ;
+
   int iPhi_Up    = iPhi + 1;
   int iPhi_Low   = iPhi - 1;
   int iTheta_Up  = iTheta + 1; 
@@ -979,7 +987,7 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
 //     std::cout << iPhi << " " << iTheta << " " << nLR[0] << " " << nLR[1] << " " << nLR[2] << " " 
 // 	      << std::endl;
     int iCode = nLR[0] + _nLayers*iPhi +  _nLayers*_nDivisionsInPhi*iTheta;
-    TrackerHitExtendedVec hitVecOuter =  _sectors[iCode]; 
+    TrackerHitExtendedVec& hitVecOuter =  _sectors[iCode]; 
     int nHitsOuter = int(hitVecOuter.size());
     if (nHitsOuter > 0) {
       for (int ipMiddle=iPhi_Low; ipMiddle<iPhi_Up+1;ipMiddle++) { // loop over phi in the Middle
@@ -988,7 +996,7 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
 	  if (ipMiddle < 0) iPhiMiddle = _nDivisionsInPhi-1;
 	  if (ipMiddle >= _nDivisionsInPhi) iPhiMiddle = ipMiddle - _nDivisionsInPhi;
 	  iCode = nLR[1] + _nLayers*iPhiMiddle +  _nLayers*_nDivisionsInPhi*itMiddle;
-	  TrackerHitExtendedVec hitVecMiddle = _sectors[iCode];
+	  TrackerHitExtendedVec& hitVecMiddle = _sectors[iCode];
 	  int nHitsMiddle = int(hitVecMiddle.size());
 	  
 	  int iPhiLowInner = iPhi_Low;
@@ -1035,7 +1043,7 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
 		if (ipInner < 0) iPhiInner = _nDivisionsInPhi-1;
 		if (ipInner >= _nDivisionsInPhi) iPhiInner = ipInner - _nDivisionsInPhi;
 		iCode = nLR[2] + _nLayers*iPhiInner +  _nLayers*_nDivisionsInPhi*itInner;
-		TrackerHitExtendedVec hitVecInner = _sectors[iCode];
+		TrackerHitExtendedVec& hitVecInner = _sectors[iCode];
 		int nHitsInner = int(hitVecInner.size());
  		if (nHitsInner > 0) {
 // 		  std::cout << iPhi << " " << ipMiddle << " " << ipInner << "     " 
@@ -1061,6 +1069,8 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
 			    _tracks4Hits.push_back(trackAR);
 			  if (nH >= 5)
 			    _tracks5Hits.push_back(trackAR);		
+
+			  counter ++ ;
 			}	
 		      } // endloop over hits in the inner sector
 		    } // endloop over hits in the middle sector
@@ -1073,6 +1083,10 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
       } // endloop over phi in the Middle
     } // endif nHitsOuter > 0
   } // endloop over triplets
+
+
+  streamlog_out( DEBUG0 ) << " process one sectector theta,phi " << iTheta << ", " << iPhi <<
+    "  number of loops : " << counter << std::endl  ;
 }
 
 TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit, 
@@ -1085,9 +1099,9 @@ TrackExtended * SiliconTracking::TestTriplet(TrackerHitExtended * outerHit,
 
   TrackExtended * trackAR = NULL;
 
-  TrackExtendedVec trackOuterVec  = outerHit->getTrackExtendedVec();
-  TrackExtendedVec trackMiddleVec = middleHit->getTrackExtendedVec();
-  TrackExtendedVec trackInnerVec  = innerHit->getTrackExtendedVec();
+  TrackExtendedVec& trackOuterVec  = outerHit->getTrackExtendedVec();
+  TrackExtendedVec& trackMiddleVec = middleHit->getTrackExtendedVec();
+  TrackExtendedVec& trackInnerVec  = innerHit->getTrackExtendedVec();
   int nTrackOuter  = int (trackOuterVec.size());
   int nTrackMiddle = int (trackMiddleVec.size());
   int nTrackInner  = int (trackInnerVec.size());
@@ -1298,7 +1312,7 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
 	if (ipInner < 0) iPhiInner = _nDivisionsInPhi-1;
 	if (ipInner >= _nDivisionsInPhi) iPhiInner = ipInner - _nDivisionsInPhi;
 	int iCode = layer + _nLayers*iPhiInner +  _nLayers*_nDivisionsInPhi*itInner;
-	TrackerHitExtendedVec hitVecInner = _sectors[iCode];
+	TrackerHitExtendedVec& hitVecInner = _sectors[iCode];
 	int nHitsInner = int(hitVecInner.size());
 	for (int iInner=0;iInner<nHitsInner;iInner++) { // loop over hits in the Inner sector
 	  TrackerHitExtended * currentHit = hitVecInner[iInner];
@@ -1334,7 +1348,7 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
       } // endloop over theta in the Inner region 
     } // endloop over phi in the Inner region
     if (distMin < _minDistCutAttach) {
-      TrackerHitExtendedVec hvec = trackAR->getTrackerHitExtendedVec();
+      TrackerHitExtendedVec& hvec = trackAR->getTrackerHitExtendedVec();
       int  nHits = int(hvec.size());
       double * xh = new double[nHits+1];
       double * yh = new double[nHits+1];
@@ -1456,7 +1470,7 @@ int SiliconTracking::BuildTrack(TrackerHitExtended * outerHit,
     }
   } // endloop over remaining layers
 
-  TrackerHitExtendedVec hvec = trackAR->getTrackerHitExtendedVec();  
+  TrackerHitExtendedVec& hvec = trackAR->getTrackerHitExtendedVec();  
   int nTotalHits = int(hvec.size());
   return nTotalHits;
 
@@ -1484,7 +1498,7 @@ void SiliconTracking::Sorting(TrackExtendedVec & trackVec) {
 	  }
       }  
   for (int i=0; i<sizeOfVector; ++i) {
-    TrackerHitExtendedVec hitVec = trackVec[i]->getTrackerHitExtendedVec();
+    TrackerHitExtendedVec& hitVec = trackVec[i]->getTrackerHitExtendedVec();
     int nHits = int(hitVec.size());
     for (int ih=0;ih<nHits;ih++) {
       hitVec[ih]->clearTrackVec();
@@ -1501,11 +1515,11 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
    */
 
 
-  TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
+  TrackerHitExtendedVec& hitVec = trackAR->getTrackerHitExtendedVec();
   int nHits = int(hitVec.size());
 
   for (int i=0; i<nHits; ++i) {
-    TrackExtendedVec trackVec = hitVec[i]->getTrackExtendedVec();
+    TrackExtendedVec& trackVec = hitVec[i]->getTrackExtendedVec();
     if (trackVec.size() != 0) 
       return ;
   }
@@ -1517,7 +1531,7 @@ void SiliconTracking::CreateTrack(TrackExtended * trackAR ) {
   int nTrk = int(_trackImplVec.size());
   for (int i=0; i<nTrk; ++i) {
     TrackExtended * trackOld = _trackImplVec[i];
-    TrackerHitExtendedVec hitVecOld = trackOld->getTrackerHitExtendedVec();
+    TrackerHitExtendedVec& hitVecOld = trackOld->getTrackerHitExtendedVec();
 
     float phiNew = trackAR->getPhi();
     float phiOld = trackOld->getPhi();
@@ -1795,11 +1809,11 @@ void SiliconTracking::AttachRemainingVTXHitsFast() {
     for (int ip=0;ip<_nDivisionsInPhi;++ip) {
       for (int it=0;it<_nDivisionsInTheta; ++it) {
 	int iCode = il + _nLayers*ip + _nLayers*_nDivisionsInPhi*it;      
-	TrackerHitExtendedVec hitVec = _sectors[iCode];
+	TrackerHitExtendedVec& hitVec = _sectors[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hitExt = hitVec[iH];
-	  TrackExtendedVec trackVec = hitExt->getTrackExtendedVec();
+	  TrackExtendedVec& trackVec = hitExt->getTrackExtendedVec();
 	  if (trackVec.size()==0) {
 	    TrackerHit * hit = hitExt->getTrackerHit();
 	    double pos[3];
@@ -1865,7 +1879,7 @@ void SiliconTracking::AttachRemainingVTXHitsFast() {
 	      TrackExtended * trackAR = trackVector[iCodeForTrack][iTrk];
 	      bool consider = true;
 	      if (_checkForDelta) {
-		TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+		TrackerHitExtendedVec& hitVector = trackAR->getTrackerHitExtendedVec();
 		int NHITS = int(hitVector.size());
 		for (int IHIT=0;IHIT<NHITS;++IHIT) {
 		  if (hit->getTrackerHit()->getType() == 
@@ -1927,13 +1941,23 @@ void SiliconTracking::AttachRemainingVTXHitsSlow() {
     for (int ip=0;ip<_nDivisionsInPhi;++ip) {
       for (int it=0;it<_nDivisionsInTheta; ++it) {
 	int iCode = il + _nLayers*ip + _nLayers*_nDivisionsInPhi*it;      
-	TrackerHitExtendedVec hitVec = _sectors[iCode];
+	TrackerHitExtendedVec& hitVec = _sectors[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];
-	  TrackExtendedVec trackVec = hit->getTrackExtendedVec();
-	  if (trackVec.size()==0)
-	    nonAttachedHits.push_back( hit );
+	  TrackExtendedVec& trackVec = hit->getTrackExtendedVec();
+	  // if (trackVec.size()==0)
+	  // nonAttachedHits.push_back( hit );
+	  //-- allow hits that are only used in triplets to be re-attached 
+	  int maxTrackSize = 0;
+	  for(unsigned int itrack = 0;itrack < trackVec.size();itrack++){
+	    TrackerHitExtendedVec hitVec = trackVec[itrack]->getTrackerHitExtendedVec();
+	    unsigned int isize = hitVec.size();
+	    if(isize>maxTrackSize)maxTrackSize = isize;
+	  }	
+	  if (maxTrackSize<=3)nonAttachedHits.push_back( hit );
+
+
 	}
       }
     }
@@ -1955,7 +1979,7 @@ void SiliconTracking::AttachRemainingVTXHitsSlow() {
 	TrackExtended * trackAR = _trackImplVec[iTrk];
 	bool consider = true;
 	if (_checkForDelta) {
-	  TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	  TrackerHitExtendedVec& hitVector = trackAR->getTrackerHitExtendedVec();
 	  int NHITS = int(hitVector.size());
 	  for (int IHIT=0;IHIT<NHITS;++IHIT) {
 	    if (hit->getTrackerHit()->getType() == 
@@ -2008,11 +2032,11 @@ void SiliconTracking::AttachRemainingFTDHitsSlow() {
     for (int layer=0;layer<_nLayersFTD;++layer) {
       for (int ip=0;ip<_nPhiFTD;++ip) {
 	int iCode = iS + 2*layer + 2*_nLayersFTD*ip;      
-	TrackerHitExtendedVec hitVec = _sectorsFTD[iCode];
+	TrackerHitExtendedVec& hitVec = _sectorsFTD[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];
-	  TrackExtendedVec trackVec = hit->getTrackExtendedVec();
+	  TrackExtendedVec& trackVec = hit->getTrackExtendedVec();
 	  if (trackVec.size()==0)
 	    nonAttachedHits.push_back( hit );
 	}
@@ -2034,7 +2058,7 @@ void SiliconTracking::AttachRemainingFTDHitsSlow() {
     for (int iTrk=0; iTrk<nTrk; ++iTrk) {
       TrackExtended * trackAR = _trackImplVec[iTrk];
       bool consider = true;
-      TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+      TrackerHitExtendedVec& hitVector = trackAR->getTrackerHitExtendedVec();
       int NHITS = int(hitVector.size());
       for (int IHIT=0;IHIT<NHITS;++IHIT) {
 	if (hit->getTrackerHit()->getType() == 
@@ -2112,7 +2136,7 @@ void SiliconTracking::AttachRemainingFTDHitsFast() {
 	for (int iHit=0;iHit<nHits;++iHit) {
 	  TrackerHitExtended * hit = _sectorsFTD[iCode][iHit];
 	  bool consider = true;
-	  TrackerHitExtendedVec hitVector = trackAR->getTrackerHitExtendedVec();
+	  TrackerHitExtendedVec& hitVector = trackAR->getTrackerHitExtendedVec();
 	  int NHITS = int(hitVector.size());
 	  for (int IHIT=0;IHIT<NHITS;++IHIT) {
 	    if (hit->getTrackerHit()->getType() == 
@@ -2154,7 +2178,7 @@ void SiliconTracking::TrackingInFTD() {
     for (int iS=0;iS<2;++iS) {
       //      std::cout << "Combinations : " << iS << " " << nLS[0] << " " << nLS[1] << " " << nLS[2] << std::endl;
       //      int iC = iS + 2*nLS[0];
-      //      TrackerHitExtendedVec hitVec = _sectorsFTD[iC];
+      //      TrackerHitExtendedVec& hitVec = _sectorsFTD[iC];
       //      int nO = int(hitVec.size());
       //      iC = iS + 2*nLS[1];
       //      hitVec = _sectorsFTD[iC];
@@ -2167,7 +2191,7 @@ void SiliconTracking::TrackingInFTD() {
 	int ipMiddleLow = ipOuter - 1;
 	int ipMiddleUp  = ipOuter + 1;
 	int iCodeOuter = iS + 2*nLS[0] + 2*_nLayersFTD*ipOuter;
-	TrackerHitExtendedVec hitVecOuter = _sectorsFTD[iCodeOuter];
+	TrackerHitExtendedVec& hitVecOuter = _sectorsFTD[iCodeOuter];
 	int nOuter = int(hitVecOuter.size());
 	for (int iOuter=0;iOuter<nOuter;++iOuter) {
 	  TrackerHitExtended * hitOuter = hitVecOuter[iOuter];
@@ -2179,7 +2203,7 @@ void SiliconTracking::TrackingInFTD() {
 	    if (ipM >= _nPhiFTD) 
 	      ipM = ipMiddle - _nPhiFTD;
 	    int iCodeMiddle = iS + 2*nLS[1] + 2*_nLayersFTD*ipM;
-	    TrackerHitExtendedVec hitVecMiddle = _sectorsFTD[iCodeMiddle];
+	    TrackerHitExtendedVec& hitVecMiddle = _sectorsFTD[iCodeMiddle];
 	    int ipInnerLow,ipInnerUp;	    
 	    ipInnerLow = ipMiddle - 1;
 	    ipInnerUp =  ipMiddle + 1;
@@ -2194,7 +2218,7 @@ void SiliconTracking::TrackingInFTD() {
 		if (ipI >= _nPhiFTD) 
 		  ipI = ipInner - _nPhiFTD;
 		int iCodeInner = iS + 2*nLS[2] + 2*_nLayersFTD*ipI;
-		TrackerHitExtendedVec hitVecInner = _sectorsFTD[iCodeInner];
+		TrackerHitExtendedVec& hitVecInner = _sectorsFTD[iCodeInner];
 		int nInner = int(hitVecInner.size());
 		for (int iInner=0;iInner<nInner;++iInner) {
 		  TrackerHitExtended * hitInner = hitVecInner[iInner];
@@ -2256,7 +2280,7 @@ int SiliconTracking::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
 	if (iP >= _nPhiFTD)
 	  iP = ip - _nPhiFTD;	
 	int iCode = iS + 2*iL + 2*_nLayersFTD*iP;
-	TrackerHitExtendedVec hitVec = _sectorsFTD[iCode];
+	TrackerHitExtendedVec& hitVec = _sectorsFTD[iCode];
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];
@@ -2280,7 +2304,7 @@ int SiliconTracking::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
       }
     }
   }
-  TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
+  TrackerHitExtendedVec& hitVec = trackAR->getTrackerHitExtendedVec();
   int nH = int (hitVec.size());
   return nH;
 }
@@ -2288,7 +2312,7 @@ int SiliconTracking::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
 int SiliconTracking::AttachHitToTrack(TrackExtended * trackAR, TrackerHitExtended * hit) {
 
   int attached = 0;
-  TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
+  TrackerHitExtendedVec& hitVec = trackAR->getTrackerHitExtendedVec();
   int nHits = int(hitVec.size());
   double * xh = new double[nHits+1];
   double * yh = new double[nHits+1];
@@ -2421,7 +2445,7 @@ void SiliconTracking::FinalRefit() {
 
   for (int iTrk=0;iTrk<nTracks;++iTrk) {
     TrackExtended * trackAR = _trackImplVec[iTrk];
-    TrackerHitExtendedVec hitVec = trackAR->getTrackerHitExtendedVec();
+    TrackerHitExtendedVec& hitVec = trackAR->getTrackerHitExtendedVec();
     int nHits = int(hitVec.size());
     double * xh = new double[nHits];
     double * yh = new double[nHits];

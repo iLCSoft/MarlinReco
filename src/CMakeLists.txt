@@ -9,6 +9,7 @@ SET( MarlinReco_PKGS
     "Analysis/SatoruJetFinder"
     "Analysis/MarlinKinfit"
     "Analysis/RecoMCTruthLink"
+    "Analysis/ZFinder"
     "Calibration/AbsCalibration"
     "CaloDigi/LDCCaloDigi"
     "Clustering/ClusterCheater" 
@@ -103,6 +104,19 @@ SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_cxx_srcs} PROPERTIES
 FILE( GLOB SatoruJetFinder_f77_srcs ../Analysis/SatoruJetFinder/src/fortsrc/*.f )
 
 SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs} )
+
+
+####################################################################################################
+# ZFinder
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Analysis/ZFinder/src ZFinder_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${ZFinder_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( ZFinder_srcs ${ZFinder_cxx_srcs} )
 
 
 ####################################################################################################

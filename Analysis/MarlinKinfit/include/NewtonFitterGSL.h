@@ -3,16 +3,16 @@
  *  \brief Declares class NewtonFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * Last update: $Date: 2009/02/17 12:46:34 $
+ *          by: $Author: blist $
+ * $Date: 2009/02/17 12:46:34 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 25.9.08 BL: Added some documentation
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: NewtonFitterGSL.h,v $
  * - Revision 1.2  2009/02/17 12:46:34  blist
  * - Improved version of NewtonFitterGSL, JetFitObject changed
  * -

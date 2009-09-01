@@ -5,7 +5,10 @@
  * - 12.2.08 BL: Add soft constraints
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: BaseFitter.h,v $
+ * - Revision 1.4  2009/09/01 09:48:12  blist
+ * - Added tracer mechanism, added access to fit covariance matrix
+ * -
  * - Revision 1.3  2008/02/13 12:37:37  blist
  * - new file BaseFitter.cc
  * -
@@ -41,14 +44,15 @@ class BaseFitObject;
 class BaseConstraint;
 class BaseHardConstraint;
 class BaseSoftConstraint;
+class BaseTracer;
 
 //  Class BaseConstraint:
 /// Abstract base class for fitting engines of kinematic fits
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2009/09/01 09:48:12 $
+ *          by: $Author: blist $
  *
  */
 class BaseFitter {
@@ -75,8 +79,25 @@ class BaseFitter {
   
     virtual void reset();
     virtual bool initialize() = 0;
+    
+    virtual BaseTracer *getTracer();
+    virtual const BaseTracer *getTracer() const;
+    virtual void setTracer(BaseTracer *newTracer
+                          );
+    virtual void setTracer(BaseTracer& newTracer
+                          );
+    
+    virtual const double *getGlobalCovarianceMatrix (int& idim ///< 1st dimension of global covariance matrix
+                                                          ) const;                 
+    virtual double *getGlobalCovarianceMatrix (int& idim ///< 1st dimension of global covariance matrix
+                                              );                 
   
   protected:
+    /// Copy constructor disabled
+    BaseFitter (const BaseFitter& rhs);
+    /// Assignment disabled
+    BaseFitter& operator= (const BaseFitter& rhs);
+    
     
     typedef std::vector <BaseFitObject *> FitObjectContainer;
     typedef std::vector <BaseHardConstraint *> ConstraintContainer;
@@ -89,6 +110,12 @@ class BaseFitter {
     FitObjectContainer      fitobjects;
     ConstraintContainer     constraints;
     SoftConstraintContainer softconstraints;
+    
+    BaseTracer *tracer;
+    
+    int     covDim;   ///< dimension of global covariance matrix
+    double *cov;      ///< global covariance matrix of last fit problem
+    bool    covValid; ///< Flag whether global covariance is valid
 
 };
 

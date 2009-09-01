@@ -9,20 +9,24 @@
 /// p_z is internally replaced by a parameter p_g
 ///
 /// This class assumes a photon p_z distribution according to dN/d|p_z| = c*|p_z|^(b-1), where the total number of photons should be given by N = \int_{PzMin}^{PzMax} dN/d|p_z| d|p_z|
+/// The parameters b, PzMaxB:=PzMax^b and PzMinB:=PzMin^b are required to describe the photon spectrum
 /// Only |p_z| values in [PzMin,PzMax[ can be used as start values (assertion in PgFromPz(...)) and will occur in the fit
-/// The parameters b, PzMaxB:=PzMax^b and PzMinB:=PzMin^b are required
+/// Recommended start value is the missing p_z (fitter will always find a minimum around p_z=0)
 
 /**
  *
  * Author: Moritz Beckmann
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/03/26 08:47:16 $
+ * $Author: mbeckman $
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: PhotonFitObjectPxyg.h,v $
+ * - Revision 1.6  2009/03/26 08:47:16  mbeckman
+ * - Bug fix (measured p = 0 instead of start value), extended documentation
+ * -
  * - Revision 1.5  2009/02/23 12:03:18  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization

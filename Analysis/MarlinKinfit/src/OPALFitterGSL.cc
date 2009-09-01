@@ -2,14 +2,17 @@
  *  \brief Implements class OPALFitterGSL
  *
  * Author: Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/09/01 09:48:13 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 2.10.08 BL: First version, based on OPALFitter
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: OPALFitterGSL.cc,v $
+ * - Revision 1.3  2009/09/01 09:48:13  blist
+ * - Added tracer mechanism, added access to fit covariance matrix
+ * -
  * - Revision 1.2  2008/11/20 16:12:40  mbeckman
  * - Renamed PseudoMeasuredPhotonFitObjectPz to PhotonFitObject for consistency with ILCSoft CVS. Removed debug cout from OPALFitterGSL.cc
  * -
@@ -23,8 +26,8 @@
 // Class OPALFitterGSL
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2009-02-26 18:35:17 $
-//          by: $Author: beckmann $
+// Last update: $Date: 2009/09/01 09:48:13 $
+//          by: $Author: blist $
 // 
 // Description: kinematic fit a la WWFGO
 // DISCLAIMER: the only object oriented stuff in here is the
@@ -47,6 +50,7 @@
 
 #include "BaseFitObject.h"
 #include "BaseHardConstraint.h"
+#include "BaseTracer.h"
 #include "ftypes.h"
 #include "cernlib.h"
 #include "cernlib.h"
@@ -265,6 +269,10 @@ double OPALFitterGSL::fit() {
   bool repeat = true;
   bool scut = false;
   bool calcerr = true;
+  
+#ifndef FIT_TRACEOFF
+  if (tracer) tracer->initialize (*this);
+#endif   
  
   // start of iterations
   while (repeat) {
@@ -580,6 +588,10 @@ double OPALFitterGSL::fit() {
       for (unsigned int i = 0; i < fitobjects.size(); ++i) 
         cout << "fitobject " << i << ": " << *fitobjects[i] << endl;                                 
 
+#ifndef FIT_TRACEOFF
+    if (tracer) tracer->step (*this);
+#endif   
+
   }   // end of while (repeat)
   
 // *-- End of iterations - calculate errors.
@@ -727,18 +739,37 @@ double OPALFitterGSL::fit() {
       }
     }
     
+    // Finally, copy covariance matrix
+    if (cov && covDim != nmea+nunm) {
+      delete[] cov;
+      cov = 0;
+    }
+    covDim = nmea+nunm;
+    if (!cov) cov = new double[covDim*covDim];
+    for (int i = 0; i < covDim; ++i) {
+      for (int j = 0; j < covDim; ++j) {
+        cov[i*covDim+j] = gsl_matrix_get (Vnew, i, j);
+      }
+    }    
+    covValid = true;
+    
   } // endif calcerr == true
 
 // *-- Turn chisq into probability.
   FReal chi = FReal(chinew);
   fitprob = (ncon-nunm > 0) ? prob(chi,ncon-nunm) : 0.5;
   chi2 = chinew;
+  
+#ifndef FIT_TRACEOFF
+    if (tracer) tracer->finish (*this);
+#endif   
 
   return fitprob;
     
 }
 
 bool OPALFitterGSL::initialize() {
+  covValid = false;
   // tell fitobjects the global ordering of their parameters:
   int iglobal = 0;
   // measured parameters first!

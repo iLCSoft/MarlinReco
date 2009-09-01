@@ -5,9 +5,19 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
- * - Revision 1.1  2009/02/26 18:35:17  beckmann
- * - Bug fixes in MarlinKinFit
+ * - $Log: PhotonFitObjectPxyg.cc,v $
+ * - Revision 1.10  2009/04/02 12:47:35  mbeckman
+ * - PhotonFitObject.cc, PseudoMeasuredPhotonFitObjectPxyz.cc: bug fix (measured p = 0 instead of start value)
+ * - PhotonFitObjectPxyg.cc: added assertion to catch up division by zero
+ * -
+ * - Revision 1.9  2009/04/01 09:00:15  mbeckman
+ * - Corrected derivatives by factor sqrt(2)
+ * -
+ * - Revision 1.8  2009/03/26 08:47:30  mbeckman
+ * - Bug fix (measured p = 0 instead of start value)
+ * -
+ * - Revision 1.7  2009/03/17 13:27:03  mbeckman
+ * - fixed for compiling with gcc 3.2.3 (for compability with ILCSoft)
  * -
  * - Revision 1.6  2009/02/23 12:04:05  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
@@ -35,7 +45,7 @@ using std::cout;
 using std::endl;
 
 static const double pi_ = 3.14159265358979323846264338328,
-                    a   = 8./3./pi_*(pi_-3.)/(4.-pi_);      // avoid multiple calculation of constant values
+                    a   = 8./3./pi_*(pi_-3.)/(4.-pi_);    // = ca. 0.140012289
 
 // constructor
 PhotonFitObjectPxyg::PhotonFitObjectPxyg(double px, double py, double pz,
@@ -49,17 +59,18 @@ PhotonFitObjectPxyg::PhotonFitObjectPxyg(double px, double py, double pz,
   if(debug){
     cout << "PhotonFitObjectPxyg:   b: " << b << "   PzMinB: " << PzMinB << "   PzMaxB: " << PzMaxB << endl;
   }
-  assert(b > 0);     // not anticipated for b<=0
+  assert(b > 0 && b < 1);
   assert(PzMinB >= 0);
   assert(PzMaxB >= PzMinB);
-  dp2zFact = 2.*(PzMaxB-PzMinB)/b/sqrt(pi_);
+//   dp2zFact = 2.*(PzMaxB-PzMinB)/b/sqrt(pi_);
+  dp2zFact = (PzMaxB-PzMinB)/b*sqrt(2./pi_);
   double pg = PgFromPz(pz);         // using internally Gauss-distributed parameter p_g instead of p_z
   setParam (0, px, true, true);
   setParam (1, py, true, true);
   setParam (2, pg, true);
-  setMParam (0, px);
-  setMParam (1, py);
-  setMParam (2, pg);
+  setMParam (0, 0.);                // all measured parameters
+  setMParam (1, 0.);                // are assumed to be zero
+  setMParam (2, 0.);                // in this photon parametrization
   if(debug){
     cout << "PhotonFitObjectPxyg:   Initial pg: " << pg << endl;
   }

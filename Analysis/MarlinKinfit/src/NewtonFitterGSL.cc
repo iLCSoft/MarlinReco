@@ -2,14 +2,17 @@
  *  \brief Implements class NewtonFitterGSL
  *
  * Author: Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/09/01 09:48:13 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 26.9.08 BL: Correct parameter counting (discared fixed parameters)
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: NewtonFitterGSL.cc,v $
+ * - Revision 1.4  2009/09/01 09:48:13  blist
+ * - Added tracer mechanism, added access to fit covariance matrix
+ * -
  * - Revision 1.3  2009/02/18 11:56:21  mbeckman
  * - PhotonFitObject*.cc: documentation, debug output
  * - NewtonFitterGSL.cc:  bug fix (Lagrange multipliers not initialized), debug output
@@ -41,6 +44,7 @@
 #include "BaseFitObject.h"
 #include "BaseHardConstraint.h"
 #include "BaseSoftConstraint.h"
+#include "BaseTracer.h"
 #include "ftypes.h"
 #include "cernlib.h"
 
@@ -133,6 +137,10 @@ double NewtonFitterGSL::fit() {
   
   
   // LET THE GAMES BEGIN
+  
+#ifndef FIT_TRACEOFF
+  if (tracer) tracer->initialize (*this);
+#endif   
   
   bool converged = 0;
   ierr = 0;
@@ -284,6 +292,11 @@ double NewtonFitterGSL::fit() {
            << "fvalbest=" << fvalbest << "\n"
            << "abs(fvals[0]-fvalbest)=" << abs(fvals[0]-fvalbest)<< "\n";      
     } 
+
+#ifndef FIT_TRACEOFF
+    if (tracer) tracer->step (*this);
+#endif  
+ 
   } while (!(converged || ierr));
   
 // *-- End of iterations - calculate errors.
@@ -309,8 +322,13 @@ double NewtonFitterGSL::fit() {
 
 // *-- Turn chisq into probability.
   FReal chi = FReal(chi2new);
+  fitprob = (chi >= 0 && ncon+nsoft-nunm> 0) ? prob(chi, ncon+nsoft-nunm) : -1;
+  
+#ifndef FIT_TRACEOFF
+    if (tracer) tracer->finish (*this);
+#endif   
 
-  return fitprob = prob(chi ,ncon+nsoft-nunm);
+  return fitprob;
     
 }
 

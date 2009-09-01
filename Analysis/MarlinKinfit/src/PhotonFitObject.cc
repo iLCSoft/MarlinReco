@@ -5,7 +5,11 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: PhotonFitObject.cc,v $
+ * - Revision 1.7  2009/04/02 12:47:35  mbeckman
+ * - PhotonFitObject.cc, PseudoMeasuredPhotonFitObjectPxyz.cc: bug fix (measured p = 0 instead of start value)
+ * - PhotonFitObjectPxyg.cc: added assertion to catch up division by zero
+ * -
  * - Revision 1.6  2009/02/23 12:04:05  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
@@ -36,9 +40,9 @@ PhotonFitObject::PhotonFitObject(double px, double py, double pz,
   setParam (0, px, true, true);
   setParam (1, py, true, true);
   setParam (2, pz, true);
-  setMParam (0, px);
-  setMParam (1, py);
-  setMParam (2, pz);
+  setMParam (0, 0.);
+  setMParam (1, 0.);
+  setMParam (2, 0.);
   setError (2, Dpz);
   setMass (0.);
   invalidateCache();

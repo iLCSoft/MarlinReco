@@ -5,7 +5,10 @@
  * - 7.6.04 JB: First doxygen docu
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: BaseFitObject.h,v $
+ * - Revision 1.2  2009/09/02 13:10:57  blist
+ * - Added errors for NewtonFitterGSL
+ * -
  * - Revision 1.1  2008/02/12 10:19:05  blist
  * - First version of MarlinKinfit
  * -
@@ -91,8 +94,8 @@
  * 
  *
  * Author:  Benno List, Jenny Böhme
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/09/02 13:10:57 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov
@@ -197,7 +200,9 @@ class BaseFitObject {
     
     /// Add covariance matrix elements to 
     /// global covariance matrix of size idim x idim
-    virtual void addToGlobCov(double *glcov, int idim) const = 0; 
+    virtual void addToGlobCov(double *glcov,   ///< Global covariance matrix
+                              int idim     ///< First dimension of global derivative matrix
+                              ) const; 
             
     /// Get chi squared from measured and fitted parameters
     virtual double getChi2() const = 0;
@@ -209,11 +214,11 @@ class BaseFitObject {
                                     int jlocal    ///< Local parameter number j
                                    ) const = 0;
     
-    /// Add derivatives of chi squared to global covariance matrix
-    virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global covariance matrix
-                                           int idim     ///< First dimension of global covariance matrix
+    /// Add 2nd derivatives of chi squared to global derivative matrix
+    virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global derivative matrix
+                                           int idim     ///< First dimension of global derivative matrix
                                            ) const = 0;
-    /// Add derivatives of chi squared to global derivative matrix
+    /// Add derivatives of chi squared to global derivative vector
     virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
                                            int idim     ///< Vector size 
                                            ) const = 0;

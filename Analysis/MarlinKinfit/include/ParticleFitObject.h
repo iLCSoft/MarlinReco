@@ -50,8 +50,8 @@
  * setGlobalParNum. 
  *
  * Author: Benno List, Jenny List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/09/02 13:10:57 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 30.12.04 BL: Added getCov, setCov
@@ -220,16 +220,16 @@ class ParticleFitObject: public BaseFitObject {
                                     int jlocal          ///< Local parameter number j
                                    ) const;
     
-    /// Add derivatives of chi squared to global covariance matrix
-    virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global covariance matrix
-                                           int idim     ///< First dimension of global covariance matrix
+    /// Add 2nd derivatives of chi squared to global derivative matrix
+    virtual void addToGlobalChi2DerMatrix (double *M,   ///< Global derivative matrix
+                                           int idim     ///< First dimension of global derivative matrix
                                           ) const;
                                       
     /// Add  numerically determined derivatives of chi squared to global covariance matrix
     virtual void addToGlobalChi2DerMatrixNum (double *M,   ///< Global covariance matrix
-                                           int idim,    ///< First dimension of global covariance matrix
-                                           double eps   ///< Parameter variation
-                                          );
+                                              int idim,    ///< First dimension of global covariance matrix
+                                              double eps   ///< Parameter variation
+                                             );
                                       
     /// Add derivatives of chi squared to global derivative vector
     virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives

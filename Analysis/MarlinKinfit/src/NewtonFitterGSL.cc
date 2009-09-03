@@ -2,7 +2,7 @@
  *  \brief Implements class NewtonFitterGSL
  *
  * Author: Benno List
- * $Date: 2009/09/01 09:48:13 $
+ * $Date: 2009/09/02 13:10:57 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -10,6 +10,9 @@
  *
  * \b CVS Log messages:
  * - $Log: NewtonFitterGSL.cc,v $
+ * - Revision 1.5  2009/09/02 13:10:57  blist
+ * - Added errors for NewtonFitterGSL
+ * -
  * - Revision 1.4  2009/09/01 09:48:13  blist
  * - Added tracer mechanism, added access to fit covariance matrix
  * -
@@ -70,7 +73,7 @@ NewtonFitterGSL::NewtonFitterGSL()
 : npar (0), ncon (0), nsoft (0), idim (0),
   x(0), xold(0), xbest(0), dx(0), dxscal (0), grad(0), y(0), yscal(0), 
   perr(0), v1 (0), v2(0), Meval (0),
-  M(0), Mscal (0), M1(0), M2 (0), M3 (0), Mevec (0), 
+  M(0), Mscal (0), M1(0), M2 (0), M3 (0), M4 (0), M5 (0), Mevec (0), 
   CC (0), CC1 (0), CCinv (0), permM(0), ws(0),
   debug (debuglevel)
 {}
@@ -95,6 +98,8 @@ NewtonFitterGSL::~NewtonFitterGSL() {
   if (M1) gsl_matrix_free (M1);             M1=0;
   if (M2) gsl_matrix_free (M2);             M2=0;
   if (M3) gsl_matrix_free (M3);             M3=0;
+  if (M4) gsl_matrix_free (M4);             M4=0;
+  if (M5) gsl_matrix_free (M5);             M5=0;
   if (Mevec) gsl_matrix_free (Mevec);       Mevec=0;
   if (CC) gsl_matrix_free (CC);             CC=0;
   if (CC1) gsl_matrix_free (CC1);           CC1=0;
@@ -301,7 +306,25 @@ double NewtonFitterGSL::fit() {
   
 // *-- End of iterations - calculate errors.
 
-//    ====> HERE GOES ERROR CALCULATION <======
+// ERROR CALCULATION 
+
+  if (!ierr) {
+
+    calcCovMatrix();  
+
+    // update errors in fitobjects
+    for (unsigned int ifitobj = 0; ifitobj < fitobjects.size(); ++ifitobj) {
+      for (int ilocal = 0; ilocal < fitobjects[ifitobj]->getNPar(); ++ilocal) {
+        int iglobal = fitobjects[ifitobj]->getGlobalParNum (ilocal); 
+        for (int jlocal = ilocal; jlocal < fitobjects[ifitobj]->getNPar(); ++jlocal) {
+          int jglobal = fitobjects[ifitobj]->getGlobalParNum (jlocal); 
+          if (iglobal >= 0 && jglobal >= 0) 
+          fitobjects[ifitobj]->setCov(ilocal, jlocal, gsl_matrix_get (CCinv, iglobal, jglobal)); 
+        }
+      }
+    }
+  }
+  
 
   if (debug>1) {
     cout << "========= END =========\n";
@@ -333,6 +356,7 @@ double NewtonFitterGSL::fit() {
 }
 
 bool NewtonFitterGSL::initialize() {
+  covValid = false;
 //  bool debug = true;
 
   // tell fitobjects the global ordering of their parameters:
@@ -386,6 +410,8 @@ bool NewtonFitterGSL::initialize() {
   ini_gsl_matrix (M1, idim, idim);
   ini_gsl_matrix (M2, idim, idim);
   ini_gsl_matrix (M3, idim, idim);
+  ini_gsl_matrix (M4, idim, idim);
+  ini_gsl_matrix (M5, idim, idim);
   ini_gsl_matrix (Mevec, idim, idim);
   ini_gsl_matrix (CC, idim, idim);
   ini_gsl_matrix (CC1, idim, idim);
@@ -755,6 +781,7 @@ int NewtonFitterGSL::calcM() {
   return 0;
 }
 
+
 int NewtonFitterGSL::calcy() {
   assert (y);
   assert (y->size == idim);
@@ -931,9 +958,10 @@ int NewtonFitterGSL::invertM() {
     int ifail = 0;
     
     int signum;
+    // Calculate LU decomposition of M into M1
     int result = gsl_linalg_LU_decomp (M1, permM, &signum);
     if (debug>1)cout << "invertM: gsl_linalg_LU_decomp result=" << result << endl;
-    // SOlve M1*dx = y
+    // Calculate inverse of M
     ifail = gsl_linalg_LU_invert (M1, permM, M);
     if (debug>1)cout << "invertM: gsl_linalg_LU_solve result=" << ifail << endl;
     
@@ -946,5 +974,91 @@ int NewtonFitterGSL::invertM() {
 void NewtonFitterGSL::setDebug (int debuglevel) {
   debug = debuglevel;
 }
+
+
+void NewtonFitterGSL::calcCovMatrix() {
+  // Set up equation system M*dadeta + dydeta = 0
+  // here, dadeta is d a / d eta, i.e. the derivatives of the fitted 
+  // parameters a w.r.t. to the measured parameters eta,
+  // and dydeta is the derivative of the set of equations
+  // w.r.t eta, i.e. simply d^2 chi^2 / d a d eta.
+  // Now, if chi2 = (a-eta)^T*Vinv((a-eta), we have simply
+  // d^2 chi^2 / d a d eta = - d^2 chi^2 / d a d a
+  // and can use the method addToGlobalChi2DerMatrix.
+  
+  gsl_matrix_set_zero (M1);
+  gsl_matrix_set_zero (M2);
+  // First, all terms d^2 chi^2/dx1 dx2
+  for (FitObjectIterator i = fitobjects.begin(); i != fitobjects.end(); ++i) {
+    BaseFitObject *fo = *i;
+    assert (fo);
+    fo->addToGlobalChi2DerMatrix (M1->block->data, M1->tda);
+    fo->addToGlobCov (M2->block->data, M2->tda);
+  }
+  // multiply by -1
+  gsl_matrix_scale (M1, -1);
+  
+  gsl_matrix_view dydeta  = gsl_matrix_submatrix (M1, 0, 0, idim, npar);
+  gsl_matrix_view Cov_eta = gsl_matrix_submatrix (M2, 0, 0, npar, npar);
+  
+  cout << "NewtonFitterGSL::calcCovMatrix\n";
+  debug_print (&dydeta.matrix, "dydeta");
+  debug_print (&Cov_eta.matrix, "Cov_eta");
+  
+  calcM();
+  debug_print (M, "M");
+  
+  // Now, solve M*dadeta = dydeta
+
+  // Calculate LU decomposition of M into M3
+  int signum;
+  int result = gsl_linalg_LU_decomp (M, permM, &signum);
+  cout << "invertM: gsl_linalg_LU_decomp result=" << result << endl;
+  debug_print (M, "M_LU"); 
+  // Calculate inverse of M, store in M3
+  int ifail = gsl_linalg_LU_invert (M, permM, M3);
+  cout << "invertM: gsl_linalg_LU_invert ifail=" << ifail << endl;
+ 
+  debug_print (M3, "Minv");
+
+  // Calculate dadeta = M3*dydeta
+  gsl_matrix_set_zero (M4);
+  gsl_matrix_view dadeta   = gsl_matrix_submatrix (M4, 0, 0, idim, npar);
+
+  debug_print (&dadeta.matrix, "dadeta");
+  
+  // dadeta = 1*M*dydeta + 0*dadeta
+  gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1, M3, &dydeta.matrix, 0, &dadeta.matrix);
+  
+  
+  // Now calculate Cov_a = dadeta*Cov_eta*dadeta^T
+
+  // First, calculate M3 = Cov_eta*dadeta^T as 
+  gsl_matrix_view M3part   = gsl_matrix_submatrix (M3, 0, 0, npar, idim);
+  gsl_blas_dgemm (CblasNoTrans, CblasTrans, 1, &Cov_eta.matrix, &dadeta.matrix, 0, &M3part.matrix);
+  // Now Cov_a = dadeta*M3part
+  gsl_matrix_set_zero (M5);
+  gsl_matrix_view  Cov_a = gsl_matrix_submatrix (M5, 0, 0, npar, npar);
+  gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1, &dadeta.matrix, &M3part.matrix, 0, M5);
+
+  debug_print (&Cov_a.matrix, "Cov_a");
+
+  // debug_print (CCinv, "full Cov from err prop");
+  // debug_print (M1, "uncorr Cov from err prop");
+    // Finally, copy covariance matrix
+  if (cov && covDim != npar) {
+    delete[] cov;
+    cov = 0;
+  }
+  covDim = npar;
+  if (!cov) cov = new double[covDim*covDim];
+  for (int i = 0; i < covDim; ++i) {
+    for (int j = 0; j < covDim; ++j) {
+      cov[i*covDim+j] = gsl_matrix_get (&Cov_a.matrix, i, j);
+    }
+  }    
+  covValid = true;
+}
+
   
 

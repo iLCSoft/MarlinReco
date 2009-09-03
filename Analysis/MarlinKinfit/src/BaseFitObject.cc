@@ -4,7 +4,10 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: BaseFitObject.cc,v $
+ * - Revision 1.2  2009/09/02 13:10:57  blist
+ * - Added errors for NewtonFitterGSL
+ * -
  * - Revision 1.1  2008/02/12 10:19:08  blist
  * - First version of MarlinKinfit
  * -
@@ -106,4 +109,21 @@ bool BaseFitObject::updateParams (double p[], int idim) {
   }
   return result;
 }  
+
+void BaseFitObject::addToGlobCov(double *globCov, int idim) const {
+  for (int ilocal = 0; ilocal < getNPar(); ++ilocal) {
+    if (!isParamFixed(ilocal) && isParamMeasured(ilocal)) {
+      int iglobal = getGlobalParNum (ilocal);
+      assert (iglobal >= 0 && iglobal < idim);
+      int ioffs = idim*iglobal;
+      for (int jlocal = 0; jlocal < getNPar(); ++jlocal) {
+        if (!isParamFixed(jlocal) && isParamMeasured(jlocal)) {
+          int jglobal = getGlobalParNum (jlocal);
+          assert (jglobal >= 0 && jglobal < idim);
+          globCov[ioffs+jglobal] += getCov(ilocal,jlocal);
+        }
+      }
+    }
+  }
+}
                                 

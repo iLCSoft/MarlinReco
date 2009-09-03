@@ -3,9 +3,9 @@
  *  \brief Declares class NewtonFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2009/02/17 12:46:34 $
+ * Last update: $Date: 2009/09/02 13:10:57 $
  *          by: $Author: blist $
- * $Date: 2009/02/17 12:46:34 $
+ * $Date: 2009/09/02 13:10:57 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -13,6 +13,9 @@
  *
  * \b CVS Log messages:
  * - $Log: NewtonFitterGSL.h,v $
+ * - Revision 1.3  2009/09/02 13:10:57  blist
+ * - Added errors for NewtonFitterGSL
+ * -
  * - Revision 1.2  2009/02/17 12:46:34  blist
  * - Improved version of NewtonFitterGSL, JetFitObject changed
  * -
@@ -98,6 +101,8 @@ class NewtonFitterGSL : public BaseFitter {
     int calcy();
     int optimizeScale();
     int invertM();
+  
+    void calcCovMatrix();
     
     enum {NPARMAX=50, NCONMAX=10, NUNMMAX=10};
     
@@ -138,6 +143,8 @@ class NewtonFitterGSL : public BaseFitter {
     gsl_matrix *M1;
     gsl_matrix *M2;
     gsl_matrix *M3;
+    gsl_matrix *M4;
+    gsl_matrix *M5;
     gsl_matrix *Mevec;
     gsl_matrix *CC;
     gsl_matrix *CC1;

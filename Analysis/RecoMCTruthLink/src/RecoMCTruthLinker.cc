@@ -190,13 +190,13 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
       continue ;
     }
       
+    const TrackVec& trkVec = rec->getTracks() ;
+    
+    unsigned nTrk = trkVec.size() ;
+      
     if( fabs( charge ) > .01  ||  nTrk>1 ) {   // charged particle  or V0  -> use track
 	
       MCPMap mcpMap ;
-      
-      const TrackVec& trkVec = rec->getTracks() ;
-      
-      unsigned nTrk = trkVec.size() ;
       
      // streamlog_out( DEBUG0 ) << " loop over " <<  nTrk << " tracks " << std::endl ;
       

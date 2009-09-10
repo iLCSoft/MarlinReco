@@ -402,6 +402,14 @@ IF( "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.6 )
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > as.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GRNDM.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > ranecu.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > TE.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > helixextrapolation.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > old.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > bit.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > copy.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > polar.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > primary.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > theta.mod.proxy
     
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         COMMENT "Fixing fortran bug for cmake 2.4 versions..." VERBATIM )

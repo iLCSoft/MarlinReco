@@ -6,6 +6,7 @@
 #include <string>
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
+#include <EVENT/SimTrackerHit.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -130,6 +131,12 @@ class LEPTrackingProcessor : public Processor {
   std::string _colNameMCTracksRel ;
   std::string _usedColName;
   std::string _droppedColName;
+
+  LCCollectionVec* _tpcTrackVec ;
+  LCCollectionVec* _tpclcRelVec ;
+  LCCollectionVec* _usedCol ;
+  LCCollectionVec* _droppedCol ;
+
   int _nRun ;
   int _nEvt ;
 

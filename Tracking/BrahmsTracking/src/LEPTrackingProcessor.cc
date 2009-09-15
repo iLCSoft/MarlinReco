@@ -518,12 +518,15 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     
     //LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
     _tpclcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
-    
+    // to store the weights
+    LCFlagImpl lcFlag(0) ;
+    lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
+    _tpclcRelVec->setFlag( lcFlag.getFlag()  ) ;
+
     _droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
     _droppedCol->setSubset() ;     
     _usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
     _usedCol->setSubset() ; 
-
 
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
     streamlog_out(DEBUG) << "Number of TPCHit before filtering: " << nTPCHits << endl;

@@ -535,9 +535,15 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
 	      << " is being added to event " << std::endl;
 
   LCCollectionVec * colRel = NULL;
-  if (_createMap > 0)
+  
+  if (_createMap) {
     colRel = new LCCollectionVec(LCIO::LCRELATION);
-
+    // to store the weights
+    LCFlagImpl lcFlag(0) ;
+    lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
+    colRel->setFlag( lcFlag.getFlag()  ) ;
+  }
+  
   int nTrkCand = int(trkVec.size());
   
   int nTotTracks = 0;

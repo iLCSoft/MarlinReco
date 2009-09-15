@@ -609,8 +609,14 @@ void SiliconTracking::processEvent( LCEvent * evt ) {
     trkCol->setFlag( trkFlag.getFlag()  ) ;
     
     LCCollectionVec * relCol = NULL;
-    if (_createMap)
+    if (_createMap){
       relCol = new LCCollectionVec(LCIO::LCRELATION);
+      // to store the weights
+      LCFlagImpl lcFlag(0) ;
+      lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
+      relCol->setFlag( lcFlag.getFlag()  ) ;
+    }
+
     nTrk = int(_trackImplVec.size());
     int nSiSegments = 0;	
     float eTot = 0.;

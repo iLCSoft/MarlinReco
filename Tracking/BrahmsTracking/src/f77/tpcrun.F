@@ -129,6 +129,8 @@ CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
         IER = 1
         IF(TPCDBG.GT.0) THEN
            WRITE(*,*)'TPCRUN: Too many hits - increase NTPMAX'
+           WRITE(*,*)'TPCRUN: Too many hits - NTPHITS: ', NTPHITS
+           WRITE(*,*)'TPCRUN: Too many hits - NTPMAX:', NTPMAX
         ENDIF
         CALL TKVETO(1)
         GOTO 999

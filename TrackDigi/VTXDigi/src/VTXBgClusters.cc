@@ -344,8 +344,10 @@ void VTXBgClusters::check( LCEvent * evt ) {
 
         double zPro = ( za > zb ?  za : zb ) ;
         double yPro = ( ya > yb ?  ya : yb ) ;
-        
+
+#ifdef MARLIN_USE_AIDA
         _hist2DVec[ layer ]->fill( zPro ,  yPro  ) ; 
+#endif         
         
 
 

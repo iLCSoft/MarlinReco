@@ -1321,6 +1321,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }
   }
 
+#ifdef DIGIPLOTS
   _NSimTPCHitsHisto->fill(_NSimTPCHits);
   _NBackgroundSimTPCHitsHisto->fill(_NBackgroundSimTPCHits);
   _NPhysicsSimTPCHitsHisto->fill(_NPhysicsSimTPCHits);
@@ -1336,6 +1337,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   _NKeptPhysicsTPCHitsHistoPercent->fill( (float)(_NPhysicsSimTPCHits-_NLostPhysicsTPCHits) / (float)_NPhysicsSimTPCHits );
   _NKeptPhysicsAbove02GeVPtTPCHitsHistoPercent->fill( (float)(_NPhysicsAbove02GeVSimTPCHits-_NLostPhysicsAbove02GeVPtTPCHits) / (float)_NPhysicsAbove02GeVSimTPCHits );
   _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent->fill( (float)(_NPhysicsAbove1GeVSimTPCHits-_NLostPhysicsAbove1GeVPtTPCHits) / (float)_NPhysicsAbove1GeVSimTPCHits );
+#endif
 
   cout << "_NSimTPCHits = " << _NSimTPCHits << endl;
   cout << "_NBackgroundSimTPCHits = " << _NBackgroundSimTPCHits << endl;

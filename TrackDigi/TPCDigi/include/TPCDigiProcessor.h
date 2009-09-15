@@ -188,6 +188,19 @@ protected:
 
   LCCollectionVec* _trkhitVec;
 
+  int  _NSimTPCHits;
+  int  _NBackgroundSimTPCHits;
+  int  _NPhysicsSimTPCHits;
+  int  _NPhysicsAbove02GeVSimTPCHits;
+  int  _NPhysicsAbove1GeVSimTPCHits;
+  int  _NRecTPCHits;
+  
+  int  _NLostPhysicsTPCHits;
+  int  _NLostPhysicsAbove02GeVPtTPCHits;
+  int  _NLostPhysicsAbove1GeVPtTPCHits;
+  int  _NRevomedHits;
+
+
   //#ifdef EXPERTCHECKPLOTS
 #ifdef DIGIPLOTS
   IAnalysisFactory * _AF;
@@ -225,21 +238,6 @@ protected:
   IHistogram1D * _NKeptPhysicsTPCHitsHistoPercent;
   IHistogram1D * _NKeptPhysicsAbove02GeVPtTPCHitsHistoPercent;
   IHistogram1D * _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent;
-
-
-
-  int  _NSimTPCHits;
-  int  _NBackgroundSimTPCHits;
-  int  _NPhysicsSimTPCHits;
-  int  _NPhysicsAbove02GeVSimTPCHits;
-  int  _NPhysicsAbove1GeVSimTPCHits;
-  int  _NRecTPCHits;
-  
-  int  _NLostPhysicsTPCHits;
-  int  _NLostPhysicsAbove02GeVPtTPCHits;
-  int  _NLostPhysicsAbove1GeVPtTPCHits;
-  int  _NRevomedHits;
-
 
 #endif
 

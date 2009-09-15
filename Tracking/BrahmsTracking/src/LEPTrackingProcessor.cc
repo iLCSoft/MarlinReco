@@ -507,22 +507,22 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
   if( tpcTHcol != 0 ){
     
-    LCCollectionVec* tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
+    _tpcTrackVec = new LCCollectionVec( LCIO::TRACK )  ;
     //LCCollectionVec* TrackVec = new LCCollectionVec( LCIO::TRACK )  ;
     
     // if we want to point back to the hits we need to set the flag
     LCFlagImpl trkFlag(0) ;
     trkFlag.setBit( LCIO::TRBIT_HITS ) ;
-    tpcTrackVec->setFlag( trkFlag.getFlag()  ) ;
+    _tpcTrackVec->setFlag( trkFlag.getFlag()  ) ;
     //TrackVec->setFlag( trkFlag.getFlag()  ) ;
     
     //LCCollectionVec* lcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
-    LCCollectionVec* tpclcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
+    _tpclcRelVec = new LCCollectionVec( LCIO::LCRELATION )  ;
     
-    LCCollectionVec* droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
-    droppedCol->setSubset() ;     
-    LCCollectionVec* usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
-    usedCol->setSubset() ; 
+    _droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+    _droppedCol->setSubset() ;     
+    _usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+    _usedCol->setSubset() ; 
 
 
     int nTPCHits = tpcTHcol->getNumberOfElements()  ;   
@@ -535,7 +535,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     int errTKTREV = 0;
     
     if( _AlwaysRunCurlKiller == 0 ) {
-      selectTPCHits(tpcTHcol,usedCol);      
+      selectTPCHits(tpcTHcol,_usedCol);      
       streamlog_out(DEBUG) << "Number of TPCHit passed to PATREC: " << _goodHits.size() << endl;
       FillTPCHitBanks();            
       errTKTREV = TKTREV();       
@@ -555,15 +555,15 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         TkTeBank->clear();
         TkTkBank->clear();
 
-        delete droppedCol;
-        delete usedCol;
+        delete _droppedCol;
+        delete _usedCol;
         
-        droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
-        droppedCol->setSubset() ;     
-        usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
-        usedCol->setSubset() ; 
+        _droppedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+        _droppedCol->setSubset() ;     
+        _usedCol = new LCCollectionVec( LCIO::TRACKERHIT ) ;
+        _usedCol->setSubset() ; 
 
-        selectTPCHits(tpcTHcol, usedCol, droppedCol, _binHeight*(i),_binWidth*(i));
+        selectTPCHits(tpcTHcol, _usedCol, _droppedCol, _binHeight*(i),_binWidth*(i));
 
         FillTPCHitBanks();
         
@@ -600,8 +600,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     }
 
 
-    evt->addCollection( usedCol , _usedColName ) ;
-    evt->addCollection( droppedCol , _droppedColName ) ;
+    evt->addCollection( _usedCol , _usedColName ) ;
+    evt->addCollection( _droppedCol , _droppedColName ) ;
    
     streamlog_out(DEBUG) << "For Event:" << _nEvt << "TKTREV return:" << errTKTREV << endl;
 
@@ -727,7 +727,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 
         for(unsigned int tehit=0; tehit<hits->size();tehit++){
 
-          TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( usedCol->getElementAt( hits->at(tehit) ) ) ;
+          TrackerHit* trkHitTPC = dynamic_cast<TrackerHit*>( _usedCol->getElementAt( hits->at(tehit) ) ) ;
 
           tpcTrack->addHit(trkHitTPC) ;
         
@@ -768,7 +768,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
           tpclcRel->setWeight(weight);
         
 
-          tpclcRelVec->addElement( tpclcRel );
+          _tpclcRelVec->addElement( tpclcRel );
         }
       
         //FIXME:SJA:  Covariance matrix not included yet needs converting for 1/R and TanLambda
@@ -788,7 +788,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
         tpcTrack->subdetectorHitNumbers()[10] = int(0);
         tpcTrack->subdetectorHitNumbers()[11] = int(0);
 
-        tpcTrackVec->addElement( tpcTrack );
+        _tpcTrackVec->addElement( tpcTrack );
 
       
         //      cout << "TkTeBank->getSubdetector_ID(te) = " << TkTeBank->getSubdetector_ID(te) << endl;
@@ -833,10 +833,10 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     //     IntVec typeValues ;
     //     typeNames.push_back( LCIO::TRACK ) ;
     //     typeValues.push_back( 1 ) ;
-    //     tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
-    //     tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
+    //     _tpcTrackVec->parameters().setValues("TrackTypeNames" , typeNames ) ;
+    //     _tpcTrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
 
-    //    evt->addCollection( tpcTrackVec , _colNameTPCTracks) ;
+    //    evt->addCollection( _tpcTrackVec , _colNameTPCTracks) ;
     //    evt->addCollection( lcRelVec , _colNameMCTracksRel) ;
 
 
@@ -981,7 +981,7 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
 //          if(TkHitBank->getSubdetectorID(hits->at(tkhit))==500){
 //            
 //            int tpchitindex = hits->at(tkhit) - TkHitBank->getFirstHitIndex("TPC") ;
-//            trkHit = dynamic_cast<TrackerHit*>( usedCol->getElementAt( tpchitindex ) ) ;
+//            trkHit = dynamic_cast<TrackerHit*>( _usedCol->getElementAt( tpchitindex ) ) ;
 //          }
 //          
 //          if(TkHitBank->getSubdetectorID(hits->at(tkhit))>99
@@ -1075,8 +1075,8 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     //    //     TrackVec->parameters().setValues("TrackTypeValues" , typeValues ) ;
     //
     
-    evt->addCollection( tpcTrackVec , _colNameTPCTracks) ;
-    evt->addCollection( tpclcRelVec , _colNameMCTPCTracksRel) ;
+    evt->addCollection( _tpcTrackVec , _colNameTPCTracks) ;
+    evt->addCollection( _tpclcRelVec , _colNameMCTPCTracksRel) ;
     //    evt->addCollection( TrackVec , _colNameTracks) ;
     //    evt->addCollection( lcRelVec , _colNameMCTracksRel) ;
     
@@ -1111,19 +1111,19 @@ void LEPTrackingProcessor::end(){
 //
 }
 
-void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollection* usedCol){
+void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollection* _usedCol){
   if( tpcTHcol != 0 ){
     
     int n_THits = tpcTHcol->getNumberOfElements()  ;
     for(int i=0; i< n_THits; i++){
       TrackerHit* THit = dynamic_cast<TrackerHit*>( tpcTHcol->getElementAt( i ) ) ;
-      usedCol->addElement(THit) ;
+      _usedCol->addElement(THit) ;
       _goodHits.push_back(THit);
     }
   }
 }
 
-void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* usedCol, LCCollectionVec* droppedCol, int nbinHeight, int nbinWidth){
+void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* _usedCol, LCCollectionVec* _droppedCol, int nbinHeight, int nbinWidth){
 
   if( tpcTHcol != 0 ){
     
@@ -1182,7 +1182,7 @@ void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec
       if(   v.size() >=  (unsigned) _multiplicityCut ) {
 
         for( unsigned i = 0 ; i < v.size() ; i++){
-          droppedCol->addElement(  v[i] ) ;
+          _droppedCol->addElement(  v[i] ) ;
         } 
 
         //                 int color = 0x88ff88 ;
@@ -1197,7 +1197,7 @@ void LEPTrackingProcessor::selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec
       if(   v.size() < (unsigned) _multiplicityCut  ) {
         
         for( unsigned i = 0 ; i < v.size() ; i++){
-          usedCol->addElement(  v[i] ) ;
+          _usedCol->addElement(  v[i] ) ;
 
           _goodHits.push_back(v[i]);
           

@@ -88,7 +88,7 @@ extern "C" {
 }
 
 extern "C" {
-  struct {
+  extern struct {
     float consb;
   } fkfild_;
 }

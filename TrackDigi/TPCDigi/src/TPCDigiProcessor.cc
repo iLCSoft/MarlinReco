@@ -14,6 +14,7 @@
 #include "SimpleHelix.h"
 #include"constants.h"
 #include "LCCylinder.h"
+#include <IMPL/LCFlagImpl.h>
 
 //stl exception handler
 #include <stdexcept>
@@ -53,7 +54,7 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
 {
   
   // modify processor description
-  _description = "Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. A search is made for adjacent hits on a pad row, if they are closer in z and r-phi than the steering parameters XXX and XXX they are considered to overlap. Clusters of hits smaller than XXX are merged into a single tracker hit, with the position given as the average poision of the hits in phi and in z. Clusters which have XXX hits of more a determined to be identifiable and are not added to the tracker hit collection. This of course means that good hits caught up in a cluster of background hits will be lossed." ;
+  _description = "Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. A search is made for adjacent hits on a pad row, if they are closer in z and r-phi than the steering parameters _doubleHitResRPhi (default value 2.0 mm) and _doubleHitResZ (default value 5.0 mm) they are considered to overlap. Clusters of hits smaller than _maxMerge (default value 3) are merged into a single tracker hit, with the position given as the average poision of the hits in phi and in z. Clusters which have _maxMerge hits or more are determined to be identifiable as multiple hits, and are not added to the tracker hit collection. This of course means that good hits caught up in a cluster of background hits will be lossed." ;
   
   // register steering parameters: name, description, class-variable, default value
 
@@ -147,6 +148,7 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
 void TPCDigiProcessor::init() 
 { 
   
+
   // From GNU documentation:
   // A replacement for the standard terminate_handler which prints 
   // more information about the terminating exception (if any) on stderr. Call ...
@@ -339,9 +341,6 @@ void TPCDigiProcessor::init()
 #endif  
 
 
-
-
-  // usually a good idea to
   printParameters() ;
 
   //intialise random number generator 
@@ -354,7 +353,6 @@ void TPCDigiProcessor::init()
 
 void TPCDigiProcessor::processRunHeader( LCRunHeader* run) 
 { 
-
   _nRun++ ;
 } 
 
@@ -363,22 +361,21 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
   int numberOfVoxelsCreated(0);
 
-  _NSimTPCHits = 0;;
-  _NBackgroundSimTPCHits = 0;;
-  _NPhysicsSimTPCHits = 0;;
-  _NPhysicsAbove02GeVSimTPCHits = 0;;
-  _NPhysicsAbove1GeVSimTPCHits = 0;;
-  _NRecTPCHits = 0;;
+  _NSimTPCHits = 0;
+  _NBackgroundSimTPCHits = 0;
+  _NPhysicsSimTPCHits = 0;
+  _NPhysicsAbove02GeVSimTPCHits = 0;
+  _NPhysicsAbove1GeVSimTPCHits = 0;
+  _NRecTPCHits = 0;
 
-  _NLostPhysicsTPCHits = 0;;
-  _NLostPhysicsAbove02GeVPtTPCHits = 0;;
-  _NLostPhysicsAbove1GeVPtTPCHits = 0;;
-  _NRevomedHits = 0;;
+  _NLostPhysicsTPCHits = 0;
+  _NLostPhysicsAbove02GeVPtTPCHits = 0;
+  _NLostPhysicsAbove1GeVPtTPCHits = 0;
+  _NRevomedHits = 0;
 
-  static bool firstEvent = true ;
+  static bool firstEvent = true;
   _tpcHitMap.clear();
   _tpcRowHits.clear();
-
   
   if(firstEvent==true) streamlog_out(MESSAGE) << "TPCDigiProcessor called for first event" << endl;
 
@@ -391,7 +388,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   _trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
 
-  // first deal with the pad-row based hits from Mokka  
+  // first deal with the pad-row based hits from Mokka 
   LCCollection* STHcol = 0 ;
   try{
     STHcol = evt->getCollection( _padRowHitColName ) ;
@@ -403,466 +400,184 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
     int n_sim_hits = STHcol->getNumberOfElements()  ;
 
+    LCFlagImpl colFlag( STHcol->getFlag() ) ;    
+
     _NSimTPCHits = n_sim_hits;
       
-    streamlog_out(DEBUG) << "number of Pad-Row based SimHits = " << n_sim_hits << std::endl;
+    streamlog_out(DEBUG4) << "number of Pad-Row based SimHits = " << n_sim_hits << std::endl;
 
     // this assumes that the pad width in r*phi is the same for all pads  
     _padWidth = padLayout.getPadWidth(0)*padCoord[0];
     // set size of row_hits to hold (n_rows) vectors
     _tpcRowHits.resize(padLayout.getNRows());
 
-
-    EVENT::MCParticle *mcp(NULL);
-    EVENT::MCParticle *previousMCP(NULL);
-    EVENT::MCParticle *nextMCP(NULL);
-
-    SimTrackerHit* SimTHit(NULL);
-    SimTrackerHit* previousSimTHit(NULL);
-    SimTrackerHit* nextSimTHit(NULL);
+    _mcp=NULL;         
+    _previousMCP=NULL; 
+    _nextMCP=NULL;     
+    _nMinus2MCP=NULL;  
+    _nPlus2MCP=NULL;   
+    
+    _SimTHit=NULL;
+    _previousSimTHit=NULL;
+    _nextSimTHit=NULL;
+    _nMinus2SimHit=NULL;
+    _nPlus2SimHit=NULL;
 
     for(int i=0; i< n_sim_hits; i++){
       
-      SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
-      mcp = SimTHit->getMCParticle() ; 
+      _SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
-      if(mcp){
+      float de_dx;
+      double padPhi(0.0);
+      double padTheta (0.0);
+      
+      CLHEP::Hep3Vector *precedingPoint = (NULL);
+      CLHEP::Hep3Vector *followingPoint = (NULL);
+      CLHEP::Hep3Vector *nMinus2Point = (NULL);
+      CLHEP::Hep3Vector *nPlus2Point = (NULL);
+      
+      CLHEP::Hep3Vector thisPoint(_SimTHit->getPosition()[0],_SimTHit->getPosition()[1],_SimTHit->getPosition()[2]);
+      
+      _mcp = _SimTHit->getMCParticle() ; 
+
+      if(_mcp){ // SJA:FIX: the fact that it is a physics hit relies on the fact that for overlay the pointer to the mcp is set to NULL. This distinction may not always be true ...
         ++_NPhysicsSimTPCHits ;
-        const float *mom= SimTHit->getMomentum() ;
+        const float *mom= _SimTHit->getMomentum() ;
         double ptSQRD = mom[0]*mom[0]+mom[1]*mom[1] ; 
         if( ptSQRD > (0.2*0.2) ) ++_NPhysicsAbove02GeVSimTPCHits ;
         if( ptSQRD > 1.0 )  ++_NPhysicsAbove1GeVSimTPCHits ;
+        
+#ifdef EXPERTCHECKPLOTS
+        if(_mcp) plotHelixHitResidual(_mcp, &thisPoint);
+#endif  
+        
       } else {
         ++_NBackgroundSimTPCHits;
       }
-
-      nextMCP = NULL;
-      if (i<(n_sim_hits-1)) {
-        nextSimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i+1 ) ) ;
-        nextMCP= nextSimTHit->getMCParticle() ;
-      }
-
-      float de_dx;
-      double padPhi;
-      double padTheta = 0.0;
-
-      CLHEP::Hep2Vector *precedingPoint = (NULL);
-      CLHEP::Hep2Vector *thisPointRPhi = (NULL);
-      CLHEP::Hep2Vector *followingPoint = (NULL);
-      CLHEP::Hep2Vector *nMinus2Point = (NULL);
-      CLHEP::Hep2Vector *nPlus2Point = (NULL);
-
-      thisPointRPhi = new CLHEP::Hep2Vector(SimTHit->getPosition()[0],SimTHit->getPosition()[1]);
-
-#ifdef EXPERTCHECKPLOTS
-     
-      const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
-      const double FCT = 2.99792458E-4;
-      double charge = mcp->getCharge();
-      const double *mom = mcp->getMomentum();
-      double pt = sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
-      double radius = pt / (FCT*bField);
-      double tanLambda = mom[2]/pt;
-      double omega = charge / radius;
-
-      if(pt>1.0) {
-
-        //FIXME SJA: this is only valid for tracks from the IP and should be done correctly for non prompt tracks
-        double Z0 = 0.;      
-        double D0  = 0.;
-        
-        LCVector3D refPoint(0.,0.,0);
-        
-        SimpleHelix* helix = new SimpleHelix(D0, 
-                                             atan2(mom[1],mom[0]), 
-                                             omega, 
-                                             Z0, 
-                                             tanLambda,
-                                             refPoint);
-        
-
-        // an almost "infinite" cylinder in z        
-        LCVector3D startCylinder(0.,0.,-1000000.0);
-        LCVector3D endCylinder(0.,0.,1000000.0);
-        bool endplane=true;
-        
-        LCCylinder cylinder(startCylinder,endCylinder,thisPointRPhi->r(),endplane);
-        
-        bool pointExists = false;
-        
-        double pathlength = helix->getIntersectionWithCylinder( cylinder, pointExists);
-        
-        LCErrorMatrix* errors = new LCErrorMatrix();
-        
-        if(pointExists){
-     
-          LCVector3D intersection = helix->getPosition(pathlength, errors); 
-     
-          double intersectionPhi = atan2(intersection[1],intersection[0]);
-          double residualRPhi = ((intersectionPhi-thisPointRPhi->phi())) ;
-          _ResidualsRPhiHisto->fill(residualRPhi);
-          
-        }
-        
-        delete errors;
-        delete helix;
-
-        int row = padLayout.getRowNumber(padLayout.getNearestPad(thisPointRPhi->r(),thisPointRPhi->phi()));
-        int pad = padLayout.getNearestPad(thisPointRPhi->r(),thisPointRPhi->phi());
-        
-        double rHit_diff = thisPointRPhi->r()  
-          - padLayout.getPlaneExtent()[0]  
-          - (( row + 0.5 ) 
-             * padLayout.getPadHeight(pad)) ;
-        
-        _radiusCheckHisto->fill(rHit_diff);
-        
-//      cout << "$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$" << endl;
-//      cout << "thisPointRPhi->r() = " << thisPointRPhi->r() << endl;
-//      cout << "TPC Sensitive rMin = " << padLayout.getPlaneExtent()[0] << endl;
-//      cout << "Row number + 0.5 = " <<  row + 0.5 << endl;
-//      cout << "Pad Height = " <<  padLayout.getPadHeight(pad) << endl;
-//      cout << "Row Height = " <<   padLayout.getRowHeight(row) << endl;
-//      cout << "R_hit - TPC Rmin - ((RowIndex + 0.5 )* padheight) = " << rHit_diff << endl;
-          
-      }
       
-#endif    
-
-      // Calculate difference in Phi for current hit with that of the pad
-      
-      if( mcp==previousMCP && mcp==nextMCP) { // still on the same track
-
-        precedingPoint = new CLHEP::Hep2Vector(previousSimTHit->getPosition()[0],previousSimTHit->getPosition()[1]);
-        followingPoint = new CLHEP::Hep2Vector(nextSimTHit->getPosition()[0],nextSimTHit->getPosition()[1]);
-
-        Circle theCircle(precedingPoint, thisPointRPhi, followingPoint);
-
-        //        cout << "the circle has radius = " << theCircle.GetRadius() << endl;
-        //        cout << "the circle has center = " << theCircle.GetCenter()->x() << "  " << theCircle.GetCenter()->y() << endl;
-
-        // cout << "point x = " << SimTHit->getPosition()[0] << " point y = " << SimTHit->getPosition()[1] << endl; 
-
-        double localPhi = 
-          atan2((thisPointRPhi->y() - theCircle.GetCenter()->y()) ,(thisPointRPhi->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
-
-        if(localPhi>twopi) localPhi=localPhi - twopi;
-        if(localPhi<0.0) localPhi=localPhi + twopi;
-        if(localPhi>twopi/2.0) localPhi = localPhi - twopi/2.0 ;
-
-        double pointPhi = thisPointRPhi->phi();
-
-        if(pointPhi>twopi) pointPhi=pointPhi - twopi;
-        if(pointPhi<0.0) pointPhi=pointPhi + twopi;
-        if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
-
-        padPhi = fabs(pointPhi - localPhi);
-
-#ifdef EXPERTCHECKPLOTS
-
-        const float * mcpMomentum = SimTHit->getMomentum() ;
-
-        CLHEP::Hep3Vector* mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
-
-                //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
+      if(colFlag.bitSet(LCIO::THBIT_MOMENTUM)) {
         
-        double trackPhi = mom->phi();
+        const float * mcpMomentum = _SimTHit->getMomentum() ;
         
-        if(trackPhi<0.0) trackPhi=trackPhi+twopi;
-        if(trackPhi>twopi) trackPhi=trackPhi-twopi;
-        if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;
+        CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
 
-        _phiRelHisto->fill(padPhi);
-        _phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
-
-        //        cout << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
-        //        cout << "localPhi = " << localPhi * (360.0 / twopi) << endl; 
-        //        cout << "pad Phi from track mom = " << ( pointPhi - trackPhi ) * (360.0 / twopi) << endl; 
-
-#endif        
-
-
-        // Calculate thetaPad for current hit
-
-        double pathlength1 = 2.0 * asin( ( sqrt (
-                                                 (thisPointRPhi->x()-precedingPoint->x()) * (thisPointRPhi->x()-precedingPoint->x())
-                                                 +
-                                                 (thisPointRPhi->y()-precedingPoint->y()) * (thisPointRPhi->y()-precedingPoint->y())
-                                                 ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
+        const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+        const double FCT = 2.99792458E-4;
         
-
-        double pathlength2 = 2.0 * asin( ( sqrt (
-                                                 (followingPoint->x()-thisPointRPhi->x()) * (followingPoint->x()-thisPointRPhi->x())
-                                                 +
-                                                 (followingPoint->y()-thisPointRPhi->y()) * (followingPoint->y()-thisPointRPhi->y())
-                                                 ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
+        const double pt = mom->perp();
+        const double radius = pt / (FCT*bField);
         
-
-        padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nextSimTHit->getPosition()[2] - previousSimTHit->getPosition()[2])) ) ;
-          
-
-#ifdef EXPERTCHECKPLOTS
-        _thetaRelHisto->fill(padTheta);
-#endif    
-
-#ifdef EXPERTCHECKPLOTS
-        _thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
-        delete mom;
-#endif     
-
-        delete precedingPoint;
-        delete followingPoint; 
-
-
-      }
-      
-      else if(mcp!=previousMCP && i < (n_sim_hits-2) ) { // first hit with at least two more hits in collection
-        // if this is the first hit for this track try to get the next two hits    
-
-        followingPoint = new CLHEP::Hep2Vector(nextSimTHit->getPosition()[0],nextSimTHit->getPosition()[1]);
-
-        SimTrackerHit* nPlus2SimHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i+2 ) ) ;
-        EVENT::MCParticle* nPlus2MCP = nPlus2SimHit->getMCParticle() ;
-
-        nPlus2Point = new CLHEP::Hep2Vector(nPlus2SimHit->getPosition()[0], nPlus2SimHit->getPosition()[1]);
-
-        if ( mcp==nextMCP && mcp==nPlus2MCP ){
-
-          Circle theCircle(thisPointRPhi, followingPoint, nPlus2Point);
-          
-          //        cout << "the circle has radius = " << theCircle.GetRadius() << endl;
-          //        cout << "the circle has center = " << theCircle.GetCenter()->x() << "  " << theCircle.GetCenter()->y() << endl;
-          
-          // cout << "point x = " << SimTHit->getPosition()[0] << " point y = " << SimTHit->getPosition()[1] << endl; 
-          
-          double localPhi = 
-            atan2((thisPointRPhi->y() - theCircle.GetCenter()->y()) ,(thisPointRPhi->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
-          
-          if(localPhi>twopi) localPhi=localPhi - twopi;
-          if(localPhi<0.0) localPhi=localPhi + twopi;
-          if(localPhi>twopi/2.0) localPhi = localPhi - twopi/2.0 ;
-
-          double pointPhi = thisPointRPhi->phi();
-
-          if(pointPhi<0.0) pointPhi=pointPhi + twopi;          
-          if(pointPhi>twopi) pointPhi=pointPhi - twopi;
-          if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
-          
-          padPhi = fabs(pointPhi - localPhi);
-
-#ifdef EXPERTCHECKPLOTS                    
-          const float * mcpMomentum = SimTHit->getMomentum() ;
-          CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
-          
-          //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
-          
-          double trackPhi = mom->phi();
-          
-          if(trackPhi<0.0) trackPhi=trackPhi+twopi;
-          if(trackPhi>twopi) trackPhi=trackPhi-twopi;
-          if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
-
-
-          _phiRelHisto->fill(padPhi);
-          
-          _phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
-#endif          
-          
-          
-          // Calculate thetaPad for current hit
-          
-          double pathlength1 = 2.0 * asin( ( sqrt (
-                                                   (followingPoint->x()-thisPointRPhi->x()) * (followingPoint->x()-thisPointRPhi->x())
-                                                   +
-                                                   (followingPoint->y()-thisPointRPhi->y()) * (followingPoint->y()-thisPointRPhi->y())
-                                                   ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
-          
-          
-          double pathlength2 = 2.0 * asin( ( sqrt (
-                                                   (followingPoint->x()-nPlus2Point->x()) * (followingPoint->x()-nPlus2Point->x())
-                                                   +
-                                                   (followingPoint->y()-nPlus2Point->y()) * (followingPoint->y()-nPlus2Point->y())
-                                                   ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
-          
-          
-          padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(SimTHit->getPosition()[2] - nPlus2SimHit->getPosition()[2])) ) ;
-          
-  
-#ifdef EXPERTCHECKPLOTS
-          _thetaRelHisto->fill(padTheta);
-#endif    
-          
-#ifdef EXPERTCHECKPLOTS
-          _thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
-
-          delete mom;
-#endif     
-         
-
- 
-        }     
+        const double tanLambda = mom->z()/pt;
+        //        const double cosLambda = mom->z()/mom->r();
+        //        const double sinLambda = mom->perp()/mom->r();
         
-        else{ 
-          // less than three Sim hits for this MC particle 
-          // won't be able to fit anything so just set nominal values theta=phi=90 
-          padTheta = twopi/4.0 ;
-          padPhi = twopi/4.0 ;    
-        }
-
-        delete followingPoint;
-        delete nPlus2Point;
-       
-      }
-      else if(mcp!=nextMCP && i > 1 ) { // last hit with at least three sim hits in collection
-        // if this is the last hit for this track take the last two hits
-
-        precedingPoint = new CLHEP::Hep2Vector(previousSimTHit->getPosition()[0],previousSimTHit->getPosition()[1]);
-
-        SimTrackerHit* nMinus2SimHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i-2 ) ) ;
-        EVENT::MCParticle* nMinus2MCP= nMinus2SimHit->getMCParticle() ;
-
-        nMinus2Point = new CLHEP::Hep2Vector(nMinus2SimHit->getPosition()[0], nMinus2SimHit->getPosition()[1]);
-
-        if ( mcp==previousMCP && mcp==nMinus2MCP ){
-
-          Circle theCircle(nMinus2Point, precedingPoint, thisPointRPhi);
-          
-          //        cout << "the circle has radius = " << theCircle.GetRadius() << endl;
-          //        cout << "the circle has center = " << theCircle.GetCenter()->x() << "  " << theCircle.GetCenter()->y() << endl;
-          
-          // cout << "point x = " << SimTHit->getPosition()[0] << " point y = " << SimTHit->getPosition()[1] << endl; 
-          
-          double localPhi = 
-            atan2((thisPointRPhi->y() - theCircle.GetCenter()->y()) ,(thisPointRPhi->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
-          
-          if(localPhi>twopi) localPhi=localPhi - twopi;
-          if(localPhi<0.0) localPhi=localPhi + twopi;
-          if(localPhi>twopi/2.0) localPhi = localPhi - twopi/2.0 ;
-
-          double pointPhi = thisPointRPhi->phi();
-          
-
-          if(pointPhi<0.0) pointPhi=pointPhi + twopi;
-          if(pointPhi>twopi) pointPhi=pointPhi - twopi;
-          if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
-
-          padPhi = fabs(pointPhi - localPhi);
-
-#ifdef EXPERTCHECKPLOTS          
-          const float * mcpMomentum = SimTHit->getMomentum() ;
-          
-          CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
-          
-          //        cout << "px = " << mcpMomentum[0] << " py = " << mcpMomentum[1] << " pz = " << mcpMomentum[2] << endl;
-          
-          double trackPhi = mom->phi();
-          
-          if(trackPhi<0.0) trackPhi=trackPhi+twopi;
-          if(trackPhi>twopi) trackPhi=trackPhi-twopi;
-          if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;          
-
-          
-          _phiRelHisto->fill(padPhi);
-          _phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
-#endif              
-
-
-          // Calculate thetaPad for current hit
-          
-          double pathlength1 = 2.0 * asin( ( sqrt (
-                                                   (precedingPoint->x()-nMinus2Point->x()) * (precedingPoint->x()-nMinus2Point->x())
-                                                   +
-                                                   (precedingPoint->y()-nMinus2Point->y()) * (precedingPoint->y()-nMinus2Point->y())
-                                                   ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
-          
-          
-          double pathlength2 = 2.0 * asin( ( sqrt (
-                                                   (thisPointRPhi->x()-precedingPoint->x()) * (thisPointRPhi->x()-precedingPoint->x())
-                                                   +
-                                                   (thisPointRPhi->y()-precedingPoint->y()) * (thisPointRPhi->y()-precedingPoint->y())
-                                                   ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
+        padPhi = fabs(thisPoint.deltaPhi(*mom));
+        padTheta = mom->theta();
         
-          
-          padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(nMinus2SimHit->getPosition()[2] - SimTHit->getPosition()[2])) ) ;
-          
-#ifdef EXPERTCHECKPLOTS
-          _thetaRelHisto->fill(padTheta);
-#endif    
-#ifdef EXPERTCHECKPLOTS
-
-          _thetaDiffHisto->fill( (sin(padTheta) - sin(mom->theta()))/sin(mom->theta()) );
-          //          cout << "Padtheta = " << padTheta << endl;
-          //          cout << "Theta from track = " << mom->theta() << endl;
-          //          cout << "sin PadTheta  = " <<  sin(padTheta) << endl;
-          //          cout << "sin Track Theta  = " <<  sin(mom->theta()) << endl;
-          //          
-          
-          delete mom;
-
-#endif     
-          
-          
-        }
-        
-        else{ 
-          // less than three Sim hits for this MC particle 
-          // won't be able to fit anything so just set nominal values theta=phi=PI/2.0 
-          padTheta = twopi/4.0 ;
-          padPhi = twopi/4.0 ;    
-        }    
-
-        delete precedingPoint;
-        delete nMinus2Point;
-
-      }
-
+      } 
       else {
-        // less than three hits Sim hits 
-        // won't be able to fit anything so just set nominal values theta=phi=90 
-        padTheta = twopi/4.0 ;
-        padPhi = twopi/4.0 ;
+        
+        // as the momentum vector is not available at the hits perform the old gymnastics        
+        if (!_mcp) { // then there is no way to know if this hit has consecutive hits from the same MCParticle
+          // so just set nominal values theta=phi=90 
+          padTheta = twopi/4.0 ;
+          padPhi = twopi/4.0 ;    
+        }
+        else{
+          // if there is at least one more hit after this one, set the pointer to the MCParticle for the next hit
+          if (i < (n_sim_hits-1) ) {
+            _nextSimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i+1 ) ) ;
+            _nextMCP     = _nextSimTHit->getMCParticle() ;
+          }
+          // if there is at least two more hits after this one, set the pointer to the MCParticle for the next but one hit
+          if (i < (n_sim_hits-2) ) {
+            _nPlus2SimHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i+2 ));
+            _nPlus2MCP   = _nPlus2SimHit->getMCParticle() ;            
+          }
+          
+          if      ( _mcp==_previousMCP && _mcp==_nextMCP )    { // middle hit of 3 from the same MCParticle 
+            // use a function which returns phi and takes arguments first, second, and third points to calculate the circle 
+            precedingPoint = new CLHEP::Hep3Vector(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]);
+            followingPoint = new CLHEP::Hep3Vector(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]);
+            
+            padPhi = getPadPhi( &thisPoint, precedingPoint, &thisPoint, followingPoint);
+            padTheta = getPadTheta(precedingPoint, &thisPoint, followingPoint);
 
+            delete precedingPoint;
+            delete followingPoint;
+          }
+          else if ( _mcp==_nextMCP     && _mcp==_nPlus2MCP )  { // first  hit of 3 from the same MCParticle
+            followingPoint = new CLHEP::Hep3Vector(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]);
+            nPlus2Point = new CLHEP::Hep3Vector(_nPlus2SimHit->getPosition()[0],_nPlus2SimHit->getPosition()[1],_nPlus2SimHit->getPosition()[2]);
+            
+            padPhi = getPadPhi( &thisPoint, &thisPoint, followingPoint, nPlus2Point);
+            padTheta = getPadTheta(&thisPoint, followingPoint, nPlus2Point);
+
+            delete followingPoint;
+            delete nPlus2Point;
+            
+          }
+          else if ( _mcp==_previousMCP && _mcp==_nMinus2MCP ) { // last   hit of 3 from the same MCParticle
+            nMinus2Point = new CLHEP::Hep3Vector(_nMinus2SimHit->getPosition()[0],_nMinus2SimHit->getPosition()[1],_nMinus2SimHit->getPosition()[2]);
+            precedingPoint = new CLHEP::Hep3Vector(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]);
+            
+            padPhi = getPadPhi( &thisPoint, nMinus2Point, precedingPoint, &thisPoint);
+            padTheta = getPadTheta(nMinus2Point, precedingPoint, &thisPoint);
+
+            delete nMinus2Point;            
+            delete precedingPoint;
+            
+          }
+          else{ // the hit is isolated as either a single hit, or a pair of hits, from a single MCParticle  
+            padTheta = twopi/4.0 ;
+            padPhi = twopi/4.0 ;    
+          }
+        }
+#ifdef EXPERTCHECKPLOTS
+
+        if(colFlag.bitSet(LCIO::THBIT_MOMENTUM)) {
+          
+          const float * mcpMomentum = _SimTHit->getMomentum() ;
+          
+          CLHEP::Hep3Vector mom(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
+          
+          double trackPhi = mom.phi();
+          
+          if(trackPhi<0.0) trackPhi=trackPhi+twopi;
+          if(trackPhi>twopi) trackPhi=trackPhi-twopi;
+          if(trackPhi>twopi/2.0) trackPhi = trackPhi - twopi/2.0 ;
+          
+          double localPhi = thisPoint.phi() - padPhi;
+          
+          _phiRelHisto->fill(padPhi);
+          _phiDiffHisto->fill((fabs(localPhi - trackPhi))/trackPhi);
+          _thetaRelHisto->fill(padTheta);
+          _thetaDiffHisto->fill( (sin(padTheta) - sin(mom.theta()))/sin(mom.theta()) );
+          
+          streamlog_out(DEBUG3) << "track Phi = " << trackPhi * (360.0 / twopi) << endl; 
+          streamlog_out(DEBUG3) << "localPhi = " << localPhi * (360.0 / twopi) << endl; 
+          streamlog_out(DEBUG3) << "pad Phi = " << padPhi * (360.0 / twopi) << endl; 
+          streamlog_out(DEBUG3) << "pad Phi from track mom = " << ( thisPoint.phi() - trackPhi ) * (360.0 / twopi) << endl; 
+          streamlog_out(DEBUG3) << "padTheta = " << padTheta * (360.0 / twopi) << endl; 
+          streamlog_out(DEBUG3) << "padTheta from track mom = " << mom.theta() * (360.0 / twopi) << endl; 
+          
+        }
+#endif        
+        
       }
       
-      CLHEP::Hep3Vector *thisPoint = new CLHEP::Hep3Vector(SimTHit->getPosition()[0],SimTHit->getPosition()[1],SimTHit->getPosition()[2]);
-
-      const float * mcpMomentum = SimTHit->getMomentum() ;
-      //      const double  stepLength = SimTHit->getStepLength() ;      
-
-      CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
-
-      const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
-      const double FCT = 2.99792458E-4;
-
-      const double pt = mom->perp();
-      const double radius = pt / (FCT*bField);
-
-      const double tanLambda = mom->z()/pt;
-      const double cosLambda = mom->z()/mom->r();
-      const double sinLambda = mom->perp()/mom->r();
-
-      //      const double zExtention = 0.5*stepLength*sinLambda;
-
-      //      CLHEP::Hep3Vector* endpoint = new CLHEP::Hep3Vector(end[0],end[1],end[2]);
-
-      padPhi = fabs(thisPoint->deltaPhi(*mom));
-      padTheta = mom->theta();
-
-      int pad = padLayout.getNearestPad(thisPointRPhi->r(),thisPointRPhi->phi());
-      int layerNumber = SimTHit->getCellID();
+      //      int pad = padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi());
+      int layerNumber = _SimTHit->getCellID();
 
       if(_rejectCellID0 && (layerNumber<1)) {
-        delete thisPointRPhi;
-        delete thisPoint;
-        
         continue;
       }
 
-      de_dx = SimTHit->getdEdx();
+      de_dx = _SimTHit->getdEdx();
 
-      //       cout << "x position for this hit is " << pos[0] << " - " << SimTHit->getPosition()[0] << endl; 
-      //       cout << "y position for this hit is " << pos[1] << " - " << SimTHit->getPosition()[1] << endl; 
-      //       cout << "z position for this hit is " << pos[2] << " - " << SimTHit->getPosition()[2] << endl; 
+      //       cout << "x position for this hit is " << pos[0] << " - " << _SimTHit->getPosition()[0] << endl; 
+      //       cout << "y position for this hit is " << pos[1] << " - " << _SimTHit->getPosition()[1] << endl; 
+      //       cout << "z position for this hit is " << pos[2] << " - " << _SimTHit->getPosition()[2] << endl; 
 
       //       cout << "de/dx for this hit is " << de_dx << endl; 
       //       cout << "MCParticle PID for this hit is " << mcp->getPDG() << endl; 
@@ -880,18 +595,17 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       // sigma_{z}^2 = (400microns)^2 + L_{drift}cm * (80micron/sqrt(cm))^2 
       
-
       double aReso =_pointResoRPhi0*_pointResoRPhi0 + (_pointResoPadPhi*_pointResoPadPhi * sin(padPhi)*sin(padPhi)) ;
-      double driftLength = gearTPC.getMaxDriftLength() - (fabs(thisPoint->z()) - _cathode);
+      double driftLength = gearTPC.getMaxDriftLength() - (fabs(thisPoint.z()) - _cathode);
 
       if (driftLength <0) { 
-        std::cout << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
-        std::cout << "Setting driftLength to 0.1" << std::endl;
-        std::cout << "gearTPC.getMaxDriftLength() = " << gearTPC.getMaxDriftLength() << std::endl; 
+        streamlog_out(DEBUG3) << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 
+        streamlog_out(DEBUG3) << "Setting driftLength to 0.1" << std::endl;
+        streamlog_out(DEBUG3) << "gearTPC.getMaxDriftLength() = " << gearTPC.getMaxDriftLength() << std::endl; 
         driftLength = 0.10;
       }
 
-      double padheight = padLayout.getPadHeight(padLayout.getNearestPad(thisPoint->perp(),thisPoint->phi()));
+      double padheight = padLayout.getPadHeight(padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi()));
 
       double bReso = ( (_diffRPhi * _diffRPhi) / _nEff ) * sin(padTheta) * ( 6.0 / (padheight) );
 
@@ -911,7 +625,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 //             std::cout << "tpcZRes = " << tpcZRes << std::endl;
 
 
-      int padIndex = padLayout.getNearestPad(thisPoint->perp(),thisPoint->phi());
+      int padIndex = padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi());
 
       const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
       double TPCPadPlaneRMin = planeExt[0] ;
@@ -920,48 +634,47 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       int iRowHit = padLayout.getRowNumber(padIndex);
       int iPhiHit = padLayout.getPadNumber(padIndex);
       int NBinsZ =  (int) ((2.0 * gearTPC.getMaxDriftLength()) / _binningZ);
-      int iZHit = (int) ( (float) NBinsZ * ( gearTPC.getMaxDriftLength() + thisPoint->z() ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
+      int iZHit = (int) ( (float) NBinsZ * ( gearTPC.getMaxDriftLength() + thisPoint.z() ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
 
       if(iZHit<0) iZHit=0;
       if(iZHit>NBinsZ) iZHit=NBinsZ;
 
       // make sure that the hit lies at the middle of the pad ring
-      thisPoint->setPerp(padLayout.getPadCenter(padIndex)[0]);
+      thisPoint.setPerp(padLayout.getPadCenter(padIndex)[0]);
 
-      if( (thisPoint->perp() < TPCPadPlaneRMin) || (thisPoint->perp() > TPCPadPlaneRMax) ) {
-        cout << "Hit R not in TPC " << endl;
-        cout << "R = " << thisPoint->perp() << endl; 
-        cout << "the tpc InnerRadius = " << TPCPadPlaneRMin << endl;
-        cout << "the tpc OuterRadius = " << TPCPadPlaneRMax << endl;
-        delete thisPoint;
-        delete thisPointRPhi;
+      if( (thisPoint.perp() < TPCPadPlaneRMin) || (thisPoint.perp() > TPCPadPlaneRMax) ) {
+        streamlog_out(DEBUG3) << "Hit R not in TPC " << endl;
+        streamlog_out(DEBUG3) << "R = " << thisPoint.perp() << endl; 
+        streamlog_out(DEBUG3) << "the tpc InnerRadius = " << TPCPadPlaneRMin << endl;
+        streamlog_out(DEBUG3) << "the tpc OuterRadius = " << TPCPadPlaneRMax << endl;
+        streamlog_out(DEBUG3) << "Hit Dropped " << endl;
         continue;
       }
 
-      if( (fabs(thisPoint->z()) > gearTPC.getMaxDriftLength()) ) {
-        cout << "Hit Z not in TPC " << endl;
-        cout << "Z = " << thisPoint->z() << endl; 
-        cout << "the tpc Max Z = " << gearTPC.getMaxDriftLength() << endl;
-        delete thisPoint;
-        delete thisPointRPhi;
+      if( (fabs(thisPoint.z()) > gearTPC.getMaxDriftLength()) ) {
+        streamlog_out(DEBUG3) << "Hit Z not in TPC " << endl;
+        streamlog_out(DEBUG3) << "Z = " << thisPoint.z() << endl; 
+        streamlog_out(DEBUG3) << "the tpc Max Z = " << gearTPC.getMaxDriftLength() << endl;
+        streamlog_out(DEBUG3) << "Hit Dropped " << endl;
         continue; 
       }
       
       //      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, pos,  posRPhi, de_dx, tpcRPhiRes, tpcZRes);
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, *thisPoint, de_dx, tpcRPhiRes, tpcZRes);
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, de_dx, tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
       ++numberOfVoxelsCreated;
       
-      _tpcHitMap[atpcVoxel] = SimTHit; 
+      _tpcHitMap[atpcVoxel] = _SimTHit; 
 
       //      cout << "a voxel hit "<< i << " has been added to row " << iRowHit << endl;  
 
-      previousMCP = mcp ;
-      previousSimTHit = SimTHit;
+      _nMinus2MCP = _previousMCP;
+      _previousMCP = _mcp ;
 
-      delete thisPointRPhi;
-      delete thisPoint;
+      _nMinus2SimHit = _previousSimTHit;
+      _previousSimTHit = _SimTHit;
+
 
     }
   }
@@ -982,13 +695,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
     _padWidth = padLayout.getPadWidth(0)*padCoord[0];
 
-    std::cout << "number of LowPt hits:" << n_sim_hitsLowPt << std::endl;
+    streamlog_out(DEBUG4) << "number of LowPt hits:" << n_sim_hitsLowPt << std::endl;
 
     for(int i=0; i< n_sim_hitsLowPt; i++){  
 
-      SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcolLowPt->getElementAt( i ) ) ;
+      _SimTHit = dynamic_cast<SimTrackerHit*>( STHcolLowPt->getElementAt( i ) ) ;
       
-      CLHEP::Hep3Vector *thisPoint = new CLHEP::Hep3Vector(SimTHit->getPosition()[0],SimTHit->getPosition()[1],SimTHit->getPosition()[2]);
+      CLHEP::Hep3Vector thisPoint(_SimTHit->getPosition()[0],_SimTHit->getPosition()[1],_SimTHit->getPosition()[2]);
 
       const gear::DoubleVec & planeExt = padLayout.getPlaneExtent() ;
       double TPCPadPlaneRMin = planeExt[0] ;
@@ -996,55 +709,52 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       int NBinsZ =  (int) ((2.0 * gearTPC.getMaxDriftLength()) / _binningZ);
 
-      if( (thisPoint->perp() < TPCPadPlaneRMin) || (thisPoint->perp() > TPCPadPlaneRMax) ) {
-        cout << "Hit R not in TPC " << endl;
-        cout << "R = " << thisPoint->perp() << endl; 
-        cout << "the tpc InnerRadius = " << TPCPadPlaneRMin << endl;
-        cout << "the tpc OuterRadius = " << TPCPadPlaneRMax << endl;
-        delete thisPoint;
+      if( (thisPoint.perp() < TPCPadPlaneRMin) || (thisPoint.perp() > TPCPadPlaneRMax) ) {
+        streamlog_out(DEBUG3) << "Hit R not in TPC " << endl;
+        streamlog_out(DEBUG3) << "R = " << thisPoint.perp() << endl; 
+        streamlog_out(DEBUG3) << "the tpc InnerRadius = " << TPCPadPlaneRMin << endl;
+        streamlog_out(DEBUG3) << "the tpc OuterRadius = " << TPCPadPlaneRMax << endl;
+        streamlog_out(DEBUG3) << "Hit Dropped " << endl;
         continue;
       }
 
-      if( (fabs(thisPoint->z()) > gearTPC.getMaxDriftLength()) ) {
-        cout << "Hit Z not in TPC " << endl;
-        cout << "Z = " << thisPoint->z() << endl; 
-        cout << "the tpc Max Z = " << gearTPC.getMaxDriftLength() << endl;
-        delete thisPoint;
+      if( (fabs(thisPoint.z()) > gearTPC.getMaxDriftLength()) ) {
+        streamlog_out(DEBUG3) << "Hit Z not in TPC " << endl;
+        streamlog_out(DEBUG3) << "Z = " << thisPoint.z() << endl; 
+        streamlog_out(DEBUG3) << "the tpc Max Z = " << gearTPC.getMaxDriftLength() << endl;
+        streamlog_out(DEBUG3) << "Hit Dropped " << endl;
         continue; 
       }
 
-      int padIndex = padLayout.getNearestPad(thisPoint->perp(),thisPoint->phi());
+      int padIndex = padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi());
       double padheight = padLayout.getPadHeight(padIndex);
 
       int iRowHit = padLayout.getRowNumber(padIndex);
       int iPhiHit = padLayout.getPadNumber(padIndex);
       int iZHit = (int) ( (float) NBinsZ * 
-                          ( gearTPC.getMaxDriftLength() + thisPoint->z() ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
+                          ( gearTPC.getMaxDriftLength() + thisPoint.z() ) / ( 2.0 * gearTPC.getMaxDriftLength() ) ) ;
 
       // shift the hit in r-phi to the nearest pad-row centre 
-      thisPoint->setPerp(padLayout.getPadCenter(padIndex)[0]);
+      thisPoint.setPerp(padLayout.getPadCenter(padIndex)[0]);
 
-      double de_dx = SimTHit->getdEdx();
+      double de_dx = _SimTHit->getdEdx();
 
-      //SJA:FIXME: these parameters need to be steered
-      double tpcRPhiRes = 1.00001;
-      double tpcZRes = 1.00001;
+      double tpcRPhiRes = _padWidth;
+      double tpcZRes = _binningZ;
 
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, *thisPoint, SimTHit->getdEdx(), tpcRPhiRes, tpcZRes);
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, _SimTHit->getdEdx(), tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
       ++numberOfVoxelsCreated;      
 
-      _tpcHitMap[atpcVoxel] = SimTHit; 
+      _tpcHitMap[atpcVoxel] = _SimTHit; 
      
-      delete thisPoint;
-
     }
   }
 
   int number_of_adjacent_hits(0);
 
-  streamlog_out(DEBUG) << "finished looping over simhits, number of voxels = " << numberOfVoxelsCreated << endl;
+  streamlog_out(DEBUG4) << "finished looping over simhits, number of voxels = " << numberOfVoxelsCreated << endl;
 
   int numberOfhitsTreated(0);
     
@@ -1119,29 +829,24 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           if( Hit1 && Hit2 ){
             
-            if( Hit1->getPathLength()!=0.0 && Hit2->getPathLength()!=0.0 ){
+            LCFlagImpl colFlag( STHcol->getFlag() );
+            
+            if( Hit1->getPathLength()!=0.0 && Hit2->getPathLength()!=0.0 && colFlag.bitSet(LCIO::THBIT_MOMENTUM)){
               
               const float * Momentum1 = Hit1->getMomentum() ;
               const float * Momentum2 = Hit2->getMomentum() ;
               
-              CLHEP::Hep3Vector* mom1 = new CLHEP::Hep3Vector(Momentum1[0],Momentum1[1],Momentum1[2]);
-              CLHEP::Hep3Vector* mom2 = new CLHEP::Hep3Vector(Momentum2[0],Momentum2[1],Momentum2[2]);
+              CLHEP::Hep3Vector mom1(Momentum1[0],Momentum1[1],Momentum1[2]);
+              CLHEP::Hep3Vector mom2(Momentum2[0],Momentum2[1],Momentum2[2]);
               
-              pathlengthZ1 = fabs(Hit1->getPathLength() * (mom1->z() / mom1->r()));
-              pathlengthZ2 = fabs(Hit2->getPathLength() * (mom2->z() / mom2->r()));
-              
-              delete mom1;
-              delete mom2;         
+              pathlengthZ1 = fabs(Hit1->getPathLength() * (mom1.z() / mom1.perp()));
+              pathlengthZ2 = fabs(Hit2->getPathLength() * (mom2.z() / mom2.perp()));
               
             } 
             else {
               pathlengthZ1 = (5.0) ; 
               pathlengthZ2 = (5.0) ; 
             }
-            
-            
-            //  pathlengthZ1 = (1.0) ; 
-            //  pathlengthZ2 = (1.0) ; 
             
             double dZ(0.0);
             double dZAlt(0.0);
@@ -1179,16 +884,16 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             
         
             if( dZAlt < dZ ) {
-              cout << "dZAlt " << dZAlt << endl;
-              cout << "dZ " << dZ << endl;
-              cout << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
-              cout << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
-              cout << "row_hits[j]->getPhi()*R " << row_hits[j]->getPhi()*row_hits[j]->getR() << endl;
-              cout << "row_hits[k]->getPhi()*R " << row_hits[k]->getPhi()*row_hits[k]->getR() << endl;  
-              cout << "pathlength 1 " << Hit1->getPathLength() << endl;  
-              cout << "pathlength 2 " << Hit2->getPathLength() << endl;  
-              cout << "pathlengthZ1 " << pathlengthZ1 << endl;  
-              cout << "pathlengthZ2 " << pathlengthZ2 << endl;  
+              streamlog_out(DEBUG3) << "dZAlt " << dZAlt << endl;
+              streamlog_out(DEBUG3) << "dZ " << dZ << endl;
+              streamlog_out(DEBUG3) << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
+              streamlog_out(DEBUG3) << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
+              streamlog_out(DEBUG3) << "row_hits[j]->getPhi()*R " << row_hits[j]->getPhi()*row_hits[j]->getR() << endl;
+              streamlog_out(DEBUG3) << "row_hits[k]->getPhi()*R " << row_hits[k]->getPhi()*row_hits[k]->getR() << endl;  
+              streamlog_out(DEBUG3) << "pathlength 1 " << Hit1->getPathLength() << endl;  
+              streamlog_out(DEBUG3) << "pathlength 2 " << Hit2->getPathLength() << endl;  
+              streamlog_out(DEBUG3) << "pathlengthZ1 " << pathlengthZ1 << endl;  
+              streamlog_out(DEBUG3) << "pathlengthZ2 " << pathlengthZ2 << endl;  
             }
             
             //if( dZAlt < _doubleHitResZ ){            
@@ -1237,7 +942,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
               ++number_of_adjacent_hits;
             }
           } else {
-            cout << "Hit1=" << Hit1 << "Hit2=" << Hit2 << endl; 
+            streamlog_out(DEBUG3) << "Hit1=" << Hit1 << "Hit2=" << Hit2 << endl; 
           }
         }
       }
@@ -1294,10 +999,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }
   }
 
-  cout << "the number of adjacent hits is " <<  number_of_adjacent_hits << "  _doubleHitResZ " << _doubleHitResZ << endl;  
+  streamlog_out(DEBUG4) << "the number of adjacent hits is " <<  number_of_adjacent_hits << "  _doubleHitResZ " << _doubleHitResZ << endl;  
 
-  streamlog_out(DEBUG) << "number of rec_hits = "  << _NRecTPCHits << endl ;
-  streamlog_out(DEBUG) << "finished row hits " << numberOfHits << " " << numberOfhitsTreated << endl;    
+  streamlog_out(DEBUG4) << "number of rec_hits = "  << _NRecTPCHits << endl ;
+  streamlog_out(DEBUG4) << "finished row hits " << numberOfHits << " " << numberOfhitsTreated << endl;    
   
   // set the parameters to decode the type information in the collection
   // for the time being this has to be done manually
@@ -1339,16 +1044,16 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent->fill( (float)(_NPhysicsAbove1GeVSimTPCHits-_NLostPhysicsAbove1GeVPtTPCHits) / (float)_NPhysicsAbove1GeVSimTPCHits );
 #endif
 
-  cout << "_NSimTPCHits = " << _NSimTPCHits << endl;
-  cout << "_NBackgroundSimTPCHits = " << _NBackgroundSimTPCHits << endl;
-  cout << "_NPhysicsSimTPCHits = " << _NPhysicsSimTPCHits << endl;
-  cout << "_NPhysicsAbove02GeVSimTPCHits = " << _NPhysicsAbove02GeVSimTPCHits << endl;
-  cout << "_NPhysicsAbove1GeVSimTPCHits = " << _NPhysicsAbove1GeVSimTPCHits << endl;
-  cout << "_NRecTPCHits = " << _NRecTPCHits<< endl;
-  cout << "_NLostPhysicsTPCHits = " << _NLostPhysicsTPCHits << endl;
-  cout << "_NLostPhysicsAbove02GeVPtTPCHits = " << _NLostPhysicsAbove02GeVPtTPCHits << endl;
-  cout << "_NLostPhysicsAbove1GeVPtTPCHits = " << _NLostPhysicsAbove1GeVPtTPCHits << endl;
-  cout << "_NRevomedHits = " << _NRevomedHits << endl;
+  streamlog_out(DEBUG4) << "_NSimTPCHits = " << _NSimTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NBackgroundSimTPCHits = " << _NBackgroundSimTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NPhysicsSimTPCHits = " << _NPhysicsSimTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NPhysicsAbove02GeVSimTPCHits = " << _NPhysicsAbove02GeVSimTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NPhysicsAbove1GeVSimTPCHits = " << _NPhysicsAbove1GeVSimTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NRecTPCHits = " << _NRecTPCHits<< endl;
+  streamlog_out(DEBUG4) << "_NLostPhysicsTPCHits = " << _NLostPhysicsTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NLostPhysicsAbove02GeVPtTPCHits = " << _NLostPhysicsAbove02GeVPtTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NLostPhysicsAbove1GeVPtTPCHits = " << _NLostPhysicsAbove1GeVPtTPCHits << endl;
+  streamlog_out(DEBUG4) << "_NRevomedHits = " << _NRevomedHits << endl;
   
  _nEvt++;  
 }
@@ -1430,8 +1135,11 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   trkHit->setCovMatrix(covMat);      
 
   if( _tpcHitMap[seed_hit] == NULL ){
-    std::cout << "SimTracker Pointer is NULL" << std::endl;
-    exit(1);
+    std::stringstream errorMsg;
+    errorMsg << "\nProcessor: TPCDigiProcessor \n" 
+             << "SimTracker Pointer is NULL throwing exception\n"
+             << "\n" ;
+    throw Exception(errorMsg.str());
   }
 
   if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
@@ -1444,23 +1152,24 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
 #ifdef EXPERTCHECKPLOTS
   SimTrackerHit* theSimHit = _tpcHitMap[seed_hit];
   double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
+
   double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
+
+  double rPhiDiff = (point->phi() - phiSim)*sqrt(rSimSqrd);
+  double rPhiPull = ((point->phi() - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(point->phi())*cos(point->phi()))));
         
-  double rPhiDiff = (phi - phiSim)*sqrt(rSimSqrd);
-  double rPhiPull = ((phi - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(phi)*cos(phi))));
-        
-  double zDiff = row_hits[j]->getZ() - theSimHit->getPosition()[2];
+  double zDiff = point->getZ() - theSimHit->getPosition()[2];
   double zPull = zDiff/sqrt(covMat[5]);
         
         
   _rPhiDiffHisto->fill(rPhiDiff);
   _rPhiPullHisto->fill(rPhiPull);
-  _phiDistHisto->fill(phi - phiSim);
+  _phiDistHisto->fill(point->phi() - phiSim);
   _zDiffHisto->fill(zDiff);
   _zPullHisto->fill(zPull);
         
   _zSigmaVsZHisto->fill(seed_hit->getZ(),sqrt(covMat[5]));
-  _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(phi)*cos(phi))));
+  _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(point->phi())*cos(point->phi()))));
   _zSigmaHisto->fill(sqrt(covMat[5]));
 #endif
 }
@@ -1516,9 +1225,8 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   trkHit->setType( 500 );
         
   double phi = mergedPoint->getPhi();
-  //SJA:FIXME: these values need to be steered
-  double tpcRPhiRes = 1.0;
-  double tpcZRes = 1.0;
+  double tpcRPhiRes = _padWidth;
+  double tpcZRes = _binningZ;
         
   //          cout << "row_hits->getY() = " << row_hits[j]->getY() << "  row_hits->getY() = " << row_hits[j]->getX() ;
   //          cout << "  phi = " <<  phi ;
@@ -1544,31 +1252,147 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   delete mergedPoint;
       
-#ifdef EXPERTCHECKPLOTS
-  SimTrackerHit* theSimHit = _tpcHitMap[seed_hit];
-  double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
-  double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
-        
-  double rPhiDiff = (phi - phiSim)*sqrt(rSimSqrd);
-  double rPhiPull = ((phi - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(phi)*cos(phi))));
-        
-  double zDiff = row_hits[j]->getZ() - theSimHit->getPosition()[2];
-  double zPull = zDiff/sqrt(covMat[5]);
-        
-        
-  _rPhiDiffHisto->fill(rPhiDiff);
-  _rPhiPullHisto->fill(rPhiPull);
-  _phiDistHisto->fill(phi - phiSim);
-  _zDiffHisto->fill(zDiff);
-  _zPullHisto->fill(zPull);
-        
-  _zSigmaVsZHisto->fill(seed_hit->getZ(),sqrt(covMat[5]));
-  _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(phi)*cos(phi))));
-  _zSigmaHisto->fill(sqrt(covMat[5]));
-#endif
 }
 
+#ifdef EXPERTCHECKPLOTS
+void TPCDigiProcessor::plotHelixHitResidual( MCParticle *mcp, CLHEP::Hep3Vector *thisPoint){
+
+      const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+      const double FCT = 2.99792458E-4;
+      double charge = mcp->getCharge();
+      const double *mom = mcp->getMomentum();
+      double pt = sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
+      double radius = pt / (FCT*bField);
+      double tanLambda = mom[2]/pt;
+      double omega = charge / radius;
+
+      if(pt>1.0) {
+
+        //FIXME SJA: this is only valid for tracks from the IP and should be done correctly for non prompt tracks
+        double Z0 = 0.;      
+        double D0  = 0.;
+        
+        LCVector3D refPoint(0.,0.,0);
+        
+        SimpleHelix* helix = new SimpleHelix(D0, 
+                                             atan2(mom[1],mom[0]), 
+                                             omega, 
+                                             Z0, 
+                                             tanLambda,
+                                             refPoint);
+        
+
+        // an almost "infinite" cylinder in z        
+        LCVector3D startCylinder(0.,0.,-1000000.0);
+        LCVector3D endCylinder(0.,0.,1000000.0);
+        bool endplane=true;
+        
+        LCCylinder cylinder(startCylinder,endCylinder,thisPoint->perp(),endplane);
+        
+        bool pointExists = false;
+        
+        double pathlength = helix->getIntersectionWithCylinder( cylinder, pointExists);
+        
+        LCErrorMatrix* errors = new LCErrorMatrix();
+        
+        if(pointExists){
+     
+          LCVector3D intersection = helix->getPosition(pathlength, errors); 
+     
+          double intersectionPhi = atan2(intersection[1],intersection[0]);
+          double residualRPhi = ((intersectionPhi-thisPoint->phi())) ;
+          _ResidualsRPhiHisto->fill(residualRPhi);
+          
+        }
+        
+        delete errors;
+        delete helix;
+
+        const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+        const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
+        
+        int row = padLayout.getRowNumber(padLayout.getNearestPad(thisPoint->perp(),thisPoint->phi()));
+        int pad = padLayout.getNearestPad(thisPoint->perp(),thisPoint->phi());
+        
+        double rHit_diff = thisPoint->perp()  
+          - padLayout.getPlaneExtent()[0]  
+          - (( row + 0.5 ) 
+             * padLayout.getPadHeight(pad)) ;
+        
+        _radiusCheckHisto->fill(rHit_diff);
+        
+//      cout << "$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$" << endl;
+//      cout << "thisPoint->perp() = " << thisPoint->perp() << endl;
+//      cout << "TPC Sensitive rMin = " << padLayout.getPlaneExtent()[0] << endl;
+//      cout << "Row number + 0.5 = " <<  row + 0.5 << endl;
+//      cout << "Pad Height = " <<  padLayout.getPadHeight(pad) << endl;
+//      cout << "Row Height = " <<   padLayout.getRowHeight(row) << endl;
+//      cout << "R_hit - TPC Rmin - ((RowIndex + 0.5 )* padheight) = " << rHit_diff << endl;
+          
+      }
+      return;
+}
+#endif
 
 
+double TPCDigiProcessor::getPadPhi( CLHEP::Hep3Vector *thisPoint, CLHEP::Hep3Vector* firstPoint, CLHEP::Hep3Vector* middlePoint, CLHEP::Hep3Vector* lastPoint){
+
+  CLHEP::Hep2Vector firstPointRPhi(firstPoint->x(),firstPoint->y());
+  CLHEP::Hep2Vector middlePointRPhi(middlePoint->x(),middlePoint->y());
+  CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
+
+  Circle theCircle(&firstPointRPhi, &middlePointRPhi, &lastPointRPhi);
+  
+  double localPhi = atan2((thisPoint->y() - theCircle.GetCenter()->y()) ,(thisPoint->x() - theCircle.GetCenter()->x())) + (twopi/4.0) ;
+  
+  if(localPhi>twopi) localPhi=localPhi - twopi;
+  if(localPhi<0.0) localPhi=localPhi + twopi;
+  if(localPhi>twopi/2.0) localPhi = localPhi - twopi/2.0 ;
+  
+  double pointPhi = thisPoint->phi();
+  
+  if(pointPhi>twopi) pointPhi=pointPhi - twopi;
+  if(pointPhi<0.0) pointPhi=pointPhi + twopi;
+  if(pointPhi>twopi/2.0) pointPhi = pointPhi - twopi/2.0 ;
+  
+  double padPhi = fabs(pointPhi - localPhi);
+  
+  return padPhi;
+
+}
+
+double TPCDigiProcessor::getPadTheta(CLHEP::Hep3Vector* firstPoint, CLHEP::Hep3Vector* middlePoint, CLHEP::Hep3Vector* lastPoint){
+
+  // Calculate thetaPad for current hit
+  CLHEP::Hep2Vector firstPointRPhi(firstPoint->x(),firstPoint->y()) ;
+  CLHEP::Hep2Vector middlePointRPhi(middlePoint->x(),middlePoint->y());
+  CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
+
+  Circle theCircle(&firstPointRPhi, &middlePointRPhi, &lastPointRPhi);
+  
+  double deltaPhi = firstPoint->deltaPhi(*lastPoint);
+
+  double pathlength = fabs(deltaPhi) *  theCircle.GetRadius();
+  
+  double padTheta = atan ( pathlength / fabs(lastPoint->z() - firstPoint->z()) ) ;
+                        
+  double pathlength1 = 2.0 * asin( ( sqrt (
+                                           (middlePointRPhi.x() - firstPointRPhi.x()) * (middlePointRPhi.x()-firstPointRPhi.x())
+                                           +
+                                           (middlePointRPhi.y()-firstPointRPhi.y()) * (middlePointRPhi.y()-firstPointRPhi.y())
+                                           ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
+  
+  
+  double pathlength2 = 2.0 * asin( ( sqrt (
+                                           (lastPointRPhi.x()-middlePointRPhi.x()) * (lastPointRPhi.x()-middlePointRPhi.x())
+                                           +
+                                           (lastPointRPhi.y()-middlePointRPhi.y()) * (lastPointRPhi.y()-middlePointRPhi.y())
+                                           ) / 2.0 ) / theCircle.GetRadius() ) * theCircle.GetRadius()  ;
+  
+  
+  padTheta = atan ((fabs(pathlength1 + pathlength2)) / (fabs(lastPoint->z() - firstPoint->z())) ) ;
 
   
+  return padTheta;
+
+}

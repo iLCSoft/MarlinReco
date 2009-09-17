@@ -33,7 +33,7 @@ Steve Aplin 26 June 2009 (DESY)
 
 
 //#define EXPERTCHECKPLOTS 
-#define DIGIPLOTS
+//#define DIGIPLOTS
 
 
 
@@ -54,7 +54,9 @@ Steve Aplin 26 June 2009 (DESY)
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
 
+#include "CLHEP/Vector/TwoVector.h"
 class Voxel_tpc;
+
 
 
 
@@ -142,8 +144,9 @@ public:
   
   void writeVoxelToHit( Voxel_tpc* aVoxel) ;  
   void writeMergedVoxelsToHit( std::vector <Voxel_tpc*>* hitList ) ;  
-
-  
+  void plotHelixHitResidual(MCParticle *mcp, CLHEP::Hep3Vector *thisPointRPhi);
+  double getPadPhi( CLHEP::Hep3Vector* thisPointRPhi, CLHEP::Hep3Vector* firstPointRPhi, CLHEP::Hep3Vector* middlePointRPhi, CLHEP::Hep3Vector* lastPointRPhi);
+  double getPadTheta( CLHEP::Hep3Vector* firstPointRPhi, CLHEP::Hep3Vector* middlePointRPhi, CLHEP::Hep3Vector* lastPointRPhi );
 
 protected:
 
@@ -160,6 +163,18 @@ protected:
 
   int _nRun ;
   int _nEvt ;
+
+  EVENT::MCParticle* _mcp;
+  EVENT::MCParticle* _previousMCP;
+  EVENT::MCParticle* _nextMCP;
+  EVENT::MCParticle* _nMinus2MCP;
+  EVENT::MCParticle* _nPlus2MCP;   
+
+  SimTrackerHit* _SimTHit;
+  SimTrackerHit* _previousSimTHit;
+  SimTrackerHit* _nextSimTHit;
+  SimTrackerHit* _nPlus2SimHit;
+  SimTrackerHit* _nMinus2SimHit;
 
   // gsl random number generator
   gsl_rng * _random ;

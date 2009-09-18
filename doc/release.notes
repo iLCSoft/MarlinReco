@@ -5,6 +5,70 @@
 ================================
 
  --------
+| v00-16 |
+ --------
+
+     *	MarlinKinfit (boehmej, beckmann & K. Fujii)
+
+      -	Global covariance matrix now also filled by NewtonFitter. 
+      -	Added Tracer classes and access to global covariance matrix in
+	BaseFitter, plus some bug fix in PhotonFitObjectPxyg and
+	PhotonFitObject 
+
+      -	Various bug fixes.
+
+      -	Patches applied for compiling on mac osx.
+
+	
+     *	TrackDigi (gaede, aplin, raspereza, deMasi & fujii)
+
+      -	VTXDigi, cluster parameter class for user extension of
+	SimTrackerHits. 
+      -	Introduced coordinate transform for direction
+	vectors in VXDGeometry. New class for coordinate transform between
+	ladder and lab frame. 
+      -	Salt'n pepper noise hits with cluster
+	parameters. 
+      -	Only keep link to SimTrackerHit if MCParticle pointer
+	is not null. 
+      -	Evolved version of TPCDigi that provides additional functionality
+	to deal with background. Coupled to the Mokka Sensitive Detector
+	Driver. TPCSD03.cc. Plus considerable clean up.
+      -	VTXDigitizer.cc, added possibility to store for each digitized
+	tracker hit information on the fired pixels.
+      -	Initial version of VTXBgClusters.
+      -	ETDDigiProcessor, VTXDigiProcessor, patches applied for compiling 
+	on mac osx. 
+
+	
+     * 	CaloDigi (thomson)
+      -	Updates for digital and semi-digital HCAL readout of DHCAL 
+
+	
+     *	PFOID (aplin)
+
+      -	Update the hcal calo type determintation to use Helper class from
+	MarlinUtil for decoding/encoding lcio::CalorimeterHit types for
+	the ILD. 
+
+
+     *	ZFinder (thomson)
+
+      -	New package for finding Z->l+l-.
+
+
+     *	BrahmsTracking (aplin)
+
+      -	Removed hardcoded cut of chi^2<300.
+
+
+     * 	RecoMCTruthLink (gaede)
+
+      -	Protect against MCParticle null pointers.
+
+      -> see Changelog for details 
+
+ --------
 | v00-15 |
  --------
      * PFOID (A.Raspereza) 

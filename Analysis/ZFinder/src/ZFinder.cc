@@ -13,6 +13,9 @@
 typedef CLHEP::HepLorentzVector LorentzVector ;
 typedef CLHEP::Hep3Vector Vector3D ;
 
+#include<cstdlib>
+#include<cmath>
+
 
 // Marlin stuff
 #include <marlin/Global.h>

@@ -378,28 +378,29 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   float ErrorD0 = sqrt(eparam[0]);
   float ErrorZ0 = sqrt(eparam[9]);
 
-  if (ErrorD0<MinIpReso || ErrorZ0<MinIpReso) {
-//       std::cout << "Par = " << _parIpReso[0]
-// 		<< "  " << _parIpReso[1]
-// 		<< "  " << _parIpReso[2]
-// 		<< "  " << _parIpReso[3]
-// 		<< " ; Min = " 
-// 		<< " ED0 = " << 1e+3*ErrorD0
-// 		<< " EZ0 = " << 1e+3*ErrorZ0
-// 		<< std::endl;
-      float errPhi = eparam[2];
-      float errOmg = eparam[5];
-      float errTL  = eparam[14];
-      for (int ip=0;ip<15;++ip) 
-	  eparam[ip] = 0;
-      float Error = MinIpReso + 0.002;
-      eparam[0] = Error*Error;
-      eparam[2] = errPhi;
-      eparam[5] = errOmg;
-      Error = MinIpReso + 0.002;
-      eparam[9] = Error*Error;
-      eparam[14]= errTL;
-  }
+  //  SJA: This is far too dangerous. Removed. 26/10/09
+//  if (ErrorD0<MinIpReso || ErrorZ0<MinIpReso) {
+////       std::cout << "Par = " << _parIpReso[0]
+//// 		<< "  " << _parIpReso[1]
+//// 		<< "  " << _parIpReso[2]
+//// 		<< "  " << _parIpReso[3]
+//// 		<< " ; Min = " 
+//// 		<< " ED0 = " << 1e+3*ErrorD0
+//// 		<< " EZ0 = " << 1e+3*ErrorZ0
+//// 		<< std::endl;
+//      float errPhi = eparam[2];
+//      float errOmg = eparam[5];
+//      float errTL  = eparam[14];
+//      for (int ip=0;ip<15;++ip) 
+//	  eparam[ip] = 0;
+//      float Error = MinIpReso + 0.002;
+//      eparam[0] = Error*Error;
+//      eparam[2] = errPhi;
+//      eparam[5] = errOmg;
+//      Error = MinIpReso + 0.002;
+//      eparam[9] = Error*Error;
+//      eparam[14]= errTL;
+//  }
 
 
 

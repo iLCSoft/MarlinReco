@@ -298,6 +298,8 @@ double Histogram::GetContent(VObject *VO){
   if (mind>totNoOfBins-1)
     mind = totNoOfBins-1;
 
+  if ( mind<0 ) mind = 0;
+
   double result = content[mind];
 
   if (result <=0 ) result = 1e-20;

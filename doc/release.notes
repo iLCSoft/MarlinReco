@@ -5,6 +5,12 @@
 ================================
 
  --------
+| v00-17 |
+ --------
+        removed dangerous revision of impact parameters 
+        d0 and z0 in MarlinTrackFit.cc
+
+ --------
 | v00-16 |
  --------
 

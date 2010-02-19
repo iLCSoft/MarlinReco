@@ -1,3 +1,12 @@
+2010-02-09 14:44  engels
+
+	* CMakeLists.txt, doc/release.notes: -------- v00-17-01 ----------
+
+2009-11-30 18:47  /C=DE/O=GermanGrid/OU=DESY/CN=Steven Aplin
+
+	* ChangeLog, doc/release.notes: ------------------- release v00-17
+	  --------------------
+
 2009-11-20 15:34  /C=DE/O=GermanGrid/OU=DESY/CN=Steven Aplin
 
 	* PFOID/src/Histogram.cc: proctect against vector index less than

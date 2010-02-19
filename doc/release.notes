@@ -5,9 +5,13 @@
 ================================
 
  -----------
-| v00-17-01 |
+| v00-17-02 |
  -----------
-    bug fix: incorrect library version numbers
+     - made compatible with MacOS
+     bug fixes: 
+     - incorrect library version numbers
+      
+
 
  --------
 | v00-17 |

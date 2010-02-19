@@ -142,7 +142,7 @@ bool PhotonFitObjectPxyg::updateParams (double p[], int idim) {
   
   double p2 = p[i2];
   if(debug){std::cout << "PhotonFitObjectPxyg::updateParams:   p2(new) = " << p[i2] << "   par[2](old) = " << par[2] << endl;}
-  assert( !isinf(p2) );   assert( !isnan(p2) );
+  assert( !std::isinf(p2) );   assert( !std::isnan(p2) );
   
   bool result = ((p2-par[2])*(p2-par[2]) > eps2*cov[2][2]);
 
@@ -152,10 +152,10 @@ bool PhotonFitObjectPxyg::updateParams (double p[], int idim) {
 }  
 
 // these depend on actual parametrisation!
-double PhotonFitObjectPxyg::getPx() const {  assert( !isinf(par[0]) );   assert( !isnan(par[0]) );
+double PhotonFitObjectPxyg::getPx() const {  assert( !std::isinf(par[0]) );   assert( !std::isnan(par[0]) );
 return par[0];}
 
-double PhotonFitObjectPxyg::getPy() const {  assert( !isinf(par[1]) );   assert( !isnan(par[1]) );
+double PhotonFitObjectPxyg::getPy() const {  assert( !std::isinf(par[1]) );   assert( !std::isnan(par[1]) );
 return par[1];}
 
 double PhotonFitObjectPxyg::getPz() const {

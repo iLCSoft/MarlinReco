@@ -447,6 +447,9 @@ MARK_AS_ADVANCED( G2C_LIB )
 
 # link MarlinReco library to libg2c/libgfortran
 TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${G2C_LIB} )
+IF(APPLE)
+  TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} streamlog )
+ENDIF(APPLE)
 
 # install library
 INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS

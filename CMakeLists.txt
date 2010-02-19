@@ -31,7 +31,7 @@ PROJECT( MarlinReco C CXX Fortran )
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 0 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 17 )
-SET( ${PROJECT_NAME}_PATCH_LEVEL 1 )
+SET( ${PROJECT_NAME}_PATCH_LEVEL 2 )
 
 
 ### SETTINGS #################################################################
@@ -64,6 +64,9 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 
 # project dependencies
 SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil GEAR LCIO CLHEP GSL CERNLIB" )
+IF(APPLE)
+   SET( ${PROJECT_NAME}_DEPENDS "${${PROJECT_NAME}_DEPENDS} CED" )
+ENDIF(APPLE)
 
 # set default cmake build type to RelWithDebInfo
 # possible options are: None Debug Release RelWithDebInfo MinSizeRel

@@ -762,8 +762,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     
   //      cout << "get the row hits" << endl;
     
-  for (int i = 0; i<padLayout.getNRows(); ++i){
-    
+  for (int i = 0; i<_tpcRowHits.size(); ++i){
+
     row_hits = _tpcRowHits.at(i);
     
     //    cout << "got the row hits" << endl;
@@ -981,7 +981,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
   int numberOfHits(0);
 
-  for (int i = 0; i<padLayout.getNRows(); ++i){
+  for (int i = 0; i<_tpcRowHits.size(); ++i){
     row_hits = _tpcRowHits.at(i);
     for (unsigned int j = 0; j<row_hits.size(); ++j){
       numberOfHits++;
@@ -1019,8 +1019,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   evt->addCollection( _trkhitVec , _TPCTrackerHitsCol ) ;
   
   // delete voxels
-  for (int i = 0; i<padLayout.getNRows(); ++i){
-    vector <Voxel_tpc *>* current_row = &_tpcRowHits[i];  
+  for (int i = 0; i<_tpcRowHits.size(); ++i){
+    vector <Voxel_tpc *>* current_row = &_tpcRowHits.at(i);  
     for (unsigned int j = 0; j<current_row->size(); ++j){
       delete current_row->at(j);
     }

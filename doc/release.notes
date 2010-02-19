@@ -10,8 +10,8 @@
      - made compatible with MacOS
      bug fixes: 
      - incorrect library version numbers
+     -  bug fix in TPCDigiProcessor.cc (empty TPC hit collection)
       
-
 
  --------
 | v00-17 |

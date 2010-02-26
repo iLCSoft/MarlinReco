@@ -45,7 +45,7 @@ PFOID::PFOID() : Processor("PFOID") {
   filenamesC.push_back(std::string("pdf_charged_ge10.txt"));
   
   registerProcessorParameter("FilePDFName",
-			     "Name of files containing pdfs for charged particles",
+			     "Name of files containing pdfs for charged particles (order of files must be consistent with parameter EnergyBoundaries!!)",
 			     _filesCharged,
 			     filenamesC) ;
 
@@ -55,7 +55,7 @@ PFOID::PFOID() : Processor("PFOID") {
 
 
   registerProcessorParameter("neutralFilePDFName",
-			     "Name of files containing pdfs for neutral particles",
+			     "Name of files containing pdfs for neutral particles (order of files must be consistent with parameter EnergyBoundaries!!)",
 			     _filesNeutral,
 			     filenamesN) ;
 

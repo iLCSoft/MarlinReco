@@ -8,11 +8,12 @@
 #include <EVENT/LCParameters.h>
 #include <UTIL/CellIDDecoder.h>
 
-#include <algorithm>
-#include <string>
+// #include <algorithm>
+// #include <string>
 #include <cctype> 
 
 #include "CalorimeterHitType.h"
+#include "CHT_helper.h"
 
 using namespace std;
 using namespace lcio ;
@@ -21,13 +22,6 @@ using namespace marlin ;
 
 SimpleMuonDigi aSimpleMuonDigi ;
 
-
-// helper struct for string comparision
-struct ToLower{
-  int operator() ( int ch ) {
-    return std::tolower ( ch );
-  }  
-}; 
 
 SimpleMuonDigi::SimpleMuonDigi() : Processor("SimpleMuonDigi") {
 
@@ -88,6 +82,10 @@ void SimpleMuonDigi::processRunHeader( LCRunHeader* run) {
 void SimpleMuonDigi::processEvent( LCEvent * evt ) { 
     
 
+  streamlog_out( DEBUG ) << " process event : " << evt->getEventNumber() 
+			 << " - run  " << evt->getRunNumber() << std::endl ;
+
+
   LCCollectionVec *muoncol = new LCCollectionVec(LCIO::CALORIMETERHIT);
   LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
 
@@ -104,21 +102,11 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
   for (unsigned int i(0); i < _muonCollections.size(); ++i) {
 
     std::string colName =  _muonCollections[i] ;
-    std::transform( colName.begin() , colName.end() , colName.begin(), ToLower() ) ;
     
     //fg: need to establish the yoke subdetetcor part here 
     //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = CHT::any ;
-    if( colName == "barrel" )
-      caloLayout = CHT::barrel ;
-    else 
-      if( colName == "endcap" )
-	caloLayout = CHT::endcap ;
-      else
-	if( colName == "plug" )
-	  caloLayout = CHT::plug ;
-    
-    
+    CHT::Layout caloLayout = layoutFromString( colName ) ; 
+
     try{
       LCCollection * col = evt->getCollection( _muonCollections[i].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);

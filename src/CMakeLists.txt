@@ -27,6 +27,7 @@ SET( MarlinReco_PKGS
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
     "Tracking/TrackCheater"
+    "Tracking/KinkFinder" 
     "Tracking/V0Finder"
     "PFOID"
 )
@@ -351,6 +352,19 @@ SET_SOURCE_FILES_PROPERTIES( ${V0Finder_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( V0Finder_srcs ${V0Finder_cxx_srcs} )
+
+####################################################################################################
+# KinkFinder
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Tracking/KinkFinder/src KinkFinder_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${KinkFinder_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( KinkFinder_srcs ${KinkFinder_cxx_srcs} )
+
 
 ####################################################################################################
 # PFOID

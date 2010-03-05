@@ -2,7 +2,18 @@
 
  release notes for MarlinReco
 
-================================
+===============================
+ --------
+| v00-18 |
+ --------
+     - added new package Tracking/KinkFinder
+
+     bug fixes:
+      - bug fixes in SimpleMuonDigi, (New)LDCCaloDigi wrt. to
+        ecoding of calorimeter layout in CalorimeterHit::type 
+        (was allways CHT::any)
+      - fixed bug in TPCDigitizer with hit-MCParticle association
+    
 
  -----------
 | v00-17-02 |

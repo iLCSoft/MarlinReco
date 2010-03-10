@@ -84,8 +84,10 @@ class KinkFinder : public Processor {
   float _veryTightDrCutTPC;
   float _drCutTPC;
   float _drCutSIT;
+  float _looseDrCutSIT;
   float _maxSplitTrackFracDeltaP;
   float _maxSplitTrackDeltaP;
+  float _minELambda;
 
 
   float _bField;

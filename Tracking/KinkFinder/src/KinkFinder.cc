@@ -161,7 +161,17 @@ KinkFinder::KinkFinder() : Processor("KinkFinder") {
   registerProcessorParameter("KinkProjectionCutSIT",
 			     "Cuts on kink distance of closest approach in SIT",
 			     _drCutSIT,
-			     float(5));
+			     float(10));
+
+  registerProcessorParameter("LooseProjectionCutSIT",
+			     "Cuts on kink distance of closest approach in SIT",
+			     _looseDrCutSIT,
+			     float(10));
+
+  registerProcessorParameter("MinELambda",
+			     "Minimum Lambda Energy",
+			     _minELambda,
+			     float(2.));
 
 
   registerProcessorParameter("DebugPrinting",
@@ -214,6 +224,9 @@ void KinkFinder::processRunHeader( LCRunHeader* run) {
 void KinkFinder::processEvent( LCEvent * evt ) { 
 
   TrackVec tracks;
+
+
+  if(_debugPrinting>0)std::cout << " Searching for kinks/prongs/split tracks " << std::endl;
 
 
   LCCollection* relationTrackCollection = NULL;
@@ -537,7 +550,32 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    float rkink = 0;
 
 
-	    if(dr<100){
+	    bool mcKink = false;
+	    if(mcParticle[j]!=NULL && _debugPrinting>0){
+	      EVENT::MCParticleVec parents = mcParticle[j]->getParents();
+	      if(parents.size()>0 && mcParticle[i]!=NULL){
+		for(int im = 0; im<parents.size();im++){
+		  if(parents[im]==mcParticle[i] && momentum[i]>2.0){
+		    //		    if(abs(mcParticle[i]->getPDG())==211 &&
+		    //  abs(mcParticle[j]->getPDG())==13)mcKink = true;
+		    if(abs(mcParticle[i]->getPDG())==321 &&
+		       abs(mcParticle[j]->getPDG())==13)mcKink = true;
+		    if(abs(mcParticle[i]->getPDG())==321 &&
+		       abs(mcParticle[j]->getPDG())==211)mcKink = true;
+		    if(abs(mcParticle[i]->getPDG())==3222 &&
+		       abs(mcParticle[j]->getPDG())==211)mcKink = true;
+		    if(abs(mcParticle[i]->getPDG())==3212 &&
+		       abs(mcParticle[j]->getPDG())==211)mcKink = true;
+		    if(abs(mcParticle[i]->getPDG())==3112 &&
+		       abs(mcParticle[j]->getPDG())==211)mcKink = true;
+		  }
+		}
+	      }
+	    }
+	  
+	  
+
+	    if(dr<100 || mcKink){
 	      dr = 999999.;
 	      float refsp[3];
 	      float refsd[3];
@@ -556,7 +594,8 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		ze = z1;
 	      }
 	      float zstep = (ze-zs)/10.;
-
+	      if(zstep<1)zstep=1;
+	      
 	      for(float z = zs; z < ze; z+= zstep){
 		float t = helixEnd[ip]->getPointInZ(z, refsp, seedp);
 		helixStart[id]->getPointInZ(z, refsd, seedd);
@@ -568,8 +607,8 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		  dr=newdr;
 		  xkink = (seedp[0]+seedd[0])/2;
 		  ykink = (seedp[1]+seedd[1])/2;
-		  zkink = z;
 		  rkink = sqrt(xkink*xkink+ykink*ykink);
+		  zkink = z;
 		  if(rkink<rOuter[i])rkink=rOuter[i];
 		  if(rkink>rInner[j])rkink=rInner[j];
 		}
@@ -580,7 +619,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    if(fabs(deltaz)>200)ok=false;
 	    if(fabs(deltaz)>100 && dr > 5.0)ok=false;
 	    
-
 	    float deltaRxyCut = -100;
 	    float drCut   = -100;
     	    bool goodRadialSep = false;
@@ -624,11 +662,16 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      }
 	    }
 
+	      
 	    // looser cuts for debug
-	    if(dr<drCut && deltarxy < deltaRxyCut*2){
+	    //	    std::cout << i << " : " << j << " dr = " << dr << " ( " << drCut << " )    deltaRxy = " << deltarxy << " ( " << deltaRxyCut << " ) " << std::endl; 
+	    if( (dr<drCut && deltarxy < deltaRxyCut*2) || mcKink){
 	      bool possibleSplit = false;
 	      bool split = false;
-	      if(rkink > _rKinkCut && !flipped){
+	      rkink = sqrt(xkink*xkink+ykink*ykink);
+
+	      if( (rkink > _rKinkCut && !flipped) || mcKink){
+
 		float massENu   = this->kinkMass(helixEnd[i],helixStart[j],0., 0.);
 		float massMuNu  = this->kinkMass(helixEnd[i],helixStart[j],mMuon,0.);
 		float massPiPi  = this->kinkMass(helixEnd[i],helixStart[j],mPion,mPion);
@@ -660,19 +703,19 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		  if(deltaKaonPiPi<deltaKaon)deltaKaon = deltaKaonPiPi;
 		  if(deltaKaon<1 && tKaon > 0.005)probKaon = 3.125*deltaKaon*deltaKaon+tKaon;
 		}
-		if(_sigmaDecayMassCut>0){
+		if(_sigmaDecayMassCut>0 && momentum[i] > _minELambda){
 		  float deltaSigmaPiN  = fabs(massPiN-mSigma)/_sigmaDecayMassCut; 
 		  float deltaSigmaPPi0 = fabs(massPPi0-mSigma)/_sigmaDecayMassCut;
 		  float deltaSigma     = deltaSigmaPiN;
 		  if(deltaSigmaPPi0<deltaSigma)deltaSigma = deltaSigmaPPi0;
 		  if(deltaSigma<1 && tSigma < _sigmaTimeCut)probSigma = 3.125*deltaSigma*deltaSigma+tSigma;
 		}
-		if(_hyperonDecayMassCut>0){
+		if(_hyperonDecayMassCut>0 && momentum[i] > _minELambda){
 		  float deltaHyperon   = fabs(massPiL-mHyperon)/_hyperonDecayMassCut; 
 		  if(deltaHyperon<1 && tHyperon < _hyperonTimeCut)probHyperon = 3.125*deltaHyperon*deltaHyperon+tHyperon;
 		}
 		bool goodKinkMass = false;
-		if(probPion>0||probKaon>0||probSigma>0||probHyperon>0)goodKinkMass=true;
+		if(probPion>0.0001||probKaon>0.0001||probSigma>0.0001||probHyperon>0.0001)goodKinkMass=true;
 
 
 		float dpop = 2*fabs(momentum[i]-momentum[j])/(momentum[i]+momentum[j]); 
@@ -694,9 +737,8 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		  kinkij.mass     = 0.;
 		  kinkij.distance = dr;
 
-
 		  // split tracks
-		  if(deltarxy<2*deltaRxyCut && dr<drCut ){
+		  if(deltarxy<2*deltaRxyCut && dr<drCut*2 ){
 		    if(possibleSplit && charge[i]*charge[j]>0 ){
 		      TrackerHitVec hitveci= tracks[i]->getTrackerHits();
 		      TrackerHitVec hitvecj= tracks[j]->getTrackerHits();
@@ -798,6 +840,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 
 		  // prongs
 		  if(deltarxy<deltaRxyCut && dr<drCut ){
+		
 		    if(_debugPrinting>0)std::cout << "Found prong candidate " << i << " " << j  << std::endl;
 		    prongDaughters[i].push_back(kinkij);
 		    kinkij.pdgCode = 211;
@@ -808,7 +851,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		}
 		
 		if(_debugPrinting>0){
-		  std::cout << "Kink....................................................................." << std::endl;
 		  if(mcParticle[j]!=NULL){
 		    EVENT::MCParticleVec parents = mcParticle[j]->getParents();
 		    if(parents.size()>0 && mcParticle[i]!=NULL){
@@ -817,6 +859,8 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		      }
 		    }
 		  }
+		  
+
 
 		  std::cout << "   Candidate kink tracks : " << i << "," << j << " p[i] " << momentum[i] << " p[j] " << momentum[j] << std::endl;
 		  if(flipped)std::cout << "   Flipped Track " << std::endl;;
@@ -1047,6 +1091,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   }
 
   _nEvt++;
+  if(_debugPrinting>0)std::cout << " Done " << std::endl;
 
 }
 

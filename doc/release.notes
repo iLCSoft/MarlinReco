@@ -5,6 +5,12 @@
 ================================
 
  -----------
+| v00-17-03 |
+ -----------
+ 
+    - bug fix in the logic when checking for hits from the same MCParticle, Pointer not initialied to NULL. Caused a segmentation violation in LEPTracking due to a NaN value in the covariance matrix.
+
+ -----------
 | v00-17-02 |
  -----------
      - made compatible with MacOS

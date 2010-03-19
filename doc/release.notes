@@ -7,8 +7,15 @@
  -----------
 | v00-17-03 |
  -----------
- 
-    - bug fix in the logic when checking for hits from the same MCParticle, Pointer not initialied to NULL. Caused a segmentation violation in LEPTracking due to a NaN value in the covariance matrix.
+      bug fix release:
+
+    -  bug fixes in TPCDigiProcessor.cc 
+        - empty TPC hit collection
+        - fix in the logic when checking for hits from the same MCParticle, Pointer not initialied to NULL. 
+          Caused a segmentation violation in LEPTracking due to a NaN value in the covariance matrix.
+    - bug fixes in SimpleMuonDigi, (New)LDCCaloDigi wrt. to
+      ecoding of calorimeter layout in CalorimeterHit::type (was allways CHT::any)
+
 
  -----------
 | v00-17-02 |

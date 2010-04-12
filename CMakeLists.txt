@@ -95,6 +95,7 @@ IF( BUILD_32BIT_COMPATIBLE )
         /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
         /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
         /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1/32   # SL5 64bit 32bit compatible
         /usr/osxws/lib                              # OSX
         /usr/lib
     )
@@ -102,6 +103,7 @@ ELSE()
     SET( G2C_LIB_PATHS
         /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
         /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
         /usr/osxws/lib                              # OSX
         /usr/lib64
     )

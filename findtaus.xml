@@ -1,0 +1,90 @@
+<marlin>
+   <execute>
+        <processor name="MyPrepareRECParticles"/>
+        <processor name="MyTauFinder_PFO"/>
+        <processor name="MyEvaluateTauFinder_PFO"/>
+        <processor name="MyTauFinder_MC"/>
+        <processor name="MyEvaluateTauFinder_MC"/>
+        <processor name="MyTauFinder_Tracks"/>
+        <processor name="MyEvaluateTauFinder_Tracks"/>
+        <processor name="MyLCIOOutputProcessor"/>
+   </execute>
+
+   <global>
+     <parameter name="LCIOInputFiles">
+        /afs/cern.ch/eng/clic/work/battagl/slcio/207_219_DSTv02_00BX.slcio
+      </parameter>
+     <parameter name="GearXMLFile" value="../GearCLIC01_ILD.xml"/>
+     <parameter name="MaxRecordNumber" value="0"/>
+     <parameter name="SkipNEvents" value="0"/>
+     <parameter name="SupressCheck" value="false"/>
+     <parameter name="Verbosity">
+       MESSAGE4
+     </parameter>
+   </global>
+
+  
+  <processor name="MyPrepareRECParticles" type="PrepareRECParticles">
+  <parameter name="outputColMC" value="MCParticles_tau"/>
+  <parameter name="outputColPFO" value="PFO_tau"/>
+  <parameter name="outputColTracks" value="Tracks_tau"/>
+  </processor>
+
+<processor name="MyTauFinder_MC" type="TauFinder">
+    <parameter name="inputCol" value="MCParticles_tau"/>
+    <parameter name="outputCol" value="TauRec_MC"/>
+    <parameter name="relCol" value="TauRecLink_MC"/>
+    <parameter name="pt_cut" value="1"/>
+    <parameter name="D0seed" value="0.5"/>
+    <parameter name="searchConeAngle" value="0.07"/>
+    <parameter name="isolationConeAngle" value="0.03"/>
+    <parameter name="isolationEnergy" value="5.0"/>
+  </processor>
+
+<processor name="MyTauFinder_PFO" type="TauFinder">
+    <parameter name="inputCol" value="PFO_tau"/>
+    <parameter name="outputCol" value="TauRec_PFO"/>
+    <parameter name="relCol" value="TauRecLink_PFO"/>
+    <parameter name="pt_cut" value="1.00"/>
+    <parameter name="D0seed" value="0.5"/>
+    <parameter name="searchConeAngle" value="0.07"/>
+    <parameter name="isolationConeAngle" value="0.03"/>
+    <parameter name="isolationEnergy" value="5.0"/>
+  </processor>
+
+
+<processor name="MyTauFinder_Tracks" type="TauFinder">
+    <parameter name="inputCol" value="Tracks_tau"/>
+    <parameter name="outputCol" value="TauRec_Tracks"/>
+    <parameter name="relCol" value="TauRecLink_Tracks"/>
+    <parameter name="pt_cut" value="1"/>
+    <parameter name="D0seed" value="0.5"/>
+    <parameter name="searchConeAngle" value="0.07"/>
+    <parameter name="isolationConeAngle" value="0.03"/>
+    <parameter name="isolationEnergy" value="5.0"/>
+  </processor>
+
+
+
+  <processor name="MyEvaluateTauFinder_Tracks" type="EvaluateTauFinder">
+    <parameter name="inputCol" value="TauRec_Tracks"/>
+    <parameter name="relCol" value="TauRecLink_Tracks"/>
+</processor>
+ <processor name="MyEvaluateTauFinder_MC" type="EvaluateTauFinder">
+    <parameter name="inputCol" value="TauRec_MC"/>
+    <parameter name="relCol" value="TauRecLink_MC"/>
+  </processor>
+ <processor name="MyEvaluateTauFinder_PFO" type="EvaluateTauFinder">
+    <parameter name="inputCol" value="TauRec_PFO"/>
+    <parameter name="relCol" value="TauRecLink_PFO"/>
+  </processor>
+
+<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+   <parameter name="LCIOOutputFile" type="string" value="TauFinderOutput.slcio"/>
+   <parameter name="LCIOWriteMode" type="string" value="None"/>
+</processor>
+
+ 
+
+
+</marlin>

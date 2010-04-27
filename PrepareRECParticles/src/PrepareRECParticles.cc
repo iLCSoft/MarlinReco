@@ -225,7 +225,6 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
 	      if( (mc->getMass()==0 && fabs(mc->getPDG())!=22)
 		  || mc->getPDG()==1000022)
 		continue;
-	      
 	      ReconstructedParticleImpl *rec = new ReconstructedParticleImpl();
 	      //copy values from MC to REC
 	      rec->setMomentum(mc->getMomentum());
@@ -292,9 +291,8 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
 	  prec->setMass(pfo->getMass());
 	  prec->setReferencePoint (pfo->getReferencePoint());
 	  prec->setGoodnessOfPID(pfo->getGoodnessOfPID());
-	  const EVENT::ParticleIDVec &pidv=dynamic_cast<const EVENT::ParticleIDVec &>(pfo->getParticleIDs());
-	  for(unsigned int s=0;s<pidv.size();s++)
-	    prec->addParticleID(pidv[s]);
+	  //copying of ParticleId vector causes problems because it is also deleted in ~ReconstructedParticle
+	  //left it out because it is not needed and if so can be retrieved from the original PFO via Relations
 	  EVENT::ParticleID *pid=dynamic_cast<EVENT::ParticleID *>(pfo->getParticleIDUsed());
 	  prec->setParticleIDUsed(pid);
 	  const EVENT::ReconstructedParticleVec &recpv=dynamic_cast<const EVENT::ReconstructedParticleVec &>(pfo->getParticles());
@@ -343,7 +341,7 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
 
     }
 
- 
+  
   evt->addCollection(reccol,_outcolMC);
   evt->addCollection(mc_relationcol,_colNameMCTruth);
   evt->addCollection(trackcol,_outcolTracks);

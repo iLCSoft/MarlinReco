@@ -49,10 +49,6 @@ if (n > 0) return 1;
 return 0;
 }
 
-bool MyEnergySort( ReconstructedParticle *p1, ReconstructedParticle *p2)
-{
-  return fabs(p1->getEnergy()) > fabs(p2->getEnergy());
-}
 
 PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles") 
 {

@@ -19,7 +19,6 @@ using namespace std;
 #include <EVENT/MCParticle.h>
 #include <EVENT/ReconstructedParticle.h>
 #include <IMPL/ReconstructedParticleImpl.h>
-#include <IMPL/VertexImpl.h>
 #include "UTIL/LCRelationNavigator.h"
 
 #include <gear/GEAR.h>
@@ -31,7 +30,7 @@ using namespace std;
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#define coutEv 0
+#define coutEv -1
 #define coutUpToEv 0
 
 using namespace lcio ;
@@ -67,7 +66,7 @@ TauFinder::TauFinder() : Processor("TauFinder")
   registerProcessorParameter( "relCol" ,
                                "Name of the LCRelation output Collection"  ,
                                _colNameTauRecLink ,
-                               std::string("TauRecLink_PFA")) ;
+			      std::string("TauRecLink_PFA")) ;
 
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			    "TauRecCollection",
@@ -105,6 +104,16 @@ TauFinder::TauFinder() : Processor("TauFinder")
                               "Limit on D0 for the track seeding the tau jet"  ,
                               _D0seed ,
                               (float)0.5) ;
+  
+  registerProcessorParameter( "ptseed" ,
+                              "Minimum tranverse momentum of tau seed"  ,
+                              _ptseed ,
+                              (float)5.0) ;
+  
+  registerProcessorParameter( "invariant_mass" ,
+                              "Upper limit on invariant mass of tau candidate"  ,
+                              _minv ,
+                              (float)2.0) ;
 }
 
 
@@ -121,6 +130,7 @@ void TauFinder::init()
   _nEvt = 0 ;
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
   _fail_minv=0;
+  _fail_minv_neg=0;
   _fail_Qtr=0;
   _fail_isoE=0;
   std::cout << "INIT IS DONE" << std::endl;
@@ -169,6 +179,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	  ReconstructedParticle *particle = dynamic_cast <ReconstructedParticle*>( colRECO->getElementAt( i ) );
 	  double pt=sqrt(particle->getMomentum()[0]*particle->getMomentum()[0]
 			 +particle->getMomentum()[1]*particle->getMomentum()[1]);
+	
 	  if(pt<_ptcut)   
 	    continue;
 	  Avector.push_back(particle);
@@ -234,10 +245,12 @@ void TauFinder::processEvent( LCEvent * evt )
 	mass_inv=sqrt(E*E-psquare);
      
       //check for inverse mass
-      if(mass_inv>2 || mass_inv<-0.001 || chargedtracks>6 || chargedtracks==0)
+      if(mass_inv>_minv || mass_inv<-0.001 || chargedtracks>6 || chargedtracks==0)
 	{
-	  if(mass_inv>2 || mass_inv<-0.001)
+	  if(mass_inv>_minv)
 	    _fail_minv++;
+	  if(mass_inv<-0.001)
+	    _fail_minv_neg++;
 	  if(chargedtracks>6 || chargedtracks==0)
 	    _fail_Qtr++;
 
@@ -324,10 +337,12 @@ void TauFinder::processEvent( LCEvent * evt )
 		  else
 		    mass_inv= sqrt(En*En-psquaren);
 		  //failed to merge
-		  if(mass_inv>2 || mass_inv<-0.001 ||  QTvec[t+erasecount]+QTvec[t2+erasecount]>6)
+		  if(mass_inv>_minv || mass_inv<-0.001 ||  QTvec[t+erasecount]+QTvec[t2+erasecount]>6)
 		    {
-		      if(mass_inv>2 || mass_inv<-0.001)
+		      if(mass_inv>_minv)
 			_fail_minv++;
+		      if(mass_inv<-0.001)
+			_fail_minv_neg++;
 		      if(QTvec[t+erasecount]+QTvec[t2+erasecount]>6)
 			_fail_Qtr++;
 		      
@@ -422,12 +437,13 @@ void TauFinder::processEvent( LCEvent * evt )
       
     }
   
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"--------------------------------------------------------------------------------------------"<<endl;
  
   evt->addCollection(reccol,_outcol);
   evt->addCollection(relationcol,_colNameTauRecLink);
- 
+  
+  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+    cout<<"--------------------------------------------------------------------------------------------"<<endl;
+  
   _nEvt ++ ;
   
 }
@@ -450,26 +466,37 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   for ( unsigned int s=0; s<Qvec.size() ; s++ )
     {
       tauseed=dynamic_cast<ReconstructedParticle*>(Qvec[s]);
-      float mom[3];
-      float ver[3];
-      
-      VertexImpl *vtx=dynamic_cast<VertexImpl*>(tauseed->getStartVertex());
-      for (int icomp=0; icomp<3; ++icomp) {
-	mom[icomp]=(float)tauseed->getMomentum()[icomp];
-	if(vtx)
-	  {
-	    const float *vpos=vtx->getPosition();
-	    ver[icomp]=vpos[icomp];
+      const EVENT::TrackVec &tv=dynamic_cast<const EVENT::TrackVec &>(tauseed->getTracks());
+      float momtr[3];
+      float p_on_tr[3];
+      const float *refp=0;
+      double pt=0;
+      if(tv.size())
+	{
+	  double p=0;
+	  //take the track with the highest momentum to get ReferencPoint which should be on the helix
+	  //if track model changes this has to change as well
+	  for(unsigned int s=0;s<tv.size();s++)
+	    {
+	      //momentum of track assuming B along z
+	      double pt=fabs(_bField/tv[s]->getOmega())*3e-4;
+	      double mom=fabs(pt/cos(atan(tv[s]->getTanLambda())));	  
+	      if(mom>p)
+		refp=tv[s]->getReferencePoint();
+	      p=mom;
+	    }
+	  for (int icomp=0; icomp<3; ++icomp) {
+	    momtr[icomp]=(float)tauseed->getMomentum()[icomp];
+	    p_on_tr[icomp]=refp[icomp];
 	  }
-	else
-	  ver[icomp]=0;
-      }
-      double pt=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
-      float charge = tauseed->getCharge(); 
-      helix->Initialize_VP(ver,mom,charge,_bField);
-     
-      D0seed=fabs(helix->getD0());
-      if(D0seed<_D0seed && D0seed>1e-5  && pt >5)
+	  pt=sqrt(momtr[0]*momtr[0]+momtr[1]*momtr[1]);
+	  float charge = tauseed->getCharge(); 
+	  helix->Initialize_VP(p_on_tr,momtr,charge,_bField);
+	  D0seed=fabs(helix->getD0());
+	}
+      else
+	D0seed=0;
+      if(D0seed<_D0seed && D0seed>1e-5 && pt>_ptseed)
      	break;
       else
 	{
@@ -584,10 +611,11 @@ void TauFinder::end(){
   std::cout << "TauFinder::end()  " << name() 
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    << std::endl ;
-  std::cout << "Reasons for Failure: " <<std::endl;
-  std::cout << "High inverse mass:    " << _fail_minv<< std::endl ;
-  std::cout << "No or to many tracks: " << _fail_Qtr<< std::endl ;
-  std::cout << "No isolation        : " << _fail_isoE<< std::endl ;
+  std::cout << "Reasons for Failure:   " <<std::endl;
+  std::cout << "High inverse mass:     " << _fail_minv<< std::endl ;
+  std::cout << "Negative inverse mass: " << _fail_minv_neg<< std::endl ;
+  std::cout << "No or to many tracks:  " << _fail_Qtr<< std::endl ;
+  std::cout << "No isolation        :  " << _fail_isoE<< std::endl ;
  
 
 }

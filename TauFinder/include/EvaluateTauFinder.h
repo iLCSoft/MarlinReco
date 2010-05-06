@@ -81,6 +81,8 @@ class EvaluateTauFinder : public Processor {
   TNtuple *taumatchtuple;
   TNtuple *tauexacttuple;
   TNtuple *evtuple;
+  TNtuple *faketuple;
+  TNtuple *topofaketuple;
 } ;
 
 #endif

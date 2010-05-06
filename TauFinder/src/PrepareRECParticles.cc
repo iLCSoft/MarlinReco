@@ -18,16 +18,17 @@ using namespace std;
 #include <EVENT/LCRelation.h>
 #include <IMPL/LCRelationImpl.h>
 #include <EVENT/MCParticle.h>
+#include <EVENT/Track.h>
 #include <EVENT/ReconstructedParticle.h>
 #include <IMPL/ReconstructedParticleImpl.h>
-#include <IMPL/VertexImpl.h>
+#include <IMPL/TrackImpl.h>
 #include "IMPL/LCFlagImpl.h" 
 #include "UTIL/LCRelationNavigator.h"
 
 #include <gear/GEAR.h>
 #include <gear/BField.h>
 #include <marlin/Global.h>
-
+#include "HelixClass.h"
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -49,7 +50,6 @@ if (n > 0) return 1;
 return 0;
 }
 
-
 PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles") 
 {
   // modify processor description
@@ -68,19 +68,6 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
 			   _colNameTrack ,
 			   std::string("LDCTracks") ) ;
 
-  
-  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-			   "PandoraPFOCollectionName" , 
-			   "Name of the PandoraPFO collection"  ,
-			   _colNamePFO ,
-			   std::string("PandoraPFOs") ) ;
-
-  registerInputCollection( LCIO::LCRELATION,
-			   "RECOMCTRUTHCollectionName" , 
-			   "Name of the MC Truth PFA collection"  ,
-			   _colNamePFOMCTruth ,
-			   std::string("RecoMCTruthLink") ) ;
-
   registerProcessorParameter( "outputColMC" ,
                               "Name of the output Collection of refilled information"  ,
                               _outcolMC ,
@@ -91,11 +78,6 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
                               _outcolTracks ,
                               std::string("Tracks_tau")) ;
  
-  registerProcessorParameter( "outputColPFO" ,
-                              "Name of the output Collection of refilled information"  ,
-                              _outcolPFO ,
-                              std::string("PFO_tau")) ;
-
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
                             "RecCollection",
                             "Collection of Rec Particles for TauFinder",
@@ -107,12 +89,7 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
                             "Collection of Rec Particles for TauFinder",
                             _outcolTracks ,
                             std::string("Tracks_tau"));
-  
-   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-                            "RecCollection",
-                            "Collection of Rec Particles for TauFinder",
-                            _outcolPFO ,
-                            std::string("PFO_tau"));
+   
   
   registerOutputCollection( LCIO::LCRELATION,
 			   "MCRECLinkCollectionName" , 
@@ -126,11 +103,7 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
 			    _colNameTrackTruth ,
 			    std::string("TracksRecLink") ) ;
 
-  registerOutputCollection( LCIO::LCRELATION,
-			    "PFORECLinkCollectionName" , 
-			    "Name of the Track Truth ReconstructedParticle collection"  ,
-			    _colNamePFOTruth ,
-			    std::string("PFORecLink") ) ;
+  
 }
 
 
@@ -159,7 +132,7 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
   
-  LCCollection *colMC, *colTrack, *colPFO,*colMCTruth;
+  LCCollection *colMC, *colTrack;
   try {
     colMC = evt->getCollection( _colNameMC ) ;
   } catch (Exception e) {
@@ -172,27 +145,14 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
     colTrack = 0;
   }
   
-  try {
-    colPFO = evt->getCollection( _colNamePFO ) ;
-  } catch (Exception e) {
-    colPFO = 0;
-  }
+ 
   
-  try {
-    colMCTruth = evt->getCollection( _colNamePFOMCTruth ) ;
-  } catch (Exception e) {
-    colMCTruth = 0;
-  }
-
   _nEvt = evt->getEventNumber();  
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
     cout<<"EVENT "<<_nEvt<<endl;
   
   LCCollectionVec *reccol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   LCCollectionVec *trackcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  LCCollectionVec *pfocol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  //need to store the vertices because the RecontructeParticle only holds the pointer
-  LCCollectionVec *vtxcol = new LCCollectionVec(LCIO::VERTEX);
   //LCRelation stuff
   LCCollectionVec *mc_relationcol = new LCCollectionVec(LCIO::LCRELATION);
   mc_relationcol->parameters().setValue(std::string("FromType"),LCIO::RECONSTRUCTEDPARTICLE);
@@ -200,14 +160,8 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
   LCCollectionVec *track_relationcol = new LCCollectionVec(LCIO::LCRELATION);
   track_relationcol->parameters().setValue(std::string("FromType"),LCIO::RECONSTRUCTEDPARTICLE);
   track_relationcol->parameters().setValue(std::string("ToType"),LCIO::TRACK);
-  LCCollectionVec *pfo_relationcol = new LCCollectionVec(LCIO::LCRELATION);
-  pfo_relationcol->parameters().setValue(std::string("FromType"),LCIO::RECONSTRUCTEDPARTICLE);
-  pfo_relationcol->parameters().setValue(std::string("ToType"),LCIO::RECONSTRUCTEDPARTICLE);
-   
-  LCRelationNavigator* relationNavigatorPFOMC = 0;
-  if( colMCTruth != 0)
-    relationNavigatorPFOMC = new LCRelationNavigator( colMCTruth );
   
+  HelixClass *helix = new HelixClass();
   //convert MCPARTICLES 
   if( colMC != 0 ) 
     {
@@ -228,17 +182,35 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
 	      rec->setEnergy(mc->getEnergy());
 	      rec->setMass(mc->getMass());
 	      rec->setCharge(mc->getCharge());
-	      VertexImpl *vtx=new VertexImpl();
-	      vtx->setPosition(mc->getVertex()[0],mc->getVertex()[1],mc->getVertex()[2]);
-	      vtxcol->addElement(vtx);
-	      rec->setStartVertex(vtx);
+	      //add the track if charged, so that information for D0 is present
+	      if(mc->getCharge())
+		{
+		  TrackImpl *track=new TrackImpl();
+		  float ver[3];
+		  float mom[3];
+		  float rp[3];
+		  for(int i=0;i<3;i++){
+		    ver[i]=mc->getVertex()[i];
+		    mom[i]=mc->getMomentum()[i];
+		  }
+		  helix->Initialize_VP(ver,mom,mc->getCharge(),_bField);
+		  for(int i=0;i<3;i++)
+		    rp[i]=helix->getReferencePoint()[i];
+		  track->setReferencePoint(rp);
+		  track->setD0(fabs(helix->getD0()));
+		  track->setPhi (helix->getPhi0());
+		  track->setOmega (helix->getOmega());
+		  track->setZ0 (helix->getZ0());
+		  track->setTanLambda (helix->getTanLambda());
+		  rec->addTrack(track);
+		}
 	      reccol->addElement( rec );
 	      LCRelationImpl *rel = new LCRelationImpl(rec,mc);
 	      mc_relationcol->addElement( rel );
 	    }
 	}
     }
-   
+  delete helix;
   //convert TRACKS
   if( colTrack != 0 ) 
     {
@@ -259,94 +231,19 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
 	  trec->setType(-1);
 	  trec->setEnergy(p);
 	  trec->setCharge(charge);
-	  VertexImpl *vtx=new VertexImpl();
-	  vtx->setPosition(tr->getReferencePoint()[0],tr->getReferencePoint()[1],tr->getReferencePoint()[2]);
-	  vtxcol->addElement(vtx);
-	  trec->setStartVertex(vtx);
+	  trec->addTrack(tr);
 	  trackcol->addElement( trec );
 	  LCRelationImpl *rel = new LCRelationImpl(trec,tr);
 	  track_relationcol->addElement( rel );
 	}
     }
   
-  //convert PANDORAPFOs
-  //here we also have to make sure a StartVertex is set correctly
-  if( colPFO != 0 ) 
-    {
-      int nt=colPFO->getNumberOfElements();
-      for(int n=0;n<nt;n++)
-	{
-	  ReconstructedParticle *pfo=dynamic_cast < ReconstructedParticle*>(colPFO->getElementAt(n));
-	  ReconstructedParticleImpl *prec = new ReconstructedParticleImpl(); 
-	  //copy the pfo object
-	  prec->setType (pfo->getType());
-	  prec->setMomentum (pfo->getMomentum());
-	  prec->setEnergy(pfo->getEnergy());
-	  prec->setCharge (pfo->getCharge());
-	  prec->setCovMatrix(pfo->getCovMatrix());
-	  prec->setMass(pfo->getMass());
-	  prec->setReferencePoint (pfo->getReferencePoint());
-	  prec->setGoodnessOfPID(pfo->getGoodnessOfPID());
-	  //copying of ParticleId vector causes problems because it is also deleted in ~ReconstructedParticle
-	  //left it out because it is not needed and if so can be retrieved from the original PFO via Relations
-	  EVENT::ParticleID *pid=dynamic_cast<EVENT::ParticleID *>(pfo->getParticleIDUsed());
-	  prec->setParticleIDUsed(pid);
-	  const EVENT::ReconstructedParticleVec &recpv=dynamic_cast<const EVENT::ReconstructedParticleVec &>(pfo->getParticles());
-	  for(unsigned int s=0;s<recpv.size();s++)
-	    prec->addParticle(recpv[s]);
-	  const EVENT::ClusterVec &cv=pfo->getClusters();
-	  for(unsigned int s=0;s<cv.size();s++)
-	    prec->addCluster(cv[s]);
-	  //check if a StartVertex is set. If not compute one from tracks
-	  const EVENT::TrackVec &tv=dynamic_cast<const EVENT::TrackVec &>(pfo->getTracks());
-	  VertexImpl *vtx=new VertexImpl();
-	  bool vtxset=false;
-	  Vertex *vtx2=dynamic_cast<Vertex*>(pfo->getStartVertex());
-	  const float *pos=0;
-	  if(vtx2)
-	    {
-	      pos=vtx2->getPosition();
-	      vtx->setPosition(pos[0],pos[1],pos[2]);
-	      vtxset=true;
-	    }
-	  else
-	    vtx->setPosition(0.,0.,0.);
-	  
-	  if(tv.size() && !vtxset)
-	    {
-	      double p=0;
-	      //take the track with the highest momentum to set Vertex
-	      for(unsigned int s=0;s<tv.size();s++)
-		{
-		  prec->addTrack(tv[s]);				
-		  //momentum of track assuming B along z
-		  double pt=fabs(_bField/tv[s]->getOmega())*3e-4;
-		  double mom=fabs(pt/cos(atan(tv[s]->getTanLambda())));	  
-		  if(mom>p)
-		    vtx->setPosition(tv[s]->getReferencePoint()[0],tv[s]->getReferencePoint()[1],tv[s]->getReferencePoint()[2]);
-		  p=mom;
-		}
-	    }
-	  
-	  vtxcol->addElement(vtx);
-	  prec->setStartVertex(vtx);
-	  pfocol->addElement( prec );
-	  LCRelationImpl *rel = new LCRelationImpl(prec,pfo);
-	  pfo_relationcol->addElement( rel );
-	}
-
-    }
-
   
   evt->addCollection(reccol,_outcolMC);
   evt->addCollection(mc_relationcol,_colNameMCTruth);
   evt->addCollection(trackcol,_outcolTracks);
   evt->addCollection(track_relationcol,_colNameTrackTruth);
-  evt->addCollection(pfocol,_outcolPFO);
-  evt->addCollection(pfo_relationcol,_colNamePFOTruth);
-  evt->addCollection(vtxcol,"VTXCollection");
-  
-  
+   
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
     cout<<"--------------------------------------------------------------------------------------------"<<endl;
    

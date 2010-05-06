@@ -65,11 +65,11 @@ class TauFinder : public Processor {
   int _nEvt ;
 
   float _bField;
-  float _ptcut;
+  float _ptcut,_ptseed;
   float _coneAngle,_isoAngle,_isoE;
-  float _D0seed;
+  float _D0seed,_minv;
 
-  int _fail_minv,_fail_Qtr,_fail_isoE;
+  int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE;
    
   bool FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<ReconstructedParticle*> &Nvec,
 	       std::vector<std::vector<ReconstructedParticle*> > &tauvec);

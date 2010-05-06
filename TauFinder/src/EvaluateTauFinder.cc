@@ -31,7 +31,7 @@ using namespace std;
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#define coutEv -1
+#define coutEv 0
 #define coutUpToEv 0
 
 using namespace lcio ;
@@ -44,7 +44,7 @@ struct TAU {   // Declare  struct type
   double E,phi,theta,D0;   // Declare member types
 };   
 
-bool MyEnergySort( TAU p1, TAU p2)
+bool MyAngleSort( TAU p1, TAU p2)
 {
   return fabs(p1.phi) > fabs(p2.phi);
 }
@@ -107,11 +107,7 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
 			   _colNameTracksRecLink ,
 			   std::string("TracksRecLink") ) ;
 
-  registerInputCollection( LCIO::LCRELATION,
-			   "PFOTauLinkCollectionName" , 
-			   "Name of the PFO Truth Reconstructed Tau collection"  ,
-			   _colNamePFORecLink ,
-			   std::string("PFORecLink") ) ;
+  
 }
 
 
@@ -133,17 +129,15 @@ void EvaluateTauFinder::init()
   _dEsumsq= 0;
   _ndE= 0;
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
-
-  std::string end(".root");
-  std::string name = _incol+end;
-  const char *filename=name.c_str();
-  rootfile = new TFile(filename,"RECREATE");
-  evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec");
+ 
+  evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed:WpD1:WpD2:WmD1:WmD2");
   tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0");
-  mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:Phi:Theta:D0");
+  mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:D0:D1:D2");
   taumatchtuple=new TNtuple("taumatch","taumatch","EvID:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
   tauexacttuple=new TNtuple("tauexact","tauexact","EvID:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
-   
+  faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recp:recD0");
+  topofaketuple =new TNtuple("topofake","topofake","EvID:nfake:WpD1:WpD2:WmD1:WmD2");
+  
   std::cout << "INIT IS DONE" << std::endl;
 }
 
@@ -158,7 +152,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   // usually the working horse ...
   
   LCCollection *colMC, *colRECO, *colMCTruth, *colTau;
-  LCCollection *colTauRecLink, *colMCRecLink, * colPFORecLink,*colTracksRecLink;
+  LCCollection *colTauRecLink, *colMCRecLink, *colTracksRecLink;
   try {
     colMC = evt->getCollection( _colNameMC ) ;
   } catch (Exception e) {
@@ -200,21 +194,16 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
     colTracksRecLink = 0;
   }
   
-  try {
-    colPFORecLink = evt->getCollection( _colNamePFORecLink ) ;
-  } catch (Exception e) {
-    colPFORecLink = 0;
-  }
   
   _nEvt = evt->getEventNumber();  
   
   int ntau_mc=0;
   int ntau_rec=0;
- 
+  int missed=0;
+
   LCRelationNavigator* relationNavigatorTau = 0;
   LCRelationNavigator* relationNavigatorMC = 0;
   LCRelationNavigator* relationNavigatorTracks = 0;
-  LCRelationNavigator* relationNavigatorPFO = 0;
   LCRelationNavigator* relationNavigatorPFOMC = 0;
   if( colTauRecLink != 0)
     relationNavigatorTau = new LCRelationNavigator( colTauRecLink );
@@ -222,169 +211,193 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
     relationNavigatorMC = new LCRelationNavigator( colMCRecLink );
   if( colTracksRecLink != 0)
     relationNavigatorTracks = new LCRelationNavigator( colTracksRecLink );
-  if( colPFORecLink != 0)
-    relationNavigatorPFO = new LCRelationNavigator( colPFORecLink );
   if( colMCTruth != 0)
     relationNavigatorPFOMC = new LCRelationNavigator( colMCTruth );
     
+  bool isfake=false;
+  int nfakes=0;
   std::vector<TAU> rectauvec;
-
   if( colTau != 0)
     {
       int nT = colTau->getNumberOfElements();
       ntau_rec=nT;
-     
-       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	 cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
-       HelixClass * helix = new HelixClass();
-       HelixClass *mc_helix = new HelixClass();
-       for(int k=0; k < nT; k++) 
-	 {
-	   ReconstructedParticle *tau = dynamic_cast <ReconstructedParticle*>( colTau->getElementAt( k ) );
-	   const double *pvec=tau->getMomentum();
-	   double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
-	   double p=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2]);
-	   double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
-	   double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
-	   float mom[3];
-	   float ver[3];
-	   
-	   for (int icomp=0; icomp<3; ++icomp) {
-	     mom[icomp]=(float)tau->getMomentum()[icomp];
-	     VertexImpl *vtx=dynamic_cast<VertexImpl*>(tau->getStartVertex());
-	     if(vtx)
-	       {
-		 const float *vpos=vtx->getPosition();
-		 ver[icomp]=vpos[icomp];
-	       }
-	     else
-	       ver[icomp]=0;
-	   }
-	 
-	   float charge = tau->getCharge(); 
-	   helix->Initialize_VP(ver,mom,charge,_bField);
-	   double D0=fabs(helix->getD0());
-	   if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	     cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
-	     
-	   TAU rtau;
-	   rtau.E=tau->getEnergy();
-	   rtau.phi=phi;
-	   rtau.theta=theta;
-	   rtau.D0=D0;
-	   rectauvec.push_back(rtau);
-	   _ntot_rec++;
-	   
-	   //follow the chain back to mc truth
-	   if(relationNavigatorTau)
-	     {
-	       bool istau=false;
-	       MCParticle *mctau=NULL;
-	       EVENT::LCObjectVec relobjFROM = relationNavigatorTau->getRelatedToObjects(tau);
-	       for(unsigned int o=0;o<relobjFROM.size();o++)
-		 {
-		   ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
-		   if(relationNavigatorMC)
-		     {
-		       EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(rec);
-		       for(unsigned int m=0;m<relobj.size();m++)
-			 {
-			   MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
-			   //check whether particles parent is really a tau:
-			   MCParticle *dummy=mc;
-			   MCParticle *parent=mc;
-			   int size=mc->getParents().size();
-			   while(size!=0)
-			     {
-			       dummy=parent->getParents()[0];
-			       size=dummy->getParents().size();
-			       parent=dummy;
-			       if(fabs(parent->getPDG())==15)
-				 size=0;
-			     }
-			   if(fabs(parent->getPDG())==15)
-			     {
+      
+      if(_nEvt<coutUpToEv || _nEvt==coutEv)
+	cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
+      HelixClass * helix = new HelixClass();
+      HelixClass *mc_helix = new HelixClass();
+      for(int k=0; k < nT; k++) 
+	{
+	  ReconstructedParticle *tau = dynamic_cast <ReconstructedParticle*>( colTau->getElementAt( k ) );
+	  const double *pvec=tau->getMomentum();
+	  double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
+	  double p=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2]);
+	  double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
+	  double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
+	  float mom[3];
+	  float ver[3];
+	  
+	  for (int icomp=0; icomp<3; ++icomp) {
+	    mom[icomp]=(float)tau->getMomentum()[icomp];
+	    VertexImpl *vtx=dynamic_cast<VertexImpl*>(tau->getStartVertex());
+	    if(vtx)
+	      {
+		const float *vpos=vtx->getPosition();
+		ver[icomp]=vpos[icomp];
+	      }
+	    else
+	      ver[icomp]=0;
+	  }
+	  
+	  float charge = tau->getCharge(); 
+	  helix->Initialize_VP(ver,mom,charge,_bField);
+	  double D0=fabs(helix->getD0());
+	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+	    cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
+	  
+	  TAU rtau;
+	  rtau.E=tau->getEnergy();
+	  rtau.phi=phi;
+	  rtau.theta=theta;
+	  rtau.D0=D0;
+	  rectauvec.push_back(rtau);
+	  _ntot_rec++;
+	  
+	  //follow the chain back to mc truth
+	  if(relationNavigatorTau)
+	    {
+	      bool istau=false;
+	      MCParticle *mctau=NULL;
+	      EVENT::LCObjectVec relobjFROM = relationNavigatorTau->getRelatedToObjects(tau);
+	      for(unsigned int o=0;o<relobjFROM.size();o++)
+		{
+		  ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
+		  if(relationNavigatorMC)
+		    {
+		      EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(rec);
+		      for(unsigned int m=0;m<relobj.size();m++)
+			{
+			  MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
+			  //check whether particles parent is really a tau:
+			  MCParticle *dummy=mc;
+			  MCParticle *parent=mc;
+			  int size=mc->getParents().size();
+			  while(size!=0)
+			    {
+			      dummy=parent->getParents()[0];
+			      size=dummy->getParents().size();
+			      parent=dummy;
+			      if(fabs(parent->getPDG())==15)
+				size=0;
+			    }
+			  if(fabs(parent->getPDG())==15)
+			    {
 			       istau=true;
 			       mctau=parent;
-			     }
-			   else
-			     istau=false;
-			 }
-		       
-		     }
-		   if(relationNavigatorPFO)
-		     {
-		       EVENT::LCObjectVec relobj = relationNavigatorPFO->getRelatedToObjects(rec);
-		       if(relationNavigatorPFOMC)
-			 {
-			    for(unsigned int r=0;r<relobj.size();r++)
-			     {
-			       ReconstructedParticle *pfo=dynamic_cast <ReconstructedParticle*>(relobj[r]);
-			       EVENT::LCObjectVec relobjMC = relationNavigatorPFOMC->getRelatedToObjects(pfo);
-			       for(unsigned int m=0;m<relobjMC.size();m++)
-				 {
-				   MCParticle *mc=dynamic_cast <MCParticle*>(relobjMC[m]);
-				   //check whether particles parent is really a tau:
-				   MCParticle *dummy=mc;
-				   MCParticle *parent=mc;
-				   int size=mc->getParents().size();
-				   while(size!=0)
-				     {
-				       dummy=parent->getParents()[0];
-				       size=dummy->getParents().size();
-				       parent=dummy;
-				       if(fabs(parent->getPDG())==15)
-					 size=0;
-				     }
-				   if(fabs(parent->getPDG())==15)
-				     {
-				       istau=true;
-				       mctau=parent;
-				     }
-				   else
-				     istau=false;
-				 }
-			     }
-			 }
-		     }
-		 }
-	       //compare tau with mc truth
-	       if(mctau)
-		 {
-		   float mc_mom[3];
-		   float mc_ver[3];
-		   const double *mc_pvec=mctau->getMomentum();
-		   double mc_pt=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
-		   double mc_phi=180./TMath::Pi()*atan(mc_pvec[1]/mc_pvec[0]);
-		   double  mc_theta=180./TMath::Pi()*atan(mc_pt/fabs(mc_pvec[2]));
-		   
-		   for (int icomp=0; icomp<3; ++icomp) {
-		     mc_mom[icomp]=(float)mctau->getMomentum()[icomp];
-		     mc_ver[icomp]=(float)mctau->getVertex()[icomp];
-		   }
-		   float mc_charge = mctau->getCharge(); 
-		   mc_helix->Initialize_VP(mc_ver,mc_mom,mc_charge,_bField);
-		   double mc_D0=fabs(mc_helix->getD0());
-		   double Evis=0,ptvis=0,pvis=0;
-		   
-		   LoopDaughters(mctau,Evis,ptvis,pvis);
-
-		   taumatchtuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
-		   if(istau)
-		     tauexacttuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
-		   _dEsum+=Evis-tau->getEnergy();
-		   _dEsumsq+=(Evis-tau->getEnergy())*(Evis-tau->getEnergy());
-		   _ndE++;
-		 }
-	       if(istau)
-		 _ntau_correct++;
-	     }//relNavTau
-	 }
-       delete helix;
-       delete mc_helix;
+			    }
+			  
+			}
+		      
+		    }
+		  if(relationNavigatorPFOMC)
+		    {
+		      EVENT::LCObjectVec relobjMC = relationNavigatorPFOMC->getRelatedToObjects(rec);
+		      for(unsigned int m=0;m<relobjMC.size();m++)
+			{
+			  MCParticle *mc=dynamic_cast <MCParticle*>(relobjMC[m]);
+			  //check whether particles parent is really a tau:
+			  MCParticle *dummy=mc;
+			  MCParticle *parent=mc;
+			  int size=mc->getParents().size();
+			  while(size!=0)
+			    {
+			      dummy=parent->getParents()[0];
+			      size=dummy->getParents().size();
+			      parent=dummy;
+			      if(fabs(parent->getPDG())==15)
+				size=0;
+			    }
+			  if(fabs(parent->getPDG())==15)
+			    {
+			      istau=true;
+			      mctau=parent;
+			    }
+			}
+		    }
+		}
+			
+	      //compare tau with mc truth
+	      if(mctau)
+		{
+		  float mc_mom[3];
+		  float mc_ver[3];
+		  const double *mc_pvec=mctau->getMomentum();
+		  double mc_pt=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
+		  double mc_phi=180./TMath::Pi()*atan(mc_pvec[1]/mc_pvec[0]);
+		  double  mc_theta=180./TMath::Pi()*atan(mc_pt/fabs(mc_pvec[2]));
+		  
+		  for (int icomp=0; icomp<3; ++icomp) {
+		    mc_mom[icomp]=(float)mctau->getMomentum()[icomp];
+		    mc_ver[icomp]=(float)mctau->getDaughters()[0]->getVertex()[icomp];
+		  }
+		  float mc_charge = mctau->getCharge(); 
+		  mc_helix->Initialize_VP(mc_ver,mc_mom,mc_charge,_bField);
+		  double mc_D0=fabs(mc_helix->getD0());
+		  double Evis=0,ptvis=0,pvis=0;
+		  
+		  LoopDaughters(mctau,Evis,ptvis,pvis);
+		  
+		  taumatchtuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
+		  if(istau)
+		    tauexacttuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
+		  _dEsum+=Evis-tau->getEnergy();
+		  _dEsumsq+=(Evis-tau->getEnergy())*(Evis-tau->getEnergy());
+		  _ndE++;
+		}
+	      if(istau)
+		_ntau_correct++;
+	      else
+		{ 
+		  int d1=0,d2=0,pdg;
+		  for(unsigned int o=0;o<relobjFROM.size();o++)
+		    {
+		      ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
+		      if(relationNavigatorMC)
+			{
+			  EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(rec);
+			  for(unsigned int m=0;m<relobj.size();m++)
+			    {
+			      MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
+			      if(mc->getPDG()==22)
+				continue;
+			      MCParticle *dummy=mc;
+			      MCParticle *parent=mc;
+			      int size=mc->getParents().size();
+			      while(size!=0)
+				{
+				  dummy=parent->getParents()[0];
+				  size=dummy->getParents().size();
+				  parent=dummy;
+				}
+			      pdg=parent->getPDG();
+			      if(parent->getDaughters().size())
+				d1=parent->getDaughters()[0]->getPDG();
+			      if(parent->getDaughters().size()>1)
+				d2=parent->getDaughters()[1]->getPDG();
+			    }
+			}
+		    }
+		  faketuple->Fill(_nEvt,pdg,d1,d2,tau->getEnergy(),p,D0);
+		  isfake=true;
+		  nfakes++;
+		}
+	    }//relNavTau
+	}
+      delete helix;
+      delete mc_helix;
     }
   
-  
+  int D1=0,D2=0,D3=0,D4=0;
   std::vector<TAU> mctauvec;
   if( colMC != 0 ) 
     {
@@ -408,7 +421,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      
 	      for (int icomp=0; icomp<3; ++icomp) {
 		mom[icomp]=(float)particle->getMomentum()[icomp];
-		ver[icomp]=(float)particle->getVertex()[icomp];
+		ver[icomp]=(float)particle->getDaughters()[0]->getVertex()[icomp];
 	      }
 	      float charge = particle->getCharge(); 
 	      helix->Initialize_VP(ver,mom,charge,_bField);
@@ -424,16 +437,44 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      mctauvec.push_back(mctau);
 	      if(_nEvt<coutUpToEv || _nEvt==coutEv)
 		cout<<Evis<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
+	      
+	      //find out which mc taus do not have a link to the rec
+	      if(relationNavigatorMC && relationNavigatorTau )
+		{
+		  bool hasRel=false;
+		  LoopDaughtersRelation(particle,relationNavigatorTau ,relationNavigatorMC ,hasRel);
+		  if(!hasRel)
+		    {		    
+		      missed++;
+		      mcmisstuple->Fill(_nEvt,Evis,D0,particle->getDaughters()[0]->getPDG(),particle->getDaughters()[1]->getPDG());
+		      if(_nEvt<coutUpToEv || _nEvt==coutEv)
+			cout<<"Missed: "<<Evis<<" "<<D0<<" "<<particle->getDaughters()[0]->getPDG()<<" "<<particle->getDaughters()[1]->getPDG()<<endl;
+		    }
+		}
+	    }//tau
+	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==24)
+	    {
+	      if(particle->getPDG()==24)
+		{
+		  D1=particle->getDaughters()[0]->getPDG();
+		  D2=particle->getDaughters()[1]->getPDG();
+		}
+	      if(particle->getPDG()==-24)
+		{
+		  D3=particle->getDaughters()[0]->getPDG();
+		  D4=particle->getDaughters()[1]->getPDG();
+		}
 	    }
 	}
       delete helix;
     }
-   
-   //filling the tuple
-   evtuple->Fill(_nEvt,ntau_mc,ntau_rec);
+  if(isfake)
+    topofaketuple->Fill(_nEvt,nfakes,D1,D2,D3,D4);
+  //filling the tuple
+  evtuple->Fill(_nEvt,ntau_mc,ntau_rec,missed,D1,D2,D3,D4);
    //sort the mc t and rec taus for comparison
-   std::sort(mctauvec.begin(), mctauvec.end(), MyEnergySort);
-   std::sort(rectauvec.begin(), rectauvec.end(), MyEnergySort);
+   std::sort(mctauvec.begin(), mctauvec.end(), MyAngleSort);
+   std::sort(rectauvec.begin(), rectauvec.end(), MyAngleSort);
    
    unsigned int common=mctauvec.size();
    if(mctauvec.size()>rectauvec.size())
@@ -461,7 +502,6 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   delete relationNavigatorTau;
   delete relationNavigatorMC;
   delete relationNavigatorTracks;
-  delete relationNavigatorPFO;
   delete relationNavigatorPFOMC;
   
 }
@@ -526,14 +566,25 @@ void EvaluateTauFinder::check( LCEvent * evt ) {
 
 void EvaluateTauFinder::end(){ 
   
+
+  std::string end(".root");
+  std::string fname = _incol+end;
+  const char *filename=fname.c_str();
+  rootfile = new TFile(filename,"RECREATE");
   
   std::cout << "EvaluateTauFinder::end()  " << name() 
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "<<std::endl;
   
 
+  evtuple->Write();
+  tautuple->Write();
+  mcmisstuple->Write();
+  taumatchtuple->Write();
+  tauexacttuple->Write();
+  faketuple->Write();
+  topofaketuple->Write();
   
   //Close File here
-  
   rootfile->Write();
   rootfile->Close();
 }

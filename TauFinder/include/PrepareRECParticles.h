@@ -60,9 +60,9 @@ class PrepareRECParticles : public Processor {
 
   /** Input collection name.
    */
-  std::string _colNameMC,_colNameTrack,_colNamePFO,_colNamePFOMCTruth,;
-  std::string _colNameMCTruth, _colNameTrackTruth,_colNamePFOTruth;
-  std::string _outcolMC, _outcolTracks ,_outcolPFO;
+  std::string _colNameMC,_colNameTrack;
+  std::string _colNameMCTruth, _colNameTrackTruth;
+  std::string _outcolMC, _outcolTracks ;
   double _bField;
   int _nRun ;
   int _nEvt ;

@@ -267,6 +267,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	  if(relationNavigatorTau)
 	    {
 	      bool istau=false;
+	      bool contaminated=false;
 	      MCParticle *mctau=NULL;
 	      EVENT::LCObjectVec relobjFROM = relationNavigatorTau->getRelatedToObjects(tau);
 	      for(unsigned int o=0;o<relobjFROM.size();o++)
@@ -295,7 +296,8 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			       istau=true;
 			       mctau=parent;
 			    }
-			  
+			  else
+			    contaminated=true;
 			}
 		      
 		    }
@@ -322,6 +324,8 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			      istau=true;
 			      mctau=parent;
 			    }
+			  else
+			    contaminated=true;
 			}
 		    }
 		}

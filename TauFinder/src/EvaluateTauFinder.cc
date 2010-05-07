@@ -352,7 +352,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  LoopDaughters(mctau,Evis,ptvis,pvis);
 		  
 		  taumatchtuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
-		  if(istau)
+		  if(!contaminated)
 		    tauexacttuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
 		  _dEsum+=Evis-tau->getEnergy();
 		  _dEsumsq+=(Evis-tau->getEnergy())*(Evis-tau->getEnergy());

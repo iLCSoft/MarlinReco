@@ -18,6 +18,8 @@ typedef CLHEP::Hep3Vector Vector3D ;
 #include <marlin/Global.h>
 // the event display
 
+#include <cstdlib>
+
 using namespace lcio;
 
 ZFinder aZFinder;

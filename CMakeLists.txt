@@ -104,6 +104,7 @@ ELSE()
         /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
         /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
         /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
+        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
         /usr/osxws/lib                              # OSX
         /usr/lib64
     )

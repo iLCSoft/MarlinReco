@@ -1,6 +1,6 @@
 #include "CalorimeterHitType.h"
 #include "CHT_helper.h"
-
+#include <algorithm>
 
 /** Helper functions that should go to Marlinutil/CalorimeterHitTypes.hh */
 

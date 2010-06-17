@@ -2,7 +2,7 @@
 #define VTXNoiseClusters_h 1
 
 
-#ifdef USE_ROOT 
+//#ifdef USE_ROOT 
 // we need some root histograms with cluster size distribution for this processor
 
 #include "marlin/Processor.h"
@@ -12,11 +12,11 @@
 #include <vector>
 #include <gsl/gsl_rng.h>
 
+#include <AIDA/AIDA.h>
 #include "TH2F.h"
 #include "TFile.h"
 
 #ifdef MARLIN_USE_AIDA
-#include <AIDA/AIDA.h>
 typedef std::vector< AIDA::IHistogram1D* > Hist1DVec ;
 typedef std::vector< AIDA::IHistogram2D* > Hist2DVec ;
 #endif
@@ -106,7 +106,7 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
 } ;
 
 #endif
-#endif // USE_ROOT
+//#endif // USE_ROOT
 
 
 

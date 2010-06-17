@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-#ifdef USE_ROOT
+//#ifdef USE_ROOT
 #include "VTXNoiseClusters.h"
 #include "VXDClusterParameters.h"
 
@@ -494,4 +494,4 @@ void VTXNoiseClusters::end(){
 }
 
 
-#endif // USE_ROOT
+//#endif // USE_ROOT

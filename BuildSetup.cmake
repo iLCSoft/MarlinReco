@@ -64,7 +64,7 @@ SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/v01-05"
 
 # if you want to build and link Marlin with one or more of these additional
 # tools you also have to define the corresponding "home" paths
-SET( BUILD_WITH "GEAR RAIDA"
+SET( BUILD_WITH "GEAR RAIDA ROOT"
     CACHE STRING "Build Marlin with these optional packages" FORCE )
 
 # Path to GEAR

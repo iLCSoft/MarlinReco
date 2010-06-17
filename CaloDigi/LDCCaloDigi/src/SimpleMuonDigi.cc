@@ -144,6 +144,7 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
   }
   muoncol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(muoncol,_outputMuonCollection.c_str());
+  evt->addCollection(relcol,_outputRelCollection.c_str());
 
 
   _nEvt++;

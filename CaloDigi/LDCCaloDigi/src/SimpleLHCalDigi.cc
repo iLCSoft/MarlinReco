@@ -131,6 +131,7 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
   }
   lcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(lcalcol,_outputLHCalCollection.c_str());
+  evt->addCollection(relcol,_outputRelCollection.c_str());
 
 
   _nEvt++;

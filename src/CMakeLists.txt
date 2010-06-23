@@ -43,7 +43,9 @@ FOREACH( pkg ${MarlinReco_PKGS} )
     INCLUDE_DIRECTORIES( "../${pkg}/include" )
     INSTALL( DIRECTORY "../${pkg}/include" DESTINATION .
         PATTERN "*~" EXCLUDE
-        PATTERN "*CVS*" EXCLUDE )
+        PATTERN "*CVS*" EXCLUDE
+        PATTERN "*/.svn*" EXCLUDE
+        )
 ENDFOREACH()
 
 

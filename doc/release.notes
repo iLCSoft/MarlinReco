@@ -6,14 +6,31 @@
  --------
 | v00-18 |
  --------
-     - added new package Tracking/KinkFinder
+      - added new package Tracking/KinkFinder  (M.Thomson, J.Marshall)
+
+      - improved compatibility for gcc 4.x
+        - g2c/gfortran in sl5 with gcc 4.1.1
+        - fixed CaloDigi/LDCCaloDigi/src/CHT_helper.cc for gcc 4.4.3
 
      bug fixes:
+
+      - CaloDigi/SimpleLHCalDigi.cc, CaloDigi/SimpleMuonDigi.cc,
+         added missing output relation collection to the event
+
       - bug fixes in SimpleMuonDigi, (New)LDCCaloDigi wrt. to
         ecoding of calorimeter layout in CalorimeterHit::type 
         (was allways CHT::any)
+
       - fixed bug in TPCDigitizer with hit-MCParticle association
-    
+
+      - PFOID/src/PFOID.cc: addedd missing information
+	that order of pdfs must be consistent with parameter
+	EnergyBoundaries in parameter description   
+
+      - TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: fixed a bug in the
+	logic when checking for hits from the same MCParticle 
+        (last hit compared with itself)
+
 
  -----------
 | v00-17-02 |

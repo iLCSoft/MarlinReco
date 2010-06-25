@@ -1,3 +1,100 @@
+2010-06-23 15:32  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: added exclude pattern for
+	  .svn dirs
+
+2010-06-17 09:55  gaede
+
+	* BuildSetup.cmake, CaloDigi/LDCCaloDigi/src/SimpleLHCalDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc,
+	  TrackDigi/VTXDigi/include/VTXNoiseClusters.h,
+	  TrackDigi/VTXDigi/src/VTXNoiseClusters.cc: added relation
+	  collection to the event
+
+2010-06-17 09:54  gaede
+
+	* CMakeLists.txt: added RAIDA and ROOT dependencies
+
+2010-05-07 07:47  engels
+
+	* Analysis/ZFinder/src/ZFinder.cc, CMakeLists.txt,
+	  CaloDigi/LDCCaloDigi/src/CHT_helper.cc: bug fixes for gcc 4.4.3
+
+2010-04-12 13:06  engels
+
+	* CMakeLists.txt: added path to find library g2c/gfortran in sl5
+	  with gcc 4.1.1
+
+2010-03-10 12:50  thomson
+
+	* Tracking/KinkFinder/src/KinkFinder.cc: Updated KinkFinder code
+
+2010-03-10 12:49  thomson
+
+	* Tracking/KinkFinder/include/KinkFinder.h: added DOxygen comments
+
+2010-03-10 12:21  thomson
+
+	* Tracking/KinkFinder/include/KinkFinder.h: Updated header file
+
+2010-03-05 11:11  gaede
+
+	* src/CMakeLists.txt: added KinkFinder
+
+2010-03-05 11:10  gaede
+
+	* doc/release.notes: added doc for v00-18
+
+2010-03-05 11:10  gaede
+
+	* CMakeLists.txt: update version to v00-18
+
+2010-03-05 10:40  gaede
+
+	* Tracking/KinkFinder, Tracking/KinkFinder/include,
+	  Tracking/KinkFinder/include/KinkFinder.h,
+	  Tracking/KinkFinder/src, Tracking/KinkFinder/src/KinkFinder.cc:
+	  added new package (M.Thomson, J.Marshall)
+
+2010-03-04 15:19  aplin
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: fixed a bug in the
+	  logic when checking for hits from the same MCParticle. The bug
+	  occurred or the last hit in a collection, meaning the same hit
+	  was compared with itself, giving a false positive match.
+	  
+	  Cleaned up and added more comments
+
+2010-03-02 16:42  gaede
+
+	* CaloDigi/LDCCaloDigi/src/CHT_helper.cc,
+	  CaloDigi/LDCCaloDigi/src/CHT_helper.h,
+	  CaloDigi/LDCCaloDigi/src/NewLDCCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleCaloDigi.cc,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: fixed bug with the
+	  layout encoding in CalorimeterHit::Type (parsing collection name)
+
+2010-02-26 10:22  engels
+
+	* PFOID/src/PFOID.cc: parameter description missing information
+	  that order of pdfs must be consistent with parameter
+	  EnergyBoundaries
+
+2010-02-19 11:34  gaede
+
+	* ChangeLog, doc/release.notes: ------- version v00-17-02
+
+2010-02-19 11:10  gaede
+
+	* CMakeLists.txt, src/CMakeLists.txt: made compatible with MacOS
+	  ----- v00-12-02 ---------
+
+2010-02-19 10:09  gaede
+
+	* Analysis/MarlinKinfit/src/JetFitObject.cc,
+	  Analysis/MarlinKinfit/src/PhotonFitObjectPxyg.cc: added namespace
+	  std:: to isinf() and isnan()
+
 2010-02-09 14:44  engels
 
 	* CMakeLists.txt, doc/release.notes: -------- v00-17-01 ----------

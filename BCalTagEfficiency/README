@@ -1,0 +1,16 @@
+This processor simulates the expected BeamCal response 
+to single high energetic electrons, positrons and photons 
+above the energy density from pair background.
+
+It currently takes the MCParticlesSkimmed, tracks them to the BeamCal,
+looks up the local background energy density and calculates the 
+corresponding efficiency. A new collection of ReconstructedParticles
+is created either with: 
+- all e/gamma reaching the BCAL  (detectAll == 1)
+- those passing passing a random number based acceptance-rejection 
+  procedure                      (detectAll == 0)
+
+The efficiency for each particle can be accessed via
+ReconstructedParticle::getGoodnessOfPID()
+
+In addition, a root tree is written out for detailed studies.

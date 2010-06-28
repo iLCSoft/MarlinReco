@@ -18,7 +18,7 @@ V0Finder aV0Finder ;
 
 
 V0Finder::V0Finder() : Processor("V0Finder") {
-
+  
   _description = "V0 Finder Processor " ;
   
   registerInputCollection(LCIO::TRACK,
@@ -26,19 +26,19 @@ V0Finder::V0Finder() : Processor("V0Finder") {
 			  "Name of input collection of reconstructed particles",
 			  _trackColName,
 			  std::string("LDCTracks"));
-
+  
   registerOutputCollection(LCIO::RECONSTRUCTEDPARTICLE,
-			  "RecoParticleCollection",
-			  "Name of output collection of reconstructed particles",
-			  _recoPartColName,
-			  std::string("V0RecoParticles"));
-
+			   "RecoParticleCollection",
+			   "Name of output collection of reconstructed particles",
+			   _recoPartColName,
+			   std::string("V0RecoParticles"));
+  
   registerOutputCollection(LCIO::VERTEX,
-			  "VertexCollection",
-			  "Name of output collection of neutral vertices",
-			  _vertexColName,
-			  std::string("V0Vertices"));
-
+			   "VertexCollection",
+			   "Name of output collection of neutral vertices",
+			   _vertexColName,
+			   std::string("V0Vertices"));
+  
 //   std::vector<float> rVertCut;
 //   rVertCut.push_back(14.);
 //   rVertCut.push_back(60.);
@@ -200,6 +200,21 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	    energyV0 = energy1 + energy2;	  
 	    float massL0 = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
 	  
+           // Testing L0bar hypothesis                                             
+            if (charge1>0) {
+              energy1 = sqrt(pp1*pp1+MASSPion*MASSPion);
+              energy2 = sqrt(pp2*pp2+MASSProton*MASSProton);
+            }
+            else {
+              energy1 = sqrt(pp1*pp1+MASSProton*MASSProton);
+              energy2 = sqrt(pp2*pp2+MASSPion*MASSPion);
+            }
+            energyV0 = energy1 + energy2;
+            float massL0bar = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-moment\
+um[1]*momentum[1]-momentum[2]*momentum[2]);
+
+
+
 	    // Testing photon hypothesis	  
 	    energyV0 = pp1 + pp2;
 	    float massGamma = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
@@ -207,22 +222,42 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	    float deltaK0 = fabs(massK0 - MASSK0S);
 	    float deltaL0 = fabs(massL0 - MASSLambda0);
 	    float deltaGm = fabs(massGamma - MASSGamma);
+
+	    float deltaL0bar = fabs(massL0bar - MASSLambda0);
 	    
 	    int code = 22;
 	    bool massCondition = false;
 
-	    if (deltaGm<deltaL0&&deltaGm<deltaK0) {
-	      code = 22;
-	      massCondition = deltaGm < _deltaMassGamma;
-	    }
-	    else if (deltaK0<deltaL0) {
-	      code = 310;
-	      massCondition = deltaK0 < _deltaMassK0S;
-	    }
-	    else {
-	      code = 3122;
-	      massCondition = deltaL0 < _deltaMassL0;
-	    }
+           if (deltaGm<deltaL0&&deltaGm<deltaK0&&deltaGm<deltaL0bar) {
+              code = 22;
+              massCondition = deltaGm < _deltaMassGamma;
+            }
+            else if (deltaK0<deltaL0 && deltaK0<deltaL0bar) {
+              code = 310;
+              massCondition = deltaK0 < _deltaMassK0S;
+            }
+            else{
+              if (deltaL0<deltaL0bar ) {
+                code = 3122;
+                massCondition = deltaL0 < _deltaMassL0;
+              }else{
+                code = -3122;
+                massCondition = deltaL0bar < _deltaMassL0;
+              }
+            }
+
+// 	    if (deltaGm<deltaL0&&deltaGm<deltaK0) {
+// 	      code = 22;
+// 	      massCondition = deltaGm < _deltaMassGamma;
+// 	    }
+// 	    else if (deltaK0<deltaL0) {
+// 	      code = 310;
+// 	      massCondition = deltaK0 < _deltaMassK0S;
+// 	    }
+// 	    else {
+// 	      code = 3122;
+// 	      massCondition = deltaL0 < _deltaMassL0;
+// 	    }
 
 	    if (massCondition) {
 	      TrackPair * trkPair = new TrackPair();

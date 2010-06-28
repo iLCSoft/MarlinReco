@@ -8,6 +8,10 @@
  --------
       - added new package Tracking/KinkFinder  (M.Thomson, J.Marshall)
 
+      - moved sub-package BCalTagEfficiency from MarlinAna to ./Analysis
+
+      - Tracking/V0Finder : fix for Lambda0bar (M.Thomson)
+
       - improved compatibility for gcc 4.x
         - g2c/gfortran in sl5 with gcc 4.1.1
         - fixed CaloDigi/LDCCaloDigi/src/CHT_helper.cc for gcc 4.4.3

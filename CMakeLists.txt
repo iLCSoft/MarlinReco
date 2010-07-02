@@ -64,6 +64,10 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 
 # project dependencies
 SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil GEAR LCIO CLHEP GSL CERNLIB RAIDA ROOT" )
+
+# MathMore library from ROOT is required for BCalTagEfficiency
+SET( ROOT_USE_COMPONENTS MathMore )
+
 IF(APPLE)
    SET( ${PROJECT_NAME}_DEPENDS "${${PROJECT_NAME}_DEPENDS} CED" )
 ENDIF(APPLE)

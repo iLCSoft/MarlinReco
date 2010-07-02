@@ -57,6 +57,20 @@ ENDFOREACH()
 ####################################################################################################
 
 
+
+####################################################################################################
+# BCalTagEfficiency
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../Analysis/BCalTagEfficiency/src BCalTagEfficiency_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${BCalTagEfficiency_cxx_srcs} PROPERTIES
+    COMPILE_FLAGS "-Wall" )
+
+SET( BCalTagEfficiency_f77_srcs ../Analysis/BCalTagEfficiency/Fortran/track-to-bcal.F )
+
+SET( BCalTagEfficiency_srcs ${BCalTagEfficiency_cxx_srcs} ${BCalTagEfficiency_f77_srcs} )
+
 ####################################################################################################
 # EventShapes
 

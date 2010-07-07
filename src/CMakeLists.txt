@@ -442,6 +442,10 @@ IF( "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.6 )
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > polar.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > primary.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > theta.mod.proxy
+
+        # BCalTagEfficiency fix
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > sine.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > "...).mod.proxy"
     
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         COMMENT "Fixing fortran bug for cmake 2.4 versions..." VERBATIM )

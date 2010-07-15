@@ -38,7 +38,7 @@ class Tk_Hit_Bank
   float getY(int i){return hit_bank[i].y;};
   float getZ(int i){return hit_bank[i].z;};
   float getEnergy(int i){return hit_bank[i].energy;};
-  int   getSubdetectorID(int i){return hit_bank[i].subdetector_ID;};;
+  int   getSubdetectorID(int i){return hit_bank[i].subdetector_ID;};
   int   getTrackID(int i){return hit_bank[i].track_ID;};
   int   getPntToFirstExclusion(int i){return hit_bank[i].pointer_to_first_exclusion;};
   int   getNExclusion(int i){return hit_bank[i].number_of_exclusions;};

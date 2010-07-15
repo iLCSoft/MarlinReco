@@ -25,6 +25,7 @@ SET( MarlinReco_PKGS
     "TrackDigi/FTDDigi"
     "TrackDigi/ETDDigi"
     "TrackDigi/VTXDigi"
+    "TrackDigi/FPCCDDigi"
     "Tracking/BrahmsTracking"
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
@@ -297,6 +298,18 @@ SET_SOURCE_FILES_PROPERTIES( ${VTXDigi_cxx_srcs} PROPERTIES
     COMPILE_FLAGS "-Wall -ansi -pedantic" )
 
 SET( VTXDigi_srcs ${VTXDigi_cxx_srcs} )
+
+####################################################################################################
+# FPCCDDigi
+
+# cxx sources
+AUX_SOURCE_DIRECTORY( ../TrackDigi/FPCCDDigi/src FPCCDDigi_cxx_srcs )
+
+SET_SOURCE_FILES_PROPERTIES( ${FPCCDDigi_cxx_srcs} PROPERTIES
+    # require proper c++
+    COMPILE_FLAGS "-Wall -ansi -pedantic" )
+
+SET( FPCCDDigi_srcs ${FPCCDDigi_cxx_srcs} )
 
 ####################################################################################################
 # BrahmsTracking

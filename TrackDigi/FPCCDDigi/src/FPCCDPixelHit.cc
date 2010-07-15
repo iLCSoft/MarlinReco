@@ -1,6 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "FPCCDPixelHit.h"
 #include <iostream>
+#include <assert.h>
 #include <EVENT/MCParticle.h>
 
 #define SHIFT_LADDER 0  // 5 bits

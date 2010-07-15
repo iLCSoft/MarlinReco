@@ -144,29 +144,43 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
-
-SET( FORTRAN_LIB FORTRAN_LIB-NOTFOUND )
-FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} PATHS
-
+IF( NOT BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS
         # 64 bit paths
         /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
         /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
         /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
         /usr/lib64
+    )
+ENDIF()
 
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
         # 32 bit paths
         /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
         /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
         /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+)
 
+IF( BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
         /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
         /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
         /usr/lib/gcc/x86_64-redhat-linux/4.1.1/32   # SL5 64bit 32bit compatible
+        /usr/lib
+    )
+ENDIF()
 
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
         /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
         /usr/osxws/lib                              # OSX
-        /usr/lib
 )
+
+MESSAGE( STATUS "FORTRAN_LIB_PATHS: ${FORTRAN_LIB_PATHS}" )
+
+SET( FORTRAN_LIB FORTRAN_LIB-NOTFOUND )
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} PATHS ${FORTRAN_LIB_PATHS} NO_DEFAULT_PATH )
+# if previous find fails, try to find in system paths..
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} )
 
 IF( NOT FORTRAN_LIB )
     MESSAGE( FATAL_ERROR "failed to find ${FORTRAN_LIBNAME} library!!" )

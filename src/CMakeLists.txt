@@ -25,7 +25,6 @@ SET( MarlinReco_PKGS
     "TrackDigi/FTDDigi"
     "TrackDigi/ETDDigi"
     "TrackDigi/VTXDigi"
-    "TrackDigi/FPCCDDigi"
     "Tracking/BrahmsTracking"
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"

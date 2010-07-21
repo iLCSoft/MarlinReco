@@ -3,6 +3,19 @@
  release notes for MarlinReco
 
 ===============================
+
+ -----------
+| v00-18-01 |
+ -----------
+    - bug fixes for fortran in 64 bit:
+        - replaced Tracking/BrahmsTracking/include/cfortran.h with newer version (4.4)
+            - same version as in ROOT 5.26.00b
+
+        - bug in CMakeLists.txt fixed which was overwriting compiler flag -Df2cFortran
+            with newer version of cfortran.h (4.4) the -Df2cFortran compiler flag changed to:
+                -Dg77Fortran    # for g77
+                -DgFortran      # for gfortran
+
  --------
 | v00-18 |
  --------

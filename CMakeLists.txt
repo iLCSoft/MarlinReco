@@ -14,12 +14,20 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 ########################################################
 
 
-# you can change the fortran compiler by setting the variable
-# FC in your shell _before_ calling cmake !!
-# e.g.  $ export FC=gfortran
-#       $ cmake ....
-#       $ make install
-SET( CMAKE_Fortran_COMPILER_INIT g77 )
+# due to the incompatibility between g77/gfortran on 32/64bit machines
+# it is enforced to set the fortran compiler before running cmake
+IF( NOT DEFINED ENV{FC} )
+    MESSAGE( FATAL_ERROR "please set FC before running cmake, e.g.: export FC=g77" )
+ENDIF()
+
+# fix for lcio: all c++ sources need to be compiled with -Wno-long-long
+SET( ENV{CXXFLAGS} "-Wno-long-long $ENV{CXXFLAGS}" )
+
+# require proper c and c++
+# -pedantic cannot be set globally because it cannot be removed for certain
+# source files only: grep pedantic src/CMakeLists.txt
+SET( ENV{CXXFLAGS} "-Wall -ansi $ENV{CXXFLAGS}" ) # FIXME -pedantic
+SET( ENV{CFLAGS} "-Wall -ansi -pedantic $ENV{CFLAGS}" )
 
 ####################################################################################################
 # User section: modify as needed
@@ -31,31 +39,28 @@ PROJECT( MarlinReco C CXX Fortran )
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 0 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 18 )
-SET( ${PROJECT_NAME}_PATCH_LEVEL 0 )
+SET( ${PROJECT_NAME}_PATCH_LEVEL 1 )
 
 
 ### SETTINGS #################################################################
 
-# fortran flags
-SET( CMAKE_Fortran_FLAGS "-ff2c" CACHE STRING
-    "Flags for Fortran compiler." )
-# gfortran does not support -Wno-globals
+
+SET( CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -DNDEBUG" )
+SET( CMAKE_Fortran_FLAGS_MINSIZEREL "${CMAKE_Fortran_FLAGS_MINSIZEREL} -DNDEBUG" )
+
 GET_FILENAME_COMPONENT( FORTRAN_COMPILER "${CMAKE_Fortran_COMPILER}" NAME_WE )
 IF( FORTRAN_COMPILER STREQUAL "g77" )
-    SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" )
-    SET( G2C_LIBNAME "g2c" )
+    SET( FORTRAN_LIBNAME "g2c" )
+    SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" ) # -ff2c ?
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dg77Fortran" ) # -Df2cFortran
+
 ENDIF()
 IF( FORTRAN_COMPILER STREQUAL "gfortran" )
-    SET( G2C_LIBNAME "gfortran" )
+    SET( FORTRAN_LIBNAME "gfortran" )
+    SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy" )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DgFortran" )
 ENDIF()
-SET( CMAKE_Fortran_FLAGS_DEBUG "-g" CACHE STRING
-    "Flags used by the compiler during debug builds." )
-SET( CMAKE_Fortran_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING
-    "Flags used by the compiler during release minsize builds." )
-SET( CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING
-    "Flags used by the compiler during Release with Debug Info builds." )
-SET( CMAKE_Fortran_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING
-    "Flags used by the compiler during release builds (/MD /Ob1 /Oi /Ot /Oy /Gs will produce slightly less optimized but smaller files" )
+
 
 # project options
 OPTION( BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON )
@@ -83,36 +88,6 @@ IF( CMAKE_INSTALL_PREFIX STREQUAL "/usr/local" )
     SET( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}" )
 ENDIF()
 
-
-#---------------- libg2c/gfortran issues ---------------------------------
-# if somehow the library is in a different location you can tell cmake to
-# also search in other locations for finding libraries.
-# this can be done by setting a shell environment variable:
-# $ export CMAKE_LIBRARY_PATH="/bla/bla:/foo/bar"
-# or by calling:
-# $ cmake -DCMAKE_LIBRARY_PATH="/bla/bla;/foo/bar" ...
-# notice the path's separators! ( ':' for shell and ';' for cmake !! )
-IF( BUILD_32BIT_COMPATIBLE )
-    SET( G2C_LIB_PATHS
-        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
-        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
-        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
-        /usr/lib/gcc/x86_64-redhat-linux/4.1.1/32   # SL5 64bit 32bit compatible
-        /usr/osxws/lib                              # OSX
-        /usr/lib
-    )
-ELSE()
-    SET( G2C_LIB_PATHS
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
-        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
-        /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
-        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
-        /usr/osxws/lib                              # OSX
-        /usr/lib64
-    )
-ENDIF()
 
 #---------------- 32/64 bit issues ---------------------------------------
 IF( CMAKE_SIZEOF_VOID_P EQUAL 4 )

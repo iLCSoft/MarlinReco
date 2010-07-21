@@ -25,6 +25,7 @@ SET( MarlinReco_PKGS
     "TrackDigi/FTDDigi"
     "TrackDigi/ETDDigi"
     "TrackDigi/VTXDigi"
+    "TrackDigi/FPCCDDigi"
     "Tracking/BrahmsTracking"
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
@@ -37,382 +38,57 @@ SET( MarlinReco_PKGS
 
 
 ####################################################################################################
-### INCLUDES
+### INCLUDES and SOURCES
 ####################################################################################################
 
 FOREACH( pkg ${MarlinReco_PKGS} )
     MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
-    INCLUDE_DIRECTORIES( "../${pkg}/include" )
-    INSTALL( DIRECTORY "../${pkg}/include" DESTINATION .
+    INCLUDE_DIRECTORIES( BEFORE "${PROJECT_SOURCE_DIR}/${pkg}/include" )
+    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/${pkg}/include" DESTINATION .
         PATTERN "*~" EXCLUDE
         PATTERN "*CVS*" EXCLUDE
         PATTERN "*/.svn*" EXCLUDE
-        )
+    )
+
+    AUX_SOURCE_DIRECTORY( ${PROJECT_SOURCE_DIR}/${pkg}/src MarlinReco_cxx_srcs )
+
 ENDFOREACH()
 
-
-
-####################################################################################################
-### SOURCES
-####################################################################################################
-
-
-
-####################################################################################################
-# BCalTagEfficiency
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/BCalTagEfficiency/src BCalTagEfficiency_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${BCalTagEfficiency_cxx_srcs} PROPERTIES
-    COMPILE_FLAGS "-Wall" )
-
-SET( BCalTagEfficiency_f77_srcs ../Analysis/BCalTagEfficiency/Fortran/track-to-bcal.F )
-
-SET( BCalTagEfficiency_srcs ${BCalTagEfficiency_cxx_srcs} ${BCalTagEfficiency_f77_srcs} )
-
-####################################################################################################
-# EventShapes
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/EventShapes/src EventShapes_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${EventShapes_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( EventShapes_srcs ${EventShapes_cxx_srcs} )
-
-####################################################################################################
-# MarlinKinFit
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/MarlinKinfit/src MarlinKinfit_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${MarlinKinfit_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( MarlinKinfit_srcs ${MarlinKinfit_cxx_srcs} )
-
-
-####################################################################################################
-# RecoMCTruthLink
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/RecoMCTruthLink/src RecoMCTruthLink_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${RecoMCTruthLink_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( RecoMCTruthLink_srcs ${RecoMCTruthLink_cxx_srcs} )
-
-
-####################################################################################################
-# SatoruJetFinder
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/SatoruJetFinder/src SatoruJetFinder_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${SatoruJetFinder_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-# fortran sources
-FILE( GLOB SatoruJetFinder_f77_srcs ../Analysis/SatoruJetFinder/src/fortsrc/*.f )
-
-SET( SatoruJetFinder_srcs ${SatoruJetFinder_cxx_srcs} ${SatoruJetFinder_f77_srcs} )
-
-
-####################################################################################################
-# ZFinder
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Analysis/ZFinder/src ZFinder_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${ZFinder_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( ZFinder_srcs ${ZFinder_cxx_srcs} )
-
-
-####################################################################################################
-# AbsCalibration
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Calibration/AbsCalibration/src AbsCalibration_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${AbsCalibration_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( AbsCalibration_srcs ${AbsCalibration_cxx_srcs} )
-
-
-####################################################################################################
-# LDCCaloDigi
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../CaloDigi/LDCCaloDigi/src LDCCaloDigi_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${LDCCaloDigi_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( LDCCaloDigi_srcs ${LDCCaloDigi_cxx_srcs} )
-
-####################################################################################################
-# ClusterCheater
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Clustering/ClusterCheater/src  ClusterCheater_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( ClusterCheater_srcs ${ClusterCheater_cxx_srcs} )
-
-####################################################################################################
-# ClusterCheater5_3
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Clustering/ClusterCheater5_3/src  ClusterCheater5_3_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${ClusterCheater5_3_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( ClusterCheater5_3_srcs ${ClusterCheater5_3_cxx_srcs} )
-
-####################################################################################################
-# NNClustering
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Clustering/NNClustering/src NNClustering_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${NNClustering_cxx_srcs} PROPERTIES
-    # require proper c++
-    # FIXME -pedantic flag crashes under sl4
-    COMPILE_FLAGS "-Wall -ansi" )
-
-SET( NNClustering_srcs ${NNClustering_cxx_srcs} )
-
-####################################################################################################
-# TrackwiseClustering
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Clustering/TrackwiseClustering/src TrackwiseClustering_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${TrackwiseClustering_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( TrackwiseClustering_srcs ${TrackwiseClustering_cxx_srcs} )
-
-####################################################################################################
-# PhotonFinderKit
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Clustering/PhotonFinderKit/src PhotonFinderKit_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${PhotonFinderKit_cxx_srcs} PROPERTIES
-    # require proper c++
-    # FIXME -pedantic flag crashes under sl4
-    COMPILE_FLAGS "-Wall -ansi" )
-
-SET( PhotonFinderKit_srcs ${PhotonFinderKit_cxx_srcs} )
-
-####################################################################################################
-# Wolf
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Pflow/Wolf/src Wolf_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${Wolf_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( Wolf_srcs ${Wolf_cxx_srcs} )
-
-####################################################################################################
-# TrackBasedPFlow
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Pflow/TrackBasedPFlow/src TrackBasedPFlow_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${TrackBasedPFlow_cxx_srcs} PROPERTIES
-    # require proper c++
-    # FIXME -pedantic flag crashes under sl4
-    COMPILE_FLAGS "-Wall -ansi" )
-
-SET( TrackBasedPFlow_srcs ${TrackBasedPFlow_cxx_srcs} )
-
-####################################################################################################
-# FTDDigi
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../TrackDigi/FTDDigi/src FTDDigi_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${FTDDigi_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( FTDDigi_srcs ${FTDDigi_cxx_srcs} )
-
-####################################################################################################
-# ETDDigi
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../TrackDigi/ETDDigi/src ETDDigi_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${ETDDigi_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( ETDDigi_srcs ${ETDDigi_cxx_srcs} )
-
-####################################################################################################
-# TPCDigi
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../TrackDigi/TPCDigi/src TPCDigi_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${TPCDigi_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( TPCDigi_srcs ${TPCDigi_cxx_srcs} )
-
-####################################################################################################
-# VTXDigi
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../TrackDigi/VTXDigi/src VTXDigi_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${VTXDigi_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( VTXDigi_srcs ${VTXDigi_cxx_srcs} )
-
-####################################################################################################
-# BrahmsTracking
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src BrahmsTracking_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic"
-    # required for the fortran interface to work
-    COMPILE_FLAGS "-Df2cFortran" )
-
-# c sources
-AUX_SOURCE_DIRECTORY( ../Tracking/BrahmsTracking/src/C BrahmsTracking_c_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${BrahmsTracking_c_srcs} PROPERTIES
-    # require proper c
-    COMPILE_FLAGS "-ansi -pedantic" )
-
-# fortran sources
-FILE( GLOB BrahmsTracking_f77_srcs ../Tracking/BrahmsTracking/src/f77/*.F )
-
-SET( BrahmsTracking_srcs ${BrahmsTracking_cxx_srcs} ${BrahmsTracking_c_srcs} ${BrahmsTracking_f77_srcs} )
-
-####################################################################################################
-# FullLDCTracking
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/FullLDCTracking/src FullLDCTracking_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${FullLDCTracking_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( FullLDCTracking_srcs ${FullLDCTracking_cxx_srcs} )
-
-####################################################################################################
-# SiliconTracking
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/SiliconTracking/src SiliconTracking_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${SiliconTracking_cxx_srcs} PROPERTIES
-    # require proper c++
-    # FIXME -pedantic
-    COMPILE_FLAGS "-Wall -ansi" )
-
-SET( SiliconTracking_srcs ${SiliconTracking_cxx_srcs} )
-
-####################################################################################################
-# TrackCheater
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/TrackCheater/src TrackCheater_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${TrackCheater_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( TrackCheater_srcs ${TrackCheater_cxx_srcs} )
-
-####################################################################################################
-# V0Finder
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/V0Finder/src V0Finder_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${V0Finder_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( V0Finder_srcs ${V0Finder_cxx_srcs} )
-
-####################################################################################################
-# KinkFinder
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../Tracking/KinkFinder/src KinkFinder_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${KinkFinder_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( KinkFinder_srcs ${KinkFinder_cxx_srcs} )
-
-
-####################################################################################################
-# PFOID
-
-# cxx sources
-AUX_SOURCE_DIRECTORY( ../PFOID/src PFOID_cxx_srcs )
-
-SET_SOURCE_FILES_PROPERTIES( ${PFOID_cxx_srcs} PROPERTIES
-    # require proper c++
-    COMPILE_FLAGS "-Wall -ansi -pedantic" )
-
-SET( PFOID_srcs ${PFOID_cxx_srcs} )
-
+# C sources
+AUX_SOURCE_DIRECTORY( ${PROJECT_SOURCE_DIR}/Tracking/BrahmsTracking/src/C MarlinReco_c_srcs )
+
+# Fortran sources
+FILE( GLOB SatoruJetFinder_f77_srcs ${PROJECT_SOURCE_DIR}/Analysis/SatoruJetFinder/src/fortsrc/*.f )
+FILE( GLOB BrahmsTracking_f77_srcs ${PROJECT_SOURCE_DIR}/Tracking/BrahmsTracking/src/f77/*.F )
+LIST( APPEND MarlinReco_f77_srcs "${PROJECT_SOURCE_DIR}/Analysis/BCalTagEfficiency/Fortran/track-to-bcal.F" )
+LIST( APPEND MarlinReco_f77_srcs ${SatoruJetFinder_f77_srcs} )
+LIST( APPEND MarlinReco_f77_srcs ${BrahmsTracking_f77_srcs} )
+
+
+#STRING( REPLACE "-pedantic" "" CXX_FLAGS_NOT_PEDANTIC ${CMAKE_CXX_FLAGS} )
+#MESSAGE( STATUS "CXX_FLAGS_NOT_PEDANTIC: ${CXX_FLAGS_NOT_PEDANTIC}" )
+SET_SOURCE_FILES_PROPERTIES( ${MarlinReco_cxx_srcs} PROPERTIES COMPILE_FLAGS "-pedantic" )
+
+# FIXME sources which do not compile with -pedantic
+SET_SOURCE_FILES_PROPERTIES(
+    "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/EMShowerFinder.cc"
+    "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/KITutil.cc"
+    "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/KIT.cc"
+    "${PROJECT_SOURCE_DIR}/Pflow/TrackBasedPFlow/src/TrackBasedPFlow.cc"
+    "${PROJECT_SOURCE_DIR}/Clustering/NNClustering/src/NNClusterProcessor.cc"
+    "${PROJECT_SOURCE_DIR}/Tracking/SiliconTracking/src/SiliconTracking.cc"
+    "${PROJECT_SOURCE_DIR}/Tracking/KinkFinder/src/KinkFinder.cc"
+    PROPERTIES COMPILE_FLAGS ""
+)
 
 ####################################################################################################
 ### LIBRARY
 ####################################################################################################
 
-# set library sources
-SET( lib_srcs )
-FOREACH( pkgDir ${MarlinReco_PKGS} )
-    # extract basename from dir (e.g. Analysis/EventShapes -> EventShapes)
-    STRING( REGEX REPLACE ".*/([^ ]+)" "\\1" pkgName ${pkgDir} )
-    # all c++ sources need -Wno-long-long flag (due to lcio)
-    SET_SOURCE_FILES_PROPERTIES( ${${pkgName}_cxx_srcs} PROPERTIES COMPILE_FLAGS "-Wno-long-long" )
-    SET( lib_srcs ${lib_srcs} ${${pkgName}_srcs} )
-ENDFOREACH()
+#MESSAGE( STATUS "MarlinReco_cxx_srcs: ${MarlinReco_cxx_srcs}" )
 
 # create library
-ADD_LIBRARY( lib_${PROJECT_NAME} ${lib_srcs} )
+ADD_LIBRARY( lib_${PROJECT_NAME} ${MarlinReco_cxx_srcs} ${MarlinReco_c_srcs} ${MarlinReco_f77_srcs} )
 
 # workaround for fortran cmake bug in cmake 2.4.x versions
 IF( "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.6 )
@@ -442,6 +118,10 @@ IF( "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.6 )
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > polar.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > primary.mod.proxy
         COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > theta.mod.proxy
+
+        # BCalTagEfficiency fix
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > sine.mod.proxy
+        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > "...).mod.proxy"
     
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         COMMENT "Fixing fortran bug for cmake 2.4 versions..." VERBATIM )
@@ -464,21 +144,53 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
-SET( G2C_LIB G2C_LIB-NOTFOUND )
-# prevent static library to be detected instead of shared one
-FIND_LIBRARY( G2C_LIB NAMES ${G2C_LIBNAME} PATHS ${G2C_LIB_PATHS} NO_DEFAULT_PATH )
-# if previous find fails, try to find in system paths..
-FIND_LIBRARY( G2C_LIB NAMES ${G2C_LIBNAME} )
-
-IF( NOT G2C_LIB )
-    MESSAGE( FATAL_ERROR "Check for lib${G2C_LIBNAME}: failed to find ${G2C_LIBNAME} library!!" )
-ELSE()
-    MESSAGE( STATUS "Check for lib${G2C_LIBNAME}: ${G2C_LIB}" )
+IF( NOT BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS
+        # 64 bit paths
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
+        /usr/lib64
+    )
 ENDIF()
-MARK_AS_ADVANCED( G2C_LIB )
+
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        # 32 bit paths
+        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+)
+
+IF( BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1/32   # SL5 64bit 32bit compatible
+        /usr/lib
+    )
+ENDIF()
+
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
+        /usr/osxws/lib                              # OSX
+)
+
+MESSAGE( STATUS "FORTRAN_LIB_PATHS: ${FORTRAN_LIB_PATHS}" )
+
+SET( FORTRAN_LIB FORTRAN_LIB-NOTFOUND )
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} PATHS ${FORTRAN_LIB_PATHS} NO_DEFAULT_PATH )
+# if previous find fails, try to find in system paths..
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} )
+
+IF( NOT FORTRAN_LIB )
+    MESSAGE( FATAL_ERROR "failed to find ${FORTRAN_LIBNAME} library!!" )
+ELSE()
+    MESSAGE( STATUS "Check for lib${FORTRAN_LIBNAME}: ${FORTRAN_LIB}" )
+ENDIF()
+MARK_AS_ADVANCED( FORTRAN_LIB )
 
 # link MarlinReco library to libg2c/libgfortran
-TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${G2C_LIB} )
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${FORTRAN_LIB} )
 IF(APPLE)
   TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} streamlog )
 ENDIF(APPLE)

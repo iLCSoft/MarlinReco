@@ -72,6 +72,7 @@ class V0Finder : public Processor {
  protected:
 
   void Sorting( TrackPairVec & trkPairVec );
+  float Rmin( Track* track );
   
   int _nRun ;
   int _nEvt ;
@@ -94,6 +95,12 @@ class V0Finder : public Processor {
   float _deltaMassK0S;
   float _deltaMassL0;
   float _deltaMassGamma;
+
+  float _rxyCutGamma;
+  float _rxyCutK0S;
+  float _rxyCutLambda;
+
+  float _minTrackHitRatio;
 
 } ;
 

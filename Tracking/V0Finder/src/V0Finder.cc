@@ -61,6 +61,10 @@ V0Finder::V0Finder() : Processor("V0Finder") {
 			     _dVertCut,
 			     float(1.5));
 
+  registerProcessorParameter("MinimumTrackHitRatio",
+			     "Minimum ratio of inner track hit radius to reconstructed vertex radius",
+			     _minTrackHitRatio,
+			     float(0.7));
 
   registerProcessorParameter("MassRangeGamma",
 			     "Maximal deviation in mass for photon candidate",
@@ -77,13 +81,27 @@ V0Finder::V0Finder() : Processor("V0Finder") {
 			     _deltaMassL0,
 			     float(0.008));
 
+  registerProcessorParameter("RxyCutGamma",
+			     "Minimum radius in xy plane for photon candidate",
+			     _rxyCutGamma,
+			     float(10.0));
+  registerProcessorParameter("RxyCutK0S",
+			     "Minimum radius in xy plane for K0S candidate",
+			     _rxyCutK0S,
+			     float(30.0));
+  registerProcessorParameter("RxyCutGamma",
+			     "Minimum radius in xy plane for Lambda0 candidate",
+			     _rxyCutLambda,
+			     float(50.0));
+
+
 
 }
 
 void V0Finder::init() {
 
-  MASSProton = 0.93827203;
-  MASSPion   = 0.13957018;
+  MASSProton  = 0.93827203;
+  MASSPion    = 0.13957018;
   MASSLambda0 = 1.115683;
   MASSK0S     = 0.497648;
   MASSGamma   = 0;
@@ -178,8 +196,15 @@ void V0Finder::processEvent( LCEvent * evt ) {
 // 	    }
 // 	  }
 
-	  
 
+	  float r1 = firstTrack->getRadiusOfInnermostHit();
+	  float r2 = secondTrack->getRadiusOfInnermostHit();
+
+	  // check to ensure there are no hits on tracks at radii significantly smaller than reconstructed vertex
+	  // TO DO: should be done more precisely using helices
+	  if(r1/radV0<_minTrackHitRatio)continue;
+	  if(r2/radV0<_minTrackHitRatio)continue;
+	 
 	  if (distV0 < _dVertCut && radV0 > _rVertCut ) { // cut on vertex radius and track misdistance
 	    
 	    // Testing K0 hypothesis
@@ -222,8 +247,11 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
 	    float deltaK0 = fabs(massK0 - MASSK0S);
 	    float deltaL0 = fabs(massL0 - MASSLambda0);
 	    float deltaGm = fabs(massGamma - MASSGamma);
-
 	    float deltaL0bar = fabs(massL0bar - MASSLambda0);
+	    if(radV0<_rxyCutGamma )deltaGm    = 100000.;
+	    if(radV0<_rxyCutK0S   )deltaK0    = 100000.;
+	    if(radV0<_rxyCutLambda)deltaL0    = 100000.;
+	    if(radV0<_rxyCutLambda)deltaL0bar = 100000.;
 	    
 	    int code = 22;
 	    bool massCondition = false;
@@ -246,20 +274,15 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
               }
             }
 
-// 	    if (deltaGm<deltaL0&&deltaGm<deltaK0) {
-// 	      code = 22;
-// 	      massCondition = deltaGm < _deltaMassGamma;
-// 	    }
-// 	    else if (deltaK0<deltaL0) {
-// 	      code = 310;
-// 	      massCondition = deltaK0 < _deltaMassK0S;
-// 	    }
-// 	    else {
-// 	      code = 3122;
-// 	      massCondition = deltaL0 < _deltaMassL0;
-// 	    }
-
 	    if (massCondition) {
+	      bool ok = true;
+	      if(r1/radV0<_minTrackHitRatio|| r2/radV0<_minTrackHitRatio){
+		r1 = this->Rmin(firstTrack);
+		r2 = this->Rmin(secondTrack);
+		if(r1/radV0<_minTrackHitRatio || r2/radV0<_minTrackHitRatio)ok = false;
+		//std::cout << " V0X: " << ok << " r = " << radV0 << " r1 = " << r1 << " r2 = " << r2 << std::endl;
+	      }
+	      if(!ok)continue;
 	      TrackPair * trkPair = new TrackPair();
 	      trkPair->setFirstTrack( firstTrack );
 	      trkPair->setSecondTrack( secondTrack );
@@ -268,6 +291,7 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
 	      trkPair->setMomentum( momentum );	    
 	      trkPair->setCode( code );
 	      trkPairs.push_back( trkPair );
+	      
 	    }
 	    else {
 // 	      std::cout << "Rejected vertex : V = (" 
@@ -408,5 +432,44 @@ void V0Finder::Sorting( TrackPairVec & trkPairVec ) {
 	    trkPairVec[j+1] = Temp;
 	  }
       }  
+
+}
+
+float V0Finder::Rmin( Track* track ) {
+
+   // find track extrema
+
+  float rmin = 1000000.;
+  TrackerHitVec hitvec = track->getTrackerHits();
+  int nhits = (int)hitvec.size();
+  float zmax =-99999.;
+  float zmin =99999.;
+  for(int ih =0;ih<nhits;++ih){
+    float z = (float)hitvec[ih]->getPosition()[2];
+    if(z<zmin)zmin=z;
+    if(z>zmax)zmax=z;
+  }
+  float tanLambda = track->getTanLambda();
+  //  std::cout << " V0 Check : " << tanLambda << " z = " << zmin << " - " << zmax << std::endl; 
+  float zzz = zmin;
+  if(tanLambda<0)zzz=zmax;
+
+  float zstart = 0;
+  if(fabs(zmin)<fabs(zmax))zstart = zmin;
+  if(fabs(zmax)<fabs(zmin))zstart = zmax;
+  //std::cout << " V0 Check " << zstart << " - " << zzz << std::endl;
+  for(int ih =0;ih<nhits;++ih){
+    float z = (float)hitvec[ih]->getPosition()[2];
+    if(fabs(z-zstart)<250){
+      float x = (float)hitvec[ih]->getPosition()[0];
+      float y = (float)hitvec[ih]->getPosition()[1];
+      float r2 = x*x+y*y;
+      float  r = sqrt(r2);
+      if(r<rmin)rmin = r;
+    }
+    
+  }
+  
+  return rmin;
 
 }

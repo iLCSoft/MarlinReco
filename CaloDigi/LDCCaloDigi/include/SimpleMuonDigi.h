@@ -52,6 +52,7 @@ class SimpleMuonDigi : public Processor {
 
   float _thresholdMuon;
   float _calibrCoeffMuon;
+  float _maxHitEnergyMuon;
 
 
 } ;

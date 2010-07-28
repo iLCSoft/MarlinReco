@@ -55,12 +55,17 @@ SimpleMuonDigi::SimpleMuonDigi() : Processor("SimpleMuonDigi") {
   registerProcessorParameter("MuonThreshold" , 
 			     "Threshold for Muon Hits in GeV" ,
 			     _thresholdMuon,
-			     (float)0.0);
+			     (float)0.025);
 
   registerProcessorParameter("CalibrMUON" , 
 			     "Calibration coefficients for MUON" ,
 			     _calibrCoeffMuon,
-			     (float)31.);
+			     (float)120000.);
+
+  registerProcessorParameter("MaxHitEnergyMUON", 
+			     "maximum hit energy for a MUON hit" ,
+			     _maxHitEnergyMuon,
+			     (float)2.0);
 }
 
 void SimpleMuonDigi::init() {
@@ -115,22 +120,19 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
       for (int j(0); j < numElements; ++j) {
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	float energy = hit->getEnergy();
-	
-	if (energy > _thresholdMuon) {
+	int cellid = hit->getCellID0();
+	int cellid1 = hit->getCellID1();
+	float calibr_coeff(1.);
+	calibr_coeff = _calibrCoeffMuon;
+	float hitEnergy = calibr_coeff*energy;
+	if(hitEnergy>_maxHitEnergyMuon)hitEnergy=_maxHitEnergyMuon;
+	if (hitEnergy > _thresholdMuon) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
-	  int cellid = hit->getCellID0();
-	  int cellid1 = hit->getCellID1();
-	  float calibr_coeff(1.);
-	  //int layer = idDecoder(hit)["K"];
-	  calibr_coeff = _calibrCoeffMuon;
 	  calhit->setCellID0(cellid);
 	  calhit->setCellID1(cellid1);
-	  calhit->setEnergy(calibr_coeff*energy);
+	  calhit->setEnergy(hitEnergy);
 	  calhit->setPosition(hit->getPosition());
-
 	  calhit->setType( CHT( CHT::muon, CHT::yoke, caloLayout ,  idDecoder(hit)["K-1"] ) );
-
-
 	  calhit->setRawHit(hit);
 	  muoncol->addElement(calhit);
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);

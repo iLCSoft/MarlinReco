@@ -1051,7 +1051,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   // make sure the hit is not smeared beyond the TPC Max DriftLength
   if( fabs(point->z()) > gearTPC.getMaxDriftLength() ) point->setZ( (fabs(point->z()) / point->z() ) * gearTPC.getMaxDriftLength() );
 
-  double pos[3] = {seed_hit->getX(),seed_hit->getY(),seed_hit->getZ()}; 
+  double pos[3] = {point->x(),point->y(),point->z()}; 
   trkHit->setPosition(pos);
   trkHit->setdEdx(seed_hit->getdEdx());
   trkHit->setType( 500 );

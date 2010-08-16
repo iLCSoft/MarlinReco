@@ -100,11 +100,16 @@ TauFinder::TauFinder() : Processor("TauFinder")
                               _isoE ,
                               (float)5.0) ;
   
-  registerProcessorParameter( "D0seed" ,
+  registerProcessorParameter( "D0seedmax" ,
                               "Limit on D0 for the track seeding the tau jet"  ,
-                              _D0seed ,
+                              _D0seedmax ,
                               (float)0.5) ;
-  
+
+  registerProcessorParameter( "D0seedmin" ,
+                              "Limit on D0 for the track seeding the tau jet"  ,
+                              _D0seedmin ,
+                              (float)1e-5) ;
+
   registerProcessorParameter( "ptseed" ,
                               "Minimum tranverse momentum of tau seed"  ,
                               _ptseed ,
@@ -233,6 +238,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	    neutraltracks++;
 	  LCRelationImpl *rel = new LCRelationImpl(taurec,tau[tp]);
 	  relationcol->addElement( rel );
+	  taurec->addParticle(tau[tp]);
 	}
       
       double pt_tau=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
@@ -245,16 +251,16 @@ void TauFinder::processEvent( LCEvent * evt )
 	mass_inv=sqrt(E*E-psquare);
      
       //check for inverse mass
-      if(mass_inv>_minv || mass_inv<-0.001 || chargedtracks>6 || chargedtracks==0)
+      if(mass_inv>_minv || mass_inv<-0.001 || chargedtracks>4 || chargedtracks==0)
 	{
 	  if(mass_inv>_minv)
 	    _fail_minv++;
 	  if(mass_inv<-0.001)
 	    _fail_minv_neg++;
-	  if(chargedtracks>6 || chargedtracks==0)
+	  if(chargedtracks>4 || chargedtracks==0)
 	    _fail_Qtr++;
 
-	  tauvec.erase(iterT);
+	  iterT=tauvec.erase(iterT);
 	  p--;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	    {
@@ -265,7 +271,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	    }
 	}
       else
-	iterT++;
+	++iterT;
       
       double q=1;
       int pdg=15;
@@ -321,7 +327,8 @@ void TauFinder::processEvent( LCEvent * evt )
 		  tau->setEnergy(En);
 		  double newp[3]={mom[0]+momn[0],mom[1]+momn[1],mom[2]+momn[2]};
 		  tau->setMomentum(newp);		  
-		  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+		  
+		   if(_nEvt<coutUpToEv || _nEvt==coutEv)
 		    {
 		      cout<<" Tau Merging: "<<endl;
 		      cout<<t<<" "<<E<<" "<<phi<<" "<<theta<<endl;
@@ -337,13 +344,13 @@ void TauFinder::processEvent( LCEvent * evt )
 		  else
 		    mass_inv= sqrt(En*En-psquaren);
 		  //failed to merge
-		  if(mass_inv>_minv || mass_inv<-0.001 ||  QTvec[t+erasecount]+QTvec[t2+erasecount]>6)
+		  if(mass_inv>_minv || mass_inv<-0.001 ||  QTvec[t+erasecount]+QTvec[t2+erasecount]>4)
 		    {
 		      if(mass_inv>_minv)
 			_fail_minv++;
 		      if(mass_inv<-0.001)
 			_fail_minv_neg++;
-		      if(QTvec[t+erasecount]+QTvec[t2+erasecount]>6)
+		      if(QTvec[t+erasecount]+QTvec[t2+erasecount]>4)
 			_fail_Qtr++;
 		      
 		      delete *iterC;
@@ -365,7 +372,10 @@ void TauFinder::processEvent( LCEvent * evt )
 		    }
 		  else //merge
 		    {
-		      //set the relations
+		      //set the relations and add particles from one tau to the other
+		      std::vector< ReconstructedParticle * > mergetaus=taun->getParticles();
+		      for(unsigned int p=0;p<mergetaus.size();p++)
+			tau->addParticle(mergetaus[p]);
 		      EVENT::LCObjectVec relobjFROM = relationNavigator->getRelatedToObjects(taun);
 		      for(unsigned int o=0;o<relobjFROM.size();o++)
 			{
@@ -394,11 +404,11 @@ void TauFinder::processEvent( LCEvent * evt )
       int nparticles=0;
       const double *pvec_tau=tau->getMomentum();
       //too many particles in tau 
-      if(QTvec[t+erasecount]+NTvec[t+erasecount]>10)
+      if(QTvec[t+erasecount]+NTvec[t+erasecount]>10 || QTvec[t+erasecount]>4)
 	{
 	  _fail_Qtr++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": too many particles: "<<QTvec[t]<<" "<<NTvec[t]<<endl;
+	    cout<<"Tau "<<tau->getEnergy()<<": too many particles: "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
 	  delete *iter;
 	  tauRecvec.erase(iter);
 	  erasecount++;
@@ -423,18 +433,20 @@ void TauFinder::processEvent( LCEvent * evt )
       if(E_iso>_isoE)
 	{
 	  _fail_isoE++;
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
+	   if(_nEvt<coutUpToEv || _nEvt==coutEv)
+	     cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
 	  delete *iter;
 	  tauRecvec.erase(iter);
+	  erasecount++;
 	  t--;
 	}
       else
 	{
 	  reccol->addElement(tau);  
+	  if(QTvec[t+erasecount]>4)
+	    cout<<"Tau "<<tau->getEnergy()<<" "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
 	  iter++;
 	}
-      
     }
   
  
@@ -458,7 +470,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	cout<<"No charged particle in event!"<<endl;
       return true;
     }
-  double Etauseed=0,OpAngleMax=0,D0seed=0;
+  double OpAngleMax=0,D0seed=0;
   //find a good tauseed, check impact parameter 
   ReconstructedParticle *tauseed;
   std::vector<ReconstructedParticle*>::iterator iterS=Qvec.begin();
@@ -468,35 +480,29 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
       tauseed=dynamic_cast<ReconstructedParticle*>(Qvec[s]);
       const EVENT::TrackVec &tv=dynamic_cast<const EVENT::TrackVec &>(tauseed->getTracks());
       float momtr[3];
-      float p_on_tr[3];
-      const float *refp=0;
       double pt=0;
       if(tv.size())
 	{
 	  double p=0;
-	  //take the track with the highest momentum to get ReferencPoint which should be on the helix
-	  //if track model changes this has to change as well
+	  //take the track with the highest momentum to get impact parameter
+	  //(Note: definition of impact parameter depends on the track model 
 	  for(unsigned int s=0;s<tv.size();s++)
 	    {
 	      //momentum of track assuming B along z
 	      double pt=fabs(_bField/tv[s]->getOmega())*3e-4;
 	      double mom=fabs(pt/cos(atan(tv[s]->getTanLambda())));	  
 	      if(mom>p)
-		refp=tv[s]->getReferencePoint();
+		D0seed=tv[s]->getD0();
 	      p=mom;
 	    }
-	  for (int icomp=0; icomp<3; ++icomp) {
+	  for (int icomp=0; icomp<3; ++icomp) 
 	    momtr[icomp]=(float)tauseed->getMomentum()[icomp];
-	    p_on_tr[icomp]=refp[icomp];
-	  }
+
 	  pt=sqrt(momtr[0]*momtr[0]+momtr[1]*momtr[1]);
-	  float charge = tauseed->getCharge(); 
-	  helix->Initialize_VP(p_on_tr,momtr,charge,_bField);
-	  D0seed=fabs(helix->getD0());
 	}
       else
 	D0seed=0;
-      if(D0seed<_D0seed && D0seed>1e-5 && pt>_ptseed)
+      if(D0seed>_D0seedmin && D0seed<_D0seedmax && pt>_ptseed)
      	break;
       else
 	{
@@ -511,8 +517,9 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	cout<<"no further tau seed! D0="<<D0seed<<endl;
       return true;
     }
-  Etauseed=tauseed->getEnergy();
+  
   double  Etau=tauseed->getEnergy();
+ 
   tau.push_back(tauseed);
   
   const double *pvec=tauseed->getMomentum();
@@ -550,8 +557,8 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	  if(angle>OpAngleMax)
 	    OpAngleMax=angle;
 	  tau.push_back(Qvec[s]);
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+// 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+// 	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
 	  Etau+=Qvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -583,8 +590,8 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	  if(angle>OpAngleMax)
 	    OpAngleMax=angle;
 	  tau.push_back(Nvec[s]);
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+// 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+// 	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
 	  Etau+=Nvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){

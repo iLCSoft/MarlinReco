@@ -31,7 +31,7 @@ using namespace std;
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#define coutEv 0
+#define coutEv -1
 #define coutUpToEv 0
 
 using namespace lcio ;
@@ -133,8 +133,8 @@ void EvaluateTauFinder::init()
   evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed:WpD1:WpD2:WmD1:WmD2");
   tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0");
   mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:D0:D1:D2");
-  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
-  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
+  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:E:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
+  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:E:mcE:mcp:mcpt:mcD0:recE:recp:recpt:recD0:ED0seed");
   faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recp:recD0");
   topofaketuple =new TNtuple("topofake","topofake","EvID:nfake:WpD1:WpD2:WmD1:WmD2");
   
@@ -224,7 +224,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
-      HelixClass * helix = new HelixClass();
+      HelixClass *helix = new HelixClass();
       HelixClass *mc_helix = new HelixClass();
       for(int k=0; k < nT; k++) 
 	{
@@ -234,24 +234,38 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	  double p=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2]);
 	  double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
 	  double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
-	  float mom[3];
-	  float ver[3];
+	   std::vector< ReconstructedParticle * > tauvec=tau->getParticles();
+	  double Eseed=0,D0=0;
+	  for(unsigned int o=0;o<tauvec.size();o++)
+	    {
+	      //find seed track for D0
+	      if(tauvec[o]->getCharge()!=0)
+		{
+		  if(tauvec[o]->getEnergy()>Eseed && tauvec[o]->getTracks().size()!=0 )
+		    {
+		      D0=(float)tauvec[o]->getTracks()[0]->getD0();
+		      Eseed=tauvec[o]->getEnergy();
+		    }
+		}
+	    }
+	  // float mom[3];
+// 	  float ver[3];
 	  
-	  for (int icomp=0; icomp<3; ++icomp) {
-	    mom[icomp]=(float)tau->getMomentum()[icomp];
-	    VertexImpl *vtx=dynamic_cast<VertexImpl*>(tau->getStartVertex());
-	    if(vtx)
-	      {
-		const float *vpos=vtx->getPosition();
-		ver[icomp]=vpos[icomp];
-	      }
-	    else
-	      ver[icomp]=0;
-	  }
+// 	  for (int icomp=0; icomp<3; ++icomp) {
+// 	    mom[icomp]=(float)tau->getMomentum()[icomp];
+// 	    VertexImpl *vtx=dynamic_cast<VertexImpl*>(tau->getStartVertex());
+// 	    if(vtx)
+// 	      {
+// 		const float *vpos=vtx->getPosition();
+// 		ver[icomp]=vpos[icomp];
+// 	      }
+// 	    else
+// 	      ver[icomp]=0;
+// 	  }
 	  
-	  float charge = tau->getCharge(); 
-	  helix->Initialize_VP(ver,mom,charge,_bField);
-	  double D0=fabs(helix->getD0());
+// 	  float charge = tau->getCharge(); 
+// 	  helix->Initialize_VP(ver,mom,charge,_bField);
+	  //double D0=fabs(helix->getD0());
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	    cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
 	  
@@ -351,9 +365,9 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  
 		  LoopDaughters(mctau,Evis,ptvis,pvis);
 		  
-		  taumatchtuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
+		  taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
 		  if(!contaminated)
-		    tauexacttuple->Fill(_nEvt,Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
+		    tauexacttuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_D0,tau->getEnergy(),p,pt,D0,Eseed);
 		  _dEsum+=Evis-tau->getEnergy();
 		  _dEsumsq+=(Evis-tau->getEnergy())*(Evis-tau->getEnergy());
 		  _ndE++;
@@ -362,7 +376,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		_ntau_correct++;
 	      else
 		{ 
-		  int d1=0,d2=0,pdg;
+		  int d1=0,d2=0,pdg=0;
 		  for(unsigned int o=0;o<relobjFROM.size();o++)
 		    {
 		      ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);

@@ -1,4 +1,5 @@
 #include "TrackBasedPFlow.h"
+#include <float.h>
 
 using namespace lcio;
 using namespace marlin;

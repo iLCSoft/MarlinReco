@@ -5,6 +5,15 @@
 ===============================
 
  -----------
+| v00-18-02 |
+ -----------
+    - TPCDigiProcessor:
+	- Fixed bug in hit smearing - in previous version unsmeared hit was used (smearing didn't do anything) (M. Thomson)
+	- Protected against accessing NULL pointer from getMCParticle (K. Wichmann)
+    - BCalTagEfficiency:
+        - Fixed memory leak bug (C. Bartels)
+
+ -----------
 | v00-18-01 |
  -----------
     - bug fixes for fortran in 64 bit:

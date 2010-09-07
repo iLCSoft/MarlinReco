@@ -428,6 +428,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
     // loop over all the pad row based sim hits
     for(int i=0; i< n_sim_hits; i++){
+
+      // this will used for nominaml smearing for very low pt rubish, so set it to zero initially
+			double ptSqrdMC = 0;
       
       _SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
@@ -449,11 +452,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       _mcp = _SimTHit->getMCParticle() ; 
 
-      const double *momentumMC = _mcp->getMomentum();
-      double ptSqrdMC = momentumMC[0]*momentumMC[0]+momentumMC[1]*momentumMC[1] ; 
-      
       // increase the counters for the different classification of simhits
       if(_mcp){ 
+
+        // get the pt of the MCParticle, this will used later to uses nominal smearing for low momentum rubish
+        const double *momentumMC = _mcp->getMomentum();
+        ptSqrdMC = momentumMC[0]*momentumMC[0]+momentumMC[1]*momentumMC[1] ;
+        
         // SJA:FIXME: the fact that it is a physics hit relies on the fact that for overlay 
         // the pointer to the mcp is set to NULL. This distinction may not always be true ...
         ++_NPhysicsSimTPCHits ;
@@ -1051,7 +1056,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   // make sure the hit is not smeared beyond the TPC Max DriftLength
   if( fabs(point->z()) > gearTPC.getMaxDriftLength() ) point->setZ( (fabs(point->z()) / point->z() ) * gearTPC.getMaxDriftLength() );
 
-  double pos[3] = {seed_hit->getX(),seed_hit->getY(),seed_hit->getZ()}; 
+  double pos[3] = {point->x(),point->y(),point->z()};
   trkHit->setPosition(pos);
   trkHit->setdEdx(seed_hit->getdEdx());
   trkHit->setType( 500 );

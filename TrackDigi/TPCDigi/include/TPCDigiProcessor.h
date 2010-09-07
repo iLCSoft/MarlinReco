@@ -32,12 +32,11 @@ Steve Aplin 26 June 2009 (DESY)
 //#include <AIDA/IHistogram1D.h>
 
 
-//#define EXPERTCHECKPLOTS 
+
 //#define DIGIPLOTS
 
 
 
-//#ifdef EXPERTCHECKPLOTS
 #ifdef DIGIPLOTS
 // includes all AIDA header files
 #include <AIDA/AIDA.h>
@@ -216,7 +215,6 @@ protected:
   int  _NRevomedHits;
 
 
-  //#ifdef EXPERTCHECKPLOTS
 #ifdef DIGIPLOTS
   IAnalysisFactory * _AF;
   ITreeFactory * _TRF;

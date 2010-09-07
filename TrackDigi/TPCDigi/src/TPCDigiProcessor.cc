@@ -155,7 +155,6 @@ void TPCDigiProcessor::init()
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
 
 #ifdef DIGIPLOTS
-  //#ifdef EXPERTCHECKPLOTS
   /// Hook an AIDA implementation -----------------------------------------------
 
   // First create a pointer to the "IAnalysisFactory" of a specific AIDA
@@ -428,6 +427,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
     // loop over all the pad row based sim hits
     for(int i=0; i< n_sim_hits; i++){
+
+      // this will used for nominaml smearing for very low pt rubish, so set it to zero initially
+      double ptSqrdMC = 0;
       
       _SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
@@ -449,17 +451,20 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       _mcp = _SimTHit->getMCParticle() ; 
 
-      const double *momentumMC = _mcp->getMomentum();
-      double ptSqrdMC = momentumMC[0]*momentumMC[0]+momentumMC[1]*momentumMC[1] ; 
-      
       // increase the counters for the different classification of simhits
       if(_mcp){ 
+
+        // get the pt of the MCParticle, this will used later to uses nominal smearing for low momentum rubish
+        const double *momentumMC = _mcp->getMomentum();
+        ptSqrdMC = momentumMC[0]*momentumMC[0]+momentumMC[1]*momentumMC[1] ; 
+        
         // SJA:FIXME: the fact that it is a physics hit relies on the fact that for overlay 
         // the pointer to the mcp is set to NULL. This distinction may not always be true ...
         ++_NPhysicsSimTPCHits ;
         if( ptSqrdMC > (0.2*0.2) ) ++_NPhysicsAbove02GeVSimTPCHits ;
         if( ptSqrdMC > 1.0 )  ++_NPhysicsAbove1GeVSimTPCHits ;
-#ifdef EXPERTCHECKPLOTS
+
+#ifdef DIGIPLOTS
         if(_mcp) plotHelixHitResidual(_mcp, &thisPoint);
 #endif  
       } else {
@@ -473,10 +478,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         
         CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
         
-        const double pt = mom->perp();
-        const double radius = pt / (FCT*bField);
+        //const double pt = mom->perp();
+        //const double radius = pt / (FCT*bField);
         
-        const double tanLambda = mom->z()/pt;
+        //const double tanLambda = mom->z()/pt;
         
         padPhi = fabs(thisPoint.deltaPhi(*mom));
         padTheta = mom->theta();
@@ -487,7 +492,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
         // as the momentum vector is not available from the hits use triplets of 
         // hits to fit a circle and calculate theta and phi relative to the pad        
-
 
         if (!_mcp || (sqrt(ptSqrdMC) / (FCT*bField)) < ( padheight / (0.1 * twopi))) { 
           // if the hit has no record of it MCParticle then there is no way to know if this hit has consecutive hits from the same MCParticle
@@ -560,8 +564,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             padPhi = twopi/4.0 ;    
           }
         }
-#ifdef EXPERTCHECKPLOTS
 
+#ifdef DIGIPLOTS
         if(colFlag.bitSet(LCIO::THBIT_MOMENTUM)) {
           
           const float * mcpMomentum = _SimTHit->getMomentum() ;
@@ -736,7 +740,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       }
 
       int padIndex = padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi());
-      double padheight = padLayout.getPadHeight(padIndex);
+      //double padheight = padLayout.getPadHeight(padIndex);
 
       int iRowHit = padLayout.getRowNumber(padIndex);
       int iPhiHit = padLayout.getPadNumber(padIndex);
@@ -745,8 +749,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
       // shift the hit in r-phi to the nearest pad-row centre 
       thisPoint.setPerp(padLayout.getPadCenter(padIndex)[0]);
-
-      double de_dx = _SimTHit->getdEdx();
 
       // set the resolutions to the pads to digital like values
       double tpcRPhiRes = _padWidth;
@@ -773,7 +775,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   vector <Voxel_tpc *> row_hits;
     
   // loop over the tpc rows containing hits and check for merged hits
-  for (int i = 0; i<_tpcRowHits.size(); ++i){
+  for (unsigned int i = 0; i<_tpcRowHits.size(); ++i){
 
     row_hits = _tpcRowHits.at(i);
     std::sort(row_hits.begin(), row_hits.end(), compare_phi );
@@ -918,7 +920,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   int numberOfHits(0);
   // count up the number of hits merged or lost
-  for (int i = 0; i<_tpcRowHits.size(); ++i){
+  for (unsigned int i = 0; i<_tpcRowHits.size(); ++i){
     row_hits = _tpcRowHits.at(i);
     for (unsigned int j = 0; j<row_hits.size(); ++j){
       numberOfHits++;
@@ -957,7 +959,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   evt->addCollection( _trkhitVec , _TPCTrackerHitsCol ) ;
   
   // delete voxels
-  for (int i = 0; i<_tpcRowHits.size(); ++i){
+  for (unsigned int i = 0; i<_tpcRowHits.size(); ++i){
     vector <Voxel_tpc *>* current_row = &_tpcRowHits.at(i);  
     for (unsigned int j = 0; j<current_row->size(); ++j){
       delete current_row->at(j);
@@ -1007,14 +1009,13 @@ void TPCDigiProcessor::check( LCEvent * evt )
 void TPCDigiProcessor::end()
 { 
 
-  //#ifdef EXPERTCHECKPLOTS
 #ifdef DIGIPLOTS
   _TREE->commit();
   _TREE->cd("/Histograms");
   _TREE->ls("..");
 
   _TREE->close();  
-  streamlog_out(MESSAGE) << "EXPERTCHECKPLOTS Finished" << endl;
+  streamlog_out(MESSAGE) << "DIGICHECKPLOTS Finished" << endl;
 #endif
 
   gsl_rng_free(_random);
@@ -1093,7 +1094,8 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
     _NRecTPCHits++;
   }
         
-#ifdef EXPERTCHECKPLOTS
+
+#ifdef DIGIPLOTS
   SimTrackerHit* theSimHit = _tpcHitMap[seed_hit];
   double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
 
@@ -1129,10 +1131,10 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   double sumZ = 0;
   double sumPhi = 0;
   double sumdEdx = 0;
-  double R = 0;
+  //  double R = 0;
   double lastR = 0;
 
-  for(int ihitCluster = 0; ihitCluster < hitsToMerge->size(); ++ihitCluster){
+  for(unsigned int ihitCluster = 0; ihitCluster < hitsToMerge->size(); ++ihitCluster){
     
     sumZ += hitsToMerge->at(ihitCluster)->getZ();
     sumPhi += hitsToMerge->at(ihitCluster)->getPhi();
@@ -1195,7 +1197,8 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
 }
 
-#ifdef EXPERTCHECKPLOTS
+
+#ifdef DIGIPLOTS
 void TPCDigiProcessor::plotHelixHitResidual( MCParticle *mcp, CLHEP::Hep3Vector *thisPoint){
   
       const double bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;

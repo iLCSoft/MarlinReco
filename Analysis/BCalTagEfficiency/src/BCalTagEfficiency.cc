@@ -445,6 +445,8 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             mcp++;
             streamlog_out(MESSAGE) << "filling tree, mcp = " << mcp << endl;
             tree->Fill();
+
+	    delete randGen;
    
           } // beamcal acceptance
           

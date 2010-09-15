@@ -5,7 +5,7 @@
  * - 12.2.08 BL: First version
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftBWParticleConstraint.h,v $
  * - Revision 1.1  2008/10/21 08:36:50  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
@@ -55,8 +55,8 @@ class ParticleFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2008/10/21 08:36:50 $
+ * $Author: blist $
  *
  */
 

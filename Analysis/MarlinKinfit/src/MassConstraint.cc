@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: MassConstraint.cc,v $
  * - Revision 1.2  2008/02/12 11:03:32  blist
  * - Added doxygen configuration
  * -

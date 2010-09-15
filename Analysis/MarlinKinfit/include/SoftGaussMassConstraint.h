@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussMassConstraint.h,v $
  * - Revision 1.1  2008/02/12 16:43:26  blist
  * - First Version of Soft Constraints
  * -
@@ -40,8 +40,8 @@ class ParticleFitObject;
  *   sets of objects should be m (normally m=0 in this case).
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/12 16:43:26 $
+ *          by: $Author: blist $
  *
  */
 

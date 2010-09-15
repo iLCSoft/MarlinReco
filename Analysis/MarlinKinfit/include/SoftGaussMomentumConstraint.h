@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussMomentumConstraint.h,v $
  * - Revision 1.1  2008/02/18 09:59:34  blist
  * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
  * -
@@ -32,8 +32,8 @@ class ParticleFitObject;
  * - chi^2 = (sum(E)-sum(pz)-2 Ee)^2/sigma^2
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/18 09:59:34 $
+ *          by: $Author: blist $
  *
  */
 

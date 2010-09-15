@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: cernlib.h,v $
  * - Revision 1.1  2008/02/12 10:19:07  blist
  * - First version of MarlinKinfit
  * -

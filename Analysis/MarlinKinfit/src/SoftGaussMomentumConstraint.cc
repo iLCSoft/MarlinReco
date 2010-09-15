@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussMomentumConstraint.cc,v $
  * - Revision 1.1  2008/02/18 09:59:35  blist
  * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
  * -

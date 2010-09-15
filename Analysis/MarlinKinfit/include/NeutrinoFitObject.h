@@ -12,8 +12,8 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2008/02/12 10:19:06 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 30.12.04 BL: addToGlobCov, getDChi2DParam, getDChi2DParam2,

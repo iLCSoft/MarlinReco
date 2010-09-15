@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: JetFitObject.h,v $
  * - Revision 1.2  2009/02/17 12:46:34  blist
  * - Improved version of NewtonFitterGSL, JetFitObject changed
  * -
@@ -43,8 +43,8 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2009/02/17 12:46:34 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 30.12.04 BL: addToGlobCov, getDChi2DParam, getDChi2DParam2, addToGlobalChi2DerMatrix

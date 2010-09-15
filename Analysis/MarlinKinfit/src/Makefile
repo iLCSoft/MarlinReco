@@ -52,6 +52,7 @@ include Makefile.dep
 
 LIB_OBJS= BaseFitObject.o \
              ParticleFitObject.o JetFitObject.o NeutrinoFitObject.o \
+             PhotonFitObject.o PhotonFitObjectPxyg.o \
              BaseConstraint.o \
              ParticleConstraint.o  \
              PConstraint.o MomentumConstraint.o  \
@@ -59,6 +60,8 @@ LIB_OBJS= BaseFitObject.o \
              BaseFitter.o \
              NewtonFitter.o OPALFitter.o  \
              OPALFitterGSL.o NewtonFitterGSL.o  \
+             BaseTracer.o \
+             TextTracer.o RootTracer.o \
              TopEventILC.o TopEventILCSoft.o FourVector.o \
              TwoB4JPairing.o  FourJetPairing.o \
              SoftGaussParticleConstraint.o SoftGaussMassConstraint.o \

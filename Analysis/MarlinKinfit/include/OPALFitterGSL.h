@@ -3,19 +3,16 @@
  *  \brief Declares class OPALFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2009-03-23 15:28:44 $
- *          by: $Author: engels $
- * $Date: 2009-03-23 15:28:44 $
- * $Author: engels $
+ * Last update: $Date: 2008/10/16 08:13:36 $
+ *          by: $Author: blist $
+ * $Date: 2008/10/16 08:13:36 $
+ * $Author: blist $
  *
  * \b Changelog:
  * - 2.10.08 BL: First version, based on OPALFitter
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
- * - Revision 1.3  2009/02/26 18:35:17  beckmann
- * - Bug fixes in MarlinKinFit
- * -
+ * - $Log: OPALFitterGSL.h,v $
  * - Revision 1.1  2008/10/16 08:13:36  blist
  * - New versions of OPALfitter and Newtonfitter using GSL
  * -
@@ -26,8 +23,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2009-03-23 15:28:44 $
-//          by: $Author: engels $
+// Last update: $Date: 2008/10/16 08:13:36 $
+//          by: $Author: blist $
 // 
 // Description: kinematic fit a la WWFGO
 //               
@@ -61,11 +58,11 @@ class BaseConstraint;
  * OPALFitter::fit first initializes the global parameter numbering
  * using OPALFitter::initialize.
  *
- * Then it initializes vectors etaxi (\f$ \eta\xi\f$)  and y (\f$ \vec y\f$)
+ * Then it initializes vectors etaxi (\f$ \etaxi\f$)  and y (\f$ \vec y\f$)
  * with the current  parameter values.
  *
  * Next it initializes the matrix Feta that represents 
- * \f$d \vec F / d \vec \eta\xi\f$
+ * \f$d \vec F / d \vec \etaxi\f$
  *
  * Used methods in OPALFitter::initialize:
  * - BaseFitObject::getNPar

@@ -5,7 +5,10 @@
  * - 26.09.2008 mbeckman: Minor bug fixes, dodged possible division by zero
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: JetFitObject.cc,v $
+ * - Revision 1.8  2010/07/05 19:52:33  mbeckman
+ * - JetFitObject.cc: commented out assert(!isnan(...))
+ * -
  * - Revision 1.7  2009/02/23 12:04:05  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
@@ -57,7 +60,6 @@
 
 #include "JetFitObject.h"
 #include <cmath>
-#include <math.h>
 #include <cassert>
 #include <iostream>
 
@@ -72,13 +74,13 @@ JetFitObject::JetFitObject(double E, double theta, double phi,
                            double DE, double Dtheta, double Dphi, 
                            double m) {
   initCov();                         
-  assert( !std::isinf(E) );        assert( !std::isnan(E) );
-  assert( !std::isinf(theta) );    assert( !std::isnan(theta) );
-  assert( !std::isinf(phi) );      assert( !std::isnan(phi) );
-  assert( !std::isinf(DE) );       assert( !std::isnan(DE) );
-  assert( !std::isinf(Dtheta) );   assert( !std::isnan(Dtheta) );
-  assert( !std::isinf(Dphi) );     assert( !std::isnan(Dphi) );
-  assert( !std::isinf(m) );        assert( !std::isnan(m) );
+//  assert( !isinf(E) );        assert( !isnan(E) );
+//  assert( !isinf(theta) );    assert( !isnan(theta) );
+//  assert( !isinf(phi) );      assert( !isnan(phi) );
+//  assert( !isinf(DE) );       assert( !isnan(DE) );
+//  assert( !isinf(Dtheta) );   assert( !isnan(Dtheta) );
+//  assert( !isinf(Dphi) );     assert( !isnan(Dphi) );
+//  assert( !isinf(m) );        assert( !isnan(m) );
   setMass (m);
   adjustEThetaPhi (m, E, theta, phi);
   setParam (0, E, true);
@@ -156,9 +158,9 @@ bool JetFitObject::updateParams (double p[], int idim) {
   double e  = p[iE];
   double th = p[ith];
   double ph = p[iph];
-  assert( !std::isinf(e) );    assert( !std::isnan(e) );
-  assert( !std::isinf(th) );   assert( !std::isnan(th) );
-  assert( !std::isinf(ph) );   assert( !std::isnan(ph) );
+//  assert( !isinf(e) );    assert( !isnan(e) );
+//  assert( !isinf(th) );   assert( !isnan(th) );
+//  assert( !isinf(ph) );   assert( !isnan(ph) );
   
   if (e<0) {
     // cout << "JetFitObject::updateParams: mirrored E!\n";

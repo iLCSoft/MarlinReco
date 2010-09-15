@@ -5,7 +5,7 @@
  * - 17.11.04 BL: First version (refactured from BaseConstraint)
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: ParticleConstraint.h,v $
  * - Revision 1.2  2008/02/12 16:43:26  blist
  * - First Version of Soft Constraints
  * -
@@ -81,8 +81,8 @@ class ParticleFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2008/02/12 16:43:26 $
+ * $Author: blist $
  *
  */
 

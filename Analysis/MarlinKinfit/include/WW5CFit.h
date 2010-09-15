@@ -25,7 +25,7 @@ using namespace marlin ;
  * @param CollectionName Name of the ReconstructedParticle collection
  * 
  * @author J. List, DESY
- * @version $Id: WW5CFit.h,v 1.3 2009-02-26 18:35:17 beckmann Exp $ 
+ * @version $Id: WW5CFit.h,v 1.2 2010/07/19 23:41:46 mbeckman Exp $ 
  */
 
 class WW5CFit : public Processor {
@@ -66,7 +66,10 @@ class WW5CFit : public Processor {
   std::string _jetcolName ;
   /** Input parameter: center of mass energy.
    */
-  float _ecm ;
+  float _ecm, _isrpzmax;
+  int _fitISR;
+
+  double b, ISRPzMaxB;
 
   int _nRun ;
   int _nEvt ;

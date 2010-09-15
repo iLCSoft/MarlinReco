@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: ParticleFitObject.cc,v $
  * - Revision 1.7  2009/02/17 12:46:35  blist
  * - Improved version of NewtonFitterGSL, JetFitObject changed
  * -

@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussMassConstraint.cc,v $
  * - Revision 1.1  2008/02/12 16:43:26  blist
  * - First Version of Soft Constraints
  * -

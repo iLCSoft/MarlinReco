@@ -23,8 +23,8 @@
  * 
  *
  * Author: Jenny Böhme, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2008/02/12 10:19:05 $
+ * $Author: blist $
  *
  */
 

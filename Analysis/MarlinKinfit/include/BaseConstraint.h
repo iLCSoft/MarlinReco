@@ -6,7 +6,7 @@
  * - 12.2.08 BL: Part of functionality transferred to BaseHardConstraint
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: BaseConstraint.h,v $
  * - Revision 1.3  2008/02/18 09:59:34  blist
  * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
  * -
@@ -72,8 +72,8 @@ class BaseFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/18 09:59:34 $
+ *          by: $Author: blist $
  *
  */
 

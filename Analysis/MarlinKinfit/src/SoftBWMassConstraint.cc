@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftBWMassConstraint.cc,v $
  * - Revision 1.1  2008/10/21 08:37:00  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -

@@ -2,8 +2,8 @@
 // Class ThreeVector
 //
 // Author: Benno List
-// Last update: $Date: 2009-02-26 18:35:17 $
-//          by: $Author: beckmann $
+// Last update: $Date: 2008/02/12 10:19:07 $
+//          by: $Author: blist $
 // 
 // Description: class for three-vectors
 //               

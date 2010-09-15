@@ -1,11 +1,17 @@
 /*! \file 
- *  \brief Implements class PhotonFitObject
+ *  \brief Implements class SimplePhotonFitObject
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
- * - $Log: PhotonFitObject.cc,v $
+ * - $Log: SimplePhotonFitObject.cc,v $
+ * - Revision 1.1  2010/06/11 20:32:51  mbeckman
+ * - Renamed PhotonFitObjects, cleaned them up for usage
+ * -
+ * - Revision 1.8  2010/05/25 13:23:56  boehmej
+ * - fixed RootTracer
+ * -
  * - Revision 1.7  2009/04/02 12:47:35  mbeckman
  * - PhotonFitObject.cc, PseudoMeasuredPhotonFitObjectPxyz.cc: bug fix (measured p = 0 instead of start value)
  * - PhotonFitObjectPxyg.cc: added assertion to catch up division by zero
@@ -23,18 +29,18 @@
  *
  */ 
 
-#include "PhotonFitObject.h"
+#include "SimplePhotonFitObject.h"
 #include <cmath>
 #include <cassert>
 #include <iostream>
-#include "marlin/Processor.h"
+//#include "marlin/Processor.h"
 
 using std::sqrt;
 using std::cout; 
 using std::endl;
 
 // constructor
-PhotonFitObject::PhotonFitObject(double px, double py, double pz,  
+SimplePhotonFitObject::SimplePhotonFitObject(double px, double py, double pz,  
                            double Dpz) {
   initCov();                         
   setParam (0, px, true, true);
@@ -49,9 +55,9 @@ PhotonFitObject::PhotonFitObject(double px, double py, double pz,
 }
 
 // destructor
-PhotonFitObject::~PhotonFitObject() {}
+SimplePhotonFitObject::~SimplePhotonFitObject() {}
 
-const char *PhotonFitObject::getParamName (int ilocal) const {
+const char *SimplePhotonFitObject::getParamName (int ilocal) const {
   switch (ilocal) {
     case 0: return "P_x";
     case 1: return "P_y";
@@ -61,7 +67,7 @@ const char *PhotonFitObject::getParamName (int ilocal) const {
 }
 
 // needed for constructor!
-bool PhotonFitObject::setParam (int ilocal, double par_, 
+bool SimplePhotonFitObject::setParam (int ilocal, double par_, 
                                     bool measured_, bool fixed_) {
   assert (ilocal >= 0 && ilocal < 3);
   if (measured[ilocal] != measured_ || fixed[ilocal] != fixed_) invalidateCache();
@@ -78,7 +84,7 @@ bool PhotonFitObject::setParam (int ilocal, double par_,
   return true;
 } 
 
-bool PhotonFitObject::setParam (int i, double par_ ) {
+bool SimplePhotonFitObject::setParam (int i, double par_ ) {
   invalidateCache();
 //   if (i==0) {
 //      std::cout << "setParam: par_ = " << par_ << endl;
@@ -96,12 +102,12 @@ bool PhotonFitObject::setParam (int i, double par_ ) {
     // p_z
     case 2: par[2] = par_;
             break;          
-    default: std::cerr << "PhotonFitObject::setParam: Illegal i=" << i << std::endl;
+    default: std::cerr << "SimplePhotonFitObject::setParam: Illegal i=" << i << std::endl;
   }
   return result;
 }
  
-bool PhotonFitObject::updateParams (double p[], int idim) {
+bool SimplePhotonFitObject::updateParams (double p[], int idim) {
   invalidateCache();
   
   int i2 = getGlobalParNum(2);
@@ -120,34 +126,34 @@ bool PhotonFitObject::updateParams (double p[], int idim) {
 }  
 
 // these depend on actual parametrisation!
-double PhotonFitObject::getPx() const {return par[0];}
+double SimplePhotonFitObject::getPx() const {return par[0];}
 
-double PhotonFitObject::getPy() const {return par[1];}
+double SimplePhotonFitObject::getPy() const {return par[1];}
 
-double PhotonFitObject::getPz() const {return par[2];}
+double SimplePhotonFitObject::getPz() const {return par[2];}
 
-double PhotonFitObject::getE() const {
+double SimplePhotonFitObject::getE() const {
   if (!cachevalid) updateCache();
   return p;
 }
-double PhotonFitObject::getP() const {
+double SimplePhotonFitObject::getP() const {
   if (!cachevalid) updateCache();
   return p;
 }
-double PhotonFitObject::getP2() const {
+double SimplePhotonFitObject::getP2() const {
   if (!cachevalid) updateCache();
   return p2;
 }
-double PhotonFitObject::getPt() const {
+double SimplePhotonFitObject::getPt() const {
   if (!cachevalid) updateCache();
   return std::sqrt(pt2);
 }
-double PhotonFitObject::getPt2() const {
+double SimplePhotonFitObject::getPt2() const {
   if (!cachevalid) updateCache();
   return pt2;
 }
 
-double PhotonFitObject::getDPx(int ilocal) const {
+double SimplePhotonFitObject::getDPx(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
 //   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -161,7 +167,7 @@ double PhotonFitObject::getDPx(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObject::getDPy(int ilocal) const {
+double SimplePhotonFitObject::getDPy(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
 //   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -175,7 +181,7 @@ double PhotonFitObject::getDPy(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObject::getDPz(int ilocal) const {
+double SimplePhotonFitObject::getDPz(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
 //   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -189,7 +195,7 @@ double PhotonFitObject::getDPz(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObject::getDE(int ilocal) const {
+double SimplePhotonFitObject::getDE(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -200,7 +206,7 @@ double PhotonFitObject::getDE(int ilocal) const {
   return 0; 
 }
  
-void   PhotonFitObject::addToDerivatives (double der[], int idim, 
+void   SimplePhotonFitObject::addToDerivatives (double der[], int idim, 
                                        double efact, double pxfact, 
                                        double pyfact, double pzfact) const {
   int i0 = globalParNum[0];
@@ -241,7 +247,7 @@ void   PhotonFitObject::addToDerivatives (double der[], int idim,
   der[i2] += (efact*dE2+pzfact);
 }
     
-void   PhotonFitObject::addTo2ndDerivatives (double der2[], int idim, 
+void   SimplePhotonFitObject::addTo2ndDerivatives (double der2[], int idim, 
                                           double efact, double pxfact, 
                                           double pyfact, double pzfact) const {
   int i2 = globalParNum[2];
@@ -256,11 +262,11 @@ void   PhotonFitObject::addTo2ndDerivatives (double der2[], int idim,
   der2[idim*i2+i2] += der22;
 }
     
-void   PhotonFitObject::addTo2ndDerivatives (double M[], int idim,  double lambda, double der[]) const {
+void   SimplePhotonFitObject::addTo2ndDerivatives (double M[], int idim,  double lambda, double der[]) const {
   addTo2ndDerivatives (M, idim, lambda*der[0], lambda*der[1], lambda*der[2], lambda*der[3]);
 }
 
-void   PhotonFitObject::addTo1stDerivatives (double M[], int idim, double der[], int kglobal) const {
+void   SimplePhotonFitObject::addTo1stDerivatives (double M[], int idim, double der[], int kglobal) const {
   assert (kglobal >= 0 && kglobal < idim);
   int i2 = globalParNum[2];
   assert (i2 >= 0 && i2 < idim);
@@ -275,7 +281,7 @@ void   PhotonFitObject::addTo1stDerivatives (double M[], int idim, double der[],
 }
 
          
-void PhotonFitObject::initCov() {
+void SimplePhotonFitObject::initCov() {
   for (int i = 0; i < NPAR; ++i) {
     for (int j = 0; j < NPAR; ++j) {
       cov[i][j] = static_cast<double>(i == j);
@@ -283,11 +289,11 @@ void PhotonFitObject::initCov() {
   }    
 }
 
-void PhotonFitObject::invalidateCache() const {
+void SimplePhotonFitObject::invalidateCache() const {
   cachevalid = false;
 }
 
-void PhotonFitObject::addToGlobalChi2DerVector (double *y, int idim, 
+void SimplePhotonFitObject::addToGlobalChi2DerVector (double *y, int idim, 
                                              double lambda, double der[]) const {
   int i2 = globalParNum[2];
   assert (i2 >= 0 && i2 < idim);
@@ -300,8 +306,8 @@ void PhotonFitObject::addToGlobalChi2DerVector (double *y, int idim,
   y[i2] += lambda*(der[0]*dE2 + der[3]);
 }
 
-void PhotonFitObject::updateCache() const {
-  // std::cout << "PhotonFitObject::updateCache" << std::endl;
+void SimplePhotonFitObject::updateCache() const {
+  // std::cout << "SimplePhotonFitObject::updateCache" << std::endl;
   double px = par[0];
   double py = par[1];
   double pz = par[2];
@@ -334,7 +340,7 @@ void PhotonFitObject::updateCache() const {
   cachevalid = true;
 }
 
-double PhotonFitObject::getError2 (double der[]) const {
+double SimplePhotonFitObject::getError2 (double der[]) const {
   if (!cachevalid) updateCache();
   double cov4[4][4]; // covariance of E, px, py, px
 //   cov4[0][0] =                                       // E, E

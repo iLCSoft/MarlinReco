@@ -1,11 +1,13 @@
  
-#ifndef __PHOTONFITOBJECTPXYG_H
-#define __PHOTONFITOBJECTPXYG_H
+#ifndef __IRSPHOTONFITOBJECT_H
+#define __ISRPHOTONFITOBJECT_H
 
 #include "ParticleFitObject.h"
 
-// Class PhotonFitObjectPxyg
-/// Class for ISR/Beamstrahlung photons with (p_x,p_y (both fix),  p_z (free)) in kinematic fits
+/// Class ISRPhotonFitObject
+/// Documention: arXiv:1006.0436 [hep-ex]
+
+/// Class for ISR photons with (p_x,p_y (both fix),  p_z (free)) in kinematic fits
 /// p_z is internally replaced by a parameter p_g
 ///
 /// This class assumes a photon p_z distribution according to dN/d|p_z| = c*|p_z|^(b-1), where the total number of photons should be given by N = \int_{PzMin}^{PzMax} dN/d|p_z| d|p_z|
@@ -16,14 +18,17 @@
 /**
  *
  * Author: Moritz Beckmann
- * $Date: 2009/03/26 08:47:16 $
+ * $Date: 2010/06/11 20:32:51 $
  * $Author: mbeckman $
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
- * - $Log: PhotonFitObjectPxyg.h,v $
+ * - $Log: ISRPhotonFitObject.h,v $
+ * - Revision 1.1  2010/06/11 20:32:51  mbeckman
+ * - Renamed PhotonFitObjects, cleaned them up for usage
+ * -
  * - Revision 1.6  2009/03/26 08:47:16  mbeckman
  * - Bug fix (measured p = 0 instead of start value), extended documentation
  * -
@@ -33,15 +38,13 @@
  * -
  * - Revision 1.4  2009/02/18 11:53:42  mbeckman
  * - documentation, debug output
- * -
  *
  */ 
-class PhotonFitObjectPxyg : public ParticleFitObject {
+class ISRPhotonFitObject : public ParticleFitObject {
   public:
-    PhotonFitObjectPxyg(double px, double py, double pz,                 /// initial values for photon (p_x,p_y fix)
-                        double b_, double PzMaxB_, double PzMinB_ = 0.,  /// photon spectrum parametrization (see above)
-                        int debug_ = 0);                                 /// 0: no output,   1: cout << parameters
-    virtual ~PhotonFitObjectPxyg();
+    ISRPhotonFitObject(double px, double py, double pz,                   /// initial values for photon (p_x,p_y fix)
+                        double b_, double PzMaxB_, double PzMinB_ = 0.);  /// photon spectrum parametrization (see above)
+    virtual ~ISRPhotonFitObject();
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number
@@ -139,12 +142,6 @@ class PhotonFitObjectPxyg : public ParticleFitObject {
                    dpx2, dpy2, dpz2, dE2, d2pz22, d2E22,
                    chi2,                   
                    b, PzMinB, PzMaxB, dp2zFact;
-                   
-    int debug;
-
 };
 
-
-
-#endif // __PHOTONFITOBJECTPXYG_H
-
+#endif // __ISRPHOTONFITOBJECT_H

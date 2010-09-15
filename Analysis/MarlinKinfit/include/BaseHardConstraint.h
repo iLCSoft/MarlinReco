@@ -5,7 +5,7 @@
  * - 12.2.08 First version
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: BaseHardConstraint.h,v $
  * - Revision 1.1  2008/02/12 16:43:25  blist
  * - First Version of Soft Constraints
  * -
@@ -54,8 +54,8 @@ class BaseFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/12 16:43:25 $
+ *          by: $Author: blist $
  *
  */
 

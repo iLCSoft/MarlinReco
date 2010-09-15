@@ -5,7 +5,7 @@
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussParticleConstraint.cc,v $
  * - Revision 1.4  2008/10/17 13:17:17  blist
  * - Avoid variable-size arrays
  * -

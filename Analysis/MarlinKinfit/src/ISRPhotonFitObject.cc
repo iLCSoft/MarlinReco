@@ -1,11 +1,17 @@
 /*! \file 
- *  \brief Implements class PhotonFitObjectPxyg
+ *  \brief Implements class ISRPhotonFitObject
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
- * - $Log: PhotonFitObjectPxyg.cc,v $
+ * - $Log: ISRPhotonFitObject.cc,v $
+ * - Revision 1.2  2010/07/05 20:08:43  mbeckman
+ * - ISRPhotonFitObject.cc: Included flag for output via cout/marlin
+ * -
+ * - Revision 1.1  2010/06/11 20:32:51  mbeckman
+ * - Renamed PhotonFitObjects, cleaned them up for usage
+ * -
  * - Revision 1.10  2009/04/02 12:47:35  mbeckman
  * - PhotonFitObject.cc, PseudoMeasuredPhotonFitObjectPxyz.cc: bug fix (measured p = 0 instead of start value)
  * - PhotonFitObjectPxyg.cc: added assertion to catch up division by zero
@@ -28,41 +34,50 @@
  * - PhotonFitObject*.cc: documentation, debug output
  * - NewtonFitterGSL.cc:  bug fix (Lagrange multipliers not initialized), debug output
  * - JetFitObject.cc:     bug fix: division by 0, if energy <= mass
- * -
  *
  */ 
 
-#include "PhotonFitObjectPxyg.h"
+// #define NO_MARLIN		// if defined: all output via cout, Marlin inclusion not required
+#include "ISRPhotonFitObject.h"
 #include <cmath>
 #include <cassert>
 #include <iostream>
+#ifndef NO_MARLIN
 #include "marlin/Processor.h"
+#endif
 
 using std::sqrt;
 using std::exp;
 using std::pow;
 using std::cout; 
 using std::endl;
+#ifndef NO_MARLIN
+using namespace marlin;
+#endif
 
 static const double pi_ = 3.14159265358979323846264338328,
                     a   = 8./3./pi_*(pi_-3.)/(4.-pi_);    // = ca. 0.140012289
 
 // constructor
-PhotonFitObjectPxyg::PhotonFitObjectPxyg(double px, double py, double pz,
-                                         double b_, double PzMaxB_, double PzMinB_, int debug_) {
+ISRPhotonFitObject::ISRPhotonFitObject(double px, double py, double pz,
+                                         double b_, double PzMaxB_, double PzMinB_) {
   initCov();
-  debug = debug_;   // 0: -   1: cout parameters
-  assert( (debug==0) || (debug==1) );
   b = b_;
   PzMinB = PzMinB_;
   PzMaxB = PzMaxB_;
-  if(debug){
-    cout << "PhotonFitObjectPxyg:   b: " << b << "   PzMinB: " << PzMinB << "   PzMaxB: " << PzMaxB << endl;
+  #ifdef DEBUG
+    cout << "ISRPhotonFitObject:   b: " << b << "   PzMinB: " << PzMinB << "   PzMaxB: " << PzMaxB << endl;
+  #endif
+
+  if(b <= 0. || b >= 1.){
+    cout << "ISRPhotonFitObject:   b must be from ]0,1[ "  << endl;
   }
-  assert(b > 0 && b < 1);
-  assert(PzMinB >= 0);
-  assert(PzMaxB >= PzMinB);
-//   dp2zFact = 2.*(PzMaxB-PzMinB)/b/sqrt(pi_);
+  assert(b > 0. && b < 1.);
+  if(PzMinB < 0. || PzMaxB <= PzMinB){
+    cout << "ISRPhotonFitObject:   PzMinB and PzMaxB must be chosen such that 0 <= PzMinB < PzMaxB"  << endl;
+  }
+  assert(PzMinB >= 0.);
+  assert(PzMaxB > PzMinB);
   dp2zFact = (PzMaxB-PzMinB)/b*sqrt(2./pi_);
   double pg = PgFromPz(pz);         // using internally Gauss-distributed parameter p_g instead of p_z
   setParam (0, px, true, true);
@@ -71,18 +86,18 @@ PhotonFitObjectPxyg::PhotonFitObjectPxyg(double px, double py, double pz,
   setMParam (0, 0.);                // all measured parameters
   setMParam (1, 0.);                // are assumed to be zero
   setMParam (2, 0.);                // in this photon parametrization
-  if(debug){
-    cout << "PhotonFitObjectPxyg:   Initial pg: " << pg << endl;
-  }
+  #ifdef DEBUG
+    cout << "ISRPhotonFitObject:   Initial pg: " << pg << endl;
+  #endif
   setError (2, 1.);
   setMass (0.);
   invalidateCache();
 }
 
 // destructor
-PhotonFitObjectPxyg::~PhotonFitObjectPxyg() {}
+ISRPhotonFitObject::~ISRPhotonFitObject() {}
 
-const char *PhotonFitObjectPxyg::getParamName (int ilocal) const {
+const char *ISRPhotonFitObject::getParamName (int ilocal) const {
   switch (ilocal) {
     case 0: return "P_x";
     case 1: return "P_y";
@@ -92,13 +107,13 @@ const char *PhotonFitObjectPxyg::getParamName (int ilocal) const {
 }
 
 // needed for constructor!
-bool PhotonFitObjectPxyg::setParam (int ilocal, double par_, 
+bool ISRPhotonFitObject::setParam (int ilocal, double par_, 
                                     bool measured_, bool fixed_) {
   assert (ilocal >= 0 && ilocal < 3);
   if (measured[ilocal] != measured_ || fixed[ilocal] != fixed_) invalidateCache();
   measured[ilocal] = measured_;
   fixed[ilocal] = fixed_;
-// this doesn't work inn constructor, since par[i], mass etc are not initialized yet!!!!  
+// this doesn't work in constructor, since par[i], mass etc are not initialized yet!!!!  
 //  return setParam (ilocal, par_);
 // old version of bool ParticleFitObject::setParam (int ilocal, double par_ )
 //  if (!isfinite(par_)) return false;  doesn't exist anymore?
@@ -109,17 +124,12 @@ bool PhotonFitObjectPxyg::setParam (int ilocal, double par_,
   return true;
 } 
 
-bool PhotonFitObjectPxyg::setParam (int i, double par_ ) {
+bool ISRPhotonFitObject::setParam (int i, double par_ ) {
   invalidateCache();
-//   if (i==0) {
-//      std::cout << "setParam: par_ = " << par_ << endl;
-//      std::cout << "setParam: par[0] = " << par[0] << endl;
-//   }   
   bool result = (par_-par[i])*(par_-par[i]) > eps2*cov[i][i]; 
   switch (i) {
     // p_x
     case 0: par[0] = par_;
-            //std::cout << "setParam: par[0] = " << par[0] << endl;
             break;
     // p_y
     case 1: par[1] = par_;
@@ -127,23 +137,21 @@ bool PhotonFitObjectPxyg::setParam (int i, double par_ ) {
     // p_g
     case 2: par[2] = par_;
             break;          
-    default: std::cerr << "PhotonFitObjectPxyg::setParam:   Illegal i=" << i << std::endl;
+    default: std::cerr << "ISRPhotonFitObject::setParam:   Illegal i=" << i << std::endl;
   }
   return result;
 }
  
-bool PhotonFitObjectPxyg::updateParams (double p[], int idim) {
+bool ISRPhotonFitObject::updateParams (double p[], int idim) {
   invalidateCache();
   
   int i2 = getGlobalParNum(2);
-// std::cout << "updateParams: i2 = " << i2 << "\n";
-// std::cout << "updateParams: idim = " << idim << "\n";
   assert (i2 >= 0 && i2 < idim);
   
   double p2 = p[i2];
-  if(debug){std::cout << "PhotonFitObjectPxyg::updateParams:   p2(new) = " << p[i2] << "   par[2](old) = " << par[2] << endl;}
-  assert( !std::isinf(p2) );   assert( !std::isnan(p2) );
-  
+  #ifdef DEBUG
+    std::cout << "ISRPhotonFitObject::updateParams:   p2(new) = " << p[i2] << "   par[2](old) = " << par[2] << endl;
+  #endif
   bool result = ((p2-par[2])*(p2-par[2]) > eps2*cov[2][2]);
 
   par[2] = p2;
@@ -152,39 +160,41 @@ bool PhotonFitObjectPxyg::updateParams (double p[], int idim) {
 }  
 
 // these depend on actual parametrisation!
-double PhotonFitObjectPxyg::getPx() const {  assert( !std::isinf(par[0]) );   assert( !std::isnan(par[0]) );
-return par[0];}
+double ISRPhotonFitObject::getPx() const {
+  return par[0];
+}
 
-double PhotonFitObjectPxyg::getPy() const {  assert( !std::isinf(par[1]) );   assert( !std::isnan(par[1]) );
-return par[1];}
+double ISRPhotonFitObject::getPy() const {
+  return par[1];
+}
 
-double PhotonFitObjectPxyg::getPz() const {
+double ISRPhotonFitObject::getPz() const {
   if (!cachevalid) updateCache();
   return pz;
 }
 
-double PhotonFitObjectPxyg::getE() const {
+double ISRPhotonFitObject::getE() const {
   if (!cachevalid) updateCache();
   return p;
 }
-double PhotonFitObjectPxyg::getP() const {
+double ISRPhotonFitObject::getP() const {
   if (!cachevalid) updateCache();
   return p;
 }
-double PhotonFitObjectPxyg::getP2() const {
+double ISRPhotonFitObject::getP2() const {
   if (!cachevalid) updateCache();
   return p2;
 }
-double PhotonFitObjectPxyg::getPt() const {
+double ISRPhotonFitObject::getPt() const {
   if (!cachevalid) updateCache();
   return std::sqrt(pt2);
 }
-double PhotonFitObjectPxyg::getPt2() const {
+double ISRPhotonFitObject::getPt2() const {
   if (!cachevalid) updateCache();
   return pt2;
 }
 
-double PhotonFitObjectPxyg::getDPx(int ilocal) const {
+double ISRPhotonFitObject::getDPx(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -195,7 +205,7 @@ double PhotonFitObjectPxyg::getDPx(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObjectPxyg::getDPy(int ilocal) const {
+double ISRPhotonFitObject::getDPy(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -206,7 +216,7 @@ double PhotonFitObjectPxyg::getDPy(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObjectPxyg::getDPz(int ilocal) const {
+double ISRPhotonFitObject::getDPz(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -217,7 +227,7 @@ double PhotonFitObjectPxyg::getDPz(int ilocal) const {
   return 0; 
 }
 
-double PhotonFitObjectPxyg::getDE(int ilocal) const {
+double ISRPhotonFitObject::getDE(int ilocal) const {
   assert (ilocal >= 0 && ilocal < NPAR);
   if (!cachevalid) updateCache();
   switch (ilocal) {
@@ -228,7 +238,7 @@ double PhotonFitObjectPxyg::getDE(int ilocal) const {
   return 0; 
 }
  
-void   PhotonFitObjectPxyg::addToDerivatives (double der[], int idim, 
+void   ISRPhotonFitObject::addToDerivatives (double der[], int idim, 
                                        double efact, double pxfact, 
                                        double pyfact, double pzfact) const {
   int i0 = globalParNum[0];
@@ -266,26 +276,24 @@ void   PhotonFitObjectPxyg::addToDerivatives (double der[], int idim,
   der[i2] += der2;
 }
     
-void   PhotonFitObjectPxyg::addTo2ndDerivatives (double der2[], int idim, 
+void   ISRPhotonFitObject::addTo2ndDerivatives (double der2[], int idim, 
                                           double efact, double pxfact, 
                                           double pyfact, double pzfact) const {
   int i2 = globalParNum[2];
   assert (i2 >= 0 && i2 < idim);
   
   if (!cachevalid) updateCache();
-  // if p==0, 2nd derivates are zero (catch up 1/0)
-  if (p==0) return;
   
   double der22 = pzfact*d2pz22 + efact*d2E22;
     
   der2[idim*i2+i2] += der22;
 }
     
-void   PhotonFitObjectPxyg::addTo2ndDerivatives (double M[], int idim,  double lambda, double der[]) const {
+void   ISRPhotonFitObject::addTo2ndDerivatives (double M[], int idim,  double lambda, double der[]) const {
   addTo2ndDerivatives (M, idim, lambda*der[0], lambda*der[1], lambda*der[2], lambda*der[3]);
 }
 
-void   PhotonFitObjectPxyg::addTo1stDerivatives (double M[], int idim, double der[], int kglobal) const {
+void   ISRPhotonFitObject::addTo1stDerivatives (double M[], int idim, double der[], int kglobal) const {
   assert (kglobal >= 0 && kglobal < idim);
   int i2 = globalParNum[2];
   assert (i2 >= 0 && i2 < idim);
@@ -299,17 +307,36 @@ void   PhotonFitObjectPxyg::addTo1stDerivatives (double M[], int idim, double de
 }
 
          
-double PhotonFitObjectPxyg::PgFromPz(double pz){
+double ISRPhotonFitObject::PgFromPz(double pz){
   int sign = (pz>0.) - (pz<0.);
-//   double u = sign*s/b*( pow(fabs(pz),b) - PzMinB );
   double u = ( pow(fabs(pz),b) - PzMinB ) / (PzMaxB-PzMinB);
-  assert(u>=0. && u<1.);        // corresponds to PzMin <= pz < PzMax
+
+  if(u<0.){
+  #ifdef NO_MARLIN
+    cout << 
+  #else
+    m_out(WARNING) << 
+  #endif
+    "ISRPhotonFitObject: Initial pz with abs(pz) < pzMin adjusted to zero." << std::endl;
+    u = 0.;
+  }
+
+  if(u>=1.){
+  #ifdef NO_MARLIN
+    cout << 
+  #else
+    m_out(WARNING) << 
+  #endif
+    "ISRPhotonFitObject: Initial pz with abs(pz) >= pzMax adjusted." << std::endl;
+    u = 0.99999999;
+  }
+
   double g = std::log(1.-u*u);
   double g4pa = g + 4./pi_/a;
-  return sign*sqrt(-g4pa+sqrt( g4pa*g4pa-4./a*g )) ;
+  return sign*sqrt( -g4pa+sqrt( g4pa*g4pa-4./a*g ) ) ;
 }
 
-void PhotonFitObjectPxyg::initCov() {
+void ISRPhotonFitObject::initCov() {
   for (int i = 0; i < NPAR; ++i) {
     for (int j = 0; j < NPAR; ++j) {
       cov[i][j] = static_cast<double>(i == j);
@@ -317,11 +344,11 @@ void PhotonFitObjectPxyg::initCov() {
   }    
 }
 
-void PhotonFitObjectPxyg::invalidateCache() const {
+void ISRPhotonFitObject::invalidateCache() const {
   cachevalid = false;
 }
 
-void PhotonFitObjectPxyg::addToGlobalChi2DerVector (double *y, int idim, 
+void ISRPhotonFitObject::addToGlobalChi2DerVector (double *y, int idim, 
                                              double lambda, double der[]) const {
   int i2 = globalParNum[2];
   assert (i2 >= 0 && i2 < idim);
@@ -333,8 +360,7 @@ void PhotonFitObjectPxyg::addToGlobalChi2DerVector (double *y, int idim,
   y[i2] += lambda*d2;
 }
 
-void PhotonFitObjectPxyg::updateCache() const {
-  // std::cout << "PhotonFitObjectPxyg::updateCache" << std::endl;
+void ISRPhotonFitObject::updateCache() const {
   double px = par[0];
   double py = par[1];
   double pg = par[2];
@@ -343,7 +369,6 @@ void PhotonFitObjectPxyg::updateCache() const {
   double pg2h = pg*pg/2.;
   double exponent = -pg2h*(4./pi_+a*pg2h)/(1.+a*pg2h);
   double u = sqrt( (exponent<-1.e-14) ? 1.-exp( exponent ) : -exponent );  // approximation to avoid numerical problem
-//   pz = sign*pow( ( PzMinB + b/s*u ) , (1./b) );
   pz = sign*pow( ( PzMinB + (PzMaxB-PzMinB)*u ) , (1./b) );
 
   pt2 = px*px+py*py;
@@ -383,16 +408,16 @@ void PhotonFitObjectPxyg::updateCache() const {
     d2E22 = 0.;
   }
 
-  if(debug){
-    cout << "PhotonFitObjectPxyg::updateCache:   pg: " << pg << "   pz: " << pz << "   p: " << p << "   p^2: " << p2 << "\n"
-         << "                                    DpzDpg: " << dpz2 << "   DEDpg: " << dE2 << "   D2pzDpg2: " << d2pz22
-                                          << "   D2EDpg2: " << d2E22 << endl;
-  }
+  #ifdef DEBUG
+    cout << "ISRPhotonFitObject::updateCache:   pg: " << pg << "   pz: " << pz << "   p: " << p << "   p^2: " << p2 << "\n"
+         << "                                    Dpz/Dpg: " << dpz2 << "   DE/Dpg: " << dE2 << "   D^2pz/Dpg^2: " << d2pz22
+                                          << "   D^2E/Dpg^2: " << d2E22 << endl;
+  #endif
   
   cachevalid = true;
 }
 
-double PhotonFitObjectPxyg::getError2 (double der[]) const {
+double ISRPhotonFitObject::getError2 (double der[]) const {
   if (!cachevalid) updateCache();
   double cov4[4][4]; // covariance of E, px, py, px
   cov4[0][0] =                                       // E, E

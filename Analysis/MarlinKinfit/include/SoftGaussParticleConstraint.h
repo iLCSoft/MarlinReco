@@ -5,7 +5,7 @@
  * - 12.2.08 BL: First version
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SoftGaussParticleConstraint.h,v $
  * - Revision 1.2  2008/02/13 12:37:38  blist
  * - new file BaseFitter.cc
  * -
@@ -59,8 +59,8 @@ class ParticleFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2008/02/13 12:37:38 $
+ * $Author: blist $
  *
  */
 

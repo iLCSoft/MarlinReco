@@ -1,36 +1,38 @@
  
-#ifndef __PHOTONFITOBJECT_H
-#define __PHOTONFITOBJECT_H
+#ifndef __SIMPLEPHOTONFITOBJECT_H
+#define __SIMPLEPHOTONFITOBJECT_H
 
 #include "ParticleFitObject.h"
 
-// Class PhotonFitObject
+// Class SimplePhotonFitObject
 /// Class for ISR/Beamstrahlung photons with (p_x,p_y (both fix),  p_z (free)) in kinematic fits
 /**
  *
  * Author: Moritz Beckmann
- * $Date: 2009-02-26 18:35:17 $
- * $Author: beckmann $
+ * $Date: 2010/06/11 20:32:51 $
+ * $Author: mbeckman $
  *
  * \b Changelog:
  * - 
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: SimplePhotonFitObject.h,v $
+ * - Revision 1.1  2010/06/11 20:32:51  mbeckman
+ * - Renamed PhotonFitObjects, cleaned them up for usage
+ * -
  * - Revision 1.3  2009/02/23 12:03:18  mbeckman
  * - - PhotonFitObject:     bug fix (1/0), removed dispensable variables
  * - - PhotonFitObjectPxyg: bug fixes (1/0, order of computing variables), modified parametrization
  * -
  * - Revision 1.2  2009/02/18 11:53:42  mbeckman
  * - documentation, debug output
- * -
  *
  */ 
-class PhotonFitObject : public ParticleFitObject {
+class SimplePhotonFitObject : public ParticleFitObject {
   public:
-    PhotonFitObject(double px, double py, double pz,   /// initial values for photon (p_x,p_y fix)
+    SimplePhotonFitObject(double px, double py, double pz,   /// initial values for photon (p_x,p_y fix)
                  double Dpz);                          /// sigma for pz
-    virtual ~PhotonFitObject();
+    virtual ~SimplePhotonFitObject();
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number
@@ -131,5 +133,4 @@ class PhotonFitObject : public ParticleFitObject {
 
 
 
-#endif // __PHOTONFITOBJECT_H
-
+#endif // __SIMPLEPHOTONFITOBJECT_H

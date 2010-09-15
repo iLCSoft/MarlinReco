@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: PConstraint.h,v $
  * - Revision 1.2  2008/02/12 11:03:32  blist
  * - Added doxygen configuration
  * -
@@ -16,8 +16,8 @@
 // Class PConstraint
 //
 // Author: Jenny Boehme, Bennmo List
-// Last update: $Date: 2009-02-26 18:35:17 $
-//          by: $Author: beckmann $
+// Last update: $Date: 2008/02/12 11:03:32 $
+//          by: $Author: blist $
 // 
 // Description: constraint 
 // a*sum(px)+b*sum(py)+c*sum(pz)+d*sum(E)=e
@@ -36,8 +36,8 @@ class ParticleFitObject;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/12 11:03:32 $
+ *          by: $Author: blist $
  *
  */
 class PConstraint : public ParticleConstraint {

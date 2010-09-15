@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: FourVector.h,v $
  * - Revision 1.1  2008/02/12 10:19:05  blist
  * - First version of MarlinKinfit
  * -
@@ -30,8 +30,8 @@
 /**
  *
  * Author: Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/12 10:19:05 $
+ *          by: $Author: blist $
  *
  */
 class FourVector {

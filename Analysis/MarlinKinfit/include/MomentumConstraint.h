@@ -4,7 +4,7 @@
  * \b Changelog:
  *
  * \b CVS Log messages:
- * - $Log: not supported by cvs2svn $
+ * - $Log: MomentumConstraint.h,v $
  * - Revision 1.1  2008/02/18 09:59:34  blist
  * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
  * -
@@ -17,8 +17,8 @@
 // Class MomentumConstraint
 //
 // Author: Benno List, Jenny List
-// Last update: $Date: 2009-02-26 18:35:17 $
-//          by: $Author: beckmann $
+// Last update: $Date: 2008/02/18 09:59:34 $
+//          by: $Author: blist $
 // 
 // Description: constraint 
 // efact*sum(E_i) + pxfact*sum(p_x,i)+pyfact*sum(p_y,i)+pzfact*sum(p_z,i)-value = 0
@@ -37,8 +37,8 @@ class ParticleFitObject;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009-02-26 18:35:17 $
- *          by: $Author: beckmann $
+ * Last update: $Date: 2008/02/18 09:59:34 $
+ *          by: $Author: blist $
  *
  */
 class MomentumConstraint : public ParticleConstraint {

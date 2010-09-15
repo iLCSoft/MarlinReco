@@ -5,6 +5,7 @@
     #                                        #
     ##########################################-->
 
+<!-- Add to ${PROJECT_NAME}_DEPENDS in CMakeLists.txt: MarlinReco CLHEP RAIDA -->
 
 <marlin>
  <execute>
@@ -25,12 +26,12 @@
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">
  <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
-  <!-- compression of output file 0: false >0: true (default) -->
-  <parameter name="Compress" type="int">1 </parameter>
+  <!-- compression of output file?   0: false >0: true (default) -->
+  <parameter name="Compress" type="int"> 1 </parameter>
   <!-- filename without extension-->
-  <parameter name="FileName" type="string">WW5CFit_OPAL </parameter>
+  <parameter name="FileName" type="string"> WW5CFit_OPAL </parameter>
   <!-- type of output file xml (default) or root ( only OpenScientist)-->
-  <parameter name="FileType" type="string">root </parameter>
+  <parameter name="FileType" type="string"> root </parameter>
 </processor>
 
 
@@ -38,7 +39,12 @@
   <!--WW5CFit does a 5C fit on 4 jet events (Px, Py, Pz, E, M12 = M34 (for all three permutations)) -->
   <!--Name of the Jet collection-->
   <parameter name="JetCollectionName" type="string" lcioInType="ReconstructedParticle"> Durham2Jets </parameter>
+  <!-- center-of-mass energy (default: 500.) -->
   <parameter name="ECM" type="float"> 500. </parameter>
+  <!-- include ISR in fit hypothesis?    0: false >0: true (default) -->
+  <parameter name="FitISR" type="int"> 1 </parameter>
+  <!-- maximum energy (=|p_z|) for a single ISR photon  (default: 225.) -->
+  <parameter name="ISRPzMax" type="float"> 225. </parameter>
 </processor>
 
 </marlin>

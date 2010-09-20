@@ -120,10 +120,10 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
             // position of FTD layer is fixed along Z axis
             newPos[2] = pos[2] ;
           
-            float de_dx ;
+            float edep ;
             float dedxSmear = 0.0 ;
-            de_dx = SimTHit->getdEdx() ;
-            de_dx = de_dx + dedxSmear ; 
+            edep = SimTHit->getEDep() ;
+            edep = edep + dedxSmear ; 
             MCParticle *mcp ;
             mcp = SimTHit->getMCParticle() ;
             
@@ -133,7 +133,7 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
             //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
             trkHit->setPosition(  newPos  ) ;
 
-            trkHit->setdEdx( de_dx ) ;
+            trkHit->setEDep( edep ) ;
             trkHit->setType( 200+abs(SimTHit->getCellID()));
             float covMat[TRKHITNCOVMATRIX]={_pointReso*_pointReso,0.,_pointReso*_pointReso,0.,0.,0.};
             trkHit->setCovMatrix(covMat);      

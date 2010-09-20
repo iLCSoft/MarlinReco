@@ -447,11 +447,11 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             
           }
           
-          float de_dx ;
+          float edep ;
           float dedxSmear = 0.0 ;
-          de_dx = SimTHit->getdEdx() ;
+          edep = SimTHit->getEDep() ;
           
-          de_dx = de_dx + dedxSmear ; 
+          edep = edep + dedxSmear ; 
           
           MCParticle *mcp ;
           mcp = SimTHit->getMCParticle() ;
@@ -462,7 +462,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
           trkHit->setPosition( newPos ) ;
           
-          trkHit->setdEdx( de_dx ) ;
+          trkHit->setEDep( edep ) ;
           if (iColl==0) 
             trkHit->setType(100+celId ); 
           else {

@@ -444,7 +444,7 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
       
    //      for (int iHit=0; iHit<int(simTrkHitVec.size()); ++iHit) {
 //           SimTrackerHit * hit = simTrkHitVec[iHit];
-//           //cout<<"hit 1"<<iHit <<" "<<hit->getdEdx()<<endl;
+//           //cout<<"hit 1"<<iHit <<" "<<hit->getEDep()<<endl;
 //         }
        
 
@@ -461,13 +461,13 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
        //  if (_produceFullPattern == 1 && recoHit !=0 ) {
 //           SimTrackerHitImpl * sth = new SimTrackerHitImpl();
 //           sth->setCellID(simTrkHit->getCellID());
-//           sth->setdEdx(simTrkHit->getdEdx());
+//           sth->setEDep(simTrkHit->getEDep());
 //           double currentPosition[3];
 //           for (int j=0; j<3; ++j)
 //             currentPosition[j] = 0.5*(_currentExitPoint[j] + _currentEntryPoint[j]);
 //           sth->setPosition(currentPosition);
 //           TrackerHitImpl * th = new TrackerHitImpl();
-//           th->setdEdx(recoHit->getdEdx());
+//           th->setEDep(recoHit->getEDep());
 //           double xp[3];
 //           for (int j=0; j<3; ++j)
 //             xp[j] = recoHit->getPosition()[j];
@@ -758,7 +758,7 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
   double dEmean = 1e-6*_energyLoss * trackLength;  
 
 
-  //  dEmean = hit->getdEdx()/((double)_numberOfSegments);
+  //  dEmean = hit->getEDep()/((double)_numberOfSegments);
 
 
   _numberOfSegments = int(trackLength/_segmentLength) + 1;
@@ -769,7 +769,7 @@ void CCDDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
 // if(_numberOfSegments>100) cout <<"check100,ionpointnumber: "<< _numberOfSegments<<endl;
   if(_numberOfSegments>maxnionpoint){   
     _numberOfSegments=maxnionpoint;
-     dEmean = hit->getdEdx()/((double)_numberOfSegments)*epitaxdep/_layerThickness[_currentLayer];
+     dEmean = hit->getEDep()/((double)_numberOfSegments)*epitaxdep/_layerThickness[_currentLayer];
     }
 
 
@@ -957,9 +957,9 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
               }
             }
             if (iexist == 1) {
-              float de = existingHit->getdEdx();
-              de += charge;
-              existingHit->setdEdx( de );
+              float edep = existingHit->getEDep();
+              edep += charge;
+              existingHit->setEDep( edep );
             }
             else {
               SimTrackerHitImpl * hit = new SimTrackerHitImpl();
@@ -968,7 +968,7 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
               // hit->setPosition( pos );
 
               hit->setCellID( currentcellid );
-              hit->setdEdx( charge );
+              hit->setEDep( charge );
               vectorOfHits.push_back( hit );
             }
           }
@@ -1049,17 +1049,17 @@ void CCDDigitizer::PoissonSmearer( SimTrackerHitImplVec & simTrkVec ) {
 
   for (int ihit=0; ihit<int(simTrkVec.size()); ++ihit) {
     SimTrackerHitImpl * hit = simTrkVec[ihit];
-    double charge = hit->getdEdx();
+    double charge = hit->getEDep();
     double rng;
     if (charge > 1000.) { // assume Gaussian 
       double sigma = sqrt(charge);
       rng = double(RandGauss::shoot(charge,sigma));
-      hit->setdEdx(rng); 
+      hit->setEDep(rng); 
     }
     else { // assume Poisson
       rng = double(RandPoisson::shoot(charge));
     }
-    hit->setdEdx(float(rng));
+    hit->setEDep(float(rng));
   }  
 }
 
@@ -1074,9 +1074,9 @@ void CCDDigitizer::GainSmearer( SimTrackerHitImplVec & simTrkVec ) {
   for (int i=0;i<nPixels;++i) {
     double Noise = RandGauss::shoot(0.,_electronicNoise);
     SimTrackerHitImpl * hit = simTrkVec[i];
-    double charge = hit->getdEdx() + Noise ;
+    double charge = hit->getEDep() + Noise ;
     if (charge> _saturation) charge = _saturation;
-    hit->setdEdx( charge );
+    hit->setEDep( charge );
   }
 
 }
@@ -1098,12 +1098,12 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];
       
-      //  if(_debug) cout<<"hit "<<iHit <<" "<<hit->getdEdx()<<endl;
-      // if(_debug) cout<< "dedx:  "<< hit->getdEdx()<<endl;
-      //istsignal->fill(hit->getdEdx(),1);
+      //  if(_debug) cout<<"hit "<<iHit <<" "<<hit->getEDep()<<endl;
+      // if(_debug) cout<< "edep:  "<< hit->getEDep()<<endl;
+      //istsignal->fill(hit->getEDep(),1);
       
-      if (hit->getdEdx() > _threshold) {
-        charge+= hit->getdEdx();
+      if (hit->getEDep() > _threshold) {
+        charge+= hit->getEDep();
         
         
         int cellID = hit->getCellID();
@@ -1111,11 +1111,11 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         int iy = cellID - 100000 * ix;                 
         double xCurrent,yCurrent;
         TransformCellIDToXY(ix,iy,xCurrent,yCurrent);
-        pos[0]+=xCurrent* hit->getdEdx();
-        pos[1]+=yCurrent* hit->getdEdx();
+        pos[0]+=xCurrent* hit->getEDep();
+        pos[1]+=yCurrent* hit->getEDep();
         
         // for (int j=0; j<2; ++j){
-        // pos[j] += hit->getdEdx()*hit->getPosition()[j];
+        // pos[j] += hit->getEDep()*hit->getPosition()[j];
       }
       
     }
@@ -1131,8 +1131,8 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];
                      
-      if (hit->getdEdx() > emax) {
-        emax=hit->getdEdx();        
+      if (hit->getEDep() > emax) {
+        emax=hit->getEDep();        
         int cellID = hit->getCellID();
         xcentre = cellID / 100000 ;
         ycentre = cellID - 100000 * xcentre;
@@ -1152,14 +1152,14 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
       bool inframe = (abs(ix-xcentre) < _framesize) && (abs(iy-ycentre) < _framesize);
       if (inframe) {
                        
-        charge+= hit->getdEdx();
+        charge+= hit->getEDep();
         double xCurrent,yCurrent;
         TransformCellIDToXY(ix,iy,xCurrent,yCurrent);
-        pos[0]+=xCurrent* hit->getdEdx();
-        pos[1]+=yCurrent* hit->getdEdx();
+        pos[0]+=xCurrent* hit->getEDep();
+        pos[1]+=yCurrent* hit->getEDep();
 
 #ifdef CCD_diagnostics
-        double a=hit->getdEdx();
+        double a=hit->getEDep();
         histsignalframe->fill(a,1);
 #endif
       }
@@ -1171,7 +1171,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
   
   if(charge>0){
     TrackerHitImpl * recoHit = new TrackerHitImpl();
-    recoHit->setdEdx( charge );
+    recoHit->setEDep( charge );
     for (int j=0; j<2; ++j)
       pos[j]/=charge;
     
@@ -1223,7 +1223,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
        
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];  
-      if (hit->getdEdx() > _threshold) {
+      if (hit->getEDep() > _threshold) {
         nPixels++;
   
         int cellID = hit->getCellID();
@@ -1334,7 +1334,7 @@ void CCDDigitizer::PrintInfo( SimTrackerHit * simHit, TrackerHitImpl * recoHit) 
             << " " << recoHit->getPosition()[0]
             << " " << recoHit->getPosition()[1]
             << " " << recoHit->getPosition()[2]
-            << " total number of electrons " << recoHit->getdEdx() <<std::endl;
+            << " total number of electrons " << recoHit->getEDep() <<std::endl;
     
   
   std::cout << std::endl;
@@ -1369,7 +1369,7 @@ void CCDDigitizer::generateBackground(LCCollectionVec * col) {
       TransformToLab(pos,xLab);
       TrackerHitImpl * trkHit = new TrackerHitImpl();
       trkHit->setPosition( xLab );
-      trkHit->setdEdx(1000.);
+      trkHit->setEDep(1000.);
       trkHit->setType(ilayer+1);
       col->addElement( trkHit );
     }

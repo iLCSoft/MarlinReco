@@ -7,7 +7,7 @@ using namespace std;
 
 Voxel_tpc::Voxel_tpc(){
 }
-Voxel_tpc::Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double dedx, double RPhiRes, double ZRes)
+Voxel_tpc::Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double edep, double RPhiRes, double ZRes)
 {
   _row_index = row;
   _phi_index = phi;
@@ -15,20 +15,20 @@ Voxel_tpc::Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], 
   _coord.setX(pos[0]);
   _coord.setY(pos[1]);
   _coord.setZ(pos[2]);
-  _dE_dx = dedx;
+  _edep = edep;
   _rPhiRes = RPhiRes;
   _zRes = ZRes;
   _isMerged = false;
   _isClusterHit = false;
 }
 
-Voxel_tpc::Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double dedx, double RPhiRes, double ZRes)
+Voxel_tpc::Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double edep, double RPhiRes, double ZRes)
 {
   _row_index = row;
   _phi_index = phi;
   _z_index = z;
   _coord=coord;
-  _dE_dx = dedx;
+  _edep = edep;
   _rPhiRes = RPhiRes;
   _zRes = ZRes;
   _isMerged = false;

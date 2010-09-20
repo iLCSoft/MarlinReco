@@ -190,7 +190,7 @@ void VTXNoiseHits::processEvent( LCEvent * evt ) {
 
         hit->setPosition( pos ) ;
 
-        hit->setdEdx( 0. ) ; // FIXME: which dedx should be used for noise hits 
+        hit->setEDep( 0. ) ; // FIXME: which dedx should be used for noise hits 
 
         hit->setType( 101 + i  ) ; // encoding used in VTXDigi: 100 + layernum + 1
 

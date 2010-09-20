@@ -312,7 +312,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
  //     _momX = simTrkHit->getMomentum()[0];
  //     _momY = simTrkHit->getMomentum()[1];
  //     _momZ = simTrkHit->getMomentum()[2];
- //     _eDep = simTrkHit->getdEdx();
+ //     _eDep = simTrkHit->getEDep();
  //     float totPartMomentum = sqrt(_momX*_momX+_momY*_momY+_momZ*_momZ);
 
       // do digitization for one SimTrackerHit 
@@ -335,7 +335,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 
    //      for (int iHit=0; iHit<int(simTrkHitVec.size()); ++iHit) {
 //           SimTrackerHit * hit = simTrkHitVec[iHit];
-//           //cout<<"hit 1"<<iHit <<" "<<hit->getdEdx()<<endl;
+//           //cout<<"hit 1"<<iHit <<" "<<hit->getEDep()<<endl;
 //         }
 
         // std::cout << "End of ProduceHits( ) " << std::endl;
@@ -367,7 +367,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
             int nSimHits = int( simTrkHitVec.size() );
             for (int iS=0;iS<nSimHits;++iS) {
               SimTrackerHitImpl * sth = simTrkHitVec[iS];
-              float charge = sth->getdEdx();
+              float charge = sth->getEDep();
               if ( charge >_threshold) {
                 SimTrackerHitImpl * newsth = new SimTrackerHitImpl();
                 double spos[3];
@@ -376,7 +376,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
                   spos[iC] = sth->getPosition()[iC];
                 TransformToLab(spos,sLab);
                 newsth->setPosition(sLab);
-                newsth->setdEdx(charge);
+                newsth->setEDep(charge);
                 STHLocCol->addElement(newsth);
                 recoHit->rawHits().push_back( newsth );
               }
@@ -682,7 +682,7 @@ void VTXDigitizer::ProduceIonisationPoints( SimTrackerHit * hit) {
 //                                               double(1000.*dEmean))/1000.;
 
 
-  //  dEmean = hit->getdEdx()/((double)_numberOfSegments);
+  //  dEmean = hit->getEDep()/((double)_numberOfSegments);
   _numberOfSegments = int(trackLength/_segmentLength) + 1;
   //std::cout << "number of segments = " << _numberOfSegments << std::endl;
   dEmean = dEmean/((double)_numberOfSegments);
@@ -833,16 +833,16 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
               }
             }
             if (iexist == 1) {
-              float de = existingHit->getdEdx();
-              de += totCharge;
-              existingHit->setdEdx( de );
+              float edep = existingHit->getEDep();
+              edep += totCharge;
+              existingHit->setEDep( edep );
             }
             else {
               SimTrackerHitImpl * hit = new SimTrackerHitImpl();
               double pos[3] = {xCurrent, yCurrent, _layerHalfThickness[_currentLayer]};
               hit->setPosition( pos );
               hit->setCellID( cellID );
-              hit->setdEdx( totCharge );
+              hit->setEDep( totCharge );
               vectorOfHits.push_back( hit );
             }
           }
@@ -992,17 +992,17 @@ void VTXDigitizer::PoissonSmearer( SimTrackerHitImplVec & simTrkVec ) {
 
   for (int ihit=0; ihit<int(simTrkVec.size()); ++ihit) {
     SimTrackerHitImpl * hit = simTrkVec[ihit];
-    double charge = hit->getdEdx();
+    double charge = hit->getEDep();
     double rng;
     if (charge > 1000.) { // assume Gaussian 
       double sigma = sqrt(charge);
       rng = double(RandGauss::shoot(charge,sigma));
-      hit->setdEdx(rng); 
+      hit->setEDep(rng); 
     }
     else { // assume Poisson
       rng = double(RandPoisson::shoot(charge));
     }
-    hit->setdEdx(float(rng));
+    hit->setEDep(float(rng));
   }  
 }
 
@@ -1017,8 +1017,8 @@ void VTXDigitizer::GainSmearer( SimTrackerHitImplVec & simTrkVec ) {
   for (int i=0;i<nPixels;++i) {
     double Noise = RandGauss::shoot(0.,_electronicNoise);
     SimTrackerHitImpl * hit = simTrkVec[i];
-    double charge = hit->getdEdx() + Noise ;
-    hit->setdEdx( charge );
+    double charge = hit->getEDep() + Noise ;
+    hit->setEDep( charge );
   }
 
 }
@@ -1046,17 +1046,17 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
 //cout<<"threshold "<<_threshold<<endl;
   for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
     SimTrackerHit * hit = simTrkVec[iHit];
-    //cout<<"hit "<<iHit <<" "<<hit->getdEdx()<<endl;
-    if (hit->getdEdx() > _threshold) {
+    //cout<<"hit "<<iHit <<" "<<hit->getEDep()<<endl;
+    if (hit->getEDep() > _threshold) {
       if (nPixels < 100)
-        _amplC[nPixels] = hit->getdEdx();
+        _amplC[nPixels] = hit->getEDep();
       nPixels++;
-      charge += hit->getdEdx();
+      charge += hit->getEDep();
       int cellID = hit->getCellID();
       int ix = cellID / 100000 ;
       int iy = cellID - 100000 * ix;      
-      if (hit->getdEdx() > _amplMax) {
-        _amplMax = hit->getdEdx();
+      if (hit->getEDep() > _amplMax) {
+        _amplMax = hit->getEDep();
         ixSeed = ix;
         iySeed = iy;
       }
@@ -1070,7 +1070,7 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
       if (iy < iymin)
         iymin = iy;
       for (int j=0; j<2; ++j)
-        pos[j] += hit->getdEdx()*hit->getPosition()[j];
+        pos[j] += hit->getEDep()*hit->getPosition()[j];
     }
   }
 
@@ -1107,42 +1107,42 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
 
   if (charge > 0. && nPixels > 0) {
     TrackerHitImpl * recoHit = new TrackerHitImpl();
-    recoHit->setdEdx( charge );
+    recoHit->setEDep( charge );
     for (int iY=0;iY<20;++iY) {
       _amplY[iY] = 0.0;
       _amplX[iY] = 0.0;
     }
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];
-      if (hit->getdEdx() > _threshold) {
+      if (hit->getEDep() > _threshold) {
         float deltaX = hit->getPosition()[0]-pos[0];
-        _clusterWidthX += deltaX*deltaX*hit->getdEdx();
+        _clusterWidthX += deltaX*deltaX*hit->getEDep();
         deltaX = hit->getPosition()[1]-pos[1];
-        _clusterWidthY += deltaX*deltaX*hit->getdEdx();
+        _clusterWidthY += deltaX*deltaX*hit->getEDep();
         int cellID = hit->getCellID();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix;
         if ((iy - iymin) < 20)
-          _amplY[iy-iymin] = _amplY[iy-iymin] + hit->getdEdx();
+          _amplY[iy-iymin] = _amplY[iy-iymin] + hit->getEDep();
         if ((ix - ixmin) < 20) 
-          _amplX[ix-ixmin] = _amplX[ix-ixmin] + hit->getdEdx();        
+          _amplX[ix-ixmin] = _amplX[ix-ixmin] + hit->getEDep();        
         bool frame = abs(ix-ixSeed) < 2;
         frame = frame && abs(iy-iySeed) < 2;
         if (frame) {
           _ncell33++;
-          _ampl33 += hit->getdEdx();
+          _ampl33 += hit->getEDep();
         } 
         frame = abs(ix-ixSeed) < 3;
         frame = frame && abs(iy-iySeed) < 3;
         if (frame) {
           _ncell55++;
-          _ampl55 += hit->getdEdx();
+          _ampl55 += hit->getEDep();
         }
         frame = abs(ix-ixSeed) < 4;
         frame = frame && abs(iy-iySeed) < 4;
         if (frame) {
           _ncell77++;
-          _ampl77 += hit->getdEdx();
+          _ampl77 += hit->getEDep();
         }
       }
     }
@@ -1265,7 +1265,7 @@ void VTXDigitizer::generateBackground(LCCollectionVec * col) {
       TransformToLab(pos,xLab);
       TrackerHitImpl * trkHit = new TrackerHitImpl();
       trkHit->setPosition( xLab );
-      trkHit->setdEdx(1000.);
+      trkHit->setEDep(1000.);
       trkHit->setType(ilayer+1);
       col->addElement( trkHit );
     }

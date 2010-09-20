@@ -225,16 +225,16 @@ void FPCCDDigitizer::processEvent( LCEvent* evt )
 //   FPCCDID_t fpccdID=encodeFPCCDID(layer, posvec);
 //   if( fpccdID.layer >= 0 ) {  // When valid fpccdid is obtained, ..
     
-//     float de_dx ;
+//     float edep ;
 //     float dedxSmear = 0.0 ;
-//     de_dx = simHit->getdEdx() ;
+//     edep = simHit->getEDep() ;
 
 //     MCParticle *mcp ;
 //     mcp = simHit->getMCParticle() ;
 //     FPCCDPixelHit::HitQuality_t quality=FPCCDPixelHit::kSingle;
 
 //     FPCCDPixelHit aHit(fpccdID.layer, fpccdID.ladder, fpccdID.xi, fpccdID.zeta,
-//                        de_dx, quality, mcp);
+//                        edep, quality, mcp);
     
 //     hitVec.addPixelHit(aHit, true);
 
@@ -851,7 +851,7 @@ map<gear::Vector3D*, double> FPCCDDigitizer::getLocalPixel(const SimTrackerHit* 
   map<gear::Vector3D*, double> pixel_local;
   int f_layer = simthit->getCellID() - 1;
   double L_through_pixel = 0.;
-  double dEdx = simthit ->getdEdx();
+  double edep = simthit ->getEDep();
   double dE = 0.;
   int count = 0;
   vector<gear::Vector3D*>::iterator nxt=edgeofpixel.begin();
@@ -864,7 +864,7 @@ map<gear::Vector3D*, double> FPCCDDigitizer::getLocalPixel(const SimTrackerHit* 
     double diffz = (*nxt)->z() - (*fst)->z();
     double mag = sqrt(diffx*diffx+diffy*diffy+diffz*diffz);
     L_through_pixel = mag;
-    dE = dEdx*L_through_pixel;
+    dE = edep*L_through_pixel;
     gear::Vector3D* center_pixel = FindPixel((*fst),(*nxt),f_layer,"central");      // estimate central point of pixels 
     pixel_local.insert(map< gear::Vector3D*, double>::value_type( center_pixel, dE));
     count++;

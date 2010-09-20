@@ -1233,12 +1233,12 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     TrackerHit* trkHitTPC = _goodHits[i];
     
     double *pos;
-    float  de_dx;
+    float  edep;
     float  time;
     
     //      cellId = 	trkHitTPC->getCellID();
     pos = (double*) trkHitTPC->getPosition(); 
-    de_dx = trkHitTPC->getdEdx();
+    edep = trkHitTPC->getEDep();
     time = trkHitTPC->getTime();
     
       // convert to cm needed for BRAHMS(GEANT)
@@ -1249,7 +1249,7 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     // convert de/dx from GeV (LCIO) to number of electrons 
     const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
     double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
-    de_dx = de_dx/tpcIonisationPotential;
+    edep = edep/tpcIonisationPotential;
     
 //       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
 //       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");
@@ -1289,9 +1289,9 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     int mctrack = 0;
     
 
-    TkHitBank->add_hit(x,y,z,de_dx,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
+    TkHitBank->add_hit(x,y,z,edep,subid,mctrack,0,0,icode,tpcRPhiRes,tpcZRes);
     
-    TPCHitBank->add_hit(x,y,z,de_dx,subid,tpcRPhiRes,tpcZRes,mctrack);
+    TPCHitBank->add_hit(x,y,z,edep,subid,tpcRPhiRes,tpcZRes,mctrack);
     
   }
   

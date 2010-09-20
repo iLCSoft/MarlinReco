@@ -15,8 +15,8 @@ class Voxel_tpc{
   // the intialation in the constructor here would be preferable though I don't know how to intialise
   // the array xyz[3] here with pos[3], for the mean time the constructor will be put in the .cc file
   //  Voxel_tpc(int row, int phi, int z, double pos[3]) : row_index(row), phi_index(phi), z_index(z){}
-  Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double dedx, double rPhiRes, double zRes);
-  Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double dedx, double rPhiRes, double zRes);
+  Voxel_tpc(int row, int phi, int z, double pos[3], double posRPhi[2], double edep, double rPhiRes, double zRes);
+  Voxel_tpc(int row, int phi, int z, CLHEP::Hep3Vector coord, double edep, double rPhiRes, double zRes);
   ~Voxel_tpc();
 
   void setAdjacent(Voxel_tpc * p_voxel) { _adjacent_voxels.push_back(p_voxel);}; 
@@ -38,7 +38,7 @@ class Voxel_tpc{
   double getZ() {return _coord.z();};
   double getR() {return _coord.perp();};
   double getPhi() {return _coord.phi();};
-  double getdEdx() {return _dE_dx;};
+  double getEDep() {return _edep;};
   double getRPhiRes() {return _rPhiRes;};
   double getZRes() {return _zRes;};
   const CLHEP::Hep3Vector getHep3Vector() {return _coord;};
@@ -52,7 +52,7 @@ class Voxel_tpc{
   int _z_index;
   vector <Voxel_tpc *> _adjacent_voxels;
   CLHEP::Hep3Vector _coord;
-  double _dE_dx;
+  double _edep;
   double _rPhiRes;
   double _zRes;
   bool _isMerged;

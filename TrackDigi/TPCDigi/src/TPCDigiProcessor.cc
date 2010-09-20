@@ -433,7 +433,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       _SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
 
-      float de_dx;
+      float edep;
       double padPhi(0.0);
       double padTheta (0.0);
       
@@ -604,7 +604,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         continue;
       }
 
-      de_dx = _SimTHit->getdEdx();
+      edep = _SimTHit->getEDep();
       
       // Calculate Point Resolutions according to Ron's Formula 
       
@@ -673,7 +673,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       }
       
       // create a tpc voxel hit and store it for this row
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, de_dx, tpcRPhiRes, tpcZRes);
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, edep, tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
       ++numberOfVoxelsCreated;
@@ -755,7 +755,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double tpcZRes = _binningZ;
 
       // create a tpc voxel hit for this simhit and store it for this tpc pad row
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, _SimTHit->getdEdx(), tpcRPhiRes, tpcZRes);
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, _SimTHit->getEDep(), tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
       ++numberOfVoxelsCreated;      
@@ -1054,7 +1054,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
 
   double pos[3] = {point->x(),point->y(),point->z()}; 
   trkHit->setPosition(pos);
-  trkHit->setdEdx(seed_hit->getdEdx());
+  trkHit->setEDep(seed_hit->getEDep());
   trkHit->setType( 500 );
         
   // check values for inf and nan
@@ -1130,7 +1130,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   double sumZ = 0;
   double sumPhi = 0;
-  double sumdEdx = 0;
+  double sumEDep = 0;
   //  double R = 0;
   double lastR = 0;
 
@@ -1138,7 +1138,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
     
     sumZ += hitsToMerge->at(ihitCluster)->getZ();
     sumPhi += hitsToMerge->at(ihitCluster)->getPhi();
-    sumdEdx += hitsToMerge->at(ihitCluster)->getdEdx();
+    sumEDep += hitsToMerge->at(ihitCluster)->getEDep();
     hitsToMerge->at(ihitCluster)->setIsMerged();
     lastR = hitsToMerge->at(ihitCluster)->getR();
     
@@ -1158,7 +1158,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   //now the hit pos has to be smeared
   double pos[3] = {mergedPoint->getX(),mergedPoint->getY(),mergedPoint->getZ()}; 
   trkHit->setPosition(pos);
-  trkHit->setdEdx(sumdEdx);
+  trkHit->setEDep(sumEDep);
   trkHit->setType( 500 );
         
   double phi = mergedPoint->getPhi();

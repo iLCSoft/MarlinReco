@@ -45,6 +45,12 @@ SET( ${PROJECT_NAME}_PATCH_LEVEL 1 )
 ### SETTINGS #################################################################
 
 
+# project options
+OPTION( BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON )
+OPTION( BUILD_32BIT_COMPATIBLE "Set to ON to build in 32 bit compatibility mode" OFF )
+OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
+
+
 SET( CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -DNDEBUG" )
 SET( CMAKE_Fortran_FLAGS_MINSIZEREL "${CMAKE_Fortran_FLAGS_MINSIZEREL} -DNDEBUG" )
 
@@ -61,11 +67,51 @@ IF( FORTRAN_COMPILER STREQUAL "gfortran" )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DgFortran" )
 ENDIF()
 
+IF( NOT BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS
+        # 64 bit paths
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3      # SL4 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6      # SL5 native 64bit
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1      # SL5 native 64bit
+        /usr/lib64
+    )
+ENDIF()
 
-# project options
-OPTION( BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON )
-OPTION( BUILD_32BIT_COMPATIBLE "Set to ON to build in 32 bit compatibility mode" OFF )
-OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        # 32 bit paths
+        /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+)
+
+IF( BUILD_32BIT_COMPATIBLE )
+    SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.3/32   # SL4 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/3.4.6/32   # SL5 64bit 32bit compatible
+        /usr/lib/gcc/x86_64-redhat-linux/4.1.1/32   # SL5 64bit 32bit compatible
+        /usr/lib
+    )
+ENDIF()
+
+SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
+        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
+        /usr/osxws/lib                              # OSX
+)
+
+#MESSAGE( STATUS "FORTRAN_LIB_PATHS: ${FORTRAN_LIB_PATHS}" )
+
+SET( FORTRAN_LIB FORTRAN_LIB-NOTFOUND )
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} PATHS ${FORTRAN_LIB_PATHS} NO_DEFAULT_PATH )
+# if previous find fails, try to find in system paths..
+FIND_LIBRARY( FORTRAN_LIB NAMES ${FORTRAN_LIBNAME} )
+
+IF( NOT FORTRAN_LIB )
+    MESSAGE( FATAL_ERROR "failed to find ${FORTRAN_LIBNAME} library!!" )
+ELSE()
+    MESSAGE( STATUS "Check for lib${FORTRAN_LIBNAME}: ${FORTRAN_LIB}" )
+ENDIF()
+MARK_AS_ADVANCED( FORTRAN_LIB )
+
 
 # project dependencies
 SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil GEAR LCIO CLHEP GSL CERNLIB RAIDA ROOT" )

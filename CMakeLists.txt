@@ -94,7 +94,8 @@ IF( BUILD_32BIT_COMPATIBLE )
 ENDIF()
 
 SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
-        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04
+        /usr/lib/gcc/x86_64-linux-gnu/4.4           # Ubuntu 10.04 64bit
+        /usr/lib/gcc/i486-linux-gnu/4.4             # Ubuntu 10.04 32bit
         /usr/osxws/lib                              # OSX
 )
 

@@ -95,7 +95,7 @@ void EvaluateTauFinder2::init()
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
  
   evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed");
-  tautuple=new TNtuple("tautuple","tautuple","EvID:recE:recp:recpt:recD0:recQ:recN");
+  tautuple=new TNtuple("tautuple","tautuple","EvID:recE:recp:recpt:recD0:recQ:recN:Q");
   mctautuple=new TNtuple("mctautuple","mctautuple","EvID:Evis:ptvis:pvis:mcQ:mcN");
   mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:D0:D1:D2");
   taumatchtuple=new TNtuple("taumatch","taumatch","EvID:recE:recp:recpt:recD0:recQ:recN:mcE:mcp:mcpt:mcQ:mcN:mcEfull");
@@ -144,9 +144,6 @@ void EvaluateTauFinder2::processEvent( LCEvent * evt )
   int ntau_rec=0;
   int missed=0;
 
-  bool isfake=false;
-  int nfakes=0;
- 
   if( colTau != 0)
     {
       int nT = colTau->getNumberOfElements();
@@ -167,7 +164,6 @@ void EvaluateTauFinder2::processEvent( LCEvent * evt )
 	  double Eseed=0,D0=0;
 	  int Q=0,N=0;
 	  bool istau=false;
-	  bool contaminated=false;
 	  MCParticle *mctau=NULL;
 	  for(unsigned int o=0;o<tauvec.size();o++)
 	    {
@@ -218,13 +214,12 @@ void EvaluateTauFinder2::processEvent( LCEvent * evt )
 		cout<<k<<" "<<tauvec[o]->getCharge()<<" "<<tauvec[o]->getType()<<" "<<tauvec[o]->getEnergy()<<endl;
 	    }
 
-	  tautuple->Fill(_nEvt,tau->getEnergy(),p,pt,D0,Q,N);
+	  tautuple->Fill(_nEvt,tau->getEnergy(),p,pt,D0,Q,N,tau->getCharge());
 	  if(mctau)
 	    {
-	      const double *mc_pvec=mctau->getMomentum();
 	      double Evis=0,ptvis=0,pvis=0;
 	      int ntr=0,qtr=0;
-	      MCParticle *highEtrack;
+	      MCParticle *highEtrack=NULL;
 	      LoopDaughters(highEtrack,mctau,Evis,ptvis,pvis,ntr,qtr);
 	      taumatchtuple->Fill(_nEvt,tau->getEnergy(),p,pt,D0,Q,N,Evis,pvis,ptvis,qtr,ntr,mctau->getEnergy());
 	    }
@@ -245,7 +240,7 @@ void EvaluateTauFinder2::processEvent( LCEvent * evt )
 	      ntau_mc++;
 	      double Evis=0,ptvis=0,pvis=0,D0=0;
 	      int ntr=0,qtr=0;
-	      MCParticle *highEtrack;
+	      MCParticle *highEtrack=NULL;
 	      LoopDaughters(highEtrack,particle,Evis,ptvis,pvis,ntr,qtr);
 	      mctautuple->Fill(_nEvt,Evis,ptvis,pvis,qtr,ntr);
 	      //find out which mc taus do not have a link to the rec

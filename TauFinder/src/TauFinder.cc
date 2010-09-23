@@ -31,7 +31,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+#define coutUpToEv 10
 
 using namespace lcio ;
 using namespace marlin ;
@@ -250,7 +250,7 @@ void TauFinder::processEvent( LCEvent * evt )
       else
 	mass_inv=sqrt(E*E-psquare);
      
-      //check for inverse mass
+      //check for invariant mass
       if(mass_inv>_minv || mass_inv<-0.001 || chargedtracks>4 || chargedtracks==0)
 	{
 	  if(mass_inv>_minv)
@@ -273,15 +273,12 @@ void TauFinder::processEvent( LCEvent * evt )
       else
 	++iterT;
       
-      double q=1;
       int pdg=15;
       if(charge<0)
-	{
-	  q=-1;
-	  pdg=-15;
-	}
+	pdg=-15;
+	
       taurec->setEnergy(E);
-      taurec->setCharge(q);
+      taurec->setCharge(charge);
       taurec->setMomentum(mom);
       taurec->setType(pdg);
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
@@ -327,7 +324,8 @@ void TauFinder::processEvent( LCEvent * evt )
 		  tau->setEnergy(En);
 		  double newp[3]={mom[0]+momn[0],mom[1]+momn[1],mom[2]+momn[2]};
 		  tau->setMomentum(newp);		  
-		  
+		  tau->setCharge(tau->getCharge()+taun->getCharge());
+
 		   if(_nEvt<coutUpToEv || _nEvt==coutEv)
 		    {
 		      cout<<" Tau Merging: "<<endl;
@@ -557,8 +555,8 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	  if(angle>OpAngleMax)
 	    OpAngleMax=angle;
 	  tau.push_back(Qvec[s]);
-// 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-// 	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+ 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+ 	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
 	  Etau+=Qvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -590,8 +588,8 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	  if(angle>OpAngleMax)
 	    OpAngleMax=angle;
 	  tau.push_back(Nvec[s]);
-// 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-// 	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+ 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+ 	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
 	  Etau+=Nvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){

@@ -4,6 +4,8 @@
 #include "FPCCDData.h"
 
 #include <iostream>
+#include <cstring>
+#include <cstdio>
 
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>

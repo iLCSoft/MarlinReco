@@ -60,7 +60,7 @@ class FPCCDData {
   int _maxladder;
 
  public:
-  FPCCDData(int max_layer, int max_layer);
+  FPCCDData(int max_layer, int max_ladder);
 
   // Add
   //  if same hit exists, add ADC values

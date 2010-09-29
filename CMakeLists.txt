@@ -82,6 +82,7 @@ SET( FORTRAN_LIB_PATHS ${FORTRAN_LIB_PATHS}
         /usr/lib/gcc-lib/i386-redhat-linux/3.2.3    # SL3 native 32bit
         /usr/lib/gcc/i386-redhat-linux/3.4.3        # SL4 native 32bit
         /usr/lib/gcc/i386-redhat-linux/3.4.6        # SL5 native 32bit
+        /usr/lib/gcc/i386-redhat-linux/4.1.1        # SL5 native 32bit
 )
 
 IF( BUILD_32BIT_COMPATIBLE )

@@ -4,6 +4,39 @@
 
 ===============================
  --------
+| v00-19 |
+ --------
+
+ 	  - added new sub package FPCCDDigi (Daisuke Kamai)
+
+	  - Analysis/MarlinKinfit  (M.Beckmann) : 
+            several updates, new RootTracer, name changes (PhotonFitObject ->
+	    SimplePhotonFitObject, PhotonFitObjectPxyg -> ISRPhotonFitObject)
+
+          - TPCDigitizer (S.Aplin) 
+             - protected against accessing NULL pointer from getMCParticle
+   	     - clean up unused variables and unneeded ifdefs
+	     - fixed unsigned int == int comparison warnings
+             - hit smearing (M.Thomson) 
+
+         - SimpleMuonDigi( M.Thomson) 
+            - improve calibration of muon hits and set a maximum energy for a single hit (factor
+	      two improvement in energy resolution). The defaults are appropriat e for ILD00
+
+          - V0Finder (M.Thomson) 
+            - improved checking to avoid false positives
+
+ 	 - BCalTagEfficiency.cc: fixed memory leak bug (C. Bartels)
+
+
+          - code fixes (J.Engels) 
+            - made gcc 4.4 compliant
+	    - fixed various issues with gfortran and g2c
+            - renamed get/setdEdx() to get/setEDep() in TrackDigitizers 
+            - fixed cmake issues          
+
+
+ --------
 | v00-18 |
  --------
       - added new package Tracking/KinkFinder  (M.Thomson, J.Marshall)

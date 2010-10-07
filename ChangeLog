@@ -1,3 +1,227 @@
+2010-09-29 06:46  engels
+
+	* CMakeLists.txt: added gfortran path for SL5 32bit
+
+2010-09-23 09:43  engels
+
+	* TrackDigi/FPCCDDigi/src/FPCCDDigitizer.cc: made gcc 4.4 compliant
+
+2010-09-23 09:38  engels
+
+	* TrackDigi/FPCCDDigi/include/FPCCDData.h: bug fix: redefinition of
+	  max_layer, should be max_ladder
+
+2010-09-23 09:22  engels
+
+	* CMakeLists.txt: added path for libgfortran on ubuntu 10.04
+
+2010-09-20 15:35  engels
+
+	* TrackDigi/ETDDigi/src/ETDDigiProcessor.cc,
+	  TrackDigi/FPCCDDigi/src/FPCCDDigitizer.cc,
+	  TrackDigi/FTDDigi/src/FTDDigiProcessor.cc,
+	  TrackDigi/TPCDigi/include/voxel.h,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc,
+	  TrackDigi/TPCDigi/src/voxel.cc,
+	  TrackDigi/VTXDigi/src/CCDDigitizer.cc,
+	  TrackDigi/VTXDigi/src/VTXDigiProcessor.cc,
+	  TrackDigi/VTXDigi/src/VTXDigitizer.cc,
+	  TrackDigi/VTXDigi/src/VTXNoiseClusters.cc,
+	  TrackDigi/VTXDigi/src/VTXNoiseHits.cc,
+	  Tracking/BrahmsTracking/src/LEPTrackingProcessor.cc: renamed
+	  get/setdEdx() to get/setEDep()
+
+2010-09-20 10:29  engels
+
+	* CMakeLists.txt, MarlinRecoConfig.cmake.in, src/CMakeLists.txt:
+	  bug fix: g2c/gfortran library not set in MarlinRecoConfig.cmake
+
+2010-09-15 15:15  mbeckman
+
+	* Analysis/MarlinKinfit/WW5CFit.xml,
+	  Analysis/MarlinKinfit/include/BaseConstraint.h,
+	  Analysis/MarlinKinfit/include/BaseEvent.h,
+	  Analysis/MarlinKinfit/include/BaseHardConstraint.h,
+	  Analysis/MarlinKinfit/include/BaseJetPairing.h,
+	  Analysis/MarlinKinfit/include/BaseSoftConstraint.h,
+	  Analysis/MarlinKinfit/include/FourJetPairing.h,
+	  Analysis/MarlinKinfit/include/FourVector.h,
+	  Analysis/MarlinKinfit/include/ISRPhotonFitObject.h,
+	  Analysis/MarlinKinfit/include/JetFitObject.h,
+	  Analysis/MarlinKinfit/include/MassConstraint.h,
+	  Analysis/MarlinKinfit/include/MomentumConstraint.h,
+	  Analysis/MarlinKinfit/include/NeutrinoFitObject.h,
+	  Analysis/MarlinKinfit/include/OPALFitterGSL.h,
+	  Analysis/MarlinKinfit/include/PConstraint.h,
+	  Analysis/MarlinKinfit/include/ParticleConstraint.h,
+	  Analysis/MarlinKinfit/include/PhotonFitObject.h,
+	  Analysis/MarlinKinfit/include/PhotonFitObjectPxyg.h,
+	  Analysis/MarlinKinfit/include/RootTracer.h,
+	  Analysis/MarlinKinfit/include/SimplePhotonFitObject.h,
+	  Analysis/MarlinKinfit/include/SoftBWMassConstraint.h,
+	  Analysis/MarlinKinfit/include/SoftBWParticleConstraint.h,
+	  Analysis/MarlinKinfit/include/SoftGaussMassConstraint.h,
+	  Analysis/MarlinKinfit/include/SoftGaussMomentumConstraint.h,
+	  Analysis/MarlinKinfit/include/SoftGaussParticleConstraint.h,
+	  Analysis/MarlinKinfit/include/TTBarExample.h,
+	  Analysis/MarlinKinfit/include/ThreeVector.h,
+	  Analysis/MarlinKinfit/include/TopEventILC.h,
+	  Analysis/MarlinKinfit/include/TopEventILCSoft.h,
+	  Analysis/MarlinKinfit/include/TwoB4JPairing.h,
+	  Analysis/MarlinKinfit/include/WW5CFit.h,
+	  Analysis/MarlinKinfit/include/cernlib.h,
+	  Analysis/MarlinKinfit/src/FourJetPairing.cc,
+	  Analysis/MarlinKinfit/src/FourVector.cc,
+	  Analysis/MarlinKinfit/src/ISRPhotonFitObject.cc,
+	  Analysis/MarlinKinfit/src/JetFitObject.cc,
+	  Analysis/MarlinKinfit/src/Makefile,
+	  Analysis/MarlinKinfit/src/MassConstraint.cc,
+	  Analysis/MarlinKinfit/src/MomentumConstraint.cc,
+	  Analysis/MarlinKinfit/src/NeutrinoFitObject.cc,
+	  Analysis/MarlinKinfit/src/PConstraint.cc,
+	  Analysis/MarlinKinfit/src/ParticleConstraint.cc,
+	  Analysis/MarlinKinfit/src/ParticleFitObject.cc,
+	  Analysis/MarlinKinfit/src/PhotonFitObject.cc,
+	  Analysis/MarlinKinfit/src/PhotonFitObjectPxyg.cc,
+	  Analysis/MarlinKinfit/src/RootTracer.cc,
+	  Analysis/MarlinKinfit/src/SimplePhotonFitObject.cc,
+	  Analysis/MarlinKinfit/src/SoftBWMassConstraint.cc,
+	  Analysis/MarlinKinfit/src/SoftBWParticleConstraint.cc,
+	  Analysis/MarlinKinfit/src/SoftGaussMassConstraint.cc,
+	  Analysis/MarlinKinfit/src/SoftGaussMomentumConstraint.cc,
+	  Analysis/MarlinKinfit/src/SoftGaussParticleConstraint.cc,
+	  Analysis/MarlinKinfit/src/TopEventILC.cc,
+	  Analysis/MarlinKinfit/src/TopEventILCSoft.cc,
+	  Analysis/MarlinKinfit/src/TwoB4JPairing.cc,
+	  Analysis/MarlinKinfit/src/WW5CFit.cc: Several updates, new
+	  RootTracer, name changes (PhotonFitObject ->
+	  SimplePhotonFitObject, PhotonFitObjectPxyg -> ISRPhotonFitObject)
+
+2010-09-07 10:21  aplin
+
+	* TrackDigi/TPCDigi/include/TPCDigiProcessor.h,
+	  TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: protected against
+	  accessing NULL pointer from getMCParticle
+	  
+	  clean up unused variables and unneeded ifdefs
+	  
+	  fixed unsigned int == int comparison warnings
+
+2010-09-06 13:42  engels
+
+	* Pflow/TrackBasedPFlow/src/TrackBasedPFlow.cc: added #include
+	  <float.h> to recognize DBL_MAX (previously defined by gsl
+	  #include statements in MarlinUtil ClusterShapes.h)
+
+2010-08-02 12:13  thomson
+
+	* TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: Fixed bug in hit
+	  smearing - in previous version unsmeared hit was used (smearing
+	  didn't do anything)
+
+2010-07-28 13:24  thomson
+
+	* CaloDigi/LDCCaloDigi/include/SimpleMuonDigi.h,
+	  CaloDigi/LDCCaloDigi/src/SimpleMuonDigi.cc: Improve calibration
+	  of muon hits and set a maximum energy for a single hit (factor
+	  two improvement in energy resolution). The defaults are
+	  appropriat e for ILD00
+
+2010-07-28 12:50  thomson
+
+	* Tracking/V0Finder/include/V0Finder.h,
+	  Tracking/V0Finder/src/V0Finder.cc: Improved checking to avoid
+	  false positives
+
+2010-07-22 13:19  engels
+
+	* Analysis/BCalTagEfficiency/src/BCalTagEfficiency.cc: fixed memory
+	  leak bug (C. Bartels)
+
+2010-07-15 15:40  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* src/CMakeLists.txt: bug fix for 32BIT_COMPATIBLE mode
+
+2010-07-15 15:03  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: several bug fixes for
+	  g77/gfortran compiler issues
+	  add sources from sub-packages through a loop
+
+2010-07-15 14:02  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* Tracking/BrahmsTracking/include/cfortran.h: updated to version
+	  4.4
+
+2010-07-15 13:15  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* Tracking/BrahmsTracking/include/tkhitbank.h,
+	  Tracking/BrahmsTracking/include/tpchitbank.h: bug fix: extra ;
+
+2010-07-15 09:55  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* TrackDigi/FPCCDDigi/src/FPCCDPixelHit.cc: missing
+	  #include<assert.h>
+
+2010-07-15 08:56  gaede
+
+	* TrackDigi/FPCCDDigi, TrackDigi/FPCCDDigi/include,
+	  TrackDigi/FPCCDDigi/include/FPCCDData.h,
+	  TrackDigi/FPCCDDigi/include/FPCCDDigitizer.h,
+	  TrackDigi/FPCCDDigi/include/FPCCDPixelHit.h,
+	  TrackDigi/FPCCDDigi/src, TrackDigi/FPCCDDigi/src/FPCCDData.cc,
+	  TrackDigi/FPCCDDigi/src/FPCCDDigitizer.cc,
+	  TrackDigi/FPCCDDigi/src/FPCCDPixelHit.cc, src/CMakeLists.txt:
+	  added new sub package FPCCDDigi (by Daisuke Kamai)
+
+2010-07-08 09:38  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* src/CMakeLists.txt: bug fix for cmake 2.4
+
+2010-07-07 08:01  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* src/CMakeLists.txt: bug fix for cmake 2.4
+
+2010-07-07 07:59  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* src/CMakeLists.txt: bug fix for cmake 2.4
+
+2010-07-02 13:25  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* CMakeLists.txt, src/CMakeLists.txt: added BCalTagEfficiency
+	  sources
+
+2010-06-29 10:22  /O=GermanGrid/OU=DESY/CN=Jan Engels
+
+	* CMakeLists.txt: BUILD_32BIT_COMPATIBLE set per default to OFF
+
+2010-06-28 10:41  gaede
+
+	* doc/release.notes: update for bCalTagEfficiency and VoFinder fix
+
+2010-06-28 10:41  gaede
+
+	* src/CMakeLists.txt: added BCalTagEfficiency
+
+2010-06-28 10:40  gaede
+
+	* Tracking/V0Finder/src/V0Finder.cc: fix for Lambda0bars
+	  (M.Thomson)
+
+2010-06-28 10:34  gaede
+
+	* Analysis/BCalTagEfficiency, BCalTagEfficiency: BCalTagEfficiency
+	  should be inb package Analysis
+
+2010-06-28 10:31  gaede
+
+	* BCalTagEfficiency: BCalTagEfficiency moved from MarlinAna to
+	  MarlinReco - should be run in in standard reconstruction
+
+2010-06-25 13:45  gaede
+
+	* ChangeLog, doc/release.notes: prepared for release v00-18
+
 2010-06-23 15:32  /O=GermanGrid/OU=DESY/CN=Jan Engels
 
 	* CMakeLists.txt, src/CMakeLists.txt: added exclude pattern for

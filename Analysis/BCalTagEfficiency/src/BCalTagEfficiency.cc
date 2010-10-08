@@ -18,6 +18,8 @@
 #include <EVENT/ReconstructedParticle.h>
 #include "IMPL/LCCollectionVec.h"
 #include <IMPL/ReconstructedParticleImpl.h>
+#include <IMPL/ClusterImpl.h>
+#include <IMPL/LCRelationImpl.h>
 #include <CLHEP/Vector/LorentzVector.h>
 
 #include <marlin/Global.h>
@@ -73,6 +75,18 @@ BCalTagEfficiency::BCalTagEfficiency() : Processor("BCalTagEfficiency") {
                            "Name of the tagged e/gamma collection"  ,
                            _BCALcolName ,
                            std::string("BCALParticles") ) ;
+
+  registerOutputCollection( LCIO::CLUSTER,
+                           "BCALClusterName" ,
+                           "Name of the collection of clusters of tagged e's/gammas"  ,
+                           _BCALClustersName ,
+                           std::string("BCALClusters") ) ;
+
+  registerOutputCollection( LCIO::LCRELATION,
+			    "BCALMCTruthLinkName",
+                           "Name of the tagged e/gamma  to mc-particle relation collection"  ,
+			    _BCALMCTruthLinkName, 
+                           std::string("BCALMCTruthLink") ) ;
 
 
   registerProcessorParameter("BackgroundFilename" ,
@@ -187,6 +201,8 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
  
   // Create output collection
   LCCollectionVec* BCALCol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  LCCollectionVec* BCALMCTruthLink = new LCCollectionVec(LCIO::LCRELATION);
+  LCCollectionVec* BCALClusters = new LCCollectionVec(LCIO::CLUSTER);
 
   if( col != 0 ){
    
@@ -259,11 +275,14 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             vout[0]=(pin[0]/abs(pin[2]))*zbcal;
             vout[1]=(pin[1]/abs(pin[2]))*zbcal; 
             vout[2]=(pin[2]/abs(pin[2]))*zbcal;
+            pout[0]=pin[0];
+            pout[1]=pin[1];
+            pout[2]=pin[2];
      
           }
  
           // Define rotated variables voutp 
-          float voutp[3]={0,0,0};
+          float voutp[3]={0,0,0};           float poutp[3]={0,0,0};
 
 //           // Rotation around y axis of 7 mrad.
 //           voutp[0] = cos(0.007)* vout[0] + sin(0.007)* vout[2];
@@ -275,6 +294,9 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           voutp[1] = vout[1];
           voutp[2] = vout[2];
           
+          poutp[0] = pout[0];
+          poutp[1] = pout[1];
+          poutp[2] = pout[2];
           // Change from cartesian to cylindrical coordinates
           Hep3Vector vvec (voutp[0], voutp[1], voutp[2]);
           
@@ -286,6 +308,15 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           if (phi[mcp] < 0) phi[mcp] += 2*PI;  // have [0, 2 PI] now
           streamlog_out(DEBUG) << "phi after +2PI = " << phi[mcp] << std::endl;
           if (p4v.perp() < 1E-3) phi[mcp] = 0;
+          	            
+          Hep3Vector pvec (poutp[0], poutp[1], poutp[2]);
+          
+          float pphi = pvec.phi(); // gives [-PI, PI]
+          streamlog_out(DEBUG) << "pphi = " << pphi << std::endl;
+          if (pphi < 0) pphi += 2*PI;  // have [0, 2 PI] now
+          streamlog_out(DEBUG) << "phi after +2PI = " << pphi << std::endl;
+          float ptheta = pvec.theta();
+          streamlog_out(DEBUG) << "ptheta = " << ptheta << std::endl;
           	            
           // Loop to sum the energy density over all layers.
           // ebkg = Energy of background
@@ -316,6 +347,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           } 
 	  streamlog_out(DEBUG) << "background energy density sum = "    << ebkg[mcp] << std::endl;
 
+
           //Scaling of the Energy density with scaling factor
           ebkg[mcp] *= densityScaling;
           
@@ -324,7 +356,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
                                   << ", scaled density = "  << ebkg[mcp] <<std::endl;
           }
                     
-                
+
           // Here starts the Eff_routine that parametrizes the efficiency
            
           //assuming that efficiency is parametrised in GeV/cm^2 instead of GeV/mm^2 ...
@@ -353,7 +385,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             }
             else {
           
-	    streamlog_out(MESSAGE) << "not in valid range of parametrisation , ebkg = "  
+	      streamlog_out(MESSAGE2) << "not in valid range of parametrisation , ebkg = "  
                                    << ebkg[mcp] << ", energy = " << energy[mcp] << std::endl;
           
             }
@@ -382,10 +414,13 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             rand[mcp] = randGen->Rndm();
 
             tag[mcp] = 0;
-            if (rand[mcp] < efficiency[mcp] || detectAll == 1) {
+            if (rand[mcp] < efficiency[mcp] || (detectAll == 1 && efficiency[mcp]>0.0) ) {
             
               ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
-
+              ClusterImpl* cluster = new ClusterImpl;
+              LCRelationImpl* MCrel  = new LCRelationImpl;
+              MCrel->setFrom (particle);
+              MCrel->setTo (p);
               // DO BOOST! 
               // before the transformation: p4v 
               // (will store 4 vector at IP, not BCAL surface!)
@@ -400,6 +435,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
               // after the transformation (boost in x-direction)
 //              pxPrime[mcp] = betagamma * sqrt(pxIP[mcp]*pxIP[mcp] + pyIP[mcp]*pyIP[mcp] + pzIP[mcp]*pzIP[mcp] + m*m) + gamma * pxIP[mcp];
               pxPrime[mcp] = betagamma * energy[mcp] + gamma * pxIP[mcp];
+
               // py and pz remain the same, E changes implicitly with px
 
               scaleP[mcp] = 1.;
@@ -414,7 +450,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
                 scaleP[mcp] = (1+deltaE/energy[mcp]);
                 if (scaleP[mcp] < 0) scaleP[mcp] = 0;
               }  
-              
+
               double pnew[3] = {scaleP[mcp]*pxPrime[mcp], scaleP[mcp]*pyIP[mcp], scaleP[mcp]*pzIP[mcp]};
               particle->setMomentum(pnew);
               particle->setEnergy(scaleP[mcp]*sqrt(m*m + pxPrime[mcp]*pxPrime[mcp] +pyIP[mcp]*pyIP[mcp] +pzIP[mcp]*pzIP[mcp]));
@@ -422,7 +458,17 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
               // store efficiency as "GoodnessOfPID"
               particle->setGoodnessOfPID(efficiency[mcp]);
               
+              cluster->setEnergy(particle->getEnergy());
+              cluster->setPosition(voutp);
+              cluster->setITheta(ptheta);
+              cluster->setIPhi(pphi);
+              cluster->subdetectorEnergies().resize(6); cluster->subdetectorEnergies()[5] =particle->getEnergy(); 
+
+              particle->addCluster(cluster);
+
               BCALCol->addElement(particle);
+              BCALMCTruthLink->addElement(MCrel);
+              BCALClusters->addElement(cluster);
 
               // store positions as single values in tree
               posx[mcp]=voutp[0];
@@ -430,20 +476,22 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
               posz[mcp]=voutp[2];
               tag[mcp] = 1;
               
+
               ePrime[mcp] = particle->getEnergy();
     
-              streamlog_out(MESSAGE) << "Detected particle with ID " << pdg[mcp] << endl;
-              streamlog_out(MESSAGE) << "Energy before boost = " << energy[mcp] << endl;
-              streamlog_out(MESSAGE) << "Energy after boost = " << ePrime[mcp]/scaleP[mcp] << endl;
-              streamlog_out(MESSAGE) << "Energy after boost and smearing = " << ePrime[mcp] << endl;
-              streamlog_out(MESSAGE) << "Efficiency= " << efficiency[mcp] << endl;
-              streamlog_out(MESSAGE) << "E background= " << ebkg[mcp] << endl;
-              streamlog_out(MESSAGE) << "+++++++++++++++++++" << endl;
+
+              streamlog_out(MESSAGE1) << "Detected particle with ID " << pdg[mcp] << endl;
+              streamlog_out(MESSAGE1) << "Energy before boost = " << energy[mcp] << endl;
+              streamlog_out(MESSAGE1) << "Energy after boost = " << ePrime[mcp] << endl;
+              streamlog_out(MESSAGE1) << "Energy after boost and smearing = " << ePrime[mcp] << endl;
+              streamlog_out(MESSAGE1) << "Efficiency= " << efficiency[mcp] << endl;
+              streamlog_out(MESSAGE1) << "E background= " << ebkg[mcp] << endl;
+              streamlog_out(MESSAGE1) << "+++++++++++++++++++" << endl;
  
             }
      
             mcp++;
-            streamlog_out(MESSAGE) << "filling tree, mcp = " << mcp << endl;
+            streamlog_out(MESSAGE1) << "filling tree, mcp = " << mcp << endl;
             tree->Fill();
 
             delete randGen;
@@ -457,12 +505,21 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
     }  // end of MCparticle loop
   
   }
+  if ( BCALCol->getNumberOfElements() <= 0 ) {
+     delete  BCALCol; 
+     delete  BCALMCTruthLink; 
+     delete  BCALClusters; 
+  } else {
+    evt->addCollection(BCALCol ,_BCALcolName) ;
+    evt->addCollection(BCALMCTruthLink ,_BCALMCTruthLinkName) ;
+    evt->addCollection(BCALClusters ,_BCALClustersName) ;
+  }
+
 
   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
                     << "   in run:  " << evt->getRunNumber() 
                     << std::endl ;
 
-  evt->addCollection(BCALCol ,_BCALcolName) ;
 
   _nEvt ++ ;
 }

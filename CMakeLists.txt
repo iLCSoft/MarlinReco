@@ -39,7 +39,7 @@ PROJECT( MarlinReco C CXX Fortran )
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 0 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 18 )
-SET( ${PROJECT_NAME}_PATCH_LEVEL 2 )
+SET( ${PROJECT_NAME}_PATCH_LEVEL 3 )
 
 
 ### SETTINGS #################################################################

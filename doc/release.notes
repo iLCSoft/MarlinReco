@@ -5,6 +5,13 @@
 ===============================
 
  -----------
+| v00-18-03 |
+ -----------
+    - bug fixes for compiling on SL5 32bit:
+        - added path to libgfortran.so
+        - g2c/gfortran library not set correctly in MarlinRecoConfig.cmake
+
+ -----------
 | v00-18-02 |
  -----------
     - TPCDigiProcessor:

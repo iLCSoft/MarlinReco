@@ -32,7 +32,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 100
+#define coutUpToEv 0
 
 using namespace lcio ;
 using namespace marlin ;

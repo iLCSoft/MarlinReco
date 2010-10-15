@@ -53,7 +53,7 @@ class EvaluateTauID : public Processor {
   /** Called after data processing for clean up.
    */
   virtual void end() ;
-  virtual void LoopDaughters(MCParticle *particle,double &Evis,double &ptvis,int &nQ, int &nN);
+  virtual void LoopDaughters(MCParticle *particle,double &Evis,double &ptvis,int &nQ, int &nN, double &Qw, double &pQ);
  
   
  protected:
@@ -66,13 +66,15 @@ class EvaluateTauID : public Processor {
   int _nRun ;
   int _nEvt ;
   
-    float _bField;
+  float _bField;
+  double _kappa;
   TFile *rootfile;
   
   TNtuple *mctuple;
   TNtuple *taumatchtuple;
   TNtuple *evtuple;
   TNtuple *faketuple;
+  TNtuple *Qtuple;
   
 } ;
 

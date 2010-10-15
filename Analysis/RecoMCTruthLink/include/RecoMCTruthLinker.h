@@ -4,6 +4,7 @@
 #include "marlin/Processor.h"
 
 #include <EVENT/MCParticle.h>
+#include <IMPL/LCCollectionVec.h>
 #include "lcio.h"
 
 #include <set>
@@ -13,15 +14,38 @@ using namespace lcio ;
 
 
   
-/** Creates a collection of LCRelations ("RecoMCTruthLink")  with a weighted relation between the 
- *  ReconstructedParticles and their corresponding MCParticles. 
- *  This relation is based on the number of hits - energy weighted for neutral particles - 
- *  that have been used in creating the Track for charged and the Cluster for neutral 
- *  ReconstructedParticles.
- *  Every ReconstructedParticle is related to the MCParticle with the largest contribution
- *  stored in the weight of the Relation.
- *  For example a weight of 0.95 for a charged particle link implies that 95 percent of the 
- *  SimTrackerHits used in the particles' track fit have been caused by the linked MCParticle.<br>
+/** Creates four collections of LCRelations ("recoMCTruthLink", "trackMCTruthLink", "clusterMCTruthLink",
+ *  ""clusterMCTruthLink" and "calohitMCTruthLink") with weighetd relations between true particles
+ *  and reconstructed particles, tracks, clusters,  and calorimeter hits, respectively.
+ *  The first is always created, the other three on request. By default, the first three are
+ *  created.
+ * 
+ *  This relation is based on the number of hits for tracks, for hits weighted with the
+ *  SimHit-energy for clusters and calorimeter hits. For tracks and clusters, the weight
+ *  is the sum of hits from the considered true particle divided by the sum of all hits,
+ *  for calorimter hits, it's simply the simHit energy of the hit.
+ *  For the reconstructed particles, the relation could either be only to the true particle
+ *  having the largest weight, or to all contributing true particles. In the former case,
+ *  the pointer (and weight) will concern the true particle creating hits in the tracker,
+ *  if there are any. Only for track-less seen particles would it point to the main
+ *  contributor to the cluster. In the latter case, pointers are set up to all contributing
+ *  true particles, and the weight is givean as (fractional contribution to track)+
+ *  10000* (fractional contribution to cluster), with fractions given in permil (int).
+ *  Hence: trackwgt = (int(wgt)%10000)/1000. and  clusterwgt = (int(wgt)/10000)/1000. 
+ *  Which of the two is used is selected by the processor flag "FullRecoRelation" (default=true)
+ *
+ *  Setting the flag "FullRecoRelation" to false gives the same interpretation of "recoMCTruthLink" as 
+ *  in the old version of the processor. If, in  addition "OutputTrackRelation" and  "OutputClusterRelation" 
+ *  are also changed from the default true value to false, the created  output collections also agrees 
+ *  with the old behaviour.
+ *
+ *  The calohitMCTruthLink LCRelation fixes errors in the "SimCalorimeterHitRelation", so that
+ *  the originating true particle is always a particle entering the calorimeter : either it starts 
+ *  outside a calorimeter, and ends inside, or back-scatters inside a calorimeter, then also ends 
+ *  inside, but is not in the same cluster as it's pre-backscatter ancestors. Note that this is 
+ *  a relation CalorimeterHit <-> MCParticle, not  SimCalorimeterHit <-> MCParticle as the 
+ *  "SimCalorimeterHitRelation !
+ *
  *  If a neutral particle with one cluster has no MC contribution assigned the MCParticle 
  *  pointing closest to the cluster is assigned and the weight is set to the negative scalar product
  *  of the MCParticle's momentum direction and the direction to the Cluster position. 
@@ -37,7 +61,13 @@ using namespace lcio ;
  * 
  *  <h4>Output</h4> 
  *  <ul>
- *  <li><b>RecoMCTruthLink</b>:  holds LCRelations  that map the  ReconstructedParticles to the
+ *  <li><b>trackMCTruthLink</b>:  holds LCRelations  that map the  tracks to the
+ *                               corresponding MCParticle
+ *  <li><b>clusterMCTruthLink</b>:  holds LCRelations  that map the  clusters to the
+ *                               corresponding MCParticle
+ *  <li><b>recoMCTruthLink</b>:  holds LCRelations  that map the reconstructed particles to the
+ *                               corresponding MCParticle
+ *  <li><b>calohitMCTruthLink</b>:  holds LCRelations  that map the calorimeter hits to the
  *                               corresponding MCParticle
  *  </li>
  *  <li><b>MCParticlesSkimmed</b>:  skimmed MCParticle collection - optional 
@@ -45,17 +75,26 @@ using namespace lcio ;
  *  </ul>
  * 
  * @param MCParticleCollectionName      the MCParticle input collection
- * @param RecoParticleCollectionName    the ReconstructedParticles input collection
+ * @param trackCollectionName           the ReconstructedParticles input collection
+ * @param clusterCollectionName         the ReconstructedParticles input collection
  * @param SimTrackerHitRelation         relation betweeen simulated and digitized tracker hits
  * @param SimClusterHitRelation         relation betweeen simulated and digitized cluster hits
- * @param KeepDaughtersPDG              absolute PDG code of particles where daughter are to be kept
+ * @param KeepDaughtersPDG              absolute PDG code of particles where daughter are to be kept (default: gamma,pi0,K0_S)
+ * @param FullRecoRelation              Select which option to use for the reconstructed link ( default: full relation)
+ * @param OutputTrackRelation           Output or not the track relation (default: output)
+ * @param OutputClusterRelation         Output or not the cluster relation (default: output)
+ * @param OutputCalohitRelation         Output or not the calohit relation (default: dont output)
  *
  * 
- * @param RecoMCTruthLinkName        name of output collection - default is "RecoMCTruthLink"
- * @param MCParticlesSkimmedName     skimmed MCParticle collection - optional 
+ * @param TrackMCTruthLinkName          name of output collection - default is "TrackMCTruthLink"
+ * @param ClusterMCTruthLinkName        name of output collection - default is "ClusterMCTruthLink"
+ * @param RecoMCTruthLinkName           name of output collection - default is "RecoMCTruthLink"
+ * @param CalohitMCTruthLinkName        name of output collection - default is "CalohitMCTruthLink"
+ * @param MCParticlesSkimmedName        skimmed MCParticle collection - default is "MCParticlesSkimmed"
+
  * 
- *  @author F. Gaede, DESY
- *  @version $Id: RecoMCTruthLinker.h,v 1.4 2008-07-18 13:15:03 gaede Exp $ 
+ *  @author M. Berggren, DESY, based on RecoMCTruthLinker v 1.0 by F. Gaede, DESY. 
+ *  @version $Id: RecoMCTruthLinker.h,v 2.0 2010/10/14 13:15:03 berggren Exp $ 
  */
 
 class RecoMCTruthLinker : public marlin::Processor {
@@ -84,10 +123,15 @@ public:
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  
+  virtual void trackLinker(  LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol)  ;
+  virtual void clusterLinker(  LCCollection* mcpCol ,  LCCollection* clusterCol, 
+                               LCCollection* cHitRelCol , 
+                               LCCollection** ctrcol, LCCollection** chittrlcol)  ;
+  virtual void particleLinker(  LCCollection* particleCol ,  LCCollection* ttrcol, 
+                               LCCollection* ctrlcol, LCCollection** ptrlcol )  ;
   virtual void check( LCEvent * evt ) ; 
   
-  
+  virtual void makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrcol,  LCCollection* ctrcol ,LCCollectionVec**  skimVec) ; 
   /** Called after data processing for clean up.
    */
   virtual void end() ;
@@ -102,14 +146,23 @@ protected:
   /**  input collection names */
 
   std::string _mcParticleCollectionName ;
+  std::string _trackCollectionName ;
+  std::string _clusterCollectionName ;
   std::string _recoParticleCollectionName ;
   std::string _trackHitRelationName;
   std::string _caloHitRelationName;
 
-  /**  ouput collection name */
+  /**  output collection names */
+  std::string _trackMCTruthLinkName;
+  std::string _clusterMCTruthLinkName;
   std::string _recoMCTruthLinkName;
   std::string _mcParticlesSkimmedName;
-  
+  std::string _calohitMCTruthLinkName;
+  /**  output collection steering */
+  bool  _FullRecoRelation;
+  bool  _OutputTrackRelation;
+  bool  _OutputClusterRelation;
+  bool  _OutputCalohitRelation;
   float _eCutMeV ;
   
   IntVec _pdgVec ;

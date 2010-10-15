@@ -6,11 +6,12 @@
 
  
  RecoMCTruthLinker:  
- processor that creates an LCRelation between ReconstructedParticles and 
- MCParticles and creates a skimmed MCParticle list
+
+ processor that creates an LCRelation from/to ReconstructedParticles, Tracks
+ Clusters, or CalorimeterHits to/from  MCParticles and creates a skimmed 
+ MCParticle list
 
  -> see RecoMCTruthLinker.h for details
- 
 
  MCTruthJetEnergy:
  processor that computes the tru jet energy from the MCParticles that

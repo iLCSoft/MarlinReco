@@ -20,7 +20,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 100
+#define coutUpToEv 0
 
 using namespace lcio ;
 using namespace marlin ;
@@ -97,10 +97,7 @@ TauID::TauID() : Processor("TauID")
                               _ptseed ,
                               (float)5.0) ;
   
-  registerProcessorParameter( "invariant_mass" ,
-                              "Upper limit on invariant mass of tau candidate"  ,
-                              _minv ,
-                              (float)2.0) ;
+
 }
 
 
@@ -113,8 +110,6 @@ void TauID::init()
   // usually a good idea to
   printParameters() ;
 
-   _fail_minv=0;
-  _fail_minv_neg=0;
   _fail_Qtr=0;
   _fail_Q=0;
   _fail_isoE=0;
@@ -237,10 +232,10 @@ void TauID::processEvent( LCEvent * evt )
 	      double pn=sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2]);
 	      double phin=atan(momn[1]/momn[0]);
 	      double etan=0.5*std::log((pn+momn[2])/(pn-momn[2]));
-	      angle=sqrt((phi-phin)*(phi-phin)+(eta-etan)*(eta-etan));
-	      // angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
-// 			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
-// 			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
+	      //angle=sqrt((phi-phin)*(phi-phin)+(eta-etan)*(eta-etan));
+	      angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
+			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
+			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
 	      
 	      if(angle<_coneAngle)
 		{
@@ -267,13 +262,22 @@ void TauID::processEvent( LCEvent * evt )
 	    }
 	}
     }
-  //test tau candidates for invariant mass, isolation, charge and too many tracks
+  //test tau candidates for isolation, charge and too many tracks
   std::vector<ReconstructedParticleImpl*>::iterator iter=tauvec.begin();
   for ( unsigned int t=0; t<tauvec.size() ; t++ )
     {
       ReconstructedParticleImpl *tau=dynamic_cast<ReconstructedParticleImpl*>(tauvec[t]);
       //charge consistency
-      if(!(tau->getCharge()==1 || tau->getCharge()==-1))
+      double kappa=0.1;
+      double Qweighted=0,ptsum=0;
+      for(unsigned int i=0;i<tau->getParticles().size();i++)
+	{
+	  double pt=sqrt(tau->getParticles()[i]->getMomentum()[0]*tau->getParticles()[i]->getMomentum()[0]
+			 +tau->getParticles()[i]->getMomentum()[1]*tau->getParticles()[i]->getMomentum()[1]);
+	  Qweighted+=tau->getParticles()[i]->getCharge()*pow(pt,kappa);
+	  ptsum+=pow(pt,kappa);
+	}
+      if(abs(Qweighted/ptsum)<0.15)
 	{
 	  _fail_Q++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
@@ -293,27 +297,7 @@ void TauID::processEvent( LCEvent * evt )
       double phi=atan(mom[1]/mom[0]);
       double eta=0.5*std::log((p+mom[2])/(p-mom[2]));
       
-      //invariant mass
-      double mass_inv=0;      
-      if(E*E<p*p)
-	mass_inv=E-sqrt(p*p);
-      else
-	mass_inv=sqrt(E*E-p*p);
      
-      if(mass_inv>_minv || mass_inv<-0.001)
-	{
-	  if(mass_inv>_minv)
-	    _fail_minv++;
-	  else
-	    _fail_minv_neg++;
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": invariant mass: "<<mass_inv<<endl;
-	  delete *iter;
-	  tauvec.erase(iter);
-	  t--;
-	  continue;
-	}
-      
       //too many particles in tau 
       int nQparticles=0, nNparticles=0;
       for(unsigned int i=0;i<tau->getParticles().size();i++)
@@ -347,8 +331,8 @@ void TauID::processEvent( LCEvent * evt )
 	  double angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
 			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
 			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
-	  if(angle>_coneAngle && angle<_isoAngle+_coneAngle)
-	    E_iso+=track->getEnergy();
+	  if(angle>_coneAngle && angle<_isoAngle+_coneAngle && E_iso<track->getEnergy())
+	    E_iso=track->getEnergy();
 	}
       if(E_iso>_isoE)
 	{
@@ -465,10 +449,10 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
       double p2=sqrt(pt2*pt2+pvec2[2]*pvec2[2]);
       double phi2=atan(pvec2[1]/pvec2[0]);
       double eta2=0.5*std::log((p2+pvec2[2])/(p2-pvec2[2]));
-      double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
-      // double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
-// 			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
-      //		 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
+      //double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
+      double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
+			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
+			 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
       if(angle<_coneAngle)
 	{
 	  tau->addParticle(Qvec[s]);
@@ -501,10 +485,10 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
       double p2=sqrt(pt2*pt2+pvec2[2]*pvec2[2]);
       double phi2=atan(pvec2[1]/pvec2[0]);
       double eta2=0.5*std::log((p2+pvec2[2])/(p2-pvec2[2]));
-      double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
-//       double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
-// 			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
-// 			 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
+      //double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
+      double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
+			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
+			 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
       if(angle<_coneAngle)
 	{
 	  tau->addParticle(Nvec[s]);
@@ -542,8 +526,6 @@ void TauID::end(){
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    << std::endl ;
   std::cout << "Reasons for Failure:   " <<std::endl;
-  std::cout << "High inverse mass:     " << _fail_minv<< std::endl ;
-  std::cout << "Negative inverse mass: " << _fail_minv_neg<< std::endl ;
   std::cout << "No or to many tracks:  " << _fail_Qtr<< std::endl ;
   std::cout << "No isolation:          " << _fail_isoE<< std::endl ;
   std::cout << "Charge inconsistency:  " << _fail_Q<< std::endl ;

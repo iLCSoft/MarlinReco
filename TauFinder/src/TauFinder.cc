@@ -31,7 +31,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 100
+#define coutUpToEv 0
 
 using namespace lcio ;
 using namespace marlin ;
@@ -267,8 +267,8 @@ void TauFinder::processEvent( LCEvent * evt )
 	      double phi=180./TMath::Pi()*atan(mom[1]/mom[0]);
 	      double theta=180./TMath::Pi()*atan(pt_tau/fabs(mom[2])); 
 	      cout<<"Tau candidate failed: minv="<<mass_inv<<"   pt="<<pt_tau<<" "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
-	      continue;
 	    }
+	  continue;
 	}
       else
 	++iterT;

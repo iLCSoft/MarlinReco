@@ -67,9 +67,9 @@ class TauID : public Processor {
   float _bField;
   float _ptcut,_ptseed;
   float _coneAngle,_isoAngle,_isoE;
-  float _D0seedmin, _D0seedmax,_minv;
+  float _D0seedmin, _D0seedmax;
 
-  int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE, _fail_Q;
+  int _fail_Qtr,_fail_isoE, _fail_Q;
    
   bool FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<ReconstructedParticle*> &Nvec,
 	       std::vector<ReconstructedParticleImpl* > &tauvec);

@@ -32,7 +32,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 100
+#define coutUpToEv 0
 
 using namespace lcio ;
 using namespace marlin ;
@@ -56,6 +56,11 @@ EvaluateTauID::EvaluateTauID() : Processor("EvaluateTauID")
                               "Name of the LCRelation otput Collection"  ,
                               _colNameMCRecLink ,
                               std::string("MCRecLink")) ;
+
+   registerProcessorParameter( "kappa" ,
+                              "kappa for charge weighting"  ,
+                              _kappa ,
+			       (double) 0.4) ;
 
   registerInputCollection( LCIO::MCPARTICLE,
 			   "MCCollectionName           " , 
@@ -105,10 +110,10 @@ void EvaluateTauID::init()
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
  
   evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec");
-  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:mcEfull:mcE:mcpt:mcnQ:mcnN:recE:recpt:recD0:Eseed:recnQ:recnN");
-  mctuple=new TNtuple("mcmiss","mcmiss","EvID:E:Evis:ptvis:nQ:nN:D1:D2");
+  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:mcEfull:mcE:mcpt:mcnQ:mcnN:recE:recpt:Eseed:recnQ:recnN:D1:D2:D3:D4");
+  mctuple=new TNtuple("mctuple","mctuple","EvID:E:Evis:ptvis:nQ:nN:D1:D2:D3:D4:Qw");
   faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recpt:recD0");
-
+  Qtuple =new TNtuple("Q","Q","EvID:Q:nTr:Qw:trueTau");
   
   std::cout << "INIT IS DONE" << std::endl;
 }
@@ -184,6 +189,8 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 	  bool contaminated=false;
 	  MCParticle *mctau=NULL;
 	  //loop over content of tau
+	  double Qweighted=0;
+	  double ptsum=0;
 	  for(unsigned int o=0;o<tauvec.size();o++)
 	    {
 	      //find seed track for D0
@@ -195,6 +202,10 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 		      D0=(float)tauvec[o]->getTracks()[0]->getD0();
 		      Eseed=tauvec[o]->getEnergy();
 		    }
+		  double pt=sqrt(tauvec[o]->getMomentum()[0]*tauvec[o]->getMomentum()[0]
+				 +tauvec[o]->getMomentum()[1]*tauvec[o]->getMomentum()[1]);
+		  Qweighted+=tauvec[o]->getCharge()*pow(tauvec[o]->getEnergy(),_kappa);
+		  ptsum+=pow(tauvec[o]->getEnergy(),_kappa);
 		}
 	      else
 		nN++;
@@ -261,18 +272,51 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 		}
 	      
 	    }//tau content
+	  float trueTau=0;
+	  if(mctau)
+	    trueTau=1;
+	  Qtuple->Fill(_nEvt,tau->getCharge(),nQ,Qweighted/ptsum,trueTau);
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	    cout<<"REC: "<<tau->getEnergy()<<" "<<nQ<<" "<<nN<<" "<<D0<<endl;
 	  
 	  //compare tau with mc truth
 	  if(mctau)
 	    {
-	      double Evis=0,ptvis=0;
+	      double Evis=0,ptvis=0,Qw=0,pQ=0;
 	      int mcnQ=0,mcnN=0;
 	      
-	      LoopDaughters(mctau,Evis,ptvis,mcnQ,mcnN);
-
-	      taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,ptvis,nQ,nN,tau->getEnergy(),pt,D0,Eseed,nQ,nN);
+	      LoopDaughters(mctau,Evis,ptvis,mcnQ,mcnN,Qw,pQ);
+	      int D[4]={0,0,0,0};
+	      int nvisD=0;
+	      for(unsigned int d=0;d< mctau->getDaughters().size();d++)
+		{
+		  if(mctau->getDaughters()[d]->getGeneratorStatus()==1 || mctau->getDaughters()[d]->getPDG()==111)
+		    {
+		      int pdg=mctau->getDaughters()[d]->getPDG();
+		      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+			{
+			  D[nvisD]=pdg;
+			  nvisD++;
+			}
+		    }
+		  else
+		    {
+		      MCParticle *daughter=mctau->getDaughters()[d];
+		      for(unsigned int d1=0;d1< daughter->getDaughters().size();d1++)
+			{
+			  if(daughter->getDaughters()[d1]->getGeneratorStatus()==1)
+			    {
+			      int pdg=daughter->getDaughters()[d1]->getPDG();
+			      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+				{
+				  D[nvisD]=pdg;
+				  nvisD++;
+				}
+			    }
+			}
+		    }
+		}
+	      taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,ptvis,nQ,nN,tau->getEnergy(),pt,Eseed,nQ,nN,D[0],D[1],D[2],D[3]);
 	    }
 	  else //fake
 	    { 
@@ -322,14 +366,43 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==15)
 	    {
 	      ntau_mc++;
-	      double Evis=0,ptvis=0;
+	      double Evis=0,ptvis=0,Qw=0,pQ=0;
 	      int nQ=0,nN=0;
-	      LoopDaughters(particle,Evis,ptvis,nQ,nN);
+	      LoopDaughters(particle,Evis,ptvis,nQ,nN,Qw,pQ);
 	    
 	      if(_nEvt<coutUpToEv || _nEvt==coutEv)
 		cout<<particle->getPDG()<<" "<<Evis<<" "<<ptvis<<" "<<nQ<<" "<<nN<<endl;
-	      
-	      mctuple->Fill(_nEvt,particle->getEnergy(),Evis,ptvis,nQ,nN,particle->getDaughters()[0]->getPDG(),particle->getDaughters()[1]->getPDG());
+	      int D[4]={0,0,0,0};
+	      int nvisD=0;
+	      for(unsigned int d=0;d< particle->getDaughters().size();d++)
+		{
+		  if(particle->getDaughters()[d]->getGeneratorStatus()==1 || particle->getDaughters()[d]->getPDG()==111)
+		    {
+		      int pdg=particle->getDaughters()[d]->getPDG();
+		      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+			{
+			  D[nvisD]=pdg;
+			  nvisD++;
+			}
+		    }
+		  else
+		    {
+		      MCParticle *daughter=particle->getDaughters()[d];
+		      for(unsigned int d1=0;d1< daughter->getDaughters().size();d1++)
+			{
+			  if(daughter->getDaughters()[d1]->getGeneratorStatus()==1)
+			    {
+			      int pdg=daughter->getDaughters()[d1]->getPDG();
+			      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+				{
+				  D[nvisD]=pdg;
+				  nvisD++;
+				}
+			    }
+			}
+		    }
+		}
+	      mctuple->Fill(_nEvt,particle->getEnergy(),Evis,ptvis,nQ,nN,D[0],D[1],D[2],D[3],Qw/pQ);
 	    	      
 	    }//tau
 	}
@@ -349,7 +422,7 @@ void EvaluateTauID::processEvent( LCEvent * evt )
    
 }
 
-void EvaluateTauID::LoopDaughters(MCParticle *particle,double &Evis,double &ptvis,int &nQ, int &nN)
+void EvaluateTauID::LoopDaughters(MCParticle *particle,double &Evis,double &ptvis,int &nQ, int &nN, double &Qw, double &pQ)
 {
   for(unsigned int d=0;d<particle->getDaughters().size();d++)
     { 
@@ -362,14 +435,20 @@ void EvaluateTauID::LoopDaughters(MCParticle *particle,double &Evis,double &ptvi
 	      Evis+=daughter->getEnergy();
 	      const double *mc_pvec=daughter->getMomentum();
 	      ptvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
+	      if(daughter->getCharge()==1 || daughter->getCharge()==-1)
+		{ 
+		  //Qw+=daughter->getCharge()*pow(sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]),_kappa);
+		  Qw+=daughter->getCharge()*pow(daughter->getEnergy(),_kappa);
+		  //pQ+=pow(sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]),_kappa);
+		  pQ+=pow(daughter->getEnergy(),_kappa);
+		  nQ++;
+		}
+	      else
+		nN++;
 	    }
-	  if(daughter->getCharge()==1 || daughter->getCharge()==-1)
-	    nQ++;
-	  else
-	    nN++;
 	}
       if(daughter->getDaughters().size())
-	LoopDaughters(daughter,Evis,ptvis,nQ,nN);
+	LoopDaughters(daughter,Evis,ptvis,nQ,nN,Qw,pQ);
     }
 }
  
@@ -395,7 +474,7 @@ void EvaluateTauID::end(){
   mctuple->Write();
   taumatchtuple->Write();
   faketuple->Write();
-    
+  Qtuple->Write(); 
   //Close File here
   rootfile->Write();
   rootfile->Close();

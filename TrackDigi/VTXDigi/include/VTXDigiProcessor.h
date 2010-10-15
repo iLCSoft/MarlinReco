@@ -94,9 +94,6 @@ class VTXDigiProcessor : public Processor {
    */
   virtual void end() ;
 
-
-  // find phi of point in projection 2D, taken from gear::VXDParameters
-  double getPhiPoint( gear::Vector3D p ) const ;
   // find phi in correct range, taken from gear::VXDParameters
   double correctPhiRange( double Phi ) const ;  
   
@@ -114,6 +111,7 @@ class VTXDigiProcessor : public Processor {
 
   int _nRun ;
   int _nEvt ;
+  int _smearAlongLadders;
   int _debug;
   int _removeDRays;
   float _pointResoRPhi,_pointResoRPhi_VTX,_pointResoRPhi_SIT,_pointResoRPhi_SET;

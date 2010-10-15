@@ -11,6 +11,8 @@
 // #include <CLHEP/Random/RandGauss.h>
 #include <gsl/gsl_randist.h>
 
+#include "CLHEP/Vector/TwoVector.h"
+
 #include <cmath>
 #include <algorithm>
 #include <sstream>
@@ -30,10 +32,15 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
 
   // register steering parameters: name, description, class-variable, default value
 
+  registerProcessorParameter( "SmearAlongLadders" ,
+                              "Points smeared along the ladders"  ,
+                              _smearAlongLadders ,
+                              int(1)) ;
+
   registerProcessorParameter( "PointResolutionRPhi_VTX" ,
                               "R-Phi Resolution in VTX"  ,
                               _pointResoRPhi_VTX ,
-                               float(0.0040)) ;
+                              float(0.0040)) ;
 	
   registerProcessorParameter( "PointResolutionZ_VTX" , 
                               "Z Resolution in VTX" ,
@@ -43,7 +50,7 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
   registerProcessorParameter( "PointResolutionRPhi_SIT" ,
                               "R-Phi Resolution in SIT"  ,
                               _pointResoRPhi_SIT ,
-                               float(0.010)) ;
+                              float(0.010)) ;
 	
   registerProcessorParameter( "PointResolutionZ_SIT" , 
                               "Z Resolution in SIT" ,
@@ -53,7 +60,7 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
   registerProcessorParameter( "PointResolutionRPhi_SET" ,
                               "R-Phi Resolution in SET"  ,
                               _pointResoRPhi_SET ,
-                               float(0.010)) ;
+                              float(0.010)) ;
 	
   registerProcessorParameter( "PointResolutionZ_SET" , 
                               "Z Resolution in SET" ,
@@ -92,7 +99,7 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
   registerProcessorParameter( "HitEfficiencyPerLayer_VTX" ,
                               "hit efficiencies per VXD layer (default: 1.0)"  ,
                               _vxdEff ,
-                               effDefault ) ;
+                              effDefault ) ;
 
   registerProcessorParameter( "RandomSeed" , 
                               "random seed - default 42" ,
@@ -121,10 +128,10 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
   
   // Output collections
   registerOutputCollection( LCIO::TRACKERHIT,
-                           "VTXHitCollection" , 
-                           "Name of the vxd TrackerHit output collection"  ,
-                           _outColNameVTX ,
-                           std::string("VTXTrackerHits") ) ;
+                            "VTXHitCollection" , 
+                            "Name of the vxd TrackerHit output collection"  ,
+                            _outColNameVTX ,
+                            std::string("VTXTrackerHits") ) ;
 
   registerOutputCollection( LCIO::TRACKERHIT,
                             "SITHitCollection" , 
@@ -150,13 +157,14 @@ void VTXDigiProcessor::init() {
   _nEvt = 0 ;
 
   // initialize gsl random generator
+  _ranSeed = 0;
   _rng = gsl_rng_alloc(gsl_rng_ranlxs2);
   gsl_rng_default_seed = _ranSeed ;
 
   // check that we have the efficiencies for all layers
   const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
   const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
-  int nLayer = layerVXD.getNLayers() ;
+  const unsigned int nLayer = layerVXD.getNLayers() ;
   
   if( _vxdEff.size() < nLayer ){
 
@@ -188,27 +196,21 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
         STHcol = evt->getCollection( _colNameSET ) ;
     }
     catch(DataNotAvailableException &e){
-      if (_debug == 1) {
-        if (iColl==0)
-          std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
-        else if (iColl==1)
-          std::cout << "Collection " << _colNameSIT.c_str() << " is unavailable in event " << _nEvt << std::endl;
-        else 
-          std::cout << "Collection " << _colNameSET.c_str() << " is unavailable in event " << _nEvt << std::endl;
-      }
+
+      if (iColl==0)
+        streamlog_out(DEBUG) << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
+      else if (iColl==1)
+        streamlog_out(DEBUG) << "Collection " << _colNameSIT.c_str() << " is unavailable in event " << _nEvt << std::endl;
+      else 
+        streamlog_out(DEBUG) << "Collection " << _colNameSET.c_str() << " is unavailable in event " << _nEvt << std::endl; 
     }
 
-  
     if( STHcol != 0 ){    
     
       LCCollectionVec* trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
     
       int nSimHits = STHcol->getNumberOfElements()  ;
     
-      if (iColl==0)
-        streamlog_out( DEBUG ) << " processing collection " << _colNameVTX 
-                               << " with " <<  nSimHits  << " hits ... " << std::endl ;
-
       for(int i=0; i< nSimHits; i++){
         
         SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
@@ -220,271 +222,242 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
           int cellID = SimTHit->getCellID() ;
           
           if( find(_activeSETLayers.begin(),_activeSETLayers.end(),cellID)==_activeSETLayers.end() ) {
-            
             continue ;   // ----------------- ignore hit 
           } 
         }
         
-        bool accept = 1;
         if (_removeDRays) { // check if hit originates from delta-electron 
           float totMomentum = 0;
           for (int i=0;i<3;++i) 
-            totMomentum+=SimTHit->getMomentum()[i]*SimTHit->getMomentum()[i];
+            {
+              totMomentum+=SimTHit->getMomentum()[i]*SimTHit->getMomentum()[i];
+            }
           totMomentum = sqrt(totMomentum);
+          
           if (totMomentum < _momCut)
-            accept = 0;
+            {
+              streamlog_out( DEBUG ) << " removeDRays enabled: hit originates from delta-electron, hit dropped" << std::endl ;
+              continue ;  // ----------------- ignore hit 
+            }
         }
         
-        if (accept == 1) {
-          
-          const int celId = SimTHit->getCellID() ;
-          
-          const double *pos ;
-          pos =  SimTHit->getPosition() ;  
 
-          double newPos[3];
+        const int celId = SimTHit->getCellID() ;
+        
+        const double *pos ;
+        pos =  SimTHit->getPosition() ;  
+        
+        double smearedPos[3];
+        
+        //VXD smearing
+        if (iColl==0) {        
+
+          streamlog_out( DEBUG ) << " processing collection " << _colNameVTX 
+                                 << " with " <<  nSimHits  << " hits ... " << std::endl ;
+            
+          //find which layer hit is in - encoded in cell ID
+          int layer = SimTHit->getCellID() - 1;
+
+
+          _vxdCount[layer].second++ ;
+          // drop hit due to inefficiency ?
+          double urand = gsl_rng_uniform( _rng ) ;
+
+          if( urand > _vxdEff[  layer ] ){
+            streamlog_out( DEBUG ) << " dropping hit in layer " << layer << std::endl ;
+            continue ;  // ----------------- ignore hit 
+          } 
+          _vxdCount[layer].first++ ;
+
+
+          //get VXD geometry info
+          const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
+          const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
+
+          gear::Vector3D hitvec(pos[0],pos[1],pos[2]);
+          gear::Vector3D smearedhitvec(pos[0],pos[1],pos[2]);
+
+          streamlog_out(DEBUG) <<"Position of hit before smearing = "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+            
+          //check detector geometry to decide how to smear hits    
+          //ladders in layer -> need to smear hits along ladder plane
           
-          //VXD smearing
-          if (iColl==0) {        
-          
-            //find which layer hit is in - encoded in cell ID
+          if( _smearAlongLadders !=0 && layerVXD.getNLadders(0) !=0 ) {
+
+            streamlog_out(DEBUG) << "start smearing along ladders for: " << layer << std::endl;
+            
             int layer = SimTHit->getCellID() - 1;
+              
+            //phi between each ladder
+            double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;
+              
+            double PhiInLocal;
+            //find the ladder that the hit is in
+            int ladderIndex = -1;
+            double ladderPhi=999;
+              
+            for (int ic=0; ic < layerVXD.getNLadders(layer); ++ic) {
+                
+              ladderPhi = correctPhiRange( layerVXD.getPhi0( layer ) + ic*deltaPhi ) ;
+                
+              PhiInLocal = hitvec.phi() - ladderPhi;
+              double RXY = hitvec.rho();
+                
+              // check if point is in range of ladder
+              if (RXY*cos(PhiInLocal) - layerVXD.getSensitiveDistance(layer) > -layerVXD.getSensitiveThickness(layer) && 
+                  RXY*cos(PhiInLocal) - layerVXD.getSensitiveDistance(layer) <  layerVXD.getSensitiveThickness(layer) )
+                {
+                  ladderIndex = ic;
+                  break;
+                }
+            }
 
+            double sensitive_width  = layerVXD.getSensitiveWidth(layer);
+            double sensitive_offset = layerVXD.getSensitiveOffset(layer);
 
-            _vxdCount[layer].second++ ;
-            // drop hit due to inefficiency ?
-            double urand = gsl_rng_uniform( _rng ) ;
-
-            if( urand > _vxdEff[  layer ] ){
-              //streamlog_out( DEBUG ) << " dropping hit in layer " << layer << std::endl ;
-              continue ;  // ----------------- ignore hit 
-            } 
-            _vxdCount[layer].first++ ;
-
-
-            //get VXD geometry info
-            const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
-            const gear::VXDLayerLayout& layerVXD = gearVXD.getVXDLayerLayout(); 
-
-            gear::Vector3D hitvec(pos[0],pos[1],pos[2]);
-
-            if(_debug ==1)
+            double ladder_incline = correctPhiRange( (M_PI/2.0 ) + ladderPhi );
+              
+            double u = (hitvec.rho() * sin(PhiInLocal) - sensitive_offset );
+            
+            streamlog_out(DEBUG) << ":" 
+                                 << " Event: " << _nEvt 
+                                 << " hit: " << i 
+                                 << " of "   << nSimHits
+                                 << "  layer: " << layer 
+                                 << "  ladderIndex: " << ladderIndex 
+                                 << "  half ladder width " << sensitive_width * 0.5 
+                                 << "  u: " <<  u
+                                 << "  layer sensitive_offset " << sensitive_offset
+                                 << "  layer phi0 " << layerVXD.getPhi0( layer )
+                                 << "  phi: " <<  hitvec.phi()
+                                 << "  PhiInLocal: " << PhiInLocal
+                                 << "  ladderPhi: " << ladderPhi
+                                 << "  ladder_incline: " << ladder_incline
+                                 << std::endl;
+              
+            if( u > sensitive_width * 0.5 || u < -sensitive_width * 0.5)
               {
-                cout<<"Position of hit before smearing = "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
-                cout<<"Hit in sensitive volume? "<<gearVXD.isPointInSensitive(hitvec)<<endl;
+                streamlog_out(DEBUG) << "hit not in sensitive: u: " << u << " half ladder width = " << sensitive_width * 0.5 << std::endl;
+                continue; // hit is not in sensitive so drop this hit and go on to the next
               }
 
-            //check detector geometry to decide how to smear hits    
-            //ladders in layer -> need to smear hits along ladder plane
-            bool UseLadders=true;
-            if(layerVXD.getNLadders(0) !=0){
-              
-//               //find which layer hit is in - encoded in cell ID
-//               int layer = SimTHit->getCellID() - 1;
-              
-              //check that this is a valid layer
-              if (layer < 0 || layer > layerVXD.getNLayers() ) 
-                {
-                  if(_debug == 1)
-                    cout<<"layer of hit not found, smearing in cylinder "<<endl;
-                  UseLadders=false;
-                }
-              //if the layer is valid, smear along the ladder
-              if(UseLadders){
-                float PhiInLocal = 0;
- 
-                //phi between each ladder
-                double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;
-                
-
-                // get phi of hit in projection 2D
-                double pPhi = getPhiPoint( hitvec ) ;
-
-                //find the ladder that the hit is in
-                int ladderIndex = -1;
-                double lPhi=999;
-                for (int ic=0; ic < layerVXD.getNLadders(layer); ++ic) 
-                  {
-                    lPhi = layerVXD.getPhi0( layer ) + ic*deltaPhi ;
-                    lPhi = correctPhiRange( lPhi ) ;
-
-                    PhiInLocal = pPhi - lPhi;
-                    float RXY = sqrt((pos[0]*pos[0]+pos[1]*pos[1]));
-
-                    // check if point is in range of ladder
-                    if (RXY*cos(PhiInLocal)- layerVXD.getSensitiveDistance(layer) > -layerVXD.getSensitiveThickness(layer) && 
-                        RXY*cos(PhiInLocal)-layerVXD.getSensitiveDistance(layer) < layerVXD.getSensitiveThickness(layer) )
-                      {
-                        ladderIndex = ic;
-                        break;
-                      }
-                  }
-                _pointResoRPhi = _pointResoRPhi_VTX/cos(PhiInLocal);
+            int  tries = 0;              
+            // try to smear the hit within the ladder
+            bool accept_hit = false;
+            while( tries < 100 )
+              {
+                  
+                if(tries > 0) streamlog_out(DEBUG) << "retry smearing for " << layer << " " << ladderIndex << " : retries " << tries << std::endl;
+                  
+                _pointResoRPhi = _pointResoRPhi_VTX;
                 _pointResoZ    = _pointResoZ_VTX;
 
-                //finding the smearing constant
-                double rSmear  = gsl_ran_gaussian(_rng,_pointResoRPhi_VTX);
-                
-                //find smearing for x and y, so that hit is smeared along ladder plane
-                double xSmear = rSmear * cos(lPhi);
-                double ySmear = rSmear * sin(lPhi);
-
-                newPos[0] = pos[0] + xSmear;
-                newPos[1] = pos[1] - ySmear;
-
-                //smear in z
-                double zSmear = gsl_ran_gaussian(_rng,_pointResoZ_VTX);
-
-                newPos[2] = pos[2] + zSmear;
-
-                //check that hits are still on ladder, if they aren't put them on end of ladder. 
-                gear::Vector3D smearedhitvec(newPos[0],newPos[1],newPos[2]);
-
-                //info for debug
-                if(_debug==1)
-                  {
-                    cout<<"Position of hit after smearing = "<<newPos[0]<<" "<<newPos[1]<<" "<<newPos[2]<<endl;
-                    cout<<"Smeared hits on sensitive volume? "<<gearVXD.isPointInSensitive(smearedhitvec)<<endl;
-                  }
-
-                if(gearVXD.isPointInSensitive(smearedhitvec)==0)
-                  {
-                    
-                    //start phi for first ladder in layer
-                    double startPhi = layerVXD.getPhi0(layer) + 
-                      atan( (-layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
-                    //end phi for first ladder in layer
-                    double endPhi = layerVXD.getPhi0(layer) +  
-                      atan( (layerVXD.getSensitiveWidth(layer) /2 + layerVXD.getSensitiveOffset(layer)) / (layerVXD.getSensitiveDistance(layer)));
-
-                    // get start and end phi for the ladder that this hit is on 
-                    float sPhi = correctPhiRange( startPhi + ladderIndex*deltaPhi ) ;
-                    float ePhi = correctPhiRange( endPhi + ladderIndex*deltaPhi) ;
-
-                    pPhi = getPhiPoint( smearedhitvec ) ;
-
-                    //point in ladder where line perpendicular to ladder, from interaction point crosses ladder in x and y
-                    float xladder = sin(lPhi)*(layerVXD.getSensitiveDistance(layer)+(0.5*layerVXD.getSensitiveThickness(layer)));
-                    float yladder = cos(lPhi)*(layerVXD.getSensitiveDistance(layer)+(0.5*layerVXD.getSensitiveThickness(layer)));
-
-                    //end of ladder in z
-                    float endz = layerVXD.getSensitiveLength(layer);
-
-                    //if point has been smeared further than start of ladder move it to start of ladder in x and y
-                    if(pPhi < sPhi)
-                      {
-                        newPos[0] = xladder - (cos(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)-layerVXD.getSensitiveOffset( layer )));
-                        newPos[1] = yladder + (sin(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)-layerVXD.getSensitiveOffset( layer )));
-                      }
-                    //if point has been smeared further than end of ladder move it to end of ladder in x and y
-                    if(pPhi > ePhi)
-                      {
-                         newPos[0] = xladder + (cos(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)+layerVXD.getSensitiveOffset( layer )));
-                         newPos[1] = yladder - (sin(lPhi)*((layerVXD.getSensitiveWidth(layer)*0.5)+layerVXD.getSensitiveOffset( layer )));
-                       }
-                    
+                double rPhiSmear  = gsl_ran_gaussian(_rng,_pointResoRPhi);
                   
-                    //if point has been smeared further than ends of ladder in z, move it to the nearest end.
-                    if(newPos[2] > endz)
-                      newPos[2] = endz;
-                    if(newPos[2] < -endz)
-                      newPos[2] = -endz;
-                
-                    //info for debug
-                    gear::Vector3D repohitvec(newPos[0],newPos[1],newPos[2]);
-                    if(_debug==1)
-                      {
-                        cout<<"Position of hit after repositioning = "<<newPos[0]<<" "<<newPos[1]<<" "<<newPos[2]<<endl;
-                        cout<<"repositioned hits on sensitive volume? "<<gearVXD.isPointInSensitive(repohitvec)<<endl;
-                      }
-
+                if( (u+rPhiSmear) < sensitive_width * 0.5 && (u+rPhiSmear) > -sensitive_width * 0.5)
+                  {
+                    accept_hit =true;
+                    double zSmear  = gsl_ran_gaussian(_rng,_pointResoZ);
+                    
+                    //find smearing for x and y, so that hit is smeared along ladder plane
+                    smearedPos[0] = hitvec.x() + rPhiSmear * cos(ladderPhi);
+                    smearedPos[1] = hitvec.y() + rPhiSmear * sin(ladderPhi); 
+                    smearedPos[2] = hitvec.z() + zSmear;
+                    break;
+                    
                   }
-              }
-              
-            }
-     
-
-            // no ladders in layers -> just smear around cylinders
-            if(layerVXD.getNLadders(0) ==0 || UseLadders==false){
-              
+                ++tries;
+              } 
+            if( accept_hit = false )
+              {
+                streamlog_out(DEBUG) << "hit could not be smeared within ladder after 100 tries: hit dropped"  << std::endl;
+                continue; 
+              } // 
+          }
+            
+          else  // no ladders in layers -> just smear around cylinders
+            {
+                
+              streamlog_out(DEBUG) << "start simple smearing for: " << layer << std::endl;
+              CLHEP::Hep3Vector point(pos[0], pos[1], pos[2]);
+                
               _pointResoRPhi = _pointResoRPhi_VTX;
-              _pointResoZ = _pointResoZ_VTX;
+              _pointResoZ    = _pointResoZ_VTX;
 
-              double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi_VTX);
-              double zSmear = gsl_ran_gaussian(_rng,_pointResoZ_VTX);
+              double rphiSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
+              double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
               
-              double phi = atan2(pos[1],pos[0]);
-              double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
-              double phi_new = phi + xSmear/rad;
-              newPos[0] = rad*cos(phi_new);
-              newPos[1] = rad*sin(phi_new);
-              newPos[2] = pos[2] + zSmear;
+              point.setPhi( point.phi() + rphiSmear / point.perp() );
+              point.setZ( point.z() + zSmear );
+              
+              smearedPos[0] = point.x();
+              smearedPos[1] = point.y();
+              smearedPos[2] = point.z();
             }
-
+          
+        }
+        // SIT/SET Smearing
+        else {
+            
+          if (iColl==1) {
+            _pointResoRPhi = _pointResoRPhi_SIT;
+            _pointResoZ = _pointResoZ_SIT;               
           }
-
-          // SIT/SET Smearing
           else {
-            
-            if (iColl==1) {
-              _pointResoRPhi = _pointResoRPhi_SIT;
-              _pointResoZ = _pointResoZ_SIT;               
-            }
-            else {
-              _pointResoRPhi = _pointResoRPhi_SET;
-              _pointResoZ = _pointResoZ_SET; 
-            }
-            
-            double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
-            double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
-            
-            double phi = atan2(pos[1],pos[0]);
-            double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
-            double phi_new = phi + xSmear/rad;
-            newPos[0] = rad*cos(phi_new);
-            newPos[1] = rad*sin(phi_new);
-            newPos[2] = pos[2] + zSmear;      
-            
+            _pointResoRPhi = _pointResoRPhi_SET;
+            _pointResoZ = _pointResoZ_SET; 
           }
+            
+          double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
+          double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
+            
+          double phi = atan2(pos[1],pos[0]);
+          double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);
+          double phi_new = phi + xSmear/rad;
+          smearedPos[0] = rad*cos(phi_new);
+          smearedPos[1] = rad*sin(phi_new);
+          smearedPos[2] = pos[2] + zSmear;      
+            
+        }
           
-          float edep ;
-          float dedxSmear = 0.0 ;
-          edep = SimTHit->getEDep() ;
+        float edep ;
+        float dedxSmear = 0.0 ;
+        edep = SimTHit->getEDep() ;
           
-          edep = edep + dedxSmear ; 
+        edep = edep + dedxSmear ; 
           
-          MCParticle *mcp ;
-          mcp = SimTHit->getMCParticle() ;
+        MCParticle *mcp ;
+        mcp = SimTHit->getMCParticle() ;
           
-          //store hit variables
-          TrackerHitImpl* trkHit = new TrackerHitImpl ;
+        //store hit variables
+        TrackerHitImpl* trkHit = new TrackerHitImpl ;
           
-          //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
-          trkHit->setPosition( newPos ) ;
+        //FIXME: SJA: this is a temporary work around the set'er should take a const double * 
+        trkHit->setPosition( smearedPos ) ;
           
-          trkHit->setEDep( edep ) ;
-          if (iColl==0) 
-            trkHit->setType(100+celId ); 
-          else {
-            trkHit->setType(400+celId);
-          }
+        trkHit->setEDep( edep ) ;
+        if (iColl==0) 
+          trkHit->setType(100+celId ); 
+        else {
+          trkHit->setType(400+celId);
+        }
           
-          float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
-          trkHit->setCovMatrix(covMat);      
-          // 	  push back the SimTHit for this TrackerHit
-          // fg: only if we have a sim hit with proper link to MC truth
-          if( mcp != 0 )  {
-            trkHit->rawHits().push_back( SimTHit ) ;
-          }
-          //else{
-          //  streamlog_out( DEBUG ) << " ignore simhit pointer as MCParticle pointer is NULL ! " << std::endl ;
-          //}
+        float covMat[TRKHITNCOVMATRIX]={0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
+        trkHit->setCovMatrix(covMat);      
+        // 	  push back the SimTHit for this TrackerHit
+        // fg: only if we have a sim hit with proper link to MC truth
+        if( mcp != 0 )  {
+          trkHit->rawHits().push_back( SimTHit ) ;
+        }
+        //else{
+        //  streamlog_out( DEBUG ) << " ignore simhit pointer as MCParticle pointer is NULL ! " << std::endl ;
+        //}
 
 
-          trkhitVec->addElement( trkHit ) ; 
-        }      
-        
-      }
+        trkhitVec->addElement( trkHit ) ; 
+      }      
+      
+    
       if (iColl==0) 
         evt->addCollection( trkhitVec , _outColNameVTX ) ;
       else if (iColl == 1)
@@ -493,13 +466,12 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
         evt->addCollection( trkhitVec , _outColNameSET );
     }
   }
-
   _nEvt ++ ;
 }
 
 
 
-  void VTXDigiProcessor::check( LCEvent * evt ) { 
+void VTXDigiProcessor::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -510,10 +482,10 @@ void VTXDigiProcessor::end(){
                          << " processed " << _nEvt << " events in " << _nRun << " runs "
                          << std::endl ;
 
-  streamlog_out(MESSAGE) << " VXD hits - efficiency : "  << std::endl ;
+  streamlog_out(DEBUG) << " VXD hits - efficiency : "  << std::endl ;
   for(unsigned i=0 ; i<_vxdCount.size(); ++i) {
     
-    streamlog_out(MESSAGE) << "     layer " << i << " kept " 
+    streamlog_out(DEBUG) << "     layer " << i << " kept " 
                            << _vxdCount[i].first << " hits of " 
                            << _vxdCount[i].second << " -> eff = " 
                            <<  double(_vxdCount[i].first)/ double(_vxdCount[i].second) 
@@ -524,43 +496,20 @@ void VTXDigiProcessor::end(){
 
 
 double VTXDigiProcessor::correctPhiRange( double Phi ) const {
-    
-    if( Phi > M_PI ) {
-      return ( Phi - 2 * M_PI ) ;
+
+  while( (Phi < -1.0*M_PI) || (Phi > 1.0*M_PI) )
+    {
+      if( Phi > 1.0*M_PI )
+        {
+          Phi -= 2.0 * M_PI;
+        }
+      else
+        {
+          Phi += 2.0 * M_PI;
+        }
     }
-    if( Phi <= -M_PI ) {
-      return ( Phi + 2 * M_PI ) ;
-    } 
-    
-    return Phi ;
+  
+  return Phi ;
+  
+} // function correctPhiRange
 
-  } // function correctPhiRange
-
-
-double VTXDigiProcessor::getPhiPoint( gear::Vector3D p ) const {
-
-    //fg: definition of phi - seems like this is the the angle with the negative y-axis ????
-    //    return correctPhiRange( p.phi() ) ;
-
-    // get phi of point in projection 2D
-    double pPhi = 0. ;
-    if( ( p[0] >= 0 ) && ( p[1] == 0 ) )
-      pPhi = -M_PI/2 ;
-    
-    if( ( p[0] < 0 ) && ( p[1] == 0 ) )
-      pPhi = M_PI/2 ;
-    
-    if( ( p[0] == 0 ) && ( p[1] < 0 ) ) 
-      pPhi = 0 ;
-    
-    if( ( p[0] != 0 ) && ( p[1] < 0 ) )
-      pPhi = atan( p[0] / p[1] ) + M_PI ;
-    
-    else
-      pPhi = atan( p[0] / p[1] ) ;
-    
-    pPhi = correctPhiRange( pPhi ) ;  
-    
-    return pPhi ;
-    
-} // function getPhiPoint

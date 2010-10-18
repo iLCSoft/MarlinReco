@@ -74,36 +74,37 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			   "TrackCollection" , 
 			   "Name of the Tracks input collection"  ,
 			   _trackCollectionName ,
-			   std::string("Tracks") ) ;
+			   std::string("LDCTracks") ) ;
+
   registerInputCollection( LCIO::CLUSTER,
 			   "ClusterCollection" , 
 			   "Name of the Clusters input collection"  ,
 			   _clusterCollectionName ,
-			   std::string("Clusters") ) ;
+			   std::string("PandoraClusters") ) ;
   
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
                            "RecoParticleCollection" ,
                            "Name of the ReconstructedParticles input collection"  ,
                            _recoParticleCollectionName ,
-                           std::string("ReconstructedParticles") ) ;
+                           std::string("PandoraPFOs") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
 			   "SimTrackerHitRelationName" , 
 			   "Name of the  SimTrackerHit - TrackerHit relation"  ,
 			   _trackHitRelationName ,
-			   std::string("SimTrackerHitRelation") ) ;
+			   std::string("TPCTracksMCP") ) ;
   
   registerInputCollection( LCIO::LCRELATION,
 			   "SimCalorimeterHitRelationName" , 
 			   "Name of the  SimCalorimeterHit - CalorimeterHit relation"  ,
 			   _caloHitRelationName ,
-			   std::string("SimCalorimeterHitRelation") ) ;
+			   std::string("RelationCaloHit") ) ;
 
 
   registerProcessorParameter("OutputTrackRelation",
                              "true: Create TrackMCTruthLink collection, false : dont ",
                              _OutputTrackRelation,
-                             bool(1));
+                             bool(true));
 
   registerOutputCollection( LCIO::LCRELATION,
 			    "TrackMCTruthLinkName" , 
@@ -114,7 +115,7 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   registerProcessorParameter("OutputClusterRelation",
                              "true: Create ClusterMCTruthLink collection, false : dont ",
                              _OutputClusterRelation,
-                             bool(1));
+                             bool(true));
 
  registerOutputCollection( LCIO::LCRELATION,
 			    "ClusterMCTruthLinkName" , 
@@ -128,7 +129,8 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
                              "track weight (weights in permill). false: Only highest contributor linked,"
                              "and only to tracks, not clusters if there are any tracks",   
                              _FullRecoRelation,
-                             bool(1));
+                             bool(false)
+			     );
 
   registerOutputCollection( LCIO::LCRELATION,
                             "RecoMCTruthLinkName" ,
@@ -139,7 +141,8 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   registerProcessorParameter("OutputCalohitRelation",
                              "true: Create CalohitMCTruthLink collection, false : dont ",
                              _OutputCalohitRelation,
-                             bool(0));
+                             bool(false));
+
   registerOutputCollection( LCIO::LCRELATION,
                             "CalohitMCTruthLinkName" ,
                             "Name of the updated calo-hit MCTruthLink output collection"  ,

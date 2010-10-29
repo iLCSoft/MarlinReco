@@ -58,11 +58,11 @@ class BaseConstraint;
  * OPALFitter::fit first initializes the global parameter numbering
  * using OPALFitter::initialize.
  *
- * Then it initializes vectors etaxi (\f$ \etaxi\f$)  and y (\f$ \vec y\f$)
+ * Then it initializes vectors etaxi (\f$ \eta\xi\f$)  and y (\f$ \vec y\f$)
  * with the current  parameter values.
  *
  * Next it initializes the matrix Feta that represents 
- * \f$d \vec F / d \vec \etaxi\f$
+ * \f$d \vec F / d \vec \eta\xi\f$
  *
  * Used methods in OPALFitter::initialize:
  * - BaseFitObject::getNPar

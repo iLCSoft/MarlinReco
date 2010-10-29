@@ -1,3 +1,57 @@
+2010-10-29 10:29  engels
+
+	* [r1795] Analysis/MarlinKinfit/include/OPALFitterGSL.h: fixed
+	  latex typo (same fix as in r1321 and r1335)
+
+2010-10-18 15:32  gaede
+
+	* [r1787] doc/release.notes: added RecoMcTruthLink doc
+
+2010-10-18 14:22  gaede
+
+	* [r1786] Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc:
+	  updated default values of steering parameters to work with
+	  standard reconstruction
+
+2010-10-15 14:09  aplin
+
+	* [r1783] TrackDigi/VTXDigi/include/VTXDigiProcessor.h,
+	  TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: Smearing has been
+	  re-written for the VXD. Smearing is still performed along the
+	  ladders if they are found to exist in the GEAR file, otherwise
+	  cylindrical smearing is performed. This can be forced by setting
+	  the steering parameter _smearAlongLadders to 0. Hits which are
+	  found to not be within the width of the sensitive layer as stated
+	  in the GEAR file are dropped.
+
+2010-10-15 00:10  berggren
+
+	* [r1781] Analysis/RecoMCTruthLink/README,
+	  Analysis/RecoMCTruthLink/RecoMCTruthLinker-steering.xml,
+	  Analysis/RecoMCTruthLink/include/RecoMCTruthLinker.h,
+	  Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc:
+	  RecoMCTruthLinker: complete linking of all contributing true
+	  particles.
+	  Also links from Tracks, Clusters, and CalorimeterHits. Fixed that
+	  the wrong True particle sometimes was linked to CalorimeterHits:
+	  the linked particle was not the one entering the Calorimeter, but
+	  a particle later in the shower.
+	  Added a sample steering-stanza xml-snippet.
+
+2010-10-14 09:42  aplin
+
+	* [r1780] TrackDigi/VTXDigi/include/VTXDigiProcessor.h: changed EOL
+	  style to unix
+
+2010-10-14 09:25  aplin
+
+	* [r1779] TrackDigi/VTXDigi/src/VTXDigiProcessor.cc: changed EOL to
+	  unix
+
+2010-10-11 15:19  engels
+
+	* [r1775] ChangeLog: updated
+
 2010-10-08 14:59  berggren
 
 	* [r1768] Analysis/BCalTagEfficiency/README,

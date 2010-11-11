@@ -209,35 +209,96 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
 
   // find track to MCParticle relations
-  LCCollection* trackCol = evt->getCollection( _trackCollectionName ) ;
-  LCCollection* ttrlcol = 0 ;
-  trackLinker(  mcpCol ,  trackCol  ,  &ttrlcol );
-  if (_OutputTrackRelation ) evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
+
+    LCCollection* trackCol = 0 ;
+    LCCollection* ttrlcol  = 0 ;
+    bool haveTracks = true  ;
+
+    try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(...){  haveTracks=false ; } 
+
+    if( ! haveTracks ) {
+      streamlog_out( MESSAGE ) << " Track collection : " << _trackCollectionName 
+			       << " not found - cannot create relation " << std::endl ;
 
 
-  // find cluster to MCParticle relations and the updated calohit to
-  // MCParticle relations.
-  LCCollection* clusterCol = evt->getCollection( _clusterCollectionName ) ;
-  LCCollection* cHitRelCol = evt->getCollection( _caloHitRelationName ) ; 
+    } else {  //if ( haveTracks ) {
+      
+      trackLinker(  mcpCol ,  trackCol  ,  &ttrlcol );
+      
+      if (_OutputTrackRelation ) 
+	evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
+      
+    }
+  
+  // find cluster to MCParticle relations and the updated calohit to MCParticle relations.
+
+  LCCollection* clusterCol = 0 ;
+  LCCollection* cHitRelCol = 0 ;
+  
+  bool haveClusters = true ;
+  bool haveCaloHitRel = true ;
+
   LCCollection* ctrlcol = 0;
   LCCollection* chittrlcol = 0;
-  clusterLinker(  mcpCol ,  clusterCol, 
-                  cHitRelCol ,  &ctrlcol , &chittrlcol);
-  if (_OutputClusterRelation ) evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
-  if (_OutputCalohitRelation ) evt->addCollection(  chittrlcol  , _calohitMCTruthLinkName ) ;
 
+  try{ clusterCol = evt->getCollection( _clusterCollectionName ) ; }   catch(...){  haveClusters=  false ; } 
+  
+  if( ! haveClusters ) {
+    streamlog_out( MESSAGE ) << " Cluster collection : " << _clusterCollectionName 
+			     << " not found - cannot create relation " << std::endl ;
+  }
+  
+  
+  try{ cHitRelCol = evt->getCollection( _caloHitRelationName ) ;   }   catch(...){  haveCaloHitRel = false ; } 
+  
+  if( ! haveCaloHitRel ) {
+    streamlog_out( MESSAGE ) << " CaloHit relation : " << _caloHitRelationName 
+			     << " not found - cannot create relation " << std::endl ;
+  }
+  
+  if( haveTracks && haveClusters && haveCaloHitRel ) {
+    
+    clusterLinker(  mcpCol ,  clusterCol,  cHitRelCol ,  &ctrlcol , &chittrlcol);
+  }
+  
+  if (_OutputClusterRelation ) evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
+  
+  if (_OutputCalohitRelation ) evt->addCollection(  chittrlcol  , _calohitMCTruthLinkName ) ;
+  
+  
+  
   // combine track and cluster to MCParticle relations to the reconstructed particle
   // to MCParticle relation
-  LCCollection*  particleCol = evt->getCollection(  _recoParticleCollectionName );
-  LCCollection* ptrlcol = 0;
-  particleLinker(   particleCol, ttrlcol,  ctrlcol, &ptrlcol);
-  evt->addCollection(  ptrlcol  , _recoMCTruthLinkName  ) ;
+  LCCollection*  particleCol = 0 ;
+  bool haveRecoParticles = true ; 
+  
+  try { particleCol = evt->getCollection(  _recoParticleCollectionName ); }   catch(...){ haveRecoParticles = false ; } 
 
-  LCCollectionVec* skimVec = new LCCollectionVec( LCIO::MCPARTICLE )  ;
-  makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
-  evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
+  if( ! haveRecoParticles ) {
+    streamlog_out( MESSAGE ) << " ReconstructedParticle collection : " << _recoParticleCollectionName 
+			     << " not found - cannot create relation " << std::endl ;
+  }
+  
+  LCCollection* ptrlcol = 0;
+
+  if( haveRecoParticles &&  haveTracks && haveClusters && haveCaloHitRel ) {
+
+    particleLinker(   particleCol, ttrlcol,  ctrlcol, &ptrlcol);
+
+    evt->addCollection(  ptrlcol  , _recoMCTruthLinkName  ) ;
+  }
+
+  if( haveTracks && haveClusters && haveCaloHitRel ) {
+
+    LCCollectionVec* skimVec = new LCCollectionVec( LCIO::MCPARTICLE )  ;
+
+    makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
+    evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
+  }
 
 }
+
+
 void RecoMCTruthLinker::trackLinker(  LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrlcol) { 
 
   

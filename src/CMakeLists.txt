@@ -90,45 +90,6 @@ SET_SOURCE_FILES_PROPERTIES(
 # create library
 ADD_LIBRARY( lib_${PROJECT_NAME} ${MarlinReco_cxx_srcs} ${MarlinReco_c_srcs} ${MarlinReco_f77_srcs} )
 
-# workaround for fortran cmake bug in cmake 2.4.x versions
-IF( "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.6 )
-    ADD_CUSTOM_TARGET( fix_f77_cmake_bug
-    
-        # SatoruJetFinder fix
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > original.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > this.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > YCUT.mod.proxy
-    
-        # BrahmsTracking fix
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > Monte.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > data.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > a.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > A.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GEAR.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > of.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > helix.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > as.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > GRNDM.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > ranecu.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > TE.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > helixextrapolation.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > old.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > bit.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > copy.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > polar.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > primary.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > theta.mod.proxy
-
-        # BCalTagEfficiency fix
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > sine.mod.proxy
-        COMMAND ${CMAKE_COMMAND} -E echo "dummy file: workaround for fortran cmake bug" > "...).mod.proxy"
-    
-        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-        COMMENT "Fixing fortran bug for cmake 2.4 versions..." VERBATIM )
-    
-    # establish dependency for fixing fortran bug
-    ADD_DEPENDENCIES( lib_${PROJECT_NAME} fix_f77_cmake_bug )
-ENDIF()
 # create symbolic lib target for calling target lib_XXX
 ADD_CUSTOM_TARGET( lib DEPENDS lib_${PROJECT_NAME} )
 

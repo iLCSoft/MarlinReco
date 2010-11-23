@@ -64,8 +64,9 @@ void SimpleLCalDigi::init() {
   _nRun = -1;
   _nEvt = 0;
 
-  //fg: need to set default encoding in for reading old files...
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+
+  //fg set to 'default' value of Mokka/Geometry/CGA/src/Encoder32Fcal.cc
+  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("I:10,J:10,K:10,S-1:2") ; 
 
 }
 

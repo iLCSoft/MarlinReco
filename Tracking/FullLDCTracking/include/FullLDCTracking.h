@@ -1,5 +1,5 @@
-#ifndef FullLDCTracking_H
-#define FullLDCTracking_H 1
+#ifndef FULLLDCTRACKING_H
+#define FULLLDCTRACKING_H 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"

@@ -123,6 +123,11 @@ IF(APPLE)
     LIST( APPEND req_pkgs CED )
 ENDIF(APPLE)
 FOREACH( pkg ${req_pkgs} )
+    # fix for backwards compatibility
+    IF( NOT ${pkg}_DIR AND DEFINED ${pkg}_HOME )
+        SET( ${pkg}_DIR ${${pkg}_HOME} )
+    ENDIF()
+
     FIND_PACKAGE( ${pkg} REQUIRED )
     INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
     LINK_LIBRARIES( ${${pkg}_LIBRARIES} )

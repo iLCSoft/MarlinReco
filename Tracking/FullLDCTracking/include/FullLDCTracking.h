@@ -1,5 +1,5 @@
-#ifndef FULLLDCTRACKING_H
-#define FULLLDCTRACKING_H 1
+#ifndef FullLDCTracking_H
+#define FullLDCTracking_H 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -13,6 +13,7 @@
 #include "GroupTracks.h"
 #include "../../BrahmsTracking/include/MarlinTrackFit.h"
 #include <map>
+#include <set>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -314,17 +315,23 @@ class FullLDCTracking : public Processor {
   void prepareVectors( LCEvent * evt );
   void CleanUp();
   void MergeTPCandSiTracks();
+  void MergeTPCandSiTracksII();
   TrackExtended * CombineTracks(TrackExtended * tpcTrk, TrackExtended * siTrk);
+  TrackExtended * TrialCombineTracks(TrackExtended * tpcTrk, TrackExtended * siTrk);
   void Sorting(TrackExtendedVec & trackVec);
   void SelectCombinedTracks();
   void AddNotCombinedTracks();
+  void CheckTracks();
   void AddNotAssignedHits();
+  void RemoveSplitTracks();
   void AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec, 
 			std::string TrkColName, std::string RelColName);
   float CompareTrk(TrackExtended * first, TrackExtended * second, 
 		     float d0Cut, float z0Cut, int iopt);
   
   float CompareTrkII(TrackExtended * first, TrackExtended * second, 
+		     float d0Cut, float z0Cut, int iopt, float &Angle);
+  float CompareTrkIII(TrackExtended * first, TrackExtended * second, 
 		     float d0Cut, float z0Cut, int iopt, float &Angle);
 
   void SortingTrackHitPairs(TrackHitPairVec & trackHitPairVec);
@@ -347,6 +354,10 @@ class FullLDCTracking : public Processor {
 		       int iopt);
 
   void GeneralSorting(int * index, float * val, int direct, int nVal);
+  
+  int SegmentRadialOverlap(TrackExtended* pTracki, TrackExtended* pTrackj);
+  bool VetoMerge(TrackExtended* firstTrackExt, TrackExtended* secondTrackExt);
+
 
   int _nRun ;
   int _nEvt ;
@@ -459,6 +470,7 @@ class FullLDCTracking : public Processor {
   LCEvent * _evt;
 
   std::map<TrackExtended*,HelixClass*> _trackExtrapolatedHelix;
+  std::set<TrackExtended*> _candidateCombinedTracks;
 
 } ;
 

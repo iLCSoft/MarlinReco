@@ -962,7 +962,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
        		<< " pz: " << closestMCP->getMomentum()[2]
        		<< std::endl ;
        	  
-       clusterTruthRelNav.addRelation(   clu , closestMCP ,  -maxProd ) ;
+       clusterTruthRelNav.addRelation(   clu , closestMCP ,  maxProd ) ;
     }
 
 

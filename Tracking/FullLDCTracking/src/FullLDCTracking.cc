@@ -499,6 +499,7 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
      // std::cout << "Collection of refitted Si tracks is added to event..." << std::endl; 
   }
   MergeTPCandSiTracks();
+  MergeTPCandSiTracksII();
   //  std::cout << "Merging done..." << std::endl;
   Sorting(_allCombinedTracks);
   //  std::cout << "Sorting done..." << std::endl;
@@ -506,6 +507,8 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
   //  std::cout << "Selection of combined tracks done..." << std::endl;
   AddNotCombinedTracks( );
   //  std::cout << "Not combined tracks added..." << std::endl;
+  //CheckTracks( );
+
   AddNotAssignedHits();
   //  std::cout << "Not assigned hits added..." << std::endl;
   AddTrackColToEvt(evt,_trkImplVec,
@@ -757,6 +760,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
   _allNonCombinedTPCTracks.clear();
   _allNonCombinedSiTracks.clear();
   _trkImplVec.clear();
+  _candidateCombinedTracks.clear();
 
   //  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   //  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
@@ -940,8 +944,8 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     if (_debug >= 2) {
       std::cout << std::endl;
       std::cout << "Number of TPC Tracks = " << nelem << std::endl;
-      std::cout << " Trk     D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
-      //           "  0     0.059      0.022    -0.54     0.61    -0.45    0.185
+      std::cout << " Trk    p     D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
+      //           "  0  1.111   0.059      0.022    -0.54     0.61    -0.45    0.185
     }
     for (int iTrk=0; iTrk<nelem; ++iTrk) {
       Track * tpcTrack = dynamic_cast<Track*>(col->getElementAt(iTrk));
@@ -1048,12 +1052,14 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 	float phi0TPC = trackExt->getPhi();
 	float tanLTPC = trackExt->getTanLambda();
 	float Chi2TPC = trackExt->getChi2()/float(trackExt->getNDF());
+	const int ndfTPC = trackExt->getNDF();
 	helixTPC.Initialize_Canonical(phi0TPC,d0TPC,z0TPC,omegaTPC,tanLTPC,_bField);
 	float pxTPC = helixTPC.getMomentum()[0];
 	float pyTPC = helixTPC.getMomentum()[1];
 	float pzTPC = helixTPC.getMomentum()[2];
-	sprintf(strg,"%3i %9.3f  %9.3f  %7.2f  %7.2f  %7.2f %8.3f",iTrk,
-		d0TPC,z0TPC,pxTPC,pyTPC,pzTPC,Chi2TPC);
+	const float ptot = sqrt(pxTPC*pxTPC+pyTPC*pyTPC+pzTPC*pzTPC);
+	sprintf(strg,"%3i  %9.3f  %9.3f  %9.3f  %7.2f  %7.2f  %7.2f %4i %4i %8.3f",iTrk,
+		ptot, d0TPC,z0TPC,pxTPC,pyTPC,pzTPC,nHits,ndfTPC,Chi2TPC);
 	std::cout << strg << std::endl;
       }
       _allTPCTracks.push_back( trackExt );                
@@ -1071,8 +1077,8 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     if (_debug >= 2) {
       std::cout << std::endl;
       std::cout << "Number of Si Tracks = " << nelem << std::endl;
-      std::cout << " Trk     D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
-      //           " 14    -0.007     -0.027    -0.28     0.56    -0.52    1.397
+      std::cout << " Trk    p      D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
+      //           " 14  1.111   -0.007     -0.027    -0.28     0.56    -0.52    1.397
 
     }
     for (int iTrk=0; iTrk<nelem; ++iTrk) {
@@ -1179,9 +1185,11 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 	float pxSi = helixSi.getMomentum()[0];
 	float pySi = helixSi.getMomentum()[1];
 	float pzSi = helixSi.getMomentum()[2];
+	const float pTot = sqrt(pxSi*pxSi+pySi*pySi+pzSi*pzSi);
+	const int ndfSi = trackExt->getNDF();
 	float Chi2Si = trackExt->getChi2()/float(trackExt->getNDF());
-	sprintf(strg,"%3i %9.3f  %9.3f  %7.2f  %7.2f  %7.2f %8.3f",iTrk,
-		d0Si,z0Si,pxSi,pySi,pzSi,Chi2Si);
+	sprintf(strg,"%3i  %9.3f  %9.3f  %9.3f  %7.2f  %7.2f  %7.2f %4i %4i %8.3f",iTrk,
+		pTot, d0Si,z0Si,pxSi,pySi,pzSi,nHits, ndfSi, Chi2Si);
 	std::cout << strg << std::endl;
       }
       _allSiTracks.push_back( trackExt );      
@@ -1301,13 +1309,22 @@ void FullLDCTracking::MergeTPCandSiTracks() {
       TrackExtended * siTrackExt = _allSiTracks[iSi];
       int iComp = 0;
       float angle = 0;
-      //      float deltaP = CompareTrk(tpcTrackExt,siTrackExt,_d0CutForMerging,_z0CutForMerging,iComp);
       float dOmega = CompareTrkII(siTrackExt,tpcTrackExt,_d0CutForMerging,_z0CutForMerging,iComp,angle);
-	//      if (deltaP<_dPCutForMerging) {
-      if ( (dOmega<_dOmegaForMerging) && (angle<_angleForMerging) ) {
-	TrackExtended * combinedTrack = CombineTracks(tpcTrackExt,siTrackExt);
+      if ( (dOmega<_dOmegaForMerging) && (angle<_angleForMerging) && !VetoMerge(siTrackExt,tpcTrackExt)) {
+	TrackExtended *combinedTrack = CombineTracks(tpcTrackExt,siTrackExt);       
 	if (combinedTrack != NULL) {
 	  _allCombinedTracks.push_back( combinedTrack );
+	  _candidateCombinedTracks.insert(tpcTrackExt);
+	  _candidateCombinedTracks.insert(siTrackExt);
+	  if (_debug == 3 ) {
+	    int iopt = 1;
+	    PrintOutMerging(tpcTrackExt,siTrackExt,iopt);
+	  }
+	}else{
+	  if (_debug == 3 ) {
+	    int iopt = 6;
+	    PrintOutMerging(tpcTrackExt,siTrackExt,iopt);
+	  }
 	}
       }
       else {
@@ -1321,6 +1338,55 @@ void FullLDCTracking::MergeTPCandSiTracks() {
 
 
 }
+
+
+
+void FullLDCTracking::MergeTPCandSiTracksII() {
+
+  int nTPCTracks = int(_allTPCTracks.size());
+  int nSiTracks  = int(_allSiTracks.size());
+
+  for (int iTPC=0;iTPC<nTPCTracks;++iTPC) {
+    TrackExtended * tpcTrackExt = _allTPCTracks[iTPC];
+    if(_candidateCombinedTracks.find(tpcTrackExt) != _candidateCombinedTracks.end() )continue;
+
+    for (int iSi=0;iSi<nSiTracks;++iSi) {
+
+      TrackExtended * siTrackExt = _allSiTracks[iSi];
+      if(_candidateCombinedTracks.find(siTrackExt)!= _candidateCombinedTracks.end() )continue;
+      int iComp = 0;
+      float angleSignificance = 0;
+      float significance = CompareTrkIII(siTrackExt,tpcTrackExt,_d0CutForMerging,_z0CutForMerging,iComp,angleSignificance);
+      if ( (significance<10) && (angleSignificance<5) && !VetoMerge(tpcTrackExt,siTrackExt) ) {
+	TrackExtended * combinedTrack = CombineTracks(tpcTrackExt,siTrackExt);
+
+	if (combinedTrack != NULL) {
+	  std::cout << " MergeTPCandSiTracksII " << std::endl;
+
+	  _allCombinedTracks.push_back( combinedTrack );
+	  if (_debug == 3 ) {
+	    int iopt = 1;
+	    PrintOutMerging(tpcTrackExt,siTrackExt,iopt);
+	  }
+	}else{
+	  if (_debug == 3 ) {
+	    int iopt = 6;
+	    PrintOutMerging(tpcTrackExt,siTrackExt,iopt);
+	  }
+	}
+      }
+      else {
+	if (_debug == 3 ) {
+	  int iopt = 6;
+	  PrintOutMerging(tpcTrackExt,siTrackExt,iopt);
+	}
+      }
+    }
+  }
+}
+
+
+
 
 TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackExtended * siTrack) {
 
@@ -1469,6 +1535,137 @@ TrackExtended * FullLDCTracking::CombineTracks(TrackExtended * tpcTrack, TrackEx
   return OutputTrack;
 }
 
+
+TrackExtended * FullLDCTracking::TrialCombineTracks(TrackExtended * tpcTrack, TrackExtended * siTrack) {
+
+  TrackExtended * OutputTrack = NULL;
+
+  TrackerHitExtendedVec siHitVec = siTrack->getTrackerHitExtendedVec();
+  TrackerHitExtendedVec tpcHitVec = tpcTrack->getTrackerHitExtendedVec();
+
+  int nSiHits = int(siHitVec.size());
+  int nTPCHits = int(tpcHitVec.size());
+
+  int nHits = nTPCHits + nSiHits;
+
+  float * xh = new float[nHits];
+  float * yh = new float[nHits];
+  float * zh = new float[nHits];
+  float * rphi_reso = new float[nHits];
+  float * z_reso = new float[nHits];
+  int * ityp_h = new int[nHits];
+  int * idet_h = new int[nHits];
+  int * lhits = new int[nHits];
+  float par[5];
+  float epar[15];
+  for (int ih=0;ih<nSiHits;++ih) {
+    TrackerHit * trkHit = siHitVec[ih]->getTrackerHit();
+    float rR = siHitVec[ih]->getResolutionRPhi();
+    float rZ = siHitVec[ih]->getResolutionZ();
+    xh[ih] = float(trkHit->getPosition()[0]);
+    yh[ih] = float(trkHit->getPosition()[1]);
+    zh[ih] = float(trkHit->getPosition()[2]);
+    rphi_reso[ih] = rR;
+    z_reso[ih] = rZ;
+    ityp_h[ih] =  siHitVec[ih]->getType();
+    idet_h[ih] =  siHitVec[ih]->getDet();
+  }      
+  for (int ih=0;ih<nTPCHits;++ih) {
+    TrackerHit * trkHit = tpcHitVec[ih]->getTrackerHit();
+    float rR = tpcHitVec[ih]->getResolutionRPhi();
+    float rZ = tpcHitVec[ih]->getResolutionZ();
+    xh[ih+nSiHits] = float(trkHit->getPosition()[0]);
+    yh[ih+nSiHits] = float(trkHit->getPosition()[1]);
+    zh[ih+nSiHits] = float(trkHit->getPosition()[2]);
+    rphi_reso[ih+nSiHits] = rR;
+    z_reso[ih+nSiHits] = rZ;
+    ityp_h[ih+nSiHits] =  tpcHitVec[ih]->getType();
+    idet_h[ih+nSiHits] =  tpcHitVec[ih]->getDet();
+  }      
+
+  int NPT = nHits;
+  float chi2_D;
+  int ndf_D;
+  float chi2rphi,chi2z;
+  par[0] = tpcTrack->getOmega();
+  par[1] = siTrack->getTanLambda();
+  par[2] = siTrack->getPhi();
+  par[3] = siTrack->getD0();
+  par[4] = siTrack->getZ0();
+  float refPoint[3];
+  int ierr = _trackFit.DoFitting(_useExtraPoint,_optFit,NPT,_bField,
+				 idet_h,ityp_h,_chi2PrefitCut,
+				 xh,yh,zh,rphi_reso,z_reso,
+				 par,epar,refPoint,chi2_D,ndf_D,
+				 chi2rphi,chi2z,lhits);
+
+  
+  float chiQ = chi2_D/float(ndf_D);
+  if (ierr == 0 && chiQ > 0.001) {
+    float omega = par[0];
+    float tanlambda = par[1];
+    float phi0 = par[2];
+    float d0 = par[3];
+    float z0 = par[4];    
+    float chi2Fit = chi2_D/float(ndf_D);
+    if (chi2Fit > _chi2FitCut) {
+      delete[] xh;
+      delete[] yh;
+      delete[] zh;
+      delete[] idet_h;
+      delete[] ityp_h;
+      delete[] rphi_reso;
+      delete[] z_reso;      
+      delete[] lhits;
+      return OutputTrack;
+    }    
+    OutputTrack = new TrackExtended();
+    GroupTracks * group = new GroupTracks();
+    group->addTrackExtended(siTrack);
+    group->addTrackExtended(tpcTrack);
+    OutputTrack->setGroupTracks(group);
+    OutputTrack->setOmega(omega);
+    OutputTrack->setTanLambda(tanlambda);
+    OutputTrack->setPhi(phi0);
+    OutputTrack->setZ0(z0);
+    OutputTrack->setD0(d0);
+    OutputTrack->setChi2(chi2_D);
+    OutputTrack->setNDF(ndf_D);
+    OutputTrack->setCovMatrix(epar);
+    if (_optFit == 4) {
+      // Preserving positiveness of cov. matrix
+      float eD0 = siTrack->getCovMatrix()[0];
+      float eZ0 = siTrack->getCovMatrix()[9];
+      float sD0 = sqrt(eD0/epar[0]);
+      float sZ0 = sqrt(eZ0/epar[9]);
+      epar[0]  = eD0;
+      epar[9]  = eZ0;
+      epar[1]  = sD0*epar[1];
+      epar[3]  = sD0*epar[3];
+      epar[10] = sD0*epar[10];
+      epar[7]  = sZ0*epar[7];
+      epar[8]  = sZ0*epar[8];
+      epar[13] = sZ0*epar[13];
+      epar[6]  = sD0*sZ0*epar[6];
+      OutputTrack->setZ0(siTrack->getZ0());
+      OutputTrack->setD0(siTrack->getD0());
+      OutputTrack->setCovMatrix(epar);
+    }
+  }
+
+  delete[] xh;
+  delete[] yh;
+  delete[] zh;
+  delete[] idet_h;
+  delete[] ityp_h;
+  delete[] rphi_reso;
+  delete[] z_reso;
+  delete[] lhits;
+  
+  return OutputTrack;
+}
+
+
 void FullLDCTracking::SortingTrackHitPairs(TrackHitPairVec & trackHitPairVec) {
 
   int sizeOfVector = int(trackHitPairVec.size());
@@ -1555,12 +1752,26 @@ void FullLDCTracking::SelectCombinedTracks() {
 	    edges[0] = zpos;
 	}
 	group->setEdges(edges);
-	_trkImplVec.push_back(trkExt);		
+	_trkImplVec.push_back(trkExt);	
+	TrackerHitExtendedVec hitVec1a = firstTrack->getTrackerHitExtendedVec();
+	int hits1a = int(hitVec1a.size());
+	TrackerHitExtendedVec hitVec2a = secondTrack->getTrackerHitExtendedVec();
+	int hits2a = int(hitVec2a.size());
+	TrackExtended * combinedTrack = CombineTracks(firstTrack,secondTrack);
+	TrackerHitExtendedVec hitVec1 = firstTrack->getTrackerHitExtendedVec();
+	int hits1 = int(hitVec1.size());
+	TrackerHitExtendedVec hitVec2 = secondTrack->getTrackerHitExtendedVec();
+	int hits2 = int(hitVec2.size());
+	TrackerHitExtendedVec hitVecs = combinedTrack->getTrackerHitExtendedVec();
+	int hitss = int(hitVecs.size());
+	
 	if (_debug == 3) {
 	  int iopt = 1;
 	  PrintOutMerging(secondTrack,firstTrack,iopt);
 	}	
       }
+    }else{
+      if(nTracks>2)std::cout << " MORE THAN TWO TRACKS " << std::endl;
     }
   }
 
@@ -1590,10 +1801,15 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	  if (groupSi == NULL) {
 	    int iComp = 0;
 	    //	    float deltaP = CompareTrk(trkExtSi,trkExtTPC,_d0CutForForcedMerging,_z0CutForForcedMerging,iComp);
-	    float angle = 0;
+	    float angle(0.);
+	    float angleSignificance(0.);
+
 	    float dOmega = CompareTrkII(trkExtSi,trkExtTPC,_d0CutForForcedMerging,_z0CutForForcedMerging,iComp,angle);
+	    float significance = CompareTrkIII(trkExtSi,trkExtTPC,_d0CutForForcedMerging,_z0CutForForcedMerging,iComp,angleSignificance);
 	    //	    if (deltaP < _dPCutForForcedMerging) {
-	    if ( (dOmega<_dOmegaForForcedMerging) && (angle<_angleForForcedMerging) ) {
+	    if ( ((dOmega<_dOmegaForForcedMerging) && (angle<_angleForForcedMerging)) ||
+		 ((significance<5)                 && (angleSignificance<5))
+		 ) {
 	      float chi2O = dOmega/_dOmegaForForcedMerging;
 	      float chi2A = angle/_angleForForcedMerging;
 	      float deltaP = chi2O*chi2O + chi2A*chi2A; 
@@ -1601,10 +1817,10 @@ void FullLDCTracking::AddNotCombinedTracks() {
 		diffMin = deltaP;
 		siTrkToAttach = trkExtSi;
 	      }
-	    }
-	    else {
+	    }else{
 	      if (_debug==3) {
 		int  iopt = 7;
+		std::cout << significance << " " << angleSignificance << std::endl;
 		PrintOutMerging(trkExtTPC,trkExtSi,iopt);
 	      }
 	    }
@@ -1677,6 +1893,8 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	}	    
       }
     }
+
+
     int nMerged = int(allMergedTracks.size());
     if (nMerged>0) {
 	Sorting(allMergedTracks);	
@@ -1711,6 +1929,8 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	}
     }
   }
+
+
 
   // clear buffer vector
   allMergedTracks.clear();
@@ -1770,10 +1990,14 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	      TrackExtended * trkInGroup = segVec[iTrk];
 	      int iComp = 1;
 	      float dPt = CompareTrk(trkExt,trkInGroup,_d0CutToMergeTPC,_z0CutToMergeTPC,iComp);
-	      if (dPt < dPtMin) {
+	      if (dPt < dPtMin && !VetoMerge(trkExt,trkInGroup)) {
 		dPtMin = dPt;
 		groupToAttach = segments;
 		trkToAttach = trkInGroup;
+		if (_debug==3) {
+		  int iopt = 6;
+		  PrintOutMerging(trkExt,trkInGroup,iopt);
+		}
 	      }
 	      else {
 		if (_debug==3) {
@@ -1798,6 +2022,9 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	  }
 	}
 	if (dPtMin < _dPCutToMergeTPC && groupToAttach != NULL) {
+
+	   
+
 	  groupToAttach->addTrackExtended(trkExt);
 	  trkExt->setGroupTracks(groupToAttach);
 	  float zminGroup = groupToAttach->getEdges()[0]; 
@@ -1826,7 +2053,7 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	}
       }
     }
-
+  
     // combining splitted TPC segments with the reconstructed tracks having Si hits
     int nCombTrk = int(_trkImplVec.size());
     int nSegments = int(TPCSegments.size());
@@ -1854,12 +2081,15 @@ void FullLDCTracking::AddNotCombinedTracks() {
 	    for (int iTrk=0;iTrk<nTrk;++iTrk) {
 	      TrackExtended * trk = segVec[iTrk];
 	      int iopt = 0;
-	      //	      std::cout << "we are about to compare " << std::endl;
 	      float dPt = CompareTrk(trk,combTrk,_d0CutToMergeTPC,_z0CutToMergeTPC,iopt);
-	      if (dPt<deltaPtMin) {
-		CombTrkToAttach = combTrk;
-		keyTrack = trk;
-		deltaPtMin = dPt;
+	      float angleSignificance(0.);
+	      float significance = CompareTrkIII(trk,combTrk,_d0CutToMergeTPC,_z0CutToMergeTPC,iopt,angleSignificance);
+	      if ( (dPt<deltaPtMin || significance <5 ) ) {
+		if(VetoMerge(trk,combTrk)==false){
+		  CombTrkToAttach = combTrk;
+		  keyTrack = trk;
+		  deltaPtMin = dPt;
+		}
 	      }
 	      else {
 		if (_debug==3) {
@@ -2007,6 +2237,107 @@ void FullLDCTracking::AddNotCombinedTracks() {
   
 }
 
+void FullLDCTracking::CheckTracks() {  
+
+  for(unsigned int i = 0; i< _trkImplVec.size();i++){
+    TrackExtended *first = _trkImplVec[i];
+    if(first==NULL)continue;
+    float d0First = first->getD0();
+    float z0First = first->getZ0();
+    float omegaFirst = first->getOmega();
+    float tanLFirst = first->getTanLambda();
+    float phiFirst = first->getPhi();
+    HelixClass helixFirst;
+    helixFirst.Initialize_Canonical(phiFirst,d0First,z0First,omegaFirst,tanLFirst,_bField);
+    float momFirst[3];
+    momFirst[0]= helixFirst.getMomentum()[0];
+    momFirst[1]= helixFirst.getMomentum()[1];
+    momFirst[2]= helixFirst.getMomentum()[2];
+    float pFirst    = sqrt(momFirst[0]*momFirst[0]+momFirst[1]*momFirst[1]+momFirst[2]*momFirst[2]);
+    if(isnan(pFirst))continue;
+    TrackerHitExtendedVec firstHitVec  = first->getTrackerHitExtendedVec();
+    if(firstHitVec.size()<1)continue;
+    
+    for(unsigned int j = i+1; j<_trkImplVec.size();j++){
+      TrackExtended *second = _trkImplVec[j];
+      if(second==NULL)continue;
+      float d0Second = second->getD0();
+      float z0Second = second->getZ0();
+      float omegaSecond = second->getOmega();
+      float tanLSecond = second->getTanLambda();
+      float phiSecond = second->getPhi();
+      HelixClass helixSecond;
+      helixSecond.Initialize_Canonical(phiSecond,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
+      float momSecond[3];
+      momSecond[0] = helixSecond.getMomentum()[0];
+      momSecond[1] = helixSecond.getMomentum()[1];
+      momSecond[2] = helixSecond.getMomentum()[2];
+      float pSecond    = sqrt(momSecond[0]*momSecond[0]+momSecond[1]*momSecond[1]+momSecond[2]*momSecond[2]);
+      if(isnan(pSecond))continue;
+      TrackerHitExtendedVec secondHitVec  = second->getTrackerHitExtendedVec();
+      if(secondHitVec.size()<1)continue;
+      if(firstHitVec.size()+secondHitVec.size()<10)continue;
+
+
+      float pdot = (momFirst[0]*momSecond[0]+momFirst[1]*momSecond[1]+momFirst[2]*momSecond[2])/pFirst/pSecond;
+      if(pdot<0.999)continue;
+      const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5])/fabs(omegaFirst);
+      const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5])/fabs(omegaSecond);
+      const float deltaP = fabs(pFirst-pSecond);
+      const float sigmaDeltaP = sqrt(pFirst*sigmaPOverPFirst*pFirst*sigmaPOverPFirst+pSecond*sigmaPOverPSecond*pSecond*sigmaPOverPSecond);
+      const float significance = deltaP/sigmaDeltaP;
+      
+      TrackExtended * combinedTrack = TrialCombineTracks(first,second);
+      if(combinedTrack != NULL){
+	const int minHits = std::min(firstHitVec.size(),secondHitVec.size());
+	const int maxHits = std::max(firstHitVec.size(),secondHitVec.size());
+       
+	if( combinedTrack->getNDF() <= 2*maxHits+minHits-5)continue;
+
+	float d0    = combinedTrack->getD0();
+	float z0    = combinedTrack->getZ0();
+	float omega = combinedTrack->getOmega();
+	float tanL  = combinedTrack->getTanLambda();
+	float phi   = combinedTrack->getPhi();
+
+	HelixClass helix;
+	helix.Initialize_Canonical(phi,d0,z0,omega,tanL,_bField);
+	float mom[3];
+	mom[0]  = helix.getMomentum()[0];
+	mom[1]  = helix.getMomentum()[1];
+	mom[2]  = helix.getMomentum()[2];
+	float p = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
+	float chi2Sig =  (combinedTrack->getChi2() - combinedTrack->getNDF());
+	chi2Sig = chi2Sig/sqrt(combinedTrack->getNDF()*2);
+
+
+
+	int nTpcFirst(0);
+	int nUsedFirst(0);
+	for(unsigned int ihit = 0;ihit<firstHitVec.size();ihit++){
+	  if(firstHitVec[ihit]->getDet()==1)nTpcFirst++;
+	  if(firstHitVec[ihit]->getUsedInFit()==true)nUsedFirst++;
+	}
+
+
+	int nTpcSecond(0);
+	int nUsedSecond(0);
+	for(unsigned int ihit = 0;ihit<secondHitVec.size();ihit++){
+	  if(secondHitVec[ihit]->getDet()==1)nTpcSecond++;
+	  if(secondHitVec[ihit]->getUsedInFit()==true)nUsedSecond++;
+	}
+	delete combinedTrack;
+      }
+    }
+  }
+  
+  
+}
+
+
+
+
+
 float FullLDCTracking::CompareTrkII(TrackExtended * first, TrackExtended * second, 
 				    float d0Cut, float z0Cut,int iopt,float & Angle) {
 
@@ -2042,6 +2373,116 @@ float FullLDCTracking::CompareTrkII(TrackExtended * first, TrackExtended * secon
   
   return result;
 
+}
+
+
+
+
+float FullLDCTracking::CompareTrkIII(TrackExtended * first, TrackExtended * second, 
+				    float d0Cut, float z0Cut,int iopt, float & AngleSignificance) {
+
+
+  float result = 1.0e+20;
+
+  float d0First = first->getD0();
+  float z0First = first->getZ0();
+  float omegaFirst = first->getOmega();
+  float tanLFirst = first->getTanLambda();
+  float phiFirst = first->getPhi();
+  float qFirst = PIOVER2 - atan(tanLFirst);
+
+
+  float d0Second = second->getD0();
+  float z0Second = second->getZ0();
+  float omegaSecond = second->getOmega();
+  float tanLSecond = second->getTanLambda();
+  float phiSecond = second->getPhi();
+  float qSecond = PIOVER2 - atan(tanLSecond);
+
+
+  //MB 2010 03
+  float d0ErrFirst = sqrt(first->getCovMatrix()[0]);
+  float z0ErrFirst = sqrt(first->getCovMatrix()[9]);
+  float omegaErrFirst = sqrt(first->getCovMatrix()[5]);
+  float phiErrFirst = sqrt(first->getCovMatrix()[2]);
+  float qErrFirst = sqrt(cos(qFirst)*cos(qFirst)*first->getCovMatrix()[14]);
+  //MB END
+  //MB 2010 03
+  float d0ErrSecond = sqrt(second->getCovMatrix()[0]);
+  float z0ErrSecond = sqrt(second->getCovMatrix()[9]);
+  float omegaErrSecond = sqrt(second->getCovMatrix()[5]);
+  float phiErrSecond = sqrt(second->getCovMatrix()[2]);
+  float qErrSecond = sqrt(cos(qSecond)*cos(qSecond)*second->getCovMatrix()[14]);
+  //MB END
+
+
+  //  bool isCloseInIP = (fabs(d0First-d0Second)<d0Cut);
+  //isCloseInIP = isCloseInIP && (fabs(z0Second-z0First)<z0Cut);
+
+  //MB 2010 03
+  bool isCloseInIP = (fabs(d0First-d0Second)/sqrt(d0ErrFirst*d0ErrFirst+d0ErrSecond*d0ErrSecond)<d0Cut);
+  isCloseInIP = isCloseInIP && (fabs(z0Second-z0First)/sqrt(z0ErrFirst*z0ErrFirst+z0ErrSecond*z0ErrSecond)<z0Cut);
+
+  if (!isCloseInIP)return result;
+
+  float Angle = (cos(phiFirst)*cos(phiSecond)+sin(phiFirst)*sin(phiSecond))*
+    sin(qFirst)*sin(qSecond)+cos(qFirst)*cos(qSecond);
+
+
+  HelixClass helixFirst;
+  helixFirst.Initialize_Canonical(phiFirst,d0First,z0First,omegaFirst,tanLFirst,_bField);
+  HelixClass helixSecond;
+  helixSecond.Initialize_Canonical(phiSecond,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
+
+  float pFirst[3];
+  float pSecond[3];
+  float momFirst = 0;
+  float momSecond = 0;
+  
+  for (int iC=0;iC<3;++iC) {
+    pFirst[iC] = helixFirst.getMomentum()[iC];
+    pSecond[iC] = helixSecond.getMomentum()[iC];
+    momFirst += pFirst[iC]* pFirst[iC];
+    momSecond += pSecond[iC]*pSecond[iC];
+  }
+  momFirst = sqrt(momFirst);
+  momSecond = sqrt(momSecond);
+
+  
+  float pdot = (pFirst[0]*pSecond[0]+pFirst[1]*pSecond[1]+pFirst[2]*pSecond[2])/momFirst/momSecond;
+
+
+  const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5])/fabs(omegaFirst);
+  const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5])/fabs(omegaSecond);
+  const float deltaP = fabs(momFirst-momSecond);
+  const float sigmaPFirst = momFirst*sigmaPOverPFirst;
+  const float sigmaPSecond = momSecond*sigmaPOverPSecond;
+  const float sigmaDeltaP = sqrt(sigmaPFirst*sigmaPFirst+sigmaPSecond*sigmaPSecond);
+  const float significance = deltaP/sigmaDeltaP;
+
+  //MB 2010 03
+    float errorAngle =sin(phiFirst)*sin(phiFirst)*phiErrFirst*phiErrFirst*cos(phiSecond)*cos(phiSecond)+
+      sin(phiSecond)*sin(phiSecond)*phiErrSecond*phiErrSecond*cos(phiFirst)*cos(phiFirst)+
+      sin(qFirst)*sin(qFirst)*qErrFirst*qErrFirst*cos(qSecond)*cos(qSecond)+
+      sin(qSecond)*sin(qSecond)*qErrSecond*qErrSecond*cos(qFirst)*cos(qFirst)+
+      cos(phiFirst)*cos(phiFirst)*phiErrFirst*phiErrFirst*(sin(phiSecond)*sin(qFirst)*sin(qSecond))*(sin(phiSecond)*sin(qFirst)*sin(qSecond))+
+      cos(phiSecond)*cos(phiSecond)*phiErrSecond*phiErrSecond*(sin(phiFirst)*sin(qFirst)*sin(qSecond))*(sin(phiFirst)*sin(qFirst)*sin(qSecond))+
+      cos(qFirst)*cos(qFirst)*qErrFirst*qErrFirst*(sin(phiFirst)*sin(phiSecond)*sin(qSecond))*(sin(phiFirst)*sin(phiSecond)*sin(qSecond))+
+      cos(qSecond)*cos(qSecond)*qErrSecond*qErrSecond*(sin(phiFirst)*sin(phiSecond)*sin(qFirst))*(sin(phiFirst)*sin(phiSecond)*sin(qFirst));
+    
+    if(Angle<1.){
+      errorAngle = sqrt(1./(1.-Angle*Angle)*errorAngle);
+    }else{
+      errorAngle = sqrt(errorAngle);
+    }
+    
+    if(errorAngle<1.e-6)errorAngle=1.e-6;
+
+    AngleSignificance = fabs(acos(Angle)/errorAngle);
+    if(pdot<0.999)return result;
+        
+    return significance;
+   
 }
 
 
@@ -2095,15 +2536,15 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
       momMinus += dPminus[iC]*dPminus[iC];
       momPlus += dPplus[iC]*dPplus[iC];
     }
+    momFirst = sqrt(momFirst);
+    momSecond = sqrt(momSecond);
     
     float ptFirst = sqrt(pFirst[0]*pFirst[0]+pFirst[1]*pFirst[1]);
     float ptSecond = sqrt(pSecond[0]*pSecond[0]+pSecond[1]*pSecond[1]);
 
 
     if ( (ptFirst<_PtCutToMergeTPC) && (ptSecond<_PtCutToMergeTPC) ) {
-
-      momFirst = sqrt(momFirst);
-      momSecond = sqrt(momSecond);
+      
       momMinus = sqrt(momMinus);
       momPlus = sqrt(momPlus);
       float nom = momMinus;
@@ -2124,19 +2565,26 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
     // look for two tracks where total tpc hits are not more than total number
     // of pad rows and that the hits on one track are close to the helix of the
     // other track
-      momFirst = sqrt(momFirst);
-      momSecond = sqrt(momSecond);
 
-      float pdot = (pFirst[0]*pSecond[0] + pFirst[1]*pSecond[1]+ 
-		    pFirst[2]*pSecond[2])/momFirst/momSecond;
       float dpOverP = 2.0*fabs(momFirst-momSecond)/(momFirst+momSecond);
+      const float pdot = (pFirst[0]*pSecond[0]+pFirst[1]*pSecond[1]+pFirst[2]*pSecond[2])/momFirst/momSecond;
+      const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5])/fabs(omegaFirst);
+      const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5])/fabs(omegaSecond);
+      const float deltaP = fabs(momFirst-momSecond);
+      const float sigmaPFirst = momFirst*sigmaPOverPFirst;
+      const float sigmaPSecond = momSecond*sigmaPOverPSecond;
+      const float sigmaDeltaP = sqrt(sigmaPFirst*sigmaPFirst+sigmaPSecond*sigmaPSecond);
+      const float significance = deltaP/sigmaDeltaP;
 
 
     //compare angle between the two vectors (cos theta) and their momentum
     //    if( ( pdot>0.99 && dpOverP<0.01 ) || ( pdot>0.998 && dpOverP<0.25 ) ){
-      if( ( pdot>_cosThetaCutHighPtMerge && dpOverP<_momDiffCutHighPtMerge ) 
+      if( (pdot>_cosThetaCutHighPtMerge && dpOverP<_momDiffCutHighPtMerge) 
 	  || 
-	  ( pdot>_cosThetaCutSoftHighPtMerge && dpOverP<_momDiffCutSoftHighPtMerge ) ){
+	  (pdot>_cosThetaCutSoftHighPtMerge && dpOverP<_momDiffCutSoftHighPtMerge) 
+	  || (pdot > 0.9999 && significance <10) 
+        ){
+
 	
 	int nTrkGrpFirst = 0;
 	int nTrkGrpSecond = 0;
@@ -2249,12 +2697,38 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 	
 	float fcloseFirst  = (float)ncloseFirst/(float)nhitsFirst;
 	float fcloseSecond = (float)ncloseSecond/(float)nhitsSecond;
-	bool split = false;
 
-// 	std::cout << "MaxDist = " << maxdistSecond << " " << maxdistFirst << " " << _maxHitDistanceCutHighPtMerge << std::endl;
-// 	std::cout << "close   = " << fcloseSecond << " " << fcloseFirst << " " << _maxFractionOfOutliersCutHighPtMerge << std::endl;
-// 	std::cout << "ntpc    = " << ntpcFirst << " " << ntpcSecond << " " << tpcMaxRow+10 << std::endl;
+
+
+	bool split = false;
+	//std::cout << "Momenta = " << momFirst << " " << momSecond << std::endl;
+ 	//std::cout << "MaxDist = " << maxdistSecond << " " << maxdistFirst << " " << _maxHitDistanceCutHighPtMerge << std::endl;
+ 	//std::cout << "close   = " << fcloseSecond << " " << fcloseFirst << " " << _maxFractionOfOutliersCutHighPtMerge << std::endl;
+ 	//std::cout << "ntpc    = " << ntpcFirst << " " << ntpcSecond << " " << tpcMaxRow+10 << std::endl;
+ 	//std::cout << "pdot    = " << pdot << " significance " << significance << std::endl;
 	
+	TrackExtended * combinedTrack = TrialCombineTracks(first,second);
+	
+	if(combinedTrack != NULL){
+	  //std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << first->getNDF()+second->getNDF()+5 << std::endl;
+	  if(combinedTrack->getNDF()+10>first->getNDF()+second->getNDF()+5){
+	    split = true;
+	    dpOverP = 0;
+	    //std::cout << " Forcing MERGE " << std::endl;
+	  }
+	  delete combinedTrack;
+	}else{
+	  //std::cout << "Could not combine track " << std::endl;
+	  if(significance<5 && fcloseFirst>_maxFractionOfOutliersCutHighPtMerge){
+	    split = true;
+	    dpOverP = 0;
+	    int overlap = SegmentRadialOverlap(first,second);
+	    //std::cout << " Forcing MERGE " << overlap << std::endl;
+	  }
+	}
+
+	// criteria for split track
+	// old criterion
 	if( maxdistSecond < _maxHitDistanceCutHighPtMerge && maxdistFirst < _maxHitDistanceCutHighPtMerge 
 	    && 
 	    (fcloseSecond > _maxFractionOfOutliersCutHighPtMerge || fcloseFirst > _maxFractionOfOutliersCutHighPtMerge) 
@@ -2269,15 +2743,6 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
       }
     }
   }
-//     if (momMinus<0.1 || momPlus <0.1) {
-//       std::cout << pFirst[0] << " "
-// 		<< pFirst[1] << " "
-// 		<< pFirst[2] << std::endl;
-//       std::cout << pSecond[0] << " "
-// 		<< pSecond[1] << " "
-// 		<< pSecond[2] << std::endl;
-//       std::cout << result << std::endl;	
-//     }
 
   return result;
   
@@ -3131,6 +3596,18 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
     
     float pFirst = sqrt(pxFirst*pxFirst+pyFirst*pyFirst+pzFirst*pzFirst);
     float pSecond = sqrt(pxSecond*pxSecond+pySecond*pySecond+pzSecond*pzSecond);
+
+    if(pFirst < 1.5 && pSecond < 1.5 )return; 
+
+    const float sigmaPOverPFirst  = sqrt(firstTrackExt->getCovMatrix()[5])/fabs(omegaFirst);
+    const float sigmaPOverPSecond = sqrt(secondTrackExt->getCovMatrix()[5])/fabs(omegaSecond);
+    //    const float deltaP = fabs(pFirst-pSecond);
+    const float sigmaPFirst = pFirst*sigmaPOverPFirst;
+    const float sigmaPSecond = pSecond*sigmaPOverPSecond;
+    //const float sigmaDeltaP = sqrt(sigmaPFirst*sigmaPFirst+sigmaPSecond*sigmaPSecond);
+    //    const float significance = deltaP/sigmaDeltaP;
+
+
     float den = pFirst;
     if (pSecond<pFirst)
       den = pSecond;
@@ -3156,23 +3633,36 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
 	std::cout << "Erroneous merging of combTPC segment with uncombTPC segment (iopt=5) --->" << std::endl;
       }
       
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0First,z0First,pxFirst,pyFirst,pzFirst);
-      std::cout << firstMCP;
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pFirst, sigmaPFirst, d0First,z0First,pxFirst,pyFirst,pzFirst);
       printf("  %5.3f\n",firstWght);
       
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0Second,z0Second,pxSecond,pySecond,pzSecond);
-      std::cout << secondMCP;
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pSecond, sigmaPSecond, d0Second,z0Second,pxSecond,pySecond,pzSecond);
       printf("  %5.3f\n",secondWght);
       
       std::cout << "Difference in +P = " << dPplus << "  -P = " << dPminus << std::endl;
+
+
+      TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
+      
+      if(combinedTrack != NULL){
+	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+      }else{
+	std::cout << "Could not combine track " << std::endl;
+      }
+      std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
+
+      delete combinedTrack;
+
       
       std::cout << std::endl;
     
     }
     else if (firstMCP==secondMCP && ( (iopt==8) || (iopt==9) ) ) {
       
+      float deltaOmega = _dOmegaForMerging;
+      float deltaAngle = _angleForMerging;
       if (iopt==8) {
 	std::cout << "Unmerged TPC and Comb segments (iopt=8) --->" << std::endl;
       }
@@ -3180,17 +3670,38 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
 	std::cout << "Unmerged TPC segments (iopt=9) --->" << std::endl;
       }
       
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0First,z0First,pxFirst,pyFirst,pzFirst);
-      std::cout << firstMCP;
+      float qFirst = PIOVER2 - atan(tanLFirst);
+      float qSecond = PIOVER2 - atan(tanLSecond);
+      float dOmega = fabs((omegaFirst-omegaSecond)/omegaSecond);
+      float angle = (cos(phi0First)*cos(phi0Second)+sin(phi0First)*sin(phi0Second))*
+	sin(qFirst)*sin(qSecond)+cos(qFirst)*cos(qSecond);
+      angle = acos(angle);
+      
+      
+      std::cout << " dOmegaCut = " << deltaOmega
+		<< " AngleCut = " << deltaAngle
+		<< " dOmega = " << dOmega
+		<< " angle = " << angle << std::endl;
+      
+
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pFirst, sigmaPFirst, d0First,z0First,pxFirst,pyFirst,pzFirst);
       printf("  %5.3f\n",firstWght);
       
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0Second,z0Second,pxSecond,pySecond,pzSecond);
-      std::cout << secondMCP;
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pSecond, sigmaPSecond, d0Second,z0Second,pxSecond,pySecond,pzSecond);
       printf("  %5.3f\n",secondWght);
-      
+
       std::cout << "Difference in +P = " << dPplus << "  -P = " << dPminus << std::endl;
+
+      TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
+      if(combinedTrack != NULL){
+	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+      }else{
+	std::cout << "Could not combine track " << std::endl;
+      }
+      delete combinedTrack;
+      std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       
       std::cout << std::endl;
       
@@ -3222,21 +3733,68 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
 		<< " AngleCut = " << deltaAngle
 		<< " dOmega = " << dOmega
 		<< " angle = " << angle << std::endl;
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0First,z0First,pxFirst,pyFirst,pzFirst);
-      std::cout << firstMCP;
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pFirst, sigmaPFirst, d0First,z0First,pxFirst,pyFirst,pzFirst);
       printf("  %5.3f\n",firstWght);
       
-      printf("%7.1f %7.1f %7.2f %7.2f %7.2f  ",
-	     d0Second,z0Second,pxSecond,pySecond,pzSecond);
-      std::cout << secondMCP;
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pSecond, sigmaPSecond, d0Second,z0Second,pxSecond,pySecond,pzSecond);
       printf("  %5.3f\n",secondWght);
       
       std::cout << "Difference in +P = " << dPplus << "  -P = " << dPminus << std::endl;      
+      TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
+      
+      if(combinedTrack != NULL){
+	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+      }else{
+	std::cout << "Could not combine track " << std::endl;
+      }
+      delete combinedTrack;
+      std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       std::cout << std::endl;      
       
+    }else if (firstMCP==secondMCP && iopt < 6) {
+      return;
+      if (iopt==1) {
+	std::cout << "Correct combining Si and TPC segments (iopt=1) --->" << std::endl;
+      }
+      else if (iopt==2) {
+	std::cout << "Correct merging of Si and TPC segments (iopt=2) --->" << std::endl;
+      }
+      else if (iopt==3) {
+	std::cout << "Correct merging of TPC segments (iopt=3) ---> " << std::endl; 
+      }
+      else if (iopt==4) {
+	std::cout << "Correct merging of combSi segment with uncombTPC segment (iopt=4) ---> " << std::endl;
+      }
+      else {
+	std::cout << "Correct merging of combTPC segment with uncombTPC segment (iopt=5) --->" << std::endl;
+      }
+      
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pFirst, sigmaPFirst, d0First,z0First,pxFirst,pyFirst,pzFirst);
+      printf("  %5.3f\n",firstWght);
+      
+      printf("%7.2f +- %7.2f    %7.1f %7.1f %7.2f %7.2f %7.2f  ",
+	     pSecond, sigmaPSecond, d0Second,z0Second,pxSecond,pySecond,pzSecond);
+      printf("  %5.3f\n",secondWght);
+      
+      std::cout << "Difference in +P = " << dPplus << "  -P = " << dPminus << std::endl;
+      TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
+      
+      if(combinedTrack != NULL){
+	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+      }else{
+	std::cout << "Could not combine track " << std::endl;
+      }
+      delete combinedTrack;
+      std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
+      
+      std::cout << std::endl;
+    
     }
   }
+
   catch(DataNotAvailableException &e){};
 
 }    
@@ -3274,6 +3832,119 @@ void FullLDCTracking::GeneralSorting(int * index, float * val, int direct, int n
 
 }
 
+int FullLDCTracking::SegmentRadialOverlap(TrackExtended* first, TrackExtended* second){
+
+  const gear::TPCParameters& pTPC = Global::GEAR->getTPCParameters();
+  const gear::PadRowLayout2D& pTPCpads = pTPC.getPadLayout();
+  static const std::vector<double>tpcExtent = pTPCpads.getPlaneExtent();
+  static const float tpcInnerR = tpcExtent[0]; 
+  static const float tpcOuterR = tpcExtent[1];
+  //static const float tpcZmax   = pTPC.getMaxDriftLength();
+  static const float tpcMaxRow = pTPCpads.getNRows();
+
+
+  float padHeight = (tpcOuterR-tpcInnerR)/(float)tpcMaxRow;
+
+
+  int nTrkGrpFirst = 0;
+  int nTrkGrpSecond = 0;
+  TrackerHitVec hitvecFirst;
+  TrackerHitVec hitvecSecond;
+  GroupTracks * groupFirst = first->getGroupTracks();
+  GroupTracks * groupSecond = second->getGroupTracks();
+	
+  if(groupFirst!=NULL){
+	
+    TrackExtendedVec tracksInGroupFirst = groupFirst->getTrackExtendedVec();
+    nTrkGrpFirst = int(tracksInGroupFirst.size());
+	
+    for (int iTrkGrp=0;iTrkGrp<nTrkGrpFirst;++iTrkGrp) {
+	
+      TrackExtended * trkGrp = tracksInGroupFirst[iTrkGrp];
+      TrackerHitExtendedVec hitVec = trkGrp->getTrackerHitExtendedVec();
+	  
+      for(unsigned int i =0; i<hitVec.size(); ++i){
+	hitvecFirst.push_back(hitVec[i]->getTrackerHit());	  
+      }
+    }
+  }
+  if(groupSecond!=NULL){
+    
+    TrackExtendedVec tracksInGroupSecond = groupSecond->getTrackExtendedVec();
+    nTrkGrpSecond = int(tracksInGroupSecond.size());
+    
+    for (int iTrkGrp=0;iTrkGrp<nTrkGrpSecond;++iTrkGrp) {
+      TrackExtended * trkGrp = tracksInGroupSecond[iTrkGrp];
+      TrackerHitExtendedVec hitVec = 
+	trkGrp->getTrackerHitExtendedVec();
+      
+      for(unsigned int i=0;i<hitVec.size();++i){
+	hitvecSecond.push_back(hitVec[i]->getTrackerHit());
+      }
+    }
+  }
+	
+
+  int nhitsFirst = (int)hitvecFirst.size();
+  int nhitsSecond = (int)hitvecSecond.size();
+  int count = 0;
+  for(int i =0;i<nhitsFirst;++i){
+    float xi = (float)hitvecFirst[i]->getPosition()[0];
+    float yi = (float)hitvecFirst[i]->getPosition()[1];
+    float ri = sqrt(xi*xi+yi*yi);
+    if(ri < tpcInnerR || ri > tpcOuterR)continue;
+    for(int j =0;j<nhitsSecond;++j){
+      float xj = (float)hitvecSecond[j]->getPosition()[0];
+      float yj = (float)hitvecSecond[j]->getPosition()[1];
+      float rj = sqrt(xj*xj+yj*yj);
+      if(fabs(ri-rj)<padHeight/2.0)count++;
+    }
+  }  
+  return count;
+}
+
+bool FullLDCTracking::VetoMerge(TrackExtended* firstTrackExt, TrackExtended* secondTrackExt){
+  
+
+  const float d0First = firstTrackExt->getD0();
+  const float z0First = firstTrackExt->getZ0();
+  const float omegaFirst = firstTrackExt->getOmega();
+  const float tanLFirst = firstTrackExt->getTanLambda();
+  const float phi0First = firstTrackExt->getPhi();
+  
+  const float d0Second = secondTrackExt->getD0();
+  const float z0Second = secondTrackExt->getZ0();
+  const float omegaSecond = secondTrackExt->getOmega();
+  const float tanLSecond = secondTrackExt->getTanLambda();
+  const float phi0Second = secondTrackExt->getPhi();	    
+  
+  HelixClass firstHelix;
+  firstHelix.Initialize_Canonical(phi0First,d0First,z0First,omegaFirst,tanLFirst,_bField);
+  const float pxFirst = firstHelix.getMomentum()[0];
+  const float pyFirst = firstHelix.getMomentum()[1];
+  const float pzFirst = firstHelix.getMomentum()[2];	    
+    
+  HelixClass secondHelix;
+  secondHelix.Initialize_Canonical(phi0Second,d0Second,z0Second,omegaSecond,tanLSecond,_bField);
+  const float pxSecond = secondHelix.getMomentum()[0];
+  const float pySecond = secondHelix.getMomentum()[1];
+  const float pzSecond = secondHelix.getMomentum()[2];	    
+  const float pFirst = sqrt(pxFirst*pxFirst+pyFirst*pyFirst+pzFirst*pzFirst);
+  const float pSecond = sqrt(pxSecond*pxSecond+pySecond*pySecond+pzSecond*pzSecond);
+  if(pFirst<2.5 || pSecond<2.5)return false;
+
+  TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
+  bool veto = false;
+  if(combinedTrack!=NULL){
+    if(combinedTrack->getNDF()+15<firstTrackExt->getNDF()+secondTrackExt->getNDF()+5)veto=true;
+    delete combinedTrack;
+  }else{
+    veto = true;
+  }
+  if(SegmentRadialOverlap(firstTrackExt,secondTrackExt)>10)veto=true;
+  return veto;
+
+}
 
 
 void FullLDCTracking::check(LCEvent * evt) { }

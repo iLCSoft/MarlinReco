@@ -18,7 +18,6 @@
 #include <cmath>
 
 #include "CalorimeterHitType.h"
-#include "CHT_helper.h"
 
 using namespace std;
 using namespace lcio ;

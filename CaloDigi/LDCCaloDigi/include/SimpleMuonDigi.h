@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#include "CalorimeterHitType.h"
+
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -37,13 +40,17 @@ class SimpleMuonDigi : public Processor {
   
   
   virtual void end() ;
-  
+
+  bool useLayer(CHT::Layout caloLayout, unsigned int layer) ;
   
  protected:
 
   int _nRun ;
   int _nEvt ;
-  
+
+  IntVec _layersToKeepBarrelVec, _layersToKeepEndcapVec;
+  std::vector<bool>  _useLayersBarrelVec, _useLayersEndcapVec;
+
   std::vector<std::string> _muonCollections;
 
   std::string _outputMuonCollection;

@@ -12,8 +12,12 @@
 // #include <string>
 #include <cctype> 
 
-#include "CalorimeterHitType.h"
-#include "CHT_helper.h"
+// STUFF needed for GEAR
+#include <marlin/Global.h>
+#include <gear/GEAR.h>
+#include <gear/CalorimeterParameters.h>
+#include <gear/LayerLayout.h>
+
 
 using namespace std;
 using namespace lcio ;
@@ -66,6 +70,21 @@ SimpleMuonDigi::SimpleMuonDigi() : Processor("SimpleMuonDigi") {
 			     "maximum hit energy for a MUON hit" ,
 			     _maxHitEnergyMuon,
 			     (float)2.0);
+
+  IntVec keepBarrelLayersVec, keepEndcapLayersVec;
+
+  registerProcessorParameter("KeepBarrelLayersVec" , 
+			     "Vector of Barrel layers to be kept. Layers start at 1!",
+			     _layersToKeepBarrelVec,
+			     keepBarrelLayersVec);
+
+  registerProcessorParameter("KeepEndcapLayersVec" , 
+			     "Vector of Endcap layers to be kept. Layers start at 1!",
+			     _layersToKeepEndcapVec,
+			     keepEndcapLayersVec);
+
+
+
 }
 
 void SimpleMuonDigi::init() {
@@ -75,6 +94,48 @@ void SimpleMuonDigi::init() {
 
   //fg: need to set default encoding in for reading old files...
   CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+
+
+  //Get the number of Layers in the Endcap
+  int layersEndcap=0, layersBarrel=0;
+
+  try{
+    layersBarrel =  Global::GEAR->getYokeBarrelParameters().getLayerLayout().getNLayers();
+  }catch( gear::UnknownParameterException& e ){
+    streamlog_out(WARNING) << "  oops - no Yoke Barrel available " << std::endl ;
+  }
+  try{
+    layersEndcap =  Global::GEAR->getYokeEndcapParameters().getLayerLayout().getNLayers();
+  }catch( gear::UnknownParameterException& e ){
+    streamlog_out(WARNING) << "  oops - no Yoke Endcap available " << std::endl ;
+  }
+
+  //If the vectors are empty, we are keeping everything 
+  if(_layersToKeepBarrelVec.size() > 0) {
+    //layers start at 0
+    for(int i = 0; i < layersBarrel; ++i) {
+      _useLayersBarrelVec.push_back(false);
+      for(IntVec::iterator iter = _layersToKeepBarrelVec.begin(); iter < _layersToKeepBarrelVec.end(); ++iter) {
+	if (i == *iter-1){
+	  _useLayersBarrelVec[i]=true; break;
+	}
+      }
+    }
+  }
+
+  if(_layersToKeepEndcapVec.size() > 0) {
+    //layers start at 0
+    for(int i = 0; i < layersEndcap; ++i) {
+      _useLayersEndcapVec.push_back(false);
+      for(IntVec::iterator iter = _layersToKeepEndcapVec.begin(); iter < _layersToKeepEndcapVec.end(); ++iter) {
+	if (i == *iter-1){
+	  _useLayersEndcapVec[i]=true; break;
+	}
+      }
+    }
+  }
+
+
 
 }
 
@@ -122,6 +183,10 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 	float energy = hit->getEnergy();
 	int cellid = hit->getCellID0();
 	int cellid1 = hit->getCellID1();
+	//Get The LayerNumber 
+	unsigned int layer = abs(idDecoder(hit)["K-1"]);
+	//Check if we want to use this layer, else go to the next hit
+	if( !useLayer(caloLayout, layer) ) continue;
 	float calibr_coeff(1.);
 	calibr_coeff = _calibrCoeffMuon;
 	float hitEnergy = calibr_coeff*energy;
@@ -157,3 +222,17 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 void SimpleMuonDigi::check( LCEvent * evt ) { }
   
 void SimpleMuonDigi::end(){ } 
+
+bool SimpleMuonDigi::useLayer(CHT::Layout caloLayout,  unsigned int layer) {
+  switch (caloLayout){
+  case CHT::barrel:
+    if(layer > _useLayersBarrelVec.size() || _useLayersBarrelVec.size() == 0) return true;
+    return _useLayersBarrelVec[layer]; //break not needed, because of return
+  case CHT::endcap:
+    if(layer > _useLayersEndcapVec.size() || _useLayersEndcapVec.size() == 0) return true;
+    return _useLayersEndcapVec[layer]; //break not needed, because of return
+  //For all other cases, always keep the hit
+  default:
+    return true;
+  }
+}//useLayer

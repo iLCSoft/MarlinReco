@@ -12,7 +12,6 @@
 // #include <algorithm>
 
 #include "CalorimeterHitType.h"
-#include "CHT_helper.h"
 
 
 using namespace std;

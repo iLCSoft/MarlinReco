@@ -128,7 +128,10 @@ class MaterialDB : public Processor {
   float _bField;
 
   float _beamPipeRadius,_beamPipeHalfZ,_beamPipe_thickness,_beamPipe_radLength,_beamPipe_dedx;
-  float _SITLayer_thickness, _SITLayerSupport_thickness;
+  //  float _SITLayer_thickness, _SITLayerSupport_thickness;
+  std::vector<double> _SITLayer_thickness ;
+  std::vector<double> _SITLayerSupport_thickness ;
+
 
   int _useExtrapolations;
   int _useMaterials;

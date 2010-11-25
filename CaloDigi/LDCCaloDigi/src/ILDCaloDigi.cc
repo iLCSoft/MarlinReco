@@ -453,7 +453,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	    const unsigned int n = hit->getNMCContributions();
 	    
 	    std::vector<bool> used;
-	    for(unsigned int i =0; i<n;i++)used.push_back(fal se);
+	    for(unsigned int i =0; i<n;i++)used.push_back(false);
 	    
 	    int count = 0;
 	    float eCellInTime = 0.;
@@ -636,7 +636,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	    const unsigned int n = hit->getNMCContributions();
 	    
 	    std::vector<bool> used;
-	    for(unsigned int i =0; i<n;i++)used.push_back(fal se);
+	    for(unsigned int i =0; i<n;i++)used.push_back(false);
 	   
 	    int count = 0;
 	    float eCellInTime = 0.;

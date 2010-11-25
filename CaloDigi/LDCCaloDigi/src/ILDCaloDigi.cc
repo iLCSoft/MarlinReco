@@ -376,20 +376,11 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
   for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
 
     std::string colName =  _ecalCollections[i] ;
-    std::transform( colName.begin() , colName.end() , colName.begin(), XToLower() ) ;
     
     //fg: need to establish the subdetetcor part here 
     //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = CHT::any ;
-    if( colName == "barrel" )
-      caloLayout = CHT::barrel ;
-    else 
-      if( colName == "endcap" )
-	caloLayout = CHT::endcap ;
-      else
-	if( colName == "plug" )
-	  caloLayout = CHT::plug ;
-    
+    CHT::Layout caloLayout = layoutFromString (colName);
+
     try{
       LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -583,20 +574,12 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
 
     std::string colName =  _hcalCollections[i] ;
-    std::transform( colName.begin() , colName.end() , colName.begin(), XToLower() ) ;
 
     //fg: need to establish the subdetetcor part here 
     //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = CHT::any ;
-    if( colName.find("barrel")!=std::string::npos )
-      caloLayout = CHT::barrel ;
-    else 
-      if( colName.find("endcap")!=std::string::npos )
-	caloLayout = CHT::endcap ;
-      else
-	if(colName.find("ring")!=std::string::npos )
-	  caloLayout = CHT::plug ;
-    
+    CHT::Layout caloLayout = layoutFromString (colName);
+
+  
     try{
       LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);

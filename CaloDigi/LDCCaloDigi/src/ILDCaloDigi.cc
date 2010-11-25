@@ -446,14 +446,14 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  }
 	  if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
 
-	  float energyCal = energy*calibr_coeff;
+	  //	  float energyCal = energy*calibr_coeff;
 
 	  if(_useEcalTiming){
 	    float dt = r/300-0.1;
 	    const unsigned int n = hit->getNMCContributions();
 	    
-	    bool used[n];
-	    for(unsigned int i =0; i<n;i++)used[i] =false;
+	    std::vector<bool> used;
+	    for(unsigned int i =0; i<n;i++)used.push_back(fal se);
 	    
 	    int count = 0;
 	    float eCellInTime = 0.;
@@ -624,7 +624,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  }
 	  if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
 
-	  float energyCal = energy*calibr_coeff;
+	  //float energyCal = energy*calibr_coeff;
 	  float x = hit->getPosition()[0];
 	  float y = hit->getPosition()[1];
 	  float z = hit->getPosition()[2];
@@ -635,9 +635,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	    float dt = r/300-0.1;
 	    const unsigned int n = hit->getNMCContributions();
 	    
-	    bool used[n];
-	    for(unsigned int i =0; i<n;i++)used[i] =false;
-	    
+	    std::vector<bool> used;
+	    for(unsigned int i =0; i<n;i++)used.push_back(fal se);
+	   
 	    int count = 0;
 	    float eCellInTime = 0.;
 	    float eCellOutput = 0.;

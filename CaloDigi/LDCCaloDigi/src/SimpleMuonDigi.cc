@@ -11,6 +11,7 @@
 // #include <algorithm>
 // #include <string>
 #include <cctype> 
+#include <cstdlib>  // abs
 
 // STUFF needed for GEAR
 #include <marlin/Global.h>

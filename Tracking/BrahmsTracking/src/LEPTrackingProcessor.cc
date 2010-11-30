@@ -284,7 +284,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
 
   // definition of gettpcgeom done here it just sends the geomtertry into to tpcgeom.F
   int gettpcgeom(float* innerrad, float* outerrad, int* npadrows, 
-                  float* maxdrift, float* tpcpixz, float* ionpoten, float* tpcrpres, float* tpczres, float* tpcbfield){
+                  float* maxdrift, float* tpcpixz, float* tpcrpres, float* tpczres, float* tpcbfield){
 
   //  try{
 
@@ -298,7 +298,7 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   *maxdrift = 0.1 * float( gearTPC.getMaxDriftLength() );
   //  *tpcpixz = 0.1 * float(gearTPC.getDoubleVal("tpcPixZ")) ;
   // FIXME:SJA: should this really be multiplied by 0.1 or has it just got caught up in the other mm->cm convertions 
-  *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
+  // *ionpoten = 0.1 * float(gearTPC.getDoubleVal("tpcIonPotential")) ;  
   //  *tpcrpres = 0.1 * float(gearTPC.getDoubleVal("tpcRPhiResConst")) ;  
   //  *tpczres = 0.1 * float(gearTPC.getDoubleVal("tpcZRes")) ;
   //  *tpcbfield = float(gearTPC.getDoubleVal("BField")) ;
@@ -310,8 +310,8 @@ FCALLSCFUN3(INT,writetkitedatcpp,WRITETKITEDATCPP,writetkitedatcpp, INT, INT, IN
   return 0;
 }
 
-FCALLSCFUN9(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT, 
-            PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT )
+FCALLSCFUN8(INT,gettpcgeom,GETTPCGEOM,gettpcgeom, PFLOAT, PFLOAT, PINT, 
+            PFLOAT, PFLOAT, PFLOAT, PFLOAT, PFLOAT )
 
 
 
@@ -1248,8 +1248,8 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     
     // convert de/dx from GeV (LCIO) to number of electrons 
     const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-    double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
-    edep = edep/tpcIonisationPotential;
+    //    double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
+    //    edep = edep/tpcIonisationPotential;
     
 //       double tpcRPhiResConst = gearTPC.getDoubleVal("tpcRPhiResConst");
 //       double tpcRPhiResDiff  = gearTPC.getDoubleVal("tpcRPhiResDiff");

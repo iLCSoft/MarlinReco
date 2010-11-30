@@ -52,7 +52,7 @@ C#include "maskdims.inc"
 #include "include/coildims.inc"
 c#include "marlin_tpcgeom.h"
 
-      REAL INNERRAD, OUTERRAD, MAXDRIFT, TPCPIXZ, IONPOTEN 
+      REAL INNERRAD, OUTERRAD, MAXDRIFT, TPCPIXZ
       REAL TPCRPRES, TPCZRES, TPCBFIELD
       
       INTEGER NPADROWS
@@ -65,7 +65,7 @@ c#include "marlin_tpcgeom.h"
 
 C CALL wrapper function to get tpc parameters from GEAR
       TRY = gettpcgeom(INNERRAD, OUTERRAD, NPADROWS, MAXDRIFT, TPCPIXZ, 
-     +     IONPOTEN, TPCRPRES, TPCZRES, TPCBFIELD)
+     +      TPCRPRES, TPCZRES, TPCBFIELD)
 
 
 C----------------------------------------------------------------------
@@ -121,7 +121,7 @@ c Longitudinal drift parameter (cm^(1/2)
 c Omega tau/B  (Cyclotron frequency parameter) (T^(-1))
       TPCWTB=5.9
 c Excitation energy for a single electron (GeV) (10*Z eV; Z=18 for Argon)
-      TPCEION=IONPOTEN
+      TPCEION=0
 C  Set up the transverse diffusion coefficient (Factor of 10 to convert
 c  B-field  from kG to T)
       TPCDT=TPCDT0/SQRT(1.+(TPCWTB*BFIELD/10.)**2)

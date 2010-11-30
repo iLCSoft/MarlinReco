@@ -149,27 +149,27 @@ CCC      enddo
 
       NTPCO=0
       DO IHIT=1,NTPHITS
-         IF((ABS(TPCHITS(4,IHIT)).GT.TPTHRS).AND.
-     &        (ABS(TPCHITS(4,IHIT)).LT.TPSAT))THEN
-            RHIT(IHIT)=SQRT(TPCHITS(1,IHIT)**2+TPCHITS(2,IHIT)**2)
-            PHI(IHIT)=ATAN2(TPCHITS(2,IHIT),TPCHITS(1,IHIT))
-            IF (PHI(IHIT).LT.0.)PHI(IHIT)=PHI(IHIT)+TWOPI
-            IROW=1+INT((RHIT(IHIT)-TPCACRI)/TPCPADR)
-            IF (IROW.LT.1) IROW=1
-            IF (IROW.GT.NRTPC) IROW=NRTPC
+c         IF((ABS(TPCHITS(4,IHIT)).GT.TPTHRS).AND.
+c     &        (ABS(TPCHITS(4,IHIT)).LT.TPSAT))THEN
+         RHIT(IHIT)=SQRT(TPCHITS(1,IHIT)**2+TPCHITS(2,IHIT)**2)
+         PHI(IHIT)=ATAN2(TPCHITS(2,IHIT),TPCHITS(1,IHIT))
+         IF (PHI(IHIT).LT.0.)PHI(IHIT)=PHI(IHIT)+TWOPI
+         IROW=1+INT((RHIT(IHIT)-TPCACRI)/TPCPADR)
+         IF (IROW.LT.1) IROW=1
+         IF (IROW.GT.NRTPC) IROW=NRTPC
 C     first sort according to rows:
-            NINROW(IROW)=NINROW(IROW)+1
-            IF(NINROW(IROW).GT.NMXHTRW)THEN
-               WRITE(6,*) 'THITSRT error: too many TPC hits in one row'
+         NINROW(IROW)=NINROW(IROW)+1
+         IF(NINROW(IROW).GT.NMXHTRW)THEN
+            WRITE(6,*) 'THITSRT error: too many TPC hits in one row'
 CCC   CALL TKVETO(1)
-               NINROW(IROW)=NMXHTRW
-            ENDIF
-            IHITRW(IROW,NINROW(IROW))=IHIT
+            NINROW(IROW)=NMXHTRW
+         ENDIF
+         IHITRW(IROW,NINROW(IROW))=IHIT
 C     SJAWRT
-         else
+c      else
 c            write(*,*) "####### threshold not met IHIT =" , IHIT,
 c     +           "threshold = ", TPCHITS(4,IHIT)
-         ENDIF
+c         ENDIF
       ENDDO
       
 c Now sort within rows according to phi:

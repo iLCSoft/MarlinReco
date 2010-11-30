@@ -11,6 +11,8 @@
 using namespace lcio ;
 using namespace marlin ;
 
+class FTDLayer ;
+
 
 /** ======= FTDigiProcessor ========== <br>
  * Produces FTD TrackerHit collection from SimTrackerHit collection. <br> 
@@ -87,6 +89,8 @@ class FTDDigiProcessor : public Processor {
   
   // gsl random number generator
   gsl_rng * r ;
+
+  FTDLayer* _ftdLayers ;
 
 } ;
 

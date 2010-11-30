@@ -1,6 +1,7 @@
 #include "MaterialDB.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 
 #include <cstdlib>
@@ -22,6 +23,8 @@
 #include <gear/TPCParameters.h>
 #include <gear/PadRowLayout2D.h>
 #include <gear/BField.h>
+
+#include <algorithm>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -93,6 +96,49 @@ extern "C" {
   } fkfild_;
 }
 
+/** helper function to get double values from GEAR parameters - 
+    reads values from DoubleVec - if thius does not exist try to read from single double
+    value and add n times to vector.
+    Needed for backward compatibility of SIT/SET/ETD Mokka drivers ... */
+
+void getDoubleValues( DoubleVec& v, const gear::GearParameters& p, 
+		      const std::string& name, unsigned n){
+
+  // first try to read vector:
+  try{
+    
+    const DoubleVec& dv = p.getDoubleVals( name )  ;
+
+
+    if( n != dv.size() ){ 
+      
+      std::stringstream em ;
+
+      em << " wrong size of array " << name << " - expected: " << n 
+	 << " - got: " << dv.size() << std::endl ;
+      
+      throw gear::Exception( em.str() );
+    }
+    
+    std::copy( dv.begin() , dv.end() , std::back_inserter( v ) ) ; 
+    
+
+    return ;
+
+  } catch(gear::UnknownParameterException& e){}
+  
+
+  // try to read single double value
+
+  double d = p.getDoubleVal( name ) ;
+
+  // no catch here - if parameter does not exist we want the exception to be thrown
+
+  v.resize( n ) ;
+
+  for( unsigned i=0 ; i < n ; ++i ) { v[i] = d ; } 
+  
+}
 
 
 
@@ -454,6 +500,7 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for VTX Detector ** //
   // **************************************** //
+  streamlog_out(DEBUG) << "build VTX  ..." << std::endl;
 
   //--Get GEAR Parameters--
   const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
@@ -789,6 +836,8 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for FTD Detector ** //
   // **************************************** //
+  streamlog_out(DEBUG) << "build FTD  ..." << std::endl;
+
   const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");
 
 
@@ -1146,23 +1195,23 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for SIT Detector ** //
   // **************************************** //
+  streamlog_out(DEBUG) << "build SIT  ..." << std::endl;
+
   const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
 
   // SIT layers
 
   int nSITR = int(pSITDet.getDoubleVals("SITLayerRadius").size());
   int nSITHL = int(pSITDet.getDoubleVals("SITLayerHalfLength").size());
-  int SITModel = int(pSITDet.getIntVal("SITModel"));
+  //  int SITModel = int(pSITDet.getIntVal("SITModel"));
   int nLayersSIT = 0;
 
   if (nSITR == nSITHL) {
     nLayersSIT = nSITR;
     _rSIT.resize(nLayersSIT);
     _halfZSIT.resize(nLayersSIT);
-    if (SITModel>0) {
-      _rSITSupport.resize(nLayersSIT);
-      _halfZSITSupport.resize(nLayersSIT);
-    }
+    _rSITSupport.resize(nLayersSIT);
+    _halfZSITSupport.resize(nLayersSIT);
   }
   else {
     _errorMsg << "Size of SITLayerRadius vector (" << nSITR 
@@ -1171,32 +1220,32 @@ void MaterialDB::init() {
     throw gear::Exception(_errorMsg.str());
   }
 
+  
+  getDoubleValues(_SITLayer_thickness,        pSITDet, "SITLayerThickness", nLayersSIT );
+  getDoubleValues(_SITLayerSupport_thickness, pSITDet, "SITSupportLayerThickness", nLayersSIT );
+
   for (int iL=0;iL<nLayersSIT;++iL) {
     _rSIT[iL] = float(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
     _halfZSIT[iL] = float(pSITDet.getDoubleVals("SITLayerHalfLength")[iL]);
-    if (SITModel>0) {
-      _rSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerRadius")[iL]);
-      _halfZSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerHalfLength")[iL]);
-    }
+    _rSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerRadius")[iL]);
+    _halfZSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerHalfLength")[iL]);
   }
 
   _radlen_si = 0.1*float(pSITDet.getDoubleVal("SITLayer_RadLen"));
   _dedx_si = 10.*float(pSITDet.getDoubleVal("SITLayer_dEdx"));
-  _SITLayer_thickness =  float(pSITDet.getDoubleVal("SITLayerThickness"));
 
-  if (SITModel>0) {
-    _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
-    _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
-    _SITLayerSupport_thickness =  float(pSITDet.getDoubleVal("SITSupportLayerThickness"));
-  }
+
+  _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
+  _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
+
+
 
 
   for (int iL = 0; iL < nLayersSIT; ++iL) {
     
     float rmin = _rSIT[iL];
-    if (SITModel>0) {
-      if (_rSITSupport[iL]<rmin)
-	rmin = _rSITSupport[iL];      
+    if (_rSITSupport[iL]<rmin){
+      rmin = _rSITSupport[iL];      
     }
 
     rmin = rmin - 0.01; 
@@ -1206,19 +1255,18 @@ void MaterialDB::init() {
     fkddes_.rcmat[Ncmat] = 0.1*_rSIT[iL];
     fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
     fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
-    fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness*_dedx_si;     
+    fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness[iL]/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness[iL]*_dedx_si;     
     Ncmat++;
 
-    if (SITModel>0) {
-      fkddes_.rcmat[Ncmat] = 0.1*_rSITSupport[iL];
-      fkddes_.zcmin[Ncmat] = -0.1*_halfZSITSupport[iL];
-      fkddes_.zcmax[Ncmat] = 0.1*_halfZSITSupport[iL];
-      fkddes_.xrlc[Ncmat] = 0.1*_SITLayerSupport_thickness/_radlen_ber;
-      fkddes_.xelosc[Ncmat] = 0.1*_SITLayerSupport_thickness*_dedx_ber;
-      Ncmat++;
-    }
-
+    fkddes_.rcmat[Ncmat] = 0.1*_rSITSupport[iL];
+    fkddes_.zcmin[Ncmat] = -0.1*_halfZSITSupport[iL];
+    fkddes_.zcmax[Ncmat] = 0.1*_halfZSITSupport[iL];
+    fkddes_.xrlc[Ncmat] = 0.1*_SITLayerSupport_thickness[iL]/_radlen_ber;
+    fkddes_.xelosc[Ncmat] = 0.1*_SITLayerSupport_thickness[iL]*_dedx_ber;
+    Ncmat++;
+    
+    
     fkexts_.itexts[Nexs] = 0;
     fkexts_.rzsurf[Nexs] = rmin;
     fkexts_.zrmin[Nexs]  = -halfZ;
@@ -1232,6 +1280,7 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for TPC Detector ** //
   // **************************************** //
+  streamlog_out(DEBUG) << "build TPC  ..." << std::endl;
 
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   //  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
@@ -1251,7 +1300,6 @@ void MaterialDB::init() {
   //  float xrargon = 10971.;
   //  float dedxargon = 0.0018*1.52e-3;
   
-
 
   float RTPCINN = 0.1*float(gearTPC.getDoubleVal("tpcInnerRadius"));
   float RTPCOUT = 0.1*float(gearTPC.getDoubleVal("tpcOuterRadius"));
@@ -1329,6 +1377,8 @@ void MaterialDB::init() {
     // **************************************** //
     // ** Building Database for SET Detector ** //
     // **************************************** //
+    streamlog_out(DEBUG) << "build SET  ..." << std::endl;
+
     const gear::GearParameters& pSETDet = Global::GEAR->getGearParameters("SET");
     int nSETR = int(pSETDet.getDoubleVals("SETLayerRadius").size());
     int nSETHL = int(pSETDet.getDoubleVals("SETLayerHalfLength").size());
@@ -1339,8 +1389,15 @@ void MaterialDB::init() {
       exit(-1);
     }
 
-    float setSupportThickness = float(pSETDet.getDoubleVal("SETSupportLayerThickness"));
-    float setLayerThickness = float(pSETDet.getDoubleVal("SETLayerThickness"));
+
+//     float setSupportThickness = float(pSETDet.getDoubleVal("SETSupportLayerThickness"));
+//     float setLayerThickness = float(pSETDet.getDoubleVal("SETLayerThickness"));
+    DoubleVec setSupportThickness ;
+    getDoubleValues(setSupportThickness, pSETDet, "SETSupportLayerThickness", nSETR );
+    DoubleVec setLayerThickness ;
+    getDoubleValues(setLayerThickness, pSETDet, "SETLayerThickness", nSETR );
+
+
     float setRadLenLayer    = float(pSETDet.getDoubleVal("SETLayer_RadLen"));
     float setRadLenSupport  = float(pSETDet.getDoubleVal("SETSupportLayer_RadLen"));
     float setdEdxLayer    = float(pSETDet.getDoubleVal("SETLayer_dEdx"));
@@ -1352,8 +1409,8 @@ void MaterialDB::init() {
       fkddes_.rcmat[Ncmat] = 0.1*radius;
       fkddes_.zcmin[Ncmat] =  -0.1*halfz;
       fkddes_.zcmax[Ncmat] = 0.1*halfz;
-      fkddes_.xrlc[Ncmat] = setLayerThickness/setRadLenLayer;
-      fkddes_.xelosc[Ncmat] = setLayerThickness*setdEdxLayer;      
+      fkddes_.xrlc[Ncmat] = setLayerThickness[iSETL]/setRadLenLayer;
+      fkddes_.xelosc[Ncmat] = setLayerThickness[iSETL]*setdEdxLayer;      
       Ncmat++;
 
       radius = float(pSETDet.getDoubleVals("SETSupportLayerRadius")[iSETL]);
@@ -1361,8 +1418,8 @@ void MaterialDB::init() {
       fkddes_.rcmat[Ncmat] = 0.1*radius;
       fkddes_.zcmin[Ncmat] = -0.1*halfz;
       fkddes_.zcmax[Ncmat] = 0.1*halfz;
-      fkddes_.xrlc[Ncmat] = setSupportThickness/setRadLenSupport;
-      fkddes_.xelosc[Ncmat] = setSupportThickness*setdEdxSupport;
+      fkddes_.xrlc[Ncmat] = setSupportThickness[iSETL]/setRadLenSupport;
+      fkddes_.xelosc[Ncmat] = setSupportThickness[iSETL]*setdEdxSupport;
       Ncmat++;
 
     }

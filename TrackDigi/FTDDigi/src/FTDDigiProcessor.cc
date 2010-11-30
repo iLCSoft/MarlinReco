@@ -9,6 +9,13 @@
 #include <EVENT/MCParticle.h>
 #include <math.h>
 
+#include <marlin/Global.h>
+
+#include <gear/GEAR.h>
+#include <gear/GearParameters.h>
+#include <gear/BField.h>
+#include <cmath>
+
 #include <gsl/gsl_randist.h>
 
 using namespace lcio ;
@@ -16,6 +23,97 @@ using namespace marlin ;
 using namespace std ;
 
 FTDDigiProcessor aFTDDigiProcessor ;
+
+
+
+/** helper class to compute the layerID of FTD hits from the z-position */
+class FTDLayer{
+protected:
+  
+  //  std::map<int,unsigned> _layerMap  ;
+  std::vector< std::pair< double, double > > _layerVec ;
+
+public:
+  FTDLayer( const gear::GearParameters& param ){
+    
+    const DoubleVec& zv = param.getDoubleVals( "FTDZCoordinate" ) ;
+    
+    
+    _layerVec.resize(  zv.size() ) ;
+    
+    for(unsigned i=0 ; i < zv.size() ; ++i ) { 
+      
+      //       int zPos = int( std::floor( zv[i] + 0.5  ) ) ;
+      //       // store layerId for +/- 1 mm
+      //       _layerMap[ zPos - 1 ] = i ;
+      //       _layerMap[ zPos     ] = i ;
+      //       _layerMap[ zPos + 1 ] = i ;
+      
+      //       streamlog_out( DEBUG )  << " FTDLayer : " << i <<  "  at : " 
+      //                               << zPos << " +/- 1 " << std::endl ;
+
+      
+      if( i != 0 ) {  // not first
+        
+        _layerVec[i].first =  ( zv[i-1] + zv[i] ) / 2. ;
+        
+      } else {
+        
+        _layerVec[i].first =  zv[i] - 100. ;
+      }
+      
+      if( i+1 < zv.size() ) { // not last 
+        
+        _layerVec[i].second = ( zv[i] + zv[i+1] ) / 2. ;
+        
+      } else {
+        
+        _layerVec[i].second = zv[i] + 100. ;
+        
+      }
+
+      streamlog_out( DEBUG )  << " FTDLayer : " << i <<  "  at : " 
+                              << _layerVec[i].first << "  -  " <<  _layerVec[i].second 
+                              << std::endl ;
+    }
+
+  }
+  
+  unsigned layerID( double zPos ) {
+    
+    //     std::map<int,unsigned>::iterator it = _layerMap.find( int( std::floor( zPos + 0.5  ) ) ) ;  
+    
+    //     if( it == _layerMap.end() ){
+    
+    //       stringstream em ;
+    //       em << " FTDDigiProcessor::FTDLayer cannot find layer for z-position : " 
+    //          << zPos << std::endl ;
+    
+    //       throw Exception( em.str() ) ;
+    //     }
+    
+    //     return it->second ;
+    //   }
+    
+    double zAbs = std::abs( zPos ) ;
+    
+    for(unsigned i=0 ; i < _layerVec.size() ; ++i ) { 
+      
+      if(   _layerVec[i].first  < zAbs  && zAbs <  _layerVec[i].second ) {
+        
+        return i ;
+      }
+    }
+
+
+    stringstream em ;
+    em << " FTDDigiProcessor::FTDLayer cannot find layer for z-position : " 
+       << zPos << std::endl ;
+    
+    throw Exception( em.str() ) ;
+  }
+
+} ;
 
 
 FTDDigiProcessor::FTDDigiProcessor() : Processor("FTDDigiProcessor") {
@@ -64,6 +162,11 @@ void FTDDigiProcessor::init() {
   //intialise random number generator 
   r = gsl_rng_alloc(gsl_rng_ranlxs2);
   
+
+  const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
+
+  _ftdLayers = new FTDLayer( pFTD )  ;
+
 }
 
 void FTDDigiProcessor::processRunHeader( LCRunHeader* run) { 
@@ -134,7 +237,15 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
             trkHit->setPosition(  newPos  ) ;
 
             trkHit->setEDep( edep ) ;
-            trkHit->setType( 200+abs(SimTHit->getCellID()));
+
+            //            trkHit->setType( 200+abs(SimTHit->getCellID()));
+            //fg: get layerID from z-position
+            trkHit->setType( 201 + _ftdLayers->layerID(  pos[2] ) ) ;
+            // FIXME:  need proper way of decoding the layerID in the TrackerHit
+            //         for now we use this 'workaround' 201 is expected as FTD ID in 
+            //         SiliconTracking
+
+
             float covMat[TRKHITNCOVMATRIX]={_pointReso*_pointReso,0.,_pointReso*_pointReso,0.,0.,0.};
             trkHit->setCovMatrix(covMat);      
             // push back the SimTHit for this TrackerHit
@@ -163,5 +274,6 @@ void FTDDigiProcessor::end(){
 // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 // 	    << std::endl ;
 
+  delete _ftdLayers ;
 }
 

@@ -1,0 +1,42 @@
+Purpose:
+========
+ ZFinder returns the best Z->ee/Z->mm candidate in the event. Relatively
+  loose cuts are applied. For a physics analysis tighter cuts (applied
+  user analysis code) might be required. Bremstrahlung/FSR recovery is
+  on by default.
+
+
+Steering file: e.g.
+===================
+  <processor name="MyZFinderMuMu" type="ZFinder">
+    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />  
+    <parameter name="ZDecay" value="mumu" />  
+    <parameter name="Printing" value="0" />
+    <parameter name="AddPhotons" value="1" />  
+    <parameter name="OutputParticleCollectionName" value="ZmumuPFOs" />  
+  </processor>
+
+  <processor name="MyZFinderEE" type="ZFinder">
+    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />  
+    <parameter name="ZDecay" value="ee" />  
+    <parameter name="Printing" value="0" />
+    <parameter name="AddPhotons" value="1" />  
+    <parameter name="OutputParticleCollectionName" value="ZeePFOs" />  
+  </processor>
+
+
+Using the Collections: e.g.
+===========================
+   ReconstructedParticle* Zmm  = NULL;
+   ReconstructedParticle* Zee  = NULL;
+   if (col->getTypeName() == LCIO::RECONSTRUCTEDPARTICLE ) {
+      if(nelem==1){
+	 if(*name=="ZmumuPFOs")Zmm = dynamic_cast<ReconstructedParticle*>(col->getElementAt(0));
+	 if(*name=="ZeePFOs")Zee = dynamic_cast<ReconstructedParticle*>(col->getElementAt(0));
+       }
+   }
+   if(Zmm!=NULL){
+     float mz =  Zmm->getMass();
+     TLorentzVector pmumu(Zmm->getMomentum()[0],Zmm->getMomentum()[1],Zmm->getMomentum()[2],Zmm->getEnergy());
+     etc...
+   }

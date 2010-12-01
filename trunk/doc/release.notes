@@ -1,0 +1,553 @@
+================================
+
+ release notes for MarlinReco
+
+===============================
+ --------
+| v00-19 |
+ --------
+
+ 	  - added new sub package FPCCDDigi (Daisuke Kamai)
+
+	  - Analysis/MarlinKinfit  (M.Beckmann) : 
+            several updates, new RootTracer, name changes (PhotonFitObject ->
+	    SimplePhotonFitObject, PhotonFitObjectPxyg -> ISRPhotonFitObject)
+
+       - TPCDigitizer (S.Aplin) 
+         - protected against accessing NULL pointer from getMCParticle
+   	    - clean up unused variables and unneeded ifdefs
+	    - fixed unsigned int == int comparison warnings
+         - hit smearing (M.Thomson) 
+
+       - NewFTDDigiProcessor
+         - Add NewFTDTrackDigi with smearing for strips or Pixels, depending LayerID
+
+       - ILDCaloDigi.cc ( M.Thomson )
+         - Added new digitiser for ILD calorimeters with timing cuts and ability to 
+           treat barrel and endcap differently
+
+       - SimpleMuonDigi( M.Thomson) 
+         - improve calibration of muon hits and set a maximum energy for a single hit (factor
+	      two improvement in energy resolution). The defaults are appropriat e for ILD00       
+
+       - MaterialDB
+         - new version for CLIC CDR studies CLICCDRMaterialDB
+         - made gear parameters for SIT/SET (support) layer thicknesses DoubleVec
+         - increased the max number of tracking surfaces in F77, see fkparm.inc
+
+       - BrahmsTracking
+         - removed tpc Ionisation Potential in F77
+         - increased the max number of tracking surfaces in F77, see fkparm.inc
+
+       - FullLDCTracking ( M.Thomson )
+         - modifications to reduce the number of split or "ghost" tracks
+
+       - V0Finder (M.Thomson) 
+         - improved checking to avoid false positives
+
+ 	    - BCalTagEfficiency.cc: fixed memory leak bug (C. Bartels)
+
+        - RecoMCTruthLinker (M.Berggren)
+         - added additional links (LCRelations) between ReconstructedParticles and Tracks and Clusters
+         
+          - code fixes (J.Engels) 
+            - made gcc 4.4 compliant
+	    - fixed various issues with gfortran and g2c
+            - renamed get/setdEdx() to get/setEDep() in TrackDigitizers 
+            - fixed cmake issues          
+
+
+ --------
+| v00-18 |
+ --------
+      - added new package Tracking/KinkFinder  (M.Thomson, J.Marshall)
+
+      - moved sub-package BCalTagEfficiency from MarlinAna to ./Analysis
+
+      - Tracking/V0Finder : fix for Lambda0bar (M.Thomson)
+
+      - improved compatibility for gcc 4.x
+        - g2c/gfortran in sl5 with gcc 4.1.1
+        - fixed CaloDigi/LDCCaloDigi/src/CHT_helper.cc for gcc 4.4.3
+
+     bug fixes:
+
+      - CaloDigi/SimpleLHCalDigi.cc, CaloDigi/SimpleMuonDigi.cc,
+         added missing output relation collection to the event
+
+      - bug fixes in SimpleMuonDigi, (New)LDCCaloDigi wrt. to
+        ecoding of calorimeter layout in CalorimeterHit::type 
+        (was allways CHT::any)
+
+      - fixed bug in TPCDigitizer with hit-MCParticle association
+
+      - PFOID/src/PFOID.cc: addedd missing information
+	that order of pdfs must be consistent with parameter
+	EnergyBoundaries in parameter description   
+
+      - TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: fixed a bug in the
+	logic when checking for hits from the same MCParticle 
+        (last hit compared with itself)
+
+
+ -----------
+| v00-17-02 |
+ -----------
+     - made compatible with MacOS
+     bug fixes: 
+     - incorrect library version numbers
+      
+
+
+ --------
+| v00-17 |
+ --------
+        removed dangerous revision of impact parameters 
+        d0 and z0 in MarlinTrackFit.cc
+
+ --------
+| v00-16 |
+ --------
+
+     *	MarlinKinfit (boehmej, beckmann & K. Fujii)
+
+      -	Global covariance matrix now also filled by NewtonFitter. 
+      -	Added Tracer classes and access to global covariance matrix in
+	BaseFitter, plus some bug fix in PhotonFitObjectPxyg and
+	PhotonFitObject 
+
+      -	Various bug fixes.
+
+      -	Patches applied for compiling on mac osx.
+
+	
+     *	TrackDigi (gaede, aplin, raspereza, deMasi & fujii)
+
+      -	VTXDigi, cluster parameter class for user extension of
+	SimTrackerHits. 
+      -	Introduced coordinate transform for direction
+	vectors in VXDGeometry. New class for coordinate transform between
+	ladder and lab frame. 
+      -	Salt'n pepper noise hits with cluster
+	parameters. 
+      -	Only keep link to SimTrackerHit if MCParticle pointer
+	is not null. 
+      -	Evolved version of TPCDigi that provides additional functionality
+	to deal with background. Coupled to the Mokka Sensitive Detector
+	Driver. TPCSD03.cc. Plus considerable clean up.
+      -	VTXDigitizer.cc, added possibility to store for each digitized
+	tracker hit information on the fired pixels.
+      -	Initial version of VTXBgClusters.
+      -	ETDDigiProcessor, VTXDigiProcessor, patches applied for compiling 
+	on mac osx. 
+
+	
+     * 	CaloDigi (thomson)
+      -	Updates for digital and semi-digital HCAL readout of DHCAL 
+
+	
+     *	PFOID (aplin)
+
+      -	Update the hcal calo type determintation to use Helper class from
+	MarlinUtil for decoding/encoding lcio::CalorimeterHit types for
+	the ILD. 
+
+
+     *	ZFinder (thomson)
+
+      -	New package for finding Z->l+l-.
+
+
+     *	BrahmsTracking (aplin)
+
+      -	Removed hardcoded cut of chi^2<300.
+
+
+     * 	RecoMCTruthLink (gaede)
+
+      -	Protect against MCParticle null pointers.
+
+      -> see Changelog for details 
+
+ --------
+| v00-15 |
+ --------
+     * PFOID (A.Raspereza) 
+       - Updated version of PFOID processor. Energy dependent scheme of 
+         particle identification is implemented.
+       - bug fix in Histogram.cc (array out of bounds)
+       -  New pdf files for energy dependent particle ID procedure
+
+ --------
+| v00-14 |
+ --------
+   * modified calorimeter digitizers to encode CalorimeterHit types
+     with CalorimeterHitType class from MarlinUtil ( need v00-13 or higher )
+
+ --------
+| v00-13 |
+ --------
+  * TrackDigi (F.Gaede)
+    - ETDDigiProcessor/VTXDigiProcessor: 
+      added active(SET)Layers parameter to mimic stereo layer readout by ignoring some layers
+
+  * LDCCaloDigi  (M.Thomson)
+     - SimpleMuonDigi:  fix default cell id encoding
+     - SimpleLHCalDigi: new digitizer
+     - NewLDCCaloDigi: improved Calo
+       digitiser for ECAL and HCAL which writes out a single collection
+       for each input collection to allow for possible CellID encoding
+
+  * MarlinKinfit (M.Beckmann)
+     - Replaced OPALFitter and NewtonFitter by OPALFitterGSL and
+       NewtonFitterGSL. New PhotonFitObject to describe ISR photons.
+       Several Bug Fixes.
+
+  * bug fixes (J.Engels,S.Aplin)
+    - removed compiler warnings in BrahmsTracking (cfortran.h,fkexts.inc)
+    - CMake: bug fix: libg2c in 64 bit, added -m32 to global link flags
+    - BrahmsTracking: fixed of bounds checking, buffer sizes
+
+
+ -----------
+| v00-12-01 |
+ -----------
+     - bug fix release:
+
+      BrahmsTracking (S.Aplin)
+       tflnks.F:  fixed a bug where a
+	  number of TPC padrows between N*32+1 and N*32+4 caused division
+	  by 0 when looking for hits in the last four padrows
+
+       FullLDCTracking corrected the GEAR definition for the disk z positions
+
+ -----------
+| v00-12-00 |
+ -----------
+
+   * improved PFOID  (S.Aplin, A.Rasperezza) 
+    - fixed to compile w/ gcc4.x 
+    - output particle collection dropped - ParticleID object is assigned
+      directly to ReconstructedParticle
+    - improved documentation 
+
+   TrackDigi/VTXDigi:
+   * fixed bug in VTXNoiseHits (F.Gaede)
+
+   * new processor CCDDigitizer (K.Harder)
+     development version of vertex digitizier specific for CCD
+     technology. written by Stefan Uebelacker (RAL) based on
+     VTXDigitizer and on CCD digitizer code by Nick Sinev. not
+     recommended for general use yet.
+
+   * FullLDCTracking: New option for track fit included
+
+   * made cmake 2.6 compliant
+   * added 32 bit compatibility build option
+   * added LIBRARY_DIRS
+
+                                    
+ -----------
+| v00-11-00 |
+ -----------
+
+     * FullLDCTracking: (A.Raspereza)
+        added cut on #Silicon hits if no TPC hits present - default: >=4
+
+     * added code for PFOID  (M.Ohlerich et. al)
+       particle id package
+       -> experimental - does not compile and is not built into library
+
+ -----------
+| v00-10-04 |
+ -----------
+      
+      * RecoMCTruthLinker (F.Gaede)
+	  added paramater daughtersECutMeV for supressing low energy deltas od decays in flight
+
+      * bug fixes and improvements in BrahmsTracking FullLDCTracking (S.Aplin)
+        - splitted non-looping tracks based on hit-helix proximity 
+        - corrected conversion of covariance matrix
+        - added steering parameter AlwaysRunCurlKiller in BrahmsTracking
+        - bug fix in  clear function of tkhitbank
+
+        -> see Changelog for details 
+
+ -----------
+| v00-10-03 |
+ -----------
+
+	* bug fix SiliconTracking/LEPTrackingProcessor (S. Aplin)
+          subdetectorHitNumbers  for ETD and SET hits
+
+        * improved V0Finder (A.Raspereza)
+          added cut on the mass of the candidate vertices
+
+ -----------
+| v00-10-01 |
+ -----------
+
+    * Tracking/FullLDCTracking/src/FullLDCTracking.cc: Si and TPC
+      tracks are allowed to be merged if fit error = 0 ( proposed by
+      Mark ).
+
+ --------
+| v00-10 |
+ --------
+
+    * new package Tracking/V0Finder  (A.Raspereza)
+      processor to perform identification of neutral vertices,
+      originating from photon conversions and decays of K0S and
+      Lambda0
+
+ ----------
+| v00-09-01 |
+ ----------
+      fixed bug in RecoMCTruthLinker
+	  and recover missing MCParticle link for Lcal clusters
+
+ --------
+| v00-09 |
+ --------
+
+    * RecoMCTruthLink:   (M.Beckmann, F.Gaede)
+      - new processor MCTruthJetEnergy: adds colleciton parameter 'MCTruthJetEnergies'
+
+    * TrackDigi/VTXDigitizer  (A.Raspereza)
+      - bug fix for phi0 of gear::VXDParameters
+
+    * BrahmsTracking/LEPTrackingProcessor 
+      - bug fix w/ wrong TPCHit collection
+      - changed default binning for the emoval of hits ala CurlKiller
+      - bug fix for iteration of CurlKiller
+
+ --------
+| v00-08 |
+ --------
+     
+    * TrackDigi: 
+       - new processor VTXNoiseHits.cc   (F.Gaede)
+       -> creates random noise hits with layer dependent density
+          
+       - added  ETDDigiProcessor (copy of FTDDigiProcessor w/simple
+	  gaussian smearing in x-y )
+
+    * improved LEPTracking (S.Aplin)	
+      - error flag in LCIO event if patrec fails
+      - produce only TPCTracks collection
+      - functionality of CurlKiller moved into LEPTracking
+      - improved log messages (streamlog/debug flags f77)
+      - increased f77 array sizes for hits
+
+    * improved FullLDCTracking (S.Aplin, M.Thomson)
+       - correction for non looping split tracks
+       - bug fixes
+
+    
+    * additional bug fixes
+
+       -> see Changelog for details
+ 
+ --------
+| v00-07 |
+ --------
+
+     * improved FullLDCTracking (A.Raspereza)
+       include SET and ETD in pattern recognition and fit
+
+     * improved SiliconTracking (A.Raspereza, S.Aplin))
+        - fixed/improved FTD geometry code 
+        - improved efficiency in patrec
+ 
+     * added LDCCaloDigi package (M.Thomson)
+       calo digi code with gap corrections
+
+
+     * additional bug fixes and code cleaning
+
+       -> see Changelog for details
+
+ --------
+| v00-06 |
+ --------
+	 
+    * improved LEPTracking and TPCDigi(S.Aplin)
+	- reduced printout and moved cout to debug streamlog_out
+        - corrected covariance matrix definition of TrackerHits
+        - removed VTX and SIT Hits from LEPTracking
+
+    * removed obsolete package VertexTracking (use SiliconTracking)
+
+    * new package Analysis/RecoMCTruthLink (F.Gaede)
+       - create link between ReconstructedParticles and MCParticles 
+       - create skimmed MCparticle list
+
+    * improved SiliconTracking (A.Raspereza)
+       - reduced printout	
+       - improved Silicon track finding efficiency (hit triplet fitting)
+       - bug fix for correct assignment of left-over Silicon hits
+
+
+     * additional bug fixes
+
+       -> see Changelog for details
+
+ -----------
+| v00-05-03 |
+ -----------
+
+       bug fix release 
+
+	* TrackDigi/TPCDigi/TPCDigiProcessor:    (S.Aplin)
+	  - fixed several memory leaks 
+
+	* Tracking/SiliconTracking/include/MaterialDB (A.Raspereza)
+	  - added support structures for SIT
+	  - included treatment of the first layer of heavy-weight Si for FTD
+     	    detector
+
+
+ -----------
+| v00-05-02 |
+ -----------
+  
+       bug fix release 
+
+          !!! requires MarlinUtil v00-06 !!!!
+
+
+	* TrackDigi/VTXDigi/VTXDigiProcessor: (C. Lynch)
+
+	  - vertex hits are now smeared on ladders 
+ 
+	* TrackDigi/TPCDigi/TPCDigiProcessor:    (S.Aplin)
+          - new parametrization of r-phi and z resolution smearing (from LC-TPC group) 
+          - bug fixes 
+          - added expert check histograms (enable w/ -D EXPERTCHECKPLOTS)
+          - covariance matrix of TrackerHit are now x,y,z (used to be cylindrical)
+
+	* Analysis/MarlinKinfit:  (J.List) 
+	  - added soft constraints
+          - added more example fitters
+          - bug fixes
+
+ -----------
+| v00-05-01 |
+ -----------
+       bug fix release
+
+        - MarlinKinfit improved and new example (J.List) 
+
+        - fixed LEPTracking for large #pad rows in TPC (S.Aplin)
+          ( currently 512 pad rows are allowed - increase by
+            setting the value of N32BITREG in padrow.inc )
+
+        - dvips for documentation does not send to printer (J.Engels)
+
+        - added simple digitizers SimpleLCalDigi and SimpleMuonDigi (by M.Thomson)
+
+        - ...
+
+ --------
+| v00-05 |
+ --------
+       - new processor YThresh, calculates the yThresh variable(B. Hooberman)
+         * in Analysis/EventShapes
+         * see README and doxygen documentation
+ 
+       - modified TPC digitization for new TPC driver (S.Aplin)
+       - removed silicon tracking from BrahmsTracking
+
+       - new package MarlinKinFit (J.List)
+	 * Analysis/MarlinKinfit
+         * kinematic fits with constraints
+         * see doxygen documentation       
+
+       - improved TrackBasedPFlow (O.Wendt)
+	 * example steering file for the
+	   Track-Based Particle Flow processor
+	 * bug fixes and improved performance
+         * LEPTracking: use TrackerHit::getCovMatrix for resolution
+
+       - make consistent use of GEAR (K.Harder, C.Lynch) 
+         * TrackDigi/VTXDigi: introduce gear
+         * use global GEAR B field setting instead of TPC parameters setting in:
+           Analysis/CheckPlots, Pflow/TrackBasedPFlow, Pflow/Wolf, Tracking/BrahmsTracking
+         * updated example gear files (Bfield)
+	 * Tracking/SiliconTracking: adjustments for new
+	   GEAR file format as of Mokka v06-04-p02
+
+       - improved FullLDCTracking (A.Raspereza)
+         * some bugs fixed, e.g. wrong reference point
+         * detailed users manual: doc/FullLDCTracking_Manual.pdf
+         * consistent use of gear::BField 
+       	 * TrackDigi/TPCDigi: Modified class for digitization of the
+	   TPC hits. Spatial resolutions as well as parameters tpcPixRP and
+	   tpcPixZ, representing the physical pad width and time binning
+	   respectively, are passed to the processor as external parameters
+	   (implemented by Clare Lynch)
+         * example steering file
+         * introduced various fit options
+         * improved performance
+         * digitization of laddered VXD detectors
+  
+       - improved code and cmake build files (J.Engels)
+         * removed unused variables (compiler warnings)
+         * install target for header files
+         * fortran compiler flags and libg2c
+            
+       - improved documentation (F.Gaede)
+	 * automatic generation of API doc (doxygen)
+
+
+    -> see ChangeLog for details 
+
+ --------
+| v00-04 |
+ --------
+   - cmake is now default build tool:  (J.Engels)
+        # edit BuildSetup.cmake as needed
+        mkdir build ; cd build
+        cmake -C ../BuildSetup.cmake ..
+        make install
+     -> creates plugin library $MarlinReco/lib/libMarlinReco.so
+       
+
+   - improved Tracking  (A.Raspereza)
+       Extended version of TrackCheater, FullLDCTracking and SiliconTracking.
+       The numbers of hits from different subdetectors are stored using
+       TRACK:subdetectorHitNumbers. trackfit.F has been modified to
+       account for curling tracks.
+
+   -  Clustering/PhotonFinderKit/EMShowerFinder  (O.Wendt)
+	  Processor to find electro-magnetic showers. 
+          It is based on the KIT package and takes
+	  only ECAL hits into account.	The output is a collection of
+	  clusters in which the electro-magnetic shower are stored
+
+   - TrackBasedPFlow (O.Wendt)
+       + debugging and improvement of performance
+       + included EMShowerFinder for improved efficiency to find
+	 electromagnetic showers
+
+   - bug fixes
+       + made compliant with SL4 (gcc3.4) 
+       +...
+
+    -> see ChangeLog for details 
+
+ --------
+| v00-03 |
+ --------
+  - improved Full Tracking  (A.Raspereza)
+
+  - initial version of TrackBasedPFA (O.Wendt)
+
+  - PhotonFinderKit (P. Krstonosic)
+
+  - added cmake support (epxerimental)
+ 
+
+ for details see the ChangeLog file
+
+

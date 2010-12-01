@@ -40,12 +40,12 @@ extern "C" {
     float zcmax[100];
     float xrlc[100];
     int npmat;
-    float zpmat[50];
-    float rpmin[50];
-    float rpmax[50];
-    float xrlp[50];
+    float zpmat[60];
+    float rpmin[60];
+    float rpmax[60];
+    float xrlp[60];
     float xelosc[100];
-    float xelosp[50];   
+    float xelosp[60];   
     float zcmin[100];
   } fkddes_; 
 }
@@ -81,10 +81,10 @@ extern "C" {
 extern "C" {
   extern struct {
     int nexs;
-    float rzsurf[50];
-    float zrmin[50];
-    float zrmax[50];
-    int itexts[50];
+    float rzsurf[60];
+    float zrmin[60];
+    float zrmax[60];
+    int itexts[60];
     int nexhpc;
   } fkexts_;
 

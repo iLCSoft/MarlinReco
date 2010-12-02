@@ -1,4 +1,4 @@
-#include "MaterialDB.h"
+#include "CLICCDRMaterialDB.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -96,56 +96,10 @@ extern "C" {
   } fkfild_;
 }
 
-/** helper function to get double values from GEAR parameters - 
-    reads values from DoubleVec - if thius does not exist try to read from single double
-    value and add n times to vector.
-    Needed for backward compatibility of SIT/SET/ETD Mokka drivers ... */
-
-void getDoubleValues( DoubleVec& v, const gear::GearParameters& p, 
-		      const std::string& name, unsigned n){
-
-  // first try to read vector:
-  try{
-    
-    const DoubleVec& dv = p.getDoubleVals( name )  ;
+CLICCDRMaterialDB aCLICCDRMaterialDB ;
 
 
-    if( n != dv.size() ){ 
-      
-      std::stringstream em ;
-
-      em << " wrong size of array " << name << " - expected: " << n 
-	 << " - got: " << dv.size() << std::endl ;
-      
-      throw gear::Exception( em.str() );
-    }
-    
-    std::copy( dv.begin() , dv.end() , std::back_inserter( v ) ) ; 
-    
-
-    return ;
-
-  } catch(gear::UnknownParameterException& e){}
-  
-
-  // try to read single double value
-
-  double d = p.getDoubleVal( name ) ;
-
-  // no catch here - if parameter does not exist we want the exception to be thrown
-
-  v.resize( n ) ;
-
-  for( unsigned i=0 ; i < n ; ++i ) { v[i] = d ; } 
-  
-}
-
-
-
-MaterialDB aMaterialDB ;
-
-
-MaterialDB::MaterialDB() : Processor("MaterialDB") {
+CLICCDRMaterialDB::CLICCDRMaterialDB() : Processor("CLICCDRMaterialDB") {
   
   // Processor description
   _description = "Material DB builder..." ;
@@ -484,7 +438,7 @@ MaterialDB::MaterialDB() : Processor("MaterialDB") {
 }
 
 
-void MaterialDB::init() { 
+void CLICCDRMaterialDB::init() { 
 
   // usually a good idea to
   printParameters() ;
@@ -500,7 +454,6 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for VTX Detector ** //
   // **************************************** //
-  streamlog_out(DEBUG) << "build VTX  ..." << std::endl;
 
   //--Get GEAR Parameters--
   const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
@@ -516,12 +469,30 @@ void MaterialDB::init() {
   _beamPipe_radLength = 0.1*float(pBeamPipe.getDoubleVal("BeamPipeProperties_RadLen"));
   _beamPipe_dedx = 10.0*float(pBeamPipe.getDoubleVal("BeamPipeProperties_dEdx"));
 
-  fkddes_.rcmat[Ncmat] = 0.1*_beamPipeRadius;
-  fkddes_.zcmin[Ncmat] = -0.1*_beamPipeHalfZ;
-  fkddes_.zcmax[Ncmat] = 0.1*_beamPipeHalfZ;
-  fkddes_.xrlc[Ncmat] = 0.1*_beamPipe_thickness / _beamPipe_radLength;
-  fkddes_.xelosc[Ncmat] = 0.1*_beamPipe_thickness * _beamPipe_dedx;
+  //At StripLineFinalZ the thicker Beampipe starts
+  float  tempStripLine_final_z = float(pVXDDet.getDoubleVals("StripLineFinalZ")[0]);
+  float beamPipeExtraSize = 0.696;//mm
 
+  fkddes_.rcmat[Ncmat]  =  0.1*_beamPipeRadius;
+  fkddes_.zcmin[Ncmat]  = -0.1* tempStripLine_final_z;
+  fkddes_.zcmax[Ncmat]  =  0.1* tempStripLine_final_z;
+  fkddes_.xrlc[Ncmat]   =  0.1*_beamPipe_thickness / _beamPipe_radLength;
+  fkddes_.xelosc[Ncmat] =  0.1*_beamPipe_thickness * _beamPipe_dedx;
+  Ncmat++;
+
+  fkddes_.rcmat[Ncmat]  =  0.1*_beamPipeRadius;
+  fkddes_.zcmin[Ncmat]  =  0.1*tempStripLine_final_z;
+  fkddes_.zcmax[Ncmat]  =  0.1*_beamPipeHalfZ;
+  fkddes_.xrlc[Ncmat]   =  0.1*(_beamPipe_thickness+beamPipeExtraSize) / _beamPipe_radLength;
+  fkddes_.xelosc[Ncmat] =  0.1*(_beamPipe_thickness+beamPipeExtraSize) * _beamPipe_dedx;
+  Ncmat++;
+
+
+  fkddes_.rcmat[Ncmat]  =   0.1*_beamPipeRadius;
+  fkddes_.zcmin[Ncmat]  =  -0.1*_beamPipeHalfZ;
+  fkddes_.zcmax[Ncmat]  =  -0.1*tempStripLine_final_z;
+  fkddes_.xrlc[Ncmat]   =   0.1*(_beamPipe_thickness+beamPipeExtraSize) / _beamPipe_radLength;
+  fkddes_.xelosc[Ncmat] =   0.1*(_beamPipe_thickness+beamPipeExtraSize) * _beamPipe_dedx;
   Ncmat++;
 
 
@@ -573,12 +544,12 @@ void MaterialDB::init() {
 
   // Check values
   if (nLadderGaps != nLayersVTX) {
-    _errorMsg << "MaterialDB Processor : vector size of LadderGaps vector ("
+    _errorMsg << "CLICCDRMaterialDB Processor : vector size of LadderGaps vector ("
 	      << nLadderGaps << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
     throw gear::Exception(_errorMsg.str());
   }
   if (nStripLines != nLayersVTX) {
-    _errorMsg << "MaterialDB Processor : vector size of StripLines vector ("
+    _errorMsg << "CLICCDRMaterialDB Processor : vector size of StripLines vector ("
 	      << nStripLines << ")  not equal to number of VXD Layers (" << nLayersVTX << ")" << std::endl;
     throw gear::Exception(_errorMsg.str());
   }
@@ -775,39 +746,42 @@ void MaterialDB::init() {
     }
   }
 
-  //--Cryostat--
-  float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
-  float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
-  float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
-  float AlZEndCap = float(pVXDDet.getDoubleVal("CryostatAlZEndCap"));
-  float AlRinEndCap = float(pVXDDet.getDoubleVal("CryostatAlInnerR"));
-  float xrad_cryo = 0.1*float(pVXDDet.getDoubleVal("Cryostat_RadLen"));
-  float dedx_cryo = 10.0*float(pVXDDet.getDoubleVal("Cryostat_dEdx"));
+  try{
+    //--Cryostat--
+    float AlRadius = float(pVXDDet.getDoubleVal("CryostatAlRadius"));
+    float AlHalfLength = float(pVXDDet.getDoubleVal("CryostatAlHalfZ"));
+    float AlThickness = float(pVXDDet.getDoubleVal("CryostatAlThickness"));
+    float AlZEndCap = float(pVXDDet.getDoubleVal("CryostatAlZEndCap"));
+    float AlRinEndCap = float(pVXDDet.getDoubleVal("CryostatAlInnerR"));
+    float xrad_cryo = 0.1*float(pVXDDet.getDoubleVal("Cryostat_RadLen"));
+    float dedx_cryo = 10.0*float(pVXDDet.getDoubleVal("Cryostat_dEdx"));
   
 
-  // Al cryostat barrel
-  fkddes_.rcmat[Ncmat] = 0.1*(AlRadius+0.5*AlThickness);
-  fkddes_.zcmin[Ncmat] = -0.1*AlHalfLength;
-  fkddes_.zcmax[Ncmat] = 0.1*AlHalfLength;
-  fkddes_.xrlc[Ncmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosc[Ncmat] = 0.1*AlThickness*dedx_cryo;
-  Ncmat++;
+    // Al cryostat barrel
+    fkddes_.rcmat[Ncmat] = 0.1*(AlRadius+0.5*AlThickness);
+    fkddes_.zcmin[Ncmat] = -0.1*AlHalfLength;
+    fkddes_.zcmax[Ncmat] = 0.1*AlHalfLength;
+    fkddes_.xrlc[Ncmat] = 0.1*AlThickness/xrad_cryo;
+    fkddes_.xelosc[Ncmat] = 0.1*AlThickness*dedx_cryo;
+    Ncmat++;
   
 
-  // Al cryostat endcaps
-  fkddes_.zpmat[Npmat] = -0.1*(AlZEndCap+0.5*AlThickness);
-  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
-  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
-  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
-  Npmat++;
+    // Al cryostat endcaps
+    fkddes_.zpmat[Npmat] = -0.1*(AlZEndCap+0.5*AlThickness);
+    fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+    fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+    fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+    fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+    Npmat++;
 
-  fkddes_.zpmat[Npmat] = 0.1*(AlZEndCap+0.5*AlThickness);
-  fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
-  fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
-  fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
-  fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
-  Npmat++;
+    fkddes_.zpmat[Npmat] = 0.1*(AlZEndCap+0.5*AlThickness);
+    fkddes_.rpmin[Npmat] = 0.1*AlRinEndCap;
+    fkddes_.rpmax[Npmat] = 0.1*(AlRadius+AlThickness);;
+    fkddes_.xrlp[Npmat] = 0.1*AlThickness/xrad_cryo;
+    fkddes_.xelosp[Npmat] = 0.1*AlThickness*dedx_cryo;
+    Npmat++;
+  }
+  catch(gear::UnknownParameterException &e){}
 
 
   //  Outer support cyllinder for VTX
@@ -836,8 +810,6 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for FTD Detector ** //
   // **************************************** //
-  streamlog_out(DEBUG) << "build FTD  ..." << std::endl;
-
   const gear::GearParameters& pFTDDet = Global::GEAR->getGearParameters("FTD");
 
 
@@ -1186,7 +1158,7 @@ void MaterialDB::init() {
     Ncmat++;
   }
   else {
-    _errorMsg << "MaterialDB Processor : FTD Geometery not correctly described. \n"
+    _errorMsg << "CLICCDRMaterialDB Processor : FTD Geometery not correctly described. \n"
 	      << " It is neither SupportRing or SupportDisk based."
 	      <<  std::endl;
     throw gear::Exception(_errorMsg.str());
@@ -1195,23 +1167,23 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for SIT Detector ** //
   // **************************************** //
-  streamlog_out(DEBUG) << "build SIT  ..." << std::endl;
-
   const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
 
   // SIT layers
 
   int nSITR = int(pSITDet.getDoubleVals("SITLayerRadius").size());
   int nSITHL = int(pSITDet.getDoubleVals("SITLayerHalfLength").size());
-  //  int SITModel = int(pSITDet.getIntVal("SITModel"));
+  int SITModel = int(pSITDet.getIntVal("SITModel"));
   int nLayersSIT = 0;
 
   if (nSITR == nSITHL) {
     nLayersSIT = nSITR;
     _rSIT.resize(nLayersSIT);
     _halfZSIT.resize(nLayersSIT);
-    _rSITSupport.resize(nLayersSIT);
-    _halfZSITSupport.resize(nLayersSIT);
+    if (SITModel>0) {
+      _rSITSupport.resize(nLayersSIT);
+      _halfZSITSupport.resize(nLayersSIT);
+    }
   }
   else {
     _errorMsg << "Size of SITLayerRadius vector (" << nSITR 
@@ -1220,32 +1192,32 @@ void MaterialDB::init() {
     throw gear::Exception(_errorMsg.str());
   }
 
-  
-  getDoubleValues(_SITLayer_thickness,        pSITDet, "SITLayerThickness", nLayersSIT );
-  getDoubleValues(_SITLayerSupport_thickness, pSITDet, "SITSupportLayerThickness", nLayersSIT );
-
   for (int iL=0;iL<nLayersSIT;++iL) {
     _rSIT[iL] = float(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
     _halfZSIT[iL] = float(pSITDet.getDoubleVals("SITLayerHalfLength")[iL]);
-    _rSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerRadius")[iL]);
-    _halfZSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerHalfLength")[iL]);
+    if (SITModel>0) {
+      _rSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerRadius")[iL]);
+      _halfZSITSupport[iL] = float(pSITDet.getDoubleVals("SITSupportLayerHalfLength")[iL]);
+    }
   }
 
   _radlen_si = 0.1*float(pSITDet.getDoubleVal("SITLayer_RadLen"));
   _dedx_si = 10.*float(pSITDet.getDoubleVal("SITLayer_dEdx"));
+  _SITLayer_thickness =  float(pSITDet.getDoubleVal("SITLayerThickness"));
 
-
-  _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
-  _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
-
-
+  if (SITModel>0) {
+    _radlen_ber = 0.1*float(pSITDet.getDoubleVal("SITSupportLayer_RadLen"));
+    _dedx_ber = 10.*float(pSITDet.getDoubleVal("SITSupportLayer_dEdx"));
+    _SITLayerSupport_thickness =  float(pSITDet.getDoubleVal("SITSupportLayerThickness"));
+  }
 
 
   for (int iL = 0; iL < nLayersSIT; ++iL) {
     
     float rmin = _rSIT[iL];
-    if (_rSITSupport[iL]<rmin){
-      rmin = _rSITSupport[iL];      
+    if (SITModel>0) {
+      if (_rSITSupport[iL]<rmin)
+	rmin = _rSITSupport[iL];      
     }
 
     rmin = rmin - 0.01; 
@@ -1255,18 +1227,19 @@ void MaterialDB::init() {
     fkddes_.rcmat[Ncmat] = 0.1*_rSIT[iL];
     fkddes_.zcmin[Ncmat] = -0.1*_halfZSIT[iL];
     fkddes_.zcmax[Ncmat] = 0.1*_halfZSIT[iL];
-    fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness[iL]/_radlen_si;
-    fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness[iL]*_dedx_si;     
+    fkddes_.xrlc[Ncmat] = 0.1*_SITLayer_thickness/_radlen_si;
+    fkddes_.xelosc[Ncmat] = 0.1*_SITLayer_thickness*_dedx_si;     
     Ncmat++;
 
-    fkddes_.rcmat[Ncmat] = 0.1*_rSITSupport[iL];
-    fkddes_.zcmin[Ncmat] = -0.1*_halfZSITSupport[iL];
-    fkddes_.zcmax[Ncmat] = 0.1*_halfZSITSupport[iL];
-    fkddes_.xrlc[Ncmat] = 0.1*_SITLayerSupport_thickness[iL]/_radlen_ber;
-    fkddes_.xelosc[Ncmat] = 0.1*_SITLayerSupport_thickness[iL]*_dedx_ber;
-    Ncmat++;
-    
-    
+    if (SITModel>0) {
+      fkddes_.rcmat[Ncmat] = 0.1*_rSITSupport[iL];
+      fkddes_.zcmin[Ncmat] = -0.1*_halfZSITSupport[iL];
+      fkddes_.zcmax[Ncmat] = 0.1*_halfZSITSupport[iL];
+      fkddes_.xrlc[Ncmat] = 0.1*_SITLayerSupport_thickness/_radlen_ber;
+      fkddes_.xelosc[Ncmat] = 0.1*_SITLayerSupport_thickness*_dedx_ber;
+      Ncmat++;
+    }
+
     fkexts_.itexts[Nexs] = 0;
     fkexts_.rzsurf[Nexs] = rmin;
     fkexts_.zrmin[Nexs]  = -halfZ;
@@ -1280,7 +1253,6 @@ void MaterialDB::init() {
   // **************************************** //
   // ** Building Database for TPC Detector ** //
   // **************************************** //
-  streamlog_out(DEBUG) << "build TPC  ..." << std::endl;
 
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   //  const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
@@ -1300,6 +1272,7 @@ void MaterialDB::init() {
   //  float xrargon = 10971.;
   //  float dedxargon = 0.0018*1.52e-3;
   
+
 
   float RTPCINN = 0.1*float(gearTPC.getDoubleVal("tpcInnerRadius"));
   float RTPCOUT = 0.1*float(gearTPC.getDoubleVal("tpcOuterRadius"));
@@ -1377,8 +1350,6 @@ void MaterialDB::init() {
     // **************************************** //
     // ** Building Database for SET Detector ** //
     // **************************************** //
-    streamlog_out(DEBUG) << "build SET  ..." << std::endl;
-
     const gear::GearParameters& pSETDet = Global::GEAR->getGearParameters("SET");
     int nSETR = int(pSETDet.getDoubleVals("SETLayerRadius").size());
     int nSETHL = int(pSETDet.getDoubleVals("SETLayerHalfLength").size());
@@ -1389,15 +1360,8 @@ void MaterialDB::init() {
       exit(-1);
     }
 
-
-//     float setSupportThickness = float(pSETDet.getDoubleVal("SETSupportLayerThickness"));
-//     float setLayerThickness = float(pSETDet.getDoubleVal("SETLayerThickness"));
-    DoubleVec setSupportThickness ;
-    getDoubleValues(setSupportThickness, pSETDet, "SETSupportLayerThickness", nSETR );
-    DoubleVec setLayerThickness ;
-    getDoubleValues(setLayerThickness, pSETDet, "SETLayerThickness", nSETR );
-
-
+    float setSupportThickness = float(pSETDet.getDoubleVal("SETSupportLayerThickness"));
+    float setLayerThickness = float(pSETDet.getDoubleVal("SETLayerThickness"));
     float setRadLenLayer    = float(pSETDet.getDoubleVal("SETLayer_RadLen"));
     float setRadLenSupport  = float(pSETDet.getDoubleVal("SETSupportLayer_RadLen"));
     float setdEdxLayer    = float(pSETDet.getDoubleVal("SETLayer_dEdx"));
@@ -1409,8 +1373,8 @@ void MaterialDB::init() {
       fkddes_.rcmat[Ncmat] = 0.1*radius;
       fkddes_.zcmin[Ncmat] =  -0.1*halfz;
       fkddes_.zcmax[Ncmat] = 0.1*halfz;
-      fkddes_.xrlc[Ncmat] = setLayerThickness[iSETL]/setRadLenLayer;
-      fkddes_.xelosc[Ncmat] = setLayerThickness[iSETL]*setdEdxLayer;      
+      fkddes_.xrlc[Ncmat] = setLayerThickness/setRadLenLayer;
+      fkddes_.xelosc[Ncmat] = setLayerThickness*setdEdxLayer;      
       Ncmat++;
 
       radius = float(pSETDet.getDoubleVals("SETSupportLayerRadius")[iSETL]);
@@ -1418,8 +1382,8 @@ void MaterialDB::init() {
       fkddes_.rcmat[Ncmat] = 0.1*radius;
       fkddes_.zcmin[Ncmat] = -0.1*halfz;
       fkddes_.zcmax[Ncmat] = 0.1*halfz;
-      fkddes_.xrlc[Ncmat] = setSupportThickness[iSETL]/setRadLenSupport;
-      fkddes_.xelosc[Ncmat] = setSupportThickness[iSETL]*setdEdxSupport;
+      fkddes_.xrlc[Ncmat] = setSupportThickness/setRadLenSupport;
+      fkddes_.xelosc[Ncmat] = setSupportThickness*setdEdxSupport;
       Ncmat++;
 
     }
@@ -1451,14 +1415,14 @@ void MaterialDB::init() {
 
 }
 
-void MaterialDB::processRunHeader( LCRunHeader* run) { 
+void CLICCDRMaterialDB::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
   //  _bField = Global::parameters->getFloatVal("BField");
   _bField = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
   fkfild_.consb = 2.997924e-3*_bField;
 } 
 
-void MaterialDB::processEvent( LCEvent * evt ) { 
+void CLICCDRMaterialDB::processEvent( LCEvent * evt ) { 
   _nEvt ++ ;
   _bField = float(Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z());
   fkfild_.consb = 2.997924e-3*_bField;
@@ -1466,13 +1430,13 @@ void MaterialDB::processEvent( LCEvent * evt ) {
 
 
 
-void MaterialDB::check( LCEvent * evt ) { 
+void CLICCDRMaterialDB::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 
-void MaterialDB::end(){ 
-  //   std::cout << "MaterialDB::end()  " << name() 
+void CLICCDRMaterialDB::end(){ 
+  //   std::cout << "CLICCDRMaterialDB::end()  " << name() 
   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
   // 	    << std::endl ;
 }

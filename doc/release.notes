@@ -13,18 +13,37 @@
             several updates, new RootTracer, name changes (PhotonFitObject ->
 	    SimplePhotonFitObject, PhotonFitObjectPxyg -> ISRPhotonFitObject)
 
-      - TPCDigitizer (S.Aplin) 
-        - protected against accessing NULL pointer from getMCParticle
+       - TPCDigitizer (S.Aplin) 
+         - protected against accessing NULL pointer from getMCParticle
    	    - clean up unused variables and unneeded ifdefs
 	    - fixed unsigned int == int comparison warnings
-        - hit smearing (M.Thomson) 
+         - hit smearing (M.Thomson) 
+
+       - NewFTDDigiProcessor
+         - Add NewFTDTrackDigi with smearing for strips or Pixels, depending LayerID
+
+       - ILDCaloDigi.cc ( M.Thomson )
+         - Added new digitiser for ILD calorimeters with timing cuts and ability to 
+           treat barrel and endcap differently
 
        - SimpleMuonDigi( M.Thomson) 
          - improve calibration of muon hits and set a maximum energy for a single hit (factor
-	      two improvement in energy resolution). The defaults are appropriat e for ILD00
+	      two improvement in energy resolution). The defaults are appropriat e for ILD00       
 
-        - V0Finder (M.Thomson) 
-        - improved checking to avoid false positives
+       - MaterialDB
+         - new version for CLIC CDR studies CLICCDRMaterialDB
+         - made gear parameters for SIT/SET (support) layer thicknesses DoubleVec
+         - increased the max number of tracking surfaces in F77, see fkparm.inc
+
+       - BrahmsTracking
+         - removed tpc Ionisation Potential in F77
+         - increased the max number of tracking surfaces in F77, see fkparm.inc
+
+       - FullLDCTracking ( M.Thomson )
+         - modifications to reduce the number of split or "ghost" tracks
+
+       - V0Finder (M.Thomson) 
+         - improved checking to avoid false positives
 
  	    - BCalTagEfficiency.cc: fixed memory leak bug (C. Bartels)
 

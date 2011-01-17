@@ -138,6 +138,8 @@ class ILDCaloDigi : public Processor {
   float _ecalModuleGapCorrectionFactor;
   float _ecalEndcapCorrectionFactor;
   float _hcalEndcapCorrectionFactor;
+  int   _hcalGapCorrection;
+  float _hcalModuleGapCorrectionFactor;
 
   std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
   std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];
@@ -155,14 +157,16 @@ class ILDCaloDigi : public Processor {
   int   _useEcalTiming;
   int   _ecalCorrectTimesForPropagation;
   float _ecalTimeWindowMin;
-  float _ecalTimeWindowMax;
+  float _ecalBarrelTimeWindowMax;
+  float _ecalEndcapTimeWindowMax;
   float _ecalDeltaTimeHitResolution;
   float _ecalTimeResolution;
 
   int   _useHcalTiming;
   int   _hcalCorrectTimesForPropagation;
   float _hcalTimeWindowMin;
-  float _hcalTimeWindowMax;
+  float _hcalBarrelTimeWindowMax;
+  float _hcalEndcapTimeWindowMax;
   float _hcalDeltaTimeHitResolution;
   float _hcalTimeResolution;
   
@@ -174,7 +178,33 @@ class ILDCaloDigi : public Processor {
   TH1F* fHcalC1;
   TH1F* fEcalC2;
   TH1F* fHcalC2;
-  TH2F* fHcalCvsE;
+  TH2F* fHcalCvsE; 
+  TH2F* fHcalLayer1;
+  TH2F* fHcalLayer11;
+  TH2F* fHcalLayer21;
+  TH2F* fHcalLayer31;
+  TH2F* fHcalLayer41;
+  TH2F* fHcalLayer51;
+  TH2F* fHcalLayer61;
+  TH2F* fHcalLayer71;
+  TH1F* fHcalRLayer1;
+  TH1F* fHcalRLayer11;
+  TH1F* fHcalRLayer21;
+  TH1F* fHcalRLayer31;
+  TH1F* fHcalRLayer41;
+  TH1F* fHcalRLayer51;
+  TH1F* fHcalRLayer61;
+  TH1F* fHcalRLayer71;
+  TH1F* fHcalRLayerNorm;
+
+  TH1F* fEcalRLayerNorm;
+  TH2F* fEcalLayer1;
+  TH2F* fEcalLayer11;
+  TH2F* fEcalLayer21;
+  TH1F* fEcalRLayer1;
+  TH1F* fEcalRLayer11;
+  TH1F* fEcalRLayer21;
+
 } ;
 
 #endif

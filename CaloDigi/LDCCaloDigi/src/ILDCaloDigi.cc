@@ -197,6 +197,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
 			     _ecalGapCorrection,
 			     (int)1);
 
+  registerProcessorParameter("HCALGapCorrection" , 
+			     "Correct for ECAL gaps" ,
+			     _hcalGapCorrection,
+			     (int)1);
+
   registerProcessorParameter("ECALEndcapCorrectionFactor" , 
 			     "Energy correction for ECAL endcap" ,
 			     _ecalEndcapCorrectionFactor,
@@ -215,6 +220,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
   registerProcessorParameter("ECALModuleGapCorrectionFactor" , 
 			     "Factor applied to module gap correction" ,
 			     _ecalModuleGapCorrectionFactor,
+			     (float)0.5);
+
+  registerProcessorParameter("HCALModuleGapCorrectionFactor" , 
+			     "Factor applied to module gap correction" ,
+			     _hcalModuleGapCorrectionFactor,
 			     (float)0.5);
 
 
@@ -238,9 +248,14 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
 			     _ecalTimeWindowMin,
 			     (float)-10.0);
 
-  registerProcessorParameter("ECALTimeWindowMax" , 
-			     "ECAL Time Window maximum time in ns" ,
-			     _ecalTimeWindowMax,
+  registerProcessorParameter("ECALEndcapTimeWindowMax" , 
+			     "ECAL Endcap Time Window maximum time in ns" ,
+			     _ecalEndcapTimeWindowMax,
+			     (float)+100.0);
+
+  registerProcessorParameter("ECALBarrelTimeWindowMax" , 
+			     "ECAL BarrelTime Window maximum time in ns" ,
+			     _ecalBarrelTimeWindowMax,
 			     (float)+100.0);
 
   registerProcessorParameter("ECALDeltaTimeHitResolution" , 
@@ -252,7 +267,6 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
 			     "ECAL Time Resolution used to smear hit times" ,
 			     _ecalTimeResolution,
 			     (float)10.);
-
 
 
   registerProcessorParameter("UseHcalTiming" , 
@@ -271,9 +285,14 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
 			     _hcalTimeWindowMin,
 			     (float)-10.0);
 
-  registerProcessorParameter("HCALTimeWindowMax" , 
+  registerProcessorParameter("HCALBarrelTimeWindowMax" , 
 			     "HCAL Time Window maximum time in ns" ,
-			     _hcalTimeWindowMax,
+			     _hcalBarrelTimeWindowMax,
+			     (float)+100.0);
+
+  registerProcessorParameter("HCALEndcapTimeWindowMax" , 
+			     "HCAL Time Window maximum time in ns" ,
+			     _hcalEndcapTimeWindowMax,
 			     (float)+100.0);
 
   registerProcessorParameter("HCALDeltaTimeHitResolution" , 
@@ -307,7 +326,33 @@ void ILDCaloDigi::init() {
     fEcalC2   = new TH1F("fEcalC2", "Ecal time profile cor",10, 0., 1000.0);
     fHcalC2   = new TH1F("fHcalC2", "Hcal time profile cor",10, 0., 1000.0);
 
-    fHcalCvsE = new TH2F("fHcalCvsE", "Hcal time profile cor",100, 0., 500.0,100,0.,10.);
+    fHcalLayer1 = new TH2F("fHcalLayer1", "Hcal layer 1 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer11 = new TH2F("fHcalLayer11", "Hcal layer 11 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer21 = new TH2F("fHcalLayer21", "Hcal layer 21 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer31 = new TH2F("fHcalLayer31", "Hcal layer 31 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer41 = new TH2F("fHcalLayer41", "Hcal layer 41 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer51 = new TH2F("fHcalLayer51", "Hcal layer 51 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer61 = new TH2F("fHcalLayer61", "Hcal layer 61 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalLayer71 = new TH2F("fHcalLayer71", "Hcal layer 71 map",300, -4500., 4500.0,300,-4500,4500.);
+    fHcalRLayer1  = new TH1F("fHcalRLayer1",  "Hcal R layer 1",50, 0., 5000.0);
+    fHcalRLayer11 = new TH1F("fHcalRLayer11", "Hcal R layer 11",50, 0., 5000.0);
+    fHcalRLayer21 = new TH1F("fHcalRLayer21", "Hcal R layer 21",50, 0., 5000.0);
+    fHcalRLayer31 = new TH1F("fHcalRLayer31", "Hcal R layer 31",50, 0., 5000.0);
+    fHcalRLayer41 = new TH1F("fHcalRLayer41", "Hcal R layer 41",50, 0., 5000.0);
+    fHcalRLayer51 = new TH1F("fHcalRLayer51", "Hcal R layer 51",50, 0., 5000.0);
+    fHcalRLayer61 = new TH1F("fHcalRLayer61", "Hcal R layer 61",50, 0., 5000.0);
+    fHcalRLayer71 = new TH1F("fHcalRLayer71", "Hcal R layer 71",50, 0., 5000.0);
+    fHcalRLayerNorm  = new TH1F("fHcalRLayerNorm",  "Hcal R layer Norm",50, 0., 5000.0);
+
+    fEcalLayer1 = new TH2F("fEcalLayer1", "Ecal layer 1 map",1800, -4500., 4500.0,1800,-4500,4500.);
+    fEcalLayer11 = new TH2F("fEcalLayer11", "Ecal layer 11 map",1800, -4500., 4500.0,1800,-4500,4500.);
+    fEcalLayer21 = new TH2F("fEcalLayer21", "Ecal layer 21 map",1800, -4500., 4500.0,1800,-4500,4500.);
+    fEcalRLayer1  = new TH1F("fEcalRLayer1",  "Ecal R layer 1",100, 0., 5000.0);
+    fEcalRLayer11 = new TH1F("fEcalRLayer11", "Ecal R layer 11",100, 0., 5000.0);
+    fEcalRLayer21 = new TH1F("fEcalRLayer21", "Ecal R layer 21",100, 0., 5000.0);
+    fEcalRLayerNorm  = new TH1F("fEcalRLayerNorm",  "Ecal R layer Norm",100, 0., 5000.0);    
+
+    //fHcalCvsE = new TH2F("fHcalCvsE", "Hcal time profile cor",100, 0., 500.0,100,0.,10.);
   }
 
   //fg: need to set default encoding in for reading old files...
@@ -418,9 +463,19 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  float calibr_coeff(1.);
 	  float x = hit->getPosition()[0];
 	  float y = hit->getPosition()[1];
-	  float z = hit->getPosition()[2];
+	  float z = hit->getPosition()[2];	
 	  float r = sqrt(x*x+y*y+z*z);
+	  float rxy = sqrt(x*x+y*y);
 	  float cost = fabs(z)/r;
+
+	  if(z>0){
+	    if(layer==1)fEcalLayer1->Fill(x,y);
+	    if(layer==11)fEcalLayer11->Fill(x,y);
+	    if(layer==21)fEcalLayer21->Fill(x,y);
+	    if(layer==1)fEcalRLayer1->Fill(rxy);
+	    if(layer==11)fEcalRLayer11->Fill(rxy);
+	    if(layer==21)fEcalRLayer21->Fill(rxy);
+	  }
 	  if(_digitalEcal){
 	    calibr_coeff = this->digitalEcalCalibCoeff(layer);
 	    if(_mapsEcalCorrection){ 
@@ -440,7 +495,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  //	  float energyCal = energy*calibr_coeff;
 
 	  if(_useEcalTiming){
-	    float dt = r/300-0.1;
+	    float ecalTimeWindowMax = _ecalEndcapTimeWindowMax;
+   	    if(caloLayout==CHT::barrel)ecalTimeWindowMax = _ecalBarrelTimeWindowMax;
+	    float dt = r/300.-0.1;
 	    const unsigned int n = hit->getNMCContributions();
 	    
 	    std::vector<bool> used(n) ;
@@ -455,7 +512,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	      float energyi = hit->getEnergyCont(i);
 	      float deltat = 0;
 	      if(_ecalCorrectTimesForPropagation)deltat=dt;
-	      if(timei-deltat > _ecalTimeWindowMin && timei-deltat < _ecalTimeWindowMax){
+	      if(timei-deltat > _ecalTimeWindowMin && timei-deltat < ecalTimeWindowMax){
 		float ecor = energyi*calibr_coeff;
 		eCellInTime+=ecor;
 	      }
@@ -503,7 +560,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		  float timeCor=0;
 		  if(_ecalCorrectTimesForPropagation)timeCor=dt;
 		  timei = timei - timeCor;
-		  if(timei > _ecalTimeWindowMin && timei < _ecalTimeWindowMax){
+		  if(timei > _ecalTimeWindowMin && timei < ecalTimeWindowMax){
 		    count++;
 		    CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 		    if(_ecalGapCorrection!=0){
@@ -520,11 +577,13 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		    eCellOutput+= energyi*calibr_coeff;
 		    calhit->setTime(timei);
 		    calhit->setPosition(hit->getPosition());
-		    calhit->setType( CHT( CHT::had, CHT::hcal , caloLayout ,  layer ) );
+		    calhit->setType( CHT( CHT::em, CHT::ecal , caloLayout ,  layer ) );
 		    calhit->setRawHit(hit);
 		    ecalcol->addElement(calhit);
 		    LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
 		    relcol->addElement( rel );
+		  }else{
+		    //		    if(caloLayout==CHT::barrel)std::cout << " Drop ECAL Barrel hit : " << timei << " " << calibr_coeff*energyi << std::endl;
 		  }
 		}
 	      }
@@ -545,7 +604,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	    }
 	    calhit->setTime(0);
 	    calhit->setPosition(hit->getPosition());
-	    calhit->setType( CHT( CHT::had, CHT::hcal , caloLayout ,  layer ) );
+	    calhit->setType( CHT( CHT::em, CHT::ecal , caloLayout ,  layer ) );
 	    calhit->setRawHit(hit);
 	    ecalcol->addElement(calhit);
 	    LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
@@ -563,6 +622,25 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       evt->addCollection(ecalcol,_outputEcalCollections[i].c_str());
     }
     catch(DataNotAvailableException &e){ 
+    }
+  }
+
+
+  // fill normalisation of HCAL occupancy plots
+  for(float x=15;x<3000; x+=30){
+    for(float y=15;y<3000; y+=30){
+      if(x>430||y>430){
+	float r = sqrt(x*x+y*y);
+	fHcalRLayerNorm->Fill(r,4.);
+      }
+    }
+  }
+
+  // fill normalisation of ECAL occupancy plots
+  for(float x=2.5;x<3000; x+=5){
+    for(float y=2.5;y<3000; y+=5){
+      float r = sqrt(x*x+y*y);
+      if(r>235)fEcalRLayerNorm->Fill(r,4.);
     }
   }
 
@@ -607,13 +685,15 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  }
 	  if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
 
-	  //float energyCal = energy*calibr_coeff;
+	  //float energyCal = energy*calibr_coeff
 	  float x = hit->getPosition()[0];
 	  float y = hit->getPosition()[1];
 	  float z = hit->getPosition()[2];
-
-
+	  float r = sqrt(x*x+y*y);
 	  if(_useHcalTiming){
+	    float hcalTimeWindowMax = _hcalEndcapTimeWindowMax;
+   	    if(caloLayout==CHT::barrel)hcalTimeWindowMax = _hcalBarrelTimeWindowMax;
+
 	    float r = sqrt(x*x+y*y+z*z);
 	    float dt = r/300-0.1;
 	    const unsigned int n = hit->getNMCContributions();
@@ -630,7 +710,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	      float energyi = hit->getEnergyCont(i);
 	      float deltat = 0;
 	      if(_hcalCorrectTimesForPropagation)deltat=dt;
-	      if(timei-deltat > _hcalTimeWindowMin && timei-deltat < _hcalTimeWindowMax)eCellInTime+=energyi*calibr_coeff;
+	      if(timei-deltat > _hcalTimeWindowMin && timei-deltat < hcalTimeWindowMax)eCellInTime+=energyi*calibr_coeff;
 	      
 	      //std::cout << i << " " << timei << " energy = " <<  energyi*calibr_coeff*1000 << std::endl;
 	      if(!used[i]){
@@ -665,13 +745,35 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		  fHcalC->Fill(timei-dt,energyi*calibr_coeff);
 		  fHcalC1->Fill(timei-dt,energyi*calibr_coeff);
 		  fHcalC2->Fill(timei-dt,energyi*calibr_coeff);
-		  fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
+		  //fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
 		}
-		if (energyi > _thresholdHcal[0]) {
+		if (energyi > _thresholdHcal[0]){
+		  if(hit->getPosition()[2]>0){
+		    float rxy = sqrt(x*x+y*y);
+		    //std::cout << j << " " 
+		    if(layer==1)fHcalLayer1->Fill(x,y);
+		    if(layer==11)fHcalLayer11->Fill(x,y);
+		    if(layer==21)fHcalLayer21->Fill(x,y);
+		    if(layer==31)fHcalLayer31->Fill(x,y);
+		    if(layer==41)fHcalLayer41->Fill(x,y);
+		    if(layer==51)fHcalLayer51->Fill(x,y);
+		    if(layer==61)fHcalLayer61->Fill(x,y);
+		    if(layer==61)fHcalLayer71->Fill(x,y);
+		    if(layer==1)fHcalRLayer1->Fill(rxy);
+		    if(layer==11)fHcalRLayer11->Fill(rxy);
+		    if(layer==21)fHcalRLayer21->Fill(rxy);
+		    if(layer==31)fHcalRLayer31->Fill(rxy);
+		    if(layer==41)fHcalRLayer41->Fill(rxy);
+		    if(layer==51)fHcalRLayer51->Fill(rxy);
+		    if(layer==61)fHcalRLayer61->Fill(rxy);
+		    if(layer==61)fHcalRLayer71->Fill(rxy);
+		  }
+
+
 		  float timeCor=0;
 		  if(_hcalCorrectTimesForPropagation)timeCor=dt;
 		  timei = timei - timeCor;
-		  if(timei > _hcalTimeWindowMin && timei < _hcalTimeWindowMax){
+		  if(timei > _hcalTimeWindowMin && timei < hcalTimeWindowMax){
 		    count++;
 		    CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 		    calhit->setCellID0(cellid);		  
@@ -690,6 +792,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		    hcalcol->addElement(calhit);
 		    LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.0);
 		    relcol->addElement( rel );
+		  }else{
+		    //		    std::cout << "Drop HCAL hit : " << timei << " " << calibr_coeff*energyi << std::endl;
 		  }
 		}
 	      }
@@ -747,7 +851,33 @@ void ILDCaloDigi::end(){
     fHcalC1->TH1F::Write();
     fEcalC2->TH1F::Write();
     fHcalC2->TH1F::Write();
-    fHcalCvsE->TH2F::Write();
+    //fHcalCvsE->TH2F::Write();
+    fHcalLayer1->TH2F::Write();
+    fHcalLayer11->TH2F::Write();
+    fHcalLayer21->TH2F::Write();
+    fHcalLayer31->TH2F::Write();
+    fHcalLayer41->TH2F::Write();
+    fHcalLayer51->TH2F::Write();
+    fHcalLayer61->TH2F::Write();
+    fHcalLayer71->TH2F::Write(); 
+    fHcalRLayer1->TH1F::Write();
+    fHcalRLayer11->TH1F::Write();
+    fHcalRLayer21->TH1F::Write();
+    fHcalRLayer31->TH1F::Write();
+    fHcalRLayer41->TH1F::Write();
+    fHcalRLayer51->TH1F::Write();
+    fHcalRLayer61->TH1F::Write();
+    fHcalRLayer71->TH1F::Write(); 
+    fHcalRLayerNorm->TH1F::Write();
+    fEcalLayer1->TH2F::Write();
+    fEcalLayer11->TH2F::Write();
+    fEcalLayer21->TH2F::Write();
+    fEcalRLayer1->TH1F::Write();
+    fEcalRLayer11->TH1F::Write();
+    fEcalRLayer21->TH1F::Write();
+    fEcalRLayerNorm->TH1F::Write();
+
+
     hfile->Close();
     delete hfile;
   }

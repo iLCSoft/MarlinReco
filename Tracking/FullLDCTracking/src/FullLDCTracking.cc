@@ -498,19 +498,21 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
 		      _RefittedSiTrackCollection,_RefittedSiTrackMCPCollection);
      // std::cout << "Collection of refitted Si tracks is added to event..." << std::endl; 
   }
+  std::cout << "************************************Merge TPC/Si" << std::endl;
   MergeTPCandSiTracks();
+  std::cout << "************************************Merging done..." << std::endl;
   MergeTPCandSiTracksII();
-  //  std::cout << "Merging done..." << std::endl;
+  std::cout << "************************************Merging II done..." << std::endl;
   Sorting(_allCombinedTracks);
-  //  std::cout << "Sorting done..." << std::endl;
+  std::cout << "************************************Sorting done..." << std::endl;
   SelectCombinedTracks();
-  //  std::cout << "Selection of combined tracks done..." << std::endl;
+  std::cout << "************************************Selection of combined tracks done..." << std::endl;
   AddNotCombinedTracks( );
-  //  std::cout << "Not combined tracks added..." << std::endl;
+  std::cout << "************************************Not combined tracks added..." << std::endl;
   //CheckTracks( );
 
   AddNotAssignedHits();
-  //  std::cout << "Not assigned hits added..." << std::endl;
+  std::cout << "***********************************Not assigned hits added..." << std::endl;
   AddTrackColToEvt(evt,_trkImplVec,
 		   _LDCTrackCollection,_LDCTrackMCPCollection);
   //  std::cout << "Collections added to event..." << std::endl;
@@ -944,7 +946,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     if (_debug >= 2) {
       std::cout << std::endl;
       std::cout << "Number of TPC Tracks = " << nelem << std::endl;
-      std::cout << " Trk    p     D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
+      std::cout << " Trk       p          D0         Z0       Px       Py       Pz    ntpc ndf Chi2/ndf" << std::endl;
       //           "  0  1.111   0.059      0.022    -0.54     0.61    -0.45    0.185
     }
     for (int iTrk=0; iTrk<nelem; ++iTrk) {
@@ -1077,9 +1079,7 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
     if (_debug >= 2) {
       std::cout << std::endl;
       std::cout << "Number of Si Tracks = " << nelem << std::endl;
-      std::cout << " Trk    p      D0         Z0       Px       Py       Pz     Chi2/ndf" << std::endl;
-      //           " 14  1.111   -0.007     -0.027    -0.28     0.56    -0.52    1.397
-
+      std::cout << " Trk       p          D0         Z0       Px       Py       Pz   hitsSi ndf Chi2/ndf" << std::endl;
     }
     for (int iTrk=0; iTrk<nelem; ++iTrk) {
       Track * siTrack = dynamic_cast<Track*>(col->getElementAt(iTrk));
@@ -1192,7 +1192,11 @@ void FullLDCTracking::prepareVectors(LCEvent * event ) {
 		pTot, d0Si,z0Si,pxSi,pySi,pzSi,nHits, ndfSi, Chi2Si);
 	std::cout << strg << std::endl;
       }
-      _allSiTracks.push_back( trackExt );      
+      if(nHits>0){
+	_allSiTracks.push_back( trackExt );
+      }else{
+	delete trackExt;
+      }
     }
     if (_debug>=2)
       std::cout << std::endl;
@@ -1753,17 +1757,20 @@ void FullLDCTracking::SelectCombinedTracks() {
 	}
 	group->setEdges(edges);
 	_trkImplVec.push_back(trkExt);	
+
 	TrackerHitExtendedVec hitVec1a = firstTrack->getTrackerHitExtendedVec();
 	int hits1a = int(hitVec1a.size());
 	TrackerHitExtendedVec hitVec2a = secondTrack->getTrackerHitExtendedVec();
 	int hits2a = int(hitVec2a.size());
 	TrackExtended * combinedTrack = CombineTracks(firstTrack,secondTrack);
-	TrackerHitExtendedVec hitVec1 = firstTrack->getTrackerHitExtendedVec();
-	int hits1 = int(hitVec1.size());
-	TrackerHitExtendedVec hitVec2 = secondTrack->getTrackerHitExtendedVec();
-	int hits2 = int(hitVec2.size());
-	TrackerHitExtendedVec hitVecs = combinedTrack->getTrackerHitExtendedVec();
-	int hitss = int(hitVecs.size());
+
+
+	//TrackerHitExtendedVec hitVec1 = firstTrack->getTrackerHitExtendedVec();
+	//int hits1 = int(hitVec1.size());
+	//TrackerHitExtendedVec hitVec2 = secondTrack->getTrackerHitExtendedVec();
+	//int hits2 = int(hitVec2.size());
+	//TrackerHitExtendedVec hitVecs = combinedTrack->getTrackerHitExtendedVec();
+	//int hitss = int(hitVecs.size());
 	
 	if (_debug == 3) {
 	  int iopt = 1;
@@ -2343,33 +2350,36 @@ float FullLDCTracking::CompareTrkII(TrackExtended * first, TrackExtended * secon
 
 
   float result = 1.0e+20;
+  Angle  = 1.0e+20; 
+  float omegaFirst = first->getOmega();
+  float omegaSecond = second->getOmega();
+  float deltaOmega = fabs((omegaFirst-omegaSecond)/omegaSecond);
+  if(deltaOmega> 2*_dOmegaForMerging)return result;
+
 
   float d0First = first->getD0();
   float z0First = first->getZ0();
-  float omegaFirst = first->getOmega();
-  float tanLFirst = first->getTanLambda();
-  float phiFirst = first->getPhi();
-  float qFirst = PIOVER2 - atan(tanLFirst);
-
-
   float d0Second = second->getD0();
   float z0Second = second->getZ0();
-  float omegaSecond = second->getOmega();
-  float tanLSecond = second->getTanLambda();
-  float phiSecond = second->getPhi();
-  float qSecond = PIOVER2 - atan(tanLSecond);
 
   bool isCloseInIP = (fabs(d0First-d0Second)<d0Cut);
   isCloseInIP = isCloseInIP && (fabs(z0Second-z0First)<z0Cut);
 
-  if (isCloseInIP) {
-    Angle = (cos(phiFirst)*cos(phiSecond)+sin(phiFirst)*sin(phiSecond))*
+
+  if(!isCloseInIP)return result;
+
+  float tanLFirst = first->getTanLambda();
+  float phiFirst = first->getPhi();
+  float tanLSecond = second->getTanLambda();
+  float phiSecond = second->getPhi();
+  float qFirst = PIOVER2 - atan(tanLFirst);
+  float qSecond = PIOVER2 - atan(tanLSecond);
+
+  Angle = (cos(phiFirst)*cos(phiSecond)+sin(phiFirst)*sin(phiSecond))*
              sin(qFirst)*sin(qSecond)+cos(qFirst)*cos(qSecond);
-    Angle = acos(Angle);
+  Angle = acos(Angle);
 
-    result = fabs((omegaFirst-omegaSecond)/omegaSecond);
-
-  }
+  result = deltaOmega;
   
   return result;
 
@@ -2880,7 +2890,8 @@ void FullLDCTracking::AddNotAssignedHits() {
 	}
     }
     
-	
+    std::cout << "Assign TPC hits *********************************" << std::endl;
+
     if (_assignTPCHits) {// Treatment of left-over TPC hits
 	TrackerHitExtendedVec nonAssignedTPCHits;
 	int nTPCHits = int(_allTPCHits.size());
@@ -3246,65 +3257,140 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 	trkGrp->setEnd(endPoint);
       }
     }
+    
 
+    // replace previous version with faster loop ordering
 
+    std::vector<float>minDistances;
+    std::vector<TrackExtended*>tracksToAttach;
     for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits
-	TrackerHitExtended * hitExt = hitVec[iH];
-	float pos[3];
-	for (int ip=0;ip<3;++ip) 
+      minDistances.push_back(1E20);
+      tracksToAttach.push_back(NULL);
+    }    
+
+    std::cout << " Starting loop " << nTrk << " tracks   and  " << nHits << " hits" << std::endl;
+
+    for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
+      TrackExtended * foundTrack = _trkImplVec[iT];
+      float tanLambdaFound = foundTrack->getTanLambda();
+      GroupTracks * group = foundTrack->getGroupTracks();
+      TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
+      int nTrkGrp = int(tracksInGroup.size());
+      for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
+	TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
+	float tanLambda = trkGrp->getTanLambda();
+	float omega = trkGrp->getOmega();
+	float d0 = trkGrp->getD0();
+	float z0 = trkGrp->getZ0();
+	float phi0 = trkGrp->getPhi();
+	float dist[3];
+	float startPoint[3];
+	float endPoint[3];
+	for (int iC=0;iC<3;++iC) {
+	  startPoint[iC] = trkGrp->getStart()[iC];
+	  endPoint[iC] = trkGrp->getEnd()[iC];
+	}
+	HelixClass helix;
+	helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
+	float halfPeriodZ = fabs(acos(-1.)*tanLambda/omega);
+	for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits
+	  TrackerHitExtended * hitExt = hitVec[iH];
+	  float pos[3];
+	  for (int ip=0;ip<3;++ip) 
 	    pos[ip] = float(hitExt->getTrackerHit()->getPosition()[ip]);
-	float minDist = 1.0e+20;
-	TrackExtended * trackToAttach = NULL;
-	for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
-	    TrackExtended * foundTrack = _trkImplVec[iT];
-	    float tanLambdaFound = foundTrack->getTanLambda();
-	    float product = tanLambdaFound*pos[2];
-	    if (product>0) {
-	      GroupTracks * group = foundTrack->getGroupTracks();
-	      TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
-	      int nTrkGrp = int(tracksInGroup.size());
-	      for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
-		TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
-		float tanLambda = trkGrp->getTanLambda();
-		float omega = trkGrp->getOmega();
-		float d0 = trkGrp->getD0();
-		float z0 = trkGrp->getZ0();
-		float phi0 = trkGrp->getPhi();
-		float dist[3];
-		float startPoint[3];
-		float endPoint[3];
-		for (int iC=0;iC<3;++iC) {
-		  startPoint[iC] = trkGrp->getStart()[iC];
-		  endPoint[iC] = trkGrp->getEnd()[iC];
-		}
-		HelixClass helix;
-		helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
-		float halfPeriodZ = fabs(acos(-1.)*tanLambda/omega);
-		helix.getDistanceToPoint(pos,dist);
-		float DeltaStart = fabs(pos[2]-startPoint[2]);
-		float DeltaEnd = fabs(pos[2]-endPoint[2]);
-		bool consider = DeltaStart <= 1.5*halfPeriodZ;
-		consider = consider || (DeltaEnd <= 1.5*halfPeriodZ);
-		consider = consider || ( (pos[2]>=startPoint[2]) && (pos[2]<=endPoint[2]) );
-// 		float ZMin = DeltaStart;
-// 		if (DeltaEnd<ZMin)
-// 		  ZMin = DeltaEnd;
-		if (dist[2]<dcut && consider && dist[2]<minDist) {
-		  minDist = dist[2];
-		  trackToAttach = foundTrack;
-		}
+
+	  float product = tanLambdaFound*pos[2];
+	  if (product>0) {
+	    float DeltaStart = fabs(pos[2]-startPoint[2]);
+	    float DeltaEnd = fabs(pos[2]-endPoint[2]);
+	    bool consider = DeltaStart <= 1.5*halfPeriodZ;
+	    consider = consider || (DeltaEnd <= 1.5*halfPeriodZ);
+	    consider = consider || ( (pos[2]>=startPoint[2]) && (pos[2]<=endPoint[2]) );
+	    if(consider){
+	      helix.getDistanceToPoint(pos,dist);
+	      if (dist[2]<dcut && dist[2]<minDistances[iH]) {
+		minDistances[iH] = dist[2];
+		tracksToAttach[iH] = foundTrack;
 	      }
 	    }
+	  }
 	}
-	if (trackToAttach!=NULL) {
-	    trackToAttach->addTrackerHitExtended(hitExt);
-	    hitExt->setTrackExtended( trackToAttach );
-	    hitExt->setUsedInFit( false );
-	}
-	else {
-	  //	  std::cout << iH << " hit is not assigned : distance to closest track = " << minDist << std::endl;
-	}
+      }
     }
+
+    for (int iH=0;iH<nHits;++iH) {
+      TrackerHitExtended * trkHitExt = hitVec[iH];
+      if (tracksToAttach[iH]!=NULL) {
+	tracksToAttach[iH]->addTrackerHitExtended(trkHitExt);
+	trkHitExt->setTrackExtended( tracksToAttach[iH] );
+	trkHitExt->setUsedInFit( false );
+      }
+    }
+	
+    std::cout << " Fast loop done " << std::endl;
+    
+
+//     for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits
+// 	TrackerHitExtended * hitExt = hitVec[iH];
+// 	float pos[3];
+// 	for (int ip=0;ip<3;++ip) 
+// 	    pos[ip] = float(hitExt->getTrackerHit()->getPosition()[ip]);
+// 	float minDist = 1.0e+20;
+// 	TrackExtended * trackToAttach = NULL;
+// 	for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
+// 	    TrackExtended * foundTrack = _trkImplVec[iT];
+// 	    float tanLambdaFound = foundTrack->getTanLambda();
+// 	    float product = tanLambdaFound*pos[2];
+// 	    if (product>0) {
+// 	      GroupTracks * group = foundTrack->getGroupTracks();
+// 	      TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
+// 	      int nTrkGrp = int(tracksInGroup.size());
+// 	      for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
+// 		TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
+// 		float tanLambda = trkGrp->getTanLambda();
+// 		float omega = trkGrp->getOmega();
+// 		float d0 = trkGrp->getD0();
+// 		float z0 = trkGrp->getZ0();
+// 		float phi0 = trkGrp->getPhi();
+// 		float dist[3];
+// 		float startPoint[3];
+// 		float endPoint[3];
+// 		for (int iC=0;iC<3;++iC) {
+// 		  startPoint[iC] = trkGrp->getStart()[iC];
+// 		  endPoint[iC] = trkGrp->getEnd()[iC];
+// 		}
+// 		HelixClass helix;
+// 		helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
+// 		float halfPeriodZ = fabs(acos(-1.)*tanLambda/omega);
+// 		helix.getDistanceToPoint(pos,dist);
+// 		float DeltaStart = fabs(pos[2]-startPoint[2]);
+// 		float DeltaEnd = fabs(pos[2]-endPoint[2]);
+// 		bool consider = DeltaStart <= 1.5*halfPeriodZ;
+// 		consider = consider || (DeltaEnd <= 1.5*halfPeriodZ);
+// 		consider = consider || ( (pos[2]>=startPoint[2]) && (pos[2]<=endPoint[2]) );
+// // 		float ZMin = DeltaStart;
+// // 		if (DeltaEnd<ZMin)
+// // 		  ZMin = DeltaEnd;
+// 		if (dist[2]<dcut && consider && dist[2]<minDist) {
+// 		  minDist = dist[2];
+// 		  trackToAttach = foundTrack;
+// 		}
+// 	      }
+// 	    }
+// 	}
+
+	//	if (trackToAttach!=NULL) {
+	//   trackToAttach->addTrackerHitExtended(hitExt);
+	//  hitExt->setTrackExtended( trackToAttach );
+	//  hitExt->setUsedInFit( false );
+	//  if(trackToAttach!=tracksToAttach[iH])std::cout << " Check Failed" << trackToAttach << "  " << tracksToAttach[iH] << std::endl;
+	//
+	//}
+	//else {
+	///	  std::cout << iH << " hit is not assigned : distance to closest track = " << minDist << std::endl;
+	///}
+    //}
+    //std::cout << " Slow loop done " << std::endl;
 
 }
 

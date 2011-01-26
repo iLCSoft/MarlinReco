@@ -7,6 +7,10 @@
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
 #include <EVENT/SimTrackerHit.h>
+#include "TFile.h"
+#include "TH1.h"
+#include "TH2.h"
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -108,11 +112,11 @@ class LEPTrackingProcessor : public Processor {
   
   /** Used to remove problematic TPC hits from Curlers
    */
-  void selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* remainingCol, LCCollectionVec* cutCol, int binHeight, int binWidth);
+  void selectTPCHits(LCCollection* tpcTHcol, LCCollectionVec* remainingCol, LCCollectionVec* cutCol, int binHeight, int binWidth, float zmin=-10000., float zmax=+10000.);
 
   /** Used to send all hits to the patrec
    */
-  void selectTPCHits(LCCollection* tpcTHcol, LCCollection* usedCol);
+  void selectTPCHits(LCCollection* tpcTHcol, LCCollection* usedCol, float zmin = -10000., float zmax = +10000.);
 
   /**  Used to fill TPC hits into the hit banks for F77
    */
@@ -136,15 +140,29 @@ class LEPTrackingProcessor : public Processor {
   LCCollectionVec* _tpclcRelVec ;
   LCCollectionVec* _usedCol ;
   LCCollectionVec* _droppedCol ;
+  LCCollectionVec* _usedColForOutput ;
+  LCCollectionVec* _droppedColForOutput ;
 
   int _nRun ;
   int _nEvt ;
 
   int _binHeight ;
+  int _nSlicesInZ ;
   int _binWidth ;
   int _multiplicityCut ;
   int _AlwaysRunCurlKiller ;
   std::vector<EVENT::TrackerHit*> _goodHits;
+  std::vector<EVENT::TrackerHit*> _savedGoodHits;
+  int   _histograms;
+  TH1F* fTPCR;
+  TH1F* fTPCRRaw;
+  TH1F* fTPCZ;
+  TH1F* fTPCZRaw;
+  TH2F* fTPCRZ;
+  TH2F* fTPCXYRaw;
+  TH2F* fTPCXY;
+  TH2F* fTPCRZRaw;
+
 
 } ;
 

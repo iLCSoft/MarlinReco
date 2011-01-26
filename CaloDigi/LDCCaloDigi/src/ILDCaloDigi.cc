@@ -468,7 +468,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  float rxy = sqrt(x*x+y*y);
 	  float cost = fabs(z)/r;
 
-	  if(z>0){
+	  if(z>0 && _histograms){
 	    if(layer==1)fEcalLayer1->Fill(x,y);
 	    if(layer==11)fEcalLayer11->Fill(x,y);
 	    if(layer==21)fEcalLayer21->Fill(x,y);
@@ -626,24 +626,26 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
   }
 
 
-  // fill normalisation of HCAL occupancy plots
-  for(float x=15;x<3000; x+=30){
-    for(float y=15;y<3000; y+=30){
-      if(x>430||y>430){
+  if(_histograms){
+
+    // fill normalisation of HCAL occupancy plots
+    for(float x=15;x<3000; x+=30){
+      for(float y=15;y<3000; y+=30){
+	if(x>430||y>430){
+	  float r = sqrt(x*x+y*y);
+	  fHcalRLayerNorm->Fill(r,4.);
+	}
+      }
+    }
+    
+    // fill normalisation of ECAL occupancy plots
+    for(float x=2.5;x<3000; x+=5){
+      for(float y=2.5;y<3000; y+=5){
 	float r = sqrt(x*x+y*y);
-	fHcalRLayerNorm->Fill(r,4.);
+	if(r>235)fEcalRLayerNorm->Fill(r,4.);
       }
     }
   }
-
-  // fill normalisation of ECAL occupancy plots
-  for(float x=2.5;x<3000; x+=5){
-    for(float y=2.5;y<3000; y+=5){
-      float r = sqrt(x*x+y*y);
-      if(r>235)fEcalRLayerNorm->Fill(r,4.);
-    }
-  }
-
   
   //
   // * Reading HCAL Collections of Simulated Hits * 
@@ -745,30 +747,32 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		  fHcalC->Fill(timei-dt,energyi*calibr_coeff);
 		  fHcalC1->Fill(timei-dt,energyi*calibr_coeff);
 		  fHcalC2->Fill(timei-dt,energyi*calibr_coeff);
-		  //fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
 		}
+		//fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
 		if (energyi > _thresholdHcal[0]){
 		  if(hit->getPosition()[2]>0){
 		    float rxy = sqrt(x*x+y*y);
 		    //std::cout << j << " " 
-		    if(layer==1)fHcalLayer1->Fill(x,y);
-		    if(layer==11)fHcalLayer11->Fill(x,y);
-		    if(layer==21)fHcalLayer21->Fill(x,y);
-		    if(layer==31)fHcalLayer31->Fill(x,y);
-		    if(layer==41)fHcalLayer41->Fill(x,y);
-		    if(layer==51)fHcalLayer51->Fill(x,y);
-		    if(layer==61)fHcalLayer61->Fill(x,y);
-		    if(layer==61)fHcalLayer71->Fill(x,y);
-		    if(layer==1)fHcalRLayer1->Fill(rxy);
-		    if(layer==11)fHcalRLayer11->Fill(rxy);
-		    if(layer==21)fHcalRLayer21->Fill(rxy);
-		    if(layer==31)fHcalRLayer31->Fill(rxy);
-		    if(layer==41)fHcalRLayer41->Fill(rxy);
-		    if(layer==51)fHcalRLayer51->Fill(rxy);
-		    if(layer==61)fHcalRLayer61->Fill(rxy);
-		    if(layer==61)fHcalRLayer71->Fill(rxy);
+		    if(_histograms){
+		      if(layer==1)fHcalLayer1->Fill(x,y);
+		      if(layer==11)fHcalLayer11->Fill(x,y);
+		      if(layer==21)fHcalLayer21->Fill(x,y);
+		      if(layer==31)fHcalLayer31->Fill(x,y);
+		      if(layer==41)fHcalLayer41->Fill(x,y);
+		      if(layer==51)fHcalLayer51->Fill(x,y);
+		      if(layer==61)fHcalLayer61->Fill(x,y);
+		      if(layer==61)fHcalLayer71->Fill(x,y);
+		      if(layer==1)fHcalRLayer1->Fill(rxy);
+		      if(layer==11)fHcalRLayer11->Fill(rxy);
+		      if(layer==21)fHcalRLayer21->Fill(rxy);
+		      if(layer==31)fHcalRLayer31->Fill(rxy);
+		      if(layer==41)fHcalRLayer41->Fill(rxy);
+		      if(layer==51)fHcalRLayer51->Fill(rxy);
+		      if(layer==61)fHcalRLayer61->Fill(rxy);
+		      if(layer==61)fHcalRLayer71->Fill(rxy);
+		    }
 		  }
-
+		  
 
 		  float timeCor=0;
 		  if(_hcalCorrectTimesForPropagation)timeCor=dt;
@@ -828,7 +832,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
     catch(DataNotAvailableException &e){ 
     }
   }
-
+  
   // add relation collection for ECAL/HCAL to event
   evt->addCollection(relcol,_outputRelCollection.c_str());
 

@@ -1,5 +1,3 @@
-
-
 *     
 * $Id: tpcrun.F,v 1.6 2008-07-01 10:34:39 aplin Exp $
 *  
@@ -124,6 +122,7 @@ CCC SJA the number of hits is set from the MARLIN side
 
       NTPHITS=numofsubdethits("TPC")
 
+
 CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
       IF(NTPHITS.GT.NTPMAX)THEN
         IER = 1
@@ -135,6 +134,7 @@ CCC      NTPHITS=TKNUMB('HIT',ID_TPC)
         CALL TKVETO(1)
         GOTO 999
       ENDIF
+      
 
 CCC SJA the hits are filled on the MARLIN side
 Cc --- read hits from TK banks and store them locally
@@ -168,6 +168,7 @@ c --- order TPC hits according to (a) padrow and (b) phi within padrow
          ENDIF
         GOTO 999
       ENDIF
+ 
 
 c --- attempt to remove hits which are probably merged:
       CALL UNMERGE(IER)
@@ -225,10 +226,9 @@ c --- link up any broken tracks:
       ENDIF
 
 c --- transfer track candidates to TK banks
+
       CALL TPCSAV
-
  
-
  999  RETURN
       END
 

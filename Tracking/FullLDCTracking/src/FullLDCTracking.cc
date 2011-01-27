@@ -498,21 +498,21 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
 		      _RefittedSiTrackCollection,_RefittedSiTrackMCPCollection);
      // std::cout << "Collection of refitted Si tracks is added to event..." << std::endl; 
   }
-  std::cout << "************************************Merge TPC/Si" << std::endl;
+  if (_debug>=2)std::cout << "************************************Merge TPC/Si" << std::endl;
   MergeTPCandSiTracks();
-  std::cout << "************************************Merging done..." << std::endl;
+  if (_debug>=2)std::cout << "************************************Merging done..." << std::endl;
   MergeTPCandSiTracksII();
-  std::cout << "************************************Merging II done..." << std::endl;
+  if (_debug>=2)std::cout << "************************************Merging II done..." << std::endl;
   Sorting(_allCombinedTracks);
-  std::cout << "************************************Sorting done..." << std::endl;
+  if (_debug>=2)std::cout << "************************************Sorting done..." << std::endl;
   SelectCombinedTracks();
-  std::cout << "************************************Selection of combined tracks done..." << std::endl;
+  if (_debug>=2)std::cout << "************************************Selection of combined tracks done..." << std::endl;
   AddNotCombinedTracks( );
-  std::cout << "************************************Not combined tracks added..." << std::endl;
+  if (_debug>=2)std::cout << "************************************Not combined tracks added..." << std::endl;
   //CheckTracks( );
 
   AddNotAssignedHits();
-  std::cout << "***********************************Not assigned hits added..." << std::endl;
+  if (_debug>=2)std::cout << "***********************************Not assigned hits added..." << std::endl;
   AddTrackColToEvt(evt,_trkImplVec,
 		   _LDCTrackCollection,_LDCTrackMCPCollection);
   //  std::cout << "Collections added to event..." << std::endl;
@@ -520,7 +520,7 @@ void FullLDCTracking::processEvent( LCEvent * evt ) {
   //  std::cout << "Cleanup is done..." << std::endl;
   _nEvt++;
   //  getchar();
-  if (_debug>=1) {
+  if (_debug>=2) {
     std::cout << std::endl;
     std::cout << std::endl;
   }
@@ -1365,7 +1365,6 @@ void FullLDCTracking::MergeTPCandSiTracksII() {
 	TrackExtended * combinedTrack = CombineTracks(tpcTrackExt,siTrackExt);
 
 	if (combinedTrack != NULL) {
-	  std::cout << " MergeTPCandSiTracksII " << std::endl;
 
 	  _allCombinedTracks.push_back( combinedTrack );
 	  if (_debug == 3 ) {
@@ -1778,7 +1777,7 @@ void FullLDCTracking::SelectCombinedTracks() {
 	}	
       }
     }else{
-      if(nTracks>2)std::cout << " MORE THAN TWO TRACKS " << std::endl;
+      if(nTracks>2 && _debug>1)std::cout << " MORE THAN TWO TRACKS " << std::endl;
     }
   }
 
@@ -2890,7 +2889,7 @@ void FullLDCTracking::AddNotAssignedHits() {
 	}
     }
     
-    std::cout << "Assign TPC hits *********************************" << std::endl;
+    if(_debug>1)std::cout << "Assign TPC hits *********************************" << std::endl;
 
     if (_assignTPCHits) {// Treatment of left-over TPC hits
 	TrackerHitExtendedVec nonAssignedTPCHits;
@@ -3268,7 +3267,7 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
       tracksToAttach.push_back(NULL);
     }    
 
-    std::cout << " Starting loop " << nTrk << " tracks   and  " << nHits << " hits" << std::endl;
+    if(_debug>0)std::cout << " Starting loop " << nTrk << " tracks   and  " << nHits << " hits" << std::endl;
 
     for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
       TrackExtended * foundTrack = _trkImplVec[iT];
@@ -3327,7 +3326,7 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
       }
     }
 	
-    std::cout << " Fast loop done " << std::endl;
+    if(_debug>0)std::cout << " Fast loop done " << std::endl;
     
 
 //     for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits

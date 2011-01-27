@@ -208,13 +208,13 @@ void CLICTrackSelector::processEvent( LCEvent * evt ) {
 
       if(!passTrackSelection){
 	nDropped++;
-	std::cout << " Dropped " << pTot << " pT = " << pT << " rmin = " << sqrt(r2Min) << " nTPC = " << nHitsTPC << " nVTX = " << nHitsVTX << " nFTD = " << nHitsFTD << " nSIT = " << nHitsSIT << " nSET " << nHitsSET << " nETD " << nHitsETD << " time = " << time  << std::endl;   
+	if (_debug >= 1) std::cout << " Dropped " << pTot << " pT = " << pT << " rmin = " << sqrt(r2Min) << " nTPC = " << nHitsTPC << " nVTX = " << nHitsVTX << " nFTD = " << nHitsFTD << " nSIT = " << nHitsSIT << " nSET " << nHitsSET << " nETD " << nHitsETD << " time = " << time  << std::endl;   
 	
       }
 
       if(passTrackSelection){
 
-	std::cout << " Accepted " << pTot << " pT = " << pT << " rmin = " << sqrt(r2Min) << " nTPC = " << nHitsTPC << " nVTX = " << nHitsVTX << " nFTD = " << nHitsFTD << " nSIT = " << nHitsSIT << " nSET " << nHitsSET << " nETD " << nHitsETD << " time = " << time <<  std::endl;   
+	if (_debug >= 1) std::cout << " Accepted " << pTot << " pT = " << pT << " rmin = " << sqrt(r2Min) << " nTPC = " << nHitsTPC << " nVTX = " << nHitsVTX << " nFTD = " << nHitsFTD << " nSIT = " << nHitsSIT << " nSET " << nHitsSET << " nETD " << nHitsETD << " time = " << time <<  std::endl;   
 
 	TrackImpl * selectedTrack = new TrackImpl();
 	selectedTrack->setOmega(track->getOmega());
@@ -388,8 +388,6 @@ float CLICTrackSelector::TimeAtEcal(Track* pTrack){
 
 
 void CLICTrackSelector::CleanUp(){
-
-  std::cout << "Done CleanUp" << std::endl;
  
 
 }
@@ -397,8 +395,6 @@ void CLICTrackSelector::CleanUp(){
 void CLICTrackSelector::check(LCEvent * evt) { }
 
 void CLICTrackSelector::end() {
-
-  std::cout << "Done End" << std::endl;
 
 }
 

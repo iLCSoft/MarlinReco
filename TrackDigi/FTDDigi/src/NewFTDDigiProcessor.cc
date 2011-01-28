@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include <marlin/Global.h>
+#include "marlin/ProcessorEventSeeder.h"
 
 #include <gear/GEAR.h>
 #include <gear/GearParameters.h>
@@ -177,6 +178,7 @@ void NewFTDDigiProcessor::init() {
 
   //intialise random number generator 
   r = gsl_rng_alloc(gsl_rng_ranlxs2);
+  Global::EVENTSEEDER->registerProcessor(this);
   
 
   const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
@@ -191,6 +193,9 @@ void NewFTDDigiProcessor::processRunHeader( LCRunHeader* run) {
 } 
 
 void NewFTDDigiProcessor::processEvent( LCEvent * evt ) { 
+
+  gsl_rng_set( r, Global::EVENTSEEDER->getSeed(this) ) ;   
+  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
 
   LCCollection* STHcol = 0 ;
   try{

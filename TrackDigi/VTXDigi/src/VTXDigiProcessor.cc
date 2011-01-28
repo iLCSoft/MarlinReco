@@ -10,6 +10,8 @@
 // #include "random.h"
 // #include <CLHEP/Random/RandGauss.h>
 #include <gsl/gsl_randist.h>
+#include "marlin/ProcessorEventSeeder.h"
+
 
 #include "CLHEP/Vector/TwoVector.h"
 
@@ -101,11 +103,6 @@ VTXDigiProcessor::VTXDigiProcessor() : Processor("VTXDigiProcessor") {
                               _vxdEff ,
                               effDefault ) ;
 
-  registerProcessorParameter( "RandomSeed" , 
-                              "random seed - default 42" ,
-                              _ranSeed ,
-                              int(42) ) ;
-
 
   // Input collections
   registerInputCollection( LCIO::SIMTRACKERHIT,
@@ -157,9 +154,8 @@ void VTXDigiProcessor::init() {
   _nEvt = 0 ;
 
   // initialize gsl random generator
-  _ranSeed = 0;
   _rng = gsl_rng_alloc(gsl_rng_ranlxs2);
-  gsl_rng_default_seed = _ranSeed ;
+  Global::EVENTSEEDER->registerProcessor(this);
 
   // check that we have the efficiencies for all layers
   const gear::VXDParameters& gearVXD = Global::GEAR->getVXDParameters() ;
@@ -183,6 +179,9 @@ void VTXDigiProcessor::processRunHeader( LCRunHeader* run) {
 } 
 
 void VTXDigiProcessor::processEvent( LCEvent * evt ) { 
+
+  gsl_rng_set( _rng, Global::EVENTSEEDER->getSeed(this) ) ;   
+  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
 
   for (int iColl=0;iColl<3;++iColl) {
 
@@ -291,7 +290,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             //phi between each ladder
             double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;
               
-            double PhiInLocal;
+            double PhiInLocal(0.0);
             //find the ladder that the hit is in
             int ladderIndex = -1;
             double ladderPhi=999;
@@ -352,12 +351,12 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                 _pointResoRPhi = _pointResoRPhi_VTX;
                 _pointResoZ    = _pointResoZ_VTX;
 
-                double rPhiSmear  = gsl_ran_gaussian(_rng,_pointResoRPhi);
+                double rPhiSmear  = gsl_ran_gaussian(_rng, _pointResoRPhi);
                   
                 if( (u+rPhiSmear) < sensitive_width * 0.5 && (u+rPhiSmear) > -sensitive_width * 0.5)
                   {
                     accept_hit =true;
-                    double zSmear  = gsl_ran_gaussian(_rng,_pointResoZ);
+                    double zSmear  = gsl_ran_gaussian(_rng, _pointResoZ);
                     
                     //find smearing for x and y, so that hit is smeared along ladder plane
                     smearedPos[0] = hitvec.x() + rPhiSmear * cos(ladderPhi);
@@ -384,8 +383,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
               _pointResoRPhi = _pointResoRPhi_VTX;
               _pointResoZ    = _pointResoZ_VTX;
 
-              double rphiSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
-              double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
+              double rphiSmear = gsl_ran_gaussian(_rng, _pointResoRPhi);
+              double zSmear = gsl_ran_gaussian(_rng, _pointResoZ);
               
               point.setPhi( point.phi() + rphiSmear / point.perp() );
               point.setZ( point.z() + zSmear );
@@ -408,8 +407,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
             _pointResoZ = _pointResoZ_SET; 
           }
             
-          double xSmear = gsl_ran_gaussian(_rng,_pointResoRPhi);
-          double zSmear = gsl_ran_gaussian(_rng,_pointResoZ);
+          double xSmear = gsl_ran_gaussian(_rng, _pointResoRPhi);
+          double zSmear = gsl_ran_gaussian(_rng, _pointResoZ);
             
           double phi = atan2(pos[1],pos[0]);
           double rad = sqrt(pos[1]*pos[1]+pos[0]*pos[0]);

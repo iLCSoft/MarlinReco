@@ -254,13 +254,9 @@ protected:
 
 #endif
 
-  //FIXME:SJA Cathode is hard coded
-  const static double _cathode;
 
 } ;
 
-  //FIXME:SJA: Cathode is hard coded
-const double TPCDigiProcessor::_cathode=5.0/2.0; // cathode is 5mm thick 
 
 
 

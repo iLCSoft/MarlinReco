@@ -121,7 +121,6 @@ class VTXDigiProcessor : public Processor {
   FloatVec _vxdEff ;
   std::vector< std::pair<long, long> > _vxdCount ;
 
-  int _ranSeed ;
   gsl_rng * _rng ;
 
 

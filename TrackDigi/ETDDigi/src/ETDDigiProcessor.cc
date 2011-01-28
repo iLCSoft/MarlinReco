@@ -11,6 +11,9 @@
 #include <cmath>
 #include <algorithm>
 
+#include "marlin/Global.h"
+#include "marlin/ProcessorEventSeeder.h"
+
 #include <gsl/gsl_randist.h>
 
 using namespace lcio ;
@@ -74,7 +77,8 @@ void ETDDigiProcessor::init() {
 
   //intialise random number generator 
   r = gsl_rng_alloc(gsl_rng_ranlxs2);
-  
+  Global::EVENTSEEDER->registerProcessor(this);
+
 }
 
 void ETDDigiProcessor::processRunHeader( LCRunHeader* run) { 
@@ -86,6 +90,9 @@ void ETDDigiProcessor::processEvent( LCEvent * evt ) {
 
   streamlog_out( DEBUG ) << " processing evt : " << evt->getEventNumber() << std::endl ;
 
+  gsl_rng_set( r, Global::EVENTSEEDER->getSeed(this) ) ;   
+  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
+  
 
   LCCollection* STHcol = 0 ;
   try{

@@ -9,6 +9,7 @@
 
 #include <gsl/gsl_randist.h>
 #include "marlin/VerbosityLevels.h"
+#include "marlin/ProcessorEventSeeder.h"
 
 #include "Circle.h"
 #include "SimpleHelix.h"
@@ -344,6 +345,7 @@ void TPCDigiProcessor::init()
 
   //intialise random number generator 
   _random = gsl_rng_alloc(gsl_rng_ranlxs2);
+  Global::EVENTSEEDER->registerProcessor(this);
 
   _nRun = 0 ;
   _nEvt = 0 ;
@@ -357,6 +359,9 @@ void TPCDigiProcessor::processRunHeader( LCRunHeader* run)
 
 void TPCDigiProcessor::processEvent( LCEvent * evt ) 
 { 
+
+  gsl_rng_set( _random, Global::EVENTSEEDER->getSeed(this) ) ;   
+  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
 
   int numberOfVoxelsCreated(0);
 
@@ -619,7 +624,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       // sigma_{z}^2 = (400microns)^2 + L_{drift}cm * (80micron/sqrt(cm))^2 
       
       double aReso =_pointResoRPhi0*_pointResoRPhi0 + (_pointResoPadPhi*_pointResoPadPhi * sin(padPhi)*sin(padPhi)) ;
-      double driftLength = gearTPC.getMaxDriftLength() - (fabs(thisPoint.z()) - _cathode);
+      double driftLength = gearTPC.getMaxDriftLength() - (fabs(thisPoint.z()));
 
       if (driftLength <0) { 
         streamlog_out(DEBUG3) << " TPCDigiProcessor : Warning! driftLength < 0 " << driftLength << " --> Check out your GEAR file!!!!" << std::endl; 

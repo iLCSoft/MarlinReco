@@ -26,6 +26,8 @@
 #include <UTIL/LCTOOLS.h>
 #include <UTIL/LCRelationNavigator.h>
 
+#include <limits>
+
 using namespace lcio ;
 using namespace marlin ;
 

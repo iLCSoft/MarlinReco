@@ -1,17 +1,9 @@
 ########################################################
-# cmake file for building Marlin example Package
+# cmake file for building MarlinReco
 # @author Jan Engels, DESY
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6.2 FATAL_ERROR )
 ########################################################
 
-
-########################################################
-# CMake compatibility issues: don't modify this, please!
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6.2 )
-#SET( CMAKE_BACKWARDS_COMPATIBILITY 2.4.6 )
-MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
-# allow more human readable "if then else" constructs
-SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
-########################################################
 
 
 # due to the incompatibility between g77/gfortran on 32/64bit machines
@@ -33,13 +25,16 @@ SET( ENV{CFLAGS} "-Wall -ansi -pedantic $ENV{CFLAGS}" )
 # User section: modify as needed
 ####################################################################################################
 
+
 # project name
 PROJECT( MarlinReco C CXX Fortran )
 
+
 # project version
-SET( ${PROJECT_NAME}_MAJOR_VERSION 0 )
-SET( ${PROJECT_NAME}_MINOR_VERSION 19 )
-SET( ${PROJECT_NAME}_PATCH_LEVEL 0 )
+SET( ${PROJECT_NAME}_VERSION_MAJOR 0 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 19 )
+SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
+
 
 
 ### SETTINGS ################################################################
@@ -119,15 +114,13 @@ MARK_AS_ADVANCED( FORTRAN_LIB )
 
 ### DEPENDENCIES ############################################################
 
-# MathMore library from ROOT is required for BCalTagEfficiency
-SET( ROOT_USE_COMPONENTS MathMore )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
 FIND_PACKAGE( GSL REQUIRED )
 FIND_PACKAGE( CERNLIB REQUIRED )
 FIND_PACKAGE( RAIDA REQUIRED )
-FIND_PACKAGE( ROOT REQUIRED )
+FIND_PACKAGE( ROOT REQUIRED COMPONENTS MathMore )
 
 FOREACH( pkg Marlin MarlinUtil GSL CERNLIB RAIDA ROOT )
     # fix for backwards compatibility
@@ -140,6 +133,7 @@ FOREACH( pkg Marlin MarlinUtil GSL CERNLIB RAIDA ROOT )
     ADD_DEFINITIONS( ${${pkg}_DEFINITIONS} )
 ENDFOREACH()
 
+# MathMore library from ROOT is required for BCalTagEfficiency
 LINK_LIBRARIES( ${ROOT_MATHMORE_LIBRARY} )
 # ============================================================================
 
@@ -213,13 +207,10 @@ ENDIF()
 IF( INSTALL_DOC )
 
     # make sure doxygen is executed (make doc) before make install
-    INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS doc)" )
+    INSTALL( CODE "EXECUTE_PROCESS( COMMAND ${CMAKE_BUILD_TOOL} doc)" )
+
     # install documentation
-    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/doc"
-            DESTINATION .
-            PATTERN "*CVS*" EXCLUDE
-            PATTERN "*/.svn*" EXCLUDE
-            )
+    INSTALL_DIRECTORY( "${PROJECT_SOURCE_DIR}/doc" DESTINATION . )
 ENDIF()
 
 

@@ -44,11 +44,7 @@ SET( MarlinReco_PKGS
 FOREACH( pkg ${MarlinReco_PKGS} )
     MESSAGE( STATUS "Including MarlinReco package: ${pkg}" )
     INCLUDE_DIRECTORIES( BEFORE "${PROJECT_SOURCE_DIR}/${pkg}/include" )
-    INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/${pkg}/include" DESTINATION .
-        PATTERN "*~" EXCLUDE
-        PATTERN "*CVS*" EXCLUDE
-        PATTERN "*/.svn*" EXCLUDE
-    )
+    INSTALL_DIRECTORY( "${PROJECT_SOURCE_DIR}/${pkg}/include" DESTINATION . )
 
     AUX_SOURCE_DIRECTORY( ${PROJECT_SOURCE_DIR}/${pkg}/src MarlinReco_cxx_srcs )
 
@@ -88,32 +84,8 @@ SET_SOURCE_FILES_PROPERTIES(
 #MESSAGE( STATUS "MarlinReco_cxx_srcs: ${MarlinReco_cxx_srcs}" )
 
 # create library
-ADD_LIBRARY( lib_${PROJECT_NAME} ${MarlinReco_cxx_srcs} ${MarlinReco_c_srcs} ${MarlinReco_f77_srcs} )
-
-# create symbolic lib target for calling target lib_XXX
-ADD_CUSTOM_TARGET( lib DEPENDS lib_${PROJECT_NAME} )
-
-# change lib_target properties
-SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
-    # create *nix style library versions + symbolic links
-    VERSION ${${PROJECT_NAME}_VERSION}
-    SOVERSION ${${PROJECT_NAME}_SOVERSION}
-    # allow creating static and shared libs without conflicts
-    CLEAN_DIRECT_OUTPUT 1
-    # linker must be explicitly set due to mixed sources
-    LINKER_LANGUAGE CXX
-    # avoid conflicts between library and binary target names
-    OUTPUT_NAME ${PROJECT_NAME} )
-
+ADD_SHARED_LIBRARY( MarlinReco ${MarlinReco_cxx_srcs} ${MarlinReco_c_srcs} ${MarlinReco_f77_srcs} )
 # link MarlinReco library to libg2c/libgfortran
-TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${FORTRAN_LIB} )
-IF(APPLE)
-  TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} streamlog )
-ENDIF(APPLE)
+TARGET_LINK_LIBRARIES( MarlinReco ${FORTRAN_LIB} )
 
-# install library
-INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE )
-
+INSTALL_SHARED_LIBRARY( MarlinReco DESTINATION lib )

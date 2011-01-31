@@ -42,13 +42,14 @@ SET( ${PROJECT_NAME}_MINOR_VERSION 19 )
 SET( ${PROJECT_NAME}_PATCH_LEVEL 0 )
 
 
-### SETTINGS #################################################################
+### SETTINGS ################################################################
+
+FIND_PACKAGE( ILCUTIL COMPONENTS ILCSOFT_CMAKE_MODULES REQUIRED )
+
+# load default settings from ILCSOFT_CMAKE_MODULES
+INCLUDE( ilcsoft_default_settings )
 
 
-# project options
-OPTION( BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON )
-OPTION( BUILD_32BIT_COMPATIBLE "Set to ON to build in 32 bit compatibility mode" OFF )
-OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 
 
 SET( CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -DNDEBUG" )
@@ -115,20 +116,25 @@ ENDIF()
 MARK_AS_ADVANCED( FORTRAN_LIB )
 
 
-# ========= project dependencies =============================================
+
+### DEPENDENCIES ############################################################
+
 # MathMore library from ROOT is required for BCalTagEfficiency
 SET( ROOT_USE_COMPONENTS MathMore )
-SET( req_pkgs Marlin MarlinUtil GEAR LCIO CLHEP GSL CERNLIB RAIDA ROOT )
-IF(APPLE)
-    LIST( APPEND req_pkgs CED )
-ENDIF(APPLE)
-FOREACH( pkg ${req_pkgs} )
+
+FIND_PACKAGE( Marlin 1.0 REQUIRED )
+FIND_PACKAGE( MarlinUtil REQUIRED )
+FIND_PACKAGE( GSL REQUIRED )
+FIND_PACKAGE( CERNLIB REQUIRED )
+FIND_PACKAGE( RAIDA REQUIRED )
+FIND_PACKAGE( ROOT REQUIRED )
+
+FOREACH( pkg Marlin MarlinUtil GSL CERNLIB RAIDA ROOT )
     # fix for backwards compatibility
     IF( NOT ${pkg}_DIR AND DEFINED ${pkg}_HOME )
         SET( ${pkg}_DIR ${${pkg}_HOME} )
     ENDIF()
 
-    FIND_PACKAGE( ${pkg} REQUIRED )
     INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
     LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
     ADD_DEFINITIONS( ${${pkg}_DEFINITIONS} )
@@ -137,47 +143,12 @@ ENDFOREACH()
 LINK_LIBRARIES( ${ROOT_MATHMORE_LIBRARY} )
 # ============================================================================
 
-# set default cmake build type to RelWithDebInfo
-# possible options are: None Debug Release RelWithDebInfo MinSizeRel
-IF( NOT CMAKE_BUILD_TYPE )
-    SET( CMAKE_BUILD_TYPE "RelWithDebInfo" )
-ENDIF()
-
-# set default install prefix to project root directory
-IF( CMAKE_INSTALL_PREFIX STREQUAL "/usr/local" )
-    SET( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}" )
-ENDIF()
-
-
-#---------------- 32/64 bit issues ---------------------------------------
-IF( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-    MESSAGE( STATUS "32 bit architecture detected" )
-ENDIF()
-
-IF( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-    MESSAGE( STATUS "64 bit architecture detected" )
-
-    IF( BUILD_32BIT_COMPATIBLE )
-        IF( COMMAND SET_PROPERTY )
-            SET_PROPERTY(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS 0)
-            SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32" )
-            SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32" )
-            SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -m32" )
-            SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32" )
-            SET( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -m32" )
-            SET( CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -m32" )
-        ELSE()
-            MESSAGE( FATAL_ERROR "to build in 32 bit compatibility mode you need cmake >= 2.6" )
-        ENDIF()
-        MESSAGE( STATUS "Build in 32 bit compatibility mode" )
-    ELSE()
-        MESSAGE( STATUS "Build in native 64 bit mode" )
-    ENDIF()
-ENDIF()
-#-------------------------------------------------------------------------
 
 
 ### DOCUMENTATION ############################################################
+
+OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
+
 
 ADD_CUSTOM_TARGET( doc )
 
@@ -252,82 +223,12 @@ IF( INSTALL_DOC )
 ENDIF()
 
 
-##########################################################################################
-# End of User section: please try not to modify below this line
-##########################################################################################
-
-
-# library *nix style versioning
-SET( ${PROJECT_NAME}_SOVERSION "${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}" )
-SET( ${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_SOVERSION}.${${PROJECT_NAME}_PATCH_LEVEL}" )
-
-# add install path to the rpath list
-SET( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" )
-MARK_AS_ADVANCED( CMAKE_INSTALL_RPATH )
-
-# add install path to the rpath list (apple)
-IF( APPLE )
-    SET( CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib" )
-    MARK_AS_ADVANCED( CMAKE_INSTALL_NAME_DIR )
-ENDIF()
-
-# append link pathes to rpath list
-SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH 1 )
-MARK_AS_ADVANCED( CMAKE_INSTALL_RPATH_USE_LINK_PATH )
-
-# output directories
-SET( EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin" CACHE PATH
-    "EXECUTABLE_OUTPUT_PATH" FORCE )
-SET( LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib" CACHE PATH
-    "LIBRARY_OUTPUT_PATH" FORCE )
-MARK_AS_ADVANCED( EXECUTABLE_OUTPUT_PATH LIBRARY_OUTPUT_PATH )
-
 # input directories
 ADD_SUBDIRECTORY( src )
 
-# create uninstall configuration file 
-CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-                "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
-                IMMEDIATE @ONLY )
+# display some variables and write them to cache
+DISPLAY_STD_VARIABLES()
 
-# create uninstall target
-ADD_CUSTOM_TARGET( uninstall "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake" )
+# generate and install following configuration files
+GENERATE_PACKAGE_CONFIGURATION_FILES( ${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake )
 
-# create configuration file from .in file
-CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
-                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY )
-
-# install configuration file
-INSTALL( FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" DESTINATION . )
-
-# display status message for important variables
-MESSAGE( STATUS )
-MESSAGE( STATUS "-------------------------------------------------------------------------------" )
-MESSAGE( STATUS "BUILD_SHARED_LIBS = ${BUILD_SHARED_LIBS}" )
-MESSAGE( STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}" )
-MESSAGE( STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}" )
-MESSAGE( STATUS "CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}" )
-#IF( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-#    MESSAGE( STATUS "BUILD_32BIT_COMPATIBLE = ${BUILD_32BIT_COMPATIBLE}" )
-#ENDIF()
-MESSAGE( STATUS "INSTALL_DOC = ${INSTALL_DOC}" )
-MESSAGE( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
-MESSAGE( STATUS "-------------------------------------------------------------------------------" )
-MESSAGE( STATUS )
-
-# force some variables that could be defined in the command line
-# to be written to cache
-SET( BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL
-    "Set to OFF to build static libraries" FORCE )
-SET( CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH
-    "Where to install ${PROJECT_NAME}" FORCE )
-SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
-    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE )
-SET( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" CACHE PATH
-    "Path to custom CMake Modules" FORCE )
-SET( INSTALL_DOC "${INSTALL_DOC}" CACHE BOOL
-    "Set to OFF to skip build/install Documentation" FORCE )
-
-# export library dependencies (keep this as the last line in the file)
-EXPORT_LIBRARY_DEPENDENCIES( "${PROJECT_NAME}LibDeps.cmake" )
-INSTALL( FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}LibDeps.cmake" DESTINATION lib/cmake )

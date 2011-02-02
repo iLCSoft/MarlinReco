@@ -56,8 +56,8 @@ IF( FORTRAN_COMPILER STREQUAL "g77" )
     SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" ) # -ff2c ?
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dg77Fortran" ) # -Df2cFortran
 
-ENDIF()
-IF( FORTRAN_COMPILER STREQUAL "gfortran" )
+ELSE() # gfortran / gfortran-32
+
     SET( FORTRAN_LIBNAME "gfortran" )
     SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy" )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DgFortran" )

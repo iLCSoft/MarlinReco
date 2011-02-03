@@ -1,9 +1,32 @@
-###############################################
-# cmake configuration file for @PROJECT_NAME@
-# @author Jan Engels, DESY
-###############################################
+##############################################################################
+# cmake configuration file for MarlinReco
+#
+# requires:
+#   MacroCheckPackageLibs.cmake for checking package libraries
+#
+# returns following variables:
+#
+#   MarlinReco_FOUND      : set to TRUE if MarlinReco found
+#       if FIND_PACKAGE called with REQUIRED and COMPONENTS arguments
+#       MarlinReco_FOUND is only set to TRUE if ALL components are also found
+#       if REQUIRED is NOT set components may or may not be available
+#
+#   MarlinReco_ROOT       : path to this MarlinReco installation
+#   MarlinReco_VERSION    : package version
+#   MarlinReco_LIBRARIES  : list of MarlinReco libraries (NOT including COMPONENTS)
+#   MarlinReco_INCLUDE_DIRS  : list of paths to be used with INCLUDE_DIRECTORIES
+#   MarlinReco_LIBRARY_DIRS  : list of paths to be used with LINK_DIRECTORIES
+#   MarlinReco_COMPONENT_LIBRARIES      : list of MarlinReco component libraries
+#   MarlinReco_${COMPONENT}_FOUND       : set to TRUE or FALSE for each library
+#   MarlinReco_${COMPONENT}_LIBRARY     : path to individual libraries
+#   MarlinReco_${COMPONENT}_LIB_DEPENDS : individual library dependencies
+#
+# @author Jan Engels, Desy
+##############################################################################
+
 
 SET( MarlinReco_ROOT "@CMAKE_INSTALL_PREFIX@" )
+SET( MarlinReco_VERSION "@MarlinReco_VERSION@" )
 
 
 
@@ -43,7 +66,7 @@ INCLUDE( "${MarlinReco_ROOT}/lib/cmake/MarlinRecoLibDeps.cmake" )
 # or by calling:
 # $ cmake -DCMAKE_LIBRARY_PATH="/bla/bla;/foo/bar" ...
 # notice the path's separators! ( ':' for shell and ';' for cmake !! )
-FIND_LIBRARY( FORTRAN_LIB NAMES @FORTRAN_LIBNAME@ PATHS @FORTRAN_LIB_PATHS@;${MarlinReco_ROOT}/lib NO_DEFAULT_PATH )
+FIND_LIBRARY( FORTRAN_LIB NAMES @FORTRAN_LIBNAME@ PATHS @FORTRAN_LIB_PATHS@ ${MarlinReco_ROOT}/lib NO_DEFAULT_PATH )
 # if previous find fails, try to find in system paths..
 FIND_LIBRARY( FORTRAN_LIB NAMES @FORTRAN_LIBNAME@ )
 

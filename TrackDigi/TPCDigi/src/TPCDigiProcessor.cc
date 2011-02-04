@@ -361,7 +361,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 { 
 
   gsl_rng_set( _random, Global::EVENTSEEDER->getSeed(this) ) ;   
-  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
+  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << " for event number "<< evt->getEventNumber() << std::endl;
 
   int numberOfVoxelsCreated(0);
 
@@ -389,6 +389,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
   // this gets the center of the first pad in the pad layout
   const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
+
+  // this assumes that the pad width in r*phi is the same for all pads  
+  _padWidth = padLayout.getPadWidth(0)*padCoord[0];
+  // set size of row_hits to hold (n_rows) vectors
+  _tpcRowHits.resize(padLayout.getNRows());
  
   // created the collection which will be written out 
   _trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
@@ -410,11 +415,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     _NSimTPCHits = n_sim_hits;
       
     streamlog_out(DEBUG4) << "number of Pad-Row based SimHits = " << n_sim_hits << std::endl;
-
-    // this assumes that the pad width in r*phi is the same for all pads  
-    _padWidth = padLayout.getPadWidth(0)*padCoord[0];
-    // set size of row_hits to hold (n_rows) vectors
-    _tpcRowHits.resize(padLayout.getNRows());
 
 
     // make sure that all the pointers are initialise to NULL
@@ -818,12 +818,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           // search of the simhit pointers in the tpchit map
           it=_tpcHitMap.find(row_hits[j]);
           if(it!= _tpcHitMap.end()) {
-            Hit1 = _tpcHitMap[row_hits[j]]; // hit found 
+            Hit1 = it->second ; // hit found 
           }
  
           it=_tpcHitMap.find(row_hits[k]);
           if(it!= _tpcHitMap.end()) {
-            Hit2 = _tpcHitMap[row_hits[k]]; // hit found 
+            Hit2 = it->second ; // hit found 
           }
           
           double pathlengthZ1(0.0);
@@ -831,9 +831,20 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           if( Hit1 && Hit2 ){ // if both sim hits were found
             
-            LCFlagImpl colFlag( STHcol->getFlag() );
+            // check if the track momentum has been stored for the hits
+            bool momentum_set = true;
             
-            if( Hit1->getPathLength()!=0.0 && Hit2->getPathLength()!=0.0 && colFlag.bitSet(LCIO::THBIT_MOMENTUM)){
+            if( STHcol != NULL ){
+              LCFlagImpl colFlag( STHcol->getFlag() ) ;
+              momentum_set = momentum_set && colFlag.bitSet(LCIO::THBIT_MOMENTUM) ;
+            }            
+            
+            if( STHcolLowPt != NULL ){
+              LCFlagImpl colFlag( STHcolLowPt->getFlag() ) ;
+              momentum_set =  momentum_set && colFlag.bitSet(LCIO::THBIT_MOMENTUM) ;
+            }            
+
+            if( momentum_set ){
               
               const float * Momentum1 = Hit1->getMomentum() ;
               const float * Momentum2 = Hit2->getMomentum() ;
@@ -841,13 +852,12 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
               CLHEP::Hep3Vector mom1(Momentum1[0],Momentum1[1],Momentum1[2]);
               CLHEP::Hep3Vector mom2(Momentum2[0],Momentum2[1],Momentum2[2]);
               
-              pathlengthZ1 = fabs(Hit1->getPathLength() * (mom1.z() / mom1.perp()));
-              pathlengthZ2 = fabs(Hit2->getPathLength() * (mom2.z() / mom2.perp()));
-              
+              pathlengthZ1 = fabs( Hit1->getPathLength() * mom1.cosTheta() );
+              pathlengthZ2 = fabs( Hit2->getPathLength() * mom2.cosTheta() );
             } 
             else {
-              pathlengthZ1 = (5.0) ; 
-              pathlengthZ2 = (5.0) ; 
+              pathlengthZ1 = _doubleHitResZ ; // assume the worst i.e. that the track is moving in z 
+              pathlengthZ2 = _doubleHitResZ ; // assume the worst i.e. that the track is moving in z 
             }
             
             double dZ(0.0);

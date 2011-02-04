@@ -46,6 +46,9 @@ class CLICTrackSelector : public Processor {
   int _createMap;
   int _cutOnTPCHits;
   int _cutOnSiHits;
+  float _timingCutAtEcal;
+  float _pTCut;
+  float _radiusToKeepTPCOnlyTracks;
   LCEvent * _evt;
 
 

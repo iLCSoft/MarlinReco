@@ -88,6 +88,22 @@ CLICTrackSelector::CLICTrackSelector() : Processor("CLICTrackSelector") {
 			     "Cut on the number of the Si hits for tracks with no TPC hits",
 			     _cutOnSiHits,
 			     int(4));
+
+  registerProcessorParameter("TimingCutAtEcal",
+			     "Cut on arrival time at ECAL in ns",
+			     _timingCutAtEcal,
+			     float(20));
+
+  registerProcessorParameter("PtCut",
+			     "Cut on track pt",
+			     _pTCut,
+			     float(0.1));
+
+  registerProcessorParameter("RadiusToKeepTPCOnlyTracks",
+			     "Cut on track pt",
+			     _radiusToKeepTPCOnlyTracks,
+			     float(500.));
+
 }
 
 
@@ -198,15 +214,15 @@ void CLICTrackSelector::processEvent( LCEvent * evt ) {
 	if(nHitsSET>0)nPass++;
 	if(nHitsETD>0)nPass++;
 	if(nHitsSIT>0)nPass+=2;
-	if(nHitsFTD>4)nPass+=2;
-	if(nHitsVTX>4)nPass+=2;
-	if(r2Min > 500*500)nPass++;
+	if(nHitsFTD>= _cutOnSiHits)nPass+=2;
+	if(nHitsVTX>=_cutOnSiHits)nPass+=2;
+	if(r2Min > _radiusToKeepTPCOnlyTracks)nPass++;
 	if(nPass == 0)passTrackSelection = false;
       }
 
-      if(pT<0.100)passTrackSelection = false;
+      if(pT<_pTCut)passTrackSelection = false;
       // require arrival time at ECAL to be consistent with calorimeter hit times
-      if(fabs(time)>20)passTrackSelection = false;
+      if(fabs(time)>_timingCutAtEcal)passTrackSelection = false;
 
       if(!passTrackSelection){
 	nDropped++;

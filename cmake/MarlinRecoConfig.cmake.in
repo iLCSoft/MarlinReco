@@ -48,35 +48,13 @@ INCLUDE( "@ILCSOFT_CMAKE_MODULES_ROOT@/MacroCheckPackageLibs.cmake" )
 # only standard libraries should be passed as arguments to CHECK_PACKAGE_LIBS
 # additional components are set by cmake in variable PKG_FIND_COMPONENTS
 # first argument should be the package name
-CHECK_PACKAGE_LIBS( MarlinReco MarlinReco )
+CHECK_PACKAGE_LIBS( MarlinReco MarlinReco @FORTRAN_LIBRARY_NAME@ )
 
 
 
 # ---------- libraries dependencies -------------------------------------------
 # this sets MarlinReco_${COMPONENT}_LIB_DEPENDS variables
 INCLUDE( "${MarlinReco_ROOT}/lib/cmake/MarlinRecoLibDeps.cmake" )
-
-
-
-# check if g2c/gfortran lib is available
-# if somehow the library is in a different location you can tell cmake to
-# also search in other locations for finding libraries.
-# this can be done by setting a shell environment variable:
-# $ export CMAKE_LIBRARY_PATH="/bla/bla:/foo/bar"
-# or by calling:
-# $ cmake -DCMAKE_LIBRARY_PATH="/bla/bla;/foo/bar" ...
-# notice the path's separators! ( ':' for shell and ';' for cmake !! )
-FIND_LIBRARY( FORTRAN_LIB NAMES @FORTRAN_LIBNAME@ PATHS @FORTRAN_LIB_PATHS@ ${MarlinReco_ROOT}/lib NO_DEFAULT_PATH )
-# if previous find fails, try to find in system paths..
-FIND_LIBRARY( FORTRAN_LIB NAMES @FORTRAN_LIBNAME@ )
-
-IF( NOT FORTRAN_LIB )
-    MESSAGE( STATUS "Check for MarlinReco: failed to find @FORTRAN_LIBNAME@ library!!" )
-ELSE( NOT FORTRAN_LIB )
-    MESSAGE( STATUS "Check for lib@FORTRAN_LIBNAME@: ${FORTRAN_LIB}" )
-    MARK_AS_ADVANCED( FORTRAN_LIB )
-ENDIF( NOT FORTRAN_LIB )
-
 
 
 

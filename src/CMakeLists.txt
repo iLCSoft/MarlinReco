@@ -85,7 +85,5 @@ SET_SOURCE_FILES_PROPERTIES(
 
 # create library
 ADD_SHARED_LIBRARY( MarlinReco ${MarlinReco_cxx_srcs} ${MarlinReco_c_srcs} ${MarlinReco_f77_srcs} )
-# link MarlinReco library to libg2c/libgfortran
-TARGET_LINK_LIBRARIES( MarlinReco ${FORTRAN_LIB} )
-
 INSTALL_SHARED_LIBRARY( MarlinReco DESTINATION lib )
+

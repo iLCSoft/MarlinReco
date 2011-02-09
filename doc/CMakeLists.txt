@@ -9,6 +9,7 @@ FIND_PACKAGE( LATEX )
 
 SET( DOC_SRC_DIR "${PROJECT_SOURCE_DIR}/doc" )
 SET( DOC_BIN_DIR "${PROJECT_BINARY_DIR}/docbuild" )
+SET_DIRECTORY_PROPERTIES( PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${DOC_BIN_DIR}" )
 
 # global doc target for calling doc_html and doc_manual
 ADD_CUSTOM_TARGET( doc )
@@ -34,6 +35,7 @@ IF( DOXYGEN_FOUND )
     
     # add doc_html target
     ADD_CUSTOM_TARGET( doc_html DEPENDS "${DOC_BIN_DIR}/html/index.html" )
+
     # tell doc target to call doc_html
     ADD_DEPENDENCIES( doc doc_html )
     
@@ -53,12 +55,13 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
     AND DVIPS_CONVERTER AND LATEX2HTML_CONVERTER )
 
     ADD_CUSTOM_COMMAND(
-        OUTPUT  "${DOC_BIN_DIR}/manual"
+        OUTPUT  "${DOC_BIN_DIR}/manual/manual.tex"
         COMMAND "${CMAKE_COMMAND}" -E copy_directory "${DOC_SRC_DIR}/manual" "${DOC_BIN_DIR}/manual"
+        DEPENDS ${DOC_SRC_DIR}/manual/*
     )
 
     ADD_CUSTOM_COMMAND(
-        OUTPUT  "${DOC_BIN_DIR}/manual/manual_html/manual.html"
+        OUTPUT  "${DOC_BIN_DIR}/manual_html/manual.html"
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
         COMMAND "${LATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
         #COMMAND "${PDFLATEX_COMPILER}" ARGS -interaction=batchmode manual.tex
@@ -66,13 +69,12 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
         COMMAND "${DVIPS_CONVERTER}" ARGS -q -o manual.ps manual.dvi
         WORKING_DIRECTORY "${DOC_BIN_DIR}/manual"
         COMMENT "Building Documentation - Users Manual..."
-        DEPENDS "${DOC_BIN_DIR}/manual" ${DOC_SRC_DIR}/manual/*
+        DEPENDS "${DOC_BIN_DIR}/manual/manual.tex"
     )
 
-    SET_DIRECTORY_PROPERTIES( PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${DOC_BIN_DIR}/manual" )
-   
-    # add doc_latex target
-    ADD_CUSTOM_TARGET( doc_manual DEPENDS "${DOC_BIN_DIR}/manual/manual_html/manual.html" )
+    # add doc_manual target
+    ADD_CUSTOM_TARGET( doc_manual DEPENDS "${DOC_BIN_DIR}/manual_html/manual.html" )
+
     # tell doc target to call doc_manual
     ADD_DEPENDENCIES( doc doc_manual )
     

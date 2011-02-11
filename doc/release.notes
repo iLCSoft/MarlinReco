@@ -3,6 +3,22 @@
  release notes for MarlinReco
 
 ===============================
+
+ -----------
+| v00-19-01 |
+ -----------
+    
+    * [r2031] TrackDigi/TPCDigi/src/TPCDigiProcessor.cc: fixed a bug
+      where if lowpt hits were present in an event yet no pad row based
+      hits were present then _tpcRowHits was not correctly initialised.
+      Also fixed instance hard coded double hit res in z, it was set to
+      5 which was the default value and that used for studies, so no
+      expect change in behaviour. Also corrected Calculation of
+      pathlength in z for hit merging. It was incorrectly set to
+      pathlength*(pz/pt).
+
+
+
  --------
 | v00-19 |
  --------

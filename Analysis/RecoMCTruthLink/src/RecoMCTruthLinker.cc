@@ -1307,7 +1307,7 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
 
 #ifdef MARLIN_USE_AIDA
   
-std::cout<< " check " << std::endl;
+  streamlog_out(DEBUG) << " check " << std::endl;
   // - define some static histo pointers 
   // FIXME: these need to become class members eventually ...
 
@@ -1355,7 +1355,12 @@ std::cout<< " check " << std::endl;
   }
 
 
-  LCCollection* mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
+  LCCollection* mcpCol = NULL;
+  try{
+    mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
+  } catch (DataNotAvailableException e) {
+    streamlog_out(WARNING) << "RecoMCTructh::Check(): MCParticle collection \"" << _mcParticleCollectionName << "\" does not exist, skipping" << std::endl;
+  }
 
   int nMCP  = mcpCol->getNumberOfElements() ;
     
@@ -1384,34 +1389,35 @@ std::cout<< " check " << std::endl;
     
 
   // create the same histos now with the skimmed collection
+  LCCollection* mcpskCol = NULL;
+  try{  
+    mcpskCol = evt->getCollection( _mcParticlesSkimmedName ); 
+  }
+  catch (DataNotAvailableException e){
+    streamlog_out(WARNING) << "RecoMCTructh::Check(): MCParticleSkimmed collection \"" << _mcParticlesSkimmedName << "\" does not exist, skipping" << std::endl;
+  }
 
-  LCCollection* mcpskCol = evt->getCollection( _mcParticlesSkimmedName ) ;
-
-  int nMCPSK  = mcpskCol->getNumberOfElements() ;
-    
   etot = 0.0 ;
   nStable = 0 ;
+  int nMCPSK = 0;
 
-  for(int i=0; i< nMCPSK ; i++){
-      
-    MCParticle* mcpsk = dynamic_cast<MCParticle*> ( mcpskCol->getElementAt( i ) ) ;
-
-    if( mcpsk->getGeneratorStatus() == 1 ) {
-	
-      hmcpsk_e->fill(   mcpsk->getEnergy()  ) ;
-
-      etot +=  mcpsk->getEnergy()  ;
-	
-      ++nStable ;
+  if (mcpskCol){
+    nMCPSK  = mcpskCol->getNumberOfElements() ;
+    for(int i=0; i< nMCPSK ; i++){
+      MCParticle* mcpsk = dynamic_cast<MCParticle*> ( mcpskCol->getElementAt( i ) ) ;
+      if( mcpsk->getGeneratorStatus() == 1 ) {
+	hmcpsk_e->fill(   mcpsk->getEnergy()  ) ;
+	etot +=  mcpsk->getEnergy()  ;
+	++nStable ;
+      }
     }
-
-  }
+  }//If Skimmed Collection Exists
+  //Fill this, even if MCParticles Skimmed is empty, all are 0
   hmcpsk_n->fill( nStable ) ;
-
+  
   hmcpsk_ntot->fill( nMCPSK ) ;
     
   hmcpsk_etot->fill( etot ) ;
-    
 
 #endif
 
@@ -1421,7 +1427,7 @@ std::cout<< " check " << std::endl;
 void RecoMCTruthLinker::end(){ 
   
   streamlog_out(DEBUG4) << " processed " << _nEvt << " events in " << _nRun << " runs "
-		       << std::endl ;
+			<< std::endl ;
 
 }
 

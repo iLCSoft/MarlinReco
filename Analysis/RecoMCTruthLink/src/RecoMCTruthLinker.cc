@@ -259,11 +259,12 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   if( haveTracks && haveClusters && haveCaloHitRel ) {
     
     clusterLinker(  mcpCol ,  clusterCol,  cHitRelCol ,  &ctrlcol , &chittrlcol);
+
+    if (_OutputClusterRelation ) evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
+  
+    if (_OutputCalohitRelation ) evt->addCollection(  chittrlcol  , _calohitMCTruthLinkName ) ;
   }
   
-  if (_OutputClusterRelation ) evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
-  
-  if (_OutputCalohitRelation ) evt->addCollection(  chittrlcol  , _calohitMCTruthLinkName ) ;
   
   
   

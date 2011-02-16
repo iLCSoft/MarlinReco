@@ -258,7 +258,7 @@ SiliconTrackingCLIC::SiliconTrackingCLIC() : Processor("SiliconTrackingCLIC") {
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
 			     _nPhiFTD,
-			     int(30));
+			     int(45));
   
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
@@ -970,6 +970,9 @@ int SiliconTrackingCLIC::InitialiseFTD(LCEvent * evt) {
     success = 0;
   }
   
+  //for(int i=0;i<_nPhiFTD;i++)std::cout << " iPhi " << i << _sectorsFTD[]
+
+
   return success;
 }
 
@@ -2415,24 +2418,26 @@ void SiliconTrackingCLIC::TrackingInFTD() {
 
 
 int SiliconTrackingCLIC::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int iS) {
-  //  streamlog_out(DEBUG) << "Layers = " << nLR[0] << " " << nLR[1] << " " << nLR[2] << std::endl;
+  streamlog_out(DEBUG) << "Layers = " << nLR[0] << " " << nLR[1] << " " << nLR[2] << std::endl;
+
+  HelixClass helix;
+  const float d0 = trackAR->getD0();
+  const  float z0 = trackAR->getZ0();
+  const float phi0 = trackAR->getPhi();
+  const float tanlambda = trackAR->getTanLambda();
+  const float omega = trackAR->getOmega();
+  helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
+  float ref[3] = {helix.getReferencePoint()[0],helix.getReferencePoint()[1],helix.getReferencePoint()[2]};
+
+  //  for (int i=0;i<3;++i) {
+  // ref[i] = helix.getReferencePoint()[i];
+  //}
+  
   for (int iL=0;iL<_nLayersFTD;++iL) {
     if (iL != nLR[0] && iL != nLR[1] && iL != nLR[2]) {
-      HelixClass helix;
-      float d0 = trackAR->getD0();
-      float z0 = trackAR->getZ0();
-      float phi0 = trackAR->getPhi();
-      float tanlambda = trackAR->getTanLambda();
-      float omega = trackAR->getOmega();
-      helix.Initialize_Canonical(phi0,d0,z0,omega,tanlambda,_bField);
-      float ref[3];
-      for (int i=0;i<3;++i) {
-	ref[i] = helix.getReferencePoint()[i];
-      }
       float point[3];
       float ZL = _zLayerFTD[iL];
-      if (iS == 0) 
-	ZL = - ZL;
+      if (iS == 0) ZL = - ZL;
       helix.getPointInZ(ZL,ref,point);
       //      float Phi = atan2(point[1],point[0]);
       //      int iPhi = int(Phi/_dPhiFTD);
@@ -2446,6 +2451,7 @@ int SiliconTrackingCLIC::BuildTrackFTD(TrackExtended * trackAR, int * nLR, int i
 	  iP = ip - _nPhiFTD;	
 	int iCode = iS + 2*iL + 2*_nLayersFTD*iP;
 	TrackerHitExtendedVec& hitVec = _sectorsFTD[iCode];
+	//std::cout << " Sector Code : " << iCode << " hits = " << hitVec.size() << std::endl;   
 	int nH = int(hitVec.size());
 	for (int iH=0; iH<nH; ++iH) {
 	  TrackerHitExtended * hit = hitVec[iH];

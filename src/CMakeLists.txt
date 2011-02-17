@@ -8,6 +8,7 @@
 SET( MarlinReco_PKGS
     "Analysis/EventShapes"
     "Analysis/BCalTagEfficiency"
+    "Analysis/CLICPfoSelector"
     "Analysis/SatoruJetFinder"
     "Analysis/MarlinKinfit"
     "Analysis/RecoMCTruthLink"

@@ -219,6 +219,8 @@ class SiliconTrackingCLIC : public Processor {
   int _nLayersFTD;
   int _nLayersVTX;
   int _nLayersSIT;
+  int _nPhiFTDBase;
+  int _maxNumberOfFTDCombinations;
   int _nPhiFTD;
 
   std::string _VTXHitCollection;

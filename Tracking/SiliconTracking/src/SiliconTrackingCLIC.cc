@@ -1,6 +1,5 @@
 #include "SiliconTrackingCLIC.h"
 #include <iostream>
-
 #include <UTIL/LCTOOLS.h>
 #include <UTIL/LCRelationNavigator.h>
 #include <EVENT/LCCollection.h>
@@ -257,8 +256,14 @@ SiliconTrackingCLIC::SiliconTrackingCLIC() : Processor("SiliconTrackingCLIC") {
   
   registerProcessorParameter("NDivisionsInPhiFTD",
 			     "Number of divisions in Phi for FTD",
-			     _nPhiFTD,
+			     _nPhiFTDBase,
 			     int(45));
+  
+  
+  registerProcessorParameter("MaxNumberOfFTDCombinations",
+			     "Max number of estimated combinations in the FTD",
+			     _maxNumberOfFTDCombinations,
+			     int(100000));
   
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",
@@ -474,7 +479,6 @@ void SiliconTrackingCLIC::init() {
     PIOVER2 = double(0.5)*PI;
     _dPhi = TWOPI/double(_nDivisionsInPhi);
     _dTheta = double(2.0)/double(_nDivisionsInTheta);
-    _dPhiFTD = TWOPI/double(_nPhiFTD);
     float cutOnR = _cutOnPt/(0.3*_bField);
     cutOnR = 1000.*cutOnR;
     _cutOnOmega = 1/cutOnR;
@@ -912,67 +916,114 @@ void SiliconTrackingCLIC::CleanUp() {
 
 int SiliconTrackingCLIC::InitialiseFTD(LCEvent * evt) {
   int success = 1;
-  _nTotalFTDHits = 0;
-  _sectorsFTD.clear();
-  _sectorsFTD.resize(2*_nLayersFTD*_nPhiFTD);
+  
+  _nPhiFTD = _nPhiFTDBase;
 
-  //fg: not needed - resize already did the job....
-  //   for (int i=0; i<2*_nLayersFTD*_nPhiFTD;++i) {
-  //     TrackerHitExtendedVec hitVec;
-  //     hitVec.clear();
-  //     _sectorsFTD.push_back(hitVec);    
-  //   }
+  bool tooManyCombinations(true);
+  int iterations(0);
 
-  // Reading out FTD Hits Collection
-  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  try {
-    LCCollection * hitCollection = evt->getCollection(_FTDHitCollection.c_str());
-    int nelem = hitCollection->getNumberOfElements();
-    streamlog_out(DEBUG) << "Number of FTD hits = " << nelem << std::endl;
-    _nTotalFTDHits = nelem;
-    for (int ielem=0; ielem<nelem; ++ielem) {
-      TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
-      TrackerHitExtended * hitExt = new TrackerHitExtended( hit );
-      hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[0])));
-      hitExt->setResolutionZ(0.1);
-      if (hit->getCovMatrix()[0] < 1e-10)
-	hitExt->setResolutionRPhi(0.1);
-      hitExt->setType(int(2));
-      hitExt->setDet(int(2));
-      double pos[3];
-      for (int i=0; i<3; ++i) {
-	pos[i] = hit->getPosition()[i];
+  while(tooManyCombinations && iterations < 10){
+
+    if(iterations!=0)_nPhiFTD *= 2;
+    _dPhiFTD = TWOPI/double(_nPhiFTD);
+
+
+  //   std::cout << " N Phi Divisions in FTD : " << _nPhiFTD << std::endl;
+  
+    _nTotalFTDHits = 0;
+    _sectorsFTD.clear();
+    _sectorsFTD.resize(2*_nLayersFTD*_nPhiFTD);
+    
+    //fg: not needed - resize already did the job....
+    //   for (int i=0; i<2*_nLayersFTD*_nPhiFTD;++i) {
+    //     TrackerHitExtendedVec hitVec;
+    //     hitVec.clear();
+    //     _sectorsFTD.push_back(hitVec);    
+    //   }
+    
+    // Reading out FTD Hits Collection
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    try {
+      LCCollection * hitCollection = evt->getCollection(_FTDHitCollection.c_str());
+      int nelem = hitCollection->getNumberOfElements();
+      streamlog_out(DEBUG) << "Number of FTD hits = " << nelem << std::endl;
+      _nTotalFTDHits = nelem;
+      for (int ielem=0; ielem<nelem; ++ielem) {
+	TrackerHit * hit = dynamic_cast<TrackerHit*>(hitCollection->getElementAt(ielem));
+	TrackerHitExtended * hitExt = new TrackerHitExtended( hit );
+	hitExt->setResolutionRPhi(float(sqrt(hit->getCovMatrix()[0])));
+	hitExt->setResolutionZ(0.1);
+	if (hit->getCovMatrix()[0] < 1e-10)
+	  hitExt->setResolutionRPhi(0.1);
+	hitExt->setType(int(2));
+	hitExt->setDet(int(2));
+	double pos[3];
+	for (int i=0; i<3; ++i) {
+	  pos[i] = hit->getPosition()[i];
+	}
+	double Phi = atan2(pos[1],pos[0]);
+	if (Phi < 0.) Phi = Phi + TWOPI;
+	int layer = hit->getType() - 201;
+	
+	//get layer number from z location in Gear file (MB)
+	for(int iL=0; iL< _nLayersFTD; iL++){
+	  if(fabs(fabs(pos[2])-_zLayerFTD[iL])<1.0)layer = iL;
+	}
+	
+	streamlog_out(DEBUG)<< "FTD layer " << layer << " z " << pos[2] << " n layers " <<  _nLayersFTD << std::endl;
+	
+	if (layer < 0 || layer > _nLayersFTD-1) {
+	  streamlog_out(ERROR) << "SiliconTrackingCLIC => fatal error in FTD : layer is outside allowed range : " << layer << std::endl;
+	  exit(1);
+	}
+	int iPhi = int(Phi/_dPhiFTD);
+	int iSemiSphere = 0;
+	if (hit->getPosition()[2] > 0) 
+	  iSemiSphere = 1;
+	int iCode = iSemiSphere + 2*layer + 2*_nLayersFTD*iPhi;
+	_sectorsFTD[iCode].push_back( hitExt );
       }
-      double Phi = atan2(pos[1],pos[0]);
-      if (Phi < 0.) Phi = Phi + TWOPI;
-      int layer = hit->getType() - 201;
-
-      //get layer number from z location in Gear file (MB)
-      for(int iL=0; iL< _nLayersFTD; iL++){
-	if(fabs(fabs(pos[2])-_zLayerFTD[iL])<1.0)layer = iL;
+    }
+    catch(DataNotAvailableException &e ) {
+      success = 0;
+    }
+    
+    double estimateOfCombinations(0.0);
+    
+    for(int iSide=0; iSide< 2; iSide++){
+      for(int i=0;i<_nPhiFTD;i++){
+	for(int iL=1; iL< _nLayersFTD-1; iL++){
+	  int iCode1 =  iSide + 2*iL + 2*_nLayersFTD*i;
+	  const int n1 = _sectorsFTD[iCode1].size();
+	  int iCode0 =  iSide + 2*(iL-1) + 2*_nLayersFTD*i;
+	  const int n0 = _sectorsFTD[iCode0].size();
+	  int iCode2 =  iSide + 2*(iL+1) + 2*_nLayersFTD*i;
+	  const int n2 = _sectorsFTD[iCode2].size();
+	  estimateOfCombinations += (double)(n0*n1*n2);
+	}
       }
+    }
+    
 
-      streamlog_out(DEBUG)<< "FTD layer " << layer << " z " << pos[2] << " n layers " <<  _nLayersFTD << std::endl;
-
-      if (layer < 0 || layer > _nLayersFTD-1) {
-	streamlog_out(ERROR) << "SiliconTrackingCLIC => fatal error in FTD : layer is outside allowed range : " << layer << std::endl;
-	exit(1);
+    iterations++;
+    if(estimateOfCombinations<_maxNumberOfFTDCombinations){
+      tooManyCombinations = false;
+    }else{
+      streamlog_out(WARNING) << " Too many projected FTD Combinations " << estimateOfCombinations << std::endl;
+      streamlog_out(WARNING) << "       changing FTD phi divisions to " << _nPhiFTD*2 << std::endl;
+      for(int iSide=0; iSide< 2; iSide++){
+	for(int i=0;i<_nPhiFTD;i++){
+	  for(int iL=0; iL< _nLayersFTD; iL++){
+	    int iCode =  iSide + 2*iL + 2*_nLayersFTD*i;
+	    TrackerHitExtendedVec& hitVec = _sectorsFTD[iCode];
+	    int nH = int(hitVec.size());
+	    for (int iH=0; iH<nH; ++iH)delete hitVec[iH];
+	  }
+	}
       }
-      int iPhi = int(Phi/_dPhiFTD);
-      int iSemiSphere = 0;
-      if (hit->getPosition()[2] > 0) 
-	iSemiSphere = 1;
-      int iCode = iSemiSphere + 2*layer + 2*_nLayersFTD*iPhi;
-      _sectorsFTD[iCode].push_back( hitExt );
     }
   }
-  catch(DataNotAvailableException &e ) {
-    success = 0;
-  }
   
-  //for(int i=0;i<_nPhiFTD;i++)std::cout << " iPhi " << i << _sectorsFTD[]
-
-
   return success;
 }
 

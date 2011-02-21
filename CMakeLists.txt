@@ -52,11 +52,6 @@ FIND_PACKAGE( RAIDA REQUIRED )
 FIND_PACKAGE( ROOT 5.27 REQUIRED COMPONENTS MathMore )
 
 FOREACH( pkg Marlin MarlinUtil GSL CERNLIB RAIDA ROOT )
-    # fix for backwards compatibility
-    IF( NOT ${pkg}_DIR AND DEFINED ${pkg}_HOME )
-        SET( ${pkg}_DIR ${${pkg}_HOME} )
-    ENDIF()
-
     INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
     LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
     ADD_DEFINITIONS( ${${pkg}_DEFINITIONS} )

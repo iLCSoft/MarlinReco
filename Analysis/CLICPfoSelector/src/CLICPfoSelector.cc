@@ -587,6 +587,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	selectedPfo->setEnergy(energy);
 	eTotalOutput+=energy;
 	selectedPfo->setCovMatrix(covMatrix);
+	selectedPfo->setMomentum(momentum);
 	selectedPfo->setMass(mass); 
 	selectedPfo->setCharge(charge); 
 	selectedPfo->setReferencePoint(referencePoint); 

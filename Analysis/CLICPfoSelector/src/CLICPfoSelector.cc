@@ -304,6 +304,8 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
   }
 
   LCCollectionVec * colPFO = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  colPFO->setSubset(true);
+
   // if we want to point back to the hits we need to set the flag
 
   
@@ -582,21 +584,8 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       }
       
       if(passPfoSelection){
-	ReconstructedParticleImpl * selectedPfo = new ReconstructedParticleImpl();
-	selectedPfo->setType(type); 
-	selectedPfo->setEnergy(energy);
 	eTotalOutput+=energy;
-	selectedPfo->setCovMatrix(covMatrix);
-	selectedPfo->setMomentum(momentum);
-	selectedPfo->setMass(mass); 
-	selectedPfo->setCharge(charge); 
-	selectedPfo->setReferencePoint(referencePoint); 
-	for(unsigned int i = 0; i<particleIDs.size();i++)selectedPfo->addParticleID(particleIDs[i]);
-	selectedPfo->setParticleIDUsed(particleIDUsed); 
-	selectedPfo->setGoodnessOfPID(goodnessOfPID);
-	for(unsigned int i = 0; i<clusters.size();i++)selectedPfo->addCluster(clusters[i]);
-	for(unsigned int i = 0; i<tracks.size();i++)selectedPfo->addTrack(tracks[i]);
-	colPFO->addElement(selectedPfo);
+	colPFO->addElement(pPfo);
       }else{
 	//std::cout << " dropped E = " << energy << std::endl;
      }

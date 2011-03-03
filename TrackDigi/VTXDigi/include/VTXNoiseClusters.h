@@ -12,11 +12,11 @@
 #include <vector>
 #include <gsl/gsl_rng.h>
 
-#include <AIDA/AIDA.h>
 #include "TH2F.h"
 #include "TFile.h"
 
 #ifdef MARLIN_USE_AIDA
+#include <AIDA/AIDA.h>
 typedef std::vector< AIDA::IHistogram1D* > Hist1DVec ;
 typedef std::vector< AIDA::IHistogram2D* > Hist2DVec ;
 #endif

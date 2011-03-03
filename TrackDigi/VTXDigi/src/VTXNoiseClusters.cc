@@ -446,7 +446,9 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
         //         streamlog_out( DEBUG ) << " axisAlab " << axisAlab 
         //                                << " axisBlab " << axisBlab  << std::endl ;
         
+#ifdef MARLIN_USE_AIDA
         _hist2DVec[ layer-1 ]->fill( cluB *2. , cluA * 2. ) ;
+#endif
       }
       
       switch (layer) {

@@ -36,6 +36,7 @@ using namespace marlin ;
 const int precision = 2;
 const int widthFloat = 7;
 const int widthInt = 5;
+const int widthSmallInt = 3;
 
 CLICDstChecker aCLICDstChecker ;
 
@@ -52,6 +53,10 @@ CLICDstChecker::CLICDstChecker() : Processor("CLICDstChecker") {
 			     m_monitoring,
 			     int(1));
 
+  registerProcessorParameter("ShowBackground",
+			     "Show background pfo information",
+			     m_showBackground,
+			     int(1));
 
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
                          "InputPfoCollection",
@@ -111,7 +116,6 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 
  
   try {
-    std::cout << " Reading collection " << m_inputPfoCollection.c_str() << std::endl;
     LCCollection * col = evt->getCollection(m_inputPfoCollection.c_str());
     int nelem = col->getNumberOfElements(); 
     for (int iPfo=0; iPfo<nelem; ++iPfo)m_pfoVector.push_back(dynamic_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
@@ -124,7 +128,6 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 
 
   try {
-    std::cout << " Reading collection " << m_inputMcParticleCollection.c_str() << std::endl;
     LCCollection * col = evt->getCollection(m_inputMcParticleCollection.c_str());
     int nelem = col->getNumberOfElements(); 
     for (int iMc=0; iMc<nelem; ++iMc)m_mcSet.insert(dynamic_cast<MCParticle*>(col->getElementAt(iMc)));
@@ -137,7 +140,6 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 
   m_pfoToMcNavigator = NULL;
   try {
-    std::cout << " Reading collection " << m_inputPfoToMcRelationCollection.c_str() << std::endl;
     m_pfoToMcNavigator = new LCRelationNavigator( evt->getCollection(m_inputPfoToMcRelationCollection.c_str()) );
   }
   catch( DataNotAvailableException &e ) {
@@ -163,16 +165,31 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
   }
 
 
+  float eSignal     = 0;
+  float eBackground = 0;
+  float eMc         = 0;
+
   for(unsigned int ipass = 0; ipass<2;ipass++){
-    if (m_monitoring&&ipass==0)std::cout << " ************** Physics    Pfos ****************" << std::endl;
-    if (m_monitoring&&ipass==1)std::cout << " ************** Background Pfos ****************" << std::endl;
-    int nPfos;
+    unsigned int nPfos;
     (ipass==0) ? nPfos = physicsPfos.size() : nPfos = backgroundPfos.size();
     for (unsigned int iPfo=0; iPfo<nPfos; ++iPfo) {
+      if(iPfo==0){
+	if (m_monitoring==1&&ipass==0){
+	  std::cout << " *********************** Physics    Pfos ************************" << std::endl;
+	  std::cout << "   pfo   E       pT   cost  nt nc  mc   Emc " << std::endl;
+	}else{
+	  if (m_monitoring==1&&m_showBackground==1&&ipass==1)std::cout << " ********************** Background Pfos ************************" << std::endl;
+	  std::cout << "   pfo   E       pT   cost  nt nc " << std::endl;
+	}
+      }
+
       ReconstructedParticle * pPfo;
       (ipass==0) ? pPfo = physicsPfos[iPfo] : pPfo = backgroundPfos[iPfo];
       MCParticle * pMc = NULL;
-      if(ipass==0)physicsMatchedMcParticle[iPfo];
+      if(ipass==0){
+	pMc=physicsMatchedMcParticle[iPfo];
+	eMc += pMc->getEnergy();
+      }
       const int id = pPfo->id();
       const int type = pPfo->getType();
       const bool isCompound = pPfo->isCompound(); 
@@ -211,19 +228,27 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 	const Cluster *cluster = clusters[i];
       }
 
-      if (m_monitoring) {
+      (ipass ==0) ? eSignal+= energy : eBackground += energy;
+
+
+      if (m_monitoring && (ipass==0 || (ipass ==1 && m_showBackground))) {
 	std::cout << std::fixed;
 	std::cout << std::setprecision(precision);
 	if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT,cosTheta,tracks.size(),0);
 	if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT,cosTheta,0,clusters.size());
 	if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT,cosTheta,tracks.size(),clusters.size());
+	if(pMc!=NULL)FORMATTED_OUTPUT_MC(pMc->getPDG(),pMc->getEnergy());
+	std::cout << std::endl;			       
       }
     }
   }
   
-  if (m_monitoring)std::cout << " ************** Physics Pfos ****************" << std::endl;
+  if (m_monitoring){
+    std::cout << " ESignal = " << eSignal << "( " << eMc << " )" << std::endl;
+    std::cout << " EBack   = " << eBackground  << std::endl;
+  }
+   
 
-  
   CleanUp();
   
   m_nEvt++;

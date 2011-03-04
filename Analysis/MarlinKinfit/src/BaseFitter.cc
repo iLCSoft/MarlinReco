@@ -5,6 +5,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseFitter.cc,v $
+ * - Revision 1.3  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.2  2009/09/01 09:48:13  blist
  * - Added tracer mechanism, added access to fit covariance matrix
  * -
@@ -21,7 +24,10 @@
 #include <cassert>
 
 BaseFitter::BaseFitter()  
-: tracer (0), covDim (0), cov(0), covValid (false)
+: covDim (0), cov(0), covValid (false)
+#ifndef FIT_TRACEOFF    
+  , tracer (0)
+#endif FIT_TRACEOFF    
 {}
 
 BaseFitter::~BaseFitter()  
@@ -49,6 +55,10 @@ void BaseFitter::addConstraint (BaseConstraint* constraint_)
     constraints.push_back(hc);
   else if (BaseSoftConstraint *sc = dynamic_cast<BaseSoftConstraint *>(constraint_))
     softconstraints.push_back(sc);
+  else {
+    // illegal constraint
+    assert (0);
+  }
 }
 
 void BaseFitter::addConstraint (BaseConstraint& constraint_)  

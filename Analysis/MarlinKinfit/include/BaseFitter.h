@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseFitter.h,v $
+ * - Revision 1.5  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.4  2009/09/01 09:48:12  blist
  * - Added tracer mechanism, added access to fit covariance matrix
  * -
@@ -39,6 +42,8 @@
 #define __BASEFITTER_H
 
 #include<vector>
+#include<string>
+#include<map>
 
 class BaseFitObject;
 class BaseConstraint;
@@ -51,7 +56,7 @@ class BaseTracer;
 /**
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2009/09/01 09:48:12 $
+ * Last update: $Date: 2011/03/03 15:03:02 $
  *          by: $Author: blist $
  *
  */
@@ -109,13 +114,19 @@ class BaseFitter {
     
     FitObjectContainer      fitobjects;
     ConstraintContainer     constraints;
-    SoftConstraintContainer softconstraints;
-    
-    BaseTracer *tracer;
+    SoftConstraintContainer softconstraints;    
     
     int     covDim;   ///< dimension of global covariance matrix
     double *cov;      ///< global covariance matrix of last fit problem
     bool    covValid; ///< Flag whether global covariance is valid
+
+#ifndef FIT_TRACEOFF    
+    BaseTracer *tracer;
+#endif 
+  public:  
+#ifndef FIT_TRACEOFF    
+    std::map<std::string, double> traceValues;
+#endif 
 
 };
 

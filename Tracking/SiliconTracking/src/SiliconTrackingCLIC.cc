@@ -263,7 +263,7 @@ SiliconTrackingCLIC::SiliconTrackingCLIC() : Processor("SiliconTrackingCLIC") {
   registerProcessorParameter("MaxNumberOfFTDCombinations",
 			     "Max number of estimated combinations in the FTD",
 			     _maxNumberOfFTDCombinations,
-			     int(100000));
+			     int(50000));
   
   registerProcessorParameter("NDivisionsInTheta",
 			     "Number of divisions in Theta",

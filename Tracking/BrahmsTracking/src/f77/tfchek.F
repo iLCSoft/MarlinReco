@@ -66,7 +66,7 @@ C GAB:
          FIRST=.FALSE.
          DMAX=TPCACRO
          ZMAX=ZDRIFT
-         PMAX=1000.
+         PMAX=2000.
         ENDIF
 
         IF (LTASSO) THEN

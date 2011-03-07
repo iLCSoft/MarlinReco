@@ -481,15 +481,15 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         
         const float * mcpMomentum = _SimTHit->getMomentum() ;
         
-        CLHEP::Hep3Vector *mom = new CLHEP::Hep3Vector(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
+        CLHEP::Hep3Vector mom(mcpMomentum[0],mcpMomentum[1],mcpMomentum[2]);
         
-        //const double pt = mom->perp();
-        //const double radius = pt / (FCT*bField);
+        // const double pt = mom.perp();
+        // const double radius = pt / (FCT*bField);
         
-        //const double tanLambda = mom->z()/pt;
+        // const double tanLambda = mom.z()/pt;
         
-        padPhi = fabs(thisPoint.deltaPhi(*mom));
-        padTheta = mom->theta();
+        padPhi = fabs(thisPoint.deltaPhi(mom));
+        padTheta = mom.theta();
 
       } 
 

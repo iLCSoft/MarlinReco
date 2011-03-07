@@ -1054,20 +1054,20 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   double tpcRPhiRes = seed_hit->getRPhiRes();
   double tpcZRes = seed_hit->getZRes();
 
-  CLHEP::Hep3Vector* point = new CLHEP::Hep3Vector(seed_hit->getX(),seed_hit->getY(),seed_hit->getZ());
+  CLHEP::Hep3Vector point(seed_hit->getX(),seed_hit->getY(),seed_hit->getZ());
 
-  double unsmearedPhi = point->phi();
+  double unsmearedPhi = point.phi();
 
   double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
   double randz =  gsl_ran_gaussian(_random,tpcZRes);
 
-  point->setPhi( point->phi() + randrp/ point->perp() );
-  point->setZ( point->z() + randz );
+  point.setPhi( point.phi() + randrp/ point.perp() );
+  point.setZ( point.z() + randz );
 
   // make sure the hit is not smeared beyond the TPC Max DriftLength
-  if( fabs(point->z()) > gearTPC.getMaxDriftLength() ) point->setZ( (fabs(point->z()) / point->z() ) * gearTPC.getMaxDriftLength() );
+  if( fabs(point.z()) > gearTPC.getMaxDriftLength() ) point.setZ( (fabs(point.z()) / point.z() ) * gearTPC.getMaxDriftLength() );
 
-  double pos[3] = {point->x(),point->y(),point->z()}; 
+  double pos[3] = {point.x(),point.y(),point.z()}; 
   trkHit->setPosition(pos);
   trkHit->setEDep(seed_hit->getEDep());
   trkHit->setType( 500 );
@@ -1116,21 +1116,21 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
 
   double phiSim = atan2(theSimHit->getPosition()[1],theSimHit->getPosition()[0]);
 
-  double rPhiDiff = (point->phi() - phiSim)*sqrt(rSimSqrd);
-  double rPhiPull = ((point->phi() - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(point->phi())*cos(point->phi()))));
+  double rPhiDiff = (point.phi() - phiSim)*sqrt(rSimSqrd);
+  double rPhiPull = ((point.phi() - phiSim)*sqrt(rSimSqrd))/(sqrt((covMat[2])/(cos(point.phi())*cos(point.phi()))));
         
-  double zDiff = point->getZ() - theSimHit->getPosition()[2];
+  double zDiff = point.getZ() - theSimHit->getPosition()[2];
   double zPull = zDiff/sqrt(covMat[5]);
         
         
   _rPhiDiffHisto->fill(rPhiDiff);
   _rPhiPullHisto->fill(rPhiPull);
-  _phiDistHisto->fill(point->phi() - phiSim);
+  _phiDistHisto->fill(point.phi() - phiSim);
   _zDiffHisto->fill(zDiff);
   _zPullHisto->fill(zPull);
         
   _zSigmaVsZHisto->fill(seed_hit->getZ(),sqrt(covMat[5]));
-  _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(point->phi())*cos(point->phi()))));
+  _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(point.phi())*cos(point.phi()))));
   _zSigmaHisto->fill(sqrt(covMat[5]));
 #endif
 }

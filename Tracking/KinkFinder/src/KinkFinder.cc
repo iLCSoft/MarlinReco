@@ -468,6 +468,10 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 			 bz, phiH, _bField,signPz,
 			 zEnd);
 
+    delete[] xh;
+    delete[] yh;
+    delete[] zh;
+    delete[] ah;
 
   }
 

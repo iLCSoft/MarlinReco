@@ -143,35 +143,35 @@ void V0Finder::processEvent( LCEvent * evt ) {
     
     for (int i=0;i<nelem-1;++i) {
       Track * firstTrack = dynamic_cast<Track*>(col->getElementAt(i));
-      HelixClass * firstHelix = new HelixClass();
       float d01 = firstTrack->getD0();
       float z01 = firstTrack->getZ0();
       float phi1 = firstTrack->getPhi();
       float tanLambda1 = firstTrack->getTanLambda();
       float omega1 = firstTrack->getOmega();
-      firstHelix->Initialize_Canonical(phi1,d01,z01,omega1,tanLambda1,_bField);
-      float charge1 = firstHelix->getCharge();
+      HelixClass firstHelix;
+      firstHelix.Initialize_Canonical(phi1,d01,z01,omega1,tanLambda1,_bField);
+      float charge1 = firstHelix.getCharge();
       for (int j=i+1;j<nelem;++j) {
 	Track * secondTrack = dynamic_cast<Track*>(col->getElementAt(j));
-	HelixClass * secondHelix = new HelixClass();
 	float d02 = secondTrack->getD0();
 	float z02 = secondTrack->getZ0();
 	float phi2 = secondTrack->getPhi();
 	float tanLambda2 = secondTrack->getTanLambda();
 	float omega2 = secondTrack->getOmega();
-	secondHelix->Initialize_Canonical(phi2,d02,z02,omega2,tanLambda2,_bField);
-	float charge2 = secondHelix->getCharge();
+	HelixClass secondHelix;
+	secondHelix.Initialize_Canonical(phi2,d02,z02,omega2,tanLambda2,_bField);
+	float charge2 = secondHelix.getCharge();
 	float prodCharge = charge1*charge2;
 	if (prodCharge<0) { // two tracks with opposite charges
 	  
-	  float px1 = firstHelix->getMomentum()[0];
-	  float py1 = firstHelix->getMomentum()[1];
-	  float pz1 = firstHelix->getMomentum()[2];
+	  float px1 = firstHelix.getMomentum()[0];
+	  float py1 = firstHelix.getMomentum()[1];
+	  float pz1 = firstHelix.getMomentum()[2];
 	  float pp1 = sqrt(px1*px1+py1*py1+pz1*pz1);
 	  
-	  float px2 = secondHelix->getMomentum()[0];
-	  float py2 = secondHelix->getMomentum()[1];
-	  float pz2 = secondHelix->getMomentum()[2];
+	  float px2 = secondHelix.getMomentum()[0];
+	  float py2 = secondHelix.getMomentum()[1];
+	  float pz2 = secondHelix.getMomentum()[2];
 	  float pp2 = sqrt(px2*px2+py2*py2+pz2*pz2);
 	  
 	  float distV0;
@@ -179,10 +179,10 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  float vertex[3];
 	  
 	  if (pp1>pp2) {
-	    distV0 = firstHelix->getDistanceToHelix(secondHelix, vertex, momentum);
+	    distV0 = firstHelix.getDistanceToHelix(&secondHelix, vertex, momentum);
 	  }
 	  else {
-	    distV0 = secondHelix->getDistanceToHelix(firstHelix, vertex, momentum);
+	    distV0 = secondHelix.getDistanceToHelix(&firstHelix, vertex, momentum);
 	  }
 	  
 	  float radV0 = sqrt(vertex[0]*vertex[0]+vertex[1]*vertex[1]);
@@ -307,9 +307,7 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
 	    
 	  } 
 	}
-	delete secondHelix;
       }
-      delete firstHelix;
     }
     
 //     std::cout << std::endl;

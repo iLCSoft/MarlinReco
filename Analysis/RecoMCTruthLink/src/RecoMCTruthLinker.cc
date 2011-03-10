@@ -296,6 +296,10 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
     evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
   }
+  //If either collection has not been added to the event, we have to delete it now!
+  //Don't delete them before, because they are used
+  if(!_OutputClusterRelation) { delete ctrlcol; }
+  if(!_OutputCalohitRelation) { delete chittrlcol; }
 
 }
 

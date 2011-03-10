@@ -1010,7 +1010,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   streamlog_out(DEBUG4) << "_NLostPhysicsAbove1GeVPtTPCHits = " << _NLostPhysicsAbove1GeVPtTPCHits << endl;
   streamlog_out(DEBUG4) << "_NRevomedHits = " << _NRevomedHits << endl;
   
- _nEvt++;  
+  _nEvt++;  
+  //Clear the maps and the end of the event.
+  _tpcHitMap.clear();
+  _tpcRowHits.clear();
 }
 
 

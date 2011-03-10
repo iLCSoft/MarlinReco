@@ -421,6 +421,7 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   delete[] chi2hit;
   delete[] hitIndex;
   delete[] idoutl;
+  delete[] idRep;
   return ierr;
 
 

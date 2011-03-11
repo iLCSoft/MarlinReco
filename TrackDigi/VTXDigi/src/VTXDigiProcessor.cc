@@ -367,7 +367,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                   }
                 ++tries;
               } 
-            if( accept_hit = false )
+            if( accept_hit == false ) 
               {
                 streamlog_out(DEBUG) << "hit could not be smeared within ladder after 100 tries: hit dropped"  << std::endl;
                 continue; 

@@ -1756,20 +1756,6 @@ void FullLDCTracking::SelectCombinedTracks() {
 	}
 	group->setEdges(edges);
 	_trkImplVec.push_back(trkExt);	
-
-	TrackerHitExtendedVec hitVec1a = firstTrack->getTrackerHitExtendedVec();
-	int hits1a = int(hitVec1a.size());
-	TrackerHitExtendedVec hitVec2a = secondTrack->getTrackerHitExtendedVec();
-	int hits2a = int(hitVec2a.size());
-	TrackExtended * combinedTrack = CombineTracks(firstTrack,secondTrack);
-
-
-	//TrackerHitExtendedVec hitVec1 = firstTrack->getTrackerHitExtendedVec();
-	//int hits1 = int(hitVec1.size());
-	//TrackerHitExtendedVec hitVec2 = secondTrack->getTrackerHitExtendedVec();
-	//int hits2 = int(hitVec2.size());
-	//TrackerHitExtendedVec hitVecs = combinedTrack->getTrackerHitExtendedVec();
-	//int hitss = int(hitVecs.size());
 	
 	if (_debug == 3) {
 	  int iopt = 1;

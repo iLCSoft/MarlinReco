@@ -385,10 +385,10 @@ void RecoMCTruthLinker::trackLinker(  LCCollection* mcpCol ,  LCCollection* trac
       if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
                                                   // creating true particle: enter it into the list,
                                                   // and note how many hits it produced.
-        theMCPs[ifound]=it->first ;  MCPhits.push_back(it->second) ; ifound++;
+        theMCPs.push_back(it->first);  MCPhits.push_back(it->second); ifound++;
       } else {  // not genstat 1. Wat should we do with it ?
         if ( mother != 0 ) { // if it has a parent, save it
-          theMCPs[ifound]=it->first ;  MCPhits.push_back(it->second) ; ifound++;
+          theMCPs.push_back(it->first);  MCPhits.push_back(it->second); ifound++;
         } else {
           streamlog_out( WARNING ) << 
             " track has hit(s) from a non-generator particle with no parents ?!! " 
@@ -721,7 +721,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                                                     // creating true particle: enter it into 
                                                     // the list, and note how much energy it 
                                                     // contributed.
-        theMCPs[ifound]=it->first ;  MCPes.push_back(it->second) ; ifound++;
+        theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
       } else { // not genstat 1. What should we do with it ?
          if (  it->first->getParents().size() != 0 ) { 
            mother= dynamic_cast<MCParticle*>(it->first->getParents()[0]);
@@ -735,7 +735,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                                                            // ... and is of a type we want to
                                                            // save (it's mother is in _pdgSet) 
                                                            // -> also a bona fide creator.
-             theMCPs[ifound]=it->first ;  MCPes.push_back(it->second) ; ifound++;
+             theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
            } else { // else: add to the  moreMCPs-list, further treated below
              streamlog_out( DEBUG2 ) << " case 1 for "<< it->first << 
                                         "(morefound=" << morefound << ")" << 
@@ -744,12 +744,12 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                                         " dint " << mother->isDecayedInTracker() <<
                                         " bs "  << mother->isBackscatter() << 
                                         " pdg " <<mother->getPDG() <<std::endl;
-             moreMCPs[morefound]=it->first ;  moreMCPes.push_back(it->second) ; morefound++;
+             moreMCPs.push_back(it->first);  moreMCPes.push_back(it->second); morefound++;
            }
          } else { // not genstat 1, no mother ?! Also add to the  moreMCPs-list.
            streamlog_out( WARNING ) << " case 2 for "<< it->first << 
                                        "(morefound=" << morefound << ")" << std::endl;
-           moreMCPs[morefound]=it->first ;  moreMCPes.push_back(it->second) ; morefound++;
+           moreMCPs.push_back(it->first);  moreMCPes.push_back(it->second); morefound++;
          }	    
       }
       
@@ -863,7 +863,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
   
         streamlog_out( DEBUG3 ) << "        No relation found for "<< moreMCPs[iii] << 
                                    ". Keep it as separate originator "<< std::endl;
-        theMCPs[ifound]=moreMCPs[iii] ;  MCPes.push_back(moreMCPes[iii]); ifound ++;
+        theMCPs.push_back(moreMCPs[iii]);  MCPes.push_back(moreMCPes[iii]); ifound++;
       }
   
     }

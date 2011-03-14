@@ -1300,6 +1300,8 @@ void FullLDCTracking::CleanUp(){
 //   }
   _trkImplVec.clear();
 
+  //AS: Dont delete the individual entries, some of them are cleared elsewhere, I think
+  _candidateCombinedTracks.clear();
 }
 
 void FullLDCTracking::MergeTPCandSiTracks() {
@@ -2318,6 +2320,7 @@ void FullLDCTracking::CheckTracks() {
 	  if(secondHitVec[ihit]->getDet()==1)nTpcSecond++;
 	  if(secondHitVec[ihit]->getUsedInFit()==true)nUsedSecond++;
 	}
+	delete combinedTrack->getGroupTracks();
 	delete combinedTrack;
       }
     }
@@ -2711,6 +2714,7 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 	    dpOverP = 0;
 	    //std::cout << " Forcing MERGE " << std::endl;
 	  }
+	  delete combinedTrack->getGroupTracks();
 	  delete combinedTrack;
 	}else{
 	  //std::cout << "Could not combine track " << std::endl;
@@ -3724,6 +3728,7 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       }
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
 
+      delete combinedTrack->getGroupTracks();
       delete combinedTrack;
 
       
@@ -3771,6 +3776,7 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
+      delete combinedTrack->getGroupTracks();
       delete combinedTrack;
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       
@@ -3820,6 +3826,7 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
+      delete combinedTrack->getGroupTracks();
       delete combinedTrack;
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       std::cout << std::endl;      
@@ -3858,6 +3865,7 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
+      delete combinedTrack->getGroupTracks();
       delete combinedTrack;
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       
@@ -4008,6 +4016,7 @@ bool FullLDCTracking::VetoMerge(TrackExtended* firstTrackExt, TrackExtended* sec
   bool veto = false;
   if(combinedTrack!=NULL){
     if(combinedTrack->getNDF()+15<firstTrackExt->getNDF()+secondTrackExt->getNDF()+5)veto=true;
+    delete combinedTrack->getGroupTracks();
     delete combinedTrack;
   }else{
     veto = true;

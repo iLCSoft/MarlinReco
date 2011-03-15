@@ -22,6 +22,10 @@
 #include <gear/VXDLayerLayout.h>
 #include <gear/BField.h>
 
+
+#include <iomanip>
+using std::setw;
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -731,22 +735,22 @@ void SiliconTrackingCLIC::processEvent( LCEvent * evt ) {
 	      for (int ish=0;ish<nSH;++ish) {
 		SimTrackerHit * simHit = dynamic_cast<SimTrackerHit*>(trkHit->getRawHits()[ish]);
 		MCParticle * mcp = simHit->getMCParticle();
-
-		cosThetaMC = mcp->getMomentum()[2]/mcp->getEnergy();
-
-		bool found = false;
-		int nMCP = int(mcPointers.size());
-		for (int iMCP=0;iMCP<nMCP;++iMCP) {
-		  if (mcp == mcPointers[iMCP]) {
-		    found = true;
-		    ++mcHits[iMCP];
-		    break;
+		if(mcp) {//in case of backscatters from the outside of the tracking region no MCP might be connected to the SimHit
+		  cosThetaMC = mcp->getMomentum()[2]/mcp->getEnergy();
+		  bool found = false;
+		  int nMCP = int(mcPointers.size());
+		  for (int iMCP=0;iMCP<nMCP;++iMCP) {
+		    if (mcp == mcPointers[iMCP]) {
+		      found = true;
+		      ++mcHits[iMCP];
+		      break;
+		    }
 		  }
-		}
-		if (!found) {
-		  mcPointers.push_back(mcp);
-		  mcHits.push_back(1);
-		}
+		  if (!found) {
+		    mcPointers.push_back(mcp);
+		    mcHits.push_back(1);
+		  }
+		}//Have MCP End
 	      }
 	    }
 	  }

@@ -129,6 +129,8 @@ class CLICPfoSelector : public Processor {
   float           m_maxMomentumForClusterLessPfos;                ///< Minimum momentum for a cluster-less pfo
   float           m_minPtForClusterLessPfos;                      ///< Minimum pT for a cluster-less pfo  
   float           m_clusterLessPfoTrackTimeCut;                   ///< Maximum arrival time at Ecal for cluster-less pfo
+  float           m_forwardCosThetaForHighEnergyNeutralHadrons;   ///< Forward region of HCAL where timing cuts will be applied to all neutral hadrons
+  float           m_forwardHighEnergyNeutralHadronsEnergy;        ///< Energy cut for specific HCAL timing requirements cuts for neutral hadrons
 
  private:
   typedef std::vector<ReconstructedParticle*> PfoList;

@@ -37,6 +37,7 @@ const int precision = 2;
 const int widthFloat = 7;
 const int widthInt = 5;
 const int widthSmallInt = 3;
+const float radiansToDegrees = 57.2957;
 
 CLICDstChecker aCLICDstChecker ;
 
@@ -117,7 +118,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
  
   try {
     LCCollection * col = evt->getCollection(m_inputPfoCollection.c_str());
-    int nelem = col->getNumberOfElements(); 
+    const int nelem = col->getNumberOfElements(); 
     for (int iPfo=0; iPfo<nelem; ++iPfo)m_pfoVector.push_back(dynamic_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
     std::sort(m_pfoVector.begin(),m_pfoVector.end(),CLICDstChecker::PfoSortFunction);
   }
@@ -130,7 +131,19 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
   try {
     LCCollection * col = evt->getCollection(m_inputMcParticleCollection.c_str());
     int nelem = col->getNumberOfElements(); 
-    for (int iMc=0; iMc<nelem; ++iMc)m_mcSet.insert(dynamic_cast<MCParticle*>(col->getElementAt(iMc)));
+    for (int iMc=0; iMc<nelem; ++iMc){
+      MCParticle * pMc = dynamic_cast<MCParticle*>(col->getElementAt(iMc));
+      // insert all existing mc pointers into set *** MUST CHECK THIS BEFORE USING RELATION ***
+      m_mcSet.insert(pMc);
+      const float px(pMc->getMomentum()[0]);
+      const float py(pMc->getMomentum()[1]);
+      const float pz(pMc->getMomentum()[2]);
+      const float p=sqrt(px*px+py*py+pz*pz);
+      const float cosThetaMc = fabs(pz)/p;
+      float thetaMc = 0.;
+      if(cosThetaMc<1.0)thetaMc = acos(cosThetaMc)*radiansToDegrees;  
+	if((pMc->getParents()).size()==0)std::cout << " Primary MC particle : " << pMc->getPDG() << " E = " << pMc->getEnergy() << " cosT = " << cosThetaMc << " theta = " << thetaMc << std::endl;
+    }
   }
   catch( DataNotAvailableException &e ) {
     std::cout << m_inputMcParticleCollection.c_str() << " collection is unavailable" << std::endl;

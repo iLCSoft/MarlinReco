@@ -108,6 +108,16 @@ CLICPfoSelector::CLICPfoSelector() : Processor("CLICPfoSelector") {
 			     m_minimumEnergyForNeutronTiming,
 			     float(1.));
 
+  registerProcessorParameter("ForwardCosThetaForHighEnergyNeutralHadrons",
+			     "ForwardCosThetaForHighEnergyNeutralHadrons",
+			     m_forwardCosThetaForHighEnergyNeutralHadrons,
+			     float(0.95));
+
+  registerProcessorParameter("ForwardHighEnergyNeutralHadronsEnergy",
+			     "ForwardHighEnergyNeutralHadronsEnergy",
+			     m_forwardHighEnergyNeutralHadronsEnergy,
+			     float(10.00));
+
   registerProcessorParameter("FarForwardCosTheta",
 			     "FarForwardCosTheta",
 			     m_farForwardCosTheta,
@@ -506,8 +516,14 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
       const float pfoEnergyToDisplay(m_monitoring ? m_monitoringPfoEnergyToDisplay : std::numeric_limits<float>::max());
       
-      // Only apply cuts to low pt pfos
-      if (passPfoSelection && pT < ptCutForLooseTiming){
+
+
+      // Only apply cuts to low pt pfos and very forward neutral hadrons
+      bool applyTimingCuts = ( (pT < ptCutForLooseTiming) || ( (cosTheta > m_forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) ) );
+      bool useHcalTimingOnly = ( (cosTheta > m_forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) && (energy > m_forwardHighEnergyNeutralHadronsEnergy));
+    
+
+      if (passPfoSelection && applyTimingCuts){
 
 	// Examine any associated clusters for additional timing information
 	bool selectPfo(false);
@@ -515,7 +531,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	if (!clusters.empty())
 	  {
 	    // Make the selection decisions
-	    if ( (nEcalHits > m_minECalHitsForTiming) || (nEcalHits >= nCaloHits/2.) )
+	    if (!useHcalTimingOnly && ((nEcalHits > m_minECalHitsForTiming) || (nEcalHits >= nCaloHits/2.)) )
 	      {
 		if ((clusterTimeEcal >= timingCutLow) && (clusterTimeEcal <= timingCutHigh))
 		  selectPfo = true;
@@ -581,8 +597,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT,cosTheta,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
 	  if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
 	}
-      }
-      
+      }      
       if(passPfoSelection){
 	eTotalOutput+=energy;
 	colPFO->addElement(pPfo);

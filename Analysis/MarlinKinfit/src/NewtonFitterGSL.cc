@@ -2,14 +2,24 @@
  *  \brief Implements class NewtonFitterGSL
  *
  * Author: Benno List
- * $Date: 2009/09/02 13:10:57 $
+ * $Date: 2011/03/03 15:03:03 $
  * $Author: blist $
+ 
+ Notes:
+ - need routine to calculate best lambda values for a point
+ - calculate mu from lambda values
+ 
+ 
+ 
  *
  * \b Changelog:
  * - 26.9.08 BL: Correct parameter counting (discared fixed parameters)
  *
  * \b CVS Log messages:
  * - $Log: NewtonFitterGSL.cc,v $
+ * - Revision 1.6  2011/03/03 15:03:03  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.5  2009/09/02 13:10:57  blist
  * - Added errors for NewtonFitterGSL
  * -
@@ -75,6 +85,7 @@ NewtonFitterGSL::NewtonFitterGSL()
   perr(0), v1 (0), v2(0), Meval (0),
   M(0), Mscal (0), M1(0), M2 (0), M3 (0), M4 (0), M5 (0), Mevec (0), 
   CC (0), CC1 (0), CCinv (0), permM(0), ws(0),
+  imerit (1),
   debug (debuglevel)
 {}
 
@@ -1060,5 +1071,33 @@ void NewtonFitterGSL::calcCovMatrix() {
   covValid = true;
 }
 
+    
+double NewtonFitterGSL::meritFunction(double mu) {
+  double result = 0;
+  switch (imerit) {
+    case 1: // l1 penalty function, Nocedal&Wright Eq. (15.24)
+      result = chi2;
+      for (unsigned int k = 0; k < constraints.size(); ++k) {
+        BaseHardConstraint *c = constraints[k];
+        assert (c);
+        int kglobal = c->getGlobalNum();
+        assert (kglobal >= 0 && kglobal < (int)idim);
+        result += mu*std::fabs (c->getValue());
+      }
+      break;
+    default: assert (0);
+  }
+  return result;
+}
+
+double NewtonFitterGSL::meritFunctionDeriv(double mu) {
+  double result = 0;
+  switch (imerit) {
+    case 1: 
+      break;
+    default: assert (0);
+  }
+  return result;
+}
   
 

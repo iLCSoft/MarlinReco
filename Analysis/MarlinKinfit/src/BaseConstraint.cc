@@ -56,3 +56,8 @@ double BaseConstraint::getError() const {
   assert (false); 
   return 0;
 }
+
+std::ostream&  BaseConstraint::print (std::ostream& os) const {
+  os << getName() << "=" << getValue();
+  return os;
+}

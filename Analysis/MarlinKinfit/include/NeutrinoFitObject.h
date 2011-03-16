@@ -12,7 +12,7 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2008/02/12 10:19:06 $
+ * $Date: 2011/03/03 15:03:02 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -25,6 +25,13 @@ class NeutrinoFitObject : public ParticleFitObject {
     NeutrinoFitObject(double E, double eta, double phi, 
                       double DE=1, double Dtheta=0.1, double Dphi=0.1);
     virtual ~NeutrinoFitObject();
+    
+    /// Return a new copy of itself
+    virtual NeutrinoFitObject *copy() const;
+    
+    /// Assign from anther object, if of same type
+    virtual NeutrinoFitObject& assign (const BaseFitObject& source   ///< The source object
+                                      );
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number

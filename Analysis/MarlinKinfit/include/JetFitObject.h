@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: JetFitObject.h,v $
+ * - Revision 1.3  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.2  2009/02/17 12:46:34  blist
  * - Improved version of NewtonFitterGSL, JetFitObject changed
  * -
@@ -43,7 +46,7 @@
 /**
  *
  * Author: Jenny List, Benno List
- * $Date: 2009/02/17 12:46:34 $
+ * $Date: 2011/03/03 15:03:02 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -57,6 +60,14 @@ class JetFitObject : public ParticleFitObject {
                  double DE, double Dtheta, double Dphi, 
                  double m = 0);
     virtual ~JetFitObject();
+
+    
+    /// Return a new copy of itself
+    virtual JetFitObject *copy() const;
+    
+    /// Assign from anther object, if of same type
+    virtual JetFitObject& assign (const BaseFitObject& source   ///< The source object
+                                 );
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number

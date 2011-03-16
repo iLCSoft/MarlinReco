@@ -7,6 +7,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseConstraint.h,v $
+ * - Revision 1.4  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.3  2008/02/18 09:59:34  blist
  * - MomentumConstraint and SoftGaussMomentumCOnstraint added; PConstraint is obsolete
  * -
@@ -35,6 +38,8 @@
 
 #ifndef __BASECONSTRAINT_H
 #define __BASECONSTRAINT_H
+
+#include <iostream>
 
 class BaseFitObject;
 
@@ -72,7 +77,7 @@ class BaseFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008/02/18 09:59:34 $
+ * Last update: $Date: 2011/03/03 15:03:02 $
  *          by: $Author: blist $
  *
  */
@@ -107,11 +112,24 @@ class BaseConstraint {
     /// Call this with a predefined array "der" with the necessary number of entries!
     virtual void getDerivatives (int idim,                  ///< First dimension of array der
                                  double der[]               ///< Array of derivatives, dimension at least idim x idim
-                                ) const = 0;
+                                ) const = 0;    
+    
+    /// print object to ostream
+    virtual std::ostream&  print (std::ostream& os       ///< The output stream
+                                 ) const;
                                  
     protected:
       char *name;  
 };
+
+/** \relates BaseConstraint
+ *  \brief Prints out a BaseConstraint, using its print method
+ */
+inline std::ostream& operator<< (std::ostream& os,         ///< The output stream
+                                 const BaseConstraint& bc  ///< The object to print
+                                ) {
+  return bc.print(os);
+}
 
 
 #endif // __BASECONSTRAINT_H

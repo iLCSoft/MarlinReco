@@ -3,9 +3,9 @@
  *  \brief Declares class NewtonFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2009/09/02 13:10:57 $
+ * Last update: $Date: 2011/03/03 15:03:02 $
  *          by: $Author: blist $
- * $Date: 2009/09/02 13:10:57 $
+ * $Date: 2011/03/03 15:03:02 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -13,6 +13,9 @@
  *
  * \b CVS Log messages:
  * - $Log: NewtonFitterGSL.h,v $
+ * - Revision 1.4  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.3  2009/09/02 13:10:57  blist
  * - Added errors for NewtonFitterGSL
  * -
@@ -104,6 +107,9 @@ class NewtonFitterGSL : public BaseFitter {
   
     void calcCovMatrix();
     
+    double meritFunction(double mu);
+    double meritFunctionDeriv(double mu);
+    
     enum {NPARMAX=50, NCONMAX=10, NUNMMAX=10};
     
     int npar;      ///< total number of parameters
@@ -165,6 +171,8 @@ class NewtonFitterGSL : public BaseFitter {
     enum {NITMAX = 100};
     double scalevals[NITMAX];
     double fvals[NITMAX];
+    
+    int imerit;
     
     int debug;
 };

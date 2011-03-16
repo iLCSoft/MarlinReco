@@ -3,16 +3,19 @@
  *  \brief Declares class OPALFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2008/10/16 08:13:36 $
- *          by: $Author: blist $
- * $Date: 2008/10/16 08:13:36 $
- * $Author: blist $
+ * Last update: $Date: 2010/10/29 14:55:27 $
+ *          by: $Author: mbeckman $
+ * $Date: 2010/10/29 14:55:27 $
+ * $Author: mbeckman $
  *
  * \b Changelog:
  * - 2.10.08 BL: First version, based on OPALFitter
  *
  * \b CVS Log messages:
  * - $Log: OPALFitterGSL.h,v $
+ * - Revision 1.2  2010/10/29 14:55:27  mbeckman
+ * - fixed typo in description on request of Jan Engels
+ * -
  * - Revision 1.1  2008/10/16 08:13:36  blist
  * - New versions of OPALfitter and Newtonfitter using GSL
  * -
@@ -23,8 +26,8 @@
 // Class OPALFitter
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008/10/16 08:13:36 $
-//          by: $Author: blist $
+// Last update: $Date: 2010/10/29 14:55:27 $
+//          by: $Author: mbeckman $
 // 
 // Description: kinematic fit a la WWFGO
 //               

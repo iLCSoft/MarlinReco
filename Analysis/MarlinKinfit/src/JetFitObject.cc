@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: JetFitObject.cc,v $
+ * - Revision 1.9  2011/03/03 15:03:03  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.8  2010/07/05 19:52:33  mbeckman
  * - JetFitObject.cc: commented out assert(!isnan(...))
  * -
@@ -101,6 +104,20 @@ JetFitObject::JetFitObject(double E, double theta, double phi,
 
 // destructor
 JetFitObject::~JetFitObject() {}
+
+JetFitObject *JetFitObject::copy() const {
+  return new JetFitObject (*this);
+}
+    
+JetFitObject& JetFitObject::assign (const BaseFitObject& source) {
+  if (const JetFitObject *psource = dynamic_cast<const JetFitObject *>(&source)) {
+    if (psource != this) *this = *psource;
+  }
+  else {
+    assert (0);
+  }
+  return *this;
+}
 
 const char *JetFitObject::getParamName (int ilocal) const {
   switch (ilocal) {

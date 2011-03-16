@@ -18,7 +18,7 @@
 /**
  *
  * Author: Moritz Beckmann
- * $Date: 2010/06/11 20:32:51 $
+ * $Date: 2011/03/16 16:33:24 $
  * $Author: mbeckman $
  *
  * \b Changelog:
@@ -26,6 +26,9 @@
  *
  * \b CVS Log messages:
  * - $Log: ISRPhotonFitObject.h,v $
+ * - Revision 1.2  2011/03/16 16:33:24  mbeckman
+ * - Compatibility fixes with ILCSoft svn
+ * -
  * - Revision 1.1  2010/06/11 20:32:51  mbeckman
  * - Renamed PhotonFitObjects, cleaned them up for usage
  * -
@@ -45,6 +48,14 @@ class ISRPhotonFitObject : public ParticleFitObject {
     ISRPhotonFitObject(double px, double py, double pz,                   /// initial values for photon (p_x,p_y fix)
                         double b_, double PzMaxB_, double PzMinB_ = 0.);  /// photon spectrum parametrization (see above)
     virtual ~ISRPhotonFitObject();
+
+    
+    /// Return a new copy of itself
+    virtual ISRPhotonFitObject *copy() const;
+    
+    /// Assign from anther object, if of same type
+    virtual ISRPhotonFitObject& assign (const BaseFitObject& source   ///< The source object
+                                 );
     
     /// Get name of parameter ilocal
     virtual const char *getParamName (int ilocal     ///< Local parameter number

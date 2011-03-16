@@ -5,6 +5,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseSoftConstraint.h,v $
+ * - Revision 1.2  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.1  2008/02/12 16:43:25  blist
  * - First Version of Soft Constraints
  * -
@@ -53,13 +56,16 @@ class BaseFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008/02/12 16:43:25 $
+ * Last update: $Date: 2011/03/03 15:03:02 $
  *          by: $Author: blist $
  *
  */
 
 class BaseSoftConstraint: public BaseConstraint {
   public:
+    
+    /// Virtual destructor
+    virtual ~BaseSoftConstraint();
         
     /// Returns the chi2
     virtual double getChi2() const = 0;

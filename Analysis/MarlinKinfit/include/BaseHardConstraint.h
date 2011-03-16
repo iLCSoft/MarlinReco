@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseHardConstraint.h,v $
+ * - Revision 1.2  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.1  2008/02/12 16:43:25  blist
  * - First Version of Soft Constraints
  * -
@@ -54,13 +57,16 @@ class BaseFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008/02/12 16:43:25 $
+ * Last update: $Date: 2011/03/03 15:03:02 $
  *          by: $Author: blist $
  *
  */
 
 class BaseHardConstraint: public BaseConstraint {
   public:
+    
+    /// Virtual destructor
+    virtual ~BaseHardConstraint();
   
     /// Adds first order derivatives to global covariance matrix M
     virtual void add1stDerivativesToMatrix (double *M,      ///< Global covariance matrix, dimension at least idim x idim
@@ -72,12 +78,25 @@ class BaseHardConstraint: public BaseConstraint {
                                             int idim,       ///< First dimension of array der
                                             double lambda   ///< Lagrange multiplier for this constraint
                                             ) const = 0;
-    /// Add lambda times derivatives of chi squared to global derivative matrix
+    /// Add lambda times derivatives of chi squared to global derivative vector
     virtual void addToGlobalChi2DerVector (double *y,   ///< Vector of chi2 derivatives
                                            int idim,    ///< Vector size 
                                            double lambda //< The lambda value
                                            ) const = 0;
-    
+    /// Calculate directional derivative 
+    virtual double dirDer                 (double *p,   ///< Vector of direction
+                                           double *w,   ///< Work vector
+                                           int idim,    ///< Vector size 
+                                           double mu=1  ///< optional multiplier
+                                          );
+   
+    /// Calculate directional derivative for abs(c)
+    virtual double dirDerAbs              (double *p,   ///< Vector of direction
+                                           double *w,   ///< Work vector
+                                           int idim,    ///< Vector size 
+                                           double mu=1  ///< optional multiplier
+                                          );
+   
     /// Accesses position of constraint in global constraint list
     virtual int  getGlobalNum() const = 0;
     /// Sets position of constraint in global constraint list

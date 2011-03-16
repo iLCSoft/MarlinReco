@@ -2,8 +2,8 @@
 // Class NeutrinoFitObject
 //
 // Author: Jenny Boehme
-// Last update: $Date: 2008/09/26 09:58:10 $
-//          by: $Author: boehmej $
+// Last update: $Date: 2011/03/03 15:03:03 $
+//          by: $Author: blist $
 // 
 // Description: class for neutrinos with (E, theta, phi) in kinematic fits
 //               
@@ -35,6 +35,20 @@ NeutrinoFitObject::NeutrinoFitObject(double E, double theta, double phi,
 
 // destructor
 NeutrinoFitObject::~NeutrinoFitObject() {}
+
+NeutrinoFitObject *NeutrinoFitObject::copy() const {
+  return new NeutrinoFitObject (*this);
+}
+    
+NeutrinoFitObject& NeutrinoFitObject::assign (const BaseFitObject& source) {
+  if (const NeutrinoFitObject *psource = dynamic_cast<const NeutrinoFitObject *>(&source)) {
+    if (psource != this) *this = *psource;
+  }
+  else {
+    assert (0);
+  }
+  return *this;
+}
 
 const char *NeutrinoFitObject::getParamName (int ilocal) const {
   switch (ilocal) {

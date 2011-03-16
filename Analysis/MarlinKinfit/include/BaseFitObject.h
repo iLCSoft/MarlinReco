@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: BaseFitObject.h,v $
+ * - Revision 1.3  2011/03/03 15:03:02  blist
+ * - Latest version, with NewFitterGSL
+ * -
  * - Revision 1.2  2009/09/02 13:10:57  blist
  * - Added errors for NewtonFitterGSL
  * -
@@ -94,7 +97,7 @@
  * 
  *
  * Author:  Benno List, Jenny Böhme
- * $Date: 2009/09/02 13:10:57 $
+ * $Date: 2011/03/03 15:03:02 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -105,7 +108,9 @@
 
 class BaseFitObject {
   public:
+    /// Default constructor
     BaseFitObject();
+    
     /// Copy constructor
     BaseFitObject (const BaseFitObject& rhs              ///< right hand side
                    );
@@ -113,7 +118,15 @@ class BaseFitObject {
     BaseFitObject& operator= (const BaseFitObject& rhs   ///< right hand side
                              );
     
+    /// Virtual destructor
     virtual ~BaseFitObject();
+    
+    /// Return a new copy of itself
+    virtual BaseFitObject *copy() const = 0;
+    
+    /// Assign from anther object, if of same type
+    virtual BaseFitObject& assign (const BaseFitObject& source   ///< The source object
+                                  ) = 0;
     
     /// Set value and measured flag of parameter i; return: significant change
     virtual bool setParam (int ilocal,         ///< Local parameter number

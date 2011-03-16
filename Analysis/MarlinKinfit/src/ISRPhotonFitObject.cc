@@ -6,6 +6,12 @@
  *
  * \b CVS Log messages:
  * - $Log: ISRPhotonFitObject.cc,v $
+ * - Revision 1.4  2011/03/16 16:33:24  mbeckman
+ * - Compatibility fixes with ILCSoft svn
+ * -
+ * - Revision 1.3  2011/03/03 15:32:32  boehmej
+ * - removed obsolete PhotonFitObject.o and PhotonFitObjectPgxy.o from src/Makefile, activated NO_MARLIN in src/ISRPhotonFitObject.cc
+ * -
  * - Revision 1.2  2010/07/05 20:08:43  mbeckman
  * - ISRPhotonFitObject.cc: Included flag for output via cout/marlin
  * -
@@ -37,7 +43,7 @@
  *
  */ 
 
-// #define NO_MARLIN		// if defined: all output via cout, Marlin inclusion not required
+#define NO_MARLIN		// if defined: all output via cout, Marlin inclusion not required
 #include "ISRPhotonFitObject.h"
 #include <cmath>
 #include <cassert>
@@ -96,6 +102,22 @@ ISRPhotonFitObject::ISRPhotonFitObject(double px, double py, double pz,
 
 // destructor
 ISRPhotonFitObject::~ISRPhotonFitObject() {}
+
+
+ISRPhotonFitObject *ISRPhotonFitObject::copy() const {
+  return new ISRPhotonFitObject (*this);
+}
+    
+ISRPhotonFitObject& ISRPhotonFitObject::assign (const BaseFitObject& source) {
+  if (const ISRPhotonFitObject *psource = dynamic_cast<const ISRPhotonFitObject *>(&source)) {
+    if (psource != this) *this = *psource;
+  }
+  else {
+    assert (0);
+  }
+  return *this;
+}
+
 
 const char *ISRPhotonFitObject::getParamName (int ilocal) const {
   switch (ilocal) {

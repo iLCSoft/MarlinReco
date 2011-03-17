@@ -2721,7 +2721,7 @@ float FullLDCTracking::CompareTrk(TrackExtended * first, TrackExtended * second,
 	  if(significance<5 && fcloseFirst>_maxFractionOfOutliersCutHighPtMerge){
 	    split = true;
 	    dpOverP = 0;
-	    int overlap = SegmentRadialOverlap(first,second);
+	    //	    int overlap = SegmentRadialOverlap(first,second);
 	    //std::cout << " Forcing MERGE " << overlap << std::endl;
 	  }
 	}

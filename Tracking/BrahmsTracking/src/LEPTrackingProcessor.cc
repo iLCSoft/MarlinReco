@@ -871,11 +871,15 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
     evt->addCollection( _tpcTrackVec , _colNameTPCTracks) ;
     evt->addCollection( _tpclcRelVec , _colNameMCTPCTracksRel) ;
  
+    delete _usedCol; _usedCol=NULL;
+    delete _droppedCol; _droppedCol=NULL;
   }
 
   //******************************  
 
   _nEvt ++ ;
+  _goodHits.clear();
+  _savedGoodHits.clear();
   
 }
 

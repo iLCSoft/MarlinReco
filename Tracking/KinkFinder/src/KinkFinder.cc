@@ -475,7 +475,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 
   }
 
-  for(unsigned int  i=0;i< tracks.size();++i){ 
+  for(unsigned int i=0;i< tracks.size();++i){ 
     Track* tracki = tracks[i];
     float d0i = tracki->getD0();
     float z0i = tracki->getZ0();
@@ -921,7 +921,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   LCCollectionVec * colSplitRecoPart = NULL;
   LCCollectionVec * colSplitVertex   = NULL;
 
-  for(unsigned int  i=0;i< tracks.size();++i){ 
+  for(unsigned int i=0;i< tracks.size();++i){ 
     if(kinkDaughters[i].size()>0 || prongDaughters[i].size()>0 || splitDaughters[i].size()>0){
       if(_debugPrinting>0){
 	if(kinkDaughters[i].size()>0){
@@ -1027,7 +1027,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  colKinkVertex->addElement( vtx );
 	  //   trackUsed[firstTrack] = 1;
 	  //   trackUsed[secondTrack] = 1;
-	}else{
+	} else if(prongDaughters[i].size() > 0 ) {
 	  // Prong track collection
 	  if(_debugPrinting>0)std::cout << " Reconstructed PRONG " << std::endl;
 	  ReconstructedParticleImpl * part = new ReconstructedParticleImpl();
@@ -1096,7 +1096,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 
   _nEvt++;
   if(_debugPrinting>0)std::cout << " Done " << std::endl;
-
+  if(trackNavigator != NULL)  delete trackNavigator;
 }
 
 

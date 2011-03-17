@@ -561,34 +561,75 @@ void MarlinTrackFit::ConvertTANAGRAtoLC(float * rfit, float & bField, int & fitC
     // Calculation of helix parameters 
     // in canonical form
     // measurement code (R,R-PHI,Z)
-    float xx = rfit[0]*cos(rfit[1]/rfit[0]);
-    float yy = rfit[0]*sin(rfit[1]/rfit[0]);
-    float pos[3];
-    // conversion to mm
-    // measurement code (R,R-PHI,Z)
-    pos[0] = 10*xx;
-    pos[1] = 10*yy;
-    pos[2] = 10*rfit[2];
-    if (fitCode == 0) { // measurement code (X,Y,Z)
-      pos[0] = 10*rfit[0];
-      pos[1] = 10*rfit[1];
-    }
-    float mom[3];
-    mom[0] = sin(rfit[3])*cos(rfit[4])/fabs(rfit[5]);
-    mom[1] = sin(rfit[3])*sin(rfit[4])/fabs(rfit[5]);
-    mom[2] = cos(rfit[3])/fabs(rfit[5]);
-    float charge = -rfit[5]/fabs(rfit[5]);
+
+  // note everything still done in cm at this point
+
+  const double FCT = 2.997924e-3 ;
+
+  double r_ref     = rfit[0] ;
+  double rphi_ref  = rfit[1] ;
+  double phi_ref   = rphi_ref / r_ref ;
+  double z_ref     = rfit[2] ;
+  double theta     = rfit[3];
+  double phi       = rfit[4];
+  double inv_p     = fabs(rfit[5]);
+  double charge    = -rfit[5]/fabs(rfit[5]);
+
+  double omega = charge * (FCT*double(bField)*inv_p) / sin(theta) ;
+  
+  double tanLambda = 1.0 / tan(theta) ;
+
+  double x_ref = r_ref*cos(phi_ref) ;
+  double y_ref = r_ref*sin(phi_ref) ;
+  
+  if (fitCode == 0) { // measurement code (X,Y,Z)
+    x_ref =  rfit[0] ;
+    y_ref =  rfit[1] ;
+  }
+  
+  double radius = fabs(1.0/omega) ;
+
+  double x_centre = x_ref + radius*cos( phi - 0.5*M_PI * charge) ;
+  double y_centre = y_ref + radius*sin( phi - 0.5*M_PI * charge) ;
+  double r_centre = sqrt(x_centre*x_centre+y_centre*y_centre) ;
+  
+  double phi_of_pca = atan2(y_centre,x_centre) ;
+
+  double phi0 = phi_of_pca + (charge * 0.5*M_PI) ;
+
+  while ( phi0 < 0 )  phi0 += 2.0*M_PI ;
+  while ( phi0 >= 2.0*M_PI ) phi0 -= 2.0*M_PI ;
+
+  double x_pca = x_centre - radius*cos( phi_of_pca );
+  double y_pca = y_centre - radius*sin( phi_of_pca );
+
+  double delta_x = x_pca - x_ref ;
+  double delta_y = y_pca - y_ref ;
+  
+  double alpha = -omega * delta_x * cos(phi) - omega * delta_y * sin(phi)  ;
+  double beta  = 1.0 - omega * delta_x * sin(phi) + omega * delta_y * cos(phi)  ;
+  
+  double s = atan2(-alpha,beta) / omega ;
+  
+  double z0 = z_ref + s * tanLambda ;
     
-    HelixClass helix;
-    helix.Initialize_VP(pos,mom,charge,bField);
-    
-    // conversion to cm
-    param[0] = 10.*helix.getOmega();
-    param[1] = helix.getTanLambda();
-    param[2] = helix.getPhi0();
-    param[3] = 0.1*helix.getD0();
-    param[4] = 0.1*helix.getZ0();    
-    
+  double d0;
+
+  if (charge > 0) {
+    d0 = charge*radius - r_centre ;
+  }
+  else {
+    d0 = charge*radius + r_centre ;
+  }
+
+  param[0] = omega ;
+  param[1] = tanLambda ;
+  param[2] = phi0;
+  param[3] = d0 ;
+  param[4] = z0 ;    
+
+  // note values are still in cm
+
 }
 
 
@@ -718,10 +759,10 @@ void MarlinTrackFit::ConvertCovMatrix(float * rfit, float * rfite, float * param
   //                       YC = (d0-R)*cos(Phi0) 
 
 
-  float sinPhi0=sin(param[2]);
-  float cosPhi0=cos(param[2]);
-  float sin2Phi0=sinPhi0*sinPhi0;
-  float cos2Phi0=cosPhi0*cosPhi0;
+  double sinPhi0=sin(param[2]);
+  double cosPhi0=cos(param[2]);
+  double sin2Phi0=sinPhi0*sinPhi0;
+  double cos2Phi0=cosPhi0*cosPhi0;
   
   if (fabs(cosPhi0)>fabs(sinPhi0)) {
     for (int i=0;i<5;++i) {

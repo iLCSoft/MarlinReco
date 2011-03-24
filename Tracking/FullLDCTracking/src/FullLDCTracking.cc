@@ -2958,7 +2958,7 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 	float product = pos[2]*tanLambda;
 	if (product>0) {
 	  HelixClass * helix = _trackExtrapolatedHelix[trkExt];
-	  helix->getDistanceToPoint(pos,dist);
+	  helix->getDistanceToPoint(pos,dist,dcut);
 	  //	  std::cout << "Dist = " << dist[2] << std::endl;
 	  if (dist[2]<dcut) {
 	    TrackHitPair * trkHitPair = 
@@ -3296,8 +3296,9 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 	    consider = consider || (DeltaEnd <= 1.5*halfPeriodZ);
 	    consider = consider || ( (pos[2]>=startPoint[2]) && (pos[2]<=endPoint[2]) );
 	    if(consider){
-	      helix.getDistanceToPoint(pos,dist);
-	      if (dist[2]<dcut && dist[2]<minDistances[iH]) {
+	      float distCut=  ( dcut < minDistances[iH] ) ?  dcut :  minDistances[iH];
+	      helix.getDistanceToPoint(pos, dist, distCut);
+	      if (dist[2]<distCut) {
 		minDistances[iH] = dist[2];
 		tracksToAttach[iH] = foundTrack;
 	      }
@@ -3415,7 +3416,7 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 		float omega = trkExt->getOmega();
 		HelixClass helix;
 		helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
-		helix.getDistanceToPoint(pos,dist);
+		helix.getDistanceToPoint(pos,dist,dcut);
 		if (dist[2]<dcut) {
 		    TrackHitPair * trkHitPair = 
 			new TrackHitPair(trkExt,trkHitExt,dist[2]);

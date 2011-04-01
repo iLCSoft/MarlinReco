@@ -77,6 +77,11 @@ CLICPfoSelector::CLICPfoSelector() : Processor("CLICPfoSelector") {
 			     m_displayRejectedPfos,
 			     int(0));
 
+  registerProcessorParameter("CorrectHitTimesForTimeOfFlight",
+			     "CorrectHitTimesForTimeOfFlight",
+                             m_correctHitTimesForTimeOfFlight, 
+                             int(0));
+
   registerProcessorParameter("MonitoringPfoEnergyToDisplay",
 			     "MonitoringPfoEnergyToDisplay",
 			     m_monitoringPfoEnergyToDisplay,
@@ -603,7 +608,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	colPFO->addElement(pPfo);
       }else{
 	//std::cout << " dropped E = " << energy << std::endl;
-     }
+      }
       
     }
     
@@ -739,9 +744,24 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 
     CalorimeterHitVec hits = cluster->getCalorimeterHits();
     std::vector<float> hittimes;
+    std::vector<float> tofCorrections;
     std::vector<float> deltaTimes;
 
-    for(unsigned int ihit=0;ihit<hits.size();++ihit)hittimes.push_back(hits[ihit]->getTime());
+    for(unsigned int ihit=0;ihit<hits.size();++ihit){
+      // optionally correct hit times for straight line tof (may have already been done in another processor)
+      if(m_correctHitTimesForTimeOfFlight){
+	const float x = hits[ihit]->getPosition()[0];
+	const float y = hits[ihit]->getPosition()[1];
+	const float z = hits[ihit]->getPosition()[2];
+	const float r = sqrt(x*x+y*y+z*z);
+	const float tof = r/300.;
+	tofCorrections.push_back(tof);
+	hittimes.push_back(hits[ihit]->getTime()-tof);
+      }else{
+	hittimes.push_back(hits[ihit]->getTime());
+      }
+    }
+
     std::sort(hittimes.begin(),hittimes.end());
     
     int iMedian = static_cast<int>(hits.size()/2.);
@@ -761,22 +781,25 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 
     for(unsigned int ihit=0;ihit<hits.size();++ihit){
       CalorimeterHit *hit = hits[ihit];
-      if( (hit->getTime() - medianTime) < deltaMedian){
+      float hitTime  = hits[ihit]->getTime();
+      if(m_correctHitTimesForTimeOfFlight)hitTime -= tofCorrections[ihit];
+
+      if( (hitTime - medianTime) < deltaMedian){
 	sumEnergy += hit->getEnergy();
-	sumTimeEnergy += hit->getEnergy()*hit->getTime();
+	sumTimeEnergy += hit->getEnergy()*hitTime;
 	nCaloHitsUsed++;
 	//std::cout << " Using : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
 	CHT ch = hit->getType();
 	if(ch.is(CHT::ecal)){
 	  nEcal++;
 	  sumEnergyEcal += hit->getEnergy();
-	  sumTimeEnergyEcal += hit->getEnergy()*hit->getTime();
+	  sumTimeEnergyEcal += hit->getEnergy()*hitTime;
 	}else{
 	  float z = hit->getPosition()[2]; 
 	  if(!ch.is(CHT::barrel)){
 	    nHcalEnd++;
 	    sumEnergyHcalEndcap += hit->getEnergy();
-	    sumTimeEnergyHcalEndcap += hit->getEnergy()*hit->getTime();
+	    sumTimeEnergyHcalEndcap += hit->getEnergy()*hitTime;
 	  }
 	}
       }else{

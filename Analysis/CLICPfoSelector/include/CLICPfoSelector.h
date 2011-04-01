@@ -84,8 +84,8 @@ class CLICPfoSelector : public Processor {
   int             m_monitoring;                                   ///< Whether to display monitoring information
   int             m_displaySelectedPfos;                          ///< Whether to display monitoring information concerning selected pfos
   int             m_displayRejectedPfos;                          ///< Whether to display monitoring information concerning rejected pfos
-  float           m_monitoringPfoEnergyToDisplay;                 ///< Minimum pfo energy in order to display monitoring information
-  
+  float           m_monitoringPfoEnergyToDisplay;                 ///< Minimum pfo energy in order to display monitoring information 
+  int             m_correctHitTimesForTimeOfFlight;               ///< Correct hit times for straight line time of flight  
   int             m_checkProtonCorrection;                        ///< Check proton hypothesis
   int             m_checkKaonCorrection;                          ///< Check charged hypothesis
   int             m_keepKShorts;                                  ///< Keep kshorts

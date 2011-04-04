@@ -20,7 +20,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+#define coutUpToEv 100
 
 using namespace lcio ;
 using namespace marlin ;
@@ -68,12 +68,12 @@ TauID::TauID() : Processor("TauID")
                               (float)0.) ;
   
   registerProcessorParameter( "searchConeAngle" ,
-                              "Opening angle of the search cone for tau jet in eta-phi"  ,
+                              "Opening angle of the search cone for tau jet in theta-phi"  ,
                               _coneAngle ,
                               (float)0.7) ;
 
   registerProcessorParameter( "isolationConeAngle" ,
-                              "Outer isolation cone around search cone of tau jet in eta-phi(relativ to cone angle)"  ,
+                              "Outer isolation cone around search cone of tau jet in theta-phi(relativ to cone angle)"  ,
                               _isoAngle ,
                               (float)0.2) ;
   
@@ -219,8 +219,6 @@ void TauID::processEvent( LCEvent * evt )
 	  ReconstructedParticleImpl *tau=dynamic_cast<ReconstructedParticleImpl*>(tauvec[t]);
 	  const double *mom=tau->getMomentum();
 	  double p=sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
-	  double phi=atan(mom[1]/mom[0]);
-	  double eta=0.5*std::log((p+mom[2])/(p-mom[2]));
 	  double angle=100000;
 	  
 	  for ( unsigned int t2=t+1; t2<tauvec.size() ; t2++ )
@@ -230,9 +228,6 @@ void TauID::processEvent( LCEvent * evt )
 	      
 	      const double *momn=taun->getMomentum();
 	      double pn=sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2]);
-	      double phin=atan(momn[1]/momn[0]);
-	      double etan=0.5*std::log((pn+momn[2])/(pn-momn[2]));
-	      //angle=sqrt((phi-phin)*(phi-phin)+(eta-etan)*(eta-etan));
 	      angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
 			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
 			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
@@ -248,13 +243,13 @@ void TauID::processEvent( LCEvent * evt )
 		  for(unsigned int i=0;i<taun->getParticles().size();i++)
 		    tau->addParticle(taun->getParticles()[i]);
 		  
-		  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-		    {
-		      cout<<" Tau Merging: "<<endl;
-		      cout<<t<<" "<<E<<" "<<phi<<" "<<eta<<endl;
-		      cout<<t2<<" "<<taun->getEnergy()<<" "<<phin<<" "<<etan<<endl;
-		      cout<<angle<<" -> "<<En<<" "<<endl;
-		    }
+		  // if(_nEvt<coutUpToEv || _nEvt==coutEv)
+// 		    {
+// 		      cout<<" Tau Merging: "<<endl;
+// 		      cout<<t<<" "<<E<<" "<<phi<<" "<<eta<<endl;
+// 		      cout<<t2<<" "<<taun->getEnergy()<<" "<<phin<<" "<<etan<<endl;
+// 		      cout<<angle<<" -> "<<En<<" "<<endl;
+		  //  }
 		  delete *iterC;
 		  tauvec.erase(iterC);
 		  t2--;
@@ -270,33 +265,32 @@ void TauID::processEvent( LCEvent * evt )
       //charge consistency
       double kappa=0.1;
       double Qweighted=0,ptsum=0;
-      for(unsigned int i=0;i<tau->getParticles().size();i++)
-	{
-	  double pt=sqrt(tau->getParticles()[i]->getMomentum()[0]*tau->getParticles()[i]->getMomentum()[0]
-			 +tau->getParticles()[i]->getMomentum()[1]*tau->getParticles()[i]->getMomentum()[1]);
-	  Qweighted+=tau->getParticles()[i]->getCharge()*pow(pt,kappa);
-	  ptsum+=pow(pt,kappa);
-	}
-      if(abs(Qweighted/ptsum)<0.15)
-	{
-	  _fail_Q++;
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": charge: "<<tau->getCharge()<<endl;
-	  delete *iter;
-	  tauvec.erase(iter);
-	  t--;
-	  continue;
-	}
-
       double E=tau->getEnergy();
       double mom[3]={0,0,0};
       mom[0]=tau->getMomentum()[0];
       mom[1]=tau->getMomentum()[1];
       mom[2]=tau->getMomentum()[2];
       double p=sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
-      double phi=atan(mom[1]/mom[0]);
-      double eta=0.5*std::log((p+mom[2])/(p-mom[2]));
-      
+      double theta=atan(sqrt(mom[0]*mom[0]+mom[1]*mom[1])/mom[2]);
+
+      for(unsigned int i=0;i<tau->getParticles().size();i++)
+	{
+	  //  double pt=sqrt(tau->getParticles()[i]->getMomentum()[0]*tau->getParticles()[i]->getMomentum()[0]
+	  //	 +tau->getParticles()[i]->getMomentum()[1]*tau->getParticles()[i]->getMomentum()[1]);
+	  Qweighted+=tau->getParticles()[i]->getCharge()*pow(tau->getParticles()[i]->getEnergy(),kappa);
+	  ptsum+=pow(tau->getParticles()[i]->getEnergy(),kappa);
+	}
+      if(abs(Qweighted/ptsum)<0.12 )
+	{
+	  _fail_Q++;
+	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+	    cout<<"Tau "<<"("<<tau->getEnergy()<<","<<theta<<") failed charge: "<<tau->getCharge()<<" "<<abs(Qweighted/ptsum)<<endl;
+	  delete *iter;
+	  tauvec.erase(iter);
+	  t--;
+	  continue;
+	}
+
      
       //too many particles in tau 
       int nQparticles=0, nNparticles=0;
@@ -311,7 +305,7 @@ void TauID::processEvent( LCEvent * evt )
 	{
 	  _fail_Qtr++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": too many particles: "<<tau->getParticles().size()<<" "<<nQparticles<<endl;
+	    cout<<"Tau "<<"("<<tau->getEnergy()<<","<<theta<<"): has too many particles: "<<tau->getParticles().size()<<" "<<nQparticles<<endl;
 	  delete *iter;
 	  tauvec.erase(iter);
 	  t--;
@@ -325,9 +319,6 @@ void TauID::processEvent( LCEvent * evt )
 	  ReconstructedParticle *track=dynamic_cast<ReconstructedParticle*>(Avector[s]);
 	  const double *momn=track->getMomentum();
 	  double pn=sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2]);
-	  double phin=atan(momn[1]/momn[0]);
-	  double etan=0.5*std::log((pn+momn[2])/(pn-momn[2]));
-	  //	  double angle=sqrt((phi-phin)*(phi-phin)+(eta-etan)*(eta-etan));
 	  double angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
 			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
 			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
@@ -338,7 +329,7 @@ void TauID::processEvent( LCEvent * evt )
 	{
 	  _fail_isoE++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<endl;
+	    cout<<"Tau "<<"("<<tau->getEnergy()<<","<<theta<<") failed Isolation Energy: "<<E_iso<<endl;
 	  delete *iter;
 	  tauvec.erase(iter);
 	  t--;
@@ -346,7 +337,7 @@ void TauID::processEvent( LCEvent * evt )
       else
 	{
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau found:"<<tau->getEnergy()<<" "<<nQparticles<<" "<<nNparticles<<endl;
+	    cout<<"Tau found:"<<tau->getEnergy()<<" "<<nQparticles<<" "<<nNparticles<<" "<<theta<<endl;
 	  reccol->addElement(tau);  
 	  iter++;
 	}
@@ -368,8 +359,8 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
   ReconstructedParticleImpl *tau=new ReconstructedParticleImpl();
   if(Qvec.size()==0)
     {
-      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"No charged particle in event!"<<endl;
+      // if(_nEvt<coutUpToEv || _nEvt==coutEv)
+      //	cout<<"No charged particle in event!"<<endl;
       return true;
     }
  
@@ -415,8 +406,8 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
   
   if(!tauseed)
     {
-      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"no further tau seed! D0="<<D0seed<<endl;
+     //  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+// 	cout<<"no further tau seed! D0="<<D0seed<<endl;
       return true;
     }
   
@@ -426,11 +417,11 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
   const double *pvec=tauseed->getMomentum();
   double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
   double p=sqrt(pt*pt+pvec[2]*pvec[2]);
-  double phi=atan(pvec[1]/pvec[0]);
-  double eta=0.5*std::log((p+pvec[2])/(p-pvec[2]));
+  double theta=atan(pt/pvec[2]);
+
  
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<pt<<"\t"<<eta<<"\t"<<phi<<"\t"<<D0seed<<endl;
+    cout<<"seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<theta<<"\t"<<D0seed<<endl;
  
   Qvec.erase(iterS);
   double pvec_tau[3]={0,0,0};
@@ -447,9 +438,7 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
       const double *pvec2=track->getMomentum();
       double pt2=sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]);
       double p2=sqrt(pt2*pt2+pvec2[2]*pvec2[2]);
-      double phi2=atan(pvec2[1]/pvec2[0]);
-      double eta2=0.5*std::log((p2+pvec2[2])/(p2-pvec2[2]));
-      //double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
+      double theta2=atan(pt2/pvec2[2]);
       double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
 			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
 			 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
@@ -457,7 +446,7 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
 	{
 	  tau->addParticle(Qvec[s]);
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<pt2<<"\t"<<eta2<<"\t"<<phi2<<"\t"<<angle<<std::endl;
+	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<theta2<<"\t"<<angle<<std::endl;
 	  Etau+=Qvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -466,8 +455,6 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
 	  //adjust cone axis
 	  pt=sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]);
 	  p=sqrt(pt*pt+pvec_tau[2]*pvec_tau[2]);
-	  phi=atan(pvec_tau[1]/pvec_tau[0]);
-	  eta=0.5*std::log((p+pvec_tau[2])/(p-pvec_tau[2]));
 	  Qvec.erase(iterQ);
 	  s--;
 	}
@@ -483,9 +470,7 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
       const double *pvec2=track->getMomentum();
       double pt2=sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]);
       double p2=sqrt(pt2*pt2+pvec2[2]*pvec2[2]);
-      double phi2=atan(pvec2[1]/pvec2[0]);
-      double eta2=0.5*std::log((p2+pvec2[2])/(p2-pvec2[2]));
-      //double angle=sqrt((phi-phi2)*(phi-phi2)+(eta-eta2)*(eta-eta2));
+      double theta2=atan(pt2/pvec2[2]);
       double angle=acos((pvec2[0]*pvec_tau[0]+pvec2[1]*pvec_tau[1]+pvec2[2]*pvec_tau[2])/
 			(sqrt(pvec2[0]*pvec2[0]+pvec2[1]*pvec2[1]+pvec2[2]*pvec2[2])*
 			 sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]+pvec_tau[2]*pvec_tau[2])));
@@ -493,7 +478,7 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
 	{
 	  tau->addParticle(Nvec[s]);
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<pt2<<"\t"<<eta2<<"\t"<<phi2<<"\t"<<angle<<std::endl;
+	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<theta2<<"\t"<<angle<<std::endl;
 	  Etau+=Nvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -502,8 +487,6 @@ bool TauID::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Recons
 	  //adjust cone axis
 	  pt=sqrt(pvec_tau[0]*pvec_tau[0]+pvec_tau[1]*pvec_tau[1]);
 	  p=sqrt(pt*pt+pvec_tau[2]*pvec_tau[2]);
-	  phi=atan(pvec_tau[1]/pvec_tau[0]);
-	  eta=0.5*std::log((p+pvec_tau[2])/(p-pvec_tau[2]));
 	  s--;
 	  Nvec.erase(iterN);
 	}

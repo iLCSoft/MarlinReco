@@ -32,7 +32,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+#define coutUpToEv 100
 
 using namespace lcio ;
 using namespace marlin ;
@@ -111,7 +111,7 @@ void EvaluateTauID::init()
  
   evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec");
   taumatchtuple=new TNtuple("taumatch","taumatch","EvID:mcEfull:mcE:mcpt:mcnQ:mcnN:recE:recpt:Eseed:recnQ:recnN:D1:D2:D3:D4");
-  mctuple=new TNtuple("mctuple","mctuple","EvID:E:Evis:ptvis:nQ:nN:D1:D2:D3:D4:Qw");
+  mctuple=new TNtuple("mctuple","mctuple","EvID:E:Evis:ptvis:nQ:nN:D1:D2:D3:D4:Qw:rec");
   faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recpt:recD0");
   Qtuple =new TNtuple("Q","Q","EvID:Q:nTr:Qw:trueTau");
   
@@ -168,13 +168,116 @@ void EvaluateTauID::processEvent( LCEvent * evt )
  
   bool isfake=false;
   int nfakes=0;
+  bool print=false;
+
+  if( colMC != 0 ) 
+    {
+      int nMCP = colMC->getNumberOfElements();
+      for(int k=0; k < nMCP; k++) 
+	{
+	  MCParticle *particle = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
+	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==15)
+	    {
+	      
+	      ntau_mc++;
+	      double Evis=0,ptvis=0,Qw=0,pQ=0;
+	      int nQ=0,nN=0;
+	      LoopDaughters(particle,Evis,ptvis,nQ,nN,Qw,pQ);
+	      int D[4]={0,0,0,0};
+	      int nvisD=0;
+	      for(unsigned int d=0;d< particle->getDaughters().size();d++)
+		{
+		  if(particle->getDaughters()[d]->getGeneratorStatus()==1 || particle->getDaughters()[d]->getPDG()==111)
+		    {
+		      int pdg=particle->getDaughters()[d]->getPDG();
+		      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+			{
+			  D[nvisD]=pdg;
+			  nvisD++;
+			}
+		    }
+		  else
+		    {
+		      MCParticle *daughter=particle->getDaughters()[d];
+		      for(unsigned int d1=0;d1< daughter->getDaughters().size();d1++)
+			{
+			  if(daughter->getDaughters()[d1]->getGeneratorStatus()==1)
+			    {
+			      int pdg=daughter->getDaughters()[d1]->getPDG();
+			      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
+				{
+				  D[nvisD]=pdg;
+				  nvisD++;
+				}
+			    }
+			}
+		    }
+		}
+	      //Try to find a corresponding reconstructed tau
+	      bool found= false;
+	      if( colTau != 0)
+		{
+		  int nT = colTau->getNumberOfElements();
+		  for(int k=0; k < nT; k++) 
+		    {
+		      ReconstructedParticle *tau = dynamic_cast <ReconstructedParticle*>( colTau->getElementAt( k ) );
+		      std::vector< ReconstructedParticle * > tauvec=tau->getParticles();
+		      for(unsigned int o=0;o<tauvec.size();o++)
+			{
+			  if(relationNavigatorMC)
+			    {
+			      EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(tauvec[o]);
+			      for(unsigned int m=0;m<relobj.size();m++)
+				{
+				  MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
+				  //check whether particles parent is really a tau:
+				  MCParticle *dummy=mc;
+				  MCParticle *parent=mc;
+				  int size=mc->getParents().size();
+				  while(size!=0)
+				    {
+				      dummy=parent->getParents()[0];
+				      size=dummy->getParents().size();
+				      parent=dummy;
+				      if(fabs(parent->getPDG())==15)
+					size=0;
+				    }
+				  if(fabs(parent->getPDG())==15)
+				    {
+				      // cout<<parent<<" "<<particle<<endl;
+				      if(parent==particle)
+					found=true;
+				    }
+				}
+			    }
+			}
+		    }
+		}
+	      
+	      if(_nEvt<coutUpToEv || _nEvt==coutEv || print)
+		{
+		  if(found)
+		    cout<<"MCTRUTH: "<<found<<" "<<particle->getPDG()<<" "<<Evis<<" "<<ptvis<<" "<<nQ<<" "<<nN<<
+		      " "<<atan(sqrt(particle->getMomentum()[1]*particle->getMomentum()[1]+particle->getMomentum()[0]*particle->getMomentum()[0])/particle->getMomentum()[2])<<" "<<D[0]<<" "<<D[1]<<" "<<D[2]<<" "<<D[3]<<endl;
+		  else
+		    cout<<"MCMISSED: "<<found<<" "<<particle->getPDG()<<" "<<Evis<<" "<<ptvis<<" "<<nQ<<" "<<nN<<
+		      " "<<atan(sqrt(particle->getMomentum()[1]*particle->getMomentum()[1]+particle->getMomentum()[0]*particle->getMomentum()[0])/particle->getMomentum()[2])<<" "<<D[0]<<" "<<D[1]<<" "<<D[2]<<" "<<D[3]<<endl;
+		}
+	      mctuple->Fill(_nEvt,particle->getEnergy(),Evis,ptvis,nQ,nN,D[0],D[1],D[2],D[3],Qw/pQ,found);
+	      if(found==false)
+		print=true;
+	    }//tau
+	}
+    }
+
+  
 
   if( colTau != 0)
     {
       int nT = colTau->getNumberOfElements();
       ntau_rec=nT;
       
-      if(_nEvt<coutUpToEv || _nEvt==coutEv)
+      if(_nEvt<coutUpToEv || _nEvt==coutEv || print)
 	cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
      
       for(int k=0; k < nT; k++) 
@@ -276,9 +379,7 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 	  if(mctau)
 	    trueTau=1;
 	  Qtuple->Fill(_nEvt,tau->getCharge(),nQ,Qweighted/ptsum,trueTau);
-	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"REC: "<<tau->getEnergy()<<" "<<nQ<<" "<<nN<<" "<<D0<<endl;
-	  
+	   
 	  //compare tau with mc truth
 	  if(mctau)
 	    {
@@ -317,7 +418,10 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 		    }
 		}
 	      taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,ptvis,nQ,nN,tau->getEnergy(),pt,Eseed,nQ,nN,D[0],D[1],D[2],D[3]);
+	      if(_nEvt<coutUpToEv || _nEvt==coutEv || print)
+		cout<<"REC MATCHED: "<<tau->getEnergy()<<" "<<nQ<<" "<<nN<<" "<<D0<<endl;
 	    }
+	  
 	  else //fake
 	    { 
 	      int d1=0,d2=0,pdg=0;
@@ -349,64 +453,15 @@ void EvaluateTauID::processEvent( LCEvent * evt )
 		    }
 		}
 	      faketuple->Fill(_nEvt,pdg,d1,d2,tau->getEnergy(),pt,D0);
+	      if(_nEvt<coutUpToEv || _nEvt==coutEv || print)
+		cout<<"REC FAKE: "<<tau->getEnergy()<<" "<<nQ<<" "<<nN<<" "<<D0<<endl;
 	      isfake=true;
 	      nfakes++;
 	    }
 	}
     }//colTau
   
-  if( colMC != 0 ) 
-    {
-      int nMCP = colMC->getNumberOfElements();
-      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"MCTRUTH: "<<endl;
-      for(int k=0; k < nMCP; k++) 
-	{
-	  MCParticle *particle = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
-	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==15)
-	    {
-	      ntau_mc++;
-	      double Evis=0,ptvis=0,Qw=0,pQ=0;
-	      int nQ=0,nN=0;
-	      LoopDaughters(particle,Evis,ptvis,nQ,nN,Qw,pQ);
-	    
-	      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-		cout<<particle->getPDG()<<" "<<Evis<<" "<<ptvis<<" "<<nQ<<" "<<nN<<endl;
-	      int D[4]={0,0,0,0};
-	      int nvisD=0;
-	      for(unsigned int d=0;d< particle->getDaughters().size();d++)
-		{
-		  if(particle->getDaughters()[d]->getGeneratorStatus()==1 || particle->getDaughters()[d]->getPDG()==111)
-		    {
-		      int pdg=particle->getDaughters()[d]->getPDG();
-		      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
-			{
-			  D[nvisD]=pdg;
-			  nvisD++;
-			}
-		    }
-		  else
-		    {
-		      MCParticle *daughter=particle->getDaughters()[d];
-		      for(unsigned int d1=0;d1< daughter->getDaughters().size();d1++)
-			{
-			  if(daughter->getDaughters()[d1]->getGeneratorStatus()==1)
-			    {
-			      int pdg=daughter->getDaughters()[d1]->getPDG();
-			      if(abs(pdg)!=16 && abs(pdg)!=12 && abs(pdg)!=14)
-				{
-				  D[nvisD]=pdg;
-				  nvisD++;
-				}
-			    }
-			}
-		    }
-		}
-	      mctuple->Fill(_nEvt,particle->getEnergy(),Evis,ptvis,nQ,nN,D[0],D[1],D[2],D[3],Qw/pQ);
-	    	      
-	    }//tau
-	}
-    }
+ 
   
   //filling the tuple
   evtuple->Fill(_nEvt,ntau_mc,ntau_rec);
@@ -415,7 +470,7 @@ void EvaluateTauID::processEvent( LCEvent * evt )
   delete relationNavigatorMC;
   delete relationNavigatorPFOMC;
   
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+  if(_nEvt<coutUpToEv || _nEvt==coutEv || print)
     cout<<"--------------------------------------------------------------------------------------------"<<endl;
    
   _nEvt ++ ;

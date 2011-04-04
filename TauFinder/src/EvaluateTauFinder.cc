@@ -426,7 +426,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       for(int k=0; k < nMCP; k++) 
 	{
 	  MCParticle *particle = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
-	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==15)
+	  if(particle->getGeneratorStatus()<3 && fabs(particle->getPDG())==15)
 	    {
 	      ntau_mc++;
 	      _ntot_mc++;
@@ -436,7 +436,6 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
 	      float mom[3];
 	      float ver[3];
-	      
 	      for (int icomp=0; icomp<3; ++icomp) {
 		mom[icomp]=(float)particle->getMomentum()[icomp];
 		ver[icomp]=(float)particle->getDaughters()[0]->getVertex()[icomp];
@@ -464,20 +463,26 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  if(!hasRel)
 		    {		    
 		      missed++;
-		      mcmisstuple->Fill(_nEvt,Evis,D0,particle->getDaughters()[0]->getPDG(),particle->getDaughters()[1]->getPDG());
+		      int d1=0,d2=0;
+		      if(particle->getDaughters().size()==2)
+			{
+			  d1=particle->getDaughters()[0]->getPDG();
+			  d2=particle->getDaughters()[1]->getPDG();
+			}
+		      mcmisstuple->Fill(_nEvt,Evis,D0,d1,d2);
 		      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-			cout<<"Missed: "<<Evis<<" "<<D0<<" "<<particle->getDaughters()[0]->getPDG()<<" "<<particle->getDaughters()[1]->getPDG()<<endl;
+			cout<<"Missed: "<<Evis<<" "<<D0<<" "<<d1<<" "<<d2<<endl;
 		    }
 		}
 	    }//tau
-	  if(particle->getGeneratorStatus()!=3 && fabs(particle->getPDG())==24)
+	  if(particle->getGeneratorStatus()<3 && fabs(particle->getPDG())==24)
 	    {
-	      if(particle->getPDG()==24)
+	      if(particle->getPDG()==24 && particle->getDaughters().size()==2)
 		{
 		  D1=particle->getDaughters()[0]->getPDG();
 		  D2=particle->getDaughters()[1]->getPDG();
 		}
-	      if(particle->getPDG()==-24)
+	      if(particle->getPDG()==-24 && particle->getDaughters().size()==2)
 		{
 		  D3=particle->getDaughters()[0]->getPDG();
 		  D4=particle->getDaughters()[1]->getPDG();

@@ -652,10 +652,10 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
     }
     GroupTracks * group = trkCand->getGroupTracks();
     if (group != NULL) {
-      TrackExtendedVec trkVec = group->getTrackExtendedVec();
-      int nGrTRK = int(trkVec.size());
+      TrackExtendedVec trkVecGrp = group->getTrackExtendedVec();
+      int nGrTRK = int(trkVecGrp.size());
       for (int iGr=0;iGr<nGrTRK;++iGr) {
-	TrackExtended * subTrack = trkVec[iGr];
+	TrackExtended * subTrack = trkVecGrp[iGr];
 	track->addTrack(subTrack->getTrack());
       }
     }
@@ -2275,18 +2275,22 @@ void FullLDCTracking::CheckTracks() {
 
       float pdot = (momFirst[0]*momSecond[0]+momFirst[1]*momSecond[1]+momFirst[2]*momSecond[2])/pFirst/pSecond;
       if(pdot<0.999)continue;
-      const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5])/fabs(omegaFirst);
-      const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5])/fabs(omegaSecond);
-      const float deltaP = fabs(pFirst-pSecond);
-      const float sigmaDeltaP = sqrt(pFirst*sigmaPOverPFirst*pFirst*sigmaPOverPFirst+pSecond*sigmaPOverPSecond*pSecond*sigmaPOverPSecond);
-      const float significance = deltaP/sigmaDeltaP;
+      // const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5])/fabs(omegaFirst);
+      // const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5])/fabs(omegaSecond);
+      // const float deltaP = fabs(pFirst-pSecond);
+      // const float sigmaDeltaP = sqrt(pFirst*sigmaPOverPFirst*pFirst*sigmaPOverPFirst+pSecond*sigmaPOverPSecond*pSecond*sigmaPOverPSecond);
+      //      const float significance = deltaP/sigmaDeltaP;
       
       TrackExtended * combinedTrack = TrialCombineTracks(first,second);
       if(combinedTrack != NULL){
 	const int minHits = std::min(firstHitVec.size(),secondHitVec.size());
 	const int maxHits = std::max(firstHitVec.size(),secondHitVec.size());
        
-	if( combinedTrack->getNDF() <= 2*maxHits+minHits-5)continue;
+	if( combinedTrack->getNDF() <= 2*maxHits+minHits-5){
+	  delete combinedTrack->getGroupTracks();
+	  delete combinedTrack;
+	  continue;
+	}
 
 	float d0    = combinedTrack->getD0();
 	float z0    = combinedTrack->getZ0();
@@ -2300,9 +2304,9 @@ void FullLDCTracking::CheckTracks() {
 	mom[0]  = helix.getMomentum()[0];
 	mom[1]  = helix.getMomentum()[1];
 	mom[2]  = helix.getMomentum()[2];
-	float p = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
-	float chi2Sig =  (combinedTrack->getChi2() - combinedTrack->getNDF());
-	chi2Sig = chi2Sig/sqrt(combinedTrack->getNDF()*2);
+	// float p = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
+	// float chi2Sig =  (combinedTrack->getChi2() - combinedTrack->getNDF());
+	// chi2Sig = chi2Sig/sqrt(combinedTrack->getNDF()*2);
 
 
 
@@ -2401,14 +2405,14 @@ float FullLDCTracking::CompareTrkIII(TrackExtended * first, TrackExtended * seco
   //MB 2010 03
   float d0ErrFirst = sqrt(first->getCovMatrix()[0]);
   float z0ErrFirst = sqrt(first->getCovMatrix()[9]);
-  float omegaErrFirst = sqrt(first->getCovMatrix()[5]);
+  //  float omegaErrFirst = sqrt(first->getCovMatrix()[5]);
   float phiErrFirst = sqrt(first->getCovMatrix()[2]);
   float qErrFirst = sqrt(cos(qFirst)*cos(qFirst)*first->getCovMatrix()[14]);
   //MB END
   //MB 2010 03
   float d0ErrSecond = sqrt(second->getCovMatrix()[0]);
   float z0ErrSecond = sqrt(second->getCovMatrix()[9]);
-  float omegaErrSecond = sqrt(second->getCovMatrix()[5]);
+  //  float omegaErrSecond = sqrt(second->getCovMatrix()[5]);
   float phiErrSecond = sqrt(second->getCovMatrix()[2]);
   float qErrSecond = sqrt(cos(qSecond)*cos(qSecond)*second->getCovMatrix()[14]);
   //MB END
@@ -3220,14 +3224,14 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
       int nTrkGrp = int(tracksInGroup.size());
       for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
 	TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
-	TrackerHitExtendedVec hitVec = trkGrp->getTrackerHitExtendedVec();
-	int nHits = int(hitVec.size());
+	TrackerHitExtendedVec hitVecGrp = trkGrp->getTrackerHitExtendedVec();
+	int nHits = int(hitVecGrp.size());
 	float zMin = 1.0e+20;
 	float zMax = -1.0e+20;
 	float startPoint[3] = {0.,0.,0.};
 	float endPoint[3]   = {0.,0.,0.};
 	for (int iH=0;iH<nHits;++iH) {
-	  TrackerHitExtended * trkHitExt = hitVec[iH];
+	  TrackerHitExtended * trkHitExt = hitVecGrp[iH];
 	  float pos[3] = {0.,0.,0.};
 	  for (int iC=0;iC<3;++iC) 
 	    pos[iC] = float(trkHitExt->getTrackerHit()->getPosition()[iC]);	  
@@ -3724,15 +3728,13 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       
       if(combinedTrack != NULL){
 	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+	delete combinedTrack->getGroupTracks();
+	delete combinedTrack;
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
 
-      delete combinedTrack->getGroupTracks();
-      delete combinedTrack;
-
-      
       std::cout << std::endl;
     
     }
@@ -3774,11 +3776,11 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       TrackExtended * combinedTrack = TrialCombineTracks(firstTrackExt,secondTrackExt);
       if(combinedTrack != NULL){
 	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+	delete combinedTrack->getGroupTracks();
+	delete combinedTrack;
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
-      delete combinedTrack->getGroupTracks();
-      delete combinedTrack;
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       
       std::cout << std::endl;
@@ -3824,11 +3826,11 @@ void FullLDCTracking::PrintOutMerging(TrackExtended * firstTrackExt, TrackExtend
       
       if(combinedTrack != NULL){
 	std::cout << "CombinedTrack " << combinedTrack->getNDF() << " c.f. " << firstTrackExt->getNDF()+secondTrackExt->getNDF()+5 << std::endl;
+	delete combinedTrack->getGroupTracks();
+	delete combinedTrack;
       }else{
 	std::cout << "Could not combine track " << std::endl;
       }
-      delete combinedTrack->getGroupTracks();
-      delete combinedTrack;
       std::cout << " Overlap = " << SegmentRadialOverlap(firstTrackExt, secondTrackExt) << " veto = " << VetoMerge(firstTrackExt, secondTrackExt) << std::endl;
       std::cout << std::endl;      
       

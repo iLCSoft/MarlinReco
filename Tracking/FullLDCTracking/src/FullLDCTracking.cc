@@ -2943,7 +2943,6 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 
     for (int iH=0;iH<nHits;++iH) {
       float pos[3];
-      float dist[3];
       TrackerHitExtended * trkHitExt = hitVec[iH];
       TrackerHit * hit = trkHitExt->getTrackerHit();
       for (int ip=0;ip<3;++ip)
@@ -2962,11 +2961,11 @@ void FullLDCTracking::AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, floa
 	float product = pos[2]*tanLambda;
 	if (product>0) {
 	  HelixClass * helix = _trackExtrapolatedHelix[trkExt];
-	  helix->getDistanceToPoint(pos,dist,dcut);
+	  float distance = helix->getDistanceToPoint(pos,dcut);
 	  //	  std::cout << "Dist = " << dist[2] << std::endl;
-	  if (dist[2]<dcut) {
+	  if (distance<dcut) {
 	    TrackHitPair * trkHitPair = 
-	      new TrackHitPair(trkExt,trkHitExt,dist[2]);
+	      new TrackHitPair(trkExt,trkHitExt,distance);
 	    pairs.push_back(trkHitPair);
 	    flagTrack[trkExt] = true;
 	    flagHit[trkHitExt] = true;
@@ -3254,21 +3253,29 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 
     // replace previous version with faster loop ordering
 
-    std::vector<float>minDistances;
-    std::vector<TrackExtended*>tracksToAttach;
-    for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits
-      minDistances.push_back(1E20);
-      tracksToAttach.push_back(NULL);
+    std::vector<float> minDistances(nHits, dcut);
+    std::vector<TrackExtended*> tracksToAttach(nHits,NULL);
+    std::vector< std::vector<float> > HitPositions(nHits);
+    std::vector<int> HitSign(nHits);//Positive or Negative side
+    for (int iH=0;iH<nHits;++iH) { // loop over leftover TPC hits
+      //Get all TrackerHit positions, so we only have to get them once
+      TrackerHit* temphit = hitVec[iH]->getTrackerHit();
+      const double *temppos = temphit->getPosition();
+      HitPositions[iH].push_back(float(temppos[0]));
+      HitPositions[iH].push_back(float(temppos[1]));
+      HitPositions[iH].push_back(float(temppos[2]));
+      HitSign[iH]=signbit(temppos[2]);
     }    
 
     if(_debug>0)std::cout << " Starting loop " << nTrk << " tracks   and  " << nHits << " hits" << std::endl;
 
     for (int iT=0;iT<nTrk;++iT) { // loop over all tracks
       TrackExtended * foundTrack = _trkImplVec[iT];
-      float tanLambdaFound = foundTrack->getTanLambda();
+      int tanlambdaSign = signbit(foundTrack->getTanLambda());//we only care about positive or negative
       GroupTracks * group = foundTrack->getGroupTracks();
       TrackExtendedVec tracksInGroup = group->getTrackExtendedVec();
       int nTrkGrp = int(tracksInGroup.size());
+
       for (int iTrkGrp=0;iTrkGrp<nTrkGrp;++iTrkGrp) {
 	TrackExtended * trkGrp = tracksInGroup[iTrkGrp];
 	float tanLambda = trkGrp->getTanLambda();
@@ -3276,41 +3283,34 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
 	float d0 = trkGrp->getD0();
 	float z0 = trkGrp->getZ0();
 	float phi0 = trkGrp->getPhi();
-	float dist[3];
-	float startPoint[3];
-	float endPoint[3];
-	for (int iC=0;iC<3;++iC) {
-	  startPoint[iC] = trkGrp->getStart()[iC];
-	  endPoint[iC] = trkGrp->getEnd()[iC];
-	}
+	float startPointZ = trkGrp->getStart()[2];
+	float endPointZ   = trkGrp->getEnd()[2];
 	HelixClass helix;
 	helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
-	float halfPeriodZ = fabs(acos(-1.)*tanLambda/omega);
-	for (int iH=0;iH<nHits;iH++) { // loop over leftover TPC hits
-	  TrackerHitExtended * hitExt = hitVec[iH];
-	  float pos[3];
-	  for (int ip=0;ip<3;++ip) 
-	    pos[ip] = float(hitExt->getTrackerHit()->getPosition()[ip]);
+	float OnePFivehalfPeriodZ = 1.5*fabs(acos(-1.)*tanLambda/omega);
 
-	  float product = tanLambdaFound*pos[2];
-	  if (product>0) {
-	    float DeltaStart = fabs(pos[2]-startPoint[2]);
-	    float DeltaEnd = fabs(pos[2]-endPoint[2]);
-	    bool consider = DeltaStart <= 1.5*halfPeriodZ;
-	    consider = consider || (DeltaEnd <= 1.5*halfPeriodZ);
-	    consider = consider || ( (pos[2]>=startPoint[2]) && (pos[2]<=endPoint[2]) );
-	    if(consider){
-	      float distCut=  ( dcut < minDistances[iH] ) ?  dcut :  minDistances[iH];
-	      helix.getDistanceToPoint(pos, dist, distCut);
-	      if (dist[2]<distCut) {
-		minDistances[iH] = dist[2];
-		tracksToAttach[iH] = foundTrack;
-	      }
+	for (int iH=0;iH<nHits;++iH) { // loop over leftover TPC hits
+
+	  //check if the hit and the track or on the same side
+	  //xor return 1, if hits are different
+	  if ( tanlambdaSign^HitSign[iH] ) continue;
+
+	  float DeltaStart = fabs(HitPositions[iH][2]-startPointZ);
+	  float DeltaEnd = fabs(HitPositions[iH][2]-endPointZ);
+	  bool consider = DeltaStart <= OnePFivehalfPeriodZ;
+	  consider = consider || (DeltaEnd <= OnePFivehalfPeriodZ);
+	  consider = consider || ( (HitPositions[iH][2]>=startPointZ) && (HitPositions[iH][2]<=endPointZ) );
+	  
+	  if(consider){
+	    float distance = helix.getDistanceToPoint(HitPositions[iH], minDistances[iH]);
+	    if (distance < minDistances[iH]) {
+	      minDistances[iH] = distance;
+	      tracksToAttach[iH] = foundTrack;
 	    }
 	  }
-	}
-      }
-    }
+	} // loop over leftover TPC hits
+      } //groups in tracks
+    } // loop over all tracks
 
     for (int iH=0;iH<nHits;++iH) {
       TrackerHitExtended * trkHitExt = hitVec[iH];
@@ -3403,7 +3403,6 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 
     for (int iH=0;iH<nHits;++iH) {
 	float pos[3];
-	float dist[3];
 	TrackerHitExtended * trkHitExt = hitVec[iH];
 	TrackerHit * hit = trkHitExt->getTrackerHit();
 	for (int ip=0;ip<3;++ip)
@@ -3420,10 +3419,10 @@ void FullLDCTracking::AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
 		float omega = trkExt->getOmega();
 		HelixClass helix;
 		helix.Initialize_Canonical(phi0,d0,z0,omega,tanLambda,_bField);
-		helix.getDistanceToPoint(pos,dist,dcut);
-		if (dist[2]<dcut) {
+		float distance = helix.getDistanceToPoint(pos,dcut);
+		if (distance<dcut) {
 		    TrackHitPair * trkHitPair = 
-			new TrackHitPair(trkExt,trkHitExt,dist[2]);
+			new TrackHitPair(trkExt,trkHitExt,distance);
 		    pairs.push_back(trkHitPair);
 		    flagTrack[trkExt] = true;
 		    flagHit[trkHitExt] = true;

@@ -3254,10 +3254,11 @@ void FullLDCTracking::AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
     // replace previous version with faster loop ordering
 
     std::vector<float> minDistances(nHits, dcut);
-    std::vector<TrackExtended*> tracksToAttach(nHits,NULL);
+    std::vector<TrackExtended*> tracksToAttach(nHits);
     std::vector< std::vector<float> > HitPositions(nHits);
     std::vector<int> HitSign(nHits);//Positive or Negative side
     for (int iH=0;iH<nHits;++iH) { // loop over leftover TPC hits
+      tracksToAttach[iH]=NULL;
       //Get all TrackerHit positions, so we only have to get them once
       TrackerHit* temphit = hitVec[iH]->getTrackerHit();
       const double *temppos = temphit->getPosition();

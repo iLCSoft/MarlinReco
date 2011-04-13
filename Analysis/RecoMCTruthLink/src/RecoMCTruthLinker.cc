@@ -516,7 +516,8 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
           } else {
             MCParticle* this_Kid = mcp ;     // ... and a true particle !
           
-            if ( mcp-> getGeneratorStatus() == 0 ) { 
+	    //Particle gun particles dont have parents, but are "created in the simulation" and have genStat 0
+            if ( mcp-> getGeneratorStatus() == 0 && ( mcp->getParents().empty() == false ) ) { 
                   // not from generator, find which true particle this
                   // hit should really be attributed to, by tracking back the history.
 
@@ -895,7 +896,8 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                               << " id: " << theMCPs[iii]
       		      << std::endl ;
       
-      if (  theMCPs[iii]->getGeneratorStatus() == 0 ) {
+      //Particle gun particles dont have parents but have genStat 0      
+      if (  theMCPs[iii]->getGeneratorStatus() == 0 &&  ( theMCPs[iii]->getParents().empty() == false) ) {
         streamlog_out( DEBUG4 ) << " mother id " << theMCPs[iii]->getParents()[0] 
          << " and genstat " 
          << theMCPs[iii]->getParents()[0]->getGeneratorStatus() << std::endl ;

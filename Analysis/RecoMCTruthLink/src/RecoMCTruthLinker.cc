@@ -556,10 +556,11 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
 
               mother= dynamic_cast<MCParticle*>(mcp->getParents()[0]); 
 
+	      bool NoChange=true;
               while ( this_Kid->isDecayedInTracker()  && 
                            mother->getGeneratorStatus() == 0){ // backtrack until the particle is 
                                                                // in a calorimeter. 
-
+		NoChange=true;//If nothing happens in the loop, we are going to break, to make sure we are not looping endlessly
                 // case back-scatter
 
                 streamlog_out( DEBUG2 ) <<"  back-scatter o mother "<<mother<<
@@ -584,7 +585,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                                       // back-scatterers furher down the tree.
                   this_Kid=mother ;
                   mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
-
+		  NoChange=false;
 
                   streamlog_out( DEBUG2 ) <<"  back-scatter i mother "<<mother<<
                                             " gs "<<mother->getGeneratorStatus()<<
@@ -597,7 +598,10 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                 if ( mother->isBackscatter()) {
                   this_Kid=mother ;
                   mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
-                } 
+		  NoChange=false;
+                }
+		//If mother genStatus==0 and it is not backscattering and there are no parents (because mother is coming from particle gun), we may never get out of this loop
+		if(NoChange) break;
               }
               streamlog_out( DEBUG2 ) <<"  mother "<<mother<<
                                         " gs "<<mother->getGeneratorStatus()<<
@@ -1109,14 +1113,23 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
         particleTruthRelNav.addRelation(   part ,  mcit->first ,  mcit->second ) ;
       }
     } else {
-      particleTruthRelNav.addRelation(   part ,  mcmax ,  maxwgt ) ;
-      streamlog_out( DEBUG3 ) << " particle has weight "<<maxwgt
-     			        << " of MCParticle with pdg : " << mcmax->getPDG() 
-    			        << " and genstat : " <<  mcmax->getGeneratorStatus() 
+      if( mcmax != NULL ) {
+	//AS: FixMe: There is still something going wrong with particles from the particle gun.
+	//Although there are perfect PFOs no link with the MCParticle is established.
+	  particleTruthRelNav.addRelation(   part ,  mcmax ,  maxwgt ) ;
+	  streamlog_out( DEBUG3 ) << " particle has weight "<<maxwgt
+     	  		        << " of MCParticle with pdg : " << mcmax->getPDG() 
+    	  		        << " and genstat : " <<  mcmax->getGeneratorStatus() 
                                 << " id: " << mcmax 
                                 << ". Particle charge and ntracks : " << part->getCharge()<<" "<<ntrk
-    		                << std::endl ;
-    } 
+    	  	                << std::endl ;
+      } else { 
+      	  streamlog_out( WARNING ) << " particle has weight "<< maxwgt
+      				  << ". Particle charge and ntracks : " << part->getCharge()<<" "<<ntrk
+      				  << " but no mcparticle found "
+      				  << std::endl ;
+      }
+    }
   }
   streamlog_out( DEBUG4 ) << " particle linking complete, create collection " << std::endl;
   *ptrlcol = particleTruthRelNav.createLCCollection() ;

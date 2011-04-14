@@ -31,7 +31,7 @@ PROJECT( MarlinReco C CXX Fortran )
 
 # project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 0 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 19 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 20 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 
@@ -78,9 +78,11 @@ INSTALL( PROGRAMS ${FORTRAN_LIBRARY_FULL_PATH} DESTINATION lib ) # PROGRAMS is l
 # -------- compiler flags ---------------------------------------------------
 IF( FORTRAN_COMPILER_NAME STREQUAL "g77" )
     SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wno-globals" ) # -ff2c ?
+    #SET( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -ffortran-bounds-check" )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dg77Fortran" ) # -Df2cFortran
 ELSE() # gfortran / gfortran-32
     SET( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy" )
+    #SET( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fbounds-check" )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DgFortran" )
 ENDIF()
 SET( CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -DNDEBUG" )

@@ -8,8 +8,40 @@
 | v00-20 |
  --------
 
-    - TODO !!
+        - Tracking
+          - MarlinTrackFit
+           - Use double precision for the conversion from Tanagra to LC Track Parameters. Use of the HelixClass has been removed from the conversion.
+          - FullLDCTracking
+           - Use faster HelixClass::getDistanceToPoint where possible.
+           - Improved dynamic mememory allocation
+           - General clean-up and removal of redundant code.
+          - LEPTracking 
+           - Improved dynamic mememory allocation
+           - Upper limit on track momentum now 2 TeV.
+          - KinkFinder
+           - Improved dynamic mememory allocation
+           - Make sure prongDaughters[i] has entries.           
+          - SiliconTracking
+           - Protect against missing connection from SimTrackerHit to MCParticle.
+           - Reducing maximum number of allowed FTD combinations
+           - In case of many potential FTD hit combinations, iteratively adjust phi sectors for triplet formation to avoid long processing times 
 
+        - TrackDigi
+           - Improved dynamic mememory allocation
+
+        - Analysis
+          - MarlinKinfit
+           - Added new test classes IterationScanner and ParameterScanner
+           - Added NewFitterGSL.
+          - CLICPfoSelector
+           - Put in possibility of applying time of flight corrections to hit times: CorrectHitTimesForTimeOfFlight
+           - Add one final cut to CLICPFOSelector to remove high energy neutral hadrons in the far forward region which are formed from mulitple background particles.
+           - Improved monitoring of background/physics pfos.
+           - Added simple analysis processor to loop over pfos separated in to "physics event" and background.
+           - Create Selected PFO Collections as a subset of All PFOs.
+          - RecoMCTruthLink
+           - Use push_back instead of directly assigning entries to the vector, in case we run out of reserved space.
+           - Output cluster truth linked collections for Clusters and Hits can only be created if there are clusters/hits.
 
  --------
 | v00-19 |

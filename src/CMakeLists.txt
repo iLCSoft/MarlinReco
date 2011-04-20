@@ -6,11 +6,7 @@
 
 # MarlinReco Packages
 SET( MarlinReco_PKGS
-    "Analysis/EventShapes"
-    "Analysis/BCalTagEfficiency"
     "Analysis/CLICPfoSelector"
-    "Analysis/SatoruJetFinder"
-    "Analysis/MarlinKinfit"
     "Analysis/RecoMCTruthLink"
     "Analysis/ZFinder"
     "Calibration/AbsCalibration"
@@ -27,16 +23,39 @@ SET( MarlinReco_PKGS
     "TrackDigi/ETDDigi"
     "TrackDigi/VTXDigi"
     "TrackDigi/FPCCDDigi"
+    "Tracking/KinkFinder" 
+    "Tracking/V0Finder"
+)
+
+IF( CERNLIB_FOUND ) 
+SET( MarlinReco_PKGS ${MarlinReco_PKGS}
     "Tracking/BrahmsTracking"
     "Tracking/FullLDCTracking"
     "Tracking/SiliconTracking"
+    "Analysis/SatoruJetFinder"
     "Tracking/TrackCheater"
-    "Tracking/KinkFinder" 
-    "Tracking/V0Finder"
+    "Analysis/BCalTagEfficiency"
+    "Analysis/MarlinKinfit"
     "PFOID"
+    "Analysis/EventShapes"
+)
+ELSE()
+  MESSAGE( WARNING "=====================================================================================
+  MarlinReco will be built without cernlib - the following packages will not be available : 
+    Tracking/BrahmsTracking
+    Tracking/FullLDCTracking
+    Tracking/SiliconTracking
+    Analysis/SatoruJetFinder
+    Tracking/TrackCheater
+    Analysis/BCalTagEfficiency
+    Analysis/MarlinKinfit
+    PFOID
+    Analysis/EventShapes
+ In order to build these packages specify MARLIN_CERNLIB=on and CERNLIB_DIR !! 
+ =============================================================================================  " 
 )
 
-
+ENDIF(CERNLIB_FOUND)
 
 ####################################################################################################
 ### INCLUDES and SOURCES
@@ -51,15 +70,17 @@ FOREACH( pkg ${MarlinReco_PKGS} )
 
 ENDFOREACH()
 
+IF( CERNLIB_FOUND ) 
 # C sources
 AUX_SOURCE_DIRECTORY( ${PROJECT_SOURCE_DIR}/Tracking/BrahmsTracking/src/C MarlinReco_c_srcs )
 
 # Fortran sources
-FILE( GLOB SatoruJetFinder_f77_srcs ${PROJECT_SOURCE_DIR}/Analysis/SatoruJetFinder/src/fortsrc/*.f )
-FILE( GLOB BrahmsTracking_f77_srcs ${PROJECT_SOURCE_DIR}/Tracking/BrahmsTracking/src/f77/*.F )
-LIST( APPEND MarlinReco_f77_srcs "${PROJECT_SOURCE_DIR}/Analysis/BCalTagEfficiency/Fortran/track-to-bcal.F" )
-LIST( APPEND MarlinReco_f77_srcs ${SatoruJetFinder_f77_srcs} )
-LIST( APPEND MarlinReco_f77_srcs ${BrahmsTracking_f77_srcs} )
+ FILE( GLOB SatoruJetFinder_f77_srcs ${PROJECT_SOURCE_DIR}/Analysis/SatoruJetFinder/src/fortsrc/*.f )
+ FILE( GLOB BrahmsTracking_f77_srcs ${PROJECT_SOURCE_DIR}/Tracking/BrahmsTracking/src/f77/*.F )
+ LIST( APPEND MarlinReco_f77_srcs "${PROJECT_SOURCE_DIR}/Analysis/BCalTagEfficiency/Fortran/track-to-bcal.F" )
+ LIST( APPEND MarlinReco_f77_srcs ${SatoruJetFinder_f77_srcs} )
+ LIST( APPEND MarlinReco_f77_srcs ${BrahmsTracking_f77_srcs} )
+ENDIF(CERNLIB_FOUND)
 
 
 #STRING( REPLACE "-pedantic" "" CXX_FLAGS_NOT_PEDANTIC ${CMAKE_CXX_FLAGS} )

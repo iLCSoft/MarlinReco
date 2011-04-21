@@ -27,7 +27,7 @@ SET( ENV{CFLAGS} "-Wall -ansi -pedantic $ENV{CFLAGS}" )
 
 # project name
 IF( MARLIN_CERNLIB )
- PROJECT( MarlinReco C CXX FORTRAN )
+ PROJECT( MarlinReco C CXX Fortran )
 ELSE()
  PROJECT( MarlinReco C CXX )
 ENDIF()

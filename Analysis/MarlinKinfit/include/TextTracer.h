@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: TextTracer.h,v $
+ * - Revision 1.2  2011/05/03 13:18:48  blist
+ * - New test stuff
+ * -
  * - Revision 1.1  2009/09/01 09:48:13  blist
  * - Added tracer mechanism, added access to fit covariance matrix
  * -
@@ -27,7 +30,7 @@ class BaseFitter;
 /**
  *
  * Author: Benno List
- * Last update: $Date: 2009/09/01 09:48:13 $
+ * Last update: $Date: 2011/05/03 13:18:48 $
  *          by: $Author: blist $
  *
  */
@@ -52,12 +55,18 @@ class TextTracer: public BaseTracer {
     
     void printFitObjects (BaseFitter& fitter);
     void printConstraints (BaseFitter& fitter);
+    void printTraceValues (BaseFitter& fitter);
+    void printSums (BaseFitter& fitter);
     
   protected:
     std::ostream& os;
     
     int istep;
     int isubstep;
+    double chi2fo;
+    double chi2sc;
+    double sumhc;
+    double sumhcscal;
 };
 
 #endif // __TEXTTRACER_H

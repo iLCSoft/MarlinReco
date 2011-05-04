@@ -1,11 +1,10 @@
-////////////////////////////////////////////////////////////////
 /*! \file 
  *  \brief Declares class NewFitterGSL
  *
  * Author: Benno List
- * Last update: $Date: 2011/03/03 15:03:02 $
+ * Last update: $Date: 2011/05/03 13:16:41 $
  *          by: $Author: blist $
- * $Date: 2011/03/03 15:03:02 $
+ * $Date: 2011/05/03 13:16:41 $
  * $Author: blist $
  *
  * \b Changelog:
@@ -13,6 +12,12 @@
  *
  * \b CVS Log messages:
  * - $Log: NewFitterGSL.h,v $
+ * - Revision 1.3  2011/05/03 13:16:41  blist
+ * - new version of NewFitterGSL
+ * -
+ * - Revision 1.2  2011/05/03 13:15:35  blist
+ * - intermediate version of NewFitterGSL
+ * -
  * - Revision 1.1  2011/03/03 15:03:02  blist
  * - Latest version, with NewFitterGSL
  * -
@@ -31,6 +36,19 @@
 
 // Class NewFitterGSL
 /// A kinematic fitter using the Newton-Raphson method to solve the equations
+/**
+ * This class implements a kinematic fitter using the Newton-Raphson method 
+ * to solve the system of equations arising from the Lagrange multiplier
+ * method
+ *
+ * Author: Benno List
+ * Last update: $Date: 2011/05/03 13:16:41 $
+ *          by: $Author: blist $
+ *
+ * \b Changelog:
+ * - 15.11.2010 First version
+ *
+ */
 
 class NewFitterGSL : public BaseFitter {
   public:
@@ -200,8 +218,7 @@ class NewFitterGSL : public BaseFitter {
                       const gsl_vector *vece,        ///< Error vector e
                             gsl_vector *vecw         ///< Work vector w
                      );  
-                     
-                     
+                         
     // Calculate mu for the merit function                                
     double calcMu (const gsl_vector *vecx,           ///< Current vector x
                    const gsl_vector *vece,           ///< Current errors x
@@ -255,6 +272,12 @@ class NewFitterGSL : public BaseFitter {
 
     // z = x + a y
     static void add (gsl_vector *vecz, const gsl_vector *vecx, double a, const gsl_vector *vecy);
+    
+    // Check whether all elements are finite
+    static bool isfinite (const gsl_vector *vec);
+    
+    // Check whether all elements are finite
+    static bool isfinite (const gsl_matrix *mat);
     
     /// Compute the Moore-Penrose pseudo-inverse A+ of A, using SVD
     static void MoorePenroseInverse (gsl_matrix *Ainv,     ///< Result: m x n matrix A+

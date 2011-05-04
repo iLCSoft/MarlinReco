@@ -5,6 +5,9 @@
  *
  * \b CVS Log messages:
  * - $Log: SoftBWMassConstraint.cc,v $
+ * - Revision 1.2  2011/05/03 13:18:29  blist
+ * - SoftConstraint classes fixed
+ * -
  * - Revision 1.1  2008/10/21 08:37:00  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
@@ -16,6 +19,7 @@
 
 #include<iostream>
 #include<cmath>
+#include<limits>
 #include<cassert>
 
 using std::cerr;
@@ -23,8 +27,8 @@ using std::cout;
 using std::endl;
 
 // constructor
-SoftBWMassConstraint::SoftBWMassConstraint (double gamma_, double mass_) 
-: SoftBWParticleConstraint (gamma_),
+SoftBWMassConstraint::SoftBWMassConstraint (double gamma_, double mass_, double massmin_, double massmax_) 
+: SoftBWParticleConstraint (gamma_, massmin_-mass_, massmax_-mass_),
   mass(mass_) 
 {}
 
@@ -46,9 +50,23 @@ double SoftBWMassConstraint::getValue() const {
     totpy[index] += fitobjects[i]->getPy(); 
     totpz[index] += fitobjects[i]->getPz(); 
   }
-  double result = -mass;
-  result += std::sqrt(std::abs(totE[0]*totE[0]-totpx[0]*totpx[0]-totpy[0]*totpy[0]-totpz[0]*totpz[0]));
-  result -= std::sqrt(std::abs(totE[1]*totE[1]-totpx[1]*totpx[1]-totpy[1]*totpy[1]-totpz[1]*totpz[1]));
+  double m1 = std::sqrt(std::abs(totE[0]*totE[0]-totpx[0]*totpx[0]-totpy[0]*totpy[0]-totpz[0]*totpz[0]));
+  if (!std::isfinite (m1))
+    cout << "SoftBWMassConstraint::getValue(): m1 is nan: "
+         << "p[0]=(" << totE[0] << ", " << totpx[0] << ", " << totpy[0] << ", " << totpz[0]
+         << "), p^2=" << totE[0]*totE[0]-totpx[0]*totpx[0]-totpy[0]*totpy[0]-totpz[0]*totpz[0]
+         << endl;
+  
+  assert (std::isfinite (m1));
+  double m2 = std::sqrt(std::abs(totE[1]*totE[1]-totpx[1]*totpx[1]-totpy[1]*totpy[1]-totpz[1]*totpz[1]));
+  if (!std::isfinite (m2))
+    cout << "SoftBWMassConstraint::getValue(): m2 is nan: "
+         << "p[1]=(" << totE[1] << ", " << totpx[1] << ", " << totpy[1] << ", " << totpz[1]
+         << "), p^2=" << totE[1]*totE[1]-totpx[1]*totpx[1]-totpy[1]*totpy[1]-totpz[1]*totpz[1]
+         << endl;
+  assert (std::isfinite (m2));
+  double result = m1 - m2 -mass;
+  assert (std::isfinite (result));
   return result;
 }
 

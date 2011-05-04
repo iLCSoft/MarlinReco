@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: SoftGaussParticleConstraint.cc,v $
+ * - Revision 1.5  2011/05/03 13:18:29  blist
+ * - SoftConstraint classes fixed
+ * -
  * - Revision 1.4  2008/10/17 13:17:17  blist
  * - Avoid variable-size arrays
  * -
@@ -188,18 +191,27 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
       }
     }
   }
-  /** Second, treat the part 
+  /** Second, treat the parts
    * $$
    * \sum_i \frac{\partial g}{\partial P_i} \cdot 
    *        \frac{\partial^2 P_i}{\partial a_k \partial a_l}
    * $$
+   * and
+   * $$
+   * \frac{\partial^2 h}{\partial g^2}
+   * \sum_i \frac{\partial g}{\partial P_i} \cdot 
+   *        \frac{\partial P_i}{\partial a_k}
+   * \sum_j \frac{\partial g}{\partial P_j} \cdot 
+   *        \frac{\partial P_j}{\partial a_l}
+   * $$
+   *
    * Here, $\frac{\partial g}{\partial P_i}$ is a 4-vector, which we pass on to 
    * the FitObject
    */
   
   double *v = new double[idim];
   for (int i = 0; i < idim; ++i) v[i] = 0;
-  double fact2 = sqrt(2.0)/s;
+  double sqrtfact2 = sqrt(2.0)/s;
   
   double dgdpi[4];
   for (int i = 0; i < n; ++i) {
@@ -207,7 +219,7 @@ void SoftGaussParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim
     assert (foi);
     if (firstDerivatives (i, dgdpi)) {
       foi->addTo2ndDerivatives (M, idim, fact, dgdpi);
-      foi->addToGlobalChi2DerVector (v, idim, fact2, dgdpi);
+      foi->addToGlobalChi2DerVector (v, idim, sqrtfact2, dgdpi);
     }
   }
   

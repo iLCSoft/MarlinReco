@@ -23,6 +23,8 @@
 #include "ISRPhotonFitObject.h"
 #include "PConstraint.h"
 #include "OPALFitterGSL.h"
+#include "NewFitterGSL.h"
+#include "TextTracer.h"
 //#include "NewtonFitterGSL.h"
 #include "FourJetPairing.h"
 #include "MassConstraint.h"
@@ -88,7 +90,7 @@ void WW5CFit::processRunHeader( LCRunHeader* run) {
 void WW5CFit::processEvent( LCEvent * evt ) { 
 
     
-    message<MESSAGE>( log() 
+    message<DEBUG>( log() 
 		      << " processing event " << evt->getEventNumber() 
 		      << "  in run "          << evt->getRunNumber() 
 		      ) ;
@@ -164,7 +166,7 @@ void WW5CFit::processEvent( LCEvent * evt ) {
      if (jetcol != 0) {
   
        int nJETS = jetcol->getNumberOfElements()  ;
-       message<MESSAGE>( log() 
+       message<DEBUG>( log() 
                       << " found " << nJETS
                       << " jets in event " << evt->getEventNumber() 
                       << "  in run "          << evt->getRunNumber() 
@@ -173,11 +175,11 @@ void WW5CFit::processEvent( LCEvent * evt ) {
        if (nJETS != 4) return;               
                    
        float yminus = jetcol ->parameters().getFloatVal( "YMinus");              
-       message<MESSAGE>( log() 
+       message<DEBUG>( log() 
                       << " yminus = " << yminus
                       ) ;
        float yplus = jetcol ->parameters().getFloatVal( "YPlus");              
-       message<MESSAGE>( log() 
+       message<DEBUG>( log() 
                       << " yplus = " << yplus
                       ) ;
        
@@ -197,33 +199,32 @@ void WW5CFit::processEvent( LCEvent * evt ) {
           ReconstructedParticle* j = dynamic_cast<ReconstructedParticle*>( jetcol->getElementAt( i ) ) ;
                
           if (j) {
-             message<MESSAGE>( log() 
+             message<DEBUG>( log() 
                        << " found jet in event " << evt->getEventNumber() 
                        << "  in run "          << evt->getRunNumber() 
                        ) ;
              lvec = HepLorentzVector ((j->getMomentum())[0],(j->getMomentum())[1],(j->getMomentum())[2],j->getEnergy()); 
-             erre *= std::sqrt(lvec.e());
              if (i == 0) {
-               j1 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
-               message<MESSAGE>( log() 
+               j1 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre*std::sqrt(lvec.e()), errtheta, errphi);
+               message<DEBUG>( log() 
                        << " start four-vector of first  jet: " << *j1 
                        ) ;
              }
              else if (i == 1) {
-               j2 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
-               message<MESSAGE>( log() 
+               j2 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre*std::sqrt(lvec.e()), errtheta, errphi);
+               message<DEBUG>( log() 
                        << " start four-vector of second  jet: " << *j2 
                        ) ;
              }
              else if (i == 2) {
-               j3 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
-               message<MESSAGE>( log() 
+               j3 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre*std::sqrt(lvec.e()), errtheta, errphi);
+               message<DEBUG>( log() 
                        << " start four-vector of third  jet: " << *j3 
                        ) ;
              }
              else if (i == 3) {
-               j4 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre, errtheta, errphi);
-               message<MESSAGE>( log() 
+               j4 = new JetFitObject (lvec.e(), lvec.theta(), lvec.phi(), erre*std::sqrt(lvec.e()), errtheta, errphi);
+               message<DEBUG>( log() 
                        << " start four-vector of forth  jet: " << *j4 
                        ) ;
              }
@@ -252,10 +253,10 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
        for (int iperm = 0; iperm < pairing.getNPerm(); iperm++) {
 
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << " ================================================= "  
                        ) ;
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << " iperm = " << iperm 
                        ) ;
 
@@ -267,7 +268,7 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
          pairing.nextPermutation (permutedjets);
          for (int i = 0; i < NJETS; ++i)
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "start four-vector of jet " << i << ": " << *(permutedjets[i])
                        ) ;
         
@@ -283,30 +284,30 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          for (int i = 0; i < NJETS; ++i)
             pzc.addToFOList (*(permutedjets[i]));
         
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                    << "ECM = " << _ecm
                        ) ;
          PConstraint ec(0, 0, 0, 1,_ecm);
          for (int i = 0; i < NJETS; ++i)
             ec.addToFOList (*(permutedjets[i]));
         
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "Value of pxc before fit: " << pxc.getValue()
                        ) ;
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "Value of pyc before fit: " << pyc.getValue()
                        ) ;
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "Value of pzc before fit: " << pzc.getValue()
                        ) ;
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "Value of ec before fit: " << ec.getValue()
                        ) ;
 
          // ISR Photon initialized with missing p_z
          ISRPhotonFitObject *photon = new ISRPhotonFitObject (0., 0., -pzc.getValue(), b, ISRPzMaxB);
          if(_fitISR){
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "start four-vector of ISR photon: " << *(photon)
                        ) ;
             pxc.addToFOList (*(photon));
@@ -323,10 +324,10 @@ void WW5CFit::processEvent( LCEvent * evt ) {
 
          startmass1 = w.getMass(1);
          startmass2 = w.getMass(2);
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "start mass of W 1: " << startmass1
                        ) ;
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "start mass of W 2: " << startmass2
                        ) ;
 #ifdef MARLIN_USE_AIDA
@@ -334,8 +335,15 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          hRecWMassNoFitAll->fill( startmass2 ) ;
 #endif
 
- //        NewtonFitterGSL fitter;
-         OPALFitterGSL fitter;
+         NewFitterGSL fitter;
+//          OPALFitterGSL fitter;
+
+         //TextTracer tracer (std::cout);
+         
+         //if (evt->getEventNumber() == 49) {
+         //  fitter.setTracer (tracer);
+         //  fitter.setDebug (10);
+         //}
          for (int i = 0; i < NJETS; ++i)
             fitter.addFitObject (*(permutedjets[i]));
          if(_fitISR){
@@ -350,30 +358,30 @@ void WW5CFit::processEvent( LCEvent * evt ) {
          double prob = fitter.fit();
          double chi2 = fitter.getChi2();
          int nit = fitter.getIterations();
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "fit probability = " << prob 
                        ) ;
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "fit chi2 = " << chi2 
                        ) ;
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "error code: " << fitter.getError() 
                        ) ;
          for (int i = 0; i < NJETS; ++i) {
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "final four-vector of jet " << i << ": " << *(permutedjets[i])
                        ) ;
          }
          if(_fitISR){
-            message<MESSAGE>( log() 
+            message<DEBUG>( log() 
                        << "final four-vector of ISR photon: " << *(photon)
                        ) ;
          }
 
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "final mass of W 1: " << w.getMass(1)
                        ) ;
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "final mass of W 2: " << w.getMass(2)
                        ) ;
          if (fitter.getError() == 0) {
@@ -383,7 +391,8 @@ void WW5CFit::processEvent( LCEvent * evt ) {
            hRecWMassAll->fill( w.getMass(1)) ;
            hRecWMassAll->fill( w.getMass(2)) ;
 #endif
-           if (prob > bestprob && w.getMass(1) > 50 && w.getMass(1) < 110) {
+//           if (prob > bestprob && w.getMass(1) > 50 && w.getMass(1) < 110) {
+           if (prob > bestprob) {
              bestprob = prob;
              bestnit  = nit;
              bestmass1 = w.getMass(1);
@@ -394,13 +403,13 @@ void WW5CFit::processEvent( LCEvent * evt ) {
            }
          }
          else {
-         message<MESSAGE>( log() 
+         message<DEBUG>( log() 
                        << "FIT ERROR = " << fitter.getError() << ", not filling histograms!"
                        ) ;
          }
          delete photon;
 
-         message<MESSAGE>( log() << "end permutation ") ;
+         message<DEBUG>( log() << "end permutation ") ;
        }
 
 #ifdef MARLIN_USE_AIDA

@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: TextTracer.cc,v $
+ * - Revision 1.2  2011/05/03 13:18:48  blist
+ * - New test stuff
+ * -
  * - Revision 1.1  2009/09/01 09:48:13  blist
  * - Added tracer mechanism, added access to fit covariance matrix
  * -
@@ -20,6 +23,7 @@
 #include "BaseSoftConstraint.h"
 #include <cassert>
 #include <cstring>
+#include <cmath>
 
 TextTracer::TextTracer(std::ostream& os_)
 : os (os_)
@@ -34,6 +38,8 @@ void TextTracer::initialize (BaseFitter& fitter) {
   
   printFitObjects (fitter);
   printConstraints (fitter);
+  printTraceValues (fitter);
+  printSums (fitter);
   
   istep = 1;
   isubstep = 0;
@@ -47,6 +53,8 @@ void TextTracer::step (BaseFitter& fitter) {
   
   printFitObjects (fitter);
   printConstraints (fitter);
+  printTraceValues (fitter);
+  printSums (fitter);
   
   ++istep;
   BaseTracer::step (fitter);
@@ -57,6 +65,8 @@ void TextTracer::substep (BaseFitter& fitter, int flag) {
   
   printFitObjects (fitter);
   printConstraints (fitter);
+  printTraceValues (fitter);
+  printSums (fitter);
 
   ++isubstep;
   BaseTracer::substep (fitter, flag);
@@ -67,6 +77,8 @@ void TextTracer::finish (BaseFitter& fitter) {
   os << "=============== Final result ======================\n";
   printFitObjects (fitter);
   printConstraints (fitter);
+  printTraceValues (fitter);
+  printSums (fitter);
   
   os << "=============== Finished fit ======================\n";
 
@@ -75,6 +87,7 @@ void TextTracer::finish (BaseFitter& fitter) {
 }
 
 void TextTracer::printFitObjects (BaseFitter& fitter) {
+  chi2fo = 0;
   FitObjectContainer* fitobjects = fitter.getFitObjects();
   if (!fitobjects) return;
   os << "Fit objects:\n";
@@ -82,9 +95,12 @@ void TextTracer::printFitObjects (BaseFitter& fitter) {
     BaseFitObject *fo = *i;
     assert (fo);
     os << fo->getName() << ": " << *fo << ", chi2=" << fo->getChi2() << std::endl;
+    chi2fo += fo->getChi2();
   }
 }
 void TextTracer::printConstraints (BaseFitter& fitter) {
+  chi2sc = 0;
+  sumhc = 0;
   ConstraintContainer* constraints = fitter.getConstraints();
   if (constraints && constraints->size() > 0) {
     os << "Hard Constraints:\n";
@@ -92,6 +108,8 @@ void TextTracer::printConstraints (BaseFitter& fitter) {
       BaseConstraint *c = *i;
       assert (c);
       os << i-constraints->begin() << " " << c->getName() << ": " << c->getValue() << "+-" << c->getError() << std::endl;
+      sumhc += std::fabs(c->getValue());
+      sumhcscal += std::fabs(c->getValue()/c->getError());
     }
   }
   SoftConstraintContainer* softConstraints = fitter.getSoftConstraints();
@@ -99,8 +117,34 @@ void TextTracer::printConstraints (BaseFitter& fitter) {
     os << "Soft Constraints:\n";
     for (SoftConstraintIterator i = softConstraints->begin(); i != softConstraints->end(); ++i) {
       BaseConstraint *c = *i;
+      BaseSoftConstraint *sc = dynamic_cast<BaseSoftConstraint *> (c);
       assert (c);
-      os << i-softConstraints->begin() << " " << c->getName() << ": " << c->getValue() << "+-" << c->getError() << std::endl;
+      assert (sc);
+      os << i-softConstraints->begin() << " " << c->getName() << ": " << c->getValue() << "+-" << c->getError() 
+         << ", chi2=" << sc->getChi2() << std::endl;
+      chi2sc +=  sc->getChi2();
     }
   }
+}
+
+void TextTracer::printTraceValues (BaseFitter& fitter) {
+  for (std::map<std::string, double>::iterator i =  fitter.traceValues.begin(); 
+       i != fitter.traceValues.end(); ++i) {
+    std::string name = i->first;
+    double value = i->second;
+    os << "Value of " << name << ": " << value << std::endl;;
+  }     
+}
+void TextTracer::printSums (BaseFitter& fitter) {
+  os << "Total chi2: " << fitter.getChi2() 
+     << " = " << chi2fo + chi2sc << " = " << chi2fo << "(fo) + " << chi2sc << "(sc)"
+     << std::endl;
+  os << "Hard constraints: " << sumhc << ", scaled: " << sumhcscal << std::endl;
+  std::map<std::string, double>::iterator i = fitter.traceValues.find("mu"); 
+  if (i != fitter.traceValues.end()) {
+    double mu = i->second;
+    os << "Contribution to merit function: " << sumhc*mu << ", scaled: " << sumhcscal*mu << std::endl;
+    os << "Merit function: " << chi2fo + chi2sc + sumhc*mu << ", scaled: " << chi2fo + chi2sc + sumhcscal*mu << std::endl;
+  }
+  
 }

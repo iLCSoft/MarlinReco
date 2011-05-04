@@ -6,18 +6,34 @@
  *
  * \b CVS Log messages:
  * - $Log: SoftBWParticleConstraint.cc,v $
+ * - Revision 1.2  2011/05/03 13:18:29  blist
+ * - SoftConstraint classes fixed
+ * -
  * - Revision 1.1  2008/10/21 08:37:00  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
  */ 
 
+// TO DO:
+// Complete incorporation of minimum / maximum mass limit
+// -> introduce center value or correct for center value
+// Redo calculation of penalty function and deriavtives
+// Check where to get erfinv 
+
+
+
 #include "SoftBWParticleConstraint.h"
 #include "ParticleFitObject.h"
+
+#include "Math/ProbFuncMathCore.h"
+#include "Math/QuantFuncMathCore.h"
+
 #include <iostream>
 #include <cmath>
+
 using namespace std;
-SoftBWParticleConstraint::SoftBWParticleConstraint(double gamma_)
-: gamma (gamma_)
+SoftBWParticleConstraint::SoftBWParticleConstraint(double gamma_, double emin_, double emax_)
+: gamma (gamma_), emin (emin_), emax (emax_)
 {
   invalidateCache();
 }
@@ -30,11 +46,12 @@ double SoftBWParticleConstraint::getGamma() const
 double SoftBWParticleConstraint::setGamma(double gamma_) 
 {
   if (gamma_ != 0) gamma = std::abs(gamma_);
+  invalidateCache();
   return gamma;
 }
     
 double SoftBWParticleConstraint::getChi2() const {
-  return penalty (getValue(), getGamma());
+  return penalty (getValue());
 }
   
 double SoftBWParticleConstraint::getError() const {
@@ -83,10 +100,9 @@ void SoftBWParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim) c
    *     \frac{\partial P_i}{\partial a_k} \cdot \frac{\partial P_j}{\partial a_l}
    * $$
    */
-  double g = getValue();
-  double gam = getGamma();
-  double fact = penalty1stder (g, gam);
-  double fact2 = penalty2ndder (g, gam);
+  double e = getValue();
+  double fact = penalty1stder (e);
+  double fact2 = penalty2ndder (e);
    
   // Derivatives $\frac{\partial ^2 g}{\partial P_i \partial P_j}$ at fixed i, j
   // d2GdPidPj[4*ii+jj] is derivative w.r.t. P_i,ii and P_j,jj, where ii=0,1,2,3 for E,px,py,pz
@@ -204,6 +220,7 @@ void SoftBWParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim) c
   double *v = new double[idim];
   for (int i = 0; i < idim; ++i) v[i] = 0;
   
+  // fact2 may be negative, so don't use sqrt(fact2)
   double dgdpi[4];
   for (int i = 0; i < n; ++i) {
     const ParticleFitObject *foi = fitobjects[i];
@@ -232,9 +249,7 @@ void SoftBWParticleConstraint::add2ndDerivativesToMatrix (double *M, int idim) c
 
 void SoftBWParticleConstraint::addToGlobalChi2DerVector (double *y, int idim) const {
   double dgdpi[4];
-  double g = getGamma();
-  double v = getValue();
-  double r = 1.5*v/(g*g+v*v);
+  double r = penalty1stder (getValue());
   for (unsigned int i = 0; i < fitobjects.size(); ++i) {
     const ParticleFitObject *foi = fitobjects[i];
     assert (foi);
@@ -352,33 +367,132 @@ double SoftBWParticleConstraint::num2ndDerivative (int ifo1, int ilocal1, double
 }
 
 double SoftBWParticleConstraint::erfinv (double x) {
-  static const double a = 8*(M_PI-3)/(3*M_PI*(4-M_PI));
-  static const double aa = 3*(4-M_PI)/(4*(M_PI-3));  // = 2/(M_PI*a);
-  double s = (x<0) ? -1 : 1;
-  x *= s;
-  if (x >= 1) return s*HUGE_VAL;
-  double ll = std::log (1 - x*x);
-  double xx = aa + 0.5*ll;
-  return s * std::sqrt(-xx + std::sqrt (xx*xx - ll/a));
+//   static const double a = 8*(M_PI-3)/(3*M_PI*(4-M_PI));
+//   static const double aa = 3*(4-M_PI)/(4*(M_PI-3));  // = 2/(M_PI*a);
+//   double s = (x<0) ? -1 : 1;
+//   x *= s;
+//   if (x >= 1) return s*HUGE_VAL;
+//   double ll = std::log (1 - x*x);
+//   double xx = aa + 0.5*ll;
+//   return s * std::sqrt(-xx + std::sqrt (xx*xx - ll/a));
+  return 2*ROOT::Math::normal_quantile (std::sqrt(2.0)*x, 1.0)-1;
 }
 
-double SoftBWParticleConstraint::penalty (double g, double gam) {
-  double x = g/gam;
+double SoftBWParticleConstraint::normal_quantile (double x) {
+  return ROOT::Math::normal_quantile (x, 1.0);
+}
+
+double SoftBWParticleConstraint::normal_quantile_1stderiv (double x) {
+  double y = ROOT::Math::normal_quantile (x, 1.0);
+  return 1/normal_pdf (y);
+}
+
+double SoftBWParticleConstraint::normal_quantile_2ndderiv (double x) {
+  double y = ROOT::Math::normal_quantile (x, 1.0);
+//  return -normal_pdf_deriv (y)/pow (normal_pdf (y), 3);
+  return -y/pow (normal_pdf (y), 2);
+}
+
+double SoftBWParticleConstraint::normal_pdf (double x) {
+  static const double C_1_SQRT2PI = 1/(std::sqrt(2*M_PI));
+  return C_1_SQRT2PI* std::exp (-0.5*x*x);
+}
+
+double SoftBWParticleConstraint::normal_pdf_deriv (double x) {
+  static const double C_1_SQRT2PI = 1/(std::sqrt(2*M_PI));
+  return -C_1_SQRT2PI*x*std::exp (-0.5*x*x);
+}
+
+double SoftBWParticleConstraint::penalty (double e) const {
+  double x = e/gamma;
   // x is distributed according to the Cauchy distribution
   // f(x) = 1/pi 1/(1 + x^2)
+  // or (if limits are active)
+  // f(x) = 1/(arctan(x_max) - arctan(x_min)) 1/(1 + x^2)
+  
   // The integral pdf is
   // F(x) = 1/2 + 1/pi arctan (x)
+  // or (if limits are active)
+  // F(x) = 1/2 + arctan (x)/(arctan(x_max) - arctan(x_min)) 
+  
   // So, chi2 = 2 (erf^-1 (1 + 2 F(x)) )^2
+  // or chi2 = norm_quantile (F(x))^2
+  
+  if (!cachevalid) updateCache();
+  double F = 0.5 + std::atan (x)/diffatanx;
+  if (F < 0 || F > 1 || !std::isfinite(F)) 
+    cout << "SoftBWParticleConstraint::penalty: error for e=" << e 
+         << ", gamma=" << gamma << " -> x=" << x << " => F=" << F << endl;
+         
+  assert (F >= 0);
+  assert (F <= 1);
+  double result = std::pow (normal_quantile(F), 2);
+  assert (std::isfinite(result));
+  return result;
+  
+  
+  
   //double chi = erfinv (2/M_PI *std:arctan (x));
   //return 2*chi*chi;;
   
   // anyway, a very good and much simpler approximation is
-  return 0.75*std::log (1 + x*x);
+  // return 0.75*std::log (1 + x*x);
 }
 
-double SoftBWParticleConstraint::penalty1stder (double g, double gam) {
-  return 2*0.75*g/(gam*gam+g*g);
+double SoftBWParticleConstraint::penalty1stder (double e) const {
+  double x = e/gamma;
+  if (!cachevalid) updateCache();
+  double F = 0.5 + std::atan (x)/diffatanx;
+  double dF_de = 1./((1+x*x)*diffatanx*gamma);
+  double result = 2*normal_quantile(F)*normal_quantile_1stderiv(F)*dF_de;
+  assert (std::isfinite(result));
+  return result;
+  
 }
-double SoftBWParticleConstraint::penalty2ndder (double g, double gam) {
-  return 2*0.75*(gam*gam-g*g)/((gam*gam+g*g)*(gam*gam+g*g));
+double SoftBWParticleConstraint::penalty2ndder (double e) const {
+  double x = e/gamma;
+  if (!cachevalid) updateCache();
+  double F = 0.5 + std::atan (x)/diffatanx;
+  double dF_de = 1./((1+x*x)*diffatanx*gamma);
+  double d2F_de2 = -2*diffatanx*x*dF_de*dF_de;
+
+  double result = 2*pow(normal_quantile_1stderiv(F)*dF_de, 2)
+         + 2*normal_quantile(F)*normal_quantile_2ndderiv(F)*dF_de*dF_de
+         + 2*normal_quantile(F)*normal_quantile_1stderiv(F)*d2F_de2;
+  assert (std::isfinite(result));
+  return result;
+
+
 }
+
+void SoftBWParticleConstraint::invalidateCache() const {
+  cachevalid = false;
+}
+
+void SoftBWParticleConstraint::updateCache() const {
+  if (emin == -numeric_limits<double>::infinity())
+    atanxmin = -M_PI_2;
+  else if (emin == numeric_limits<double>::infinity())
+    atanxmin =  M_PI_2;
+  else  atanxmin = std::atan (emin/gamma);
+  if (emax == -numeric_limits<double>::infinity())
+    atanxmax = -M_PI_2;
+  else if (emax == numeric_limits<double>::infinity())
+    atanxmax =  M_PI_2;
+  else  atanxmax = std::atan (emax/gamma);
+  diffatanx = atanxmax-atanxmin;
+  cachevalid = true;
+  
+  cout << "SoftBWParticleConstraint::updateCache(): "
+       << "gamma=" << gamma
+       << ", emin=" << emin << " -> atanxmin=" << atanxmin
+       << ", emax=" << emax << " -> atanxmax=" << atanxmax
+       << " => diffatanx=" << diffatanx
+       << endl;
+  
+}
+
+bool SoftBWParticleConstraint::cacheValid() const {
+  return cachevalid;
+}
+

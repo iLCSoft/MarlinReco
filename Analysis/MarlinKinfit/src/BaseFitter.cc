@@ -27,7 +27,7 @@ BaseFitter::BaseFitter()
 : covDim (0), cov(0), covValid (false)
 #ifndef FIT_TRACEOFF    
   , tracer (0)
-#endif FIT_TRACEOFF    
+#endif     
 {}
 
 BaseFitter::~BaseFitter()  

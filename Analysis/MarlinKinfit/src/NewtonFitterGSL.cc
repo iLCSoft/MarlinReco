@@ -886,7 +886,7 @@ int NewtonFitterGSL::optimizeScale () {
   }
     
   scale = 1;
-  double tmpscale, scaleold;
+  double tmpscale, scaleold = 1;
   do {
     // sets x = xold
     gsl_vector_memcpy (x, xold);

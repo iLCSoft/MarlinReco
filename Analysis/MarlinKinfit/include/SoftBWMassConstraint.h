@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: SoftBWMassConstraint.h,v $
+ * - Revision 1.2  2011/05/03 13:18:28  blist
+ * - SoftConstraint classes fixed
+ * -
  * - Revision 1.1  2008/10/21 08:36:50  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
@@ -16,6 +19,8 @@
 #define __SOFTBWMASSCONSTRAINT_H
 
 #include "SoftBWParticleConstraint.h"
+
+#include <limits>
 
 class ParticleFitObject;
 
@@ -28,7 +33,7 @@ class ParticleFitObject;
  *   sets of objects should be m (normally m=0 in this case).
  *
  * Author: Jenny List, Benno List
- * Last update: $Date: 2008/10/21 08:36:50 $
+ * Last update: $Date: 2011/05/03 13:18:28 $
  *          by: $Author: blist $
  *
  */
@@ -37,8 +42,10 @@ class SoftBWMassConstraint : public SoftBWParticleConstraint {
   public:
   
     /// Constructor
-    SoftBWMassConstraint (double gamma_,    ///< The Gamma value
-                          double mass_ = 0.   ///< The mass difference between object sets 1 and 2
+    SoftBWMassConstraint (double gamma_,     ///< The Gamma value
+                          double mass_ = 0.,  ///< The mass difference between object sets 1 and 2
+                          double massmin_ = -std::numeric_limits<double>::infinity(),   ///< lower mass bound
+                          double massmax_ =  std::numeric_limits<double>::infinity()    ///< upper mass bound
                    );
     /// Virtual destructor             
     virtual ~SoftBWMassConstraint();
@@ -62,7 +69,7 @@ class SoftBWMassConstraint : public SoftBWParticleConstraint {
     
   
   protected:
-    double mass;   ///< The mass difference between object sets 1 and 2
+    double mass;      ///< The mass difference between object sets 1 and 2
 
   
     /// Second derivatives with respect to the 4-vectors of Fit objects i and j; result false if all derivatives are zero 

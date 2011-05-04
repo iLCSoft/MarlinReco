@@ -200,8 +200,8 @@ bool ParticleFitObject::calculateCovInv() const {
   }
   int ierr = (idim == 0) ? 0 : dsinv(idim+1, &covinv[0][0], NPAR);
   if (ierr != 0) {
-    std::cerr << "ParticleFitObject::calculateCovInv: Error "
-              << ierr << " from dsinv! Object " << getName() << std::endl;
+    //std::cerr << "ParticleFitObject::calculateCovInv: Error "
+    //          << ierr << " from dsinv! Object " << getName() << std::endl;
     // printCov (std::cerr);         
   }
   return covinvvalid = (ierr == 0);

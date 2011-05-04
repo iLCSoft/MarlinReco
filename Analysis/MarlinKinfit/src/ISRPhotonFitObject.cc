@@ -333,25 +333,25 @@ double ISRPhotonFitObject::PgFromPz(double pz){
   int sign = (pz>0.) - (pz<0.);
   double u = ( pow(fabs(pz),b) - PzMinB ) / (PzMaxB-PzMinB);
 
-  if(u<0.){
-  #ifdef NO_MARLIN
-    cout << 
-  #else
-    m_out(WARNING) << 
-  #endif
-    "ISRPhotonFitObject: Initial pz with abs(pz) < pzMin adjusted to zero." << std::endl;
-    u = 0.;
-  }
-
-  if(u>=1.){
-  #ifdef NO_MARLIN
-    cout << 
-  #else
-    m_out(WARNING) << 
-  #endif
-    "ISRPhotonFitObject: Initial pz with abs(pz) >= pzMax adjusted." << std::endl;
-    u = 0.99999999;
-  }
+//   if(u<0.){
+//   #ifdef NO_MARLIN
+//     cout << 
+//   #else
+//     m_out(WARNING) << 
+//   #endif
+//     "ISRPhotonFitObject: Initial pz with abs(pz) < pzMin adjusted to zero." << std::endl;
+//     u = 0.;
+//   }
+// 
+//   if(u>=1.){
+//   #ifdef NO_MARLIN
+//     cout << 
+//   #else
+//     m_out(WARNING) << 
+//   #endif
+//     "ISRPhotonFitObject: Initial pz with abs(pz) >= pzMax adjusted." << std::endl;
+//     u = 0.99999999;
+//   }
 
   double g = std::log(1.-u*u);
   double g4pa = g + 4./pi_/a;

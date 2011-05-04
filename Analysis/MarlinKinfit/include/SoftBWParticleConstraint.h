@@ -6,6 +6,9 @@
  *
  * \b CVS Log messages:
  * - $Log: SoftBWParticleConstraint.h,v $
+ * - Revision 1.2  2011/05/03 13:18:29  blist
+ * - SoftConstraint classes fixed
+ * -
  * - Revision 1.1  2008/10/21 08:36:50  blist
  * - Added classes SoftBWParticleConstraint, SoftBWMassConstraint
  * -
@@ -15,9 +18,11 @@
 #ifndef __SOFTBWPARTICLECONSTRAINT_H
 #define __SOFTBWPARTICLECONSTRAINT_H
 
+#include "BaseSoftConstraint.h"
+
 #include<vector>
 #include<cassert>
-#include "BaseSoftConstraint.h"
+#include<limits>
 
 class ParticleFitObject;
 
@@ -55,7 +60,7 @@ class ParticleFitObject;
  * 
  *
  * Author: Jenny List, Benno List
- * $Date: 2008/10/21 08:36:50 $
+ * $Date: 2011/05/03 13:18:29 $
  * $Author: blist $
  *
  */
@@ -63,8 +68,10 @@ class ParticleFitObject;
 class SoftBWParticleConstraint: public BaseSoftConstraint {
   public:
     /// Creates an empty SoftBWParticleConstraint object
-    SoftBWParticleConstraint(double gamma_     ///< The Gamma value
-                               );
+    SoftBWParticleConstraint(double gamma_,                                            ///< The Gamma value
+                             double emin_ = -std::numeric_limits<double>::infinity(),   ///< lower mass bound
+                             double emax_ =  std::numeric_limits<double>::infinity()    ///< upper mass bound
+                             );
     /// Virtual destructor
     virtual ~SoftBWParticleConstraint() {};
     
@@ -116,8 +123,13 @@ class SoftBWParticleConstraint: public BaseSoftConstraint {
     
     
     /// Invalidates any cached values for the next event
-    virtual void invalidateCache() const 
-    {}
+    virtual void invalidateCache() const;
+    
+    /// Recalculates any cached values for the next event
+    virtual void updateCache() const;
+    
+    /// Checks whether cache is valid
+    virtual bool cacheValid() const;
     
     void test1stDerivatives ();
     void test2ndDerivatives ();
@@ -143,13 +155,19 @@ class SoftBWParticleConstraint: public BaseSoftConstraint {
       * http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf.
       */
     static double erfinv (double x);
+
+    static double normal_quantile (double x);
+    static double normal_quantile_1stderiv (double x);
+    static double normal_quantile_2ndderiv (double x);
+    static double normal_pdf (double x);
+    static double normal_pdf_deriv (double x);
     
-    /// Penalty function h(g), g is the value of the constraint
-    static double penalty (double g, double gam);
-    /// 1st derivative of penalty function h'(g), g is the value of the constraint
-    static double penalty1stder (double g, double gam);
-    /// 2nd derivative of penalty function h''(g), g is the value of the constraint
-    static double penalty2ndder (double g, double gam);
+    /// Penalty function h(e), e is the value of the constraint
+    double penalty (double e) const;
+    /// 1st derivative of penalty function h'(e), eis the value of the constraint
+    double penalty1stder (double e) const;
+    /// 2nd derivative of penalty function h''(e), e is the value of the constraint
+    double penalty2ndder (double e) const;
     
   
   protected:
@@ -181,6 +199,13 @@ class SoftBWParticleConstraint: public BaseSoftConstraint {
     
     /// The Gamma of the BW function
     double gamma;
+    double emin;   ///< The lower e limit
+    double emax;   ///< The upper e limit
+    
+    mutable bool cachevalid;
+    mutable double atanxmin;
+    mutable double atanxmax;
+    mutable double diffatanx;
 
 };
 

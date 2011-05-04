@@ -562,7 +562,7 @@ double JetFitObject::calcChi2 () const {
   
   double chi2 = 0;
   static double resid[3];
-  static bool chi2contr[3];
+  //static bool chi2contr[3];
   resid[0] = isParamMeasured(0) && !isParamFixed(0) ? par[0]-mpar[0] : 0;
   resid[1] = isParamMeasured(1) && !isParamFixed(1) ? par[1]-mpar[1] : 0;
   resid[2] = isParamMeasured(2) && !isParamFixed(2) ? par[2]-mpar[2] : 0;

@@ -56,23 +56,24 @@ void FPCCDPixelHit::print()
 }
 
 // =====================================================================
-void FPCCDPixelHit::addPixelHit(FPCCDPixelHit &aHit, bool isSignal)
+void FPCCDPixelHit::addPixelHit(FPCCDPixelHit &aHit, HitQuality_t addedQuality)
 {
+
   _edep += aHit.getEdep();
-  
+
   if( _quality == kSingle || _quality == kSignalOverlap ){
-    if( isSignal ) { _quality=kSignalOverlap; }
+    if( addedQuality == kSingle || addedQuality == kSignalOverlap ) { _quality=kSignalOverlap; }
     else { _quality=kBKGOverlap; }
   }
   else if( _quality == kBKG){
-    if( isSignal) { _quality = kBKGOverlap;}
+    if( addedQuality == kSingle || addedQuality == kSignalOverlap ) { _quality = kBKGOverlap;}
   }
-
-  if( aHit.getMCParticleVec().size() > 0 ) {
-    for(int i=0;i<aHit.getMCParticleVec().size();i++) {
-      _MCParticleVec.push_back(aHit.getMCParticleVec()[i]);
-    }
-  }
+//   if( aHit.getMCParticleVec().size() > 0 ) {
+    
+//     for(int i=0;i<aHit.getMCParticleVec().size();i++) {
+//       _MCParticleVec.push_back(aHit.getMCParticleVec()[i]);
+//     }
+//  }
 }
 
 // =====================================================================

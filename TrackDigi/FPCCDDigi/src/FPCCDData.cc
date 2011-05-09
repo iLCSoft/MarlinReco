@@ -21,7 +21,12 @@ void FPCCDData::clear()
 {
   for(int layer=0;layer<_maxlayer;layer++){
     for(int ladder=0;ladder<_maxladder;ladder++){
-       _pxHits[layer][ladder].clear();
+            PixelHitMap_t::iterator it = _pxHits[layer][ladder].begin();
+      while( it != _pxHits[layer][ladder].end()){
+        delete (*it).second;
+        it++ ;
+      }
+      _pxHits[layer][ladder].clear();
     }
   }
 }
@@ -32,32 +37,37 @@ void FPCCDData::dump()
   std::cout << "FPCCDData::dump() prints out all Pixel hits" << std::endl;
   for(int layer=0;layer<_maxlayer;layer++) {
     for(int ladder=0;ladder<_maxladder;ladder++) {
-      PixelHitMap_t::iterator it=_pxHits[layer][ladder].begin();
       if( _pxHits[layer][ladder].size() > 0 ) {
+        PixelHitMap_t::iterator it=_pxHits[layer][ladder].begin();
         while( it != _pxHits[layer][ladder].end() ) {
           (*it).second->print();
           it++;
         }
       }
-     }
+    }
   }
 }
 
 // ====================================================================
-void FPCCDData::addPixelHit(FPCCDPixelHit &aHit, bool isSignal=true)
+void FPCCDData::addPixelHit(FPCCDPixelHit &aHit, bool isSignal)
 {
   int layer=aHit.getLayerID();
   int ladder=aHit.getLadderID();
+
   unsigned int hitid=aHit.encodeCellWord();
+  FPCCDPixelHit::HitQuality_t addedQuality;
+  { isSignal ? addedQuality = FPCCDPixelHit::kSingle : addedQuality = FPCCDPixelHit::kBKG ; }  
 
   PixelHitMap_t::iterator it=_pxHits[layer][ladder].find(hitid);
   // Append ADC if same pixelID exist in the map
   if( it != _pxHits[layer][ladder].end() ) {
-    FPCCDPixelHit *findhit=(*it).second;
-    findhit->addPixelHit(aHit, isSignal);
-  }
+    FPCCDPixelHit *findhit=(*it).second;  
+    //    addedQuality = aHit.getQuality();
+    findhit->addPixelHit(aHit, addedQuality);
+     }
   // Add new hit if not exist in the map
-  else { 
+  else {
+    aHit.setQuality(addedQuality);
     _pxHits[layer][ladder].insert(PixelHitMap_t::value_type(hitid, new FPCCDPixelHit(aHit)));
   }
 }
@@ -67,12 +77,10 @@ void FPCCDData::packPixelHits(EVENT::LCCollection &colvec)
 {
   // This function writes all CCD data into hitvec.
   // _pxHits are cleared after copying to save space
-
   for(int layer=0;layer<_maxlayer;layer++) {
     for(int ladder=0;ladder<_maxladder;ladder++) {
       PixelHitMap_t::iterator it=_pxHits[layer][ladder].begin();
       if( it != _pxHits[layer][ladder].end() ) {
-
         IMPL::LCGenericObjectImpl *out=new IMPL::LCGenericObjectImpl();
         unsigned int index=0;
         // store layer number, ladder number in the first word
@@ -81,7 +89,6 @@ void FPCCDData::packPixelHits(EVENT::LCCollection &colvec)
         int word0=( (layer & 0x000000FF ) << 8 | ( ladder & 0x000000FF ) );
         out->setIntVal(index, word0 );
         index++;
-        
         while( it !=_pxHits[layer][ladder].end() ) {
           FPCCDPixelHit *aHit=(*it).second;
           // First word, from left to right,
@@ -95,16 +102,16 @@ void FPCCDData::packPixelHits(EVENT::LCCollection &colvec)
           out->setIntVal(index++, hitwd );
           // 2nd word is edep
           union intfloat { float edep; int iedep; } edepout;
+
           edepout.edep=aHit->getEdep();
           out->setIntVal(index++, edepout.iedep);
           it++;
         } // moving data in aHit to LCGenericObjectImpl
         colvec.addElement(out);  // add one element
-        _pxHits[layer][ladder].clear();
       }
-
     }
   }
+  clear();
 }
 
 // =====================================================
@@ -115,9 +122,9 @@ int FPCCDData::unpackPixelHits(EVENT::LCCollection &col)
 
   int nhits=0;
   int nElements=col.getNumberOfElements();
-  
+
 //   UTIL::LCTOOLS::printLCGenericObjects(col);
-  
+
   clear();
   for(int ie=0;ie<nElements;ie++){
     int ig=0;
@@ -156,24 +163,22 @@ int FPCCDData::unpackPixelHits(EVENT::LCCollection &col)
 // =====================================================
 void FPCCDData::Add(FPCCDData &bgHit)
 {
-
-  for(int i=0; i<_maxlayer; i++){
-
+  FPCCDPixelHit *aHit;
+  
+  for(int i=0; i<_maxlayer; i++){  
     for(int j=0; j<_maxladder; j++){
-
+      
+      
       PixelHitMap_t::iterator it= bgHit.itBegin(i, j);
       while( it != bgHit.itEnd(i, j)){
-
-        FPCCDPixelHit *aHit=(*it).second;
-
+        
+        aHit=(*it).second;
+        
         FPCCDData::addPixelHit( *aHit, false);
-
+        
         it++;
       }
-
+      
     }
-  } 
-
-
-
+  }
 }

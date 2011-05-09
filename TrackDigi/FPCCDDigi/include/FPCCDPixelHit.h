@@ -75,7 +75,7 @@ class FPCCDPixelHit
   int getNMCParticles(){ return _MCParticleVec.size(); }
 
   // add pixel hit
-  void addPixelHit(FPCCDPixelHit &aHit, bool isSignal);
+  void addPixelHit(FPCCDPixelHit &aHit, HitQuality_t addedQuality);
   
   void print();
   unsigned int encodeCellWord();

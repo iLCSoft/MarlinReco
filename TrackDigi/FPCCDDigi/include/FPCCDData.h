@@ -77,8 +77,9 @@ class FPCCDData {
   int unpackPixelHits(EVENT::LCCollection &col);
 
   //
-  void Add(FPCCDData &gkHit);
-  
+  void Add(FPCCDData &bkgHit);
+
+  void Add(FPCCDData &bkgHit, int layer, int ladder);
   // iterators to get pixel hit.
   PixelHitMap_t::iterator itBegin(int layer, int ladder){ 
 	return _pxHits[layer][ladder].begin();

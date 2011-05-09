@@ -1,12 +1,16 @@
 #ifndef FPCCDDigitizer_h
 #define FPCCDDigitizer_h 1
 
+#include "FPCCDPixelHit.h"
+
 #include "marlin/Processor.h"
+#include "marlin/EventModifier.h"
 #include "lcio.h"
 #include <string>
 #include <vector>
 
 #include <marlin/Global.h>
+#include <IMPL/LCEventImpl.h>
 #include <gear/GEAR.h>
 #include <gearimpl/Vector3D.h>
 #include <gear/BField.h>
@@ -42,6 +46,9 @@ class FPCCDData;
 namespace EVENT {
   class SimTrackerHit;
 }
+namespace IMPL {
+  class SimTrackerHitImpl;
+}
 
 typedef struct {
   int layer;
@@ -52,7 +59,7 @@ typedef struct {
   
 
 // =================================================================
-class FPCCDDigitizer : public marlin::Processor {
+class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
 
  public:
   
@@ -60,6 +67,11 @@ class FPCCDDigitizer : public marlin::Processor {
   
   
   FPCCDDigitizer() ;
+
+  virtual const std::string & name() const { return Processor::name() ; }
+  
+  virtual void modifyEvent( LCEvent * evt ) ; 
+
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -72,8 +84,7 @@ class FPCCDDigitizer : public marlin::Processor {
   
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
+  //  virtual void processEvent( LCEvent * evt ) ;
   
   virtual void check( LCEvent * evt ) ;   
   
@@ -82,47 +93,49 @@ class FPCCDDigitizer : public marlin::Processor {
   virtual void end() ;
 
   // make PixelHits from SimTrackerHits.
-  void makePixelHits(const EVENT::SimTrackerHit *simHit, FPCCDData &pxHits);
+  void makePixelHits(IMPL::SimTrackerHitImpl *simHit, FPCCDData &pxHits);
 
   // Initialize Geometry data
   void InitGeometry();
 
-  // Obtain FPCCDID data from layer number and hit position
-  FPCCDID_t encodeFPCCDID(const int layer, const gear::Vector3D pos);
-
-  void printBasicInfoToGlobal(const int nhits, const EVENT::SimTrackerHit *simthit);
-  int getLadderID(const EVENT::SimTrackerHit* simthit);
-  double getToLocalRad(const EVENT::SimTrackerHit* simthit,const int ladderID);
-  gear::Vector3D* getLocalPos(const EVENT::SimTrackerHit* simthit,const double tolocalrad);
-  gear::Vector3D* getMomAtLocalPos(const EVENT::SimTrackerHit* simthit,const double tolocalrad);
-  gear::Vector3D* getTopBottomPosOnLadder(gear::Vector3D* pos,gear::Vector3D* mom,const char* topbottom);
-  gear::Vector3D* getInOutPosOfHelixOnLadder(const EVENT::SimTrackerHit* simthit,gear::Vector3D* pos,gear::Vector3D* mom,gear::Vector3D* BField,float charge,const char* inout);
-  void ModifyIntoLadder(gear::Vector3D* bemodifiedpos,const EVENT::SimTrackerHit* simthit,gear::Vector3D* pos,gear::Vector3D* mom);
+  void printBasicInfoToGlobal(const int nhits, IMPL::SimTrackerHitImpl *simthit);
+  int getLadderID(const gear::Vector3D* pos, const int layer);
+  gear::Vector3D* getLocalPos(const gear::Vector3D* pos, const int layer,const int ladder);
+  void getInOutPosOnLadder(IMPL::SimTrackerHitImpl* simthit, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom);
+  void getInOutPosOfHelixOnLadder(IMPL::SimTrackerHitImpl* simthit,gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom,gear::Vector3D* BField,float charge);
+  void ModifyIntoLadder(gear::Vector3D* bemodifiedpos,const int layer,gear::Vector3D* pos,gear::Vector3D* mom);
   void setLoopRange(int* looprange);
-  std::vector<gear::Vector3D*> getIntersectionOfTrkAndPix(const EVENT::SimTrackerHit* simthit,gear::Vector3D* pos,gear::Vector3D* mom,gear::Vector3D* top,gear::Vector3D* bottom);
-  std::map<gear::Vector3D*, double> getLocalPixel(const EVENT::SimTrackerHit* simthit, std::vector<gear::Vector3D*> edgeofpixel);
-  gear::Vector3D* FindPixel(gear::Vector3D* f_fst, gear::Vector3D* f_nxt, int f_layer, char* updown);
-
-
+  std::vector<gear::Vector3D*> getIntersectionOfTrkAndPix(const int layer,gear::Vector3D* top,gear::Vector3D* bottom);
+  std::map< std::pair< double, double>*, double> getLocalPixel(IMPL::SimTrackerHitImpl* simthit, std::vector<gear::Vector3D*> edgeofpixel);
+  std::pair< double, double>* FindPixel(gear::Vector3D* f_fst, gear::Vector3D* f_nxt, int f_layer);
+  void makeNewSimTHit(IMPL::SimTrackerHitImpl* simthit, gear::Vector3D* newpos, gear::Vector3D* newmom, int layer, int ladder, double newPathLength);
+  int inSensitiveRegion( gear::Vector3D* pos, int layer);
+  
  protected:
 
   std::string _colNameVTX ;
+  std::string _colNameSIT ;
+  std::string _colNameSET ;
   std::string _outColNameVTX ;
+  std::string _outColNameSIT ;
+  std::string _outColNameSET ;
 
   int _nRun ;
   int _nEvt ;
   int _debug;
+  bool _modifySimTHit;
   
-  float _momCut;
   float _pixelSize;
-
-  float _pixelsizex;
-  float _pixelsizey;
   float _pixelheight;
 
-  double _electronsPerKeV;
-  double _threshold;
+  float _momCut;
+  
+  double _sigmaConst;
 
+  float _pointResoRPhi, _pointResoZ;
+  float _pointResoRPhi_SIT, _pointResoZ_SIT;
+  float _pointResoRPhi_SET, _pointResoZ_SET;
+  
   bool _isSignal;
   
   int _sloopx,_eloopx,_sloopy,_eloopy;

@@ -164,6 +164,8 @@ protected:
   bool  _OutputClusterRelation;
   bool  _OutputCalohitRelation;
   float _eCutMeV ;
+  bool   _saveBremsstrahlungPhotons;
+  float _bremsstrahlungEnergyCut;
   
   IntVec _pdgVec ;
 

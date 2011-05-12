@@ -163,8 +163,19 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			      ) ;
   
 
+  registerProcessorParameter( "SaveBremsstrahlungPhotons" , 
+			      "save photons from Brems"  ,
+			      _saveBremsstrahlungPhotons,
+			      bool(false)  
+			      ) ;
   
-
+    
+  registerProcessorParameter( "BremsstrahlungEnergyCut" , 
+			      "energy cut for Brems that are kept"  ,
+			      _bremsstrahlungEnergyCut,
+			      float( 1. )  
+			      ) ;
+ 
 
 }
 
@@ -1226,6 +1237,43 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
   //     the parameter vector 'KeepDaughtersPDG 
 
   streamlog_out( DEBUG4 ) << " First loop done. Now search for KeepDaughtersPDG:s" << std::endl;
+
+
+  if(_saveBremsstrahlungPhotons){
+    for(int i=0; i< nMCP ; i++){
+      MCParticle* mcp = dynamic_cast<MCParticle*> ( mcpCol->getElementAt( i ) ) ;
+      if( abs(mcp->getPDG()) == 22 && mcp->getEnergy() > _bremsstrahlungEnergyCut){
+	if( mcp->getParents().size() ){
+	  MCParticle* parent = mcp->getParents()[0];
+	  if( abs(parent->getPDG()) == 11){
+	    const float x = fabs(mcp->getVertex()[0]);
+	    const float y = fabs(mcp->getVertex()[1]);
+	    const float z = fabs(mcp->getVertex()[2]);
+	    const float r= sqrt(x*x+z*z);
+	    const MCParticleVec& daughters = parent->getDaughters() ;
+	    const float xp = fabs(parent->getVertex()[0]);
+	    const float yp = fabs(parent->getVertex()[1]);
+	    const float zp = fabs(parent->getVertex()[2]);
+	    const float rp= sqrt(x*x+z*z);
+	    const float xpe = fabs(parent->getEndpoint()[0]);
+	    const float ype = fabs(parent->getEndpoint()[1]);
+	    const float zpe = fabs(parent->getEndpoint()[2]);
+	    const float dx= x-xpe;
+	    const float dy= y-ype;
+	    const float dz= z-zpe;
+	    const float dr = sqrt(dx*dx+dy*dy+dz*dz);
+	    if(dr>100.){
+	      //std::cout << " Brem candidate " << mcp->getPDG() << " E = " << mcp->getEnergy() << std::endl; 
+	      //std::cout << mcp->getParents().size() << " parent pdg : " << parent->getPDG() << " E = " << parent->getEnergy() << " Daughters : " << daughters.size() << std::endl; 
+	      
+	      //std::cout << " parent " << xp << "," << yp << " " << zp << " ->  " << xpe << "," << ype << " " << zpe << std::endl; 
+	      mcp->ext<MCPKeep>() = true ;
+	    }
+	  }
+	} 
+      }
+    }
+  }
 
 
   for(int i=0; i< nMCP ; i++){

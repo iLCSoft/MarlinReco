@@ -1267,7 +1267,7 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
 	      //std::cout << mcp->getParents().size() << " parent pdg : " << parent->getPDG() << " E = " << parent->getEnergy() << " Daughters : " << daughters.size() << std::endl; 
 	      
 	      //std::cout << " parent " << xp << "," << yp << " " << zp << " ->  " << xpe << "," << ype << " " << zpe << std::endl; 
-	      mcp->ext<MCPKeep>() = true ;
+	      keepMCParticle( mcp ) ;
 	    }
 	  }
 	} 

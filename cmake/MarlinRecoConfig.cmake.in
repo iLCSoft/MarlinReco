@@ -35,10 +35,14 @@ SET( MarlinReco_INCLUDE_DIRS MarlinReco_INCLUDE_DIRS-NOTFOUND )
 MARK_AS_ADVANCED( MarlinReco_INCLUDE_DIRS )
 
 FIND_PATH( MarlinReco_INCLUDE_DIRS
-    NAMES MarlinTrackFit.h
+    NAMES marlinreco/MarlinTrackFit.h
     PATHS "${MarlinReco_ROOT}/include"
     NO_DEFAULT_PATH
 )
+
+IF( MarlinReco_INCLUDE_DIRS )
+    LIST( APPEND MarlinReco_INCLUDE_DIRS ${MarlinReco_INCLUDE_DIRS}/marlinreco )
+ENDIF()
 
 
 

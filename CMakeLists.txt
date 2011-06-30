@@ -4,14 +4,6 @@
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6.2 FATAL_ERROR )
 ########################################################
 
-
-
-# due to the incompatibility between g77/gfortran on 32/64bit machines
-# it is enforced to set the fortran compiler before running cmake
-#IF( NOT DEFINED ENV{FC} )
-#    MESSAGE( FATAL_ERROR "please set FC before running cmake, e.g.: export FC=gfortran" )
-#ENDIF()
-
 # fix for lcio: all c++ sources need to be compiled with -Wno-long-long
 SET( ENV{CXXFLAGS} "-Wno-long-long $ENV{CXXFLAGS}" )
 

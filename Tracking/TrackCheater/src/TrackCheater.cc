@@ -419,11 +419,7 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	    newTrack->subdetectorHitNumbers()[5] = nHitsFTD;
 	    newTrack->subdetectorHitNumbers()[6] = nHitsSIT;
 	    newTrack->subdetectorHitNumbers()[7] = nHitsTPC;
-	    float PCA = sqrt(Pos[0]*Pos[0]+Pos[1]*Pos[1]+Pos[2]*Pos[2]);
-	    bool isRefPCA = false;
-	    if (PCA<0.1)
-	      isRefPCA = true;
-	    newTrack->setIsReferencePointPCA(isRefPCA);
+
 	    storeTrack = true;
 	    int ntot = nHitsVTX + nHitsFTD + nHitsSIT + nHitsTPC;
 	    if (ntot < _minimal_hits)
@@ -668,7 +664,6 @@ void TrackCheater::processEvent( LCEvent * evt ) {
 	    newTrack->setChi2(chi2_D);
 	    newTrack->setNdf(ndf_D);
 	    newTrack->setReferencePoint(refPoint);
-	    newTrack->setIsReferencePointPCA(true);
 	    int nHitsVTX = 0;
 	    int nHitsFTD = 0;
 	    int nHitsSIT = 0;

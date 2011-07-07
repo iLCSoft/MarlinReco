@@ -17,6 +17,7 @@
 #include "LCCylinder.h"
 #include <IMPL/LCFlagImpl.h>
 
+
 //stl exception handler
 #include <stdexcept>
 #include "constants.h"
@@ -29,6 +30,7 @@
 #include <gear/PadRowLayout2D.h>
 #include <gear/BField.h>
 //
+#include <ILDCellIDEncoding.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -347,6 +349,7 @@ void TPCDigiProcessor::init()
   _random = gsl_rng_alloc(gsl_rng_ranlxs2);
   Global::EVENTSEEDER->registerProcessor(this);
 
+  _cellid_encoder = 0 ;
   _nRun = 0 ;
   _nEvt = 0 ;
   
@@ -397,6 +400,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
  
   // created the collection which will be written out 
   _trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
+  _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( ILDCellIDEncoding::encoder_string , _trkhitVec ) ;
 
   // first deal with the pad-row based hits from Mokka 
   LCCollection* STHcol = 0 ;
@@ -603,7 +607,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       }
       
       //      int pad = padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi());
-      int layerNumber = _SimTHit->getCellID();
+      int layerNumber = _SimTHit->getCellID0();
 
       if(_rejectCellID0 && (layerNumber<1)) {
         continue;
@@ -1014,6 +1018,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   //Clear the maps and the end of the event.
   _tpcHitMap.clear();
   _tpcRowHits.clear();
+  
+  delete _cellid_encoder ;
+
 }
 
 
@@ -1074,6 +1081,22 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   trkHit->setPosition(pos);
   trkHit->setEDep(seed_hit->getEDep());
   trkHit->setType( 500 );
+
+  // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
+  int side = 1 ;
+  
+  if( pos[2] < 0.0 ) side = 1 ;
+  
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::subdet ] = ILDCellIDEncoding::DetID::TPC ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::layer  ] = seed_hit->getRowIndex() ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::module ] = 0 ;
+ 
+  //SJA:FIXME: for now don't use side
+  //  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = 0 ;
+  
+   _cellid_encoder->setCellID( trkHit ) ;
+
         
   // check values for inf and nan
   if( std::isnan(unsmearedPhi) || std::isinf(unsmearedPhi) || std::isnan(tpcRPhiRes) || std::isinf(tpcRPhiRes) ) {
@@ -1179,6 +1202,23 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   trkHit->setEDep(sumEDep);
   trkHit->setType( 500 );
         
+  // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
+  int side = 1 ;
+  int padIndex = padLayout.getNearestPad(mergedPoint->perp(),mergedPoint->phi());  
+  int row = padLayout.getRowNumber(padIndex);
+
+  if( pos[2] < 0.0 ) side = 1 ;
+  
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::subdet ] = ILDCellIDEncoding::DetID::TPC ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::layer  ] = row ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::module ] = 0 ;
+  //SJA:FIXME: for now don't use side
+  //  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;
+  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = 0 ;
+  
+  _cellid_encoder->setCellID( trkHit ) ;
+
+
   double phi = mergedPoint->getPhi();
   double tpcRPhiRes = _padWidth;
   double tpcZRes = _binningZ;

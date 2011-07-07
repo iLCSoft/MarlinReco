@@ -21,6 +21,8 @@ Steve Aplin 26 June 2009 (DESY)
 
 #include <marlin/Processor.h>
 #include <lcio.h>
+
+
 #include <string>
 #include <gsl/gsl_rng.h>
 
@@ -52,6 +54,7 @@ Steve Aplin 26 June 2009 (DESY)
 #include <EVENT/MCParticle.h>
 #include <EVENT/SimTrackerHit.h>
 #include <IMPL/TrackerHitImpl.h>
+#include <UTIL/CellIDEncoder.h>
 
 #include "CLHEP/Vector/TwoVector.h"
 class Voxel_tpc;
@@ -201,6 +204,7 @@ protected:
   std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap;
 
   LCCollectionVec* _trkhitVec;
+  CellIDEncoder<TrackerHitImpl>* _cellid_encoder ;
 
   int  _NSimTPCHits;
   int  _NBackgroundSimTPCHits;

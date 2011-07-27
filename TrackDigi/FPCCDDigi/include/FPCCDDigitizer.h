@@ -123,7 +123,10 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   int _nRun ;
   int _nEvt ;
   int _debug;
+
   bool _modifySimTHit;
+  bool _ladder_Number_encoded_in_cellID;
+  bool _vtx_only;
   
   float _pixelSize;
   float _pixelheight;

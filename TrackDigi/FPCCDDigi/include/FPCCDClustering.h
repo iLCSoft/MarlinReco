@@ -95,6 +95,9 @@ class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
   int _nRun ;
   int _nEvt ;
   int _debug;
+
+  bool _new_tracking_system ;
+
   int _energyDigitization;
   int _randomNoise;
   float _pixelSize;
@@ -120,6 +123,7 @@ class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
     double phi0;  // aximuthal angle offset
     std::vector<double> cosphi;  // cos[phi_ladder], cos_phi of each ladder
     std::vector<double> sinphi;  // sin[phi_ladder], sin_phi of each ladder
+    std::vector<double> ladder_incline;
     double sthick;  // sensitive region thickness
     double sximin;  // minimum xi of sensitive region.
     double sximax;  // maximum xi of sensitive region

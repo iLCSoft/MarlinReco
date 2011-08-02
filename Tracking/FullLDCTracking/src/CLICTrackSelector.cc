@@ -281,7 +281,6 @@ void CLICTrackSelector::processEvent( LCEvent * evt ) {
 	RefPoint[2] = track->getReferencePoint()[2];
 	
 	selectedTrack->setReferencePoint(RefPoint);
-	selectedTrack->setIsReferencePointPCA( track->isReferencePointPCA());
 	selectedTrack->setRadiusOfInnermostHit(track->getRadiusOfInnermostHit());
 	selectedTrack->subdetectorHitNumbers().resize(12);
 	for(unsigned int i=0; i<12; i++)selectedTrack->subdetectorHitNumbers()[i] = track->getSubdetectorHitNumbers()[i];

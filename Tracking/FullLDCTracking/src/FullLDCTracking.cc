@@ -671,7 +671,6 @@ void FullLDCTracking::AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec,
     RefPoint[2] =  z0TrkCand;
 
     track->setReferencePoint(RefPoint);
-    track->setIsReferencePointPCA( true );
     track->setRadiusOfInnermostHit(sqrt(r2Min));
 
     track->subdetectorHitNumbers().resize(12);

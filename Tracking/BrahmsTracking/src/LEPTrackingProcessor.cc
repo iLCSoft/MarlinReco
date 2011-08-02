@@ -774,7 +774,6 @@ void LEPTrackingProcessor::processEvent( LCEvent * evt ) {
           tpcTrack->setD0( d0 ) ;
           tpcTrack->setZ0( z0 ) ;       
           tpcTrack->setReferencePoint( refPoint ) ;
-          tpcTrack->setIsReferencePointPCA(true) ;
           tpcTrack->setChi2(TkTeBank->getChi2(te)) ;
           tpcTrack->setNdf(TkTeBank->getNdf(te)) ;
           tpcTrack->setdEdx(TkTeBank->getDe_dx(te)) ;

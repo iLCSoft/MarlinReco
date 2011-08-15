@@ -35,7 +35,7 @@ SET( MarlinReco_INCLUDE_DIRS MarlinReco_INCLUDE_DIRS-NOTFOUND )
 MARK_AS_ADVANCED( MarlinReco_INCLUDE_DIRS )
 
 FIND_PATH( MarlinReco_INCLUDE_DIRS
-    NAMES marlinreco/MarlinTrackFit.h
+    NAMES marlinreco/TPCDigiProcessor.h
     PATHS "${MarlinReco_ROOT}/include"
     NO_DEFAULT_PATH
 )

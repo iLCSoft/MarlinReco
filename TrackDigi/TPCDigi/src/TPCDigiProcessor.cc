@@ -30,7 +30,7 @@
 #include <gear/PadRowLayout2D.h>
 #include <gear/BField.h>
 //
-#include <ILDCellIDEncoding.h>
+#include "UTIL/ILDConf.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -400,7 +400,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
  
   // created the collection which will be written out 
   _trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
-  _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( ILDCellIDEncoding::encoder_string , _trkhitVec ) ;
+  _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( ILDCellID0::encoder_string , _trkhitVec ) ;
 
   // first deal with the pad-row based hits from Mokka 
   LCCollection* STHcol = 0 ;
@@ -1087,13 +1087,13 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   if( pos[2] < 0.0 ) side = 1 ;
   
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::subdet ] = ILDCellIDEncoding::DetID::TPC ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::layer  ] = seed_hit->getRowIndex() ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::module ] = 0 ;
+  (*_cellid_encoder)[ ILDCellID0::subdet ] = ILDDetID::TPC ;
+  (*_cellid_encoder)[ ILDCellID0::layer  ] = seed_hit->getRowIndex() ;
+  (*_cellid_encoder)[ ILDCellID0::module ] = 0 ;
  
   //SJA:FIXME: for now don't use side
-  //  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = 0 ;
+  //  (*_cellid_encoder)[ ILDCellID0::side   ] = side ;
+  (*_cellid_encoder)[ ILDCellID0::side   ] = 0 ;
   
    _cellid_encoder->setCellID( trkHit ) ;
 
@@ -1209,12 +1209,12 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
 
   if( pos[2] < 0.0 ) side = 1 ;
   
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::subdet ] = ILDCellIDEncoding::DetID::TPC ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::layer  ] = row ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::module ] = 0 ;
+  (*_cellid_encoder)[ ILDCellID0::subdet ] = ILDDetID::TPC ;
+  (*_cellid_encoder)[ ILDCellID0::layer  ] = row ;
+  (*_cellid_encoder)[ ILDCellID0::module ] = 0 ;
   //SJA:FIXME: for now don't use side
-  //  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;
-  (*_cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = 0 ;
+  //  (*_cellid_encoder)[ ILDCellID0::side   ] = side ;
+  (*_cellid_encoder)[ ILDCellID0::side   ] = 0 ;
   
   _cellid_encoder->setCellID( trkHit ) ;
 

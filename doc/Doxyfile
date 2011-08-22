@@ -355,7 +355,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = overview.html ../Analysis/MarlinKinfit/doc/kinfit.doxygen  ../Analysis/CheckPlots/include ../Analysis/EventShapes/include ../Analysis/SatoruJetFinder/include ../Analysis/MarlinKinfit/include ../Calibration/AbsCalibration/include ../CaloDigi/LDCCaloDigi/include ../Clustering/ClusterCheater/include ../Clustering/ClusterCheater5_3/include ../Clustering/NNClustering/include ../Clustering/PhotonFinderKit/include ../Clustering/TrackwiseClustering/include ../Pflow/TrackBasedPFlow/include ../Pflow/Wolf/include ../TrackDigi/FTDDigi/include ../TrackDigi/TPCDigi/include ../TrackDigi/VTXDigi/include ../Tracking/BrahmsTracking/include ../Tracking/BrahmsTracking/src/f77/include ../Tracking/FullLDCTracking/include ../Tracking/SiliconTracking/include ../Tracking/TrackCheater/include
+INPUT = overview.html ../Analysis/CheckPlots/include ../Analysis/EventShapes/include ../Analysis/SatoruJetFinder/include ../Calibration/AbsCalibration/include ../CaloDigi/LDCCaloDigi/include ../Clustering/ClusterCheater/include ../Clustering/ClusterCheater5_3/include ../Clustering/NNClustering/include ../Clustering/PhotonFinderKit/include ../Clustering/TrackwiseClustering/include ../Pflow/TrackBasedPFlow/include ../Pflow/Wolf/include ../TrackDigi/FTDDigi/include ../TrackDigi/TPCDigi/include ../TrackDigi/VTXDigi/include ../Tracking/BrahmsTracking/include ../Tracking/BrahmsTracking/src/f77/include ../Tracking/FullLDCTracking/include ../Tracking/SiliconTracking/include ../Tracking/TrackCheater/include
 
 
 # If the value of the INPUT tag contains directories, you can use the 

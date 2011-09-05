@@ -446,10 +446,15 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double padPhi(0.0);
       double padTheta (0.0);
       
-      CLHEP::Hep3Vector *nMinus2Point = (NULL);
-      CLHEP::Hep3Vector *precedingPoint = (NULL);
-      CLHEP::Hep3Vector *followingPoint = (NULL);
-      CLHEP::Hep3Vector *nPlus2Point = (NULL);
+      
+      streamlog_out(DEBUG3) << "processing hit " << i << std::endl;
+      streamlog_out(DEBUG3) << " address = " << _SimTHit  
+                << " x = "  << _SimTHit->getPosition()[0] 
+                << " y = "  << _SimTHit->getPosition()[1] 
+                << " z = "  << _SimTHit->getPosition()[2] 
+                << std::endl ; 
+
+
 
       CLHEP::Hep3Vector thisPoint(_SimTHit->getPosition()[0],_SimTHit->getPosition()[1],_SimTHit->getPosition()[2]);
       double padheight = padLayout.getPadHeight(padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi()));
@@ -466,7 +471,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         // get the pt of the MCParticle, this will used later to uses nominal smearing for low momentum rubish
         const double *momentumMC = _mcp->getMomentum();
         ptSqrdMC = momentumMC[0]*momentumMC[0]+momentumMC[1]*momentumMC[1] ; 
-        
+
+        streamlog_out(DEBUG3)  << " mcp address = " << _mcp
+                  << " px = "  << momentumMC[0] 
+                  << " py = "  << momentumMC[1] 
+                  << " pz = "  << momentumMC[2] 
+                  << std::endl ; 
+
         // SJA:FIXME: the fact that it is a physics hit relies on the fact that for overlay 
         // the pointer to the mcp is set to NULL. This distinction may not always be true ...
         ++_NPhysicsSimTPCHits ;
@@ -505,7 +516,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         if (!_mcp || (sqrt(ptSqrdMC) / (FCT*bField)) < ( padheight / (0.1 * twopi))) { 
           // if the hit has no record of it MCParticle then there is no way to know if this hit has consecutive hits from the same MCParticle
           // so just set nominal values theta=phi=90
-          // here make at cut for particles which will suffer more than a 10 percent change in phi over the distance of the pad 
+          // here make a cut for particles which will suffer more than a 10 percent change in phi over the distance of the pad 
           // R > padheight/(0.1*2PI) 
           // in both cases set the angles to 90 degrees
           padTheta = twopi/4.0 ;
@@ -534,39 +545,45 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           
           if      ( _mcp==_previousMCP && _mcp==_nextMCP )    { // middle hit of 3 from the same MCParticle 
 
-            precedingPoint = new CLHEP::Hep3Vector(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]);
-            followingPoint = new CLHEP::Hep3Vector(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]);
+            CLHEP::Hep3Vector precedingPoint(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]) ;
+            CLHEP::Hep3Vector followingPoint(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]) ;
+
+            streamlog_out(DEBUG3) << "address of _previousSimTHit = " << _previousSimTHit  
+                      << " x = "  << _previousSimTHit->getPosition()[0] 
+                      << " y = "  << _previousSimTHit->getPosition()[1] 
+                      << " z = "  << _previousSimTHit->getPosition()[2] 
+                      << std::endl ; 
+
+            streamlog_out(DEBUG4) << "address of _nextSimTHit = " << _nextSimTHit 
+                      << " x = "  << _nextSimTHit->getPosition()[0] 
+                      << " y = "  << _nextSimTHit->getPosition()[1] 
+                      << " z = "  << _nextSimTHit->getPosition()[2] 
+                      << std::endl ; 
 
             // get phi and theta using functions defined below
-            padPhi = getPadPhi( &thisPoint, precedingPoint, &thisPoint, followingPoint);
-            padTheta = getPadTheta(precedingPoint, &thisPoint, followingPoint);
+            padPhi = getPadPhi( &thisPoint, &precedingPoint, &thisPoint, &followingPoint);
+            padTheta = getPadTheta(&precedingPoint, &thisPoint, &followingPoint);
 
-            delete precedingPoint;
-            delete followingPoint;
           }
           else if ( _mcp==_nextMCP     && _mcp==_nPlus2MCP )  { // first  hit of 3 from the same MCParticle
-            followingPoint = new CLHEP::Hep3Vector(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]);
-            nPlus2Point = new CLHEP::Hep3Vector(_nPlus2SimHit->getPosition()[0],_nPlus2SimHit->getPosition()[1],_nPlus2SimHit->getPosition()[2]);
+
+            CLHEP::Hep3Vector followingPoint(_nextSimTHit->getPosition()[0],_nextSimTHit->getPosition()[1],_nextSimTHit->getPosition()[2]) ;
+            CLHEP::Hep3Vector nPlus2Point(_nPlus2SimHit->getPosition()[0],_nPlus2SimHit->getPosition()[1],_nPlus2SimHit->getPosition()[2]) ;
 
             // get phi and theta using functions defined below
-            padPhi = getPadPhi( &thisPoint, &thisPoint, followingPoint, nPlus2Point);
-            padTheta = getPadTheta(&thisPoint, followingPoint, nPlus2Point);
-
-            delete followingPoint;
-            delete nPlus2Point;
+            padPhi = getPadPhi( &thisPoint, &thisPoint, &followingPoint, &nPlus2Point);
+            padTheta = getPadTheta(&thisPoint, &followingPoint, &nPlus2Point);
             
           }
           else if ( _mcp==_previousMCP && _mcp==_nMinus2MCP ) { // last   hit of 3 from the same MCParticle
-            nMinus2Point = new CLHEP::Hep3Vector(_nMinus2SimHit->getPosition()[0],_nMinus2SimHit->getPosition()[1],_nMinus2SimHit->getPosition()[2]);
-            precedingPoint = new CLHEP::Hep3Vector(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]);
+
+            CLHEP::Hep3Vector nMinus2Point(_nMinus2SimHit->getPosition()[0],_nMinus2SimHit->getPosition()[1],_nMinus2SimHit->getPosition()[2]);
+            CLHEP::Hep3Vector precedingPoint(_previousSimTHit->getPosition()[0],_previousSimTHit->getPosition()[1],_previousSimTHit->getPosition()[2]);
             
             // get phi and theta using functions defined below
-            padPhi = getPadPhi( &thisPoint, nMinus2Point, precedingPoint, &thisPoint);
-            padTheta = getPadTheta(nMinus2Point, precedingPoint, &thisPoint);
+            padPhi = getPadPhi( &thisPoint, &nMinus2Point, &precedingPoint, &thisPoint);
+            padTheta = getPadTheta(&nMinus2Point, &precedingPoint, &thisPoint);
 
-            delete nMinus2Point;            
-            delete precedingPoint;
-            
           }
           else{ // the hit is isolated as either a single hit, or a pair of hits, from a single MCParticle  
             padTheta = twopi/4.0 ;
@@ -1342,20 +1359,33 @@ double TPCDigiProcessor::getPadPhi( CLHEP::Hep3Vector *thisPoint, CLHEP::Hep3Vec
   CLHEP::Hep2Vector firstPointRPhi(firstPoint->x(),firstPoint->y());
   CLHEP::Hep2Vector middlePointRPhi(middlePoint->x(),middlePoint->y());
   CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
-
-  // check that the points are not the same
-  if( firstPointRPhi.x() == middlePointRPhi.x() && firstPointRPhi.y() == middlePointRPhi.y() 
+    
+  // check that the points are not the same, at least at the level of a tenth of a micron 
+  if( fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05 
       ||
-      middlePointRPhi.x() == lastPointRPhi.x() && middlePointRPhi.y() == lastPointRPhi.y()
+      fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
       ||
-      firstPointRPhi.x() == lastPointRPhi.x() && firstPointRPhi.y() == lastPointRPhi.y()  
+      fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
       ) {
-    std::stringstream errorMsg;
-    errorMsg << "\nProcessor: TPCDigiProcessor \n" 
-             << "2 of the 3 SimTracker hits passed to Circle Fit are the same hit\n"
-             << "\n" ;
-    throw Exception(errorMsg.str());
+
+    streamlog_out(WARNING) << " TPCDigiProcessor::getPadPhi "  
+                           << "2 of the 3 SimTracker hits passed to Circle Fit are the same hit taking pad phi as PI/2\n"
+                           << " firstPoint->x() "  << firstPoint->x() 
+                           << " firstPoint->y() "  << firstPoint->y() 
+                           << " firstPoint->z() "  << firstPoint->z() 
+                           << " middlePoint->x() "  << middlePoint->x() 
+                           << " middlePoint->y() "  << middlePoint->y() 
+                           << " middlePoint->z() "  << middlePoint->z() 
+                           << " lastPoint->x() "  << lastPoint->x() 
+                           << " lastPoint->y() "  << lastPoint->y() 
+                           << " lastPoint.z() "  << lastPoint->z() 
+                           << std::endl ;
+        
+    return twopi/4.0 ;
+
   }
+
+
 
   Circle theCircle(&firstPointRPhi, &middlePointRPhi, &lastPointRPhi);
   
@@ -1383,7 +1413,6 @@ double TPCDigiProcessor::getPadPhi( CLHEP::Hep3Vector *thisPoint, CLHEP::Hep3Vec
     throw Exception(errorMsg.str());
   }
   
-
   return padPhi;
 
 }
@@ -1395,19 +1424,31 @@ double TPCDigiProcessor::getPadTheta(CLHEP::Hep3Vector* firstPoint, CLHEP::Hep3V
   CLHEP::Hep2Vector middlePointRPhi(middlePoint->x(),middlePoint->y());
   CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
 
-  // check that the points are not the same
-  if( firstPointRPhi.x() == middlePointRPhi.x() && firstPointRPhi.y() == middlePointRPhi.y() 
+  // check that the points are not the same, at least at the level of a tenth of a micron 
+  if( fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05 
       ||
-      middlePointRPhi.x() == lastPointRPhi.x() && middlePointRPhi.y() == lastPointRPhi.y()
+      fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
       ||
-      firstPointRPhi.x() == lastPointRPhi.x() && firstPointRPhi.y() == lastPointRPhi.y()  
+      fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
       ) {
-    std::stringstream errorMsg;
-    errorMsg << "\nProcessor: TPCDigiProcessor \n" 
-             << "2 of the 3 SimTracker hits passed to Circle Fit are the same hit\n"
-             << "\n" ;
-    throw Exception(errorMsg.str());
+
+    streamlog_out(WARNING) << " TPCDigiProcessor::getPadTheta "  
+                           << "2 of the 3 SimTracker hits passed to Circle Fit are the same hit taking pad phi as PI/2\n"
+                           << " firstPoint->x() "  << firstPoint->x() 
+                           << " firstPoint->y() "  << firstPoint->y() 
+                           << " firstPoint->z() "  << firstPoint->z() 
+                           << " middlePoint->x() "  << middlePoint->x() 
+                           << " middlePoint->y() "  << middlePoint->y() 
+                           << " middlePoint->z() "  << middlePoint->z() 
+                           << " lastPoint->x() "  << lastPoint->x() 
+                           << " lastPoint->y() "  << lastPoint->y() 
+                           << " lastPoint.z() "  << lastPoint->z() 
+                           << std::endl ;
+    
+    return twopi/4.0 ;
+    
   }
+
 
   Circle theCircle(&firstPointRPhi, &middlePointRPhi, &lastPointRPhi);
 

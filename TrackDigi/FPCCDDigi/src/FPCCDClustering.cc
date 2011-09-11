@@ -230,7 +230,7 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
     }
     evt->removeCollection( _colNameVTX );
     theData.clear();
-    LCTOOLS::dumpEvent( evt ) ;
+
   } // End of process when VXD has hits
   _nEvt ++ ;
 }
@@ -339,9 +339,17 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
     int      minxi = 0;
     int    maxzeta = 0;
     int    minzeta = 0;
-    bool trackquality = true;
-    for(unsigned int i=0;i<cluster->size();i++) {
+    FPCCDPixelHit::HitQuality_t trackquality = FPCCDPixelHit::kSingle;
+
+    FPCCDPixelHit   *maxXiHit=(*cluster)[0];
+    FPCCDPixelHit   *minXiHit=(*cluster)[0];
+    FPCCDPixelHit *maxZetaHit=(*cluster)[0];
+    FPCCDPixelHit *minZetaHit=(*cluster)[0];
+    
+    unsigned int nPix=cluster->size();    
+    for(unsigned int i=0;i<nPix;i++) {
       FPCCDPixelHit *aHit=(*cluster)[i];
+      trackquality = aHit->getQuality();
       enesum+=aHit->getEdep();
       xiene+=((double)(aHit->getXiID()+0.5))*_pixelSize*aHit->getEdep();
       zetaene+=((double)(aHit->getZetaID()+0.5))*_pixelSize*aHit->getEdep();
@@ -353,17 +361,30 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
         minzeta = maxzeta;
       }
       else{
-        if(  aHit->getXiID() > maxxi) maxxi = aHit->getXiID();
-        if(  aHit->getXiID() < minxi) minxi = aHit->getXiID(); 
-        if(aHit->getZetaID() > maxxi) maxxi = aHit->getZetaID();
-        if(aHit->getZetaID() < minxi) minxi = aHit->getZetaID(); 
+        if(  aHit->getXiID() > maxxi){ maxxi = aHit->getXiID(); maxXiHit=aHit;}
+        if(  aHit->getXiID() < minxi){ minxi = aHit->getXiID(); minXiHit=aHit;}
+        if(aHit->getZetaID() > maxzeta){ maxzeta = aHit->getZetaID();maxZetaHit=aHit;}
+        if(aHit->getZetaID() < minzeta){ minzeta = aHit->getZetaID();minZetaHit=aHit;}
+          }
+      FPCCDPixelHit::HitQuality_t addedQuality = aHit->getQuality();
+      if( trackquality != FPCCDPixelHit::kBKGOverlap){
+        if(trackquality == FPCCDPixelHit::kBKG){ addedQuality=FPCCDPixelHit::kBKG ? trackquality=FPCCDPixelHit::kBKG : trackquality=FPCCDPixelHit::kBKGOverlap;}         
       }
-      if(aHit->getQuality() > 1 ) trackquality = false;
+      else if(addedQuality==FPCCDPixelHit::kSignalOverlap){trackquality=FPCCDPixelHit::kSignalOverlap;       
+      }
+      
+    }
+    
+    unsigned int xiWidth = maxxi-minxi + 1;
+    unsigned int zetaWidth = maxzeta-minzeta + 1; // cluster shapes info. could be used to reject background.
+    unsigned short int tilt=0;
+    if( xiWidth==1 || zetaWidth==1 ) tilt=0;
+    else{
+      if(maxXiHit->getZetaID()-minXiHit->getZetaID()>=0 && maxZetaHit->getXiID()-maxZetaHit->getXiID()>=0) tilt=1;
+      else if(maxXiHit->getZetaID()-minXiHit->getZetaID()<=0 && maxZetaHit->getXiID()-maxZetaHit->getXiID()<=0) tilt=2;
+      else tilt=0;
     }
 
-//     int CWidth_Rphi = maxxi-minxi+1;
-//     int CWidth_Z = maxzeta-minzeta+1; // cluster shapes info. could be used to reject background.
-    
     double xiave = xiene/enesum;
     double zetaave = zetaene/enesum;
     double newpos[3];
@@ -375,7 +396,8 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
                 + eta0*_geodata[layer].sinphi[ladder];
     newpos[2] = zetaave-_geodata[layer].hlength;
     //store hit variables
-
+ 
+  
     if ( _new_tracking_system ) {
       TrackerHitPlaneImpl* trkHit = new TrackerHitPlaneImpl ; 
       trkHit->setType( 100 + layer);
@@ -387,10 +409,17 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
       //SJA:FIXME: for now don't use side   
       //   (*cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;      
       cellid_encoder[ ILDCellIDEncoding::Fields::side   ] = 0 ;      
-
+     
       cellid_encoder.setCellID( trkHit );
-
-            
+      
+      unsigned int cellid1=0;
+      cellid1 = ((trackquality << 30) & 0xc0000000) |
+        ((tilt << 28) & 0x30000000) |
+        ((nPix << 18) & 0x0ffc0000) |
+        ((zetaWidth << 9) & 0x0003fe00) |
+        ((xiWidth) & 0x000001ff) ;
+      
+      trkHit->setCellID1(cellid1);
       float u_direction[2] ;
       u_direction[0] = _geodata[layer].ladder_incline[ladder] ;
       u_direction[1] = 0.0 ;

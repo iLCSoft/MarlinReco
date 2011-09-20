@@ -4,24 +4,46 @@
 
 ===============================
 
+
  --------
-| v00-21 |
+| v00-30 |
  --------
 
 	- General
-
-	  - Enabled build without cernlib (option MARLINRECO_CERNLIB=off) - e.g. for macos-64bit
+	  - Enabled build without cernlib/fortran (option MARLINRECO_FORTRAN=off) - e.g. for macos-64bit
 	    sub packages (BrahmsTracking, Satoru, MarlinKinfit,...) that need cernlib will not be built
+           
+	- Clustering   
+          - removed obsolete sub package ClusterCheater (ClusterCheater5_3 is newer)
+
+          - deprecated TrackwiseClustering
+            ( code still in repository, however not built by default )
+
+          - added new sub package BCalReco 
+            beam cal reconstruction (A.Rosca, DESY)
+
+
+	- Pflow  
+	  - deprecated Pflow package Wolf and TrackBasedPflow
+            ( code still in repository, however not built by default )
+
+	- CaloDigi
+	  - added SimDigital processor to LDCCaloDigi 
+            SDHCAL digitization (G.Grenier/R.Han, INPL)    
 
 	- Analysis
 	  - Removed MarlinKinfit processor
+
 	  - RecoMCTruthLinker 
 	    - Modification to allow Bremsstrahlung photons to be written to Skimmed list (off by default)
 
 	- Tracking
 	  - Use ILDCellID0 from lcio Util
+
 	  - Removed deprecated setIsReferencePointPCA
+
 	  - New processor FPCCDClustering.cc was added ( Daisuke Kamai )
+
 	  - TPCDigiProcessor 
 	    - Changed exception to warning for the case of points with the same x-y coordinates being passed to getPadTheta and getPadPhi. 
 	      Corrected the check function which was previously using float == float, to use fabs(float-float) < tolerance. 

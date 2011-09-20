@@ -64,7 +64,7 @@ using namespace marlin ;
  *    ColNameReconstructedParticles : name of the LCCollection of reconstructed paricles
  *
  *    @author O. Wendt (DESY)
- *    @version $Id: CheckPlots.h,v 1.4 2007-09-06 14:40:18 harderk Exp $
+ *    @version $Id$
  *
  */
 class CheckPlots : public Processor {

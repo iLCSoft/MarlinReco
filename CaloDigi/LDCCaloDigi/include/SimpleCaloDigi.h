@@ -60,7 +60,7 @@ using namespace marlin ;
  *  For ECal Calorimeter hits the variable type is set to 0, <br>
  *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
- *  @version $Id: SimpleCaloDigi.h,v 1.5 2008-02-25 08:23:56 gaede Exp $ <br>
+ *  @version $Id$ <br>
  */
 class SimpleCaloDigi : public Processor {
   

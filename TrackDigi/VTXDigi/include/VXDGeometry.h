@@ -43,7 +43,7 @@ typedef std::vector< VXDLayer >  VXDLayers ;
  * width. The z coordinate is the same as in the lab frame. 
  *  
  * <br>
- * @version $Id: VXDGeometry.h,v 1.2 2009-05-19 09:22:20 gaede Exp $
+ * @version $Id$
  * @author F.Gaede, DESY
  */
 class VXDGeometry  {

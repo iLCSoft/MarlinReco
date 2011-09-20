@@ -90,7 +90,7 @@ using namespace marlin ;
  *    <a href="http://www.desy.de/~rasp/Raspereza_pfa.pdf">
  *     http://www.desy.de/~rasp/Raspereza_pfa.pdf</a> <br>
  *    @author A. Raspereza (DESY)<br>
- *    @version $Id: Wolf.h,v 1.8 2007-04-27 13:54:46 owendt Exp $<br>
+ *    @version $Id$<br>
  */
 class Wolf : public Processor {
   

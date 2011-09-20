@@ -17,7 +17,7 @@ using namespace marlin ;
  *  Converts SimCalorimeterHit collections to one 
  *  CalorimeterHit collection applying a threshold and an calibration constant...
  * 
- *  @version $Id: SimpleLCalDigi.h,v 1.1 2008-01-11 15:10:39 gaede Exp $
+ *  @version $Id$
  */
 
 class SimpleLCalDigi : public Processor {

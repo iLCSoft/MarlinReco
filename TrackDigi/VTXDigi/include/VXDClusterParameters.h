@@ -9,7 +9,7 @@
  * Holds cluster parameters for a VXD hit - to be attached at runtime to the SimTrackerHit.
  * Cluster is defined by two  (principal component) axis and the corresponding extensions (eigenvalues).
  * 
- * @version $Id: VXDClusterParameters.h,v 1.3 2009-05-20 17:21:50 gaede Exp $
+ * @version $Id$
  * @author F.Gaede, DESY
  */
 

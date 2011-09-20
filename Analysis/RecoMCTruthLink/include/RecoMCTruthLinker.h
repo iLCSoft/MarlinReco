@@ -94,7 +94,7 @@ using namespace lcio ;
 
  * 
  *  @author M. Berggren, DESY, based on RecoMCTruthLinker v 1.0 by F. Gaede, DESY. 
- *  @version $Id: RecoMCTruthLinker.h,v 2.0 2010/10/14 13:15:03 berggren Exp $ 
+ *  @version $Id$ 
  */
 
 class RecoMCTruthLinker : public marlin::Processor {

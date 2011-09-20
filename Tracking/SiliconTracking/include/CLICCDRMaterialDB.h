@@ -36,7 +36,7 @@ using namespace marlin ;
  * (default value 1) <br>
  * <br>
  * @author A. Raspereza (MPI Munich)
- * @version $Id: CLICCDRMaterialDB.h,v 1.7 2008-06-05 13:40:16 rasp Exp $ 
+ * @version $Id$ 
  */
 
 class CLICCDRMaterialDB : public Processor {

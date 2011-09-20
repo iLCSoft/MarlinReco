@@ -49,7 +49,7 @@ namespace AIDA
 
 /** This processor reconstructs hits in the beamcal ....
   *  @author A.Rosca, DESY
-  *  @version $Id:$ 
+  *  @version $Id$ 
   */
 
 

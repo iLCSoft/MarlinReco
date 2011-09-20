@@ -42,7 +42,7 @@ const int MAX_STAVES =  16;
  *
  *  @author  G.Grenier, INPL
  *  @author  R.Han, INPL
- *  @version $Id: $
+ *  @version $Id$
  */
 
 class SimDigital : public Processor {

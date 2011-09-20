@@ -39,7 +39,7 @@ using namespace marlin ;
  * @param CollectionName Name of the MCParticle collection
  * 
  * @author F. Gaede, DESY
- * @version $Id: BCalTagEfficiency.h,v 1.1.1.1 2009/01/07 10:24:42 engels Exp $ 
+ * @version $Id$ 
  */
 
 class BCalTagEfficiency : public Processor {

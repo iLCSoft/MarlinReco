@@ -41,7 +41,7 @@ class VXDGeometry ;
  * @param RandomSeed          random number seed
  * 
  * <br>
- * @version $Id: VTXNoiseClusters.h,v 1.2 2009-05-15 15:53:41 gaede Exp $
+ * @version $Id$
  * @author F.Gaede, DESY
  */
 

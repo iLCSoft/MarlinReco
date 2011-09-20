@@ -148,7 +148,7 @@ using namespace marlin ;
  *  (default value is 1)
  *  <br>
  *  @author A. Raspereza (MPI Munich)
- *  @version $Id: TrackCheater.h,v 1.8 2007-09-05 10:21:42 rasp Exp $<br>
+ *  @version $Id$<br>
  */
 class TrackCheater : public Processor {
   

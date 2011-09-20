@@ -6,7 +6,7 @@
 ** For the latest version download from Web CVS:
 ** http://www-zeuthen.desy.de/lc-cgi-bin/cvsweb.cgi/marlinreco/?cvsroot=MarlinReco
 **
-** $Id: SatoruJetFinderProcessor.h,v 1.7 2007-03-17 14:36:17 samson Exp $
+** $Id$
 **
 **
 */ 
@@ -218,7 +218,7 @@ namespace marlin
    * \endverbatim
    *
    * @author Satoru Yamashita (original fortran code), Thorsten Kuhl, J&ouml;rgen Samson
-   * @version $Id: SatoruJetFinderProcessor.h,v 1.7 2007-03-17 14:36:17 samson Exp $
+   * @version $Id$
    */
   class SatoruJetFinderProcessor : public Processor {
 

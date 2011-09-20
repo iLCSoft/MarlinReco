@@ -18,7 +18,7 @@ using namespace marlin ;
  * than Trackwise Clustering had been used to find cluster the hits.
  * 
  *  @author A. Raspereza, DESY 
- *  @version $Id: CalorimeterFinalStage.h,v 1.1 2005-08-07 15:57:07 gaede Exp $ 
+ *  @version $Id$ 
  */
 class CalorimeterFinalStage : public Processor {
   

@@ -31,7 +31,7 @@ using namespace marlin ;
  * @param MCTruthRelationName of the mc truth relation
  * 
  * @author M.Beckmann, F.Gaede, DESY
- * @version $Id: MCTruthJetEnergy.h,v 1.1 2008-07-03 14:48:38 gaede Exp $
+ * @version $Id$
  */
 
 class MCTruthJetEnergy : public Processor {

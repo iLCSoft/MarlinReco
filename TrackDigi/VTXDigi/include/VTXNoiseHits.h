@@ -31,7 +31,7 @@ using namespace marlin ;
  * (default value 0.0027) <br>
  * 
  * <br>
- * @version $Id: VTXNoiseHits.h,v 1.2 2008-07-01 15:07:35 gaede Exp $
+ * @version $Id$
  * @author F.Gaede, DESY
  */
 class VTXNoiseHits : public Processor {

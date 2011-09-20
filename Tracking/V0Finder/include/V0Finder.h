@@ -48,7 +48,7 @@ using namespace marlin ;
  *  @param MassRangeL0 maximal allowed deviation in mass for L0 hypothesis <br>
  *  (default value 0.008 GeV) <br>
  *  @author A.Raspereza, DESY
- *  @version $Id: V0Finder.h,v 1.2 2008-07-10 11:36:24 rasp Exp $ 
+ *  @version $Id$ 
  */
 class V0Finder : public Processor {
   

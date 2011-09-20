@@ -19,7 +19,7 @@ using namespace marlin ;
  * @param EnergyCut         - Cut for hit energy in GeV
  *
  *  @author F.Gaede (DESY)
- *  @version $Id: NNClusterProcessor.h,v 1.2 2006-05-19 16:06:44 gaede Exp $
+ *  @version $Id$
  */
 class NNClusterProcessor : public Processor {
   

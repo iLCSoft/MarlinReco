@@ -60,7 +60,7 @@ using namespace marlin ;
  *  The name of this relation collection is specified <br>
  *  via processor parameter RelationOutputCollection. <br> 
  *  @authors A. Raspereza and P. Krstonosic (DESY) <br>
- *  @version $Id: MokkaCaloDigi.h,v 1.4 2006-02-22 12:19:21 owendt Exp $ <br>
+ *  @version $Id$ <br>
  */
 
 struct MyHit {

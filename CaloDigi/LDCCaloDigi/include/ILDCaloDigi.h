@@ -68,7 +68,7 @@ const int MAX_STAVES =  16;
  *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
  *  @author M. Thomson (DESY) <br>
- *  @version $Id: ILDCaloDigi.h,v 1.2 2010/11/11 14:35:07 thomson Exp $ <br>
+ *  @version $Id$ <br>
  */
 class ILDCaloDigi : public Processor {
   

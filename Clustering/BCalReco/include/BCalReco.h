@@ -46,6 +46,13 @@ namespace AIDA
 #include "gear/LayerLayout.h"
 #include "gearimpl/LayerLayoutImpl.h"
 
+
+/** This processor reconstructs hits in the beamcal ....
+  *  @author A.Rosca, DESY
+  *  @version $Id:$ 
+  */
+
+
 class BCalReco : public Processor {
 
 	public:

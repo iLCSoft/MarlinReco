@@ -111,7 +111,7 @@ MACRO( ADD_MARLINRECO_PKG _input_dir )
     INCLUDE_DIRECTORIES( BEFORE ${_input_dir}/include )
     AUX_SOURCE_DIRECTORY( ${_input_dir}/src MarlinReco_cxx_srcs )
     #INSTALL_DIRECTORY( "${_input_dir}/include" DESTINATION . FILES_MATCHING PATTERN "*.h" )
-    INSTALL_DIRECTORY( ${_input_dir}/include/ DESTINATION include/marlinreco FILES_MATCHING PATTERN "*.h" )
+    #INSTALL_DIRECTORY( ${_input_dir}/include/ DESTINATION include/marlinreco FILES_MATCHING PATTERN "*.h" )
 ENDMACRO()
 
 

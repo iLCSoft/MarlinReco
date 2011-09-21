@@ -12,7 +12,7 @@
 	- General
 	  - Enabled build without cernlib/fortran (option MARLINRECO_FORTRAN=off) - e.g. for macos-64bit
 	    sub packages (BrahmsTracking, Satoru, MarlinKinfit,...) that need cernlib will not be built
-           
+
 	- Clustering   
           - removed obsolete sub package ClusterCheater (ClusterCheater5_3 is newer)
 
@@ -43,6 +43,7 @@
 	  - Removed deprecated setIsReferencePointPCA
 
 	  - New processor FPCCDClustering.cc was added ( Daisuke Kamai )
+        (FPCCDData and FPCCDPixelHit classes are in MarlinUtil )
 
 	  - TPCDigiProcessor 
 	    - Changed exception to warning for the case of points with the same x-y coordinates being passed to getPadTheta and getPadPhi. 

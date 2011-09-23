@@ -218,7 +218,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
         if( iColl==2 ) { // SET 
           
           // fg: the layer number is the cellID (for Mokka at least) 
-          int cellID = SimTHit->getCellID() ;
+          int cellID = SimTHit->getCellID0() ;
           
           if( find(_activeSETLayers.begin(),_activeSETLayers.end(),cellID)==_activeSETLayers.end() ) {
             continue ;   // ----------------- ignore hit 
@@ -241,7 +241,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
         }
         
 
-        const int celId = SimTHit->getCellID() ;
+        const int celId = SimTHit->getCellID0() ;
         
         const double *pos ;
         pos =  SimTHit->getPosition() ;  
@@ -255,7 +255,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                                  << " with " <<  nSimHits  << " hits ... " << std::endl ;
             
           //find which layer hit is in - encoded in cell ID
-          int layer = SimTHit->getCellID() - 1;
+          int layer = SimTHit->getCellID0() - 1;
 
 
           _vxdCount[layer].second++ ;
@@ -285,7 +285,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
             streamlog_out(DEBUG) << "start smearing along ladders for: " << layer << std::endl;
             
-            int layer = SimTHit->getCellID() - 1;
+            int layer = SimTHit->getCellID0() - 1;
               
             //phi between each ladder
             double deltaPhi = ( 2 * M_PI ) / layerVXD.getNLadders(layer) ;

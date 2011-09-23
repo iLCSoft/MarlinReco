@@ -425,7 +425,7 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
       
       SimTrackerHit* sth = dynamic_cast<SimTrackerHit*>(  vxdCol->getElementAt(i) ) ;
       
-      int layer = ( sth->getCellID() & 0xff )  ;
+      int layer = ( sth->getCellID0() & 0xff )  ;
      
       // --- cluster axes in lab frame
       VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;

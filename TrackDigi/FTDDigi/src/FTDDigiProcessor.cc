@@ -212,7 +212,7 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
 
           if (accept) {
     
-//             const int celId = SimTHit->getCellID() ;
+//             const int celId = SimTHit->getCellID0() ;
           
             const double *pos ;
             pos =  SimTHit->getPosition() ;  
@@ -242,7 +242,7 @@ void FTDDigiProcessor::processEvent( LCEvent * evt ) {
 
             trkHit->setEDep( edep ) ;
 
-            //            trkHit->setType( 200+abs(SimTHit->getCellID()));
+            //            trkHit->setType( 200+abs(SimTHit->getCellID0()));
             //fg: get layerID from z-position
             trkHit->setType( 201 + _ftdLayers->layerID(  pos[2] ) ) ;
             // FIXME:  need proper way of decoding the layerID in the TrackerHit

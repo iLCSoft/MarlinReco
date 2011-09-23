@@ -1050,7 +1050,7 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     float  edep;
     float  time;
     
-    //      cellId = 	trkHitTPC->getCellID();
+    //      cellId = 	trkHitTPC->getCellID0();
     pos = (double*) trkHitTPC->getPosition(); 
     edep = trkHitTPC->getEDep();
     time = trkHitTPC->getTime();

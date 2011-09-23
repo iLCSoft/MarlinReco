@@ -114,7 +114,7 @@ void ETDDigiProcessor::processEvent( LCEvent * evt ) {
       
       
       // fg: the layer number is the cellID (for Mokka at least) 
-      int cellID = SimTHit->getCellID() ;
+      int cellID = SimTHit->getCellID0() ;
       
       if( find( _activeLayers.begin() ,_activeLayers.end() , cellID ) == _activeLayers.end() ) {
         
@@ -174,7 +174,7 @@ void ETDDigiProcessor::processEvent( LCEvent * evt ) {
       trkHit->setPosition(  newPos  ) ;
       
       trkHit->setEDep( edep ) ;
-      trkHit->setType( 200+abs(SimTHit->getCellID()));
+      trkHit->setType( 200+abs(SimTHit->getCellID0()));
       float covMat[TRKHITNCOVMATRIX]={_pointReso*_pointReso,0.,_pointReso*_pointReso,0.,0.,0.};
       trkHit->setCovMatrix(covMat);      
       // push back the SimTHit for this TrackerHit

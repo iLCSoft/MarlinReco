@@ -460,7 +460,7 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
         // std::cout << "End of ReconstructTrackerHit( ) " << std::endl;
        //  if (_produceFullPattern == 1 && recoHit !=0 ) {
 //           SimTrackerHitImpl * sth = new SimTrackerHitImpl();
-//           sth->setCellID(simTrkHit->getCellID());
+//           sth->setCellID(simTrkHit->getCellID0());
 //           sth->setEDep(simTrkHit->getEDep());
 //           double currentPosition[3];
 //           for (int j=0; j<3; ++j)
@@ -502,7 +502,7 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
           recoHit->setCovMatrix(covMat);      
 
 
-          recoHit->setType(100+simTrkHit->getCellID());
+          recoHit->setType(100+simTrkHit->getCellID0());
           THcol->addElement( recoHit );
           //          std::cout << "Hit is added to collection " << _nEvt << std::endl;
           LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
@@ -594,7 +594,7 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
 
 
 // layer is encoded in CellID; 
-   layer = hit->getCellID() - 1;
+   layer = hit->getCellID0() - 1;
                                           
   _currentLayer = layer;
 
@@ -950,7 +950,7 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
 
             for (int iHits=0; iHits<int(vectorOfHits.size()); ++iHits) {
               existingHit = vectorOfHits[iHits];
-              int cellid = existingHit->getCellID();
+              int cellid = existingHit->getCellID0();
               if (cellid == currentcellid) {
                 iexist = 1;
                 break;
@@ -1106,7 +1106,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         charge+= hit->getEDep();
         
         
-        int cellID = hit->getCellID();
+        int cellID = hit->getCellID0();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix;                 
         double xCurrent,yCurrent;
@@ -1133,7 +1133,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
                      
       if (hit->getEDep() > emax) {
         emax=hit->getEDep();        
-        int cellID = hit->getCellID();
+        int cellID = hit->getCellID0();
         xcentre = cellID / 100000 ;
         ycentre = cellID - 100000 * xcentre;
       }
@@ -1145,7 +1145,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
     for (int iHit=0; iHit<int(simTrkVec.size()); ++iHit) {
       SimTrackerHit * hit = simTrkVec[iHit];
       
-      int cellID = hit->getCellID();
+      int cellID = hit->getCellID0();
       int ix = cellID / 100000 ;
       int iy = cellID - 100000 * ix;
       
@@ -1226,7 +1226,7 @@ TrackerHitImpl * CCDDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
       if (hit->getEDep() > _threshold) {
         nPixels++;
   
-        int cellID = hit->getCellID();
+        int cellID = hit->getCellID0();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix     ;
         

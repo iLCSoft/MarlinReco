@@ -161,7 +161,7 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
            z' coincide with is the direction of the particle.
         */
 
-        const int cellId = SimTHit->getCellID() ;
+        const int cellId = SimTHit->getCellID0() ;
         //fg: cellId is 'layer + 1' - we need layerId 
         const int layerId = ( cellId & 0xff ) - 1 ;
 
@@ -322,7 +322,7 @@ void VTXBgClusters::check( LCEvent * evt ) {
       
       SimTrackerHit* sth = dynamic_cast<SimTrackerHit*>(  vxdCol->getElementAt(i) ) ;
       
-      int layer = ( sth->getCellID() & 0xff ) - 1 ;
+      int layer = ( sth->getCellID0() & 0xff ) - 1 ;
      
       // --- cluster axes in lab frame
       VXDClusterParameters* cluP = sth->ext< ClusterParams >() ;

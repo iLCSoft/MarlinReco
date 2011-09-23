@@ -389,7 +389,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
           recoHit->setCovMatrix(covMat);      
           
           
-          recoHit->setType(100+simTrkHit->getCellID());
+          recoHit->setType(100+simTrkHit->getCellID0());
           THcol->addElement( recoHit );
           // std::cout << "Hit is added to collection " << _nEvt << std::endl;
           // LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
@@ -496,7 +496,7 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
 
 
 // layer is encoded in CellID; 
-   layer = hit->getCellID() - 1;
+   layer = hit->getCellID0() - 1;
                                           
   _currentLayer = layer;
 
@@ -826,7 +826,7 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
             SimTrackerHitImpl * existingHit = 0;
             for (int iHits=0; iHits<int(vectorOfHits.size()); ++iHits) {
               existingHit = vectorOfHits[iHits];
-              int cellid = existingHit->getCellID();
+              int cellid = existingHit->getCellID0();
               if (cellid == cellID) {
                 iexist = 1;
                 break;
@@ -1052,7 +1052,7 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         _amplC[nPixels] = hit->getEDep();
       nPixels++;
       charge += hit->getEDep();
-      int cellID = hit->getCellID();
+      int cellID = hit->getCellID0();
       int ix = cellID / 100000 ;
       int iy = cellID - 100000 * ix;      
       if (hit->getEDep() > _amplMax) {
@@ -1119,7 +1119,7 @@ TrackerHitImpl * VTXDigitizer::ReconstructTrackerHit( SimTrackerHitImplVec & sim
         _clusterWidthX += deltaX*deltaX*hit->getEDep();
         deltaX = hit->getPosition()[1]-pos[1];
         _clusterWidthY += deltaX*deltaX*hit->getEDep();
-        int cellID = hit->getCellID();
+        int cellID = hit->getCellID0();
         int ix = cellID / 100000 ;
         int iy = cellID - 100000 * ix;
         if ((iy - iymin) < 20)

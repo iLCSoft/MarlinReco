@@ -1,5 +1,4 @@
 
-
 implementation of Kotera's strip split method, extended to hybrid case
 
 Daniel Jeans, 2/11/2010

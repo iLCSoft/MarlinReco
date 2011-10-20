@@ -38,6 +38,9 @@ using std::endl;
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
+// needed for uint
+#include <sys/types.h>
+
 using namespace lcio ;
 using namespace marlin ;
 

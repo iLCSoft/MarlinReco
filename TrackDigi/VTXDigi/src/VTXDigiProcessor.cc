@@ -359,8 +359,8 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
                     double zSmear  = gsl_ran_gaussian(_rng, _pointResoZ);
                     
                     //find smearing for x and y, so that hit is smeared along ladder plane
-                    smearedPos[0] = hitvec.x() + rPhiSmear * cos(ladderPhi);
-                    smearedPos[1] = hitvec.y() + rPhiSmear * sin(ladderPhi); 
+                    smearedPos[0] = hitvec.x() + rPhiSmear * cos(ladder_incline);
+                    smearedPos[1] = hitvec.y() + rPhiSmear * sin(ladder_incline); 
                     smearedPos[2] = hitvec.z() + zSmear;
                     break;
                     

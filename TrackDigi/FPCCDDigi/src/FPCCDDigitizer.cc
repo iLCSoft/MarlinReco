@@ -643,24 +643,21 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
   //                                               (1-BField->z()/BField->r())*mom->z());    
   double PI = M_PI;
   
-  double      radius = (tmom.r()/299.79*BField->r())*1e+01;
-  double         v_y = radius*mom->y()/sqrt(mom->x()*mom->x()+mom->z()*mom->z());
+  double      radius = (tmom.r()/(0.29979*BField->r()*fabs(Charge)))*1e+03;
   double init_pos[3] = {pos->x(),pos->y(),pos->z()};
-  double init_dir[3] = {mom->x()/sqrt(mom->x()*mom->x()+mom->z()*mom->z()), 0, mom->z()/sqrt(mom->x()*mom->x()+mom->z()*mom->z())};
-
+  double init_dir[3] = {mom->x()/tmom.r(),
+                        mom->y()/tmom.r(),
+                        mom->z()/tmom.r()};
+  double         v_y = radius*init_dir[1];
+  
   double offset_pos[3];
   double offset_phi;
-  double outphi;
-  double inphi;
-  double tmpasin = -(1/Charge)*asin(init_dir[0]/(Charge));    
-  double tmpacos = (1/Charge)*acos(init_dir[2]/(Charge));
+  double asin_offset = -(1/Charge)*asin(init_dir[0]/(Charge));    
+  double acos_offset =  (1/Charge)*acos(init_dir[2]/(Charge));
   
-  if( tmpasin >= 0){
-    tmpacos >= PI/2 ? offset_phi = tmpacos : offset_phi = tmpasin;
-  }
-  else{
-    tmpacos >= PI/2 ? offset_phi =-tmpacos : offset_phi = tmpasin;
-  }
+  asin_offset*Charge >= 0 ? offset_phi = acos_offset : offset_phi = -acos_offset;
+  int sign;
+  fabs(acos_offset*Charge) > PI/2 ? sign = -1 : sign = 1;
   
   offset_pos[0] = init_pos[0]-radius*cos(Charge*offset_phi);
   offset_pos[1] = init_pos[1]-v_y*offset_phi;
@@ -669,27 +666,30 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
   double outerZ_phi = 0;
   double innerZ_phi = 0;
   //Check if the track intesects with x-y plane. 
-  if( fabs((outerZ-offset_pos[2])/radius) <= 1. ) outerZ_phi = 1 / Charge*asin((outerZ-offset_pos[2])/radius) - offset_phi;
-  if( fabs((innerZ-offset_pos[2])/radius) <= 1. ) innerZ_phi = 1 / Charge*asin((innerZ-offset_pos[2])/radius) - offset_phi;
-  if(outerZ_phi >= innerZ_phi ){ outphi = innerZ_phi;  inphi = outerZ_phi;}
-  else{ outphi = outerZ_phi; inphi = innerZ_phi;}
+  if( fabs((outerZ-offset_pos[2])/radius) <= 1. ) outerZ_phi = 1 / Charge*asin((outerZ-offset_pos[2])/radius) - asin_offset;
+  if( fabs((innerZ-offset_pos[2])/radius) <= 1. ) innerZ_phi = 1 / Charge*asin((innerZ-offset_pos[2])/radius) - asin_offset;
+
+  double outphi = sign*outerZ_phi ;
+  double  inphi = sign*innerZ_phi ; 
 
   int flag = 0;
   if( radius*cos(Charge*(outphi + offset_phi)) + offset_pos[0] <= sximin
-      || radius*cos(Charge*(outphi + offset_phi)) + offset_pos[0] >= sximax
-      || v_y*(outphi + offset_phi) + offset_pos[1] <= szetamin
-      || v_y*(outphi + offset_phi) + offset_pos[1] >= szetamax ) flag = flag + 1;
+   || radius*cos(Charge*(outphi + offset_phi)) + offset_pos[0] >= sximax
+   || v_y*(outphi + offset_phi) + offset_pos[1] <= szetamin
+   || v_y*(outphi + offset_phi) + offset_pos[1] >= szetamax ) flag = flag + 1; // outerZ_phi will be modified.
   
   if( radius*cos(Charge*(inphi + offset_phi)) + offset_pos[0] <= sximin
-      || radius*cos(Charge*(inphi + offset_phi)) + offset_pos[0] >= sximax
-      || v_y*(inphi + offset_phi) + offset_pos[1] <= szetamin
-      || v_y*(inphi + offset_phi) + offset_pos[1] >= szetamax ) flag = flag + 2;
+   || radius*cos(Charge*(inphi + offset_phi)) + offset_pos[0] >= sximax
+   || v_y*(inphi + offset_phi) + offset_pos[1] <= szetamin
+   || v_y*(inphi + offset_phi) + offset_pos[1] >= szetamax ) flag = flag + 2; // innerZ_phi will be modified.
   
   if(flag != 0){
     
     double tmpphi;
-    double   sximin_phi = 1 / Charge*acos((sximin - offset_pos[0])/radius) - offset_phi;
-    double   sximax_phi = 1 / Charge*acos((sximax - offset_pos[0])/radius) - offset_phi;  
+    double   sximin_phi = 1e+8;
+    if(fabs((sximin-offset_pos[0])/radius) <= 1.) sximin_phi = sign*(1 / Charge*acos((sximin - offset_pos[0])/radius) - acos_offset);
+    double   sximax_phi = 1e+8;
+    if(fabs((sximax-offset_pos[0])/radius) <= 1.) sximax_phi = sign*(1 / Charge*acos((sximax - offset_pos[0])/radius) - acos_offset);  
     double szetamin_phi = (szetamin - offset_pos[1]) / v_y - offset_phi;
     double szetamax_phi = (szetamax - offset_pos[1]) / v_y - offset_phi;
     
@@ -710,7 +710,7 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
       szetamax_phi = 1e+8;
     }      
     if(flag == 1) outphi = tmpphi;
-    if(flag == 2) inphi = tmpphi;
+    if(flag == 2)  inphi = tmpphi;
     if(flag == 3){
       inphi = tmpphi;
       if(fabs(sximin_phi) <= fabs(sximax_phi) && fabs(sximin_phi) <= fabs(szetamin_phi) && fabs(sximin_phi) <= fabs(szetamax_phi)) tmpphi = sximin_phi;
@@ -729,12 +729,14 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
   in[2] = radius*sin(Charge*(inphi+offset_phi)) + offset_pos[2];
   
   double center_phi = (outphi+inphi)/2;
-  *pos = gear::Vector3D(radius*cos(Charge*(offset_phi+center_phi)) + offset_pos[0],
-                        v_y*(offset_phi+center_phi) + offset_pos[1],
-                        radius*sin(Charge*(offset_phi+center_phi)) + offset_pos[2]);
-  *mom = gear::Vector3D(-radius*sin(Charge*(offset_phi+center_phi)), v_y , radius*(Charge*(offset_phi+center_phi))); 
+  *pos = gear::Vector3D(radius*cos(Charge*(center_phi+offset_phi)) + offset_pos[0],
+                        v_y*(center_phi+offset_phi) + offset_pos[1],
+                        radius*sin(Charge*(center_phi+offset_phi)) + offset_pos[2]);
+  *mom = gear::Vector3D(-radius*sin(Charge*(center_phi+offset_phi)),
+                        v_y ,
+                        radius*cos(Charge*(center_phi+offset_phi))); 
   *outpos = gear::Vector3D(out[0], out[1], out[2]);
-  *inpos = gear::Vector3D(in[0], in[1], in[2]);
+  *inpos  = gear::Vector3D( in[0],  in[1],  in[2]);
   
   return ;
 }

@@ -391,7 +391,8 @@ void RecoMCTruthLinker::trackLinker(  LCCollection* mcpCol ,  LCCollection* trac
                                                 // times this true particle got mapped, ie. the
                                                 // number of hits it produced.
 
-      mother= dynamic_cast<MCParticle*>(it->first->getParents()[0]); // mother of the true partic.
+      
+      mother = ( it->first->getParents().size()!=0  ? dynamic_cast<MCParticle*>(it->first->getParents()[0])  : 0 )  ; // mother of the true particle.
 
       if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
                                                   // creating true particle: enter it into the list,

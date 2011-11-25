@@ -812,19 +812,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       ++numberOfhitsTreated;      
       
       for (unsigned int k = j+1; k<row_hits.size(); ++k){
-        
-//        // SJA:FIXME: the z separation here has to be dependant on theta, for highly dipped tracks the z-region affected will be considerably larger
-//        if(row_hits[k]->getZIndex() > row_hits[k]->getZIndex()+1){ // this should be > row_hits[k]->getZIndex+1+(0.5*steplength*(costheta)/zbinsize)
-//          break; // only compare hits in adjacent z bins
-//        }
-
-//        else if(row_hits[k]->getZIndex()==row_hits[j]->getZIndex() || fabs(row_hits[k]->getZ() - row_hits[j]->getZ()) < _doubleHitResZ ) {
 
         if(row_hits[k]->getPhiIndex() > (row_hits[j]->getPhiIndex())+2){ // SJA:FIXME: here we need an OR to catch the wrap around 
           break; // only compare hits in adjacent phi bins
         }
-        
-        
+                
         // look to see if the two hit occupy the same pad in phi or if not whether they are within the r-phi double hit resolution
         else if( row_hits[k]->getPhiIndex()==row_hits[j]->getPhiIndex() 
                  || 
@@ -880,42 +872,17 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
               pathlengthZ1 = _doubleHitResZ ; // assume the worst i.e. that the track is moving in z 
               pathlengthZ2 = _doubleHitResZ ; // assume the worst i.e. that the track is moving in z 
             }
+                        
+            double dZ = fabs(row_hits[j]->getZ() - row_hits[k]->getZ());
             
-            double dZ(0.0);
-            double dZAlt(0.0);
+            double spacial_coverage = 0.5*(pathlengthZ1 + pathlengthZ2) + _binningZ; 
             
-            double absZ1 = fabs(row_hits[j]->getZ()); 
-            double absZ2 = fabs(row_hits[k]->getZ());
-            
-            if ( absZ2 > absZ1 ) {
-              dZAlt = absZ2 - absZ1;
-            } else {
-              dZAlt = absZ1 - absZ2;
-            }
-            
-            if( absZ2 > absZ1 ) {
-              dZ = ( (absZ2 - 0.5*(pathlengthZ2 + _binningZ)) - (absZ1 + 0.5*(pathlengthZ1 + _binningZ)) );
-            } else {
-              dZ = ( (absZ1 - 0.5*(pathlengthZ1 + _binningZ)) - (absZ2 + 0.5*(pathlengthZ2 + _binningZ)) );
-            }
-            
-            if( dZAlt < dZ ) {
-              streamlog_out(DEBUG3) << "dZAlt " << dZAlt << endl;
-              streamlog_out(DEBUG3) << "dZ " << dZ << endl;
-              streamlog_out(DEBUG3) << "row_hits[j]->getZ() " << row_hits[j]->getZ() << endl;
-              streamlog_out(DEBUG3) << "row_hits[k]->getZ() " << row_hits[k]->getZ() << endl;
-              streamlog_out(DEBUG3) << "row_hits[j]->getPhi()*R " << row_hits[j]->getPhi()*row_hits[j]->getR() << endl;
-              streamlog_out(DEBUG3) << "row_hits[k]->getPhi()*R " << row_hits[k]->getPhi()*row_hits[k]->getR() << endl;  
-              streamlog_out(DEBUG3) << "pathlength 1 " << Hit1->getPathLength() << endl;  
-              streamlog_out(DEBUG3) << "pathlength 2 " << Hit2->getPathLength() << endl;  
-              streamlog_out(DEBUG3) << "pathlengthZ1 " << pathlengthZ1 << endl;  
-              streamlog_out(DEBUG3) << "pathlengthZ2 " << pathlengthZ2 << endl;  
-            }
-            
-            if( dZ < _doubleHitResZ ){                            
+            if( (dZ - spacial_coverage) < _doubleHitResZ ){                                          
+
               row_hits[j]->setAdjacent(row_hits[k]);
               row_hits[k]->setAdjacent(row_hits[j]);
               ++number_of_adjacent_hits;
+
             }
           } else {
             streamlog_out(DEBUG3) << "Hit1=" << Hit1 << "Hit2=" << Hit2 << endl; 
@@ -1146,7 +1113,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   }
 
   if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
-    // 	  push back the SimTHit for this TrackerHit
+    //    push back the SimTHit for this TrackerHit
     trkHit->rawHits().push_back( _tpcHitMap[seed_hit] );                        
     _trkhitVec->addElement( trkHit ); 
     _NRecTPCHits++;
@@ -1192,7 +1159,9 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   //  double R = 0;
   double lastR = 0;
 
-  for(unsigned int ihitCluster = 0; ihitCluster < hitsToMerge->size(); ++ihitCluster){
+  int number_of_hits_to_merge = hitsToMerge->size();
+  
+  for(unsigned int ihitCluster = 0; ihitCluster < number_of_hits_to_merge; ++ihitCluster){
     
     sumZ += hitsToMerge->at(ihitCluster)->getZ();
     sumPhi += hitsToMerge->at(ihitCluster)->getPhi();
@@ -1263,8 +1232,8 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   trkHit->setCovMatrix(covMat);      
   
   if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
-    // 	  push back the SimTHit for this TrackerHit
-    _trkhitVec->addElement( trkHit ); 
+    //    push back the SimTHit for this TrackerHit
+    //    _trkhitVec->addElement( trkHit ); 
     ++_nRechits;
   }
   

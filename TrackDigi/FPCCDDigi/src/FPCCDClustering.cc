@@ -219,11 +219,15 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
     
     if( _debug >=2 ) { std::cout << " nhit=" << nhit << std::endl; }
     if( nhit > 0 ) {  // Output Trackhit, if there are pixel hits
-      LCCollectionVec* trkHitVec = new LCCollectionVec( LCIO::TRACKERHIT );
-    
+
+      if(_new_tracking_system) _outColNameVTX = LCIO::TRACKERHITPLANE ;
+
+      LCCollectionVec* trkHitVec = new LCCollectionVec( _outColNameVTX );
+      
       makeTrackerHitVec(theData, *trkHitVec);
       evt->addCollection( trkHitVec, _outColNameVTX ) ;
       std::cout << "dumpEvent Clustering" << std::endl;
+      if( _debug >= 2 ) { LCTOOLS::dumpEvent( evt ) ;}
       for(int i = pHitCol->getNumberOfElements(); i>0; i--){
         pHitCol->removeElementAt(i-1);
       }
@@ -380,8 +384,8 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
     unsigned short int tilt=0;
     if( xiWidth==1 || zetaWidth==1 ) tilt=0;
     else{
-      if(maxXiHit->getZetaID()-minXiHit->getZetaID()>=0 && maxZetaHit->getXiID()-maxZetaHit->getXiID()>=0) tilt=1;
-      else if(maxXiHit->getZetaID()-minXiHit->getZetaID()<=0 && maxZetaHit->getXiID()-maxZetaHit->getXiID()<=0) tilt=2;
+      if(maxXiHit->getZetaID()-minXiHit->getZetaID()>0 && maxZetaHit->getXiID()-minZetaHit->getXiID()>0) tilt=1;
+      else if(maxXiHit->getZetaID()-minXiHit->getZetaID()<=0 && maxZetaHit->getXiID()-minZetaHit->getXiID()<=0) tilt=2;
       else tilt=0;
     }
 

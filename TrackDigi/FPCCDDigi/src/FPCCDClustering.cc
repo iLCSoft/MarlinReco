@@ -220,9 +220,7 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
     if( _debug >=2 ) { std::cout << " nhit=" << nhit << std::endl; }
     if( nhit > 0 ) {  // Output Trackhit, if there are pixel hits
 
-      if(_new_tracking_system) _outColNameVTX = LCIO::TRACKERHITPLANE ;
-
-      LCCollectionVec* trkHitVec = new LCCollectionVec( _outColNameVTX );
+      LCCollectionVec* trkHitVec = new LCCollectionVec( LCIO::TRACKERHITPLANE );
       
       makeTrackerHitVec(theData, *trkHitVec);
       evt->addCollection( trkHitVec, _outColNameVTX ) ;

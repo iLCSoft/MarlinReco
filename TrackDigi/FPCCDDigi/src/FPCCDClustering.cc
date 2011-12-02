@@ -10,12 +10,13 @@
 #include <EVENT/MCParticle.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <IMPL/TrackerHitPlaneImpl.h>
-#include <gear/VXDParameters.h>
-#include <gear/VXDLayerLayout.h>
+#include <gear/ZPlanarParameters.h>
+#include <gear/ZPlanarLayerLayout.h>
 #include <UTIL/CellIDEncoder.h>
 #include "UTIL/LCTOOLS.h"
 
 #include <ILDCellIDEncoding.h>
+#include <UTIL/ILDConf.h>
 
 #include <gsl/gsl_randist.h>
 
@@ -105,7 +106,7 @@ FPCCDClustering::FPCCDClustering() : Processor("FPCCDClustering") {
   registerProcessorParameter( "NewTrackingSystem",
                               "Use new tracking system",
                               _new_tracking_system,
-                              bool(false)); 
+                              bool(true)); 
   
   // Input collections
   registerInputCollection( LCIO::LCGENERICOBJECT,
@@ -145,8 +146,8 @@ void FPCCDClustering::InitGeometry()
 { 
 // Save frequently used parameters.
 
-  const gear::VXDParameters &gearVXD = Global::GEAR->getVXDParameters();
-  const gear::VXDLayerLayout &layerVXD=gearVXD.getVXDLayerLayout();
+  const gear::ZPlanarParameters &gearVXD = Global::GEAR->getVXDParameters();
+  const gear::ZPlanarLayerLayout &layerVXD=gearVXD.getVXDLayerLayout();
 
   _nLayer = layerVXD.getNLayers() ;
   _geodata.resize(_nLayer);
@@ -211,7 +212,6 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
     }
   }
   if( pHitCol != 0 ){    
-
     
     FPCCDData  theData(_nLayer, _maxLadder);  // prepare object to make pixelhits
     int nhit=theData.unpackPixelHits(*pHitCol);
@@ -226,8 +226,9 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
       
       makeTrackerHitVec(theData, *trkHitVec);
       evt->addCollection( trkHitVec, _outColNameVTX ) ;
-      std::cout << "dumpEvent Clustering" << std::endl;
-      if( _debug >= 2 ) { LCTOOLS::dumpEvent( evt ) ;}
+      if( _debug >= 2 ) {
+        std::cout << "dumpEvent FPCCDClustering" << std::endl;
+        LCTOOLS::dumpEvent( evt ) ;}
       for(int i = pHitCol->getNumberOfElements(); i>0; i--){
         pHitCol->removeElementAt(i-1);
       }
@@ -331,9 +332,7 @@ void FPCCDClustering::makeTrackerHitVec(FPCCDData &pHitCol, LCCollectionVec &trk
 //=============================================================================================
 void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &clusterVec, LCCollectionVec &trkHitVec)
 {
-  
-  CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( ILDCellIDEncoding::encoder_string , &trkHitVec ) ;
-  
+  CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( lcio::ILDCellID0::encoder_string , &trkHitVec ) ;
   for(unsigned int ic=0;ic<clusterVec.size();ic++) {
     FPCCDCluster_t *cluster=clusterVec[ic];
     double   xiene = 0.0;
@@ -400,19 +399,22 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
                 + eta0*_geodata[layer].sinphi[ladder];
     newpos[2] = zetaave-_geodata[layer].hlength;
     //store hit variables
- 
+
+    float pointResoRPhi = (sqrt((float)(xiWidth + 1.5)) - 1)*1e-3;
+    float pointResoZ    = (sqrt((float)(xiWidth + 1.5)) - 1)*1e-3;
+    if( xiWidth == 1 )   pointResoRPhi = _pointResoRPhi;
+    if( zetaWidth == 1 ) pointResoZ    = _pointResoZ;
+    
   
     if ( _new_tracking_system ) {
       TrackerHitPlaneImpl* trkHit = new TrackerHitPlaneImpl ; 
       trkHit->setType( 100 + layer);
 
-      cellid_encoder[ ILDCellIDEncoding::Fields::subdet ] = ILDCellIDEncoding::DetID::VXD ;
-      cellid_encoder[ ILDCellIDEncoding::Fields::layer  ] = layer ;
-      cellid_encoder[ ILDCellIDEncoding::Fields::module ] = ladder ;
-      //int side = 1;
-      //SJA:FIXME: for now don't use side   
-      //   (*cellid_encoder)[ ILDCellIDEncoding::Fields::side   ] = side ;      
-      cellid_encoder[ ILDCellIDEncoding::Fields::side   ] = 0 ;      
+      cellid_encoder[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::VXD ;
+      cellid_encoder[ lcio::ILDCellID0::side   ] = 0 ;
+      cellid_encoder[ lcio::ILDCellID0::layer  ] = layer ;
+      cellid_encoder[ lcio::ILDCellID0::module ] = ladder ;
+      cellid_encoder[ lcio::ILDCellID0::sensor ] = 0 ;      
      
       cellid_encoder.setCellID( trkHit );
       
@@ -435,8 +437,8 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
       trkHit->setU( u_direction ) ;
       trkHit->setV( v_direction ) ;
       
-      trkHit->setdU( _pointResoRPhi ) ;
-      trkHit->setdV( _pointResoZ ) ;      
+      trkHit->setdU( pointResoRPhi ) ;
+      trkHit->setdV( pointResoZ ) ;      
       
       trkHit->setPosition( newpos ) ;
       trkHit->setEDep( enesum );
@@ -448,8 +450,8 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
       trkHit->setPosition( newpos ) ;
       trkHit->setEDep( enesum );
       trkHit->setType( 101 + layer);
-      
-      float covMat[TRKHITNCOVMATRIX]={0.,0.,  _pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ}; // Resolution depends on theta.
+  
+      float covMat[TRKHITNCOVMATRIX]={0.,0., pointResoRPhi*pointResoRPhi,0.,0.,pointResoZ*pointResoZ}; // Resolution depends on theta.
       trkHit->setCovMatrix(covMat);
       trkHitVec.addElement( trkHit );
     }

@@ -14,8 +14,8 @@
 #include <gear/GEAR.h>
 #include <gearimpl/Vector3D.h>
 #include <gear/BField.h>
-#include <gear/VXDParameters.h>
-#include <gear/VXDLayerLayout.h>
+#include <gear/ZPlanarParameters.h>
+#include <gear/ZPlanarLayerLayout.h>
 
 /** ======= FPCCDDigitizer ========== <br>
  * Produces VTXPixelHits collection from VXDCollection collections. <br> 

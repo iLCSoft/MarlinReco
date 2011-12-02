@@ -14,6 +14,8 @@
 #include <IMPL/TrackerHitImpl.h>
 #include <IMPL/TrackerHitPlaneImpl.h>
 #include <EVENT/MCParticle.h>
+#include <UTIL/CellIDEncoder.h>
+#include <UTIL/ILDConf.h>
 #include "UTIL/LCTOOLS.h"
 
 #include <cmath>
@@ -52,26 +54,6 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
   _description = "FPCCDDigitizer should create FPCCD's VTXPixelHits from SimTrackerHits" ;
   
   // register steering parameters: name, description, class-variable, default value
-
-  registerProcessorParameter( "PointResolutionRPhi_SIT" ,
-                              "R-Phi Resolution in SIT"  ,
-                              _pointResoRPhi_SIT ,
-                               float(0.010)) ;
-	
-  registerProcessorParameter( "PointResolutionZ_SIT" , 
-                              "Z Resolution in SIT" ,
-                              _pointResoZ_SIT ,
-                              float(0.010));
-
-  registerProcessorParameter( "PointResolutionRPhi_SET" ,
-                              "R-Phi Resolution in SET"  ,
-                              _pointResoRPhi_SET ,
-                               float(0.010)) ;
-	
-  registerProcessorParameter( "PointResolutionZ_SET" , 
-                              "Z Resolution in SET" ,
-                              _pointResoZ_SET ,
-                              float(0.010));
 
   registerProcessorParameter( "Debug",
                               "Debugging option",
@@ -113,10 +95,6 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                               _ladder_Number_encoded_in_cellID ,
                               bool(true));
 
-  registerProcessorParameter( "VTX_Only" ,
-                              "Use digitizer for SIT and SET another",
-                              _vtx_only,
-                              bool(false));
   
   // Input collections
   registerInputCollection( LCIO::SIMTRACKERHIT,
@@ -124,18 +102,6 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                            "Name of the VTX SimTrackerHit collection"  ,
                            _colNameVTX ,
                            std::string("VXDCollection") ) ;
-  
-  registerInputCollection( LCIO::SIMTRACKERHIT,
-                           "SITCollectionName" , 
-                           "Name of the SIT SimTrackerHit collection"  ,
-                           _colNameSIT ,
-                           std::string("SITCollection") ) ;
-  
-  registerInputCollection( LCIO::SIMTRACKERHIT,
-                           "SETCollectionName" , 
-                           "Name of the SET SimTrackerHit collection"  ,
-                           _colNameSET ,
-                           std::string("SETCollection") ) ;
   
   
   // Output collections
@@ -145,17 +111,6 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                             _outColNameVTX ,
                             std::string("VTXPixelHits") ) ;
   
-  registerOutputCollection( LCIO::TRACKERHIT,
-                            "SITHitCollection" , 
-                            "Name of the SIT TrackerHit output collection"  ,
-                            _outColNameSIT ,
-                            std::string("SITTrackerHits") ) ;
-  
-  registerOutputCollection( LCIO::TRACKERHIT,
-                            "SETHitCollection" , 
-                            "Name of the SET TrackerHit output collection"  ,
-                            _outColNameSET ,
-                            std::string("SETTrackerHits") ) ;
   
   
 }
@@ -177,11 +132,8 @@ void FPCCDDigitizer::init() {
 void FPCCDDigitizer::InitGeometry() 
 { 
   // Save frequently used parameters.
-
-//   const gear::VXDParameters &gearVXD = Global::GEAR->getVXDParameters();
-//   const gear::VXDLayerLayout &layerVXD = gearVXD.getVXDLayerLayout();
-  const gear::VXDParameters &gearVXD = Global::GEAR->getVXDParameters();
-  const gear::VXDLayerLayout &layerVXD = gearVXD.getVXDLayerLayout();
+  const gear::ZPlanarParameters &gearVXD = Global::GEAR->getVXDParameters();
+  const gear::ZPlanarLayerLayout &layerVXD = gearVXD.getVXDLayerLayout();
   _nLayer = layerVXD.getNLayers() ;
   _geodata.resize(_nLayer);
   _maxLadder = 0;
@@ -217,94 +169,43 @@ void FPCCDDigitizer::processRunHeader( LCRunHeader* run) {
 // =====================================================================
 void FPCCDDigitizer::modifyEvent( LCEvent * evt )
 {
-
-  int nCol = 3;
-  if(_vtx_only) nCol = 1;
   
-  for (int iColl=0; iColl<nCol; ++iColl) {
-
-    LCCollection* col = 0 ;
-
-    try{
-      if (iColl==0)
-        col = evt->getCollection( _colNameVTX ) ;
-      else if (iColl==1)
-        col = evt->getCollection( _colNameSIT ) ;
-      else 
-        col = evt->getCollection( _colNameSET ) ;
+  LCCollection* col = 0 ;
+  
+  try{
+    col = evt->getCollection( _colNameVTX ) ;
+  }
+  catch(DataNotAvailableException &e){
+    if (_debug == 1) {   
+      std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
     }
-    catch(DataNotAvailableException &e){
-      if (_debug == 1) {
-        if (iColl==0)
-          std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
-        else if (iColl==1)
-          std::cout << "Collection " << _colNameSIT.c_str() << " is unavailable in event " << _nEvt << std::endl;
-        else 
-          std::cout << "Collection " << _colNameSET.c_str() << " is unavailable in event " << _nEvt << std::endl;
-      }
-    }
+  }
+  
+  if( col != 0 ){    
 
-    if( col != 0 ){    
-      
-      LCCollectionVec* trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
+    LCCollectionVec* fpccdDataVec = new LCCollectionVec( LCIO::LCGENERICOBJECT )  ;
 
-      if(iColl==0){
-      
-        LCCollectionVec* fpccdDataVec = new LCCollectionVec( LCIO::LCGENERICOBJECT )  ;
-        
-        FPCCDData theData(_nLayer, _maxLadder);  // prepare object to make pixelhits
-        
-        int nSimHits = col->getNumberOfElements()  ;
-        
-        // Loop over all VXD hits
-        
-        for(int i=0; i< nSimHits; i++){
-          SimTrackerHitImpl* SimTHitImpl = dynamic_cast<SimTrackerHitImpl*>( col->getElementAt( i ) ) ;
-          
-          makePixelHits(SimTHitImpl,  theData);        
+    FPCCDData theData(_nLayer, _maxLadder);  // prepare object to make pixelhits
+    
+    int nSimHits = col->getNumberOfElements()  ;
 
-        } // End of loop over all SimTrackerHits
+    // Loop over all VXD hits
+    
+    for(int i=0; i< nSimHits; i++){
+      SimTrackerHitImpl* SimTHitImpl = dynamic_cast<SimTrackerHitImpl*>( col->getElementAt( i ) ) ;
 
-        theData.packPixelHits( *fpccdDataVec );
+      makePixelHits(SimTHitImpl,  theData);        
 
-        evt->addCollection( fpccdDataVec , _outColNameVTX ) ;
-        if(_debug == 1){
-        std::cout << "dumpEvent Digitizer" << std::endl;
-        LCTOOLS::dumpEvent( evt ) ;
-        }
-      }
-      else{
-        
-        if( iColl == 1 ){
-          _pointResoRPhi = _pointResoRPhi_SIT;
-          _pointResoZ = _pointResoZ_SIT;               
-        }
-        else{
-          _pointResoRPhi = _pointResoRPhi_SET;
-          _pointResoZ = _pointResoZ_SET;               
-        }
-        for(int j = 0; j<col->getNumberOfElements(); j++){
-          SimTrackerHit* SimTHit = dynamic_cast<SimTrackerHit*>( col->getElementAt( j ) );
-          
-          TrackerHitImpl* trkHit = new TrackerHitImpl ;
-          
-          trkHit->setPosition( (double*)SimTHit->getPosition() );
-          trkHit->setEDep( SimTHit->getEDep() );
-          trkHit->setType( 400 + SimTHit->getCellID0() );
-          float covMat[TRKHITNCOVMATRIX] = {0.,0.,_pointResoRPhi*_pointResoRPhi,0.,0.,_pointResoZ*_pointResoZ};
-          trkHit->setCovMatrix( covMat );
-          
-          trkhitVec->addElement( trkHit );
-        }
-      
-        if( iColl == 1)
-          evt->addCollection( trkhitVec , _outColNameSIT ) ;
-        else  if( iColl == 2)
-          evt->addCollection( trkhitVec , _outColNameSET );
-        
-    }
-      } // End of process when VXD has hits
-  }  
+    } // End of loop over all SimTrackerHits
+    
+    theData.packPixelHits( *fpccdDataVec );
+    
+    evt->addCollection( fpccdDataVec , _outColNameVTX ) ;
+    if(_debug == 1){
+      std::cout << "dumpEvent Digitizer" << std::endl;
+      LCTOOLS::dumpEvent( evt ) ;
+    }    
+  } // End of process when VXD has hits
   _nEvt ++ ;
 }
 
@@ -355,9 +256,15 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   int layer = 0 ;
   int ladderID = 0 ;
   const int celId = SimTHit->getCellID0();
-  
+
   if(_ladder_Number_encoded_in_cellID) {
-    layer  = ( celId / 10000 ) - 1 ;
+    streamlog_out( DEBUG3 ) << "Get Layer Number using StandardILD Encoding from ILDConf.h : celId = " << celId << std::endl;
+    UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
+    encoder.setValue(celId) ;
+    layer    = encoder[lcio::ILDCellID0::layer] ;
+    ladderID = encoder[lcio::ILDCellID0::module] ;
+    streamlog_out( DEBUG3 ) << "layer Number = " << layer << std::endl;
+    streamlog_out( DEBUG3 ) << "ladder Number = " << ladderID << std::endl;
   }
   else{
     layer = celId  - 1 ;
@@ -367,14 +274,10 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   // check which ladder hit on
   //----
 
-  if(_ladder_Number_encoded_in_cellID) {
-    ladderID = ( celId % ( 10000 * (layer + 1) ) ) -1 ;
+  if( !_ladder_Number_encoded_in_cellID ) {    
+    ladderID = getLadderID( HitPosInMokka, layer);
   }
-  else{
-    
-    ladderID = getLadderID( HitPosInMokka, layer);    
-  }
-    
+  
   double  sximin = _geodata[layer].sximin;
   double hlength = _geodata[layer].hlength;
   
@@ -383,7 +286,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   //----
   
   gear::Vector3D* MomAtHitPos = new gear::Vector3D(SimTHit->getMomentum()[0],SimTHit->getMomentum()[1],SimTHit->getMomentum()[2]);
-  
+
   double momphi = MomAtHitPos->phi();
   if(MomAtHitPos->y()<0) momphi += 2*M_PI;
   gear::Vector3D origin;
@@ -406,7 +309,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
                                                          _geodata[layer].cosphi[ladderID]*BField->x()+_geodata[layer].sinphi[ladderID]*BField->y());
   gear::Vector3D* PosOutFromLadder = new gear::Vector3D(0,0,0);
   gear::Vector3D*    PosInToLadder = new gear::Vector3D(0,0,0);
-  
+
   if( sqrt(MomAtLocalHitPos->x()*MomAtLocalHitPos->x() + MomAtLocalHitPos->z()*MomAtLocalHitPos->z()) < _momCut*1e-03){ // transvers momentum criteria for helix approximation
     //----
     // Helix Fitting
@@ -438,7 +341,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
       
       makeNewSimTHit(SimTHit, LocalHitPos, MomAtLocalHitPos, layer, ladderID, PathLength);
     }
-    
+
     //----
     // get hit points incoming and outgoiong each pixel (@ edge of pixel)
     //----
@@ -852,7 +755,7 @@ pair< double, double>* FPCCDDigitizer::FindPixel(gear::Vector3D* fst, gear::Vect
   int i_fst_y = 1000;
   int i_nxt_y = -1000;
   
-  double limit = -1e-5;
+  double limit = -0.0;
   for(int i=-1; i<=_eloopx-_sloopx+1; i++){
     if( ( fst_x - sximin-(_sloopx + i)*_pixelSize) >= limit
      && (-fst_x + sximin+(_sloopx+i+1)*_pixelSize) >= limit )
@@ -864,6 +767,7 @@ pair< double, double>* FPCCDDigitizer::FindPixel(gear::Vector3D* fst, gear::Vect
   }
   if( i_x == -1000 ){
     cout << "i_x == -1000" << endl;
+    cout << "pixel not found!" << endl;
   }
   for(int i=-1; i<=_eloopy-_sloopy+1; i++){
     if( ( fst_y + hlength-(_sloopy + i)*_pixelSize) >= limit
@@ -876,7 +780,9 @@ pair< double, double>* FPCCDDigitizer::FindPixel(gear::Vector3D* fst, gear::Vect
   }
   if( i_y == -1000 ){
     cout << "i_y == -1000" << endl;
+    cout << "pixel not found!" << endl;
   }
+
   double pxl_cx = sximin+(_sloopx+i_x + 1)*_pixelSize+_pixelSize/2. ;
   double pxl_cy =-hlength+(_sloopy+i_y + 1)*_pixelSize+_pixelSize/2.;
 

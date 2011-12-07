@@ -5,6 +5,32 @@
 ===============================
 
  --------
+| v01-00 |
+ --------
+
+	- General
+	  - New release for preparation for the DBD.
+
+	- Added hybridEcalSplitter (K. Kotera)
+
+	- SiStripDigi: Processor to digitize and clusterize hits for the FTD subdtector
+                       First release of the code, still missing full validation; (J. Duarte)
+
+	- VTXDigiProcessor: corrected smearing to be along ladder, previously it was incorrectly perpendicular to the ladder, 
+                            due to the use of the ladders phi angle instead of it angle of inclination
+
+	- FPCCDDigitizer: Fixed bug in helix approximation.- in previous version the intersection between particle and ladder 
+                          could be rotated to the opposite side.
+
+        - RecoMCTruthLinker: Bug fix: protect against undefined mother pointer (T.Tanabe )
+	  		     Modified to be able to use TrackerHit relations, though not yet the default. 
+			     Enable by setting UseTrackerHitRelations true in steering file
+
+	- TPCDigiProcessor: Corrected problem where hits from alternative z halves could be considered to be adjacent
+	  		    Removed SimHits from RawHits and Used Relations. The deprecated feature to store them in the 
+			    rawhits can be enabled by setting UseRawHitsToStoreSimhitPointer true. 
+
+ --------
 | v00-30 |
  --------
 

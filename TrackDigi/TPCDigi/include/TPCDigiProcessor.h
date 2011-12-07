@@ -157,9 +157,15 @@ protected:
   std::string _padRowHitColName ;
   std::string _spacePointColName ;
   std::string _lowPtHitscolName ;
-  std::string _TPCTrackerHitsCol ;
-  
 
+  
+  /** Output collection name.
+   */
+  std::string _TPCTrackerHitsCol ;
+  std::string _outRelColName ;
+
+  bool _use_raw_hits_to_store_simhit_pointer;
+  
   int _rejectCellID0;
   float _padWidth;
 
@@ -204,6 +210,7 @@ protected:
   std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap;
 
   LCCollectionVec* _trkhitVec;
+  LCCollectionVec* _relCol;  
   CellIDEncoder<TrackerHitImpl>* _cellid_encoder ;
 
   int  _NSimTPCHits;

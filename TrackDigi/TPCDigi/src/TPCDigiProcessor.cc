@@ -16,7 +16,7 @@
 #include"constants.h"
 #include "LCCylinder.h"
 #include <IMPL/LCFlagImpl.h>
-
+#include <IMPL/LCRelationImpl.h>
 
 //stl exception handler
 #include <stdexcept>
@@ -84,6 +84,17 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                            "Name of the Output TrackerHit collection"  ,
                            _TPCTrackerHitsCol ,
                            std::string("TPCTrackerHits") ) ;
+  
+  registerOutputCollection(LCIO::LCRELATION,
+                           "SimTrkHitRelCollection",
+                           "Name of TrackerHit SimTrackHit relation collection",
+                           _outRelColName,
+                           std::string("TPCTrackerHitRelations"));
+  
+  registerProcessorParameter("UseRawHitsToStoreSimhitPointer",
+                             "Store the pointer to the SimTrackerHits in RawHits (deprecated) ",
+                             _use_raw_hits_to_store_simhit_pointer,
+                             bool(false));
   
   registerProcessorParameter( "PointResolutionPadPhi" ,
                              "Pad Phi Resolution constant in TPC"  ,
@@ -365,8 +376,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   gsl_rng_set( _random, Global::EVENTSEEDER->getSeed(this) ) ;   
   streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << " for event number "<< evt->getEventNumber() << std::endl;
-  
-  int numberOfVoxelsCreated(0);
+
+   int numberOfVoxelsCreated(0);
   
   _NSimTPCHits = 0;
   _NBackgroundSimTPCHits = 0;
@@ -384,7 +395,21 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   _tpcHitMap.clear();
   _tpcRowHits.clear();
   
-  if(firstEvent==true) streamlog_out(MESSAGE) << "TPCDigiProcessor called for first event" << endl;
+  if(firstEvent==true) {
+    streamlog_out(MESSAGE) << "TPCDigiProcessor called for first event" << endl;
+    if (! _use_raw_hits_to_store_simhit_pointer ) {
+
+      streamlog_out( DEBUG4 ) << "The relations to SimTrackerHits are now stored in relation collection " << _outRelColName << "\n SimTrackerHits are no longer stored in RawTrackerHits. Enable this deprecated feature by setting UseRawHitsToStoreSimhitPointer to true in steering file." << std::endl;
+
+    }
+    else{
+      
+        streamlog_out( DEBUG4 ) << "SimTrackerHits will be stored in RawTrackerHits. This is a deprecated please use the relations stored in " << _outRelColName << std::endl;
+      
+    }
+    
+
+  }
   
   firstEvent = false ;
   
@@ -400,6 +425,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   // created the collection which will be written out 
   _trkhitVec = new LCCollectionVec( LCIO::TRACKERHIT )  ;
+  _relCol = new LCCollectionVec(LCIO::LCRELATION);
+
+  // to store the weights
+  LCFlagImpl lcFlag(0) ;
+  lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
+  _relCol->setFlag( lcFlag.getFlag()  ) ;
+
   _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( lcio::ILDCellID0::encoder_string , _trkhitVec ) ;
   
   // first deal with the pad-row based hits from Mokka 
@@ -960,7 +992,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   // add the collection to the event
   evt->addCollection( _trkhitVec , _TPCTrackerHitsCol ) ;
-  
+  evt->addCollection( _relCol , _outRelColName ) ;
+
   // delete voxels
   for (unsigned int i = 0; i<_tpcRowHits.size(); ++i){
     vector <Voxel_tpc *>* current_row = &_tpcRowHits.at(i);  
@@ -1047,7 +1080,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   double tpcRPhiRes = seed_hit->getRPhiRes();
   double tpcZRes = seed_hit->getZRes();
-  
+ 
   CLHEP::Hep3Vector point(seed_hit->getX(),seed_hit->getY(),seed_hit->getZ());
   
   double unsmearedPhi = point.phi();
@@ -1064,7 +1097,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   double pos[3] = {point.x(),point.y(),point.z()}; 
   trkHit->setPosition(pos);
   trkHit->setEDep(seed_hit->getEDep());
-  trkHit->setType( 500 );
+  //  trkHit->setType( 500 );
   
   // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
   int side = 1 ;
@@ -1114,7 +1147,18 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
     //    push back the SimTHit for this TrackerHit
-    trkHit->rawHits().push_back( _tpcHitMap[seed_hit] );                        
+
+    if (_use_raw_hits_to_store_simhit_pointer) {
+      trkHit->rawHits().push_back( _tpcHitMap[seed_hit] );
+    }                        
+
+    LCRelationImpl* rel = new LCRelationImpl;
+    
+    rel->setFrom (trkHit);
+    rel->setTo (_tpcHitMap[seed_hit]);
+    rel->setWeight( 1.0 );
+    _relCol->addElement(rel);
+    
     _trkhitVec->addElement( trkHit ); 
     _NRecTPCHits++;
   }
@@ -1168,8 +1212,17 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
     sumEDep += hitsToMerge->at(ihitCluster)->getEDep();
     hitsToMerge->at(ihitCluster)->setIsMerged();
     lastR = hitsToMerge->at(ihitCluster)->getR();
+
+    if (_use_raw_hits_to_store_simhit_pointer) {
+      trkHit->rawHits().push_back( _tpcHitMap[hitsToMerge->at(ihitCluster)] );
+    }                        
+
+    LCRelationImpl* rel = new LCRelationImpl;
     
-    trkHit->rawHits().push_back( _tpcHitMap[ hitsToMerge->at(ihitCluster) ] );                        
+    rel->setFrom (trkHit);
+    rel->setTo (_tpcHitMap[ hitsToMerge->at(ihitCluster) ]);
+    rel->setWeight( float(1.0/number_of_hits_to_merge) );
+    _relCol->addElement(rel);
     
   }
   
@@ -1186,7 +1239,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   double pos[3] = {mergedPoint->getX(),mergedPoint->getY(),mergedPoint->getZ()}; 
   trkHit->setPosition(pos);
   trkHit->setEDep(sumEDep);
-  trkHit->setType( 500 );
+  //  trkHit->setType( 500 );
   
   // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
   int side = 1 ;
@@ -1231,11 +1284,12 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   trkHit->setCovMatrix(covMat);      
   
-  if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
-    //    push back the SimTHit for this TrackerHit
-    //    _trkhitVec->addElement( trkHit ); 
-    ++_nRechits;
-  }
+  //  if(pos[0]*pos[0]+pos[1]*pos[1]>0.0){ 
+  _trkhitVec->addElement( trkHit ); 
+  ++_nRechits;
+  //  } else {
+  //    delete trkHit;
+  //  }
   
   delete mergedPoint;
   
@@ -1330,11 +1384,11 @@ double TPCDigiProcessor::getPadPhi( CLHEP::Hep3Vector *thisPoint, CLHEP::Hep3Vec
   CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
   
   // check that the points are not the same, at least at the level of a tenth of a micron 
-  if( fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05 
+  if( (fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05) 
      ||
-     fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
+     (fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05) 
      ||
-     fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
+     (fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05) 
      ) {
     
     streamlog_out(WARNING) << " TPCDigiProcessor::getPadPhi "  
@@ -1394,11 +1448,11 @@ double TPCDigiProcessor::getPadTheta(CLHEP::Hep3Vector* firstPoint, CLHEP::Hep3V
   CLHEP::Hep2Vector lastPointRPhi(lastPoint->x(),lastPoint->y());
   
   // check that the points are not the same, at least at the level of a tenth of a micron 
-  if( fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05 
+  if( (fabs( firstPointRPhi.x() - middlePointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - middlePointRPhi.y() ) < 1.e-05) 
      ||
-     fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
+     (fabs( middlePointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( middlePointRPhi.y() - lastPointRPhi.y() ) < 1.e-05) 
      ||
-     fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05 
+     (fabs( firstPointRPhi.x() - lastPointRPhi.x() ) < 1.e-05  && fabs( firstPointRPhi.y() - lastPointRPhi.y() ) < 1.e-05) 
      ) {
     
     streamlog_out(WARNING) << " TPCDigiProcessor::getPadTheta "  

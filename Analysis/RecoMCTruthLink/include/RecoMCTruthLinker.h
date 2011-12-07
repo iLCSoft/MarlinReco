@@ -6,9 +6,18 @@
 #include <EVENT/MCParticle.h>
 #include <IMPL/LCCollectionVec.h>
 #include "lcio.h"
+#include "EVENT/TrackerHit.h"
+//#include <UTIL/BitField64.h>
+#include <UTIL/ILDConf.h>
+
 
 #include <set>
 
+
+namespace UTIL{
+  class BitField64 ;
+  class LCRelationNavigator ;
+}
 
 using namespace lcio ;
 
@@ -77,7 +86,15 @@ using namespace lcio ;
  * @param MCParticleCollectionName      the MCParticle input collection
  * @param trackCollectionName           the ReconstructedParticles input collection
  * @param clusterCollectionName         the ReconstructedParticles input collection
- * @param SimTrackerHitRelation         relation betweeen simulated and digitized tracker hits
+
+ * @param UseTrackerHitRelations          use the rel collection for TrackerHits default false
+ * @param VXDTrackerHitRelInputCollection the rel collection for VXD TrackerHit collection 
+ * @param SITTrackerHitRelInputCollection the rel collection for SIT TrackerHit collection 
+ * @param FTDTrackerHitRelInputCollection the rel collection for FTD TrackerHit collection 
+ * @param TPCTrackerHitRelInputCollection the rel collection for TPC TrackerHit collection 
+ * @param SETTrackerHitRelInputCollection the rel collection for SET TrackerHit collection 
+ * @param ETDTrackerHitRelInputCollection the rel collection for ETD TrackerHit collection 
+
  * @param SimClusterHitRelation         relation betweeen simulated and digitized cluster hits
  * @param KeepDaughtersPDG              absolute PDG code of particles where daughter are to be kept (default: gamma,pi0,K0_S)
  * @param FullRecoRelation              Select which option to use for the reconstructed link ( default: full relation)
@@ -92,6 +109,8 @@ using namespace lcio ;
  * @param CalohitMCTruthLinkName        name of output collection - default is "CalohitMCTruthLink"
  * @param MCParticlesSkimmedName        skimmed MCParticle collection - default is "MCParticlesSkimmed"
 
+ * @param UsingParticleGun              If Using Particle Gun Ignore Gen Stat - default is false
+ 
  * 
  *  @author M. Berggren, DESY, based on RecoMCTruthLinker v 1.0 by F. Gaede, DESY. 
  *  @version $Id$ 
@@ -123,7 +142,7 @@ public:
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  virtual void trackLinker(  LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol)  ;
+  virtual void trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol)  ;
   virtual void clusterLinker(  LCCollection* mcpCol ,  LCCollection* clusterCol, 
                                LCCollection* cHitRelCol , 
                                LCCollection** ctrcol, LCCollection** chittrlcol)  ;
@@ -142,6 +161,12 @@ protected:
   
   void keepMCParticle( MCParticle* mcp ) ; 
 
+  const LCObjectVec* getSimHits( TrackerHit* trkhit, const FloatVec* weights = NULL);
+  std::map<int, LCRelationNavigator*> _hit_rels_map;
+  
+  UTIL::BitField64* _encoder;
+  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::ILDCellID0::subdet]; }
+
 
   /**  input collection names */
 
@@ -149,9 +174,24 @@ protected:
   std::string _trackCollectionName ;
   std::string _clusterCollectionName ;
   std::string _recoParticleCollectionName ;
-  std::string _trackHitRelationName;
   std::string _caloHitRelationName;
 
+  std::string _vxdTrackerHitRelInputColName;
+  std::string _ftdTrackerHitRelInputColName;
+  std::string _sitTrackerHitRelInputColName;
+  std::string _tpcTrackerHitRelInputColName;
+  std::string _setTrackerHitRelInputColName;
+  std::string _etdTrackerHitRelInputColName;
+  
+  LCRelationNavigator* _navVXDTrackerHitRel;
+  LCRelationNavigator* _navSITTrackerHitRel;
+  LCRelationNavigator* _navFTDTrackerHitRel;
+  LCRelationNavigator* _navTPCTrackerHitRel;
+  LCRelationNavigator* _navSETTrackerHitRel;
+  LCRelationNavigator* _navETDTrackerHitRel;
+  
+  bool _use_tracker_hit_relations;
+  
   /**  output collection names */
   std::string _trackMCTruthLinkName;
   std::string _clusterMCTruthLinkName;
@@ -166,6 +206,8 @@ protected:
   float _eCutMeV ;
   bool   _saveBremsstrahlungPhotons;
   float _bremsstrahlungEnergyCut;
+  
+  bool _using_particle_gun;
   
   IntVec _pdgVec ;
 

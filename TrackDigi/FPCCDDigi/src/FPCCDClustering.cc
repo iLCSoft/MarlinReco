@@ -425,8 +425,8 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
       
       trkHit->setCellID1(cellid1);
       float u_direction[2] ;
-      u_direction[0] = _geodata[layer].ladder_incline[ladder] ;
-      u_direction[1] = 0.0 ;
+      u_direction[0] = M_PI/2.0;
+      u_direction[1] = _geodata[layer].ladder_incline[ladder] ;
 
       float v_direction[2] ;
       v_direction[0] = 0.0 ;

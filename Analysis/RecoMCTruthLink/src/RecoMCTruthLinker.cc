@@ -459,14 +459,7 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
       }
     }
     
-    
-    delete _navVXDTrackerHitRel; _navVXDTrackerHitRel = NULL;
-    delete _navSITTrackerHitRel; _navSITTrackerHitRel = NULL;
-    delete _navFTDTrackerHitRel; _navFTDTrackerHitRel = NULL;
-    delete _navTPCTrackerHitRel; _navTPCTrackerHitRel = NULL;
-    delete _navSETTrackerHitRel; _navSETTrackerHitRel = NULL;
-    delete _navETDTrackerHitRel; _navETDTrackerHitRel = NULL;
-    
+        
     if( nHit == 0 ){
       
       streamlog_out( WARNING ) << " No simulated tracker hits found. Set UseTrackerHitRelations to true in steering file to enable using TrackerHit relations if they are available." <<  std::endl ;
@@ -536,6 +529,15 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   streamlog_out( DEBUG4 ) << " track linking complete, create collection " << std::endl;
   
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
+
+
+  delete _navVXDTrackerHitRel; _navVXDTrackerHitRel = NULL;
+  delete _navSITTrackerHitRel; _navSITTrackerHitRel = NULL;
+  delete _navFTDTrackerHitRel; _navFTDTrackerHitRel = NULL;
+  delete _navTPCTrackerHitRel; _navTPCTrackerHitRel = NULL;
+  delete _navSETTrackerHitRel; _navSETTrackerHitRel = NULL;
+  delete _navETDTrackerHitRel; _navETDTrackerHitRel = NULL;
+  
 }
 
 

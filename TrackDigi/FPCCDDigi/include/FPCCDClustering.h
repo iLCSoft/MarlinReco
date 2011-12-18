@@ -4,8 +4,10 @@
 #include "marlin/Processor.h"
 #include "marlin/EventModifier.h"
 #include "lcio.h"
-#include "EVENT/LCCollection.h"
-#include "IMPL/LCCollectionVec.h"
+#include <EVENT/LCCollection.h>
+#include <IMPL/LCCollectionVec.h>
+#include <EVENT/SimTrackerHit.h>
+#include <IMPL/LCRelationImpl.h>
 #include <string>
 #include <vector>
 
@@ -34,8 +36,9 @@
 using namespace lcio;
 
 class FPCCDData;
-
 class FPCCDPixelHit;
+class FPCCDDigitizer;
+
 typedef std::pair<unsigned int, unsigned int> FPCCDHitLoc_t;
 typedef std::map<FPCCDHitLoc_t, FPCCDPixelHit*>  FPCCDLadderHit_t;
 typedef std::vector<FPCCDPixelHit*> FPCCDCluster_t;
@@ -74,7 +77,7 @@ class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
   virtual void end() ;
 
   // make TrackerHits from VTXPixelHits
-  void makeTrackerHitVec(FPCCDData &pxHits, LCCollectionVec &colvec);
+  void makeTrackerHitVec(FPCCDData* pxHits, LCCollection* STHcol, LCCollectionVec* relCol, LCCollectionVec* trkHitvec);
 
   // Initialize Geometry data
   void InitGeometry();
@@ -84,20 +87,23 @@ class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
   void makeClustersInALadder( int layer, FPCCDLadderHit_t &ladderHit, FPCCDClusterVec_t &cvec);
 
   // Make TrackerHit from clusters
-  void makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &cvec, LCCollectionVec &trkHitVec);
+  void makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &cvec, std::multimap< std::pair<int,int>, SimTrackerHit*> relMap, LCCollectionVec* relCol, LCCollectionVec* trkHitVec);
 
   void EnergyDigitizer(FPCCDPixelHit* aHit);
- protected:
+protected:
 
+  std::string _colNameSTH ;
   std::string _colNameVTX ;
   std::string _outColNameVTX ;
-
+  std::string _outRelColNameVTX ;
+  
   int _nRun ;
   int _nEvt ;
   int _debug;
 
   bool _new_tracking_system ;
-
+  bool _single_particle_event ;
+  
   int _energyDigitization;
   int _randomNoise;
   float _pixelSize;

@@ -30,16 +30,15 @@ using namespace std ;
 
 namespace
 {
-  template<class T>
+  template<class T1,class T2,class T3>
   class SortByPosX
   {
   public:
-    bool operator()( const T& object1, const T& object2 )
+    bool operator()( const T1& object1, const T1& object2 )
     {
-      return object1->x() < object2->x();
+      return object1.first->x() < object2.first->x();
     }
   };
-
 }
 
 
@@ -88,12 +87,12 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
   registerProcessorParameter( "HelixTMomentumCriteria(MeV)" ,
                               "Transverse momentum criteria for helix approximation (MeV)",
                               _momCut ,
-                              float(100.0));
+                              float(1.0));
 
   registerProcessorParameter( "Ladder_Number_encoded_in_cellID" ,
                               "Mokka has encoded the ladder number in the cellID" ,
                               _ladder_Number_encoded_in_cellID ,
-                              bool(true));
+                              bool(false));
 
   
   // Input collections
@@ -110,9 +109,7 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                             "Name of the VXD PixelHit output collection"  ,
                             _outColNameVTX ,
                             std::string("VTXPixelHits") ) ;
-  
-  
-  
+    
 }
 
 
@@ -170,7 +167,7 @@ void FPCCDDigitizer::processRunHeader( LCRunHeader* run) {
 void FPCCDDigitizer::modifyEvent( LCEvent * evt )
 {
   
-  LCCollection* col = 0 ;
+  col = 0 ;
   
   try{
     col = evt->getCollection( _colNameVTX ) ;
@@ -210,38 +207,6 @@ void FPCCDDigitizer::modifyEvent( LCEvent * evt )
 }
 
 // =====================================================================
-// void FPCCDDigitizer::makePixelHits(const SimTrackerHit *simHit,
-//                                    FPCCDData &hitVec)
-// {
-//   // Obtain ladderID, xiID and zetaID and fill them into FPCCDPixelHits,
-//   // which is an array of FPCCDLadder_t
-
-//   int layer = simHit->getCellID0() - 1;
-//   const double *pos =  simHit->getPosition() ;  
-//   gear::Vector3D posvec(pos[0],pos[1],pos[2]);
-
-//   // Convert SimTrackerHit position into pixelID;
-
-//   FPCCDID_t fpccdID=encodeFPCCDID(layer, posvec);
-//   if( fpccdID.layer >= 0 ) {  // When valid fpccdid is obtained, ..
-    
-//     float de_dx ;
-//     float dedxSmear = 0.0 ;
-//     de_dx = simHit->getEDep() ;
-
-//     MCParticle *mcp ;
-//     mcp = simHit->getMCParticle() ;
-//     FPCCDPixelHit::HitQuality_t quality=FPCCDPixelHit::kSingle;
-
-//     FPCCDPixelHit aHit(fpccdID.layer, fpccdID.ladder, fpccdID.xi, fpccdID.zeta,
-//                        de_dx, quality, mcp);
-    
-//     hitVec.addPixelHit(aHit, true);
-
-//   }
-
-// }
-
 void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVec)
 {
   gear::Vector3D* HitPosInMokka = new gear::Vector3D(SimTHit->getPosition()[0],SimTHit->getPosition()[1],SimTHit->getPosition()[2]);
@@ -255,19 +220,19 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
 
   int layer = 0 ;
   int ladderID = 0 ;
-  const int celId = SimTHit->getCellID0();
+  const int cellId = SimTHit->getCellID0();
 
   if(_ladder_Number_encoded_in_cellID) {
-    streamlog_out( DEBUG3 ) << "Get Layer Number using StandardILD Encoding from ILDConf.h : celId = " << celId << std::endl;
+    streamlog_out( DEBUG3 ) << "Get Layer Number using StandardILD Encoding from ILDConf.h : cellId = " << cellId << std::endl;
     UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
-    encoder.setValue(celId) ;
+    encoder.setValue(cellId) ;
     layer    = encoder[lcio::ILDCellID0::layer] ;
     ladderID = encoder[lcio::ILDCellID0::module] ;
     streamlog_out( DEBUG3 ) << "layer Number = " << layer << std::endl;
     streamlog_out( DEBUG3 ) << "ladder Number = " << ladderID << std::endl;
   }
   else{
-    layer = celId  - 1 ;
+    layer = cellId  - 1 ;
   }
 
   //----
@@ -277,9 +242,6 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   if( !_ladder_Number_encoded_in_cellID ) {    
     ladderID = getLadderID( HitPosInMokka, layer);
   }
-  
-  double  sximin = _geodata[layer].sximin;
-  double hlength = _geodata[layer].hlength;
   
   //----
   // get hit dir(mom) at hit points and other info.
@@ -310,21 +272,15 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   gear::Vector3D* PosOutFromLadder = new gear::Vector3D(0,0,0);
   gear::Vector3D*    PosInToLadder = new gear::Vector3D(0,0,0);
 
+ //----
+  // get the intersections with the surface of sensitive region
+  //----
   if( sqrt(MomAtLocalHitPos->x()*MomAtLocalHitPos->x() + MomAtLocalHitPos->z()*MomAtLocalHitPos->z()) < _momCut*1e-03){ // transvers momentum criteria for helix approximation
-    //----
-    // Helix Fitting
-    //----             
     if( _debug == 1 ) cout << "========== Track of this hit is trated as a helix ==========" << endl;
     getInOutPosOfHelixOnLadder(SimTHit, PosOutFromLadder, PosInToLadder, LocalHitPos, MomAtLocalHitPos, LocalBField,charge);
   }
   else{
-    //----
-    //Line Fittng
-    //----  
     getInOutPosOnLadder(SimTHit, PosOutFromLadder,PosInToLadder,LocalHitPos,MomAtLocalHitPos); 
-    *LocalHitPos = gear::Vector3D((PosOutFromLadder->x()+PosInToLadder->x())/2 ,
-                                  (PosOutFromLadder->y()+PosInToLadder->y())/2 ,
-                                  (PosOutFromLadder->z()+PosInToLadder->z())/2);
   }
 
   if( inSensitiveRegion( PosOutFromLadder, layer) && inSensitiveRegion( PosInToLadder, layer) ){ // check if the particle through the sensitive region.
@@ -346,30 +302,26 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
     // get hit points incoming and outgoiong each pixel (@ edge of pixel)
     //----
     
-    vector<gear::Vector3D*> EdgeOfPixel = getIntersectionOfTrkAndPix(layer,PosOutFromLadder,PosInToLadder);
+    std::vector<std::pair<const gear::Vector3D*,int> >EdgeOfPixel = getIntersectionOfTrkAndPix(layer,PosOutFromLadder,PosInToLadder);
     
     //----
     // calculate length that particle pass through pixel & central point of pixel
     //----
     
-    sort( EdgeOfPixel.begin(), EdgeOfPixel.end(), SortByPosX<gear::Vector3D*>() );
-    map< pair< double, double>*, double> pixel_local = getLocalPixel(SimTHit,EdgeOfPixel);
-    map< pair< double, double>*, double>::iterator i_pixel_local=pixel_local.begin();
+    sort( EdgeOfPixel.begin(), EdgeOfPixel.end(), SortByPosX<std::pair<const gear::Vector3D*, int>, const gear::Vector3D*, int >() );
 
+    std::map< std::pair< int, int>*, double> pixel_local = getLocalPixel(SimTHit,EdgeOfPixel);
+
+    std::map< std::pair< int, int>*, double>::iterator i_pixel_local = pixel_local.begin();
     while( i_pixel_local != pixel_local.end() ){
-
-      double   xi = ((*i_pixel_local).first->first-sximin-_pixelSize/2);
-      double zeta = ((*i_pixel_local).first->second+hlength-_pixelSize/2);
-      double mergin = 1e-2;
-      unsigned short int   xiid = (unsigned short int)(xi/_pixelSize + mergin);
-      unsigned short int zetaid = (unsigned short int)(zeta/_pixelSize + mergin);
-      double de_dx = (float)(*i_pixel_local).second; //  [mm]   
+      int    xiID = (*i_pixel_local).first->first;
+      int  zetaID = (*i_pixel_local).first->second;
+      float    dE = (float)(*i_pixel_local).second; //  [mm]   
       FPCCDPixelHit::HitQuality_t quality;
-
-      if( _isSignal && mcp->getParents().size() == 0 ){ quality =FPCCDPixelHit::kSingle; }
+      if( _isSignal && mcp->getParents().size() == 0 ){ quality = FPCCDPixelHit::kSingle; }
       else{ quality = FPCCDPixelHit::kBKG;}
-        FPCCDPixelHit aHit(layer,ladderID,xiid,zetaid,de_dx,quality,mcp);
-        hitVec.addPixelHit(aHit,_isSignal);
+      FPCCDPixelHit aHit(layer, ladderID, xiID, zetaID, dE, quality, mcp);
+        hitVec.addPixelHit(aHit,quality);
        if(_debug ==1 ) aHit.print();
 
         i_pixel_local++;
@@ -378,13 +330,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   else{
     if(_debug == 1) cout << "This particle didn't through the sensitive region." << endl;
   }
-
-  if(_debug == 1){
-    std::cout << std::endl;
-    std::cout << "============================================================================" << std::endl;
-    std::cout << std::endl;
-  }
-    
+       
   delete HitPosInMokka;
   delete LocalHitPos;
   delete MomAtLocalHitPos;
@@ -447,7 +393,7 @@ int FPCCDDigitizer::getLadderID(const gear::Vector3D* pos, const int layer){
   }
   if(ladderID==50) cout << "LADDERID==50!" << endl;
   if(ladderID>100) cout << "LADDERID>100!..." << ladderID << endl;
-
+  
   return ladderID;
 }
 
@@ -485,6 +431,10 @@ void FPCCDDigitizer::getInOutPosOnLadder(IMPL::SimTrackerHitImpl* simthit,gear::
 
   ModifyIntoLadder( inpos, layer, inpos, mom);
   ModifyIntoLadder( outpos, layer, outpos, mom);
+
+  *pos = gear::Vector3D((outpos->x()+inpos->x())/2 ,
+                        (outpos->y()+inpos->y())/2 ,
+                        (outpos->z()+inpos->z())/2);
   
   return ;
 }
@@ -547,6 +497,12 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
   double PI = M_PI;
   
   double      radius = (tmom.r()/(0.29979*BField->r()*fabs(Charge)))*1e+03;
+  if( radius/2 < _pixelheight ){
+    *outpos = gear::Vector3D( pos->x(), pos->y(), outerZ);
+    *inpos  = gear::Vector3D( pos->x(), pos->y(), innerZ);
+    *pos    = gear::Vector3D( pos->x(), pos->y(), 0);
+    return ;
+  }
   double init_pos[3] = {pos->x(),pos->y(),pos->z()};
   double init_dir[3] = {mom->x()/tmom.r(),
                         mom->y()/tmom.r(),
@@ -590,8 +546,8 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
     
     double tmpphi;
     double   sximin_phi = 1e+8;
-    if(fabs((sximin-offset_pos[0])/radius) <= 1.) sximin_phi = sign*(1 / Charge*acos((sximin - offset_pos[0])/radius) - acos_offset);
     double   sximax_phi = 1e+8;
+    if(fabs((sximin-offset_pos[0])/radius) <= 1.) sximin_phi = sign*(1 / Charge*acos((sximin - offset_pos[0])/radius) - acos_offset);
     if(fabs((sximax-offset_pos[0])/radius) <= 1.) sximax_phi = sign*(1 / Charge*acos((sximax - offset_pos[0])/radius) - acos_offset);  
     double szetamin_phi = (szetamin - offset_pos[1]) / v_y - offset_phi;
     double szetamax_phi = (szetamax - offset_pos[1]) / v_y - offset_phi;
@@ -645,18 +601,9 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear:
 }
 
 // =====================================================================
-void FPCCDDigitizer::setLoopRange(int* looprange){
-  _sloopx = looprange[0];
-  _eloopx = looprange[1];
-  _sloopy = looprange[2];
-  _eloopy = looprange[3];
-  return;
-}
-
-// =====================================================================
-vector<gear::Vector3D*> FPCCDDigitizer::getIntersectionOfTrkAndPix(const int f_layer, gear::Vector3D* top,gear::Vector3D* bottom){
-  vector<gear::Vector3D*> EdgeOfPixel;
-  double sximin = _geodata[f_layer].sximin;
+std::vector<std::pair<const gear::Vector3D*, int> > FPCCDDigitizer::getIntersectionOfTrkAndPix(const int f_layer, gear::Vector3D* top,gear::Vector3D* bottom){
+  std::vector<std::pair<const gear::Vector3D*, int> > EdgeOfPixel;
+  double   sximin =  _geodata[f_layer].sximin;
   double szetamin = -_geodata[f_layer].hlength;
   double small_localx;
   double large_localx;
@@ -666,21 +613,14 @@ vector<gear::Vector3D*> FPCCDDigitizer::getIntersectionOfTrkAndPix(const int f_l
   else { large_localx = bottom->x(); small_localx = top->x(); }
   if(top->y()>=bottom->y()) {large_localy = top->y(); small_localy = bottom->y(); }
   else { large_localy = bottom->y(); small_localy = top->y(); }
-  int nloopx = 0;
-  int nloopy = 0;
-  int sloopx = 0;
-  int sloopy = 0;
-  int eloopx = 0;
-  int eloopy = 0;
-  sloopx = (int)ceil((small_localx-sximin)/_pixelSize) ;
-  eloopx = (int)ceil((large_localx-sximin)/_pixelSize) - 1;
-  sloopy = (int)ceil((small_localy-szetamin)/_pixelSize) ;
-  eloopy = (int)ceil((large_localy-szetamin)/_pixelSize) - 1;
 
-  int looprange[4] = {sloopx,eloopx,sloopy,eloopy};
-  setLoopRange(looprange);
-  nloopx = eloopx - sloopx + 1;
-  nloopy = eloopy - sloopy + 1;
+  int sloopx = (int)ceil((small_localx-sximin)/_pixelSize) ;
+  int eloopx = (int)ceil((large_localx-sximin)/_pixelSize) - 1;
+  int sloopy = (int)ceil((small_localy-szetamin)/_pixelSize) ;
+  int eloopy = (int)ceil((large_localy-szetamin)/_pixelSize) - 1;
+
+  int nloopx = eloopx - sloopx + 1;
+  int nloopy = eloopy - sloopy + 1;
    
   for(int j=0; j<nloopx; j++){
     double XEdgeOfPixelZ = ((top->z()-bottom->z())/(top->x()-bottom->x()))*(sximin+(sloopx+j)*_pixelSize-(top->x()+bottom->x())/2.)+(top->z()+bottom->z())/2.;
@@ -688,7 +628,7 @@ vector<gear::Vector3D*> FPCCDDigitizer::getIntersectionOfTrkAndPix(const int f_l
     double XEdgeOfPixelY = ((top->y()-bottom->y())/(top->x()-bottom->x()))*(sximin+(sloopx+j)*_pixelSize-(top->x()+bottom->x())/2.)+(top->y()+bottom->y())/2.;
     
     gear::Vector3D* XEdgeOfPixel = new gear::Vector3D(XEdgeOfPixelX,XEdgeOfPixelY,XEdgeOfPixelZ);
-    EdgeOfPixel.push_back(XEdgeOfPixel);
+    EdgeOfPixel.push_back(std::pair<gear::Vector3D*,int>(XEdgeOfPixel,1));
   }
   for(int j=0; j<nloopy; j++){
     double YEdgeOfPixelZ = ((top->z()-bottom->z())/(top->y()-bottom->y()))*(szetamin+(sloopy+j)*_pixelSize-(top->y()+bottom->y())/2.)+(top->z()+bottom->z())/2.;
@@ -696,103 +636,153 @@ vector<gear::Vector3D*> FPCCDDigitizer::getIntersectionOfTrkAndPix(const int f_l
     double YEdgeOfPixelY = szetamin+(sloopy+j)*_pixelSize;
 
     gear::Vector3D* YEdgeOfPixel = new gear::Vector3D(YEdgeOfPixelX,YEdgeOfPixelY,YEdgeOfPixelZ);
-    EdgeOfPixel.push_back(YEdgeOfPixel);
+    EdgeOfPixel.push_back(std::pair<gear::Vector3D*,int>(YEdgeOfPixel,2));
   }
-  EdgeOfPixel.push_back(top);
-  EdgeOfPixel.push_back(bottom);
+  EdgeOfPixel.push_back(std::pair<gear::Vector3D*,int>(top,0));
+  EdgeOfPixel.push_back(std::pair<gear::Vector3D*,int>(bottom,0));
   return EdgeOfPixel;
 }
 
 // =====================================================================
-map< pair<double, double>*, double> FPCCDDigitizer::getLocalPixel(SimTrackerHitImpl* simthit, vector<gear::Vector3D*> edgeofpixel){
-  map<pair< double, double>*, double> pixel_local;
-  int f_layer = simthit->getCellID0() - 1;
-  double L_through_pixel = 0.;
+std::map< pair<int, int>*, double> FPCCDDigitizer::getLocalPixel(SimTrackerHitImpl* simthit, vector<std::pair<const gear::Vector3D*,int> > edgeofpixel){
+  std::map<pair< int, int>*, double> pixel_local;
+  UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
+  encoder.setValue(simthit->getCellID0()) ;
+  int f_layer    = encoder[lcio::ILDCellID0::layer] ;
   double dEdx = simthit->getEDep()*1e+9; // Energy deposit of 50um thickness ladder. [eV]
   double path_length = simthit->getPathLength(); // Path length of 50um thickness ladder. [mm]
 
-  double mpv = 0.;
-  double dE = 0.;
+  double   mpv = 0.;
+  double    dE = 0.;
   double sigma = 0.;
-  unsigned int count = 0;
-  vector<gear::Vector3D*>::iterator nxt=edgeofpixel.begin();
-  while( nxt != edgeofpixel.end() ){
-    if( count == (unsigned int)edgeofpixel.size() - 1 ) break;
-    vector<gear::Vector3D*>::iterator fst=nxt;
+  std::vector<std::pair<const gear::Vector3D*,int> >::iterator nxt = edgeofpixel.begin();
+  while( nxt != edgeofpixel.end()-1 ){
+    std::vector<std::pair<const gear::Vector3D*,int> >::iterator fst = nxt;
     nxt++;
 
-    double diffx = (*nxt)->x() - (*fst)->x();
-    double diffy = (*nxt)->y() - (*fst)->y();
-    double diffz = (*nxt)->z() - (*fst)->z();
-    double mag = sqrt(diffx*diffx+diffy*diffy+diffz*diffz);
+    double diffx = (*nxt).first->x() - (*fst).first->x();
+    double diffy = (*nxt).first->y() - (*fst).first->y();
+    double diffz = (*nxt).first->z() - (*fst).first->z();
+    double L_through_pixel = sqrt(diffx*diffx + diffy*diffy + diffz*diffz);
 
-    L_through_pixel = mag;
     mpv = (dEdx/path_length)*L_through_pixel;
     sigma = (_sigmaConst)*L_through_pixel;
 
     dE = gRandom->Landau( mpv, sigma)*1e-9; // Energy deposit is smeared by Landau distribution. [GeV]
 
-    pair< double, double>* center_pixel = FindPixel((*fst),(*nxt),f_layer); // estimate central point of pixels 
-    pixel_local.insert(map< pair<double, double>*, double>::value_type( center_pixel, dE));
-    count++;
+    std::pair< int, int>* pixID = FindPixel((*fst),(*nxt),f_layer); // estimate central point of pixels 
+    pixel_local.insert(std::map< std::pair<int, int>*, double>::value_type( pixID, dE));
   }
   return pixel_local;
 }
 
 // =====================================================================
-pair< double, double>* FPCCDDigitizer::FindPixel(gear::Vector3D* fst, gear::Vector3D* nxt, int layer){
+std::pair< int, int>* FPCCDDigitizer::FindPixel(std::pair<const gear::Vector3D*,int> fst, std::pair<const gear::Vector3D*,int> nxt, int layer){
+
+  std::pair<int,int> fst_array[4] ;
+  std::pair<int,int> nxt_array[4] ;
+
+  makeCandidates(fst, fst_array, layer);    
+  makeCandidates(nxt, nxt_array, layer);
+  
+  std::pair<int,int>* pixID = new std::pair< int, int>(0,0);
+  for(int i=0; i<4; i++){
+    for(int j=0; j<4; j++){
+      if(fst_array[i].first >= 0 && fst_array[i] == nxt_array[j] ){
+        pixID->first = fst_array[i].first;
+        pixID->second = fst_array[i].second;
+        goto GotPixID;
+      }
+    }
+  }
+ GotPixID:
+
+  return pixID;
+}
+// =====================================================================
+void FPCCDDigitizer::makeCandidates( std::pair<const gear::Vector3D*,int> edge, std::pair<int,int>* cand_array, int layer){
+
+  std::pair<int,int> candID1(-1,-1);
+  std::pair<int,int> candID2(-1,-1);
+  std::pair<int,int> candID3(-1,-1);
+  std::pair<int,int> candID4(-1,-1);
+
   double hlength = _geodata[layer].hlength;
-  double sximin = _geodata[layer].sximin;
-  
-  double fst_x = fst->x();
-  double fst_y = fst->y();
-  double nxt_x = nxt->x();
-  double nxt_y = nxt->y();
-  int i_x = -1000;
-  int i_fst_x = 1000;
-  int i_nxt_x = -1000;
-  int i_y = -1000;
-  int i_fst_y = 1000;
-  int i_nxt_y = -1000;
-  
-  double limit = -0.0;
-  for(int i=-1; i<=_eloopx-_sloopx+1; i++){
-    if( ( fst_x - sximin-(_sloopx + i)*_pixelSize) >= limit
-     && (-fst_x + sximin+(_sloopx+i+1)*_pixelSize) >= limit )
-      i_fst_x = i;
-    if( ( nxt_x - sximin-(_sloopx + i)*_pixelSize) >= limit
-     && (-nxt_x + sximin+(_sloopx+i+1)*_pixelSize) >= limit )
-      i_nxt_x = i;
-    if( i_fst_x == i_nxt_x ){ i_x = i; break; }
-  }
-  if( i_x == -1000 ){
-    cout << "i_x == -1000" << endl;
-    cout << "pixel not found!" << endl;
-  }
-  for(int i=-1; i<=_eloopy-_sloopy+1; i++){
-    if( ( fst_y + hlength-(_sloopy + i)*_pixelSize) >= limit
-     && (-fst_y - hlength+(_sloopy+i+1)*_pixelSize) >= limit )
-      i_fst_y = i;
-    if( ( nxt_y + hlength-(_sloopy + i)*_pixelSize) >= limit
-     && (-nxt_y - hlength+(_sloopy+i+1)*_pixelSize) >= limit )
-      i_nxt_y = i;
-    if( i_fst_y == i_nxt_y ){ i_y = i; break; }
-  }
-  if( i_y == -1000 ){
-    cout << "i_y == -1000" << endl;
-    cout << "pixel not found!" << endl;
-  }
+  double sximin  = _geodata[layer].sximin;
 
-  double pxl_cx = sximin+(_sloopx+i_x + 1)*_pixelSize+_pixelSize/2. ;
-  double pxl_cy =-hlength+(_sloopy+i_y + 1)*_pixelSize+_pixelSize/2.;
+  double quotient_x = (edge.first->x()-sximin)/_pixelSize ;
+  double quotient_y = (edge.first->y()+hlength)/_pixelSize ;
 
-  pair< double, double>* pixel_local = new pair< double, double>(pxl_cx, pxl_cy);
+  double mergin = 1e-5;
 
-  return pixel_local;
+  switch(edge.second)
+    {
+    case 0 : // intersection with ladder surface.
+      candID1.first = (int)floor(quotient_x);
+      if     ( quotient_x - candID1.first < mergin/_pixelSize )     candID2.first = candID1.first - 1;
+      else if( quotient_x - candID1.first > 1 - mergin/_pixelSize ) candID2.first = candID1.first + 1;
+      else candID2.first = candID1.first;
+      
+      candID1.second = (int)floor(quotient_y);
+      if     ( quotient_y - candID1.second < mergin/_pixelSize )    candID2.second = candID1.second - 1;
+      else if( quotient_y - candID1.second > 1 - mergin/_pixelSize )candID2.second = candID1.second + 1;      
+      else candID2.second = candID1.second;
+      break;
+
+    case 1 : // intersection with pixel border in xi
+      candID1.first  = (int)floor(quotient_x + 0.5);
+      candID2.first  = candID1.first - 1;
+      candID1.second = (int)floor(quotient_y);
+      candID2.second = candID1.second;
+      
+      if     ( quotient_y - candID1.second < mergin/_pixelSize){
+        candID3.first  = candID1.first;
+        candID3.second = candID1.second - 1;
+        candID4.first  = candID2.first;
+        candID4.second = candID2.second - 1;
+      }
+      else if( quotient_y - candID1.second > 1 - mergin/_pixelSize){
+        candID3.first  = candID1.first;
+        candID3.second = candID1.second + 1;
+        candID4.first  = candID2.first;
+        candID4.second = candID2.second + 1;
+      }
+      break;
+
+    case 2 : // intersection with pixel border in zeta
+      candID1.first  = (int)floor(quotient_x);
+      candID2.first  = candID1.first;
+      candID1.second = (int)floor(quotient_y + 0.5);
+      candID2.second = candID1.second - 1;
+
+      if     ( quotient_x - candID1.first < mergin/_pixelSize){
+        candID3.first  = candID1.first - 1;
+        candID3.second = candID1.second;
+        candID4.first  = candID2.first - 1;
+        candID4.second = candID2.second;
+      }
+      else if( quotient_x - candID1.first > 1 - mergin/_pixelSize){
+        candID3.first  = candID1.first + 1;
+        candID3.second = candID1.second;
+        candID4.first  = candID2.first + 1;
+        candID4.second = candID2.second;
+      }break;
+
+    default :
+      if(_debug == 1) std::cout << "pixel candidates cannot found. : " << edge.second << std::endl;
+      break;
+    }
+  *cand_array = candID1;
+  *(cand_array+1) = candID2;
+  *(cand_array+2) = candID3;
+  *(cand_array+3) = candID4;
+    
+  return ;
 }
 
 // =====================================================================
 void FPCCDDigitizer::makeNewSimTHit(SimTrackerHitImpl* simthit, gear::Vector3D* newpos, gear::Vector3D* newmom, int layer, int ladder, double newPathLength){
+
   float newdEdx = simthit->getEDep()*newPathLength/simthit->getPathLength();
   double   eta0 = _geodata[layer].rmin+0.5*_pixelheight + ((layer)%2)*(_geodata[layer].sthick-_pixelheight);
   double pos[3] = {newpos->x()*_geodata[layer].sinphi[ladder]+eta0*_geodata[layer].cosphi[ladder],
@@ -801,7 +791,14 @@ void FPCCDDigitizer::makeNewSimTHit(SimTrackerHitImpl* simthit, gear::Vector3D* 
   float  mom[3] = {(float)(newmom->x()*_geodata[layer].cosphi[ladder] - newmom->z()*_geodata[layer].sinphi[ladder]),
                    (float)(newmom->x()*_geodata[layer].sinphi[ladder] + newmom->z()*_geodata[layer].cosphi[ladder]),
                    (float)newmom->y()};
-  
+
+  CellIDEncoder<SimTrackerHitImpl> cellid_encoder( lcio::ILDCellID0::encoder_string , col) ;
+  cellid_encoder[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::VXD ;
+  cellid_encoder[ lcio::ILDCellID0::side   ] = 0 ;
+  cellid_encoder[ lcio::ILDCellID0::layer  ] = layer ;
+  cellid_encoder[ lcio::ILDCellID0::module ] = ladder ;
+  cellid_encoder[ lcio::ILDCellID0::sensor ] = 0 ;
+  cellid_encoder.setCellID( simthit );
   simthit->setEDep( newdEdx );
   simthit->setPathLength( (float)newPathLength );
   simthit->setPosition( pos );
@@ -810,14 +807,12 @@ void FPCCDDigitizer::makeNewSimTHit(SimTrackerHitImpl* simthit, gear::Vector3D* 
 }
 
 // =====================================================================
-int FPCCDDigitizer::inSensitiveRegion( gear::Vector3D* pos, int layer){
+bool FPCCDDigitizer::inSensitiveRegion( gear::Vector3D* pos, int layer){
   if(fabs(pos->z()) > 0.5*_pixelheight + 1e-5
      || fabs(pos->y()) > _geodata[layer].hlength + 1e-5
      || pos->x() > _geodata[layer].sximax + 1e-5
      || pos->x() < _geodata[layer].sximin - 1e-5){
- return 0;
+ return false;
   }
-  else{
- return 1;
-  } 
+  else return true;
 }

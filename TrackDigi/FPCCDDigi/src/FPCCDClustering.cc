@@ -462,7 +462,7 @@ void FPCCDClustering::makeTrackerHit(int layer, int ladder, FPCCDClusterVec_t &c
     //store hit variables
 
     float pointResoRPhi = (sqrt((float)(xiWidth + 1.5)) - 1)*1e-3;
-    float pointResoZ    = (sqrt((float)(xiWidth + 1.5)) - 1)*1e-3;
+    float pointResoZ    = (sqrt((float)(zetaWidth + 1.5)) - 1)*1e-3;
     if( xiWidth == 1 )   pointResoRPhi = _pointResoRPhi;
     if( zetaWidth == 1 ) pointResoZ    = _pointResoZ;
     

@@ -49,7 +49,7 @@ namespace AIDA
 
 /** This processor reconstructs hits in the beamcal ....
   *  @author A.Rosca, DESY
-  *  @version $Id$ 
+  *  @version $Id$
   */
 
 
@@ -112,7 +112,9 @@ class BCalReco : public Processor {
 
 		cell myCell, *** cells;
                 BCalReconstruction::CellType ***celule;
+                BCalReconstruction::CellType ***celuleSig;
                 BCalReconstruction::RecCorr obiect;             
+                BCalReconstruction::RecCorr obiectSig;             
 
                 BCalReconstruction *bc_en;
 
@@ -121,6 +123,7 @@ class BCalReco : public Processor {
                 std::vector<cluster_t> emptyclu;
                 std::vector<std::vector<cluster_t> > allClu; // vector of clusters
                 
+		std::string backgroundfilename;
 		
 		//calorimeter parameters;
 		int nLayers,nRings,nbPhis[MAXRINGS];
@@ -156,13 +159,6 @@ class BCalReco : public Processor {
 
                 int Nentr ; // number of entries in background map
 
-                //per particle
-		int mcp;
-		enum {MCP = 100};
-                int pdg[MCP];
-                float energy[MCP], pxIP[MCP], pyIP[MCP], pzIP[MCP];
-                float pxIPtot, pyIPtot, pzIPtot;
-
 		TTree *t;
 		TH1D *beamcalhitsn, *beamcalhitsp, *eperlayern, *eperlayerp; 
 		TH2F *coordhitsxyP; 
@@ -172,16 +168,31 @@ class BCalReco : public Processor {
                 TH1F *coordclusterzP;
                 TH1F *coordclusterzN;
                 TH1F *energyFW;
+                TH1F *energySigFW;
                 TH1F *energyBW;
-                TH1F *momPxMC;
-                TH1F *numberclusters;
-                TH1F *SigPosMean,*SigNegMean;
+                TH1F *momPxMC,*momPxRECO;
+                TH1F *diffCoordX,*diffCoordY,*diffEnerg;
+                TH1F *numberclusters,*numberparticles;
+                TH1F *SigPosMean;
+                TH1F *SigNegMean;
+                TH1F *SigPosMean1,*SigGausPosMean1;
+                TH1F *SigPosMean2,*SigGausPosMean2;
+                TH1F *SigPosMean3,*SigGausPosMean3;
+                TH1F *SigPosMean4,*SigGausPosMean4;
+                TH1F *SigPosMean5,*SigGausPosMean5;
                 TH1F *SigGausPosMean,*SigGausNegMean;
-                TH1F *clusterEnergyHisto;
+                TH1F *clusterNegEnergyHisto,*clusterPosEnergyHisto;
+		TH1F *particleNegEnergyHisto,*particlePosEnergyHisto;
+		TH1F *particleNegMomeHisto,*particlePosMomeHisto;
 		TH2F *coordclusterxyP; 
 		TH2F *coordclusterxyN; 
                 TH2F *clusterPosHistoN,*clusterPosHisto;
-                TH3F *clusterPos3DHistoN,*clusterPos3DHisto;
+                TH3F *clusterPos3DHistoN,*clusterPos3DHisto,*clusterPos3DHistoAll;
+		
+		TH2F *particlePosHistoN,*particlePosHisto;
+                TH3F *particlePos3DHistoN,*particlePos3DHisto,*particlePos3DHistoAll;
+		TH2F *MCparticlePosHistoN,*MCparticlePosHisto;
+                TH3F *MCparticlePos3DHistoN,*MCparticlePos3DHisto,*MCparticlePos3DHistoAll;
 		TFile *file;
 		TTree *tree;
 		//TStyle *st;
@@ -202,6 +213,13 @@ class BCalReco : public Processor {
 * Number Of Clusters Histogram
 */
         AIDA::IHistogram1D* _numClustersHisto;
+	
+	
+/**
+* Number Of Particles Histogram
+*/
+        AIDA::IHistogram1D* _numParticHisto;
+	
 
 /**
 * This stores the EventClusterHistoRange option
@@ -209,6 +227,15 @@ class BCalReco : public Processor {
         int _eventClustersHistoRange;
 
 
+/**
+* Min theta angle for particles to hit the calo
+*/
+        double _thetaMin;
+
+/**
+* Max theta angle for particles to hit the calo
+*/
+        double _thetaMax;
 
 
 };

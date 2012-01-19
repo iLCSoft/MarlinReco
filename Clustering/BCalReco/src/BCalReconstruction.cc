@@ -85,7 +85,7 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
           for(int p=0; p<the_Phis[r]; p++){
             RenFW[r][p]=0.;
             RenBW[r][p]=0.;
-            for(int l=0; l<the_Layers; l++){  
+            for(int l=1; l<the_Layers; l++){  
               RingFW[r][p][l]=0;
               RingBW[r][p][l]=0;
             }
@@ -150,17 +150,17 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
      BCalReconstruction::RecCorr reco_obj_fw = {{0},{0.}},reco_obj_bw = {{0},{0.}};
 
       reco_obj_fw = SearchClustersFW(BcCells);
-//     cout << "Reconstructed energy FW BeamCal = " << " " << reco_obj_fw.RecEne[0] << endl;
+     //cout << "Reconstructed side FW BeamCal = " << " " << reco_obj_fw.side[0] << " " << reco_obj_fw.side[1] << endl;
 
       reco_obj_bw = SearchClustersBW(BcCells);
 
-//     cout << "Reconstructed energy BW BeamCal = " << " " << reco_obj_bw.RecEne[1] << endl;
+     //cout << "Reconstructed side BW BeamCal = " << " " << reco_obj_bw.side[0] << " " << reco_obj_bw.side[1] << endl;
  
-     if(reco_obj_fw.side[0] == 1 && reco_obj_fw.side[1] == 0)
+     if((reco_obj_fw.side[0] == 1 && reco_obj_fw.side[1] == 0) && (reco_obj_bw.side[0] == 0 && reco_obj_bw.side[1] == 0))
        reco_obj = reco_obj_fw;
-     else if(reco_obj_bw.side[0] == 0 && reco_obj_fw.side[1] == 1)
+     else if((reco_obj_bw.side[0] == 0 && reco_obj_bw.side[1] == 1) && (reco_obj_fw.side[0] == 0 && reco_obj_fw.side[1] == 0))
        reco_obj = reco_obj_bw;
-     else if(reco_obj_fw.side[0] == 1 && reco_obj_fw.side[1] == 1)
+     else if((reco_obj_fw.side[0] == 1 && reco_obj_fw.side[1] == 0) && (reco_obj_bw.side[0] == 0 && reco_obj_bw.side[1] == 1)){
        reco_obj.RecEne[0] = reco_obj_fw.RecEne[0];
        reco_obj.RecEne[1] = reco_obj_bw.RecEne[1];
        reco_obj.ErrEne[0] = reco_obj_fw.ErrEne[0];
@@ -177,8 +177,9 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
        reco_obj.RecPhi[1] = reco_obj_bw.RecPhi[1];
        reco_obj.side[0] = reco_obj_fw.side[0];
        reco_obj.side[1] = reco_obj_bw.side[1];
+     }  
 
-//     cout << "Reconstructed energy BeamCal = " << " " << reco_obj.RecEne << endl;
+    // cout << "Reconstructed side BeamCal = " << " " << reco_obj.side[0] << " " << reco_obj.side[1] << endl;
 
 //     Print(reco_obj); 
 
@@ -194,7 +195,9 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
 
         //-------- count segments in stack------------
         
-        const  double  Pi    =  3.14159165;
+        //const  double  Pi    =  3.14159165;
+	const  double  Pi    =  4.*atan(1.);
+	   // cout << "Pi = " << Pi << endl;
         double rInner = 20.;
         double rOuter = 150.;
         double SgScl = 8.;
@@ -331,7 +334,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
                 std::vector<cluster> emptyclu;   
                 std::vector<std::vector<cluster> > allClu; // vector of clusters
                 
-                BCalReconstruction::RecCorr reconstructed_object;
+                BCalReconstruction::RecCorr reconstructed_object = {{0},{0.}};
                 BCalReconstruction::CellType ***nBcCells;
                 float angle;
 
@@ -738,7 +741,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
                 std::vector<cluster> emptyclu;   
                 std::vector<std::vector<cluster> > allClu; // vector of clusters
                 
-                BCalReconstruction::RecCorr reconstructed_object;
+                BCalReconstruction::RecCorr reconstructed_object = {{0},{0.}};
                 BCalReconstruction::CellType ***nBcCells;
                 float angle;
 
@@ -1107,7 +1110,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     reconstructed_object.CoordX[1] = GetCoordRotX(CluPos,CluPhi,IP,angle);
     reconstructed_object.CoordY[1] = GetCoordY(CluPos,CluPhi);
     reconstructed_object.CoordZ[1] = GetCoordRotZ(CluPos,CluPhi,IP,angle);
-    reconstructed_object.side[1] = -1;
+    reconstructed_object.side[1] = 1;
   }  
   else {
     std::cout << "no cluster found >=2" << std::endl;
@@ -1138,7 +1141,10 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
 
 double  BCalReconstruction::GetEnergyCalib(double energy){
 
-  return (energy*70.+4.7);
+//  return (energy*70.+4.7);  //calib BeCas
+//  return (energy*71.43+10.);  //calib Marlin signal
+  return (energy*78.55+0.1199);  //calib Marlin signal
+//  return energy;
 }
 
 double  BCalReconstruction::GetCoordRotX(int ring, int pad, float IP, float angle){
@@ -1253,7 +1259,6 @@ double  BCalReconstruction::GetEnergyErr(int ring, int pad){
 
 //  scoeff bgc[Nentr];
   std::vector<scoeff>  bgc(Nentr) ;
-
   for (int i=0; i<Nentr; i++){
     bgc[i].sPos[0] = 0;
     bgc[i].sPos[1] = 0;
@@ -1375,7 +1380,7 @@ void BCalReconstruction::Free2DArray(int **p2DArray){
 
 void BCalReconstruction::Free3DArray(BCalReconstruction::CellType ***p3DArray){ 
 
-  for (int i = 1; i < maxlayers; ++i) {
+  for (int i = 2; i < maxlayers; ++i) {
     for (int j = 0; j < maxrings; ++j)
       delete [] p3DArray[i][j];
 

@@ -1,7 +1,7 @@
 
 #include "BCalReco.h"
-
 #include "BCalReconstruction.h"
+
 #include <UTIL/CellIDDecoder.h>
 
 #ifdef MARLIN_USE_AIDA
@@ -73,6 +73,11 @@ BCalReco::BCalReco() : Processor("BCalReco"){
                                  _BCALMCTruthLinkName ,
                                  std::string("BCALMCTruthLink") );
 
+       registerProcessorParameter( "BackgroundFilename"  ,
+                                " Name of input file for background energy density" ,
+                                backgroundfilename ,
+                                std::string("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root") );
+
         registerProcessorParameter( "EventClustersHistoRange",
                                 " Event Clusters Histgram X axis range [n] (10 by default)",
                                 _eventClustersHistoRange,
@@ -119,6 +124,11 @@ void BCalReco::init(){
         geometry.xAngle=bcparam.getDoubleVal("beam_crossing_angle");
         geometry.pairMon=bcparam.getDoubleVal("pairsMonitorZ");
         geometry.cellSize0=l.getCellSize0(0);
+	
+	//precompute limiting theta values for particle-calo hit checking
+        _thetaMin = atan ( geometry.rMin / fabs(geometry.zMax));
+        _thetaMax = atan ( geometry.rMax / fabs(geometry.zMin));
+	
 
         std::cout.precision(15);
 
@@ -136,7 +146,7 @@ void BCalReco::init(){
 
         std::cout<<std::endl<<"INITIALIZATION\n\nLAYER [1,"<<nLayers<<"] = BEAMCAL\tLAYER "<<nLayers+1<<" = PAIR MONITOR\n\n";
 
-   TFile ftmp("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root");
+   TFile ftmp(backgroundfilename.c_str());
 
   if ( ftmp.IsZombie() ) {
       cerr << "Could not read data file. Exit." << endl;
@@ -178,19 +188,41 @@ void BCalReco::init(){
 
         coordclusterxyP = new TH2F("coordclusterxyP", "Clusters XY plane", 150, -150., 150., 150, -150., 150.); //
         coordclusterxyN = new TH2F("coordclusterxyN", "Clusters XY plane", 150, -150., 150., 150, -150., 150.); //
+	
         clusterPosHistoN = new TH2F("clusterPosHistoN", "Clusters XY plane", 150, -150., 150., 150, -150., 150.); //
         clusterPosHisto = new TH2F("clusterPosHisto", "Clusters XY plane", 150, -150., 150., 150, -150., 150.); //
-        clusterPos3DHistoN = new TH3F("clusterPos3DHistoN", "Clusters 3D", 150, -150., 150., 150, -150., 150., 150, -150., 150.); //
-        clusterPos3DHisto = new TH3F("clusterPos3DHisto", "Clusters 3D", 150, -150., 150., 150, -150., 150., 150, -150., 150.); //
+        clusterPos3DHistoN = new TH3F("clusterPos3DHistoN", "Clusters 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+        clusterPos3DHisto = new TH3F("clusterPos3DHisto", "Clusters 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+	clusterPos3DHistoAll = new TH3F("clusterPos3DHistoAll", "Clusters 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+
+        particlePosHistoN = new TH2F("particlePosHistoN", "Particles XY plane", 150, -150., 150., 150, -150., 150.); //
+        particlePosHisto = new TH2F("particlePosHisto", "Particles XY plane", 150, -150., 150., 150, -150., 150.); //
+        particlePos3DHistoN = new TH3F("particlePos3DHistoN", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+        particlePos3DHisto = new TH3F("particlePos3DHisto", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+	particlePos3DHistoAll = new TH3F("particlePos3DHistoAll", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+
+        MCparticlePosHistoN = new TH2F("MCparticlePosHistoN", "Particles XY plane", 150, -150., 150., 150, -150., 150.); //
+        MCparticlePosHisto = new TH2F("MCparticlePosHisto", "Particles XY plane", 150, -150., 150., 150, -150., 150.); //
+        MCparticlePos3DHistoN = new TH3F("MCparticlePos3DHistoN", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+        MCparticlePos3DHisto = new TH3F("MCparticlePos3DHisto", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+	MCparticlePos3DHistoAll = new TH3F("MCparticlePos3DHistoAll", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
+
 
         numberclusters = new TH1F("numberclusters", "Clusters", 10, 0., 10.); //
+        numberparticles = new TH1F("numberparticles", "Particles", 10, 0., 10.); //
+
 
 
         energyFW = new TH1F("energyp", "Energy in FW", 50, 0., 300.); //
         energyBW = new TH1F("energyn", "Energy in BW", 50, 0., 300.); //
-        clusterEnergyHisto = new TH1F("clusterEnergyHisto", "Cluster Energy", 50, 0., 300.); //
-        momPxMC = new TH1F("momMC", "Momentum Px MC particles", 100, -50., 50.); //
-
+        clusterNegEnergyHisto = new TH1F("clusterNegEnergyHisto", "Cluster Energy", 50, 0., 300.); //
+	clusterPosEnergyHisto = new TH1F("clusterPosEnergyHisto", "Cluster Energy", 50, 0., 300.); //
+	particleNegEnergyHisto = new TH1F("particleNegEnergyHisto", "Particle Energy", 50, 0., 300.); //
+	particlePosEnergyHisto = new TH1F("particlePosEnergyHisto", "Particle Energy", 50, 0., 300.); //
+	
+	particleNegMomeHisto = new TH1F("particleNegMomeHisto", "Particle Momentum", 50, 0., 300.); //
+	particlePosMomeHisto = new TH1F("particlePosMomeHisto", "Particle Momentum", 50, 0., 300.); //
+	
 
         SigPosMean  = new TH1F("SigPosMean","Energy signal hits FW",100,0.,5.);
         SigNegMean  = new TH1F("SigNegMean","Energy signal hits BW",100,0.,5.);
@@ -219,8 +251,13 @@ void BCalReco::init(){
         coordhitszP->GetYaxis()->SetTitle("events");
 
         numberclusters->SetFillColor(5);        //eperlayerp->SetFillStyle(5);
-        numberclusters->GetXaxis()->SetTitle("z, mm");
+        numberclusters->GetXaxis()->SetTitle("N");
         numberclusters->GetYaxis()->SetTitle("events");
+	
+	numberparticles->SetFillColor(5);        //eperlayerp->SetFillStyle(5);
+        numberparticles->GetXaxis()->SetTitle("N");
+        numberparticles->GetYaxis()->SetTitle("events");
+	
 
         coordhitszN->SetFillColor(5);   //eperlayerp->SetFillStyle(5);
         coordhitszN->GetXaxis()->SetTitle("z, mm");
@@ -231,18 +268,33 @@ void BCalReco::init(){
         energyFW->GetXaxis()->SetTitle("E, GeV");
         energyFW->GetYaxis()->SetTitle("events");
 
-        clusterEnergyHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
-        clusterEnergyHisto->GetXaxis()->SetTitle("E, GeV");
-        clusterEnergyHisto->GetYaxis()->SetTitle("events");
+        clusterNegEnergyHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        clusterNegEnergyHisto->GetXaxis()->SetTitle("E, GeV");
+        clusterNegEnergyHisto->GetYaxis()->SetTitle("events");
 
+        clusterPosEnergyHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        clusterPosEnergyHisto->GetXaxis()->SetTitle("E, GeV");
+        clusterPosEnergyHisto->GetYaxis()->SetTitle("events");
+	
+        particleNegEnergyHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        particleNegEnergyHisto->GetXaxis()->SetTitle("E, GeV");
+        particleNegEnergyHisto->GetYaxis()->SetTitle("events");
+
+        particlePosEnergyHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        particlePosEnergyHisto->GetXaxis()->SetTitle("E, GeV");
+        particlePosEnergyHisto->GetYaxis()->SetTitle("events");	
+	
+	particleNegMomeHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        particleNegMomeHisto->GetXaxis()->SetTitle("E, GeV");
+        particleNegMomeHisto->GetYaxis()->SetTitle("events");
+
+        particlePosMomeHisto->SetFillColor(5);    //eperlayerp->SetFillStyle(5);
+        particlePosMomeHisto->GetXaxis()->SetTitle("E, GeV");
+        particlePosMomeHisto->GetYaxis()->SetTitle("events");	
 
         energyBW->SetFillColor(5);      //eperlayerp->SetFillStyle(5);
         energyBW->GetXaxis()->SetTitle("E, GeV");
         energyBW->GetYaxis()->SetTitle("events");
-
-        momPxMC->SetFillColor(5);       //eperlayerp->SetFillStyle(5);
-        momPxMC->GetXaxis()->SetTitle("PxTotMC, GeV");
-        momPxMC->GetYaxis()->SetTitle("events");
 
         SigPosMean->SetFillColor(5);       //eperlayerp->SetFillStyle(5);
         SigPosMean->GetXaxis()->SetTitle("GeV");
@@ -266,6 +318,11 @@ void BCalReco::init(){
                 "Number of clusters in event [n]", _eventClustersHistoRange, 1, _eventClustersHistoRange);
         assert (_numClustersHisto);
 
+
+        //number of particles in an event
+        _numParticHisto = AIDAProcessor::histogramFactory(this)->createHistogram1D("numParticHisto",
+                "Number of particles in event [n]", _eventClustersHistoRange, 1, _eventClustersHistoRange);
+        assert (_numParticHisto);
 
         std::cout<<"\n\n\nFINISHED INITIALIZATION\n\n\n"<<std::endl;
 
@@ -302,55 +359,119 @@ void BCalReco::processEvent(LCEvent * evt){
 //        if(kk < 100) {
 
         std::vector<ClusterImpl*> clustersNew;
-
-        //Get elements for collection to study
-        LCCollection* col = evt->getCollection( _colName ) ;
+        std::vector<ReconstructedParticleImpl*> particlesNew;
 
 
         //Create output collection
         LCCollectionVec* BCALClusters = new LCCollectionVec(LCIO::CLUSTER);
+        LCCollectionVec* BCALCol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
 
+//aici
+
+                         int IP = 3595;
+                         float delta = 4.0; //layer thickness, mm
+                         double coordX = 0., coordY = 0.,coordZ = 0.;
+                         double radius = 0.;
+
+        //Get elements for collection to study
+        LCCollection* col = evt->getCollection( _colName ) ;
 
         if(col != 0) {
 
-        int nMCP = col->getNumberOfElements();
+            int nMCP = col->getNumberOfElements();
+	    
+	    //cout << "nMCP = " << nMCP << endl;
 
-        float pin[3]={0, 0, 0};
+                for (int i = 0; i < nMCP; i++) {
 
-        mcp = 0;
-        pxIPtot = 0.;
+                     MCParticle* p = dynamic_cast<MCParticle*>( col->getElementAt(i) );
 
-        for (int i = 0; i < nMCP; i++) {
+                           if(!p->isCreatedInSimulation()) {
+			   
+			        int pdg = p->getPDG();
+				
+				   //cout << "partic ID = " << pdg << endl;
+				   
+				   if(abs(pdg) == 11)  {
 
-          MCParticle* p = dynamic_cast<MCParticle*>( col->getElementAt(i) );
+                             		double* momentum = (double*) p->getMomentum();
+                                        double pTheta;
 
-          pdg[mcp] = p->getPDG();
+                                        //calculate its angle from momentum
+                                        pTheta = atan ( sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]) / fabs(momentum[2]));
+					//pTheta = atan2 ( sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]) , momentum[2]);
 
-          if(abs(pdg[mcp]) == 11 || abs(pdg[mcp]) == 22) {
+                                        	//cout <<"Theta min = " << _thetaMin << endl;
+						//cout <<"Theta max = " << _thetaMax << endl;
+						//cout <<"Theta particle = " << pTheta << endl;
+						
 
 
-                //Get initial energy
-                energy[mcp] = p->getEnergy();
+                                        //if the particle hit the calorimeter
+                                    //    if ( pTheta < _thetaMax && pTheta > _thetaMin ) {
 
-                //Get momentum
-                pin[0] = p->getMomentum() [0];
-                pin[1] = p->getMomentum() [1];
-                pin[2] = p->getMomentum() [2];
+                                        //check side
+                                        int MCpartIsNegative = p->getMomentum()[2] < 0;
+					
+									     				
+                                        //depending on side :
+                                        if (MCpartIsNegative)
+                                        {
+					
+					 			                
+                                        //get energy
+                                        double MCpartENeg = (double) p->getEnergy();
+					
+					 coordZ = - (double) IP - 5.*delta;
+					 radius = (coordZ * MCpartENeg) / p->getMomentum()[2];
+					 
+					 coordX = radius * p->getMomentum()[0] / MCpartENeg ;
+					 coordY = radius * p->getMomentum()[1] / MCpartENeg ;
+					  
+                                         
+                                                //fill position histograms
+                                                MCparticlePosHistoN->Fill(coordX, coordY,1);
 
-                pxIP[mcp] = pin[0];
-                pyIP[mcp] = pin[1];
-                pzIP[mcp] = pin[2];
+                                                MCparticlePos3DHistoN->Fill(coordZ, coordX, coordY,1);
+						MCparticlePos3DHistoAll->Fill(coordZ, coordX, coordY,1);
 
-                pxIPtot += pxIP[mcp];
 
-          }
+
+                                        }
+                                        else //if (MCpartIsNegative)
+                                        {
+                                                //same as for negative side
+						
+					//get energy
+                                        double MCpartEPos = (double) p->getEnergy();
+					
+					 coordZ = (double) IP + 5.*delta;
+					 radius = (coordZ * MCpartEPos) / p->getMomentum()[2];
+					 
+					 coordX = radius * p->getMomentum()[0] / MCpartEPos ;
+					 coordY = radius * p->getMomentum()[1] / MCpartEPos ;  
+                                     	
+						
+                                                //fill position histograms
+                                                MCparticlePosHisto->Fill(coordX, coordY,1);
+
+                                                MCparticlePos3DHisto->Fill(coordZ, coordX, coordY,1);
+						MCparticlePos3DHistoAll->Fill(coordZ, coordX, coordY,1);
+
+
+                                        } //else
+
+			//} // particle hit beamcal
+		} // only electrons
+          } //only source particles
         } // end of MCparticle loop
 
    } // end col
 
 
-                  momPxMC->Fill(pxIPtot,1);
 
+
+//aici
 
         //CONSTRUCTION OF DYNAMIC ARRAY TO STORE THE INFORMATION FROM THE DETECTOR FOR THE RECONSTRUCTION CODE
 
@@ -525,13 +646,7 @@ void BCalReco::processEvent(LCEvent * evt){
         }
 
 
-//aici 1
-
-//      cout << "TEST 1 " << "Nentr = " <<Nentr << endl;
-
-//      cout << "TEST GetEnergyErr 5" << endl;
-
-   TFile f("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root");
+   TFile f(backgroundfilename.c_str());
   if ( f.IsZombie() ) {
       cerr << "Could not read data file. Exit." << endl;
       exit(1);
@@ -541,9 +656,9 @@ void BCalReco::processEvent(LCEvent * evt){
    t = (TTree*)f.Get("tBcDensAverage");
 
 
-  if(t->IsZombie()) {
+  if(t->IsZombie()) 
       cerr<<"bgcoeff: Tree \"tBcDensAverage\" not found"<<endl;
-    }
+    
 
 
 //      cout << "TEST GetEnergyErr 4" << endl;
@@ -643,18 +758,17 @@ void BCalReco::processEvent(LCEvent * evt){
 
                     for(int i = 0; i < index - 1; i++)
                     {
-//                      if(i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i == 8 || i == 9 || i == 10 || i == 11 )
-//                            cout <<"Compare energy err " << " " << EdepPos[i] << " " << bgc[2*i].sEnDensErr*100 << endl;
-                      if(EdepPos[i] > bgc[2*i].sEnDensErr*100){
-                         EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr*100);
+
+                      if(EdepPos[i] > bgc[2*i].sEnDensErr*bgc[2*i].cell_area){
+                         EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr*bgc[2*i].cell_area);
                          EdepPosTmp[i] = EdepPos[i];
                       }
                       else {
                          EdepPosTmp[i] = 0.;
 			 EdepPosNoiseTmp[i] = 0.;
                       }
-                      if(EdepNeg[i] > bgc[2*i+1].sEnDensErr*100){
-                         EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr*100);
+                      if(EdepNeg[i] > bgc[2*i+1].sEnDensErr*bgc[2*i+1].cell_area){
+                         EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr*bgc[2*i+1].cell_area);
                          EdepNegTmp[i] = EdepNeg[i];
                       }
                       else {
@@ -665,8 +779,7 @@ void BCalReco::processEvent(LCEvent * evt){
                        EdepTotNeg += EdepNegTmp[i];
 		       EdepNoiseTotPos += EdepPosNoiseTmp[i]; 
                        EdepNoiseTotNeg += EdepNegNoiseTmp[i];
-////                       cout << " " << "Energy Pos = " << EdepPos[i] << " " << "RMS Map = " << bgc[2*i].sEnDensErr << endl;
-////                       cout << " " << "Energy Neg = " << EdepNeg[i] << " " << "RMS Map = " << bgc[2*i+1].sEnDensErr << endl;
+
                     }
 //                }
 
@@ -685,14 +798,12 @@ void BCalReco::processEvent(LCEvent * evt){
                                                 for (int k=0; k<nbPhis[j]; ++k){
                                                          cells[i][j][k].sEdepPos = EdepPosNoiseTmp[index2];
                                                          cells[i][j][k].sEdepNeg = EdepNegNoiseTmp[index2];
+                                                   
                                                      index2++;
                                                   }
                                }
                 }
 
-
-
-//aici 2
 
 
         //instantiate reconstruction class
@@ -726,41 +837,121 @@ void BCalReco::processEvent(LCEvent * evt){
 
    obiect = bc_en->GetReconstrCoordinates(nLayers,nRings,nbPhis,celule);
 
-//                  cout << "Reconstructed side = " <<" " << obiect.side[0] << " " << " " << obiect.side[1] << endl;
+                  //cout << "Reconstructed side = " <<" " << obiect.side[0] << " " << " " << obiect.side[1] << endl;
+		  
+		  float momPClu[3] = {0.,0.,0.}, energyClu = 0., thetaClu = 0., phiClu = 0., radClu = 0.;
+		  const float m = 0. ;
+		  const float q = 1e+19 ;
+		  float posit[3] = {0.,0.,0.};
 
-        if(obiect.side[0] == 1 || obiect.side[1] == -1){
+        if(obiect.side[0] == 1){
                   coordclusterxyP->Fill(obiect.CoordX[0],obiect.CoordY[0],1);
                   coordclusterzP->Fill(obiect.CoordZ[0],1);
-                  energyFW->Fill(obiect.RecEne[0],1);
-                  coordclusterxyN->Fill(obiect.CoordX[1],obiect.CoordY[1],1);
-                  coordclusterzN->Fill(obiect.CoordZ[1],1);
-                  energyBW->Fill(obiect.RecEne[1],1);
-        }
-        else if (obiect.side[0] == 0 && obiect.side[1] == 0)
-                  cout << "Unreconstructed object in event = " <<" " <<_nEvt << endl;
+                  energyFW->Fill(obiect.RecEne[0],1); 
+		  
+		  
+	    ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
+            ClusterImpl* cluster = new ClusterImpl;
 
-         for (int i = 0; i < 2; ++i) {
+		
+//            cout << "Charge = " << q << endl;
 
-            ClusterImpl* cluster = new ClusterImpl();
 
-                cluster->setEnergy( obiect.RecEne[i] );
+		particle->setMass(m) ;
+		particle->setCharge(q) ;
 
-                float posit[3];
-                posit[0] = obiect.CoordX[i];
-                posit[1] = obiect.CoordY[i];
-                posit[2] = obiect.CoordZ[i];
+                cluster->setEnergy( obiect.RecEne[0] );
+                
+                posit[0] = obiect.CoordX[0];
+                posit[1] = obiect.CoordY[0];
+                posit[2] = obiect.CoordZ[0];
 
                 cluster->setPosition( posit );
 
+		radClu = sqrt(posit[0]*posit[0] + posit[1]*posit[1] + posit[2]*posit[2]) ;
+		
+		thetaClu = acos(posit[2]/radClu) ;
+		phiClu = atan2 ( posit[1],posit[0] ) ;
 
-                clustersNew.push_back(cluster);
+		energyClu = obiect.RecEne[0] ;
 
-        BCALClusters->addElement(clustersNew[i]);
+		momPClu[0] = energyClu * sin ( thetaClu ) * cos ( phiClu ) ;
+		momPClu[1] = energyClu * sin ( thetaClu ) * sin ( phiClu ) ;
+		momPClu[2] = energyClu * cos ( thetaClu ) ;
+		
+		//cout << "FW::Check cosine phi =" << cos ( phiClu ) << endl;
 
+		particle->setMomentum ( momPClu ) ;
+		particle->setEnergy ( energyClu ) ;
+
+		particle->addCluster( cluster ) ;
+
+
+        BCALClusters->addElement(cluster);
+        BCALCol->addElement(particle);
+		  
+		                   
+	}	  
+	
+	if(obiect.side[1] == 1){
+                  coordclusterxyN->Fill(obiect.CoordX[1],obiect.CoordY[1],1);
+                  coordclusterzN->Fill(obiect.CoordZ[1],1);
+                  energyBW->Fill(obiect.RecEne[1],1);
+		  
+	    ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
+            ClusterImpl* cluster = new ClusterImpl;
+
+		
+//            cout << "Charge = " << q << endl;
+
+
+
+		particle->setMass(m) ;
+		particle->setCharge(q) ;
+
+                cluster->setEnergy( obiect.RecEne[1] );
+                
+                posit[0] = obiect.CoordX[1];
+                posit[1] = obiect.CoordY[1];
+                posit[2] = obiect.CoordZ[1];
+
+                cluster->setPosition( posit );
+		
+
+		radClu = sqrt(posit[0]*posit[0] + posit[1]*posit[1] + posit[2]*posit[2]) ;
+		
+		thetaClu = acos(posit[2]/radClu) ;
+		phiClu = atan2 ( posit[1],posit[0] ) ;
+
+		energyClu = obiect.RecEne[1] ;
+
+		momPClu[0] = energyClu * sin ( thetaClu ) * cos ( phiClu ) ;
+		
+		
+		//cout << "BW::Check cosine phi =" <<  posit[1]/posit[0] << endl;
+		
+		momPClu[1] = energyClu * sin ( thetaClu ) * sin ( phiClu ) ;
+		momPClu[2] = energyClu * cos ( thetaClu ) ;
+
+		particle->setMomentum ( momPClu ) ;
+		particle->setEnergy ( energyClu ) ;
+
+		particle->addCluster( cluster ) ; 
+
+
+        BCALClusters->addElement(cluster);
+        BCALCol->addElement(particle);
+		  
+		                   		  
+		  
+		    
         }
-
+	
+        if (obiect.side[0] == 0 && obiect.side[1] == 0)
+                  cout << "Unreconstructed object in event = " <<" " <<_nEvt << endl;
 
         evt->addCollection(BCALClusters, _BCALClustersName);
+        evt->addCollection(BCALCol, _BCALcolName);
 
   for (int i = 1; i < nLayers; ++i) {
     for (int j = 0; j < nRings; ++j)
@@ -786,73 +977,60 @@ void BCalReco::processEvent(LCEvent * evt){
 
   f.Close();
 
-}
+} // kk
 
 
 }
-
-
-
-
 
 void BCalReco::check(LCEvent *evt){
 
         int j;
         int numElements;
-        std::vector <ClusterImpl*> clustersPos, clustersNeg;
-        double totalClENeg = 0, totalClEPos = 0;
-        double _totalRecoEnergyNegative = 0;
-        double _totalRecoEnergyPositive = 0;
+	
+	
+	//cout << "BCalReco::check() : event# " << _nEvt << endl;
 
 
 //read clusters and fill basic histograms
-        // position, hit position (energy weighted)
         // split clusters into positive and negative sides
-        // sum up energy reconstructed in clusters
+	//position of clusters
+        //reconstructed energy
         try
         {
-                LCCollection * clusters = evt->getCollection( _BCALClustersName );
-                if (clusters)
+                LCCollection * cluster = evt->getCollection( _BCALClustersName );
+                if (cluster)
                 {
-                        numElements = clusters->getNumberOfElements()  ;
+                        numElements = cluster->getNumberOfElements()  ;
+			
+			//cout << "numElements = " << numElements << endl;
 
                         //first very basic histo
                         _numClustersHisto->fill(numElements);
                          numberclusters->Fill(numElements,1);
 
 
-
-
-
                         for (j = 0; j < numElements ; j++)
                         {
-                                ClusterImpl * cl = dynamic_cast<ClusterImpl*>( clusters->getElementAt(j) );
+                                ClusterImpl * cl = dynamic_cast<ClusterImpl*>( cluster->getElementAt(j) );
                                 if (cl)
                                 {
                                         //check side
                                         int clIsNegative = cl->getPosition()[2] < 0;
 
-                                        //get energy and put it into a histo
-                                        double clE = cl->getEnergy();
-
-                                         clusterEnergyHisto->Fill(clE,1);
-
                                         //depending on side :
                                         if (clIsNegative)
                                         {
-                                                //put into set for the sie
-                                                clustersNeg.push_back( cl );
 
-                                                //sum up resonstructed energy
-                                                totalClENeg += clE;
+                                        //get energy and put it into a histo
+                                        double clENeg = (double) cl->getEnergy();
 
-                                                _totalRecoEnergyNegative += clE;
-
+                                         clusterNegEnergyHisto->Fill(clENeg,1);
+                                         
                                                 //fill position histograms
                                                 clusterPosHistoN->Fill(cl->getPosition()[0], cl->getPosition()[1],1);
 
-                                                clusterPos3DHistoN->Fill(-cl->getPosition()[2], cl->getPosition()[0],
-                                                        cl->getPosition()[1],1);
+                                                clusterPos3DHistoN->Fill(cl->getPosition()[2], cl->getPosition()[0], cl->getPosition()[1],1);
+						clusterPos3DHistoAll->Fill(cl->getPosition()[2], cl->getPosition()[0], cl->getPosition()[1],1);
 
 
 
@@ -860,16 +1038,17 @@ void BCalReco::check(LCEvent *evt){
                                         else //if (clIsNegative)
                                         {
                                                 //same as for negative side
-                                                clustersPos.push_back( cl );
+						
+					//get energy and put it into a histo
+                                        double clEPos = (double) cl->getEnergy();
 
-                                                totalClEPos += clE;
-
-                                                _totalRecoEnergyPositive += clE;
-
+                                         clusterPosEnergyHisto->Fill(clEPos,1);
+                                         	
+                                                //fill position histograms
                                                 clusterPosHisto->Fill(cl->getPosition()[0], cl->getPosition()[1],1);
 
-                                                clusterPos3DHisto->Fill(cl->getPosition()[2], cl->getPosition()[0],
-                                                        cl->getPosition()[1],1);
+                                                clusterPos3DHisto->Fill(cl->getPosition()[2], cl->getPosition()[0], cl->getPosition()[1],1);
+						clusterPos3DHistoAll->Fill(cl->getPosition()[2], cl->getPosition()[0], cl->getPosition()[1],1);
 
                                         } //else
                                 } //if (cl)
@@ -879,7 +1058,7 @@ void BCalReco::check(LCEvent *evt){
 
 
 
-                } //if (clusters)
+                } //if (cluster)
         } //try
 
         catch(DataNotAvailableException &e)
@@ -888,10 +1067,116 @@ void BCalReco::check(LCEvent *evt){
         } //catch
 
 
+        int numPartElements;
 
-        //celanup
-        clustersPos.clear();
-        clustersNeg.clear();
+//read particles and fill basic histograms
+        // split particles into positive and negative sides
+	//position of particles
+        //reconstructed energy
+        try
+        {
+                LCCollection * particle = evt->getCollection( _BCALcolName );
+                if (particle)
+                {
+                        numPartElements = particle->getNumberOfElements()  ;
+
+                        //first very basic histo
+                        _numParticHisto->fill(numPartElements);
+                         numberparticles->Fill(numPartElements,1);
+			 
+			 
+			 int IP = 3595;  
+			 float delta = 4.0; //layer thickness, mm 
+			 double coordX = 0., coordY = 0.,coordZ = 0.;
+			 double radius = 0.;
+			 
+                        for (j = 0; j < numPartElements ; j++)
+                        {
+                                ReconstructedParticleImpl * part = dynamic_cast<ReconstructedParticleImpl*>( particle->getElementAt(j) );
+                                if (part)
+                               {
+                                        //check side
+                                        int partIsNegative = part->getMomentum()[2] < 0;
+					
+									     				
+                                        //depending on side :
+                                        if (partIsNegative)
+                                        {
+					
+					 			                
+                                        //get energy and put it into a histo
+                                        double partENeg = (double) part->getEnergy();
+					
+					//get momentum and put it into a histo
+					double partNegP = sqrt(part->getMomentum()[0] * part->getMomentum()[0] + part->getMomentum()[1] * part->getMomentum()[1] + part->getMomentum()[2] * part->getMomentum()[2]);
+
+                                         particleNegEnergyHisto->Fill(partENeg,1);
+					 particleNegMomeHisto->Fill(partNegP,1);
+					 
+					 coordZ = - (double) IP - 5.*delta;
+					 radius = (coordZ * partENeg) / part->getMomentum()[2];
+					 
+					 //cout << "BW::Px = " << part->getMomentum()[0] << endl;
+					 //cout << "BW::Py = " << part->getMomentum()[1] << endl;
+					 
+					 coordX = radius * part->getMomentum()[0] / partENeg ;
+					 coordY = radius * part->getMomentum()[1] / partENeg ;
+					  
+                                         
+                                                //fill position histograms
+                                                particlePosHistoN->Fill(coordX, coordY,1);
+
+                                                particlePos3DHistoN->Fill(coordZ, coordX, coordY,1);
+						particlePos3DHistoAll->Fill(coordZ, coordX, coordY,1);
+
+
+
+                                        }
+                                        else //if (partIsNegative)
+                                        {
+                                                //same as for negative side
+						
+					//get energy and put it into a histo
+                                        double partEPos = (double) part->getEnergy();
+					
+					//get momentum and put it into a histo
+					double partPosP = sqrt(part->getMomentum()[0] * part->getMomentum()[0] + part->getMomentum()[1] * part->getMomentum()[1] + part->getMomentum()[2] * part->getMomentum()[2]);
+
+                                         particlePosEnergyHisto->Fill(partEPos,1);
+					 particlePosMomeHisto->Fill(partPosP,1);
+					 
+					 coordZ = (double) IP + 5.*delta;
+					 radius = (coordZ * partEPos) / part->getMomentum()[2];
+					 
+					 //cout << "FW::Px = " << part->getMomentum()[0] << endl;
+					 //cout << "FW::Py = " << part->getMomentum()[1] << endl;
+					 
+					 coordX = radius * part->getMomentum()[0] / partEPos ;
+					 coordY = radius * part->getMomentum()[1] / partEPos ;  
+                                     	
+						
+                                                //fill position histograms
+                                                particlePosHisto->Fill(coordX, coordY,1);
+
+                                                particlePos3DHisto->Fill(coordZ, coordX, coordY,1);
+						particlePos3DHistoAll->Fill(coordZ, coordX, coordY,1);
+
+
+                                        } //else
+                                } //if (part)
+                        } //for(j = 0; j < numPartElements ; j++)
+
+
+                } //if (particle)
+        } //try
+
+        catch(DataNotAvailableException &e)
+       {
+                _numParticHisto->fill( 0 ); // no clusters found in event
+        } //catch
+
+
+
 
 }
 
@@ -923,13 +1208,31 @@ void BCalReco::end(){
         clusterPosHisto->Write();
         clusterPos3DHistoN->Write();
         clusterPos3DHisto->Write();
+	clusterPos3DHistoAll->Write();
+	particlePosHistoN->Write();
+        particlePosHisto->Write();
+        particlePos3DHistoN->Write();
+        particlePos3DHisto->Write();
+	particlePos3DHistoAll->Write();
+
+	MCparticlePosHistoN->Write();
+        MCparticlePosHisto->Write();
+        MCparticlePos3DHistoN->Write();
+        MCparticlePos3DHisto->Write();
+	MCparticlePos3DHistoAll->Write();
+
         coordhitszP->Write();
         coordhitszN->Write();
         energyFW->Write();
-        clusterEnergyHisto->Write();
+        clusterNegEnergyHisto->Write();
+	clusterPosEnergyHisto->Write();
+	particleNegEnergyHisto->Write();
+	particlePosEnergyHisto->Write();
+	particleNegMomeHisto->Write();
+	particlePosMomeHisto->Write();
         energyBW->Write();
-        momPxMC->Write();
         numberclusters->Write();
+	numberparticles->Write();
         SigPosMean->Write();
         SigNegMean->Write();
         SigGausPosMean->Write();

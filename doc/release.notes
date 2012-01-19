@@ -14,6 +14,10 @@
 	  - Modified to make link to mcp only for single particle event. 
 	  - Chaged the algorithm to find pixels.
 
+	- BCalReco
+	  - Added reconstructed particle collection and check histograms.
+	  - New parameter for bg map file: BackgroundFilename
+
  --------
 | v01-00 |
  --------

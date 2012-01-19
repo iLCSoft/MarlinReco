@@ -36,6 +36,8 @@ const float cTauHyperon= 87.0;     // mm
 const float mNeutron   = 0.940;    // GeV
 const float mProton    = 0.940;    // GeV
 
+#define MAXARRAYSIZE_TWOTRACKINTERSECTION 1000
+
 KinkFinder aKinkFinder ;
 
 
@@ -269,9 +271,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   std::vector<MCParticle*>mcParticle;
   HelixClass* helixEnd[tracks.size()];
   HelixClass* helixStart[tracks.size()];
-  std::vector<twoTrackIntersection_t> kinkDaughters[tracks.size()];
-  std::vector<twoTrackIntersection_t> prongDaughters[tracks.size()];
-  std::vector<twoTrackIntersection_t> splitDaughters[tracks.size()];
+  std::vector<twoTrackIntersection_t> kinkDaughters[MAXARRAYSIZE_TWOTRACKINTERSECTION];
+  std::vector<twoTrackIntersection_t> prongDaughters[MAXARRAYSIZE_TWOTRACKINTERSECTION];
+  std::vector<twoTrackIntersection_t> splitDaughters[MAXARRAYSIZE_TWOTRACKINTERSECTION];
   float zAtEnd[tracks.size()];
   float zAtStart[tracks.size()];
 

@@ -26,6 +26,8 @@
 using namespace lcio;
 using namespace std;
 
+#define MAXARRAYSIZE 100000
+
 class Tmpcl2;
 /**
  *    Basic hit class for reconstruction, contains the calorimeter hit plus     

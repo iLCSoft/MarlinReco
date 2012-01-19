@@ -4,6 +4,16 @@
 
 ===============================
 
+ -----------
+| v01-00-01 |
+ -----------
+
+
+	- FPCCDDigi 
+	  - Fixed setting of the cov matrix values.
+	  - Modified to make link to mcp only for single particle event. 
+	  - Chaged the algorithm to find pixels.
+
  --------
 | v01-00 |
  --------

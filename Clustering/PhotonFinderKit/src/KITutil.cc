@@ -293,7 +293,7 @@ void FindCores2(Shitvec2* secal1, Tmpclvec2* bbb , vector <PROTSEED2> * prs2,
 	  double d=PGDB[PGdb::ECAL1_BAR].r_inner;
 	  double z=PGDB[PGdb::ECAL1_CAP].z_inner;
 	  double Xatf[3];
-	  vector<Superhit2*> blk[MAXARRAYSIZE];
+	  vector<Superhit2*> blk[N];
 	 
 	  for( unsigned int iim=0;iim<secal1->size();iim++)
 	    {	      

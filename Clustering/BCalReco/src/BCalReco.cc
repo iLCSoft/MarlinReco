@@ -20,8 +20,10 @@
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <IMPL/ClusterImpl.h>
+#include <IMPL/CalorimeterHitImpl.h>
 #include <IMPL/LCRelationImpl.h>
 #include <EVENT/SimCalorimeterHit.h>
+#include <EVENT/CalorimeterHit.h>
 
 #include <string>
 #include <iostream>
@@ -83,7 +85,8 @@ BCalReco::BCalReco() : Processor("BCalReco"){
                                 _eventClustersHistoRange,
                                 10 );
 
-        registerProcessorParameter("BeamCalHitCol","Collection of SimCalorimeterHits in BeamCal",_HitCol,std::string("BeamCalCollection"));
+       //registerProcessorParameter("BeamCalHitCol","Collection of SimCalorimeterHits in BeamCal",_HitCol,std::string("BeamCalCollection"));
+	registerProcessorParameter("BeamCalHitCol","Collection of CalorimeterHits in BeamCal",_HitCol,std::string("BeamCalCollection"));
 }
 
 
@@ -558,7 +561,8 @@ void BCalReco::processEvent(LCEvent * evt){
                 totalEvt++;
 
                 LCCollection* inParVecSim = evt->getCollection(_HitCol); //save in inParVecSim all data related to the current event from the collection
-                CellIDDecoder<SimCalorimeterHit> mydecoder(inParVecSim);
+                //CellIDDecoder<SimCalorimeterHit> mydecoder(inParVecSim);
+		CellIDDecoder<CalorimeterHit> mydecoder(inParVecSim);
 
 //    std::cout<<"step 1 "<<"\n";
 
@@ -566,19 +570,29 @@ void BCalReco::processEvent(LCEvent * evt){
                         evtEnergy=0; //total energy deposition for each event
                         nHits=inParVecSim->getNumberOfElements(); //get total number of hits from current event
                         for(int j=0; j<nHits; j++){
-                                SimCalorimeterHit *hit = dynamic_cast<SimCalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
-                                side    = mydecoder(hit)[ "S-1" ] ;
+                                //SimCalorimeterHit *hit = dynamic_cast<SimCalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+				
+				CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+				//CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+				
+				if(hit){
+                    
+				side    = mydecoder(hit)[ "S-1" ] ;
                                 //if(side!=0) continue;
                                 //side=0 -> pos, side=1 -> neg
                                 cylind  = mydecoder(hit)[ "I" ] ; //r 0-16
                                 sector  = mydecoder(hit)[ "J" ] ; //phi 0-max_nb_of_pads
                                 layer   = mydecoder(hit)[ "K" ]; //z with the Mokka codification: nLayers=30; layer=[1,30] for BeamCal; layer=31 for PairMonitor
+				
+				
 
+        			double pos[3] = {hit->getPosition()[0], hit->getPosition()[1], hit->getPosition()[2] } ; //x,y,z
+							
 
-                                double pos[3]={hit->getPosition()[0], hit->getPosition()[1], hit->getPosition()[2]}; //x,y,z
-
-                                E=hit->getEnergy();
-
+                                E = hit->getEnergy();
+				
+				std::cout << "CHECK:::" << E << endl;
+                                   
 
                                 //IF ROTSATION IS NEEDED
                                 /*
@@ -624,11 +638,11 @@ void BCalReco::processEvent(LCEvent * evt){
 
                                         evtEnergy+=E;
                          }//for
-                        std::cout << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
+                        // std::cout << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
 
                         runEnergy+=evtEnergy;
                         totalEnergy+=evtEnergy;
-
+		    } // if (hit)	
 
 
                 }//try getElementAt)

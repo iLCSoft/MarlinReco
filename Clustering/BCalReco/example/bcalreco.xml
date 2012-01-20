@@ -11,18 +11,18 @@
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <execute>
   <processor name="MyAIDAProcessor"/>
+  <processor name="MySimpleBCalDigi" />
   <processor name="MyBCalReco"/>
  </execute>
 
  <global>
    <parameter name="LCIOInputFiles">
-        input.slcio
+/afs/desy.de/group/flc/pool/ars/MokkaWorkDir/jobs/efficiency/250/slcio/sHEe_250_random_fw_500_allDet_01_ring1.slcio.LONG-2000Events
    </parameter>
 
-  <parameter name="MaxRecordNumber" value="5001" />  
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />
-   <parameter name="GearXMLFile"> gear_ild00fw.xml </parameter>  
+   <parameter name="GearXMLFile"> gear_ILD_00fw.xml </parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
  </global>
 
@@ -38,16 +38,31 @@
   <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
 </processor>
 
-<processor name="MyBCalReco" type="BCalReco">
+<!--######  SimpleBCALDigi ##########################################-->
+
+ <processor name="MySimpleBCalDigi" type="SimpleLCalDigi">
+ <!--Performs simple digitization of sim calo hits...-->
+  <!--Calibration coefficients for LCAL-->
+  <parameter name="CalibrLCAL" type="FloatVec">1.0</parameter>
+  <!--LCAL Collection Names-->
+  <parameter name="LCALCollections" type="StringVec">BeamCalCollection</parameter>
+  <!--LCAL Collection of real Hits-->
+  <parameter name="LCALOutputCollection" type="string">BCAL</parameter>
+  <!--Threshold for LCAL Hits in GeV-->
+  <parameter name="LCALThreshold" type="float">1e-06 </parameter>
+  <!--MuonHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string">RelationBCalHit </parameter>
+</processor>
+
+
+ <processor name="MyBCalReco" type="BCalReco">
  <!--Filling Histograms with deposited energy from beamstrahlung pairs in BeamCal-->
   <!--Name of the Beamcal clusters collection-->
   <parameter name="BCALClusterName" type="string" lcioOutType="Cluster">BCALClusters </parameter>
   <!--Name of the Beamcal cluster to mc-particle relation collection-->
   <parameter name="BCALMCTruthLinkName" type="string" lcioOutType="LCRelation">BCALMCTruthLink </parameter>
-  <!-- Name of input file for background energy density-->
-  <parameter name="BackgroundFilename" type="string">bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root </parameter>
   <!--Collection of SimCalorimeterHits in BeamCal-->
-  <parameter name="BeamCalHitCol" type="string">BeamCalCollection </parameter>
+  <parameter name="BeamCalHitCol" type="string">BCAL </parameter>
   <!--Name of the MCParticle collection-->
   <parameter name="CollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
   <!-- Event Clusters Histgram X axis range [n] (10 by default)-->

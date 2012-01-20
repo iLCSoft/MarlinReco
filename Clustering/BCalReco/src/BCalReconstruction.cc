@@ -1144,8 +1144,8 @@ double  BCalReconstruction::GetEnergyCalib(double energy){
 
 //  return (energy*70.+4.7);  //calib BeCas
 //  return (energy*71.43+10.);  //calib Marlin signal
-//  return (energy*78.55+0.1199);  //calib Marlin signal
-  return energy;
+  return (energy*78.55+0.1199);  //calib Marlin signal
+//  return energy;
 }
 
 double  BCalReconstruction::GetCoordRotX(int ring, int pad, float IP, float angle){

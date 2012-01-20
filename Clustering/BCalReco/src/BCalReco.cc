@@ -117,7 +117,7 @@ void BCalReco::init(){
         geometry.zMin = ext[2] ;
         geometry.zMax = ext[3] ;
         geometry.DArinner = bcparam.getDoubleVal("dead_area_outer_r");
-        geometry.sPhi = bcparam.getDoubleVal("cylinder_staring_phi");
+        geometry.sPhi = bcparam.getDoubleVal("cylinder_starting_phi");
         geometry.dPhi = bcparam.getDoubleVal("cylinder_spanning_phi");
         const gear::LayerLayout & l = bcparam.getLayerLayout() ;
         nLayers = l.getNLayers() ;

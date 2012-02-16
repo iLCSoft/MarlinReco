@@ -1205,6 +1205,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   int number_of_hits_to_merge = hitsToMerge->size();
   
+
   for(unsigned int ihitCluster = 0; ihitCluster < number_of_hits_to_merge; ++ihitCluster){
     
     sumZ += hitsToMerge->at(ihitCluster)->getZ();
@@ -1235,8 +1236,30 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   mergedPoint->setZ(avgZ);
   
   //store hit variables
-  //now the hit pos has to be smeared
-  double pos[3] = {mergedPoint->getX(),mergedPoint->getY(),mergedPoint->getZ()}; 
+
+  // first the hit pos has to be smeared------------------------------------------------
+  
+  //FIXME: which errors should we use for smearing the merged hits ?
+  //       this might be a bit large ....
+  double tpcRPhiRes = _padWidth;
+  double tpcZRes = _binningZ;
+ 
+  CLHEP::Hep3Vector point( mergedPoint->getX(), mergedPoint->getY(), mergedPoint->getZ()  ) ;
+  
+  double unsmearedPhi = point.phi();
+  
+  double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
+  double randz =  gsl_ran_gaussian(_random,tpcZRes);
+  
+  point.setPhi( point.phi() + randrp/ point.perp() );
+  point.setZ( point.z() + randz );
+  
+  // make sure the hit is not smeared beyond the TPC Max DriftLength
+  if( fabs(point.z()) > gearTPC.getMaxDriftLength() ) point.setZ( (fabs(point.z()) / point.z() ) * gearTPC.getMaxDriftLength() );
+  
+  double pos[3] = {point.x(),point.y(),point.z()}; 
+
+  //---------------------------------------------------------------------------------
   trkHit->setPosition(pos);
   trkHit->setEDep(sumEDep);
   //  trkHit->setType( 500 );
@@ -1259,8 +1282,6 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   
   double phi = mergedPoint->getPhi();
-  double tpcRPhiRes = _padWidth;
-  double tpcZRes = _binningZ;
   
   // check values for inf and nan
   if( std::isnan(phi) || std::isinf(phi) || std::isnan(tpcRPhiRes) || std::isinf(tpcRPhiRes) ) {

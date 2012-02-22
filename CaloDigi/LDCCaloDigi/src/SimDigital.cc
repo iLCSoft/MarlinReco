@@ -78,14 +78,14 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 // 			     _thresholdSDHcal,
 // 			     (float)2.0e-10);
    std::vector<float> hcalThresholds;
-   hcalThresholds.push_back(0.00004);
+   hcalThresholds.push_back(0.01);
    registerProcessorParameter("HCALThreshold" ,
                              "Threshold for HCAL Hits in pC" ,
 			      _thresholdHcal,
 			      hcalThresholds);
    
    std::vector<float> calibrHcal;
-   calibrHcal.push_back(34.8);
+   calibrHcal.push_back(1.0);
 //////////////////////////////////////////////////////////
 //   std::vector<int> hcalLayers;
 //   hcalLayers.push_back(100);
@@ -151,7 +151,7 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			       (float) 30 );
 
    std::vector<float> chadisParameter;
-   chadisParameter.push_back(0.24);
+   chadisParameter.push_back(3.1415/0.24);
    registerProcessorParameter( "functionParameters",
 			       "parameter values for the function defined with functionFormula",
 			       _chargeSplitterFunction._functionParameters,
@@ -185,10 +185,6 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			       _polyaFunctionWidthParameter, 
 			       (double) 16.3 );
 
-   registerProcessorParameter( "PolyaAmplitude",
-			       "Parameter for the Polya distribution used to simulate the induced charge distribution : amplitude or normalisation of the distribution", 
-			       _polyaAmplitude,
-			       (double) 1 );
 
    registerProcessorParameter( "StepCellCenterMaxDistanceLayerDirection",
 			       "Maximum distance (mm) between the Geant4 step position and the cell center, in the RPC width direction, to keep a step for digitization",
@@ -250,7 +246,7 @@ void SimDigital::init(){
   //previousLayer=1 ,previousmodule=1, previousstave=1,previousIy=1,previousJz=1;
    //define a polya function to get induced charge
    _QPolya = new TF1("QPolya",Polya,0.0,10.0,3);
-   _QPolya->SetParameters(_polyaAverageCharge,_polyaFunctionWidthParameter,_polyaAmplitude);
+   _QPolya->SetParameters(_polyaAverageCharge,_polyaFunctionWidthParameter,1.0);
    //define the function for charge distribution
    //c2d=new TF2("c2d",ChaDis,-10,10,-10,10,3);
    //c2d->SetParNames("width","x'value","y'value");

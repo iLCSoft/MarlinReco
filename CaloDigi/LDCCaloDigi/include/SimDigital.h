@@ -260,8 +260,7 @@ class SimDigital : public Processor {
   std::string _outputRelCollection;
   bool _printSimDigital;
   TF1 * _QPolya;
-  double _polyaAverageCharge, _polyaFunctionWidthParameter, _polyaAmplitude;
-  //TF2 *c2d;  //NOT USED FOR THE MOMENT : WAITING LCIO v1.6 ? CHECK WITH RAN
+  double _polyaAverageCharge, _polyaFunctionWidthParameter;
   
   LCCollectionVec* _relcol;
 #ifdef SIMDIGITAL_WITHECAL

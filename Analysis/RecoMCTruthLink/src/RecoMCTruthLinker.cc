@@ -58,101 +58,101 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   _encoder = new UTIL::BitField64(lcio::ILDCellID0::encoder_string);
   
   registerProcessorParameter(  "KeepDaughtersPDG" , 
-                             "PDG codes of particles of which the daughters will be "
-                             "kept in the skimmmed MCParticle collection"  ,
-                             _pdgVec ,
-                             pdgVecDef ) ;
+			       "PDG codes of particles of which the daughters will be "
+			       "kept in the skimmmed MCParticle collection"  ,
+			       _pdgVec ,
+			       pdgVecDef ) ;
   
   
   
   registerInputCollection( LCIO::MCPARTICLE,
-                          "MCParticleCollection" , 
-                          "Name of the MCParticle input collection"  ,
-                          _mcParticleCollectionName ,
-                          std::string("MCParticle") ) ;
+			   "MCParticleCollection" , 
+			   "Name of the MCParticle input collection"  ,
+			   _mcParticleCollectionName ,
+			   std::string("MCParticle") ) ;
   
   registerInputCollection( LCIO::TRACK,
-                          "TrackCollection" , 
-                          "Name of the Tracks input collection"  ,
-                          _trackCollectionName ,
-                          std::string("LDCTracks") ) ;
+			   "TrackCollection" , 
+			   "Name of the Tracks input collection"  ,
+			   _trackCollectionName ,
+			   std::string("LDCTracks") ) ;
   
   registerInputCollection( LCIO::CLUSTER,
-                          "ClusterCollection" , 
-                          "Name of the Clusters input collection"  ,
-                          _clusterCollectionName ,
-                          std::string("PandoraClusters") ) ;
+			   "ClusterCollection" , 
+			   "Name of the Clusters input collection"  ,
+			   _clusterCollectionName ,
+			   std::string("PandoraClusters") ) ;
   
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-                          "RecoParticleCollection" ,
-                          "Name of the ReconstructedParticles input collection"  ,
-                          _recoParticleCollectionName ,
-                          std::string("PandoraPFOs") ) ;
+			   "RecoParticleCollection" ,
+			   "Name of the ReconstructedParticles input collection"  ,
+			   _recoParticleCollectionName ,
+			   std::string("PandoraPFOs") ) ;
   
   registerProcessorParameter("UseTrackerHitRelations",
                              "true: use relations for TrackerHits, false : use getRawHits ",
                              _use_tracker_hit_relations,
-                             bool(false));
+                             bool(true));
 
   
   registerInputCollection( LCIO::LCRELATION,"VXDTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for VXD TrackerHit collection"  ,
-                          _vxdTrackerHitRelInputColName ,
-                          std::string("VTXTrackerHitRelations") ) ;
+			   "Name of the rel collection for VXD TrackerHit collection"  ,
+			   _vxdTrackerHitRelInputColName ,
+			   std::string("VTXTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,"FTDTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for FTD TrackerHit collection"  ,
-                          _ftdTrackerHitRelInputColName ,
-                          std::string("FTDTrackerHitRelations") ) ;
+			   "Name of the rel collection for FTD TrackerHit collection"  ,
+			   _ftdTrackerHitRelInputColName ,
+			   std::string("FTDTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,"SITTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for SIT TrackerHit collection"  ,
-                          _sitTrackerHitRelInputColName ,
-                          std::string("SITTrackerHitRelations") ) ;
+			   "Name of the rel collection for SIT TrackerHit collection"  ,
+			   _sitTrackerHitRelInputColName ,
+			   std::string("SITTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,"TPCTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for TPC TrackerHit collection"  ,
-                          _tpcTrackerHitRelInputColName ,
-                          std::string("TPCTrackerHitRelations") ) ;
+			   "Name of the rel collection for TPC TrackerHit collection"  ,
+			   _tpcTrackerHitRelInputColName ,
+			   std::string("TPCTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,"SETTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for SET TrackerHit collection"  ,
-                          _setTrackerHitRelInputColName ,
-                          std::string("SETTrackerHitRelations") ) ;
+			   "Name of the rel collection for SET TrackerHit collection"  ,
+			   _setTrackerHitRelInputColName ,
+			   std::string("SETTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,"ETDTrackerHitRelInputCollection" , 
-                          "Name of the rel collection for ETD TrackerHit collection"  ,
-                          _etdTrackerHitRelInputColName ,
-                          std::string("ETDTrackerHitRelations") ) ;
+			   "Name of the rel collection for ETD TrackerHit collection"  ,
+			   _etdTrackerHitRelInputColName ,
+			   std::string("ETDTrackerHitRelations") ) ;
   
   registerInputCollection( LCIO::LCRELATION,
-                          "SimCalorimeterHitRelationName" , 
-                          "Name of the  SimCalorimeterHit - CalorimeterHit relation"  ,
-                          _caloHitRelationName ,
-                          std::string("RelationCaloHit") ) ;
+			   "SimCalorimeterHitRelationName" , 
+			   "Name of the  SimCalorimeterHit - CalorimeterHit relation"  ,
+			   _caloHitRelationName ,
+			   std::string("RelationCaloHit") ) ;
   
   
-  registerProcessorParameter("OutputTrackRelation",
-                             "true: Create TrackMCTruthLink collection, false : dont ",
-                             _OutputTrackRelation,
-                             bool(true));
-  
-  registerOutputCollection( LCIO::LCRELATION,
-                           "TrackMCTruthLinkName" , 
-                           "Name of the trackMCTruthLink output collection"  ,
-                           _trackMCTruthLinkName ,
-                           std::string("TrackMCTruthLink") ) ;
-  
-  registerProcessorParameter("OutputClusterRelation",
-                             "true: Create ClusterMCTruthLink collection, false : dont ",
-                             _OutputClusterRelation,
-                             bool(true));
+  // registerProcessorParameter("OutputTrackRelation",
+  //                            "true: Create TrackMCTruthLink collection, false : dont ",
+  //                            _OutputTrackRelation,
+  //                            bool(true));
   
   registerOutputCollection( LCIO::LCRELATION,
-                           "ClusterMCTruthLinkName" , 
-                           "Name of the clusterMCTruthLink output collection"  ,
-                           _clusterMCTruthLinkName ,
-                           std::string("ClusterMCTruthLink") ) ;
+			    "TrackMCTruthLinkName" , 
+			    "Name of the trackMCTruthLink output collection - not created if empty()"  ,
+			    _trackMCTruthLinkName ,
+			    std::string("") ) ;
+  
+  // registerProcessorParameter("OutputClusterRelation",
+  //                            "true: Create ClusterMCTruthLink collection, false : dont ",
+  //                            _OutputClusterRelation,
+  //                            bool(true));
+  
+  registerOutputCollection( LCIO::LCRELATION,
+			    "ClusterMCTruthLinkName" , 
+			    "Name of the clusterMCTruthLink output collection - not created if empty()"  ,
+			    _clusterMCTruthLinkName ,
+			    std::string("") ) ;
   
   
   registerProcessorParameter("FullRecoRelation",
@@ -164,55 +164,55 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
                              );
   
   registerOutputCollection( LCIO::LCRELATION,
-                           "RecoMCTruthLinkName" ,
-                           "Name of the RecoMCTruthLink output collection"  ,
-                           _recoMCTruthLinkName ,
-                           std::string("RecoMCTruthLink") ) ;
+			    "RecoMCTruthLinkName" ,
+			    "Name of the RecoMCTruthLink output collection - not created if empty()"  ,
+			    _recoMCTruthLinkName ,
+			    std::string("") ) ;
   
-  registerProcessorParameter("OutputCalohitRelation",
-                             "true: Create CalohitMCTruthLink collection, false : dont ",
-                             _OutputCalohitRelation,
-                             bool(false));
+  // registerProcessorParameter("OutputCalohitRelation",
+  //                            "true: Create CalohitMCTruthLink collection, false : dont ",
+  //                            _OutputCalohitRelation,
+  //                            bool(false));
   
   registerOutputCollection( LCIO::LCRELATION,
-                           "CalohitMCTruthLinkName" ,
-                           "Name of the updated calo-hit MCTruthLink output collection"  ,
-                           _calohitMCTruthLinkName ,
-                           std::string("CalohitMCTruthLink") ) ;
+			    "CalohitMCTruthLinkName" ,
+			    "Name of the updated calo-hit MCTruthLink output collection - not created if empty()"  ,
+			    _calohitMCTruthLinkName ,
+			    std::string("") ) ;
   
   registerOutputCollection( LCIO::MCPARTICLE,
-                           "MCParticlesSkimmedName" , 
-                           "Name of the skimmed MCParticle  output collection"  ,
-                           _mcParticlesSkimmedName ,
-                           std::string("MCParticlesSkimmed") ) ;
+			    "MCParticlesSkimmedName" , 
+			    "Name of the skimmed MCParticle  output collection - not created if empty()"  ,
+			    _mcParticlesSkimmedName ,
+			    std::string("") ) ;
   
   
   registerProcessorParameter( "daughtersECutMeV" , 
-                             "energy cut for daughters that are kept from KeepDaughtersPDG"  ,
-                             _eCutMeV,
-                             float( 10. )  
-                             ) ;
+			      "energy cut for daughters that are kept from KeepDaughtersPDG"  ,
+			      _eCutMeV,
+			      float( 10. )  
+			      ) ;
   
   
   registerProcessorParameter( "SaveBremsstrahlungPhotons" , 
-                             "save photons from Brems"  ,
-                             _saveBremsstrahlungPhotons,
-                             bool(false)  
-                             ) ;
+			      "save photons from Brems"  ,
+			      _saveBremsstrahlungPhotons,
+			      bool(false)  
+			      ) ;
   
   registerProcessorParameter( "UsingParticleGun" , 
-                             "If Using Particle Gun Ignore Gen Stat"  ,
-                             _using_particle_gun,
-                             bool(false)  
-                             ) ;
+			      "If Using Particle Gun Ignore Gen Stat"  ,
+			      _using_particle_gun,
+			      bool(false)  
+			      ) ;
   
   
   
   registerProcessorParameter( "BremsstrahlungEnergyCut" , 
-                             "energy cut for Brems that are kept"  ,
-                             _bremsstrahlungEnergyCut,
-                             float( 1. )  
-                             ) ;
+			      "energy cut for Brems that are kept"  ,
+			      _bremsstrahlungEnergyCut,
+			      float( 1. )  
+			      ) ;
   
   
 }
@@ -232,6 +232,12 @@ void RecoMCTruthLinker::init() {
     
     _pdgSet.insert( abs( *it )  )  ;
   }
+
+  // don't write outpur collections that have an empty name
+  _OutputClusterRelation =  ! _clusterMCTruthLinkName.empty() ;  
+  _OutputCalohitRelation =  ! _calohitMCTruthLinkName.empty() ;
+  _OutputTrackRelation   =  ! _trackMCTruthLinkName.empty() ;
+  
   
   _nRun = 0 ;
   _nEvt = 0 ;
@@ -264,7 +270,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   LCCollection* ttrlcol  = 0 ;
   bool haveTracks = true  ;
   
-  try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(...){  haveTracks=false ; }
+  try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(DataNotAvailableException&){  haveTracks=false ; }
   
   if( ! haveTracks ) {
     streamlog_out( MESSAGE ) << " Track collection : " << _trackCollectionName 
@@ -291,7 +297,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   LCCollection* ctrlcol = 0;
   LCCollection* chittrlcol = 0;
   
-  try{ clusterCol = evt->getCollection( _clusterCollectionName ) ; }   catch(...){  haveClusters=  false ; } 
+  try{ clusterCol = evt->getCollection( _clusterCollectionName ) ; }   catch(DataNotAvailableException&){  haveClusters=  false ; } 
   
   if( ! haveClusters ) {
     streamlog_out( MESSAGE ) << " Cluster collection : " << _clusterCollectionName 
@@ -299,14 +305,14 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   }
   
   
-  try{ cHitRelCol = evt->getCollection( _caloHitRelationName ) ;   }   catch(...){  haveCaloHitRel = false ; } 
+  try{ cHitRelCol = evt->getCollection( _caloHitRelationName ) ;   }   catch(DataNotAvailableException&){  haveCaloHitRel = false ; } 
   
   if( ! haveCaloHitRel ) {
     streamlog_out( MESSAGE ) << " CaloHit relation : " << _caloHitRelationName 
     << " not found - cannot create relation " << std::endl ;
   }
   
-  if( haveTracks && haveClusters && haveCaloHitRel ) {
+  if( haveTracks && haveClusters && haveCaloHitRel && ( _OutputClusterRelation || _OutputCalohitRelation ) ) {
     
     clusterLinker(  mcpCol ,  clusterCol,  cHitRelCol ,  &ctrlcol , &chittrlcol);
     
@@ -323,7 +329,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   LCCollection*  particleCol = 0 ;
   bool haveRecoParticles = true ; 
   
-  try { particleCol = evt->getCollection(  _recoParticleCollectionName ); }   catch(...){ haveRecoParticles = false ; } 
+  try { particleCol = evt->getCollection(  _recoParticleCollectionName ); }   catch(DataNotAvailableException&){ haveRecoParticles = false ; } 
   
   if( ! haveRecoParticles ) {
     streamlog_out( MESSAGE ) << " ReconstructedParticle collection : " << _recoParticleCollectionName 
@@ -332,20 +338,21 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   
   LCCollection* ptrlcol = 0;
   
-  if( haveRecoParticles &&  haveTracks && haveClusters && haveCaloHitRel ) {
+  if( haveRecoParticles &&  haveTracks && haveClusters && haveCaloHitRel && !_recoMCTruthLinkName.empty() ) {
     
     particleLinker(   particleCol, ttrlcol,  ctrlcol, &ptrlcol);
     
     evt->addCollection(  ptrlcol  , _recoMCTruthLinkName  ) ;
   }
   
-  if( haveTracks && haveClusters && haveCaloHitRel ) {
+  if( haveTracks && haveClusters && haveCaloHitRel && !_mcParticlesSkimmedName.empty() ) {
     
     LCCollectionVec* skimVec = new LCCollectionVec( LCIO::MCPARTICLE )  ;
     
     makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
     evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
   }
+
   //If either collection has not been added to the event, we have to delete it now!
   //Don't delete them before, because they are used
   if(!_OutputClusterRelation) { delete ctrlcol; }
@@ -370,42 +377,42 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   try{ 
     _navVXDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _vxdTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::VXD]=_navVXDTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for VXD " <<  std::endl ; 
   } 
   
   try{ 
     _navFTDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _ftdTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::FTD]=_navFTDTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for FTD " <<  std::endl ; 
   } 
   
   try{ 
     _navSITTrackerHitRel = new LCRelationNavigator(evt->getCollection( _sitTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::SIT]=_navSITTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for SIT " <<  std::endl ; 
   } 
   
   try{ 
     _navTPCTrackerHitRel = new LCRelationNavigator(evt->getCollection( _tpcTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::TPC]=_navTPCTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for TPC " <<  std::endl ; 
   } 
   
   try{ 
     _navSETTrackerHitRel = new LCRelationNavigator(evt->getCollection( _setTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::SET]=_navSETTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for SET " <<  std::endl ; 
   } 
   
   try{ 
     _navETDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _etdTrackerHitRelInputColName ) );
     _hit_rels_map[ILDDetID::ETD]=_navETDTrackerHitRel;     
-  }  catch(...) { 
+  }  catch(DataNotAvailableException&) { 
     streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for ETD " <<  std::endl ; 
   } 
   
@@ -1528,7 +1535,7 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
   LCCollection* mcpCol = NULL;
   try{
     mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
-  } catch (DataNotAvailableException e) {
+  } catch (DataNotAvailableException& e) {
     streamlog_out(WARNING) << "RecoMCTructh::Check(): MCParticle collection \"" << _mcParticleCollectionName << "\" does not exist, skipping" << std::endl;
   }
   

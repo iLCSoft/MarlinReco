@@ -4,6 +4,19 @@
 
 ===============================
 
+ -----------
+| v01-00-02 |
+ -----------
+
+      - LDCCaloDigi
+          Implement use of LCIO calorimeter Hit step position for SDHCAL digitizer 
+          (multiplicity simulation) and add parameters to the processor to better 
+          control the digitization -- Gerald Grenier IPNL
+
+      - TPCDigi
+          Bug fix: added smearing of merged TPC hits
+          (using rather large errors - which may have to be iterated on.)
+
 
  -----------
 | v01-00-01 |

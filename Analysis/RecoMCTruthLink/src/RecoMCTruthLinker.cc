@@ -90,10 +90,10 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			   std::string("PandoraPFOs") ) ;
   
   registerProcessorParameter("UseTrackerHitRelations",
-                             "true: use relations for TrackerHits, false : use getRawHits ",
-                             _use_tracker_hit_relations,
-                             bool(true));
-
+			     "true: use relations for TrackerHits, false : use getRawHits ",
+			     _use_tracker_hit_relations,
+			     bool(true));
+  
   
   registerInputCollection( LCIO::LCRELATION,"VXDTrackerHitRelInputCollection" , 
 			   "Name of the rel collection for VXD TrackerHit collection"  ,
@@ -239,8 +239,14 @@ void RecoMCTruthLinker::init() {
   _OutputTrackRelation   =  ! _trackMCTruthLinkName.empty() ;
   
   
-  _nRun = 0 ;
-  _nEvt = 0 ;
+  if( ! _use_tracker_hit_relations ){
+
+    streamlog_out( WARNING ) << "  ====== UseTrackerHitRelations=false => not using TrackerHit-SimTrackerHit-Relations  but getRawHits() instead - \n"
+			     << "         this is probably not what you want (only for backward compatibility with very old files...)" << std::endl ;
+  }
+   
+   _nRun = 0 ;
+ _nEvt = 0 ;
 }
 
 
@@ -437,20 +443,20 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     
     MCPMap mcpMap ;  // mcpMap is a map seen <-> true particle
     
-    int nHit = 0 ;
+    int nSimHit = 0 ;
     
     const TrackerHitVec& trkHits = trk->getTrackerHits() ;
     
     for( TrackerHitVec::const_iterator hitIt = trkHits.begin() ;
-        hitIt != trkHits.end() ; ++hitIt ) { 
+	 hitIt != trkHits.end() ; ++hitIt ) { 
       
       TrackerHit* hit = * hitIt ; // ... and a seen hit ... 
       
       const LCObjectVec& simHits  = _use_tracker_hit_relations ? *(this->getSimHits(hit)) : hit->getRawHits() ;
       
       for( LCObjectVec::const_iterator objIt = simHits.begin() ;
-          objIt != simHits.end() ; ++objIt ){
-                
+	   objIt != simHits.end() ; ++objIt ){
+	
         SimTrackerHit* simHit = dynamic_cast<SimTrackerHit*>( *objIt ) ; // ...and a sim hit ...
         
         MCParticle* mcp = simHit->getMCParticle() ; // ... and a true particle !
@@ -461,13 +467,13 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
           streamlog_out( WARNING ) << " tracker SimHit without MCParticle ?!   " <<  std::endl ;
         }
         
-        ++nHit ; // total hit count
+        ++nSimHit ; // total hit count
         
       }
     }
     
-        
-    if( nHit == 0 ){
+    
+    if( nSimHit == 0 ){
       
       streamlog_out( WARNING ) << " No simulated tracker hits found. Set UseTrackerHitRelations to true in steering file to enable using TrackerHit relations if they are available." <<  std::endl ;
       
@@ -497,40 +503,52 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
       if ( _using_particle_gun || it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
                                                                             // creating true particle: enter it into the list,
                                                                             // and note how many hits it produced.
-        theMCPs.push_back(it->first);  MCPhits.push_back(it->second); ifound++;
+        theMCPs.push_back( it->first ) ;  
+	MCPhits.push_back( it->second ) ; 
+	ifound++;
+
       } else {  // not genstat 1. Wat should we do with it ?
+
         if ( mother != 0 ) { // if it has a parent, save it
-          theMCPs.push_back(it->first);  MCPhits.push_back(it->second); ifound++;
+
+          theMCPs.push_back(it->first);  
+	  MCPhits.push_back(it->second); 
+	  ifound++;
+
         } else {
-          streamlog_out( WARNING ) << 
-          " track has hit(s) from a non-generator particle with no parents ?!! " 
-          << std::endl;
+
+          streamlog_out( WARNING ) << " track has hit(s) from a non-generator particle with no parents ?!! "  << std::endl;
         }           
       }
     } // end of loop over map
+    
+    // hits in track
+    unsigned nHit = trkHits.size() ;
     
     // finally calculate the weight of each true partic to the seen 
     // (= hits_from_this_true/ all_hits),
     // and add the weighted reltion
     for (int iii=0 ; iii<ifound ; iii++ ) {
       
-      float  weight = float(MCPhits[iii]  )/float(nHit) ; 
+
+      float  weight = float(MCPhits[iii]  )/float(nSimHit) ; 
       
       
-      streamlog_out( DEBUG4 ) << " track has " << MCPhits[iii]  
-      << " hits of " << nHit 
-      << " [ " << int(weight) << " ] " 
-      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG() 
-      << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
-      << " id: " << theMCPs[iii]
-      << std::endl ;
+      streamlog_out( DEBUG4 ) << " track has " << MCPhits[iii]  << " hits of " 
+			      << nSimHit << " SimHits ("
+			      << nHit <<    " TrackerHits) "
+			      << " [ " << int(weight*100) << " %] " 
+			      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG() 
+			      << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
+			      << " id: " << theMCPs[iii]
+			      << std::endl ;
       
       
       trackTruthRelNav.addRelation(   trk , theMCPs[iii] , weight ) ;
     }   
     
     ifoundch=ifound;
-  }  
+  } 
   //  seen-true relation complete. add the collection
   
   streamlog_out( DEBUG4 ) << " track linking complete, create collection " << std::endl;

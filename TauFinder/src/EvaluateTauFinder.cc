@@ -32,7 +32,9 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+
+#define coutUpToEv 10
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -41,7 +43,7 @@ using namespace UTIL;
 EvaluateTauFinder aEvaluateTauFinder ;
 
 struct TAU {   // Declare  struct type
-  double E,phi,theta,D0;   // Declare member types
+  double E,phi,theta,D0,NQ,N;   // Declare member types
 };   
 
 bool MyAngleSort( TAU p1, TAU p2)
@@ -56,6 +58,11 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
   
   // register steering parameters: name, description, class-variable, default value
   
+ registerProcessorParameter( "FileName_Signal",
+			      "Name of the Signal output file "  ,
+			      _OutputFile_Signal ,
+			      std::string("Signal.root") ) ;
+
   registerProcessorParameter( "inputCol" ,
                               "Name of the input Collection"  ,
                               _incol ,
@@ -66,7 +73,7 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
                               std::string("TauRecLink_PFO")) ;
 
    registerInputCollection( LCIO::MCPARTICLE,
-			   "MCCollectionName           " , 
+			   "MCCollectionName" , 
 			   "Name of the MCParticle collection"  ,
 			   _colNameMC ,
 			   std::string("MCParticlesSkimmed") ) ;
@@ -130,14 +137,18 @@ void EvaluateTauFinder::init()
   _ndE= 0;
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
  
-  evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed:WpD1:WpD2:WmD1:WmD2");
-  tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0");
-  mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:D0:D1:D2");
-  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:E:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
-  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:E:mcE:mcp:mcpt:mcD0:recE:recp:recpt:recD0:ED0seed");
-  faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recp:recD0");
+
+  rootfile = new TFile((_OutputFile_Signal).c_str (),"RECREATE");
+
+  evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed:WpD1:WpD2:WmD1:WmD2:LD");
+  tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0:recNQ:recN:LD");
+  mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:pt:theta:D0:D1:D2");
+  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:E:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0:LD");
+  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:E:mcE:mcp:mcpt:mcD0:recE:recp:recpt:recD0:ED0seed:LD");
+  faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recp:recD0:pt:theta:N");
   topofaketuple =new TNtuple("topofake","topofake","EvID:nfake:WpD1:WpD2:WmD1:WmD2");
-  
+  leptons=new TNtuple("Leptons","Leptons","EvID:PDG");
+
   std::cout << "INIT IS DONE" << std::endl;
 }
 
@@ -216,12 +227,13 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
     
   bool isfake=false;
   int nfakes=0;
+  int LDev=0;
   std::vector<TAU> rectauvec;
   if( colTau != 0)
     {
       int nT = colTau->getNumberOfElements();
       ntau_rec=nT;
-      
+      int LD=0;
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
       HelixClass *helix = new HelixClass();
@@ -234,19 +246,27 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	  double p=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2]);
 	  double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
 	  double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
-	   std::vector< ReconstructedParticle * > tauvec=tau->getParticles();
+	  std::vector< ReconstructedParticle * > tauvec=tau->getParticles();
 	  double Eseed=0,D0=0;
+	  
+	  if(tauvec.size()==1)
+	    leptons->Fill(_nEvt,tauvec[0]->getType());
+	  int NQ=0;
 	  for(unsigned int o=0;o<tauvec.size();o++)
 	    {
 	      //find seed track for D0
 	      if(tauvec[o]->getCharge()!=0)
 		{
+		  NQ++;
 		  if(tauvec[o]->getEnergy()>Eseed && tauvec[o]->getTracks().size()!=0 )
 		    {
 		      D0=(float)tauvec[o]->getTracks()[0]->getD0();
 		      Eseed=tauvec[o]->getEnergy();
 		    }
 		}
+	      //check for leptonic decay
+	      if(tauvec[o]->getType()==11 ||tauvec[o]->getType()==13)
+		LD=1;
 	    }
 	  // float mom[3];
 // 	  float ver[3];
@@ -267,13 +287,15 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 // 	  helix->Initialize_VP(ver,mom,charge,_bField);
 	  //double D0=fabs(helix->getD0());
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
+	    cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<" "<<tauvec.size()<<endl;
 	  
 	  TAU rtau;
 	  rtau.E=tau->getEnergy();
 	  rtau.phi=phi;
 	  rtau.theta=theta;
 	  rtau.D0=D0;
+	  rtau.N=tauvec.size();	 
+	  rtau.NQ=NQ;	 
 	  rectauvec.push_back(rtau);
 	  _ntot_rec++;
 	  
@@ -365,9 +387,9 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  
 		  LoopDaughters(mctau,Evis,ptvis,pvis);
 		  
-		  taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0);
+		  taumatchtuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_phi,mc_theta,mc_D0,tau->getEnergy(),p,pt,phi,theta,D0,LD);
 		  if(!contaminated)
-		    tauexacttuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_D0,tau->getEnergy(),p,pt,D0,Eseed);
+		    tauexacttuple->Fill(_nEvt,mctau->getEnergy(),Evis,pvis,ptvis,mc_D0,tau->getEnergy(),p,pt,D0,Eseed,LD);
 		  _dEsum+=Evis-tau->getEnergy();
 		  _dEsumsq+=(Evis-tau->getEnergy())*(Evis-tau->getEnergy());
 		  _ndE++;
@@ -386,7 +408,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			  for(unsigned int m=0;m<relobj.size();m++)
 			    {
 			      MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
-			      if(mc->getPDG()==22)
+			      if(mc->getCharge()==0)
 				continue;
 			      MCParticle *dummy=mc;
 			      MCParticle *parent=mc;
@@ -396,6 +418,8 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 				  dummy=parent->getParents()[0];
 				  size=dummy->getParents().size();
 				  parent=dummy;
+				  if(parent->getGeneratorStatus()==2)
+				    break;
 				}
 			      pdg=parent->getPDG();
 			      if(parent->getDaughters().size())
@@ -405,12 +429,16 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			    }
 			}
 		    }
-		  faketuple->Fill(_nEvt,pdg,d1,d2,tau->getEnergy(),p,D0);
+		  const double *tpvec=tau->getMomentum();
+		  double tpt=sqrt(tpvec[0]*tpvec[0]+tpvec[1]*tpvec[1]);
+		  double ttheta=180./TMath::Pi()*atan(tpt/fabs(tpvec[2]));
+		  faketuple->Fill(_nEvt,pdg,d1,d2,tau->getEnergy(),p,D0,tpt,ttheta,tau->getParticles().size());
 		  isfake=true;
 		  nfakes++;
 		}
 	    }//relNavTau
 	}
+
       delete helix;
       delete mc_helix;
     }
@@ -426,8 +454,11 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       for(int k=0; k < nMCP; k++) 
 	{
 	  MCParticle *particle = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
-	  if(particle->getGeneratorStatus()<3 && fabs(particle->getPDG())==15)
+
+	  if(particle->getGeneratorStatus()==2 && fabs(particle->getPDG())==15 && particle->getDaughters().size()>1 )
 	    {
+	      if(fabs(particle->getDaughters()[0]->getPDG())==15)
+		continue;
 	      ntau_mc++;
 	      _ntot_mc++;
 	      const double *pvec=particle->getMomentum();
@@ -469,7 +500,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			  d1=particle->getDaughters()[0]->getPDG();
 			  d2=particle->getDaughters()[1]->getPDG();
 			}
-		      mcmisstuple->Fill(_nEvt,Evis,D0,d1,d2);
+		      mcmisstuple->Fill(_nEvt,Evis,pt,theta,D0,d1,d2);
 		      if(_nEvt<coutUpToEv || _nEvt==coutEv)
 			cout<<"Missed: "<<Evis<<" "<<D0<<" "<<d1<<" "<<d2<<endl;
 		    }
@@ -494,29 +525,29 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   if(isfake)
     topofaketuple->Fill(_nEvt,nfakes,D1,D2,D3,D4);
   //filling the tuple
-  evtuple->Fill(_nEvt,ntau_mc,ntau_rec,missed,D1,D2,D3,D4);
-   //sort the mc t and rec taus for comparison
-   std::sort(mctauvec.begin(), mctauvec.end(), MyAngleSort);
-   std::sort(rectauvec.begin(), rectauvec.end(), MyAngleSort);
-   
-   unsigned int common=mctauvec.size();
-   if(mctauvec.size()>rectauvec.size())
-     common=rectauvec.size();
-   for(unsigned int p=0;p<common;p++)
-     tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0);
-   if(mctauvec.size()>rectauvec.size())
-     {
-       for(unsigned int p=common;p<mctauvec.size();p++)
-	 tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,0,0,0,0);
-     }
-   if(mctauvec.size()<rectauvec.size())
-     {
-       for(unsigned int p=common;p<rectauvec.size();p++)
-	 tautuple->Fill(_nEvt,0,0,0,0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0);
-     }
-   
-   
-   if(_nEvt<coutUpToEv || _nEvt==coutEv)
+  evtuple->Fill(_nEvt,ntau_mc,ntau_rec,missed,D1,D2,D3,D4,LDev);
+  //sort the mc t and rec taus for comparison
+  std::sort(mctauvec.begin(), mctauvec.end(), MyAngleSort);
+  std::sort(rectauvec.begin(), rectauvec.end(), MyAngleSort);
+  
+  unsigned int common=mctauvec.size();
+  if(mctauvec.size()>rectauvec.size())
+    common=rectauvec.size();
+  for(unsigned int p=0;p<common;p++)
+    tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N);
+  if(mctauvec.size()>rectauvec.size())
+    {
+      for(unsigned int p=common;p<mctauvec.size();p++)
+	tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,0,0,0,0,0,0);
+    }
+  if(mctauvec.size()<rectauvec.size())
+    {
+      for(unsigned int p=common;p<rectauvec.size();p++)
+	tautuple->Fill(_nEvt,0,0,0,0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N);
+    }
+  
+  
+  if(_nEvt<coutUpToEv || _nEvt==coutEv)
     cout<<"--------------------------------------------------------------------------------------------"<<endl;
   
   
@@ -539,10 +570,17 @@ void EvaluateTauFinder::LoopDaughters(MCParticle *particle,double &Evis,double &
 	{
 	  if (daughter->getGeneratorStatus()==1)
 	    {
-	      Evis+=daughter->getEnergy();
-	      const double *mc_pvec=daughter->getMomentum();
-	      ptvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
-	      pvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]+mc_pvec[2]*mc_pvec[2]);
+	       //filter out the neutrinos and other invisibles
+	      if(!(  fabs(daughter->getPDG())==12 || fabs(daughter->getPDG())==14 || fabs(daughter->getPDG())==16
+		     || fabs(daughter->getPDG())==1000022))
+		{
+		  //		  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+		  //cout<<"D vis "<<d<<" "<<daughter->getPDG()<<" "<<daughter->getEnergy()<<endl;
+		  Evis+=daughter->getEnergy();
+		  const double *mc_pvec=daughter->getMomentum();
+		  ptvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
+		  pvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]+mc_pvec[2]*mc_pvec[2]);
+		}
 	    }
 	  
 	}
@@ -590,26 +628,23 @@ void EvaluateTauFinder::check( LCEvent * evt ) {
 void EvaluateTauFinder::end(){ 
   
 
-  std::string end(".root");
-  std::string fname = _incol+end;
-  const char *filename=fname.c_str();
-  rootfile = new TFile(filename,"RECREATE");
   
   std::cout << "EvaluateTauFinder::end()  " << name() 
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "<<std::endl;
   
 
-  evtuple->Write();
-  tautuple->Write();
-  mcmisstuple->Write();
-  taumatchtuple->Write();
-  tauexacttuple->Write();
-  faketuple->Write();
-  topofaketuple->Write();
+//   evtuple->Write();
+//   tautuple->Write();
+//   mcmisstuple->Write();
+//   taumatchtuple->Write();
+//   tauexacttuple->Write();
+//   faketuple->Write();
+//   topofaketuple->Write();
   
   //Close File here
   rootfile->Write();
-  rootfile->Close();
+  delete rootfile;
+  // rootfile->Close();
 }
 
 

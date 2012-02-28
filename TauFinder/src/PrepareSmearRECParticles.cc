@@ -36,7 +36,7 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+#define coutUpToEv 10
 
 using namespace lcio ;
 using namespace marlin ;
@@ -59,10 +59,10 @@ PrepareSmearRECParticles::PrepareSmearRECParticles() : Processor("PrepareSmearRE
 
   // register steering parameters: name, description, class-variable, default value
   registerInputCollection( LCIO::MCPARTICLE,
-			   "MCCollectionName           " , 
+			   "MCCollectionName" , 
 			   "Name of the MCParticle collection"  ,
 			   _colNameMC ,
-			   std::string("MCParticlesSkimmed") ) ;
+			   std::string("MCParticle") ) ;
                                         
   registerProcessorParameter( "outputColMC" ,
                               "Name of the output Collection of refilled information"  ,
@@ -101,6 +101,11 @@ PrepareSmearRECParticles::PrepareSmearRECParticles() : Processor("PrepareSmearRE
 			   _colNameMCTruth ,
 			   std::string("MCRecLink") ) ;
 
+ registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+                            "outputColTracks",
+                            "Collection of Rec Particles for TauFinder",
+                            _outcolTracks ,
+                            std::string("Tracks_tau"));
 }
 
 
@@ -143,6 +148,7 @@ void PrepareSmearRECParticles::processEvent( LCEvent * evt )
     cout<<"EVENT "<<_nEvt<<endl;
   
   LCCollectionVec *reccol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  LCCollectionVec *trackcol = new LCCollectionVec(LCIO::TRACK);
   //LCRelation stuff
   LCCollectionVec *mc_relationcol = new LCCollectionVec(LCIO::LCRELATION);
   mc_relationcol->parameters().setValue(std::string("FromType"),LCIO::RECONSTRUCTEDPARTICLE);
@@ -158,85 +164,97 @@ void PrepareSmearRECParticles::processEvent( LCEvent * evt )
 	  MCParticle *mc = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
 	  if(mc->getGeneratorStatus()==1)//only stable ones
 	    {
-	      //filter out the neutrinos and other invisibles
-	      if( (mc->getMass()==0 && fabs(mc->getPDG())!=22)
-		  || mc->getPDG()==1000022)
+	       //filter out the neutrinos and other invisibles
+	      if(  fabs(mc->getPDG())==12 || fabs(mc->getPDG())==14 || fabs(mc->getPDG())==16
+		   || fabs(mc->getPDG())==1000022)
 		continue;
-	      ReconstructedParticleImpl *rec = new ReconstructedParticleImpl();
-	      //copy values from MC to REC
-	      //smear momentum resolution, leave z untouched
-	      float mommc[3];
-	      for(int i=0;i<3;i++)
-		mommc[i]=mc->getMomentum()[i];
-	      double pt=sqrt(mommc[0]*mommc[0]+mommc[1]*mommc[1]);
-	      double phi = atan2( mommc[1],mommc[0] );
-	      double sigma_pt=_momres*pt*pt;
-	      double pt_smear = pt+gsl_ran_gaussian( _random,sigma_pt ) ; 
-	      mommc[0] = pt_smear*cos(phi) ; 
-	      mommc[1]=  pt_smear*sin(phi);
-	      //cout<<pt<<" "<<sigma_pt<<" "<<sqrt(mommc[0]*mommc[0]+mommc[1]*mommc[1])<<endl;	      
-	      rec->setMomentum(mommc);
-	      rec->setType(mc->getPDG());
-	      rec->setMass(mc->getMass());
-	      rec->setCharge(mc->getCharge());
-	      //add the track if charged, so that information for D0 is present
-	      if(mc->getCharge())
+	      //detector acceptance
+	      double Cos_T  = fabs(mc->getMomentum()[2]) / sqrt(pow(mc->getMomentum()[0],2)+pow(mc->getMomentum()[1],2) + pow(mc->getMomentum()[2],2));
+	      double p_t  = sqrt(pow(mc->getMomentum()[0],2) + pow(mc->getMomentum()[1],2));
+	      
+	      if (p_t   > 0.2 && Cos_T <  0.99)
 		{
-		  
-		  TrackImpl *track=new TrackImpl();
-		  float ver[3];
-		  float mom[3];
-		  float rp[3];
-		  for(int i=0;i<3;i++){
-		    ver[i]=mc->getVertex()[i];
-		    mom[i]=mc->getMomentum()[i];
-		  }
-		  helix->Initialize_VP(ver,mom,mc->getCharge(),_bField);
+		  ReconstructedParticleImpl *rec = new ReconstructedParticleImpl();
+		  //copy values from MC to REC
+		  //smear momentum resolution, leave z untouched
+		  float mommc[3];
 		  for(int i=0;i<3;i++)
-		    rp[i]=helix->getReferencePoint()[i];
-		  track->setReferencePoint(rp);
-		  track->setPhi (helix->getPhi0());
-		  track->setOmega (helix->getOmega());
-		  track->setTanLambda (helix->getTanLambda());
+		    mommc[i]=mc->getMomentum()[i];
+		  double pt=sqrt(mommc[0]*mommc[0]+mommc[1]*mommc[1]);
+		  double phi = atan2( mommc[1],mommc[0] );
+		  double sigma_pt=_momres*pt*pt;
+		  double pt_smear = pt+gsl_ran_gaussian( _random,sigma_pt ) ; 
+		  mommc[0] = pt_smear*cos(phi) ; 
+		  mommc[1]=  pt_smear*sin(phi);
+		  //cout<<pt<<" "<<sigma_pt<<" "<<sqrt(mommc[0]*mommc[0]+mommc[1]*mommc[1])<<endl;	      
+		  rec->setMomentum(mommc);
+		  rec->setType(mc->getPDG());
+		  rec->setMass(mc->getMass());
+		  rec->setCharge(mc->getCharge());
+		  //add the track if charged, so that information for D0 is present
+		  if(mc->getCharge())
+		    {
+		      
+		      TrackImpl *track=new TrackImpl();
+		      float ver[3];
+		      float mom[3];
+		      float rp[3];
+		      for(int i=0;i<3;i++){
+			ver[i]=mc->getVertex()[i];
+			mom[i]=rec->getMomentum()[i];
+		      }
+		      helix->Initialize_VP(ver,mom,mc->getCharge(),_bField);
+		      for(int i=0;i<3;i++)
+			rp[i]=helix->getReferencePoint()[i];
+		      track->setReferencePoint(rp);
+		      track->setPhi (helix->getPhi0());
+		      track->setOmega (helix->getOmega());
+		      track->setTanLambda (helix->getTanLambda());
 		 
-		  double p=sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
-		  //smear energy, in case of charged particle the same as momentum resolution
-		  rec->setEnergy(p);
-		  //smearing of D0, try 2 < a < 6 micron and 10 < b < 20 micron
-		  double pt=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
-		  double theta=atan(pt/fabs(mom[2]));
-		  double sigma_D0 = sqrt(_D0res_a*_D0res_a + _D0res_b*_D0res_b/(p*p*pow(sin(theta),3))); 
-		  double mean_D0=fabs(helix->getD0());
-		  double D0=mean_D0+gsl_ran_gaussian(_random,sigma_D0)/1000.;
-		  track->setD0(fabs(D0));
-		  //cout<<mean_D0<<" "<<sigma_D0<<" "<<fabs(D0)<<" "<<pt<<"  "<<p<<endl;
-		  double sigma_z = sqrt(_D0res_a*_D0res_a + _D0res_b*_D0res_b/(p*pow(sin(theta),5)));
-		  double mean_z=helix->getZ0();
-		  track->setZ0(mean_z+gsl_ran_gaussian(_random,sigma_z)/1000);
-		  
-		  rec->addTrack(track);
+		      double p=sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
+		      //smear energy, in case of charged particle the same as momentum resolution
+		      rec->setEnergy(sqrt(p*p+mc->getMass()*mc->getMass()));
+		      //smearing of D0, try 2 < a < 6 micron and 10 < b < 20 micron
+// 		      double pt=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
+// 		      double theta=atan(pt/fabs(mom[2]));
+// 		      double sigma_D0 = sqrt(_D0res_a*_D0res_a + _D0res_b*_D0res_b/(p*p*pow(sin(theta),3))); 
+// 		      double mean_D0=fabs(helix->getD0());
+// 		      double D0=mean_D0+gsl_ran_gaussian(_random,sigma_D0)/1000.;
+// 		      track->setD0(fabs(D0));
+// 		      //cout<<mean_D0<<" "<<sigma_D0<<" "<<fabs(D0)<<" "<<pt<<"  "<<p<<endl;
+// 		      double sigma_z = sqrt(_D0res_a*_D0res_a + _D0res_b*_D0res_b/(p*pow(sin(theta),5)));
+// 		      double mean_z=helix->getZ0();
+// 		      track->setZ0(mean_z+gsl_ran_gaussian(_random,sigma_z)/1000);
+		      //no D0 smearing
+		      track->setD0(fabs(helix->getD0()));
+		      track->setZ0 (helix->getZ0());
+		      rec->addTrack(track);
+		      trackcol->addElement(track);
+		    
+		    }
+		  else
+		    {
+		      //smear energy, in case of neutral particle given by calorimter
+		      double sigma_E=_Eres*mc->getEnergy()/sqrt(mc->getEnergy());
+		      double Esmeared=mc->getEnergy()+gsl_ran_gaussian(_random,sigma_E);
+		      if(Esmeared<0)
+			Esmeared=0;
+		      rec->setEnergy(Esmeared);
+		    }
+		
+		  //cout<<mc->getCharge()<<" "<<mc->getEnergy()<<" "<<rec->getEnergy()<<endl;
+		  reccol->addElement( rec );
+		  LCRelationImpl *rel = new LCRelationImpl(rec,mc);
+		  mc_relationcol->addElement( rel );
 		}
-	      else
-		{
-		  //smear energy, in case of neutral particle given by calorimter
-		  double sigma_E=_Eres*mc->getEnergy()/sqrt(mc->getEnergy());
-		  double Esmeared=mc->getEnergy()+gsl_ran_gaussian(_random,sigma_E);
-		  if(Esmeared<0)
-		    Esmeared=0;
-		  rec->setEnergy(Esmeared);
-		}
-	      //cout<<mc->getCharge()<<" "<<mc->getEnergy()<<" "<<rec->getEnergy()<<endl;
-	      reccol->addElement( rec );
-	      LCRelationImpl *rel = new LCRelationImpl(rec,mc);
-	      mc_relationcol->addElement( rel );
 	    }
 	}
     }
   delete helix;
   
   
-  
   evt->addCollection(reccol,_outcolMC);
+  evt->addCollection(trackcol,_outcolTracks);
   evt->addCollection(mc_relationcol,_colNameMCTruth);
   
    

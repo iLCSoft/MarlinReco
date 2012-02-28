@@ -1144,7 +1144,8 @@ double  BCalReconstruction::GetEnergyCalib(double energy){
 
 //  return (energy*70.+4.7);  //calib BeCas
 //  return (energy*71.43+10.);  //calib Marlin signal
-  return (energy*78.55+0.1199);  //calib Marlin signal
+//  return (energy*78.55+0.1199);  //calib Marlin signal
+return (energy*74.91+11.45);  //calib Marlin signal+bkg 27 Feb. 2012
 //  return energy;
 }
 

@@ -31,7 +31,9 @@ using namespace std;
 #include "marlin/VerbosityLevels.h"
 
 #define coutEv -1
-#define coutUpToEv 0
+
+#define coutUpToEv 10
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -62,28 +64,43 @@ TauFinder::TauFinder() : Processor("TauFinder")
                               _outcol ,
                               std::string("TauRec_PFA")) ;
  
+  registerProcessorParameter( "TauRecRestCollection" ,
+                              "Name of the output Collection of rest group"  ,
+                              _outcolRest ,
+                              std::string("TauRecRest_PFO")) ;
+ 
   //the link between the reconstructed tau and the input particles used for it
   registerProcessorParameter( "relCol" ,
                                "Name of the LCRelation output Collection"  ,
                                _colNameTauRecLink ,
-			      std::string("TauRecLink_PFA")) ;
+			      std::string("TauRecLink_PFO")) ;
 
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			    "TauRecCollection",
                             "Collection of Tau Candidates",
                             _outcol ,
-                            std::string("TauRec_PFA"));
+                            std::string("TauRec_PFO"));
+  
+  registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+			    "TauRecRestCollection",
+                            "Collection of Particles in Rest Group not in Tau Candidates",
+                            _outcolRest ,
+                            std::string("TauRecRest_PFO"));
   
   registerOutputCollection( LCIO::LCRELATION,
 			    "TauRecLinkCollectionName" , 
 			    "Name of the Tau link to ReconstructedParticle collection"  ,
 			    _colNameTauRecLink ,
-			    std::string("TauRecLink_PFA") ) ;
+			    std::string("TauRecLink_PFO") ) ;
   
   registerProcessorParameter( "pt_cut" ,
                               "Cut on pt to suppress background"  ,
                               _ptcut ,
-                              (float)0.) ;
+                              (float)0.2) ;
+  registerProcessorParameter( "cosT_cut" ,
+                              "Cut on cosT to suppress background"  ,
+                              _cosTcut ,
+                              (float)0.99) ;
   
   registerProcessorParameter( "searchConeAngle" ,
                               "Opening angle of the search cone for tau jet in rad"  ,
@@ -138,7 +155,8 @@ void TauFinder::init()
   _fail_minv_neg=0;
   _fail_Qtr=0;
   _fail_isoE=0;
-  std::cout << "INIT IS DONE" << std::endl;
+  _mergeTries=0;
+ std::cout << "INIT IS DONE" << std::endl;
 }
 
 void TauFinder::processRunHeader( LCRunHeader* run) 
@@ -165,11 +183,12 @@ void TauFinder::processEvent( LCEvent * evt )
   relationcol->parameters().setValue(std::string("ToType"),LCIO::RECONSTRUCTEDPARTICLE);
  
   _nEvt = evt->getEventNumber();  
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+  if(_nEvt<coutUpToEv || _nEvt==coutEv || _nEvt%10000==0 )
     cout<<"------EVENT "<<_nEvt<<"---"<<endl;
   
   LCCollectionVec * reccol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
- 
+  LCCollectionVec * restcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  restcol->setSubset(1);
   //sort all input particles into charged and neutral
   std::vector<ReconstructedParticle*> Avector;//all particles
   std::vector<ReconstructedParticle*> Qvector;//charged particles
@@ -184,8 +203,8 @@ void TauFinder::processEvent( LCEvent * evt )
 	  ReconstructedParticle *particle = dynamic_cast <ReconstructedParticle*>( colRECO->getElementAt( i ) );
 	  double pt=sqrt(particle->getMomentum()[0]*particle->getMomentum()[0]
 			 +particle->getMomentum()[1]*particle->getMomentum()[1]);
-	
-	  if(pt<_ptcut)   
+	  double Cos_T  = fabs(particle->getMomentum()[2]) / sqrt(pow(particle->getMomentum()[0],2)+pow(particle->getMomentum()[1],2) + pow(particle->getMomentum()[2],2));
+	  if(pt<_ptcut || Cos_T>_cosTcut)   
 	    continue;
 	  Avector.push_back(particle);
 	  if(particle->getCharge()==1 || particle->getCharge()==-1)
@@ -195,7 +214,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	}
     }//colRECO
 
-
+  
   //sort mc vec according to energy
   std::sort(Qvector.begin(), Qvector.end(), MyEnergySort);
   std::sort(Nvector.begin(), Nvector.end(), MyEnergySort);
@@ -260,8 +279,13 @@ void TauFinder::processEvent( LCEvent * evt )
 	  if(chargedtracks>4 || chargedtracks==0)
 	    _fail_Qtr++;
 
+	  //put those particles into rest group
+	  for(unsigned int tp=0;tp<tau.size();tp++)
+	    restcol->addElement(tau[tp]);
+	  
 	  iterT=tauvec.erase(iterT);
 	  p--;
+	  
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	    {
 	      double phi=180./TMath::Pi()*atan(mom[1]/mom[0]);
@@ -293,6 +317,7 @@ void TauFinder::processEvent( LCEvent * evt )
     }
   //merge taus that are very close together, because they are likely to be from 1 tau that got split in algorithm
   LCRelationNavigator *relationNavigator = new LCRelationNavigator( relationcol );
+
   if(tauRecvec.size()>1)
     {
       std::vector<ReconstructedParticleImpl*>::iterator iterC=tauRecvec.begin();
@@ -316,9 +341,10 @@ void TauFinder::processEvent( LCEvent * evt )
 	      angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
 			 (sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2])*
 			  sqrt(momn[0]*momn[0]+momn[1]*momn[1]+momn[2]*momn[2])));
-	      
+	      //merging happens
 	      if(angle<_coneAngle)
 		{
+		  _mergeTries++;
 		  double E=tau->getEnergy();
 		  double En=E+taun->getEnergy();
 		  tau->setEnergy(En);
@@ -351,14 +377,20 @@ void TauFinder::processEvent( LCEvent * evt )
 		      if(QTvec[t+erasecount]+QTvec[t2+erasecount]>4)
 			_fail_Qtr++;
 		      
+		      //put those particles into rest group
+		      for(unsigned int tp=0;tp<(*iterC)->getParticles().size();tp++)
+			restcol->addElement((*iterC)->getParticles()[tp]);
+		      for(unsigned int tp=0;tp<(*iterF)->getParticles().size();tp++)
+			restcol->addElement((*iterF)->getParticles()[tp]);
+		      
 		      delete *iterC;
 		      tauRecvec.erase(iterC);
 		      erasecount++;
 		      t2--;
 		      delete *iterF;
-		      tauRecvec.erase(iterF);
+		      iterF=tauRecvec.erase(iterF);
 		      erasecount++;
-		      if(tauRecvec.size()>t)
+		      if(iterF!=tauRecvec.end())
 			{
 			  tau=*iterF;
 			  mom=tau->getMomentum();
@@ -407,8 +439,11 @@ void TauFinder::processEvent( LCEvent * evt )
 	  _fail_Qtr++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 	    cout<<"Tau "<<tau->getEnergy()<<": too many particles: "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
+	   //put those particles into rest group
+	  for(unsigned int tp=0;tp<(*iter)->getParticles().size();tp++)
+	    restcol->addElement((*iter)->getParticles()[tp]);
 	  delete *iter;
-	  tauRecvec.erase(iter);
+	  iter=tauRecvec.erase(iter);
 	  erasecount++;
 	  t--;
 	  continue;
@@ -431,10 +466,13 @@ void TauFinder::processEvent( LCEvent * evt )
       if(E_iso>_isoE)
 	{
 	  _fail_isoE++;
-	   if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	     cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
+	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
+	    cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
+	  //put those particles into rest group
+	  for(unsigned int tp=0;tp<(*iter)->getParticles().size();tp++)
+	    restcol->addElement((*iter)->getParticles()[tp]);
 	  delete *iter;
-	  tauRecvec.erase(iter);
+	  iter=tauRecvec.erase(iter);
 	  erasecount++;
 	  t--;
 	}
@@ -447,10 +485,18 @@ void TauFinder::processEvent( LCEvent * evt )
 	}
     }
   
- 
+  //put remaining particles into rest group
+  for(unsigned int tp=0;tp<Qvector.size();tp++)
+    restcol->addElement(Qvector[tp]);
+  for(unsigned int tp=0;tp<Nvector.size();tp++)
+    restcol->addElement(Nvector[tp]);
+
   evt->addCollection(reccol,_outcol);
+  evt->addCollection(restcol,_outcolRest);
   evt->addCollection(relationcol,_colNameTauRecLink);
   
+ 
+      
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
     cout<<"--------------------------------------------------------------------------------------------"<<endl;
   
@@ -617,10 +663,11 @@ void TauFinder::end(){
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    << std::endl ;
   std::cout << "Reasons for Failure:   " <<std::endl;
-  std::cout << "High inverse mass:     " << _fail_minv<< std::endl ;
-  std::cout << "Negative inverse mass: " << _fail_minv_neg<< std::endl ;
+  std::cout << "High invariant mass:     " << _fail_minv<< std::endl ;
+  std::cout << "Negative invariant mass: " << _fail_minv_neg<< std::endl ;
   std::cout << "No or to many tracks:  " << _fail_Qtr<< std::endl ;
   std::cout << "No isolation        :  " << _fail_isoE<< std::endl ;
+  std::cout << "Tried to merge      :  " << _mergeTries<< std::endl ;
  
 
 }

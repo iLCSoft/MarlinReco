@@ -355,11 +355,6 @@ void BCalReco::processRunHeader( LCRunHeader * run ) {
 
 void BCalReco::processEvent(LCEvent * evt){
 
-         kk += 1;
-
-        if(kk < 4000) {
-//        if(kk < 1517) {
-//        if(kk < 100) {
 
         std::vector<ClusterImpl*> clustersNew;
         std::vector<ReconstructedParticleImpl*> particlesNew;
@@ -591,7 +586,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
                                 E = hit->getEnergy();
 				
-				std::cout << "CHECK:::" << E << endl;
+				//std::cout << "CHECK:::" << E << endl;
                                    
 
                                 //IF ROTSATION IS NEEDED
@@ -987,11 +982,9 @@ void BCalReco::processEvent(LCEvent * evt){
 
 
 
-//    cout << "End of processing event " << " " <<_nEvt << " " << "counter kk =" << " " << kk << endl;
+
 
   f.Close();
-
-} // kk
 
 
 }

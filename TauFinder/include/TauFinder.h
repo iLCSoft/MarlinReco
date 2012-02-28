@@ -59,17 +59,18 @@ class TauFinder : public Processor {
   /** Input collection name.
    */
   std::string _colNameMC, _colNameRECO, _incol;
-  std::string _colNameMCTruth, _colNameTauRecLink,  _outcol;
+  std::string _colNameMCTruth, _colNameTauRecLink;
+  std::string _outcol, _outcolRest;
 
   int _nRun ;
   int _nEvt ;
 
   float _bField;
-  float _ptcut,_ptseed;
+  float _ptcut,_ptseed,_cosTcut;
   float _coneAngle,_isoAngle,_isoE;
   float _D0seedmin, _D0seedmax,_minv;
 
-  int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE;
+  int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE,_mergeTries;
    
   bool FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<ReconstructedParticle*> &Nvec,
 	       std::vector<std::vector<ReconstructedParticle*> > &tauvec);

@@ -64,6 +64,7 @@ class EvaluateTauFinder : public Processor {
   std::string _colNameMC, _colNameRECO,_colNameTrack;
   std::string _colNameMCTruth,  _incol,_colNamePFORecLink;
   std::string _colNameMCRecLink,_colNameTracksRecLink, _colNameTauRecLink;
+  std::string _OutputFile_Signal;
   int _nRun ;
   int _nEvt ;
   
@@ -76,6 +77,7 @@ class EvaluateTauFinder : public Processor {
 
   float _bField;
   TFile *rootfile;
+  TNtuple *leptons;
   TNtuple *tautuple;
   TNtuple *mcmisstuple;
   TNtuple *taumatchtuple;

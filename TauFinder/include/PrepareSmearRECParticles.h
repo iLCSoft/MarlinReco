@@ -62,8 +62,8 @@ class PrepareSmearRECParticles : public Processor {
   /** Input collection name.
    */
   std::string _colNameMC;
-  std::string _colNameMCTruth;
-  std::string _outcolMC;
+  std::string _colNameMCTruth, _colNameTrackTruth;
+  std::string _outcolMC, _outcolTracks;
   double _bField;
   int _nRun ;
   int _nEvt ;

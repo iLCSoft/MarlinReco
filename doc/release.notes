@@ -4,9 +4,33 @@
 
 ===============================
 
- -----------
-| v01-00-02 |
- -----------
+ --------
+| v01-01 |
+ --------
+      
+      - RecoMCTruthLinker
+        -  added mcTruthTrackLink: inverse relation from MCParticles to Tracks
+           the weight will be the fraction of all sim-hits from the MCParticle
+           that contributed to this track
+        - changed weight definition for trackMCTruthLink:
+          - weight is the fraction of all hits on the the track that have 
+            contributions from this MCParticle
+          - computed as sumSimHits_from_this_MCParticle/total_number_of_hits_on_track
+             -> weight can be large than 1.0 (if more than one hit from an MCParticle
+                would be used in a given layer (delta ray))
+             -> this definition of weights is more accurate for defining the 'fake hit rate'
+                as (1.-weight) in the case of many merged sim hits for a given track
+         - changed steering logic, such that it can be more easily called for
+           certain sub-tasks, eg. Track-MCTruth-Link only:
+         - made the following output collections optional:
+           trackMCTruthLink, clusterMCTruthLink, RecoMCTruthLink, calo-hit MCTruthLink, skimmed MCParticle
+           -> collections won't be created if empty name specified (default)
+         - removed options:
+           OutputClusterRelation, OutputCalohitRelation, OutputTrackRelation
+           they are now also based on name empty/not empty 
+         - changed default for UseTrackerHitRelations to 'true'
+            - print WARNING of set to false
+           -- F.Gaede
 
       - LDCCaloDigi
           Implement use of LCIO calorimeter Hit step position for SDHCAL digitizer 
@@ -17,6 +41,8 @@
           Bug fix: added smearing of merged TPC hits
           (using rather large errors - which may have to be iterated on.)
 
+       - BCalReconstruction
+       	  Improved calibration (A.Rosca)
 
  -----------
 | v01-00-01 |

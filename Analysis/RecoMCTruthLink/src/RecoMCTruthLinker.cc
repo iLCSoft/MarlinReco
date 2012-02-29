@@ -89,6 +89,15 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			   _recoParticleCollectionName ,
 			   std::string("PandoraPFOs") ) ;
   
+  StringVec exampleSimHits ;
+  exampleSimHits.push_back("TPCCollection") ;
+  
+  registerInputCollections( LCIO::SIMTRACKERHIT,
+			   "SimTrackerHitCollections" ,
+			   "Names of the SimTrackerHits input collection"  ,
+			   _simTrkHitCollectionNames ,
+			    exampleSimHits ) ;
+
   registerProcessorParameter("UseTrackerHitRelations",
 			     "true: use relations for TrackerHits, false : use getRawHits ",
 			     _use_tracker_hit_relations,
@@ -141,6 +150,12 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			    "TrackMCTruthLinkName" , 
 			    "Name of the trackMCTruthLink output collection - not created if empty()"  ,
 			    _trackMCTruthLinkName ,
+			    std::string("") ) ;
+
+  registerOutputCollection( LCIO::LCRELATION,
+			    "MCTruthTrackLinkName" , 
+			    "Name of the MCParticle to Track relation output collection - not created if empty()"  ,
+			    _mcTruthTrackLinkName ,
 			    std::string("") ) ;
   
   // registerProcessorParameter("OutputClusterRelation",
@@ -274,6 +289,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   
   LCCollection* trackCol = 0 ;
   LCCollection* ttrlcol  = 0 ;
+  LCCollection* ttrlInverseCol  = 0 ;
   bool haveTracks = true  ;
   
   try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(DataNotAvailableException&){  haveTracks=false ; }
@@ -285,11 +301,16 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     
   } else {  //if ( haveTracks ) {
     
-    trackLinker(  evt, mcpCol ,  trackCol  ,  &ttrlcol );
-    
-    if (_OutputTrackRelation ) 
-      evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
-    
+    if (_OutputTrackRelation )  {
+      
+      trackLinker(  evt, mcpCol ,  trackCol  ,  &ttrlcol , &ttrlInverseCol );
+      
+      if( ! _trackMCTruthLinkName.empty() )
+	evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
+      
+      if( ! _mcTruthTrackLinkName.empty() )
+	evt->addCollection(  ttrlInverseCol  , _mcTruthTrackLinkName  ) ;
+    }
   }
   
   // find cluster to MCParticle relations and the updated calohit to MCParticle relations.
@@ -367,7 +388,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 }
 
 
-void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrlcol) { 
+void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrlcol,  LCCollection** ttrlInversecol) { 
   
   
   
@@ -427,7 +448,26 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   
   LCRelationNavigator trackTruthRelNav(LCIO::TRACK , LCIO::MCPARTICLE  ) ;
   
-  
+  // the inverse relation from MCTruth particles to tracks 
+  // weight is the realtive number of hits from a given MCParticle on the track
+  LCRelationNavigator truthTrackRelNav(LCIO::MCPARTICLE , LCIO::TRACK  ) ;
+
+  //========== fill a map with #SimTrackerHits per MCParticle ==================
+  MCPMap simHitMap ;  //  counts total simhits for every MCParticle
+  for( unsigned i=0,iN=_simTrkHitCollectionNames.size() ; i<iN ; ++i){
+    
+    const LCCollection* col = 0 ;
+    try{ col = evt->getCollection( _simTrkHitCollectionNames[i] ) ; } catch(DataNotAvailableException&) {}
+    if( col )
+      for( int j=0, jN= col->getNumberOfElements() ; j<jN ; ++j ) {
+	
+	SimTrackerHit* simHit = (SimTrackerHit*) col->getElementAt( j ) ; 
+	MCParticle* mcp = simHit->getMCParticle() ;
+	simHitMap[ mcp ] ++ ;
+    }
+  }    
+  //===========================================================================
+
   // loop over reconstructed tracks
   int nTrack = trackCol->getNumberOfElements() ;
   
@@ -531,7 +571,7 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     for (int iii=0 ; iii<ifound ; iii++ ) {
       
 
-      float  weight = float(MCPhits[iii]  )/float(nSimHit) ; 
+      float  weight = float(MCPhits[iii]  )/float(nHit) ; 
       
       
       streamlog_out( DEBUG4 ) << " track has " << MCPhits[iii]  << " hits of " 
@@ -542,9 +582,12 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
 			      << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
 			      << " id: " << theMCPs[iii]
 			      << std::endl ;
-      
-      
+
       trackTruthRelNav.addRelation(   trk , theMCPs[iii] , weight ) ;
+      
+      weight = float(MCPhits[iii]  ) / simHitMap[ theMCPs[iii] ]  ; 
+      
+      truthTrackRelNav.addRelation(   theMCPs[iii] , trk , weight ) ;
     }   
     
     ifoundch=ifound;
@@ -554,8 +597,8 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   streamlog_out( DEBUG4 ) << " track linking complete, create collection " << std::endl;
   
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
-
-
+  *ttrlInversecol = truthTrackRelNav.createLCCollection() ;
+  
   delete _navVXDTrackerHitRel; _navVXDTrackerHitRel = NULL;
   delete _navSITTrackerHitRel; _navSITTrackerHitRel = NULL;
   delete _navFTDTrackerHitRel; _navFTDTrackerHitRel = NULL;

@@ -23,11 +23,10 @@ using namespace lcio ;
 
 
   
-/** Creates four collections of LCRelations ("recoMCTruthLink", "trackMCTruthLink", "clusterMCTruthLink",
+/** Optionally creates four collections of LCRelations ("recoMCTruthLink", "trackMCTruthLink", "mcTruthTrackLink", "clusterMCTruthLink",
  *  ""clusterMCTruthLink" and "calohitMCTruthLink") with weighetd relations between true particles
  *  and reconstructed particles, tracks, clusters,  and calorimeter hits, respectively.
- *  The first is always created, the other three on request. By default, the first three are
- *  created.
+ *  If the corresponding parameter for the output collection name is empty the collection is not created. 
  * 
  *  This relation is based on the number of hits for tracks, for hits weighted with the
  *  SimHit-energy for clusters and calorimeter hits. For tracks and clusters, the weight
@@ -71,15 +70,16 @@ using namespace lcio ;
  *  <h4>Output</h4> 
  *  <ul>
  *  <li><b>trackMCTruthLink</b>:  holds LCRelations  that map the  tracks to the
- *                               corresponding MCParticle
- *  <li><b>clusterMCTruthLink</b>:  holds LCRelations  that map the  clusters to the
- *                               corresponding MCParticle
- *  <li><b>recoMCTruthLink</b>:  holds LCRelations  that map the reconstructed particles to the
- *                               corresponding MCParticle
+ *                                corresponding MCParticle - the weight is the fraction of all hits on the the track that have contributions from this MCParticle
+ *  <li><b>mcTruthTrackLink</b>:  holds LCRelations  that map MCParticles to tracks - the weight is the fraction of all sim-hits from the MCParticle that contributed to this track
+ *  <li><b>clusterMCTruthLink</b>: holds LCRelations  that map the  clusters to the
+ *                                 corresponding MCParticle
+ *  <li><b>recoMCTruthLink</b>:    holds LCRelations  that map the reconstructed particles to the
+ *                                 corresponding MCParticle
  *  <li><b>calohitMCTruthLink</b>:  holds LCRelations  that map the calorimeter hits to the
- *                               corresponding MCParticle
+ *                                  corresponding MCParticle
  *  </li>
- *  <li><b>MCParticlesSkimmed</b>:  skimmed MCParticle collection - optional 
+ *  <li><b>MCParticlesSkimmed</b>:  skimmed MCParticle collection 
  *  </li>
  *  </ul>
  * 
@@ -87,7 +87,7 @@ using namespace lcio ;
  * @param trackCollectionName           the ReconstructedParticles input collection
  * @param clusterCollectionName         the ReconstructedParticles input collection
 
- * @param UseTrackerHitRelations          use the rel collection for TrackerHits default false
+ * @param UseTrackerHitRelations          use the rel collection for TrackerHits default true (false only for very old files)
  * @param VXDTrackerHitRelInputCollection the rel collection for VXD TrackerHit collection 
  * @param SITTrackerHitRelInputCollection the rel collection for SIT TrackerHit collection 
  * @param FTDTrackerHitRelInputCollection the rel collection for FTD TrackerHit collection 
@@ -98,21 +98,21 @@ using namespace lcio ;
  * @param SimClusterHitRelation         relation betweeen simulated and digitized cluster hits
  * @param KeepDaughtersPDG              absolute PDG code of particles where daughter are to be kept (default: gamma,pi0,K0_S)
  * @param FullRecoRelation              Select which option to use for the reconstructed link ( default: full relation)
- * @param OutputTrackRelation           Output or not the track relation (default: output)
- * @param OutputClusterRelation         Output or not the cluster relation (default: output)
- * @param OutputCalohitRelation         Output or not the calohit relation (default: dont output)
  *
  * 
- * @param TrackMCTruthLinkName          name of output collection - default is "TrackMCTruthLink"
- * @param ClusterMCTruthLinkName        name of output collection - default is "ClusterMCTruthLink"
- * @param RecoMCTruthLinkName           name of output collection - default is "RecoMCTruthLink"
- * @param CalohitMCTruthLinkName        name of output collection - default is "CalohitMCTruthLink"
- * @param MCParticlesSkimmedName        skimmed MCParticle collection - default is "MCParticlesSkimmed"
+ * @param TrackMCTruthLinkName          name of output collection - default is ""
+ * @param MCTruthTrackLinkName          name of output collection - default is ""
+ * @param ClusterMCTruthLinkName        name of output collection - default is ""
+ * @param RecoMCTruthLinkName           name of output collection - default is ""
+ * @param CalohitMCTruthLinkName        name of output collection - default is ""
+ * @param MCParticlesSkimmedName        skimmed MCParticle collection - default is ""
+ *
 
  * @param UsingParticleGun              If Using Particle Gun Ignore Gen Stat - default is false
  
  * 
  *  @author M. Berggren, DESY, based on RecoMCTruthLinker v 1.0 by F. Gaede, DESY. 
+ *          changelog F.Gaede, 02/2012  modified logic for optional output collections (collection name not empty) and added mcTruthTrackLink
  *  @version $Id$ 
  */
 
@@ -142,7 +142,7 @@ public:
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  virtual void trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol)  ;
+  virtual void trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol,  LCCollection** ttrlInversecol)  ;
   virtual void clusterLinker(  LCCollection* mcpCol ,  LCCollection* clusterCol, 
                                LCCollection* cHitRelCol , 
                                LCCollection** ctrcol, LCCollection** chittrlcol)  ;
@@ -175,6 +175,7 @@ protected:
   std::string _clusterCollectionName ;
   std::string _recoParticleCollectionName ;
   std::string _caloHitRelationName;
+  StringVec   _simTrkHitCollectionNames ;
 
   std::string _vxdTrackerHitRelInputColName;
   std::string _ftdTrackerHitRelInputColName;
@@ -194,6 +195,7 @@ protected:
   
   /**  output collection names */
   std::string _trackMCTruthLinkName;
+  std::string _mcTruthTrackLinkName ;
   std::string _clusterMCTruthLinkName;
   std::string _recoMCTruthLinkName;
   std::string _mcParticlesSkimmedName;

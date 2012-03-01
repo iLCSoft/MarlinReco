@@ -251,7 +251,7 @@ void RecoMCTruthLinker::init() {
   // don't write outpur collections that have an empty name
   _OutputClusterRelation =  ! _clusterMCTruthLinkName.empty() ;  
   _OutputCalohitRelation =  ! _calohitMCTruthLinkName.empty() ;
-  _OutputTrackRelation   =  ! _trackMCTruthLinkName.empty() ;
+  //  _OutputTrackRelation   =  ! _trackMCTruthLinkName.empty() ;
   
   
   if( ! _use_tracker_hit_relations ){
@@ -301,16 +301,16 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     
   } else {  //if ( haveTracks ) {
     
-    if (_OutputTrackRelation )  {
+    //    if (_OutputTrackRelation )  {
       
-      trackLinker(  evt, mcpCol ,  trackCol  ,  &ttrlcol , &ttrlInverseCol );
-      
-      if( ! _trackMCTruthLinkName.empty() )
-	evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
-      
-      if( ! _mcTruthTrackLinkName.empty() )
-	evt->addCollection(  ttrlInverseCol  , _mcTruthTrackLinkName  ) ;
-    }
+    trackLinker(  evt, mcpCol ,  trackCol  ,  &ttrlcol , &ttrlInverseCol );
+    
+    if( ! _trackMCTruthLinkName.empty() )
+      evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
+    
+    if( ! _mcTruthTrackLinkName.empty() )
+      evt->addCollection(  ttrlInverseCol  , _mcTruthTrackLinkName  ) ;
+    // }
   }
   
   // find cluster to MCParticle relations and the updated calohit to MCParticle relations.
@@ -339,7 +339,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     << " not found - cannot create relation " << std::endl ;
   }
   
-  if( haveTracks && haveClusters && haveCaloHitRel && ( _OutputClusterRelation || _OutputCalohitRelation ) ) {
+  if( haveTracks && haveClusters && haveCaloHitRel  ) {
     
     clusterLinker(  mcpCol ,  clusterCol,  cHitRelCol ,  &ctrlcol , &chittrlcol);
     

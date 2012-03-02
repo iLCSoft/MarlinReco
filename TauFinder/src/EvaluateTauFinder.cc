@@ -33,7 +33,7 @@ using namespace std;
 
 #define coutEv -1
 
-#define coutUpToEv 10
+#define coutUpToEv 0
 
 
 using namespace lcio ;
@@ -43,7 +43,7 @@ using namespace UTIL;
 EvaluateTauFinder aEvaluateTauFinder ;
 
 struct TAU {   // Declare  struct type
-  double E,phi,theta,D0,NQ,N;   // Declare member types
+  double E,phi,theta,D0,NQ,N,minv;   // Declare member types
 };   
 
 bool MyAngleSort( TAU p1, TAU p2)
@@ -63,14 +63,7 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
 			      _OutputFile_Signal ,
 			      std::string("Signal.root") ) ;
 
-  registerProcessorParameter( "inputCol" ,
-                              "Name of the input Collection"  ,
-                              _incol ,
-                              std::string("TauRec_PFA")) ;
-  registerProcessorParameter( "relCol" ,
-                              "Name of the LCRelation otput Collection"  ,
-                              _colNameTauRecLink ,
-                              std::string("TauRecLink_PFO")) ;
+ 
 
    registerInputCollection( LCIO::MCPARTICLE,
 			   "MCCollectionName" , 
@@ -94,25 +87,16 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
                             "TauRecCollection",
                             "Collection of Tau Candidates",
                             _incol ,
-                            std::string("TauRec_PFA"));
+                            std::string("TauRec_PFO"));
  
   registerInputCollection( LCIO::LCRELATION,
-			   "MCTauLinkCollectionName" , 
-			   "Name of the MC Truth Reconstructed Tau collection"  ,
+			   "TauLinkCollectionName" , 
+			   "Name of the link between tau and pfos"  ,
 			   _colNameTauRecLink ,
 			   std::string("TauRecLink_PFO") ) ;
 
-  registerInputCollection( LCIO::LCRELATION,
-			   "MCTauLinkCollectionName" , 
-			   "Name of the MC Truth Reconstructed Tau collection"  ,
-			   _colNameMCRecLink ,
-			   std::string("MCRecLink") ) ;
+ 
 
-  registerInputCollection( LCIO::LCRELATION,
-			   "TracksTauLinkCollectionName" , 
-			   "Name of the Track Truth Reconstructed Tau collection"  ,
-			   _colNameTracksRecLink ,
-			   std::string("TracksRecLink") ) ;
 
   
 }
@@ -141,10 +125,10 @@ void EvaluateTauFinder::init()
   rootfile = new TFile((_OutputFile_Signal).c_str (),"RECREATE");
 
   evtuple=new TNtuple("evtuple","evtuple","EvID:Ntaus_mc:Ntaus_rec:missed:WpD1:WpD2:WmD1:WmD2:LD");
-  tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0:recNQ:recN:LD");
+  tautuple=new TNtuple("tautuple","tautuple","EvID:mcE:mcPhi:mcTheta:mcD0:recE:recPhi:recTheta:recD0:recNQ:recN:minv");
   mcmisstuple=new TNtuple("mcmiss","mcmiss","EvID:E:pt:theta:D0:D1:D2");
-  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:E:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0:LD");
-  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:E:mcE:mcp:mcpt:mcD0:recE:recp:recpt:recD0:ED0seed:LD");
+  taumatchtuple=new TNtuple("taumatch","taumatch","EvID:E:mcE:mcp:mcpt:mcPhi:mcTheta:mcD0:recE:recp:recpt:recPhi:recTheta:recD0");
+  tauexacttuple=new TNtuple("tauexact","tauexact","EvID:E:mcE:mcp:mcpt:mcD0:recE:recp:recpt:recD0:ED0seed");
   faketuple =new TNtuple("fake","fake","EvID:parentpdg:D1:D2:recE:recp:recD0:pt:theta:N");
   topofaketuple =new TNtuple("topofake","topofake","EvID:nfake:WpD1:WpD2:WmD1:WmD2");
   leptons=new TNtuple("Leptons","Leptons","EvID:PDG");
@@ -163,7 +147,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   // usually the working horse ...
   
   LCCollection *colMC, *colRECO, *colMCTruth, *colTau;
-  LCCollection *colTauRecLink, *colMCRecLink, *colTracksRecLink;
+  LCCollection *colTauRecLink;
   try {
     colMC = evt->getCollection( _colNameMC ) ;
   } catch (Exception e) {
@@ -193,18 +177,8 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   } catch (Exception e) {
     colTauRecLink = 0;
   }
-  try {
-    colMCRecLink = evt->getCollection( _colNameMCRecLink ) ;
-  } catch (Exception e) {
-    colMCRecLink = 0;
-  }
   
-  try {
-    colTracksRecLink = evt->getCollection( _colNameTracksRecLink ) ;
-  } catch (Exception e) {
-    colTracksRecLink = 0;
-  }
-  
+
   
   _nEvt = evt->getEventNumber();  
   
@@ -213,15 +187,9 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   int missed=0;
 
   LCRelationNavigator* relationNavigatorTau = 0;
-  LCRelationNavigator* relationNavigatorMC = 0;
-  LCRelationNavigator* relationNavigatorTracks = 0;
   LCRelationNavigator* relationNavigatorPFOMC = 0;
   if( colTauRecLink != 0)
     relationNavigatorTau = new LCRelationNavigator( colTauRecLink );
-  if( colMCRecLink != 0)
-    relationNavigatorMC = new LCRelationNavigator( colMCRecLink );
-  if( colTracksRecLink != 0)
-    relationNavigatorTracks = new LCRelationNavigator( colTracksRecLink );
   if( colMCTruth != 0)
     relationNavigatorPFOMC = new LCRelationNavigator( colMCTruth );
     
@@ -295,7 +263,13 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	  rtau.theta=theta;
 	  rtau.D0=D0;
 	  rtau.N=tauvec.size();	 
-	  rtau.NQ=NQ;	 
+	  rtau.NQ=NQ;
+	  double mass_inv=0;
+	  if(tau->getEnergy()*tau->getEnergy()<p*p)
+	    mass_inv=tau->getEnergy()-sqrt(p*p);
+	  else
+	    mass_inv=sqrt(tau->getEnergy()*tau->getEnergy()-p*p);
+	  rtau.minv=mass_inv;	 
 	  rectauvec.push_back(rtau);
 	  _ntot_rec++;
 	  
@@ -309,34 +283,6 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      for(unsigned int o=0;o<relobjFROM.size();o++)
 		{
 		  ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
-		  if(relationNavigatorMC)
-		    {
-		      EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(rec);
-		      for(unsigned int m=0;m<relobj.size();m++)
-			{
-			  MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
-			  //check whether particles parent is really a tau:
-			  MCParticle *dummy=mc;
-			  MCParticle *parent=mc;
-			  int size=mc->getParents().size();
-			  while(size!=0)
-			    {
-			      dummy=parent->getParents()[0];
-			      size=dummy->getParents().size();
-			      parent=dummy;
-			      if(fabs(parent->getPDG())==15)
-				size=0;
-			    }
-			  if(fabs(parent->getPDG())==15)
-			    {
-			       istau=true;
-			       mctau=parent;
-			    }
-			  else
-			    contaminated=true;
-			}
-		      
-		    }
 		  if(relationNavigatorPFOMC)
 		    {
 		      EVENT::LCObjectVec relobjMC = relationNavigatorPFOMC->getRelatedToObjects(rec);
@@ -402,9 +348,9 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  for(unsigned int o=0;o<relobjFROM.size();o++)
 		    {
 		      ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
-		      if(relationNavigatorMC)
+		      if(relationNavigatorPFOMC)
 			{
-			  EVENT::LCObjectVec relobj = relationNavigatorMC->getRelatedToObjects(rec);
+			  EVENT::LCObjectVec relobj = relationNavigatorPFOMC->getRelatedToObjects(rec);
 			  for(unsigned int m=0;m<relobj.size();m++)
 			    {
 			      MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
@@ -487,10 +433,10 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		cout<<Evis<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
 	      
 	      //find out which mc taus do not have a link to the rec
-	      if(relationNavigatorMC && relationNavigatorTau )
+	      if(relationNavigatorPFOMC && relationNavigatorTau )
 		{
 		  bool hasRel=false;
-		  LoopDaughtersRelation(particle,relationNavigatorTau ,relationNavigatorMC ,hasRel);
+		  LoopDaughtersRelation(particle,relationNavigatorTau ,relationNavigatorPFOMC ,hasRel);
 		  if(!hasRel)
 		    {		    
 		      missed++;
@@ -534,7 +480,8 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   if(mctauvec.size()>rectauvec.size())
     common=rectauvec.size();
   for(unsigned int p=0;p<common;p++)
-    tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N);
+    tautuple->Fill(_nEvt,mctauvec[p].E,mctauvec[p].phi,mctauvec[p].theta,mctauvec[p].D0,rectauvec[p].E,rectauvec[p].phi,
+		   rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N,rectauvec[p].minv);
   if(mctauvec.size()>rectauvec.size())
     {
       for(unsigned int p=common;p<mctauvec.size();p++)
@@ -543,7 +490,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   if(mctauvec.size()<rectauvec.size())
     {
       for(unsigned int p=common;p<rectauvec.size();p++)
-	tautuple->Fill(_nEvt,0,0,0,0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N);
+	tautuple->Fill(_nEvt,0,0,0,0,rectauvec[p].E,rectauvec[p].phi,rectauvec[p].theta,rectauvec[p].D0,rectauvec[p].NQ,rectauvec[p].N,rectauvec[p].minv);
     }
   
   
@@ -554,8 +501,6 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   _nEvt ++ ;
   //cleanup
   delete relationNavigatorTau;
-  delete relationNavigatorMC;
-  delete relationNavigatorTracks;
   delete relationNavigatorPFOMC;
   
 }
@@ -590,7 +535,7 @@ void EvaluateTauFinder::LoopDaughters(MCParticle *particle,double &Evis,double &
 }
  
 void EvaluateTauFinder::LoopDaughtersRelation(MCParticle *particle,LCRelationNavigator* relationNavigatorTau ,
-					      LCRelationNavigator* relationNavigatorMC ,bool &relToTau)
+					      LCRelationNavigator* relationNavigatorPFOMC ,bool &relToTau)
 {
   for(unsigned int d=0;d<particle->getDaughters().size();d++)
     { 
@@ -601,7 +546,7 @@ void EvaluateTauFinder::LoopDaughtersRelation(MCParticle *particle,LCRelationNav
 	  if (daughter->getGeneratorStatus()==1)
 	    {
 	      //relation to the filled reconstructed particle
-	      EVENT::LCObjectVec relobjTO = relationNavigatorMC->getRelatedFromObjects(daughter);
+	      EVENT::LCObjectVec relobjTO = relationNavigatorPFOMC->getRelatedFromObjects(daughter);
 	      for(unsigned int o=0;o<relobjTO.size();o++)
 		{
 		  //relation to the reconstructed tau
@@ -615,7 +560,7 @@ void EvaluateTauFinder::LoopDaughtersRelation(MCParticle *particle,LCRelationNav
       if(relToTau)
 	break;
       if(daughter->getDaughters().size())
-	LoopDaughtersRelation(daughter,relationNavigatorTau,relationNavigatorMC,relToTau);
+	LoopDaughtersRelation(daughter,relationNavigatorTau,relationNavigatorPFOMC,relToTau);
     }
 }
 

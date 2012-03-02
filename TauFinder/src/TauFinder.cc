@@ -32,7 +32,7 @@ using namespace std;
 
 #define coutEv -1
 
-#define coutUpToEv 10
+#define coutUpToEv 0
 
 
 using namespace lcio ;
@@ -54,26 +54,15 @@ TauFinder::TauFinder() : Processor("TauFinder")
   
   // register steering parameters: name, description, class-variable, default value
   
-  registerProcessorParameter( "inputCol" ,
-                              "Name of the input Collection"  ,
-                              _incol ,
-                              std::string("PandoraPFOs")) ;
-
-  registerProcessorParameter( "outputCol" ,
-                              "Name of the output Collection"  ,
-                              _outcol ,
-                              std::string("TauRec_PFA")) ;
- 
-  registerProcessorParameter( "TauRecRestCollection" ,
-                              "Name of the output Collection of rest group"  ,
-                              _outcolRest ,
-                              std::string("TauRecRest_PFO")) ;
  
   //the link between the reconstructed tau and the input particles used for it
-  registerProcessorParameter( "relCol" ,
-                               "Name of the LCRelation output Collection"  ,
-                               _colNameTauRecLink ,
-			      std::string("TauRecLink_PFO")) ;
+ 
+
+  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+			    "PFOCollection",
+                            "Collection of PFOs",
+                            _incol ,
+                            std::string("PandoraPFANewPFOs"));
 
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			    "TauRecCollection",
@@ -156,7 +145,7 @@ void TauFinder::init()
   _fail_Qtr=0;
   _fail_isoE=0;
   _mergeTries=0;
- std::cout << "INIT IS DONE" << std::endl;
+  std::cout << "INIT IS DONE "<<std::endl;
 }
 
 void TauFinder::processRunHeader( LCRunHeader* run) 
@@ -166,11 +155,12 @@ void TauFinder::processRunHeader( LCRunHeader* run)
 
 void TauFinder::processEvent( LCEvent * evt ) 
 { 
+
   // this gets called for every event 
   // usually the working horse ...
   
   LCCollection *colRECO;
-  
+
   try {
     colRECO = evt->getCollection( _incol ) ;
   } catch (Exception e) {
@@ -198,6 +188,7 @@ void TauFinder::processEvent( LCEvent * evt )
   if( colRECO != 0)
     {
       int nRCP = colRECO->getNumberOfElements();
+  
       for (int i = 0; i < nRCP; i++) 
 	{
 	  ReconstructedParticle *particle = dynamic_cast <ReconstructedParticle*>( colRECO->getElementAt( i ) );
@@ -536,7 +527,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	      double pt=fabs(_bField/tv[s]->getOmega())*3e-4;
 	      double mom=fabs(pt/cos(atan(tv[s]->getTanLambda())));	  
 	      if(mom>p)
-		D0seed=tv[s]->getD0();
+		D0seed=fabs(tv[s]->getD0());
 	      p=mom;
 	    }
 	  for (int icomp=0; icomp<3; ++icomp) 

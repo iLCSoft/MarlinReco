@@ -20,6 +20,7 @@ using namespace std;
 #include <EVENT/ReconstructedParticle.h>
 #include <IMPL/ReconstructedParticleImpl.h>
 #include "UTIL/LCRelationNavigator.h"
+#include <EVENT/Vertex.h>
 
 #include <gear/GEAR.h>
 #include <gear/BField.h>
@@ -82,7 +83,12 @@ TauFinder::TauFinder() : Processor("TauFinder")
 			    _colNameTauRecLink ,
 			    std::string("TauRecLink_PFO") ) ;
   
-  registerProcessorParameter( "pt_cut" ,
+  registerProcessorParameter( "FileName_Signal",
+			      "Name of the Signal output file "  ,
+			      _OutputFile_Signal ,
+			      std::string("Signal.root") ) ;
+
+ registerProcessorParameter( "pt_cut" ,
                               "Cut on pt to suppress background"  ,
                               _ptcut ,
                               (float)0.2) ;
@@ -106,16 +112,6 @@ TauFinder::TauFinder() : Processor("TauFinder")
                               _isoE ,
                               (float)5.0) ;
   
-  registerProcessorParameter( "D0seedmax" ,
-                              "Limit on D0 for the track seeding the tau jet"  ,
-                              _D0seedmax ,
-                              (float)0.5) ;
-
-  registerProcessorParameter( "D0seedmin" ,
-                              "Limit on D0 for the track seeding the tau jet"  ,
-                              _D0seedmin ,
-                              (float)1e-5) ;
-
   registerProcessorParameter( "ptseed" ,
                               "Minimum tranverse momentum of tau seed"  ,
                               _ptseed ,
@@ -136,6 +132,11 @@ void TauFinder::init()
   
   // usually a good idea to
   printParameters() ;
+
+  rootfile = new TFile((_OutputFile_Signal).c_str (),"RECREATE");
+
+  failtuple=new TNtuple("failtuple","failtuple","minv:Qtr:isoE:mergeTries:minv_neg");
+  
 
   _nRun = 0 ;
   _nEvt = 0 ;
@@ -218,7 +219,7 @@ void TauFinder::processEvent( LCEvent * evt )
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
     cout<<"------------------------"<<endl;
 
- //combine associated particles to tau
+  //combine associated particles to tau
   std::vector<std::vector<ReconstructedParticle*> >::iterator iterT=tauvec.begin();
   std::vector<ReconstructedParticleImpl* > tauRecvec;
   //remember number of charged tracks in each tau for possible merging later
@@ -505,51 +506,31 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	cout<<"No charged particle in event!"<<endl;
       return true;
     }
-  double OpAngleMax=0,D0seed=0;
+  double OpAngleMax=0;
   //find a good tauseed, check impact parameter 
   ReconstructedParticle *tauseed;
   std::vector<ReconstructedParticle*>::iterator iterS=Qvec.begin();
-  HelixClass *helix = new HelixClass();
   for ( unsigned int s=0; s<Qvec.size() ; s++ )
     {
       tauseed=dynamic_cast<ReconstructedParticle*>(Qvec[s]);
-      const EVENT::TrackVec &tv=dynamic_cast<const EVENT::TrackVec &>(tauseed->getTracks());
-      float momtr[3];
-      double pt=0;
-      if(tv.size())
-	{
-	  double p=0;
-	  //take the track with the highest momentum to get impact parameter
-	  //(Note: definition of impact parameter depends on the track model 
-	  for(unsigned int s=0;s<tv.size();s++)
-	    {
-	      //momentum of track assuming B along z
-	      double pt=fabs(_bField/tv[s]->getOmega())*3e-4;
-	      double mom=fabs(pt/cos(atan(tv[s]->getTanLambda())));	  
-	      if(mom>p)
-		D0seed=fabs(tv[s]->getD0());
-	      p=mom;
-	    }
-	  for (int icomp=0; icomp<3; ++icomp) 
-	    momtr[icomp]=(float)tauseed->getMomentum()[icomp];
+      float mom[3];
+      for (int icomp=0; icomp<3; ++icomp) 
+	mom[icomp]=(float)tauseed->getMomentum()[icomp];
 
-	  pt=sqrt(momtr[0]*momtr[0]+momtr[1]*momtr[1]);
-	}
-      else
-	D0seed=0;
-      if(D0seed>_D0seedmin && D0seed<_D0seedmax && pt>_ptseed)
-     	break;
+      double pt=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
+
+      if(pt>_ptseed)
+	break;
       else
 	{
 	  iterS++;
 	  tauseed=NULL;
 	}
     }
-  delete helix;
   if(!tauseed)
     {
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"no further tau seed! D0="<<D0seed<<endl;
+	cout<<"no further tau seed!"<<endl;
       return true;
     }
   
@@ -564,7 +545,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
  
   if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<"\t"<<D0seed<<endl;
+    cout<<"seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<endl;
  
   Qvec.erase(iterS);
   double pvec_tau[3]={0,0,0};
@@ -648,8 +629,8 @@ void TauFinder::check( LCEvent * evt ) {
 
 
 void TauFinder::end(){ 
-  
-  
+  failtuple->Fill(_fail_minv,_fail_Qtr,_fail_isoE,_mergeTries,_fail_minv_neg);
+
   std::cout << "TauFinder::end()  " << name() 
 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    << std::endl ;
@@ -659,6 +640,9 @@ void TauFinder::end(){
   std::cout << "No or to many tracks:  " << _fail_Qtr<< std::endl ;
   std::cout << "No isolation        :  " << _fail_isoE<< std::endl ;
   std::cout << "Tried to merge      :  " << _mergeTries<< std::endl ;
+
+  rootfile->Write();
+  delete rootfile;
  
 
 }

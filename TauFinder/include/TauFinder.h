@@ -61,7 +61,7 @@ class TauFinder : public Processor {
   std::string _colNameMC, _colNameRECO, _incol;
   std::string _colNameMCTruth, _colNameTauRecLink;
   std::string _outcol, _outcolRest;
-
+  std::string _OutputFile_Signal;
   int _nRun ;
   int _nEvt ;
 
@@ -71,7 +71,10 @@ class TauFinder : public Processor {
   float _D0seedmin, _D0seedmax,_minv;
 
   int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE,_mergeTries;
-   
+  
+  TFile *rootfile;
+  TNtuple *failtuple;  
+  
   bool FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<ReconstructedParticle*> &Nvec,
 	       std::vector<std::vector<ReconstructedParticle*> > &tauvec);
   

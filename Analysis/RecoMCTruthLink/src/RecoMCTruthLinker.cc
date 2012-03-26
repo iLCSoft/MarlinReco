@@ -1672,8 +1672,14 @@ const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const Floa
     return &(it->second->getRelatedToObjects(trkhit));
   }
   else{
-    streamlog_out(ERROR) << "Relations not present for Hit Collection from Detector ID " << this->getDetectorID(trkhit) << "  : exit(1) "<< std::endl;
-    exit(1);
+    
+    std::stringstream errorMsg;
+    errorMsg << "Relations not present for Hit Collection from Detector ID " 
+    << this->getDetectorID(trkhit) 
+    << std::endl; 
+    
+    throw Exception(errorMsg.str());
+    
   }
   
 }

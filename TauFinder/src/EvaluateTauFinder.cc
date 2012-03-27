@@ -292,6 +292,12 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			  //check whether particles parent is really a tau:
 			  MCParticle *dummy=mc;
 			  MCParticle *parent=mc;
+			  //need to catch broken relations in DST file for background particles
+			  if(mc==0)
+			    {
+			      //std::cout<<"Broken Relation: "<<_nEvt<<" "<<rec->getType()<<" "<<rec->getEnergy()<<std::endl;
+			      continue;
+			    }
 			  int size=mc->getParents().size();
 			  while(size!=0)
 			    {
@@ -354,6 +360,9 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			  for(unsigned int m=0;m<relobj.size();m++)
 			    {
 			      MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
+			      //need to catch broken relations in DST file for background particles
+			      if(mc==0)
+				continue;
 			      if(mc->getCharge()==0)
 				continue;
 			      MCParticle *dummy=mc;

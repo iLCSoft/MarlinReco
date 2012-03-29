@@ -10,6 +10,7 @@
 
     - bug fixes in Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc:
 
+        - The LCRelation Collections for TrackerHit to SimTrackerHits have been merged into a list of collections. Internally a single collection of LCRelations is created.
         - create track and cluster relations in any case as they are needed for the final recomctruth-link
         - converted exit to exception
 

@@ -104,36 +104,22 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			     bool(true));
   
   
-  registerInputCollection( LCIO::LCRELATION,"VXDTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for VXD TrackerHit collection"  ,
-			   _vxdTrackerHitRelInputColName ,
-			   std::string("VTXTrackerHitRelations") ) ;
+  StringVec trackerHitsRelInputColNamesDefault;
+  trackerHitsRelInputColNamesDefault.push_back( "VXDTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "SITTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "FTDPixelTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "FTDSpacePointRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "TPCTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "SETTrackerHitRelations" );
   
-  registerInputCollection( LCIO::LCRELATION,"FTDTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for FTD TrackerHit collection"  ,
-			   _ftdTrackerHitRelInputColName ,
-			   std::string("FTDTrackerHitRelations") ) ;
   
-  registerInputCollection( LCIO::LCRELATION,"SITTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for SIT TrackerHit collection"  ,
-			   _sitTrackerHitRelInputColName ,
-			   std::string("SITTrackerHitRelations") ) ;
-  
-  registerInputCollection( LCIO::LCRELATION,"TPCTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for TPC TrackerHit collection"  ,
-			   _tpcTrackerHitRelInputColName ,
-			   std::string("TPCTrackerHitRelations") ) ;
-  
-  registerInputCollection( LCIO::LCRELATION,"SETTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for SET TrackerHit collection"  ,
-			   _setTrackerHitRelInputColName ,
-			   std::string("SETTrackerHitRelations") ) ;
-  
-  registerInputCollection( LCIO::LCRELATION,"ETDTrackerHitRelInputCollection" , 
-			   "Name of the rel collection for ETD TrackerHit collection"  ,
-			   _etdTrackerHitRelInputColName ,
-			   std::string("ETDTrackerHitRelations") ) ;
-  
+  registerInputCollections("LCRelation",
+                           "TrackerHitsRelInputCollections",
+                           "Name of the lcrelation collections, that link the TrackerHits to their SimTrackerHits.",
+                           _colNamesTrackerHitRelations,
+                           trackerHitsRelInputColNamesDefault );
+
+    
   registerInputCollection( LCIO::LCRELATION,
 			   "SimCalorimeterHitRelationName" , 
 			   "Name of the  SimCalorimeterHit - CalorimeterHit relation"  ,
@@ -390,62 +376,10 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
 
 void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrlcol,  LCCollection** ttrlInversecol) { 
   
+  // merge all the SimTrackerHit - TrackerHit relations into on collection and set up the combined navigator
+  mergeTrackerHitRelations(evt);
   
-  
-  _navVXDTrackerHitRel = NULL;
-  _navSITTrackerHitRel = NULL;
-  _navFTDTrackerHitRel = NULL;
-  _navTPCTrackerHitRel = NULL;
-  _navSETTrackerHitRel = NULL;
-  _navETDTrackerHitRel = NULL;
-  
-  _hit_rels_map.clear();
-  
-  try{ 
-    _navVXDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _vxdTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::VXD]=_navVXDTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for VXD " <<  std::endl ; 
-  } 
-  
-  try{ 
-    _navFTDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _ftdTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::FTD]=_navFTDTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for FTD " <<  std::endl ; 
-  } 
-  
-  try{ 
-    _navSITTrackerHitRel = new LCRelationNavigator(evt->getCollection( _sitTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::SIT]=_navSITTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for SIT " <<  std::endl ; 
-  } 
-  
-  try{ 
-    _navTPCTrackerHitRel = new LCRelationNavigator(evt->getCollection( _tpcTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::TPC]=_navTPCTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for TPC " <<  std::endl ; 
-  } 
-  
-  try{ 
-    _navSETTrackerHitRel = new LCRelationNavigator(evt->getCollection( _setTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::SET]=_navSETTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for SET " <<  std::endl ; 
-  } 
-  
-  try{ 
-    _navETDTrackerHitRel = new LCRelationNavigator(evt->getCollection( _etdTrackerHitRelInputColName ) );
-    _hit_rels_map[ILDDetID::ETD]=_navETDTrackerHitRel;     
-  }  catch(DataNotAvailableException&) { 
-    streamlog_out( DEBUG2 ) << " no relations to SimTrackerHits for ETD " <<  std::endl ; 
-  } 
-  
-  
-  
-  
+
   LCRelationNavigator trackTruthRelNav(LCIO::TRACK , LCIO::MCPARTICLE  ) ;
   
   // the inverse relation from MCTruth particles to tracks 
@@ -487,15 +421,13 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     
     const TrackerHitVec& trkHits = trk->getTrackerHits() ;
     
-    for( TrackerHitVec::const_iterator hitIt = trkHits.begin() ;
-	 hitIt != trkHits.end() ; ++hitIt ) { 
+    for( TrackerHitVec::const_iterator hitIt = trkHits.begin() ; hitIt != trkHits.end() ; ++hitIt ) { 
       
       TrackerHit* hit = * hitIt ; // ... and a seen hit ... 
       
       const LCObjectVec& simHits  = _use_tracker_hit_relations ? *(this->getSimHits(hit)) : hit->getRawHits() ;
       
-      for( LCObjectVec::const_iterator objIt = simHits.begin() ;
-	   objIt != simHits.end() ; ++objIt ){
+      for( LCObjectVec::const_iterator objIt = simHits.begin() ; objIt != simHits.end() ; ++objIt ) {
 	
         SimTrackerHit* simHit = dynamic_cast<SimTrackerHit*>( *objIt ) ; // ...and a sim hit ...
         
@@ -544,17 +476,17 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
                                                                             // creating true particle: enter it into the list,
                                                                             // and note how many hits it produced.
         theMCPs.push_back( it->first ) ;  
-	MCPhits.push_back( it->second ) ; 
-	ifound++;
+        MCPhits.push_back( it->second ) ; 
+        ifound++;
 
       } else {  // not genstat 1. Wat should we do with it ?
 
         if ( mother != 0 ) { // if it has a parent, save it
 
           theMCPs.push_back(it->first);  
-	  MCPhits.push_back(it->second); 
-	  ifound++;
-
+          MCPhits.push_back(it->second); 
+          ifound++;
+          
         } else {
 
           streamlog_out( WARNING ) << " track has hit(s) from a non-generator particle with no parents ?!! "  << std::endl;
@@ -565,7 +497,7 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     // hits in track
     unsigned nHit = trkHits.size() ;
     
-    // finally calculate the weight of each true partic to the seen 
+    // finally calculate the weight of each true particle to the seen 
     // (= hits_from_this_true/ all_hits),
     // and add the weighted reltion
     for (int iii=0 ; iii<ifound ; iii++ ) {
@@ -599,12 +531,8 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
   *ttrlInversecol = truthTrackRelNav.createLCCollection() ;
   
-  delete _navVXDTrackerHitRel; _navVXDTrackerHitRel = NULL;
-  delete _navSITTrackerHitRel; _navSITTrackerHitRel = NULL;
-  delete _navFTDTrackerHitRel; _navFTDTrackerHitRel = NULL;
-  delete _navTPCTrackerHitRel; _navTPCTrackerHitRel = NULL;
-  delete _navSETTrackerHitRel; _navSETTrackerHitRel = NULL;
-  delete _navETDTrackerHitRel; _navETDTrackerHitRel = NULL;
+  
+  delete _navMergedTrackerHitRel ; _navMergedTrackerHitRel = 0;
   
 }
 
@@ -1663,24 +1591,19 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
 
 const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const FloatVec* weights ){
   
-  std::map<int, LCRelationNavigator*>::iterator it;
   
-  it = _hit_rels_map.find( getDetectorID(trkhit) );
+  const LCObjectVec* obj = & _navMergedTrackerHitRel->getRelatedToObjects(trkhit);
   
-  if (it != _hit_rels_map.end()) {
-    if(weights) weights = &(it->second->getRelatedToWeights(trkhit));
-    return &(it->second->getRelatedToObjects(trkhit));
-  }
-  else{
-    
-    std::stringstream errorMsg;
-    errorMsg << "Relations not present for Hit Collection from Detector ID " 
-    << this->getDetectorID(trkhit) 
-    << std::endl; 
-    
-    throw Exception(errorMsg.str());
+  if( obj->empty() == false  ) { 
+
+    if(weights != 0 ) weights = & _navMergedTrackerHitRel->getRelatedToWeights(trkhit);
     
   }
+  else {
+    streamlog_out( DEBUG2 ) << "getSimHits :  TrackerHit : " << trkhit << " has no sim hits related." << std::endl ;
+  }
+  
+  return obj;
   
 }
 
@@ -1689,6 +1612,107 @@ void RecoMCTruthLinker::end(){
   
   streamlog_out(DEBUG4) << " processed " << _nEvt << " events in " << _nRun << " runs "
   << std::endl ;
+  
+}
+
+
+/** helper function to get collection safely */
+inline lcio::LCCollection* getCollection(lcio::LCEvent* evt, const std::string name ){
+  
+  if( name.size() == 0 )
+    return 0 ;
+  
+  try{
+    
+    return evt->getCollection( name ) ;
+    
+  } catch( lcio::DataNotAvailableException& e ){
+    
+    streamlog_out( DEBUG2 ) << "getCollection :  DataNotAvailableException : " << name <<  std::endl ;
+    
+    return 0 ;
+  }
+}
+
+
+void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
+  
+  unsigned nCol = _colNamesTrackerHitRelations.size() ;
+  
+  //--- copy existing collections to a vector first
+  std::vector<LCCollection*> colVec ;
+  
+  for( unsigned i=0; i < nCol ; ++i) {
+    
+    LCCollection* col  =  getCollection ( evt , _colNamesTrackerHitRelations[i] ) ;
+    
+    if( col != 0 ){ 
+      
+      colVec.push_back( col ) ;
+      
+    } else {
+      
+      streamlog_out(DEBUG2) << " mergeTrackerHitRelations: input collection missing : " << _colNamesTrackerHitRelations[i] << std::endl ;
+    }
+  }
+  
+  
+   
+  streamlog_out( DEBUG ) <<  " mergeTrackerHitRelations: copied collection parameters ... " << std::endl ;
+
+  
+  
+  nCol = colVec.size() ;
+  
+  for( unsigned i=0; i < nCol ; ++i) {
+    
+    LCCollection* col  =  colVec[i] ;
+    
+    if( i == 0 ){
+      // copy collection flags and collection parameters from first collections
+      
+      _mergedTrackerHitRelCol = new LCCollectionVec( col->getTypeName() )  ;
+
+      
+      _mergedTrackerHitRelCol->setFlag( col->getFlag() ) ;
+ 
+      StringVec stringKeys ;
+      col->getParameters().getStringKeys( stringKeys ) ;
+      for(unsigned i=0; i< stringKeys.size() ; i++ ){
+        StringVec vals ;
+        col->getParameters().getStringVals(  stringKeys[i] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  stringKeys[i] , vals ) ;   
+      }
+      StringVec intKeys ;
+      col->getParameters().getIntKeys( intKeys ) ;
+      for(unsigned i=0; i< intKeys.size() ; i++ ){
+        IntVec vals ;
+        col->getParameters().getIntVals(  intKeys[i] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  intKeys[i] , vals ) ;   
+      }
+      StringVec floatKeys ;
+      col->getParameters().getFloatKeys( floatKeys ) ;
+      for(unsigned i=0; i< floatKeys.size() ; i++ ){
+        FloatVec vals ;
+        col->getParameters().getFloatVals(  floatKeys[i] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  floatKeys[i] , vals ) ;   
+      }
+
+      
+      
+    }
+    
+    int nEle = col->getNumberOfElements() ;
+    
+    for(int j=0; j < nEle ; ++j){
+      
+      _mergedTrackerHitRelCol->addElement(  col->getElementAt(j) ) ;
+      
+    }
+    
+  }    
+   
+  _navMergedTrackerHitRel = new LCRelationNavigator( _mergedTrackerHitRelCol );
   
 }
 

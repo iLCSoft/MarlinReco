@@ -88,12 +88,8 @@ using namespace lcio ;
  * @param clusterCollectionName         the ReconstructedParticles input collection
 
  * @param UseTrackerHitRelations          use the rel collection for TrackerHits default true (false only for very old files)
- * @param VXDTrackerHitRelInputCollection the rel collection for VXD TrackerHit collection 
- * @param SITTrackerHitRelInputCollection the rel collection for SIT TrackerHit collection 
- * @param FTDTrackerHitRelInputCollection the rel collection for FTD TrackerHit collection 
- * @param TPCTrackerHitRelInputCollection the rel collection for TPC TrackerHit collection 
- * @param SETTrackerHitRelInputCollection the rel collection for SET TrackerHit collection 
- * @param ETDTrackerHitRelInputCollection the rel collection for ETD TrackerHit collection 
+ 
+ * @param TrackerHitsRelInputCollections the rel collection for TrackerHit collection 
 
  * @param SimClusterHitRelation         relation betweeen simulated and digitized cluster hits
  * @param KeepDaughtersPDG              absolute PDG code of particles where daughter are to be kept (default: gamma,pi0,K0_S)
@@ -159,10 +155,11 @@ public:
   
 protected:
   
+  virtual void mergeTrackerHitRelations(LCEvent * evt);
+  
   void keepMCParticle( MCParticle* mcp ) ; 
 
   const LCObjectVec* getSimHits( TrackerHit* trkhit, const FloatVec* weights = NULL);
-  std::map<int, LCRelationNavigator*> _hit_rels_map;
   
   UTIL::BitField64* _encoder;
   int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::ILDCellID0::subdet]; }
@@ -176,20 +173,11 @@ protected:
   std::string _recoParticleCollectionName ;
   std::string _caloHitRelationName;
   StringVec   _simTrkHitCollectionNames ;
-
-  std::string _vxdTrackerHitRelInputColName;
-  std::string _ftdTrackerHitRelInputColName;
-  std::string _sitTrackerHitRelInputColName;
-  std::string _tpcTrackerHitRelInputColName;
-  std::string _setTrackerHitRelInputColName;
-  std::string _etdTrackerHitRelInputColName;
   
-  LCRelationNavigator* _navVXDTrackerHitRel;
-  LCRelationNavigator* _navSITTrackerHitRel;
-  LCRelationNavigator* _navFTDTrackerHitRel;
-  LCRelationNavigator* _navTPCTrackerHitRel;
-  LCRelationNavigator* _navSETTrackerHitRel;
-  LCRelationNavigator* _navETDTrackerHitRel;
+  StringVec  _colNamesTrackerHitRelations ;
+  
+  LCCollection* _mergedTrackerHitRelCol ;
+  LCRelationNavigator* _navMergedTrackerHitRel;
   
   bool _use_tracker_hit_relations;
   

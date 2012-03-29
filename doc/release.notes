@@ -4,6 +4,16 @@
 
 ===============================
 
+ -----------
+| v01-01-01 |
+ -----------
+
+    - bug fixes in Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc:
+
+        - create track and cluster relations in any case as they are needed for the final recomctruth-link
+        - converted exit to exception
+
+
  --------
 | v01-01 |
  --------

@@ -100,8 +100,8 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
 
   int getLadderID(const gear::Vector3D* pos, const int layer);
 
-  void        getInOutPosOnLadder( IMPL::SimTrackerHitImpl* simthit, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom);
-  void getInOutPosOfHelixOnLadder( IMPL::SimTrackerHitImpl* simthit, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom,gear::Vector3D* BField,float charge);
+  void        getInOutPosOnLadder( int layer, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom);
+  void getInOutPosOfHelixOnLadder( int layer, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom, gear::Vector3D* BField,float charge);
   void           ModifyIntoLadder( gear::Vector3D* bemodifiedpos,const int layer,gear::Vector3D* pos,gear::Vector3D* mom);
   void             makeCandidates( std::pair<const gear::Vector3D*,int> edge, std::pair<int,int>* cand_array, int layer);
   void             makeNewSimTHit( IMPL::SimTrackerHitImpl* simthit, gear::Vector3D* newpos, gear::Vector3D* newmom, int layer, int ladder, double newPathLength);

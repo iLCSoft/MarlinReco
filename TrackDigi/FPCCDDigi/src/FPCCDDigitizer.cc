@@ -277,10 +277,10 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   //----
   if( sqrt(MomAtLocalHitPos->x()*MomAtLocalHitPos->x() + MomAtLocalHitPos->z()*MomAtLocalHitPos->z()) < _momCut*1e-03){ // transvers momentum criteria for helix approximation
     if( _debug == 1 ) cout << "========== Track of this hit is trated as a helix ==========" << endl;
-    getInOutPosOfHelixOnLadder(SimTHit, PosOutFromLadder, PosInToLadder, LocalHitPos, MomAtLocalHitPos, LocalBField,charge);
+    getInOutPosOfHelixOnLadder(layer, PosOutFromLadder, PosInToLadder, LocalHitPos, MomAtLocalHitPos, LocalBField,charge);
   }
   else{
-    getInOutPosOnLadder(SimTHit, PosOutFromLadder,PosInToLadder,LocalHitPos,MomAtLocalHitPos); 
+    getInOutPosOnLadder(layer, PosOutFromLadder,PosInToLadder,LocalHitPos,MomAtLocalHitPos); 
   }
 
   if( inSensitiveRegion( PosOutFromLadder, layer) && inSensitiveRegion( PosInToLadder, layer) ){ // check if the particle through the sensitive region.
@@ -410,8 +410,7 @@ gear::Vector3D* FPCCDDigitizer::getLocalPos(const gear::Vector3D* pos, const int
 }
 
 // =====================================================================
-void FPCCDDigitizer::getInOutPosOnLadder(IMPL::SimTrackerHitImpl* simthit,gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom){
-  int layer = simthit->getCellID0() - 1;
+void FPCCDDigitizer::getInOutPosOnLadder(int layer, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom){
   double f_z = 0.5 * _pixelheight;
 
   double top_y = (mom->y()/mom->z())*(f_z-pos->z())+pos->y();
@@ -479,11 +478,10 @@ void FPCCDDigitizer::ModifyIntoLadder(gear::Vector3D* bemodifiedpos,const int f_
 }
 
 // =====================================================================
-void FPCCDDigitizer::getInOutPosOfHelixOnLadder(SimTrackerHitImpl* simthit,gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom,gear::Vector3D* BField,float Charge){
+void FPCCDDigitizer::getInOutPosOfHelixOnLadder(int layer, gear::Vector3D* outpos, gear::Vector3D* inpos, gear::Vector3D* pos,gear::Vector3D* mom, gear::Vector3D* BField,float Charge){
   double out[3];
   double in[3];
   
-  int layer = simthit->getCellID0() - 1;
   double   outerZ =  0.5*_pixelheight;
   double   innerZ = -0.5*_pixelheight;
   double   sximin =  _geodata[layer].sximin;

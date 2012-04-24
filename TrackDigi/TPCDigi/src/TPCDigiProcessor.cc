@@ -1074,6 +1074,9 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
   
   Voxel_tpc* seed_hit  = aVoxel;
+  
+  //  if( seed_hit->getRowIndex() > 5 ) return ;
+  
   //store hit variables
   TrackerHitImpl* trkHit = new TrackerHitImpl ;
   //now the hit pos has to be smeared
@@ -1099,10 +1102,9 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   trkHit->setEDep(seed_hit->getEDep());
   //  trkHit->setType( 500 );
   
-  // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
-  int side = 1 ;
-  
-  if( pos[2] < 0.0 ) side = 1 ;
+//  int side = lcio::ILDDetID::barrel ;
+//  
+//  if( pos[2] < 0.0 ) side = 1 ;
   
   (*_cellid_encoder)[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::TPC ;
   (*_cellid_encoder)[ lcio::ILDCellID0::layer  ] = seed_hit->getRowIndex() ;
@@ -1110,7 +1112,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   //SJA:FIXME: for now don't use side
   //  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = side ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = 0 ;
+  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
   
   _cellid_encoder->setCellID( trkHit ) ;
   

@@ -118,7 +118,7 @@ void KIT::processEvent( LCEvent * evt ) {
 	  Ccut.MinHit0=(unsigned int) _MinHit0;
 	  Ccut.MinHitSplit=(unsigned int) _MinHitSplit;
           const unsigned int N=_N;
-	  vector<Tmpcl2*> bbb[N];
+	  vector< vector<Tmpcl2*> > bbb(N);
 	 
 	  // finding cores.
 	  if( _ToClean=="YES" || _ToClean=="yes")

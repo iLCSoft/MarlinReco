@@ -269,9 +269,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   std::vector<MCParticle*>mcParticle;
   HelixClass* helixEnd[tracks.size()];
   HelixClass* helixStart[tracks.size()];
-  std::vector<twoTrackIntersection_t> kinkDaughters[tracks.size()];
-  std::vector<twoTrackIntersection_t> prongDaughters[tracks.size()];
-  std::vector<twoTrackIntersection_t> splitDaughters[tracks.size()];
+  std::vector< std::vector<twoTrackIntersection_t> > kinkDaughters ( tracks.size() ) ;
+  std::vector< std::vector<twoTrackIntersection_t> > prongDaughters( tracks.size() ) ;
+  std::vector< std::vector<twoTrackIntersection_t> > splitDaughters( tracks.size() ) ;
   float zAtEnd[tracks.size()];
   float zAtStart[tracks.size()];
 

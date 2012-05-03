@@ -330,7 +330,7 @@ void GridTransform2( CalorimeterHit* clh,float& radius, float& halfz, float& cel
  *  Global EM core finding function , iput is vector of superhits, array of Tmpcl vectors bbb for internal
  *  computation, vector of EM core candidates prs2, and parameters of the algorithm
  */
-void FindCores2(Shitvec2* secal1, Tmpclvec2* bbb , vector <PROTSEED2> * prs2,
+void FindCores2(Shitvec2* secal1, vector< Tmpclvec2>& bbb , vector <PROTSEED2> * prs2,
 		unsigned int N, vector<float> miipstep, CoreCut2 Ccut);
 /**
  *  NN clustering 

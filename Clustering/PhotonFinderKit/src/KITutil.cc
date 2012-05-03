@@ -283,7 +283,7 @@ void GridTransform2( CalorimeterHit* clh,float& radius, float& halfz, float& cel
 }
 
 
-void FindCores2(Shitvec2* secal1, Tmpclvec2* bbb , vector <PROTSEED2> * prs2,
+void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * prs2,
 		unsigned int N, vector<float> miipstep, CoreCut2 Ccut)
 {       
           typedef pair<int,int>   test;
@@ -293,7 +293,7 @@ void FindCores2(Shitvec2* secal1, Tmpclvec2* bbb , vector <PROTSEED2> * prs2,
 	  double d=PGDB[PGdb::ECAL1_BAR].r_inner;
 	  double z=PGDB[PGdb::ECAL1_CAP].z_inner;
 	  double Xatf[3];
-	  vector<Superhit2*> blk[N];
+	  vector< vector<Superhit2*> > blk(N) ;
 	 
 	  for( unsigned int iim=0;iim<secal1->size();iim++)
 	    {	      

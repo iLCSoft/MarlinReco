@@ -5,6 +5,15 @@
 ===============================
 
  -----------
+| v01-01-02 |
+ -----------
+
+    - TrackDigi/FPCCDDigi/src/FPCCDDigitizer: bug fixed - unified the layer number in each function.
+    - TrackDigi/TPCDigi/src/TPCDigiProcessor: use lcio::ILDDetID::barrel instead of 0
+    - made compatible w/ clang++ compiler
+
+
+ -----------
 | v01-01-01 |
  -----------
 

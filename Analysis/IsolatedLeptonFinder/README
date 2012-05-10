@@ -1,0 +1,168 @@
+IsolatedLeptonFinderProcessor:
+  A Marlin processor for finding isolated leptons.
+
+Authors:
+  Ryo Yonamine <yonamine@post.kek.jp>
+  Tomohiko Tanabe <tomohiko@icepp.s.u-tokyo.ac.jp>
+
+Description:
+  This processor takes an input collection of ReconstructedParticle.
+  The input collection is split into two, a list of isolated leptons and
+  a list of everything else. The two separated lists are written as
+	output collections.
+	- OutputCollectionIsolatedLeptons
+	- OutputCollectionWithoutIsolatedLepton
+
+  The selection of isolated leptons is based on the following criteria:
+
+  1) The isolated lepton candidate is charged.
+
+  2) Isolation requirement based on cone energy, where the cone energy
+     is defined as the sum of the energy of particles which fall within
+     a cone of a specific half-cone angle (CosConeAngle) of a candidate
+     lepton track.  The energy of the candidate track is not added to
+     the cone energy.
+
+     The isolation selections can be performed in the following ways
+		 (the two methods can be combined):
+
+     a) Rectangular cuts on the candidate track energy:
+        - IsolationMinimumConeEnergy
+        - IsolationMaximumConeEnergy
+        and the cone energy:
+        - IsolationMinimumConeEnergy
+        - IsolationMaximumConeEnergy
+
+     b) Polynomial cuts on the 2D plane of track energy vs cone energy,
+        with the parameters of the cuts are defined as
+        - A (IsolationPolynomialCutA)
+        - B (IsolationPolynomialCutB, GeV)
+        - C (IsolationPolynomialCutB, GeV^2)
+        The parameters are used in the following formula:
+        - Econe^2 < A*Etrk^2 + B*Etrk + C
+        If the above equation holds true, the candidate passes the
+        isolation requirement.
+
+        The polynomial cut can be turned off using the
+				UsePolynomialIsolation parameter.
+
+  3) Optionally, the PID requirements can be used (UsePID).
+     The lepton PID employed here is a set of primitive cuts on
+     the variables based on the ECAL and HCAL energy deposits.
+		 Two variables are used:
+     - EcalToHcalFraction = EdepECAL / ( EdepECAL + EdepHCAL )
+     - EnergyDepositByMomentum = ( EdepECAL + EdepHCAL ) / Momentum
+     The cut values can be defined for electrons and muons individually.
+
+  4) Optionally, the impact parameter requirements can be used via
+     UseImpactParameter.  (This is useful e.g. for selecting primary
+     lepton tracks coming from top quark decays.)
+     Cuts can be placed on the abs(d0) and abs(z0) impact parameters
+		 (d0 and z0 are the same definition as in track reconstruction):
+     - ImpactParameterMinD0
+     - ImpactParameterMaxD0
+     - ImpactParameterMinZ0
+     - ImpactParameterMaxZ0
+     In addition, cuts on the 3D impact parameter is also available,
+     which is defined as:
+     - R0 = sqrt( D0*D0 + Z0*Z0 )
+     The cut parameters are:
+     - ImpactParameterMin3D
+     - ImpactParameterMax3D
+
+[End of Description]
+
+Steering example (default values are optimized for tth->blnubqqbb analysis at 500 GeV):
+
+<processor name="MyIsolatedLeptonFinderProcessor" type="IsolatedLeptonFinderProcessor">
+ <!--Isolated Lepton Finder Processor-->
+
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+
+	<!---------------------------------->
+	<!-- Input and output collections -->
+	<!---------------------------------->
+
+  <!--Input collection of ReconstructedParticles-->
+  <parameter name="InputCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Output collection of isolated leptons-->
+  <parameter name="OutputCollectionIsolatedLeptons" type="string" lcioOutType="ReconstructedParticle">Isolep </parameter>
+  <!--Copy of input collection but without the isolated leptons-->
+  <parameter name="OutputCollectionWithoutIsolatedLepton" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+
+	<!---------------------------->
+	<!-- Isolation requirements -->
+	<!---------------------------->
+
+  <!--Cosine of the half-angle of the cone used in isolation criteria-->
+  <parameter name="CosConeAngle" type="float">0.98 </parameter>
+
+  <!--Minimum cone energy for isolation requirement-->
+  <parameter name="IsolationMinimumConeEnergy" type="float">0 </parameter>
+  <!--Maximum cone energy for isolation requirement-->
+  <parameter name="IsolationMaximumConeEnergy" type="float">1e+20 </parameter>
+
+  <!--Minimum track energy for isolation requirement-->
+  <parameter name="IsolationMinimumTrackEnergy" type="float">15 </parameter>
+  <!--Maximum track energy for isolation requirement-->
+  <parameter name="IsolationMaximumTrackEnergy" type="float">1e+20 </parameter>
+
+  <!--Use polynomial cuts on track and cone energy-->
+  <parameter name="UsePolynomialIsolation" type="bool">true </parameter>
+
+  <!--Polynomial cut (A) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutA" type="float">0 </parameter>
+  <!--Polynomial cut (B) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutB" type="float">20 </parameter>
+  <!--Polynomial cut (C) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutC" type="float">-300 </parameter>
+
+	<!---------------------->
+	<!-- PID requirements -->
+	<!---------------------->
+
+  <!--Use primitive particle ID based on calorimeter energy deposits-->
+  <parameter name="UsePID" type="bool">true </parameter>
+
+  <!--Electron ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="ElectronMinEcalToHcalFraction" type="float">0.9 </parameter>
+  <!--Electron ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="ElectronMaxEcalToHcalFraction" type="float">1 </parameter>
+  <!--Electron ID: Minimum energy deposit divided by momentum-->
+  <parameter name="ElectronMinEnergyDepositByMomentum" type="float">0.7 </parameter>
+  <!--Electron ID: Maximum energy deposit divided by momentum-->
+  <parameter name="ElectronMaxEnergyDepositByMomentum" type="float">1.4 </parameter>
+
+  <!--Muon ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="MuonMinEcalToHcalFraction" type="float">0 </parameter>
+  <!--Muon ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="MuonMaxEcalToHcalFraction" type="float">0.4 </parameter>
+  <!--Muon ID: Minimum energy deposit divided by momentum-->
+  <parameter name="MuonMinEnergyDepositByMomentum" type="float">0 </parameter>
+  <!--Muon ID: Maximum energy deposit divided by momentum-->
+  <parameter name="MuonMaxEnergyDepositByMomentum" type="float">0.3 </parameter>
+
+	<!----------------------------------->
+	<!-- Impact parameter requirements -->
+	<!----------------------------------->
+
+  <!--Use impact parameter cuts for consistency with primary/secondary track-->
+  <parameter name="UseImpactParameter" type="bool">true </parameter>
+
+  <!--Minimum d0 impact parameter-->
+  <parameter name="ImpactParameterMinD0" type="float">0 </parameter>
+  <!--Maximum d0 impact parameter-->
+  <parameter name="ImpactParameterMaxD0" type="float">1e+20 </parameter>
+
+  <!--Minimum z0 impact parameter-->
+  <parameter name="ImpactParameterMinZ0" type="float">0 </parameter>
+  <!--Maximum z0 impact parameter-->
+  <parameter name="ImpactParameterMaxZ0" type="float">1e+20 </parameter>
+
+  <!--Minimum impact parameter in 3D-->
+  <parameter name="ImpactParameterMin3D" type="float">0 </parameter>
+  <!--Maximum impact parameter in 3D-->
+  <parameter name="ImpactParameterMax3D" type="float">0.01 </parameter>
+
+</processor>

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <utility>
+#include <cmath>
 
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>

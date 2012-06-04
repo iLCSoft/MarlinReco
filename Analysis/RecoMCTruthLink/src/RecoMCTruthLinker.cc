@@ -281,7 +281,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(DataNotAvailableException&){  haveTracks=false ; }
   
   if( ! haveTracks ) {
-    streamlog_out( MESSAGE ) << " Track collection : " << _trackCollectionName 
+    streamlog_out( DEBUG9 ) << " Track collection : " << _trackCollectionName 
     << " not found - cannot create relation " << std::endl ;
     
     
@@ -313,7 +313,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   try{ clusterCol = evt->getCollection( _clusterCollectionName ) ; }   catch(DataNotAvailableException&){  haveClusters=  false ; } 
   
   if( ! haveClusters ) {
-    streamlog_out( MESSAGE ) << " Cluster collection : " << _clusterCollectionName 
+    streamlog_out( DEBUG9 ) << " Cluster collection : " << _clusterCollectionName 
     << " not found - cannot create relation " << std::endl ;
   }
   
@@ -321,7 +321,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   try{ cHitRelCol = evt->getCollection( _caloHitRelationName ) ;   }   catch(DataNotAvailableException&){  haveCaloHitRel = false ; } 
   
   if( ! haveCaloHitRel ) {
-    streamlog_out( MESSAGE ) << " CaloHit relation : " << _caloHitRelationName 
+    streamlog_out( DEBUG9 ) << " CaloHit relation : " << _caloHitRelationName 
     << " not found - cannot create relation " << std::endl ;
   }
   
@@ -345,7 +345,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   try { particleCol = evt->getCollection(  _recoParticleCollectionName ); }   catch(DataNotAvailableException&){ haveRecoParticles = false ; } 
   
   if( ! haveRecoParticles ) {
-    streamlog_out( MESSAGE ) << " ReconstructedParticle collection : " << _recoParticleCollectionName 
+    streamlog_out( DEBUG9 ) << " ReconstructedParticle collection : " << _recoParticleCollectionName 
     << " not found - cannot create relation " << std::endl ;
   }
   
@@ -495,7 +495,15 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     } // end of loop over map
     
     // hits in track
-    unsigned nHit = trkHits.size() ;
+    unsigned nHit = 0;
+    
+    for (unsigned ihit=0; ihit<trkHits.size(); ++ihit) {
+      if ( UTIL::BitSet32( trkHits[ihit]->getType() )[ UTIL::ILDTrkHitTypeBit::COMPOSITE_SPACEPOINT ]) {
+        nHit += 2;
+      } else {
+        nHit += 1;
+      }
+    }
     
     // finally calculate the weight of each true particle to the seen 
     // (= hits_from_this_true/ all_hits),
@@ -506,7 +514,7 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
       float  weight = float(MCPhits[iii]  )/float(nHit) ; 
       
       
-      streamlog_out( DEBUG4 ) << " track has " << MCPhits[iii]  << " hits of " 
+      streamlog_out( DEBUG4 ) << " track " << trk->id() << " has " << MCPhits[iii]  << " hits of " 
 			      << nSimHit << " SimHits ("
 			      << nHit <<    " TrackerHits) "
 			      << " [ " << int(weight*100) << " %] " 
@@ -1525,7 +1533,7 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
   try{
     mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
   } catch (DataNotAvailableException& e) {
-    streamlog_out(WARNING) << "RecoMCTructh::Check(): MCParticle collection \"" << _mcParticleCollectionName << "\" does not exist, skipping" << std::endl;
+    streamlog_out(DEBUG9) << "RecoMCTructh::Check(): MCParticle collection \"" << _mcParticleCollectionName << "\" does not exist, skipping" << std::endl;
   }
   
   int nMCP  = mcpCol->getNumberOfElements() ;
@@ -1560,7 +1568,7 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
     mcpskCol = evt->getCollection( _mcParticlesSkimmedName ); 
   }
   catch (DataNotAvailableException e){
-    streamlog_out(WARNING) << "RecoMCTructh::Check(): MCParticleSkimmed collection \"" << _mcParticlesSkimmedName << "\" does not exist, skipping" << std::endl;
+    streamlog_out(DEBUG9) << "RecoMCTructh::Check(): MCParticleSkimmed collection \"" << _mcParticlesSkimmedName << "\" does not exist, skipping" << std::endl;
   }
   
   etot = 0.0 ;
@@ -1591,7 +1599,6 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
 
 const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const FloatVec* weights ){
   
-  
   const LCObjectVec* obj = & _navMergedTrackerHitRel->getRelatedToObjects(trkhit);
   
   if( obj->empty() == false  ) { 
@@ -1600,7 +1607,7 @@ const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const Floa
     
   }
   else {
-    streamlog_out( DEBUG2 ) << "getSimHits :  TrackerHit : " << trkhit << " has no sim hits related." << std::endl ;
+    streamlog_out( DEBUG2 ) << "getSimHits :  TrackerHit : " << trkhit << " has no sim hits related. CellID0 = " << trkhit->getCellID0() << " pos = " << trkhit->getPosition()[0] << " " << trkhit->getPosition()[1] << " " << trkhit->getPosition()[2] << std::endl ;
   }
   
   return obj;

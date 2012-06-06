@@ -407,8 +407,8 @@ void PFOID::fill_info(int i, ReconstructedParticle *rp){
   // Cluster Layers and energies
   int nClusters = cv.size();
 
-  float *ca, *cx ,*cy, *cz;
-  int N, nHits;
+  float *ca=0, *cx=0,*cy=0, *cz=0;
+  int N=0, nHits=0;
   float Cpos[3] = {0., 0., 0.}, Esum=0;
   
   if(nClusters>0){

@@ -269,8 +269,8 @@ void CreatePDFs::processEvent( LCEvent * evt ) {
       int nClusters = cv.size(), myPDG=0;
       SimCalorimeterHit *sd=NULL;
       bool EcalHit=false, charge =false;
-      float *ca, *cx, *cy, *cz;
-      ClusterShapes *clsp;
+      float *ca=0, *cx=0, *cy=0, *cz=0;
+      ClusterShapes *clsp = 0;
 
       if(nClusters>0){
 	for(int j=0; j<nClusters; j++){   // over each cluster of particle

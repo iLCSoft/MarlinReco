@@ -203,9 +203,9 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 	pMc=physicsMatchedMcParticle[iPfo];
 	eMc += pMc->getEnergy();
       }
-      const int id = pPfo->id();
+//      const int id = pPfo->id();
       const int type = pPfo->getType();
-      const bool isCompound = pPfo->isCompound(); 
+//      const bool isCompound = pPfo->isCompound(); 
       float momentum[3];
       for(unsigned int i=0;i<3;i++)momentum[i] = pPfo->getMomentum()[i];
       const float pT = sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]);
@@ -213,33 +213,33 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
       const float cosTheta = fabs(momentum[2])/p; 
       const float energy  = pPfo->getEnergy();
       //eTotalInput+=energy;
-      const float mass = pPfo->getMass();
-      const float charge = pPfo->getCharge();
+//      const float mass = pPfo->getMass();
+//      const float charge = pPfo->getCharge();
       const ParticleIDVec particleIDs = pPfo->getParticleIDs();
-      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
-      const float goodnessOfPID = pPfo->getGoodnessOfPID();
+//      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
+//      const float goodnessOfPID = pPfo->getGoodnessOfPID();
       const ReconstructedParticleVec particles = pPfo->getParticles();
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       
-      for(unsigned int i = 0; i< tracks.size(); i++){
-	Track *track = tracks[i];
-	const int nHitsVTX = track->getSubdetectorHitNumbers()[6];
-	const int nHitsFTD = track->getSubdetectorHitNumbers()[7];
-	const int nHitsSIT = track->getSubdetectorHitNumbers()[8];
-	const int nHitsTPC = track->getSubdetectorHitNumbers()[9];
-	const int nHitsSET = track->getSubdetectorHitNumbers()[10];
-	const int nHitsETD = track->getSubdetectorHitNumbers()[11];
-	const float d0    = track->getD0();
-	const float z0    = track->getZ0();
-	const float omega = track->getOmega();
-	const float tanL  = track->getTanLambda();
-	const float phi0  = track->getPhi();
-      }
+//      for(unsigned int i = 0; i< tracks.size(); i++){
+//	Track *track = tracks[i];
+//	const int nHitsVTX = track->getSubdetectorHitNumbers()[6];
+//	const int nHitsFTD = track->getSubdetectorHitNumbers()[7];
+//	const int nHitsSIT = track->getSubdetectorHitNumbers()[8];
+//	const int nHitsTPC = track->getSubdetectorHitNumbers()[9];
+//	const int nHitsSET = track->getSubdetectorHitNumbers()[10];
+//	const int nHitsETD = track->getSubdetectorHitNumbers()[11];
+//	const float d0    = track->getD0();
+//	const float z0    = track->getZ0();
+//	const float omega = track->getOmega();
+//	const float tanL  = track->getTanLambda();
+//	const float phi0  = track->getPhi();
+//      }
       
-      for(unsigned int i = 0; i< clusters.size(); i++){
-	const Cluster *cluster = clusters[i];
-      }
+//      for(unsigned int i = 0; i< clusters.size(); i++){
+//	const Cluster *cluster = clusters[i];
+//      }
 
       (ipass ==0) ? eSignal+= energy : eBackground += energy;
 

@@ -303,7 +303,7 @@ void VTXBgClusters::check( LCEvent * evt ) {
 
   LCCollection* vxdCol = 0 ; 
 
-  int nhit = 0 ;
+//  int nhit = 0 ;
   int nHitL1 = 0 ;
   int nHitL2 = 0 ;
   int nHitL3 = 0 ;

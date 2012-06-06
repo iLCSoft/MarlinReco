@@ -339,7 +339,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       std::cout << "Number of Input Pfos = " << nelem << std::endl;
       std::cout << " Type    E   Pt  cosTheta  Tracks time  Clusters time " << std::endl;
     }
-    int nDropped(0);
+//    int nDropped(0);
 
     float eTotalInput(0.);
     float eTotalOutput(0.);
@@ -347,9 +347,9 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     for (int iPfo=0; iPfo<nelem; ++iPfo) {
       bool passPfoSelection = true;
       ReconstructedParticle * pPfo = pfos[iPfo];
-      const int id = pPfo->id();
+//      const int id = pPfo->id();
       const int type = pPfo->getType();
-      const bool isCompound = pPfo->isCompound(); 
+//      const bool isCompound = pPfo->isCompound(); 
       float momentum[3];
       for(unsigned int i=0;i<3;i++)momentum[i] = pPfo->getMomentum()[i];
       const float pT = sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]);
@@ -359,13 +359,13 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       eTotalInput+=energy;
       float covMatrix[10];
       for(unsigned int i=0;i<10;i++)covMatrix[i] = pPfo->getCovMatrix()[i];
-      const float mass = pPfo->getMass();
-      const float charge = pPfo->getCharge();
+//      const float mass = pPfo->getMass();
+//      const float charge = pPfo->getCharge();
       float referencePoint[3];
       for(unsigned int i=0;i<3;i++)referencePoint[i] = pPfo->getReferencePoint()[i];
       const ParticleIDVec particleIDs = pPfo->getParticleIDs();
-      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
-      const float goodnessOfPID = pPfo->getGoodnessOfPID();
+//      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
+//      const float goodnessOfPID = pPfo->getGoodnessOfPID();
       const ReconstructedParticleVec particles = pPfo->getParticles();
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
@@ -724,10 +724,10 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 
     // Calculate cluster times
 
-    const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+//    const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
     // determine pseudo-geometry of detector (determined by ECAL barrel)
     // symmetry 0 =cylinder, 1=prorotype, >1 = polygon
-    const float zOfEndCap = (float)pEcalEndcap.getExtent()[2];
+//    const float zOfEndCap = (float)pEcalEndcap.getExtent()[2];
 
     float sumTimeEnergy(0.f);
     float sumEnergy(0.f);
@@ -795,7 +795,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 	  sumEnergyEcal += hit->getEnergy();
 	  sumTimeEnergyEcal += hit->getEnergy()*hitTime;
 	}else{
-	  float z = hit->getPosition()[2]; 
+//	  float z = hit->getPosition()[2]; 
 	  if(!ch.is(CHT::barrel)){
 	    nHcalEnd++;
 	    sumEnergyHcalEndcap += hit->getEnergy();

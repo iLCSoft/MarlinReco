@@ -1248,7 +1248,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
  
   CLHEP::Hep3Vector point( mergedPoint->getX(), mergedPoint->getY(), mergedPoint->getZ()  ) ;
   
-  double unsmearedPhi = point.phi();
+//  double unsmearedPhi = point.phi();
   
   double randrp = gsl_ran_gaussian(_random,tpcRPhiRes);
   double randz =  gsl_ran_gaussian(_random,tpcZRes);

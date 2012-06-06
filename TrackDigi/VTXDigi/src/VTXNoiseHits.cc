@@ -121,7 +121,7 @@ void VTXNoiseHits::processEvent( LCEvent * evt ) {
     
   }
               
-  double gap = 	gearVXD.getShellGap () ;
+//  double gap = 	gearVXD.getShellGap () ;
 
   for( int i=0 ; i <  layerVXD.getNLayers() ; i++ ) {
 

@@ -51,7 +51,7 @@ int Voxel_tpc::clusterFind(vector <Voxel_tpc*>* hitList){
     hitList->push_back(this);
     this->setIsClusterHit();
     for(int i=0; i<this->getNumberOfAdjacent();++i){
-      int clusterSize = getAdjacent(i)->clusterFind(hitList);
+      getAdjacent(i)->clusterFind(hitList);
     }
   }
 

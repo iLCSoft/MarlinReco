@@ -691,7 +691,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 	  float x = hit->getPosition()[0];
 	  float y = hit->getPosition()[1];
 	  float z = hit->getPosition()[2];
-	  float r = sqrt(x*x+y*y);
+//	  float r = sqrt(x*x+y*y);
 	  if(_useHcalTiming){
 	    float hcalTimeWindowMax = _hcalEndcapTimeWindowMax;
    	    if(caloLayout==CHT::barrel)hcalTimeWindowMax = _hcalBarrelTimeWindowMax;

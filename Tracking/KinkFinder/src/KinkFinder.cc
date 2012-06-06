@@ -601,7 +601,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      if(zstep<1)zstep=1;
 	      
 	      for(float z = zs; z < ze; z+= zstep){
-//		float t = helixEnd[ip]->getPointInZ(z, refsp, seedp);
+		helixEnd[ip]->getPointInZ(z, refsp, seedp);
 		helixStart[id]->getPointInZ(z, refsd, seedd);
 		float dx = seedp[0]-seedd[0];
 		float dy = seedp[1]-seedd[1];

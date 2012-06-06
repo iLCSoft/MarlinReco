@@ -771,9 +771,8 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
     for(unsigned int ihit=0;ihit<hits.size();++ihit)deltaTimes.push_back( fabs(hittimes[ihit]-medianTime)); 
     std::sort(deltaTimes.begin(),deltaTimes.end());
     
-    int ihit90 = static_cast<int>((hits.size()*9)/10.);
-    if(ihit90>=hits.size()-1)ihit90=hits.size()-2;
-    if(ihit90<0)ihit90=0;
+    unsigned ihit90 = static_cast<unsigned>((hits.size()*9)/10.);
+    if(ihit90>=hits.size()-1) ihit90 = hits.size()-2;
 
     //std::cout << " hits " << hits.size() << " hit 90 = " << ihit90 << std::endl; 
     float deltaMedian = deltaTimes[ihit90]+0.1;

@@ -1205,7 +1205,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   //  double R = 0;
   double lastR = 0;
   
-  int number_of_hits_to_merge = hitsToMerge->size();
+  unsigned number_of_hits_to_merge = hitsToMerge->size();
   
 
   for(unsigned int ihitCluster = 0; ihitCluster < number_of_hits_to_merge; ++ihitCluster){

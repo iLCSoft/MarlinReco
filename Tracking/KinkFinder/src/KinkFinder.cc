@@ -103,7 +103,7 @@ KinkFinder::KinkFinder() : Processor("KinkFinder") {
 			     float(100.0));
 
   registerProcessorParameter("MinimumTrackHits",
-			     "Cuts on number of track hits",
+			     "cuts on number of track hits",
 			     _minTrackHits,
 			     int(5));
 
@@ -393,7 +393,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
       if (objectVec.size() > 0)mcpart = dynamic_cast<MCParticle*>(objectVec[0]);
       if (objectVec.size() > 1){
 	float dbest = 999999999.;
-	for(int im=0;im<objectVec.size();im++ ){
+	for(unsigned im=0;im<objectVec.size();im++ ){
 	  MCParticle* mcparti = dynamic_cast<MCParticle*>(objectVec[im]);
 	  float p[3];
 	  if(mcparti!=NULL){
@@ -476,9 +476,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   }
 
   for(unsigned int i=0;i< tracks.size();++i){ 
-    Track* tracki = tracks[i];
-    float d0i = tracki->getD0();
-    float z0i = tracki->getZ0();
+//    Track* tracki = tracks[i];
+//    float d0i = tracki->getD0();
+//    float z0i = tracki->getZ0();
     if(hits[i]>=_minTrackHits){
       float seedi[3];
       float refe[3];
@@ -490,9 +490,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
       float rendi = sqrt(seedi[0]*seedi[0]+seedi[1]*seedi[1]);
       for(unsigned int  j=0;j< tracks.size();++j){
 	if(i!=j && hits[j]>_minTrackHits && momentum[j] < (1.0 + _maxSplitTrackFracDeltaP)*momentum[i]){
-	  Track* trackj = tracks[j];
-	  float d0j = trackj->getD0();
-	  float z0j = trackj->getZ0();
+//	  Track* trackj = tracks[j];
+//        float d0j = trackj->getD0();
+//	  float z0j = trackj->getZ0();
 	  if(rInner[i]>_rKinkCut || rInner[j]>_rKinkCut){
 	    float seedj[3];
 	    float refs[3];
@@ -558,7 +558,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    if(mcParticle[j]!=NULL && _debugPrinting>0){
 	      EVENT::MCParticleVec parents = mcParticle[j]->getParents();
 	      if(parents.size()>0 && mcParticle[i]!=NULL){
-		for(int im = 0; im<parents.size();im++){
+		for(unsigned im = 0; im<parents.size();im++){
 		  if(parents[im]==mcParticle[i] && momentum[i]>2.0){
 		    //		    if(abs(mcParticle[i]->getPDG())==211 &&
 		    //  abs(mcParticle[j]->getPDG())==13)mcKink = true;
@@ -601,7 +601,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      if(zstep<1)zstep=1;
 	      
 	      for(float z = zs; z < ze; z+= zstep){
-		float t = helixEnd[ip]->getPointInZ(z, refsp, seedp);
+//		float t = helixEnd[ip]->getPointInZ(z, refsp, seedp);
 		helixStart[id]->getPointInZ(z, refsd, seedd);
 		float dx = seedp[0]-seedd[0];
 		float dy = seedp[1]-seedd[1];
@@ -625,7 +625,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    
 	    float deltaRxyCut = -100;
 	    float drCut   = -100;
-    	    bool goodRadialSep = false;
+//    	    bool goodRadialSep = false;
 	    // require kink to be outside VTX detector
 	    if(rkink > _rVTX[_nLayersVTX-1]){
 	      // for TPC use
@@ -858,7 +858,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		  if(mcParticle[j]!=NULL){
 		    EVENT::MCParticleVec parents = mcParticle[j]->getParents();
 		    if(parents.size()>0 && mcParticle[i]!=NULL){
-		      for(int im = 0; im<parents.size();im++){
+		      for(unsigned im = 0; im<parents.size();im++){
 			if(parents[im]==mcParticle[i])std::cout << " TRUE KINK . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . " << std::endl;
 		      }
 		    }
@@ -926,17 +926,17 @@ void KinkFinder::processEvent( LCEvent * evt ) {
       if(_debugPrinting>0){
 	if(kinkDaughters[i].size()>0){
 	  std::cout  << " Track " << i << " has " << kinkDaughters[i].size() << " kink daughters : ";
-	  for(int j=0;j<kinkDaughters[i].size();j++)std::cout << kinkDaughters[i][j].trackj << " ";
+	  for(unsigned j=0;j<kinkDaughters[i].size();j++)std::cout << kinkDaughters[i][j].trackj << " ";
 	  std::cout  << std::endl;
 	}
 	if(prongDaughters[i].size()>0){
 	  std::cout  << " Track " << i << " has " << prongDaughters[i].size() << " prong daughters : ";
-	  for(int j=0;j<prongDaughters[i].size();j++)std::cout << prongDaughters[i][j].trackj << " ";
+	  for(unsigned j=0;j<prongDaughters[i].size();j++)std::cout << prongDaughters[i][j].trackj << " ";
 	  std::cout  << std::endl;
 	}
 	if(splitDaughters[i].size()>0){
 	  std::cout  << " Track " << i << " has " << splitDaughters[i].size() << " split daughters : ";
-	  for(int j=0;j<splitDaughters[i].size();j++)std::cout << splitDaughters[i][j].trackj << " ";
+	  for(unsigned j=0;j<splitDaughters[i].size();j++)std::cout << splitDaughters[i][j].trackj << " ";
 	  std::cout  << std::endl;
 	}
       }
@@ -1060,7 +1060,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  vtx->setAssociatedParticle( part );
 	  part->setStartVertex( vtx );
 	  part->addTrack( tracks[prongDaughters[i][0].tracki] );
-	  for(int id=0;id<prongDaughters[i].size();id++)part->addTrack( tracks[prongDaughters[i][id].trackj] );
+	  for(unsigned id=0;id<prongDaughters[i].size();id++)part->addTrack( tracks[prongDaughters[i][id].trackj] );
 	  if(colProngRecoPart==NULL){
 	    colProngRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
 	    colProngVertex   = new LCCollectionVec(LCIO::VERTEX);

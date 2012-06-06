@@ -309,14 +309,14 @@ void VXDGeometry::test() {
 
 
         std::pair<int,int> id  =  getLadderID( lab ) ;
-        if( id.first != i ){
+        if( (unsigned)id.first != i ){
 
           isOK = false ;
           
           streamlog_out( WARNING ) << "  getLadderID layer wrong : " << id.first
                                    << " instead of " << i << std::endl ;
         }        
-        if( id.second != j ){
+        if( (unsigned)id.second != j ){
 
           isOK = false ;
           

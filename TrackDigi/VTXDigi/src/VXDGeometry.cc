@@ -243,9 +243,9 @@ void VXDGeometry::test() {
   const gear::VXDParameters& gearVXD = _gearMgr->getVXDParameters() ;
   double hgap = gearVXD.getShellGap() / 2.  ;
 
-  for(int i=0 ; i< _vxdLayers.size() ; ++i) {
+  for(unsigned i=0 ; i< _vxdLayers.size() ; ++i) {
     
-    for(int j=0 ; j< _vxdLadders[i].size() ; ++j) {
+    for(unsigned j=0 ; j< _vxdLadders[i].size() ; ++j) {
 
 
       double width = _vxdLayers[i].width ;

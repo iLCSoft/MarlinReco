@@ -393,7 +393,7 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 	  // NOTE : for a digital HCAL this does not allow for varying layer thickness
 	  // with depth - would need a simple mod to make response proportional to layer thickness
 	  if(_digitalHcal){
-	    int ilevel = 0;
+	    unsigned ilevel = 0;
 	    for(unsigned int ithresh=1;ithresh<_thresholdHcal.size();ithresh++){
 	      // Assume!!!  hit energies are stored as floats, i.e. 1, 2 or 3
 	      if(energy>_thresholdHcal[ithresh])ilevel=ithresh;   // ilevel = 0 , 1, 2

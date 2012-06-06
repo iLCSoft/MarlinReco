@@ -45,7 +45,7 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
 
   float dzMin = 1.0e+20;
   float dzMax = -1.0e+20;
-  float zBegin,zEnd;
+  float zBegin=1.0e+20,zEnd=-1.0e+20;
   for (int i=0;i<nhits;++i) {
     // conversion from mm to cm
     // Delphi fit works with units of cm
@@ -361,22 +361,22 @@ int MarlinTrackFit::DoFitting(int useExtraPoint, int fitOpt, // inputs
   }
 
   // Check if the d0 or z0 errors have too low values
-  float omega = param[0];
-  float tanlambda = param[1];
-  phi0 = param[2];
-  d0 = param[3];
-  z0 = param[4];
-  helix.Initialize_Canonical(phi0, d0, z0, omega, tanlambda, bField);
-  float momX = helix.getMomentum()[0];
-  float momY = helix.getMomentum()[1];
-  float momZ = helix.getMomentum()[2];
-  float totMom = sqrt(momX*momX+momY*momY+momZ*momZ); 
-  float TransMom = sqrt(momX*momX+momY*momY);
-  float sinTheta = TransMom/totMom;
-  float Parameter = totMom*pow(sinTheta,1.5);
-  float MinIpReso = _parIpReso[0]+_parIpReso[1]/pow(Parameter,_parIpReso[2]);
-  float ErrorD0 = sqrt(eparam[0]);
-  float ErrorZ0 = sqrt(eparam[9]);
+//  float omega = param[0];
+//  float tanlambda = param[1];
+//  phi0 = param[2];
+//  d0 = param[3];
+//  z0 = param[4];
+//  helix.Initialize_Canonical(phi0, d0, z0, omega, tanlambda, bField);
+//  float momX = helix.getMomentum()[0];
+//  float momY = helix.getMomentum()[1];
+//  float momZ = helix.getMomentum()[2];
+//  float totMom = sqrt(momX*momX+momY*momY+momZ*momZ); 
+//  float TransMom = sqrt(momX*momX+momY*momY);
+//  float sinTheta = TransMom/totMom;
+//  float Parameter = totMom*pow(sinTheta,1.5);
+//  float MinIpReso = _parIpReso[0]+_parIpReso[1]/pow(Parameter,_parIpReso[2]);
+//  float ErrorD0 = sqrt(eparam[0]);
+//  float ErrorZ0 = sqrt(eparam[9]);
 
   //  SJA: This is far too dangerous. Removed. 26/10/09
 //  if (ErrorD0<MinIpReso || ErrorZ0<MinIpReso) {

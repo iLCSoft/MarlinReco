@@ -1042,7 +1042,7 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
 
   TkHitBank->setFirstHitIndex("TPC");
 
-  for(int i=0; i< _goodHits.size(); ++i){
+  for(unsigned i=0; i< _goodHits.size(); ++i){
       
     TrackerHit* trkHitTPC = _goodHits[i];
     
@@ -1061,7 +1061,7 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     float z = 0.1*pos[2];
     
     // convert de/dx from GeV (LCIO) to number of electrons 
-    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
+    //    const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
     //    double tpcIonisationPotential = gearTPC.getDoubleVal("tpcIonPotential");
     //    edep = edep/tpcIonisationPotential;
     
@@ -1081,12 +1081,12 @@ void LEPTrackingProcessor::FillTPCHitBanks(){
     // For no error in r
     
     
-    double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
+    //    double rSqrd = pos[0]*pos[0] + pos[1]*pos[1];
 
     float r = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
 
-    double phi = atan2(pos[1],pos[0]); 
+    //    double phi = atan2(pos[1],pos[0]); 
     double tpcRPhiRes = sqrt(trkHitTPC->getCovMatrix()[0] + trkHitTPC->getCovMatrix()[2]);
     double tpcZRes = sqrt(trkHitTPC->getCovMatrix()[5]);
     

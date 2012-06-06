@@ -1955,7 +1955,7 @@ void SiliconTracking::AttachRemainingVTXHitsSlow() {
 	  // if (trackVec.size()==0)
 	  // nonAttachedHits.push_back( hit );
 	  //-- allow hits that are only used in triplets to be re-attached 
-	  int maxTrackSize = 0;
+	  unsigned maxTrackSize = 0;
 	  for(unsigned int itrack = 0;itrack < trackVec.size();itrack++){
 	    TrackerHitExtendedVec hitVec = trackVec[itrack]->getTrackerHitExtendedVec();
 	    unsigned int isize = hitVec.size();

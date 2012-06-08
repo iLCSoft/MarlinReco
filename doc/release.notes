@@ -4,6 +4,16 @@
 
 ===============================
 
+ -----------
+| v01-02-01 |
+ -----------
+
+    - Analysis/RecoMCTruthLink: Corrected track <-> mcparticle weight regarding space points, nhits+=2. Reduce verbosity levels on MESSA
+    GE.
+    - Analysis/CLICPfoSelector: corrected logic to stop ihit90 index becoming negative.
+    - removed/fixed several compiler/linker warnings
+
+
  --------
 | v01-02 |
  --------

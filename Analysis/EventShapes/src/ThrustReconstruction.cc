@@ -159,13 +159,10 @@ void ThrustReconstruction::processEvent( LCEvent * evt ) {
 	}
     }
 
-  // Ausgabe der Werte:
-    cout << " thrust: " << _principleThrustValue << 
-      " TV: " << _principleThrustAxis << endl; 
-        cout << "  major: " << _majorThrustValue << 
-        " TV: " << _majorThrustAxis << endl; 
-        cout << "  minor: " << _minorThrustValue << 
-        " TV: " << _minorThrustAxis << endl; 
+	streamlog_out( DEBUG4 ) << " thrust: " << _principleThrustValue << " TV: " << _principleThrustAxis << endl; 
+	streamlog_out( DEBUG4 ) << "  major: " << _majorThrustValue << " TV: " << _majorThrustAxis << endl; 
+	streamlog_out( DEBUG4 ) << "  minor: " << _minorThrustValue << " TV: " << _minorThrustAxis << endl; 
+
   if (_principleThrustValue >= _max) _max = _principleThrustValue;
   if (_principleThrustValue <= _min) _min = _principleThrustValue;
 }

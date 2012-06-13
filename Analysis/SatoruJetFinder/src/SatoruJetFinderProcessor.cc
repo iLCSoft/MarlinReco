@@ -124,7 +124,7 @@ namespace marlin
  
   void SatoruJetFinderProcessor::init(){
 
-    std::cout << "SatoruJetFinderProcessor::init()  " << name() 
+		streamlog_out(DEBUG4) << "SatoruJetFinderProcessor::init()  " << name() 
               << std::endl 
               << "  parameters: " << std::endl 
               << *parameters()  ;
@@ -134,7 +134,7 @@ namespace marlin
 
     transform(_jetFindingMode.begin(),_jetFindingMode.end(),
               _jetFindingMode.begin(),( int (*)(int) ) std::tolower );
-    cout << "jet finding mode:" << _jetFindingMode << endl;
+		streamlog_out(DEBUG4) << "jet finding mode:" << _jetFindingMode << endl;
 
  
     //Fixme! catch wrong mode names
@@ -142,7 +142,7 @@ namespace marlin
       if (_jetFindingMode=="durhamnjet"){
         _globalMode="0B";
         _primaryJetFindingMode=5;
-        cout << "GlobalMode "<<_globalMode << " NJetRequested " << _nJetRequested << endl;
+				streamlog_out(DEBUG4) << "GlobalMode "<<_globalMode << " NJetRequested " << _nJetRequested << endl;
       }else if(_jetFindingMode=="durhamycut"){
         _globalMode="0A";
         _primaryJetFindingMode=5;
@@ -231,7 +231,7 @@ namespace marlin
 
   void SatoruJetFinderProcessor::writePartons(){
     for (int iparton=0;iparton<_partonsWorkArray.NumberOfPartons;iparton++){
-      cout << "Px,Py,Pz,E: "<< 
+			streamlog_out(DEBUG4) << "Px,Py,Pz,E: "<< 
         _partonsWorkArray.Momentum[iparton*4+0] << ", " <<
         _partonsWorkArray.Momentum[iparton*4+1] << ", " <<
         _partonsWorkArray.Momentum[iparton*4+2] << ", " <<
@@ -265,8 +265,8 @@ namespace marlin
 
   void SatoruJetFinderProcessor::getJets(LCEvent * evt,LCCollection* JetsCol){
     LCCollection* enflowcol=evt->getCollection(_inputCollection);
-    cout << " " << endl;
-    cout << " number of jets found: " <<_jetsWorkArray.NumberOfJets << endl;
+		streamlog_out(DEBUG4) << " " << endl;
+		streamlog_out(DEBUG4) << " number of jets found: " <<_jetsWorkArray.NumberOfJets << endl;
     for( int ijets=0;ijets<_jetsWorkArray.NumberOfJets; ijets++){
       ReconstructedParticleImpl* Jets = new ReconstructedParticleImpl;
       float momentum[3],energy;

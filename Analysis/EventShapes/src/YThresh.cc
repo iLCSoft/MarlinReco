@@ -115,7 +115,7 @@ void YThresh::processEvent( LCEvent * evt ) {
       }
     }
     else{
-      cout<<"YThresh Error "<<_nRecoParticles<<" particles<"<<_nMinParticles<<endl;
+			streamlog_out( WARNING ) <<"YThresh Error "<<_nRecoParticles<<" particles<"<<_nMinParticles<<endl;
       _yCut[0]=-1.;
     }
 
@@ -125,7 +125,8 @@ void YThresh::processEvent( LCEvent * evt ) {
     string yname=tempStream.str();      
     recoColl->parameters().setValue(yname.c_str(),_yCut[0]);
     
-    if(_output>0)cout<<"YThresh Event "<<_nEvt<<" "<<yname<<"="<<_yCut[0]<<endl;
+    if(_output>0)
+			streamlog_out( DEBUG4 ) <<"YThresh Event "<<_nEvt<<" "<<yname<<"="<<_yCut[0]<<endl;
 
     if(_yCut[0]>=0){
 
@@ -140,12 +141,13 @@ void YThresh::processEvent( LCEvent * evt ) {
       callSatoru(evt);
       int n2=_jetsWorkArray.NumberOfJets;
       
-      if(!(n1==_nMin && n2==_nMin+1)) cout<<"ERROR INCORRECT YTHRESH VALUE OBTAINED"<<endl;
+      if(!(n1==_nMin && n2==_nMin+1))
+				streamlog_out( WARNING ) <<"ERROR INCORRECT YTHRESH VALUE OBTAINED"<<endl;
 
     }
 
   }catch(DataNotAvailableException &e){
-    cout<<"YThresh: cannot find collection "<<_inputCollection.c_str()<<endl;
+		streamlog_out( WARNING ) << "YThresh: cannot find collection "<<_inputCollection.c_str()<<endl;
   }
     
     _nEvt ++ ;
@@ -206,7 +208,7 @@ void YThresh::check( LCEvent * evt ) {
 
 void YThresh::end(){   
   
-  std::cout << "YThresh::end()  " << name() 
+	streamlog_out( DEBUG4 ) << "YThresh::end()  " << name() 
  	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    << std::endl ;
   

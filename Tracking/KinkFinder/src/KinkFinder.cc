@@ -202,11 +202,38 @@ void KinkFinder::init() {
     _rVTX.push_back(pVXDLayerLayout.getLadderDistance(iL));
   }
   
-  const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
-  _nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
-  for(int iL=0;iL<_nLayersSIT;iL++){
-    _rSIT.push_back(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
+
+    //-- SIT Parameters--
+  const gear::ZPlanarParameters* pSITDetMain = 0;
+  const gear::ZPlanarLayerLayout* pSITLayerLayout = 0;
+  
+  try{
+    pSITDetMain = &Global::GEAR->getSITParameters();
+    pSITLayerLayout = &(pSITDetMain->getZPlanarLayerLayout());
+    _nLayersSIT = pSITLayerLayout->getNLayers();
+    for(int iL=0;iL<_nLayersSIT;iL++){
+      _rSIT.push_back(float( pSITLayerLayout->getSensitiveDistance( iL )  ) );
+    }
   }
+  catch( gear::UnknownParameterException& e){
+  }
+
+  //old SIT using cylinders   
+  try{
+    
+    const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
+    _nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
+
+    for(int iL=0;iL<_nLayersSIT;iL++){
+      _rSIT.push_back(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
+    }
+  }
+  catch( gear::UnknownParameterException& e){
+  }
+  
+
+
+
 
   _nRun = -1;
   _nEvt = 0;

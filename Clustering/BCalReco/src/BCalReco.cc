@@ -87,6 +87,11 @@ BCalReco::BCalReco() : Processor("BCalReco"){
 
        //registerProcessorParameter("BeamCalHitCol","Collection of SimCalorimeterHits in BeamCal",_HitCol,std::string("BeamCalCollection"));
 	registerProcessorParameter("BeamCalHitCol","Collection of CalorimeterHits in BeamCal",_HitCol,std::string("BeamCalCollection"));
+
+        registerProcessorParameter( "WriteHistograms",
+                                " Enable output of histogram root file",
+                                _writeHistograms,
+                                false );
 }
 
 
@@ -1203,50 +1208,52 @@ void BCalReco::end(){
 
    // write the histos out
 
-        file  = TFile::Open("bcalrootfile.root","RECREATE");
+	if (_writeHistograms) {
+                file  = TFile::Open("bcalrootfile.root","RECREATE");
 
-        coordhitsxyP->Write();
-        coordhitsxyN->Write();
-        coordclusterxyP->Write();
-        coordclusterzP->Write();
-        coordclusterzN->Write();
-        coordclusterxyN->Write();
-        clusterPosHistoN->Write();
-        clusterPosHisto->Write();
-        clusterPos3DHistoN->Write();
-        clusterPos3DHisto->Write();
-	clusterPos3DHistoAll->Write();
-	particlePosHistoN->Write();
-        particlePosHisto->Write();
-        particlePos3DHistoN->Write();
-        particlePos3DHisto->Write();
-	particlePos3DHistoAll->Write();
+		coordhitsxyP->Write();
+		coordhitsxyN->Write();
+		coordclusterxyP->Write();
+		coordclusterzP->Write();
+		coordclusterzN->Write();
+		coordclusterxyN->Write();
+		clusterPosHistoN->Write();
+		clusterPosHisto->Write();
+		clusterPos3DHistoN->Write();
+		clusterPos3DHisto->Write();
+		clusterPos3DHistoAll->Write();
+		particlePosHistoN->Write();
+		particlePosHisto->Write();
+		particlePos3DHistoN->Write();
+		particlePos3DHisto->Write();
+		particlePos3DHistoAll->Write();
 
-	MCparticlePosHistoN->Write();
-        MCparticlePosHisto->Write();
-        MCparticlePos3DHistoN->Write();
-        MCparticlePos3DHisto->Write();
-	MCparticlePos3DHistoAll->Write();
+		MCparticlePosHistoN->Write();
+		MCparticlePosHisto->Write();
+		MCparticlePos3DHistoN->Write();
+		MCparticlePos3DHisto->Write();
+		MCparticlePos3DHistoAll->Write();
 
-        coordhitszP->Write();
-        coordhitszN->Write();
-        energyFW->Write();
-        clusterNegEnergyHisto->Write();
-	clusterPosEnergyHisto->Write();
-	particleNegEnergyHisto->Write();
-	particlePosEnergyHisto->Write();
-	particleNegMomeHisto->Write();
-	particlePosMomeHisto->Write();
-        energyBW->Write();
-        numberclusters->Write();
-	numberparticles->Write();
-        SigPosMean->Write();
-        SigNegMean->Write();
-        SigGausPosMean->Write();
-        SigGausNegMean->Write();
+		coordhitszP->Write();
+		coordhitszN->Write();
+		energyFW->Write();
+		clusterNegEnergyHisto->Write();
+		clusterPosEnergyHisto->Write();
+		particleNegEnergyHisto->Write();
+		particlePosEnergyHisto->Write();
+		particleNegMomeHisto->Write();
+		particlePosMomeHisto->Write();
+		energyBW->Write();
+		numberclusters->Write();
+		numberparticles->Write();
+		SigPosMean->Write();
+		SigNegMean->Write();
+		SigGausPosMean->Write();
+		SigGausNegMean->Write();
 
-        file->Write();
-        file->Close();
+		file->Write();
+		file->Close();
+	}
 
 }
 

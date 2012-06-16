@@ -226,6 +226,11 @@ class BCalReco : public Processor {
 */
         int _eventClustersHistoRange;
 
+/**
+* Write output root file at the end of process if true.
+*/
+        bool _writeHistograms;
+
 
 /**
 * Min theta angle for particles to hit the calo

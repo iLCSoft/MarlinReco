@@ -1,9 +1,9 @@
 #include <unistd.h>
 #include <vector>
+
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <math.h>
 
 #include <TFile.h>
 #include <TMath.h>
@@ -432,9 +432,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
           }
         }
         
-  std::cout << "found " << clu.size() << " towers in cluster" << std::endl;
+  //std::cout << "found " << clu.size() << " towers in this cluster" << std::endl;
         
-
         
  if ( clu.size() > 1 ) {
         
@@ -606,14 +605,14 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
   double MaxEn_cluster = 0.;
   int clusterSize   = 0 ;
   int MaxCluSize    = 0 ;
-  int CluPos        = 0 ;
+  double CluPos        = 0. ;
   double CluPositionSearch = 0.;
-  int CluPos2        = 0 ;
+  double CluPos2        = 0. ;
   double CluPositionSearch2 = 0.;
-  int CluPhi        = 0 ;
+  double CluPhi        = 0. ;
 
   double CluPhiSearch = 0.;
-  int CluPhi2        = 0 ;
+  double CluPhi2        = 0. ;
   double CluPhiSearch2 = 0.;
           
   unsigned int clusterNum    = 0 ;
@@ -643,10 +642,10 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       MaxCluSize = clusterSize;
       clusterNum = fLoop;
       MaxEn_cluster = En_cluster;
-      CluPos2 = (int)( (CluPositionSearch/(En_cluster)) - 1. );
-      CluPos  = (int)( (CluPositionSearch/clusterSize)  - 1. );
-      CluPhi2 = (int)( (CluPhiSearch/(En_cluster)) - 1. );
-      CluPhi  = (int)( (CluPhiSearch/clusterSize)  - 1. );
+      CluPos2 = ( (CluPositionSearch/(En_cluster)) - 1. );
+      CluPos  = ( (CluPositionSearch/clusterSize)  - 1. );
+      CluPhi2 = ( (CluPhiSearch/(En_cluster)) - 1. );
+      CluPhi  = ( (CluPhiSearch/clusterSize)  - 1. );
   
     }
   }//first loop
@@ -655,47 +654,47 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
   // sort vertion for output in file for later analizis
 
   if(
-      (CluPos == 0 && CluPhi >= 24) ||
-      (CluPos == 1 && CluPhi >= 24) ||
-      (CluPos == 2 && CluPhi >= 32) ||
-      (CluPos == 3 && CluPhi >= 40) ||
-      (CluPos == 4 && CluPhi >= 40) ||
-      (CluPos == 5 && CluPhi >= 48) ||
-      (CluPos == 6 && CluPhi >= 56) ||
-      (CluPos == 7 && CluPhi >= 72) ||
-      (CluPos == 8 && CluPhi >= 72) ||
-      (CluPos == 9 && CluPhi >= 81) ||
-      (CluPos == 10 && CluPhi >= 90) ||
-      (CluPos == 11 && CluPhi >= 90) ||
-      (CluPos == 12 && CluPhi >= 99) ||
-      (CluPos == 13 && CluPhi >= 108) ||
-      (CluPos == 14 && CluPhi >= 108) ||
-      (CluPos == 15 && CluPhi >= 117) ||
-      (CluPos == 16 && CluPhi >= 125))
+      ((int) CluPos == 0 && CluPhi >= 24) ||
+      ((int) CluPos == 1 && CluPhi >= 24) ||
+      ((int) CluPos == 2 && CluPhi >= 32) ||
+      ((int) CluPos == 3 && CluPhi >= 40) ||
+      ((int) CluPos == 4 && CluPhi >= 40) ||
+      ((int) CluPos == 5 && CluPhi >= 48) ||
+      ((int) CluPos == 6 && CluPhi >= 56) ||
+      ((int) CluPos == 7 && CluPhi >= 72) ||
+      ((int) CluPos == 8 && CluPhi >= 72) ||
+      ((int) CluPos == 9 && CluPhi >= 81) ||
+      ((int) CluPos == 10 && CluPhi >= 90) ||
+      ((int) CluPos == 11 && CluPhi >= 90) ||
+      ((int) CluPos == 12 && CluPhi >= 99) ||
+      ((int) CluPos == 13 && CluPhi >= 108) ||
+      ((int) CluPos == 14 && CluPhi >= 108) ||
+      ((int) CluPos == 15 && CluPhi >= 117) ||
+      ((int) CluPos == 16 && CluPhi >= 125))
               std::cout << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
 
   if(MaxCluSize >=2 &&
     (
-      (CluPos == 0 && CluPhi < 24) ||
-      (CluPos == 1 && CluPhi < 24) ||
-      (CluPos == 2 && CluPhi < 32) ||
-      (CluPos == 3 && CluPhi < 40) ||
-      (CluPos == 4 && CluPhi < 40) ||
-      (CluPos == 5 && CluPhi < 48) ||
-      (CluPos == 6 && CluPhi < 56) ||
-      (CluPos == 7 && CluPhi < 72) ||
-      (CluPos == 8 && CluPhi < 72) ||
-      (CluPos == 9 && CluPhi < 81) ||
-      (CluPos == 10 && CluPhi < 90) ||
-      (CluPos == 11 && CluPhi < 90) ||
-      (CluPos == 12 && CluPhi < 99) ||
-      (CluPos == 13 && CluPhi < 108) ||
-      (CluPos == 14 && CluPhi < 108) ||
-      (CluPos == 15 && CluPhi < 117) ||
-      (CluPos == 16 && CluPhi < 125))
+      ((int) CluPos == 0 && CluPhi < 24) ||
+      ((int) CluPos == 1 && CluPhi < 24) ||
+      ((int) CluPos == 2 && CluPhi < 32) ||
+      ((int) CluPos == 3 && CluPhi < 40) ||
+      ((int) CluPos == 4 && CluPhi < 40) ||
+      ((int) CluPos == 5 && CluPhi < 48) ||
+      ((int) CluPos == 6 && CluPhi < 56) ||
+      ((int) CluPos == 7 && CluPhi < 72) ||
+      ((int) CluPos == 8 && CluPhi < 72) ||
+      ((int) CluPos == 9 && CluPhi < 81) ||
+      ((int) CluPos == 10 && CluPhi < 90) ||
+      ((int) CluPos == 11 && CluPhi < 90) ||
+      ((int) CluPos == 12 && CluPhi < 99) ||
+      ((int) CluPos == 13 && CluPhi < 108) ||
+      ((int) CluPos == 14 && CluPhi < 108) ||
+      ((int) CluPos == 15 && CluPhi < 117) ||
+      ((int) CluPos == 16 && CluPhi < 125))
 
     ){
-    std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
+  //  std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[0] = GetEnergyCalib(MaxEn_cluster);
     reconstructed_object.ErrEne[0] = GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[0] = (double) CluPos;
@@ -706,8 +705,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
     reconstructed_object.side[0] = 1;
   }  
   else {
-    std::cout << "no cluster found >=2" << std::endl;
-    std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
+ //   std::cout << "no cluster found >=2" << std::endl;
+ //   std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
 
     reconstructed_object.RecEne[0] = 0.;
     reconstructed_object.ErrEne[0] = 0.;
@@ -840,7 +839,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
           }
         }
         
-  std::cout << "found " << clu.size() << " towers in cluster" << std::endl;
+ // std::cout << "found " << clu.size() << " towers in this cluster" << std::endl;
         
 
         
@@ -1014,14 +1013,14 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
   double MaxEn_cluster = 0.;
   int clusterSize   = 0 ;
   int MaxCluSize    = 0 ;
-  int CluPos        = 0 ;
+  double CluPos        = 0. ;
   double CluPositionSearch = 0.;
-  int CluPos2        = 0 ;
+  double CluPos2        = 0. ;
   double CluPositionSearch2 = 0.;
-  int CluPhi        = 0 ;
+  double CluPhi        = 0. ;
 
   double CluPhiSearch = 0.;
-  int CluPhi2        = 0 ;
+  double CluPhi2        = 0. ;
   double CluPhiSearch2 = 0.;
           
   unsigned int clusterNum    = 0 ;
@@ -1051,10 +1050,10 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       MaxCluSize = clusterSize;
       clusterNum = fLoop;
       MaxEn_cluster = En_cluster;
-      CluPos2 = (int)( (CluPositionSearch/(En_cluster)) - 1. );
-      CluPos  = (int)( (CluPositionSearch/clusterSize)  - 1. );
-      CluPhi2 = (int)( (CluPhiSearch/(En_cluster)) - 1. );
-      CluPhi  = (int)( (CluPhiSearch/clusterSize)  - 1. );
+      CluPos2 = ( (CluPositionSearch/(En_cluster)) - 1. );
+      CluPos  = ( (CluPositionSearch/clusterSize)  - 1. );
+      CluPhi2 = ( (CluPhiSearch/(En_cluster)) - 1. );
+      CluPhi  = ( (CluPhiSearch/clusterSize)  - 1. );
   
     }
   }//first loop
@@ -1103,7 +1102,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       (CluPos == 15 && CluPhi < 117) ||
       (CluPos == 16 && CluPhi < 125))
     ){
-    std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
+ //   std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[1] = GetEnergyCalib(MaxEn_cluster);
     reconstructed_object.ErrEne[1] = GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[1] = (double) CluPos;
@@ -1114,8 +1113,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     reconstructed_object.side[1] = 1;
   }  
   else {
-    std::cout << "no cluster found >=2" << std::endl;
-    std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
+//    std::cout << "no cluster found >=2" << std::endl;
+//    std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
     reconstructed_object.RecEne[1] = 0.;
     reconstructed_object.ErrEne[1] = 0.;
     reconstructed_object.RecRad[1] = 0.;
@@ -1144,12 +1143,13 @@ double  BCalReconstruction::GetEnergyCalib(double energy){
 
 //  return (energy*70.+4.7);  //calib BeCas
 //  return (energy*71.43+10.);  //calib Marlin signal
-//  return (energy*78.55+0.1199);  //calib Marlin signal
-return (energy*74.91+11.45);  //calib Marlin signal+bkg 27 Feb. 2012
+ return (energy*78.55+0.1199);  //calib Marlin signal+bkg
+//return (energy*74.91+11.45);  //calib Marlin signal+bkg 27 Feb. 2012
+//return (energy*72.64 +11.69); //calib Marlin signal+bkg 1 TeV (13 May 2012)
 //  return energy;
 }
 
-double  BCalReconstruction::GetCoordRotX(int ring, int pad, float IP, float angle){
+double  BCalReconstruction::GetCoordRotX(double ring, double pad, float IP, float angle){
 
   double coordX;
   double coordZ;
@@ -1170,14 +1170,16 @@ double  BCalReconstruction::GetCoordRotX(int ring, int pad, float IP, float angl
       coordZ = (double) IP + 5.*delta;
     else
       coordZ = (double) IP - 5.*delta;
+    
 
-    coordX = ((inrad+sizepad/2) + ring*sizepad)*TMath::Cos(sPhi + (pad+1)*phiradial[ring]);
+    coordX = ((inrad+sizepad/2.) + ring*sizepad)*TMath::Cos(sPhi + (pad+1.)*phiradial[(int) ring]);
 
     return  (TMath::Cos(angle)*coordX - TMath::Sin(angle)*coordZ);
+//    return coordX;
 
 }
 
-double  BCalReconstruction::GetCoordY(int ring, int pad){
+double  BCalReconstruction::GetCoordY(double ring, double pad){
 
                 //calorimeter geometry (available in GEAR file, to be read from GEAR file in the future)
                 double sizepad = 7.646470588; // mm
@@ -1188,11 +1190,13 @@ double  BCalReconstruction::GetCoordY(int ring, int pad){
                         0.0872665, 0.0775702, 0.0698132, 0.0698132, 0.0634665, 0.0581776, 0.0581776,
                         0.0537024, 0.0498666};
 
-    return ((inrad+sizepad/2) + ring*sizepad)*TMath::Sin(sPhi + (pad+1)*phiradial[ring]);
+
+    
+    return ((inrad+sizepad/2.) + ring*sizepad)*TMath::Sin(sPhi + (pad+1.)*phiradial[(int) ring]);
 
 }
 
-double  BCalReconstruction::GetCoordRotZ(int ring, int pad, float IP, float angle){
+double  BCalReconstruction::GetCoordRotZ(double ring, double pad, float IP, float angle){
 
   double coordX;
   double coordZ;
@@ -1209,18 +1213,19 @@ double  BCalReconstruction::GetCoordRotZ(int ring, int pad, float IP, float angl
                         0.0537024, 0.0498666};
       
     if(IP > 0)
-      coordZ = (double) IP + 5*delta;
+      coordZ = (double) IP + 5.*delta;
     else
-      coordZ = (double) IP - 5*delta;
+      coordZ = (double) IP - 5.*delta;
+      
 
-    coordX = ((inrad+sizepad/2) + ring*sizepad)*TMath::Cos(sPhi + (pad+1)*phiradial[ring]);
+    coordX = ((inrad+sizepad/2.) + ring*sizepad)*TMath::Cos(sPhi + (pad+1.)*phiradial[(int) ring]);
     
     return  (TMath::Sin(angle)*coordX + TMath::Cos(angle)*coordZ);
-  
+//   return coordZ;
 
 }
 
-double  BCalReconstruction::GetEnergyErr(int ring, int pad){
+double  BCalReconstruction::GetEnergyErr(double ring, double pad){
 
 
 //      cout << "SUNT in GetEnergyErr" << endl;

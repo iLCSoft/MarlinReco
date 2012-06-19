@@ -88,10 +88,10 @@ private:
    RecCorr SearchClustersFW(CellType ***info_detector);
    RecCorr SearchClustersBW(CellType ***info_detector);
    double GetEnergyCalib(double energy);
-   double GetCoordRotX(int ring, int pad, float IP, float angle);
-   double GetCoordY(int ring, int pad);
-   double GetCoordRotZ(int ring, int pad, float IP, float angle);
-   double GetEnergyErr(int ring, int pad);
+   double GetCoordRotX(double ring, double pad, float IP, float angle);
+   double GetCoordY(double ring, double pad);
+   double GetCoordRotZ(double ring, double pad, float IP, float angle);
+   double GetEnergyErr(double ring, double pad);
    vector<vector<int> > getVector(int rows, int cols);
    void Free2DArray(int **p2DArray);
    void Free3DArray(CellType ***p3DArray);

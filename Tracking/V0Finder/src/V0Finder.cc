@@ -5,9 +5,12 @@
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 #include "IMPL/VertexImpl.h"
+#include "UTIL/Operators.h"
 #include <math.h>
 #include <gear/GEAR.h>
 #include <gear/BField.h>
+#include <gearimpl/Vector3D.h>
+
 #include "HelixClass.h"
 
 using namespace lcio ;
@@ -151,8 +154,13 @@ void V0Finder::processEvent( LCEvent * evt ) {
       HelixClass firstHelix;
       firstHelix.Initialize_Canonical(phi1,d01,z01,omega1,tanLambda1,_bField);
       float charge1 = firstHelix.getCharge();
+
+      float r1 = firstTrack->getRadiusOfInnermostHit();
+
       for (int j=i+1;j<nelem;++j) {
 	Track * secondTrack = dynamic_cast<Track*>(col->getElementAt(j));
+	float r2 = secondTrack->getRadiusOfInnermostHit();
+
 	float d02 = secondTrack->getD0();
 	float z02 = secondTrack->getZ0();
 	float phi2 = secondTrack->getPhi();
@@ -196,17 +204,36 @@ void V0Finder::processEvent( LCEvent * evt ) {
 // 	    }
 // 	  }
 
+	  // streamlog_out( DEBUG4 ) << " **** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
+	  // 		      << " t1 " << lcshort( firstTrack ) << "\n"  
+	  // 		      << " t2 " << lcshort( secondTrack )  << std::endl ;
 
-	  float r1 = firstTrack->getRadiusOfInnermostHit();
-	  float r2 = secondTrack->getRadiusOfInnermostHit();
+
 
 	  // check to ensure there are no hits on tracks at radii significantly smaller than reconstructed vertex
 	  // TO DO: should be done more precisely using helices
 	  if(r1/radV0<_minTrackHitRatio)continue;
 	  if(r2/radV0<_minTrackHitRatio)continue;
 	 
-	  if (distV0 < _dVertCut && radV0 > _rVertCut ) { // cut on vertex radius and track misdistance
+
+	  //	  if (distV0 < _dVertCut && radV0 > _rVertCut ) { // cut on vertex radius and track misdistance
+	  if (radV0 > _rVertCut  ) { 
+
+	    streamlog_out( DEBUG4 ) << " ***************** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
+				    << " t1 " << lcshort( firstTrack ) << "\n"  
+				    << " t2 " << lcshort( secondTrack )  
+				    << " distV0 " << distV0 
+				    << std::endl ;
+
+	    if( distV0 < _dVertCut ) { // cut on vertex radius and track misdistance
 	    
+
+	    // streamlog_out( DEBUG4 ) << " **** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
+	    // 			    << " t1 " << lcshort( firstTrack ) << "\n"  
+	    // 			    << " t2 " << lcshort( secondTrack )  << std::endl ;
+
+	    streamlog_out( DEBUG ) << "  ***** testing various hypotheses " << std::endl ;
+
 	    // Testing K0 hypothesis
 	    float energy1 = sqrt(pp1*pp1+MASSPion*MASSPion);
 	    float energy2 = sqrt(pp2*pp2+MASSPion*MASSPion);
@@ -274,6 +301,9 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
               }
             }
 
+	   streamlog_out( DEBUG ) << "  ***** mass condition :  " <<  massCondition 
+				  << "  code : " << code  << std::endl ;
+
 	    if (massCondition) {
 	      bool ok = true;
 	      if(r1/radV0<_minTrackHitRatio|| r2/radV0<_minTrackHitRatio){
@@ -309,7 +339,9 @@ um[1]*momentum[1]-momentum[2]*momentum[2]);
 	}
       }
     }
-    
+
+    }//DEBUG ------
+
 //     std::cout << std::endl;
 
     // Sorting of all vertices in ascending order of the track misdistance

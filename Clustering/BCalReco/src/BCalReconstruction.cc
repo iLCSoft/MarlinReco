@@ -10,6 +10,8 @@
 #include <TTree.h>
 #include <TROOT.h>
 
+#include <math.h>
+
 #include "BCalReconstruction.h"
 
 using namespace std;

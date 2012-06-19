@@ -4,15 +4,20 @@
 
 ===============================
 
- -----------
-| v01-02-01 |
- -----------
+ --------
+| v01-03 |
+ --------
+
+   - added option to enable/disable output of root file containing histograms to BCalReco.cc
+     (T.Tanabe)
+
+   - fixed SIT parameters (new ZPlanarParameters )  in KinkFinder.cc (F.Gaede)
+
+   - use streamlog for messages in EventShapes and SatoruJetFinder packages (T.Tanabe)
 
     - Analysis/RecoMCTruthLink: Corrected track <-> mcparticle weight regarding space points, nhits+=2. Reduce verbosity levels on MESSA
     GE.
     - Analysis/CLICPfoSelector: corrected logic to stop ihit90 index becoming negative.
-    - fixed SIT parameters (new ZPlanarParameters )
-    - added option to enable/disable output of root file containing histograms
     - removed/fixed several compiler/linker warnings
 
 

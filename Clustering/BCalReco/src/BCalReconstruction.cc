@@ -106,10 +106,10 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
 ////////////////                if (BcCells[l][r][p].sPos[0]>0){
                   RingFW[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]][BcCells[l][r][p].sPos[0]] = 1;
                   RenFW[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]] += BcCells[l][r][p].sEdepPos;  
-               // cout<<" SUNT IN FW BeamCal"<<endl;
-//                cout<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
-//                cout<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
-//                  cout<<index<< " "<< BcCells[l][r][p].sPos[1] <<" " << BcCells[l][r][p].sPos[2]<< " " <<Ren[BcCells[l][r][p].sPos[1]]$
+               // streamlog_out(DEBUG2)<<" SUNT IN FW BeamCal"<<endl;
+//                streamlog_out(DEBUG2)<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
+//                streamlog_out(DEBUG2)<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
+//                  streamlog_out(DEBUG2)<<index<< " "<< BcCells[l][r][p].sPos[1] <<" " << BcCells[l][r][p].sPos[2]<< " " <<Ren[BcCells[l][r][p].sPos[1]]$
 ////////////////                }
               }
 
@@ -117,9 +117,9 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
 ////////////////                if (BcCells[l][r][p].sPos[0]>0){
                   RingBW[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]][BcCells[l][r][p].sPos[0]] = 1;
                   RenBW[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]] += BcCells[l][r][p].sEdepNeg;
-               // cout<<" SUNT IN BW BeamCal"<<endl;
-//                cout<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
-//                  cout<<index<< " "<< BcCells[l][r][p].sPos[1] <<" " << BcCells[l][r][p].sPos[2]<< " " <<Ren[BcCells[l][r][p].sPos[1]]$
+               // streamlog_out(DEBUG2)<<" SUNT IN BW BeamCal"<<endl;
+//                streamlog_out(DEBUG2)<<""<<Ren[BcCells[l][r][p].sPos[1]][BcCells[l][r][p].sPos[2]]<<endl;
+//                  streamlog_out(DEBUG2)<<index<< " "<< BcCells[l][r][p].sPos[1] <<" " << BcCells[l][r][p].sPos[2]<< " " <<Ren[BcCells[l][r][p].sPos[1]]$
 ////////////////                }
               }
         
@@ -155,11 +155,11 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
      BCalReconstruction::RecCorr reco_obj_fw = {{0},{0.}},reco_obj_bw = {{0},{0.}};
 
       reco_obj_fw = SearchClustersFW(BcCells);
-     //cout << "Reconstructed side FW BeamCal = " << " " << reco_obj_fw.side[0] << " " << reco_obj_fw.side[1] << endl;
+     //streamlog_out(DEBUG2) << "Reconstructed side FW BeamCal = " << " " << reco_obj_fw.side[0] << " " << reco_obj_fw.side[1] << endl;
 
       reco_obj_bw = SearchClustersBW(BcCells);
 
-     //cout << "Reconstructed side BW BeamCal = " << " " << reco_obj_bw.side[0] << " " << reco_obj_bw.side[1] << endl;
+     //streamlog_out(DEBUG2) << "Reconstructed side BW BeamCal = " << " " << reco_obj_bw.side[0] << " " << reco_obj_bw.side[1] << endl;
  
      if((reco_obj_fw.side[0] == 1 && reco_obj_fw.side[1] == 0) && (reco_obj_bw.side[0] == 0 && reco_obj_bw.side[1] == 0))
        reco_obj = reco_obj_fw;
@@ -184,7 +184,7 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
        reco_obj.side[1] = reco_obj_bw.side[1];
      }  
 
-    // cout << "Reconstructed side BeamCal = " << " " << reco_obj.side[0] << " " << reco_obj.side[1] << endl;
+    // streamlog_out(DEBUG2) << "Reconstructed side BeamCal = " << " " << reco_obj.side[0] << " " << reco_obj.side[1] << endl;
 
 //     Print(reco_obj); 
 
@@ -202,14 +202,14 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
         
         //const  double  Pi    =  3.14159165;
 	const  double  Pi    =  4.*atan(1.);
-	   // cout << "Pi = " << Pi << endl;
+	   // streamlog_out(DEBUG2) << "Pi = " << Pi << endl;
         double rInner = 20.;
         double rOuter = 150.;
         double SgScl = 8.;
         int split = (int)((rOuter-rInner)/SgScl); //number of rings
-        // cout << " split = "<<split<<endl;
+        // streamlog_out(DEBUG2) << " split = "<<split<<endl;
         double dR = (rOuter-rInner)/((double)split+1);
-        //cout << "dR = "<<dR<<endl;
+        //streamlog_out(DEBUG2) << "dR = "<<dR<<endl;
         int nWafers = 8; //number of general segments
 //        double sphi = 200.*Pi/180.; //? 
         double sdphi = 320.*Pi/180.;//?
@@ -233,7 +233,7 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
             DAdPhis[f] = DAWafer/(double(int(Wafer/calc)+1));
             DAnPhis[f] =  (int) ceil(DAWafer/(dR/(rInner+dR/2+dR*f)));  
           }
-          //cout<<" DAdPhis = "<<DAdPhis[f]<<" ; DAnPhis = "<<DAnPhis[f]<<endl;
+          //streamlog_out(DEBUG2)<<" DAdPhis = "<<DAdPhis[f]<<" ; DAnPhis = "<<DAnPhis[f]<<endl;
         
         }
 
@@ -274,7 +274,7 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
         
           
             if (nline>10) {
-              // cout << "r= " << r << " ; p = " << p << " ; nline = " << nline << endl;
+              // streamlog_out(DEBUG2) << "r= " << r << " ; p = " << p << " ; nline = " << nline << endl;
               nl=0;
               if(the_Chains[r][p][0]==1) nl=1;
               //we are searching events after 5-th layer
@@ -289,23 +289,23 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
              maxline=maxline-1; //as first cell will be 0 always!
               //cheking if maximum is more then genetal amount of "1" cells
               if (maxline>nline) {
-                //cout << "Warning!"<<endl;
-                //cout<<"max -> r= " << r << " ; p = " << p << " ;  maxn = " << maxline << " ;  nline = " << nline <<endl;
-                //cout<<" array : " <<endl ;
-                for(int l=1; l<34; l++)  //cout <<"l -> "<<l<<" -> "<< the_Chains[r][p][l]<<endl;
+                //streamlog_out(DEBUG2) << "Warning!"<<endl;
+                //streamlog_out(DEBUG2)<<"max -> r= " << r << " ; p = " << p << " ;  maxn = " << maxline << " ;  nline = " << nline <<endl;
+                //streamlog_out(DEBUG2)<<" array : " <<endl ;
+                for(int l=1; l<34; l++)  //streamlog_out(DEBUG2) <<"l -> "<<l<<" -> "<< the_Chains[r][p][l]<<endl;
                     ;
               }
               //printing all over 10 in line
               if (maxline>=10) {
-                //cout<<"max -> r= " << r << " ; p = " << p << " ;  maxn = " << maxline << " ;  nline = " << nline <<endl;
-                //cout<<" array : " <<endl ; 
-                for(int l=1; l<34; l++)  //cout << the_Chains[r][p][l];
-                //cout << endl;
+                //streamlog_out(DEBUG2)<<"max -> r= " << r << " ; p = " << p << " ;  maxn = " << maxline << " ;  nline = " << nline <<endl;
+                //streamlog_out(DEBUG2)<<" array : " <<endl ; 
+                for(int l=1; l<34; l++)  //streamlog_out(DEBUG2) << the_Chains[r][p][l];
+                //streamlog_out(DEBUG2) << endl;
                 flag=1;
 //                Rin[r][p]=1;
                 myVectorRin[r][p] = 1;
-//            cout<<"Rin = " <<Rin[r][p]<<endl;
-//            cout<<"myVector = " <<myVector[r][p]<<endl;
+//            streamlog_out(DEBUG2)<<"Rin = " <<Rin[r][p]<<endl;
+//            streamlog_out(DEBUG2)<<"myVector = " <<myVector[r][p]<<endl;
                 Stack[cl][0]=r;
                 Stack[cl][1]=p;   
                 cl+=1;
@@ -317,7 +317,7 @@ vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][m
 //                the_ChainEn[r][p]=0;
               }
             }
-            //cout << " n lines -> " << nl << endl;
+            //streamlog_out(DEBUG2) << " n lines -> " << nl << endl;
           }
         }
         //cerr << " n lines -> " << nl << endl;
@@ -389,7 +389,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       if(Rinput[r][p]>=1) count++;
     }
                                 
-    // cout<< "!!! count of towers after testline ->" << count << endl;   
+    // streamlog_out(DEBUG2)<< "!!! count of towers after testline ->" << count << endl;   
 
 
         for(int l=1; l<the_Layers; l++){
@@ -796,7 +796,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       if(Rinput[r][p]>=1) count++;
     }
                                 
-    // cout<< "!!! count of towers after testline ->" << count << endl;   
+    // streamlog_out(DEBUG2)<< "!!! count of towers after testline ->" << count << endl;   
 
 
         for(int l=1; l<the_Layers; l++){
@@ -1232,7 +1232,7 @@ double  BCalReconstruction::GetCoordRotZ(double ring, double pad, float IP, floa
 double  BCalReconstruction::GetEnergyErr(double ring, double pad){
 
 
-//      cout << "SUNT in GetEnergyErr" << endl;
+//      streamlog_out(DEBUG2) << "SUNT in GetEnergyErr" << endl;
 
 
 
@@ -1243,13 +1243,13 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
       exit(1);
    }
 
-//      cout << "TEST GetEnergyErr 1" << endl;
+//      streamlog_out(DEBUG2) << "TEST GetEnergyErr 1" << endl;
 
 //      ftmp.ls();
 
    TTree *ttmp = (TTree*) ftmp.Get("tBcDensAverage");
 
-//      cout << "TEST GetEnergyErr 2" << endl;
+//      streamlog_out(DEBUG2) << "TEST GetEnergyErr 2" << endl;
 
 
   if ( ttmp->IsZombie() ) {
@@ -1259,13 +1259,13 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
 
 
 
-//      cout << "TEST GetEnergyErr 3" << endl;
+//      streamlog_out(DEBUG2) << "TEST GetEnergyErr 3" << endl;
 
   Int_t Nentr = ttmp->GetEntries();
   ftmp.Close();
 
 
-//      cout << "Nentr = " <<Nentr << endl;
+//      streamlog_out(DEBUG2) << "Nentr = " <<Nentr << endl;
 
 
 //  scoeff bgc[Nentr];
@@ -1310,7 +1310,7 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
     }
 
 
-//      cout << "TEST GetEnergyErr 4" << endl;
+//      streamlog_out(DEBUG2) << "TEST GetEnergyErr 4" << endl;
 
 
     t->SetBranchAddress("sPos",    sPos);
@@ -1326,7 +1326,7 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
     t->SetBranchAddress("sEnDensErr", &sEnDensErr);
 
 
-//      cout << "TEST GetEnergyErr 5" << endl;
+//      streamlog_out(DEBUG2) << "TEST GetEnergyErr 5" << endl;
 
 
     for(int i=0; i<Nentr; i++){
@@ -1351,7 +1351,7 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
     for(int i=0; i<Nentr; i++)
         if(bgc[i].sPos[0] >= 0 && bgc[i].sPos[0] <= 30 && bgc[i].sPos[1] == ring && bgc[i].sPos[2] == pad){
              sqav_EnDensErr += bgc[i].sEnDensErr * bgc[i].sEnDensErr ;
-//             cout << "Check rms " << " " << bgc[i].sEnDensErr << " " << bgc[i].sEnDensErr * bgc[i].sEnDensErr << " " << sqav_EnDensErr << endl;    
+//             streamlog_out(DEBUG2) << "Check rms " << " " << bgc[i].sEnDensErr << " " << bgc[i].sEnDensErr * bgc[i].sEnDensErr << " " << sqav_EnDensErr << endl;    
       }
 
 

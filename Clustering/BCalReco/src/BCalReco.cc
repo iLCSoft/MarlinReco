@@ -140,24 +140,24 @@ void BCalReco::init(){
 
         std::cout.precision(15);
 
-        std::cout << "PARAMETERS READ FROM GEAR FILE: " << std::endl<<" \ncrossing angle= "<<fixed<<geometry.xAngle<<" \nstarting Phi= "<<fixed<<geometry.sPhi<<" \ndelta(spanning) Phi= "<<fixed<<geometry.dPhi<<" \ndead area radius= "<<fixed<<geometry.DArinner<<" \nnumber of BeamCal Layers= "<<nLayers<<" \nnumber of Rings= "<<nRings<<" \ninner radius= "<<fixed<<geometry.rMin<<" \nouter radius= "<<fixed<<geometry.rMax<<" \nBeamCal starting Z= "<<fixed<<geometry.zMin<<" \nBeamCal ending Z= "<<fixed<<geometry.zMax<<" \npairMon Z = "<<fixed<<geometry.pairMon<<" \nfixed Pad Size (size along the radius) = "<<fixed<<geometry.cellSize0<<std::endl;
+        streamlog_out(MESSAGE) << "PARAMETERS READ FROM GEAR FILE: " << std::endl<<" \ncrossing angle= "<<fixed<<geometry.xAngle<<" \nstarting Phi= "<<fixed<<geometry.sPhi<<" \ndelta(spanning) Phi= "<<fixed<<geometry.dPhi<<" \ndead area radius= "<<fixed<<geometry.DArinner<<" \nnumber of BeamCal Layers= "<<nLayers<<" \nnumber of Rings= "<<nRings<<" \ninner radius= "<<fixed<<geometry.rMin<<" \nouter radius= "<<fixed<<geometry.rMax<<" \nBeamCal starting Z= "<<fixed<<geometry.zMin<<" \nBeamCal ending Z= "<<fixed<<geometry.zMax<<" \npairMon Z = "<<fixed<<geometry.pairMon<<" \nfixed Pad Size (size along the radius) = "<<fixed<<geometry.cellSize0<<std::endl;
 
-        std::cout<<"\n\nSegmentation:\n";
+        streamlog_out(MESSAGE)<<"\n\nSegmentation:\n";
 
-        for(int j=0;j<nRings;j++) std::cout<<"Ring "<<j<<" : "<<geometry.segmentation[j]<<"\n";
+        for(int j=0;j<nRings;j++) streamlog_out(MESSAGE)<<"Ring "<<j<<" : "<<geometry.segmentation[j]<<"\n";
 
-        std::cout<<"\n\nLayer Properties:\n";
+        streamlog_out(MESSAGE)<<"\n\nLayer Properties:\n";
         for(int i=1;i<=nLayers;i++){
                 geometry.distance[i]=l.getDistance(i-1);
-                std::cout<<"BeamCal LayerNumber="<<i<<" , z="<<geometry.distance[i]<<" , geometry.cellSize0="<<l.getCellSize0(i-1)<<std::endl;
+                streamlog_out(MESSAGE)<<"BeamCal LayerNumber="<<i<<" , z="<<geometry.distance[i]<<" , geometry.cellSize0="<<l.getCellSize0(i-1)<<std::endl;
         }
 
-        std::cout<<std::endl<<"INITIALIZATION\n\nLAYER [1,"<<nLayers<<"] = BEAMCAL\tLAYER "<<nLayers+1<<" = PAIR MONITOR\n\n";
+        streamlog_out(MESSAGE)<<std::endl<<"INITIALIZATION\n\nLAYER [1,"<<nLayers<<"] = BEAMCAL\tLAYER "<<nLayers+1<<" = PAIR MONITOR\n\n";
 
    TFile ftmp(backgroundfilename.c_str());
 
   if ( ftmp.IsZombie() ) {
-      cerr << "Could not read data file. Exit." << endl;
+      streamlog_out(ERROR) << "Could not read data file. Exit." << endl;
       exit(1);
    }
 
@@ -171,7 +171,7 @@ void BCalReco::init(){
 
 
   if ( ttmp->IsZombie() ) {
-      cerr << "Could not find data tree \"tBcDensAverage\". Exit." << endl;
+      streamlog_out(ERROR) << "Could not find data tree \"tBcDensAverage\". Exit." << endl;
       exit(1);
    }
 
@@ -332,7 +332,7 @@ void BCalReco::init(){
                 "Number of particles in event [n]", _eventClustersHistoRange, 1, _eventClustersHistoRange);
         assert (_numParticHisto);
 
-        std::cout<<"\n\n\nFINISHED INITIALIZATION\n\n\n"<<std::endl;
+        streamlog_out(MESSAGE)<<"\n\n\nFINISHED INITIALIZATION\n\n\n"<<std::endl;
 
 }
 
@@ -341,7 +341,7 @@ void BCalReco::init(){
 void BCalReco::processRunHeader( LCRunHeader * run ) {
 
         if(_nRun!=0)
-//                std::cout<<"RUN "<<_nRun<<" HAS "<<_nEvt<<" TOTAL EVENTS "<<runEnergy<< "GEV TOTAL DEPOSITED SENSOR ENERGY. "<<"ZNMIN="<<znmin<<"mm   ZNMAX="<<znmax<<"mm  ZPMIN="<<zpmin<<"mm  ZPMAX="<<zpmax<<"mm"<<std::endl;
+//                streamlog_out(MESSAGE)<<"RUN "<<_nRun<<" HAS "<<_nEvt<<" TOTAL EVENTS "<<runEnergy<< "GEV TOTAL DEPOSITED SENSOR ENERGY. "<<"ZNMIN="<<znmin<<"mm   ZNMAX="<<znmax<<"mm  ZPMIN="<<zpmin<<"mm  ZPMAX="<<zpmax<<"mm"<<std::endl;
         _nRun++;
         _nEvt = 0; //number of events for each run
         runEnergy=0; //total deposited sensor energy for each run
@@ -479,41 +479,41 @@ void BCalReco::processEvent(LCEvent * evt){
         //CONSTRUCTION OF DYNAMIC ARRAY TO STORE THE INFORMATION FROM THE DETECTOR FOR THE RECONSTRUCTION CODE
 
         cells = new (nothrow) cell ** [nLayers+2];
-        if(cells==0) {std::cerr<<"No more space for Layer allocation"; exit(1);}
+        if(cells==0) {streamlog_out(ERROR)<<"No more space for Layer allocation"; exit(1);}
 
         for(int i=1;i<=nLayers+1;i++){
                 cells[i]=new (nothrow) cell * [nRings];
-                if(cells[i]==0) {std::cerr<<"No more space for Ring allocation at layer "<<i; exit(1);}
+                if(cells[i]==0) {streamlog_out(ERROR)<<"No more space for Ring allocation at layer "<<i; exit(1);}
         }
 
         for(int j=0;j<nRings;j++){
 
                 int N=(int)(round(2*TMath::Pi()/geometry.segmentation[j]));
 
-                //std::cout<<"\n\n\nRING "<<j<<"\nNumber of assigned cells: "<<N;
+                //streamlog_out(DEBUG2)<<"\n\n\nRING "<<j<<"\nNumber of assigned cells: "<<N;
 
                 for(int i=1;i<=nLayers+1;i++){
 
                         cells[i][j]=new (nothrow) cell [N];
-                        if(cells[i][j]==0) {std::cerr<<"\nNo more space for cell allocation at layer="<<i<<" ring="<<j; exit(1);}
+                        if(cells[i][j]==0) {streamlog_out(ERROR)<<"\nNo more space for cell allocation at layer="<<i<<" ring="<<j; exit(1);}
                 }
 
                 int k=0;
                 double phi=geometry.sPhi;
 
-//               std::cout<<"check sPhi "<< phi <<N;
+//               streamlog_out(DEBUG2)<<"check sPhi "<< phi <<N;
 
 
                 do{
                         if(k>=N) {
-                                std::cout<<"\nNot enough cells allocated for ring="<<j<<" phi="<<phi<<" k="<<k<<"\n";
+                                streamlog_out(DEBUG2)<<"\nNot enough cells allocated for ring="<<j<<" phi="<<phi<<" k="<<k<<"\n";
                                 fflush(stdout);
                                 exit(1);
                         }
 
                         if ((geometry.sPhi+geometry.dPhi-epsPhi<= phi) && (geometry.rMin+j*geometry.cellSize0 <= geometry.DArinner+epsR )) 
 {
-                                //std::cout<< "\nArrived to Dead Area.\tRing "<<j<<" LastConsideredPhi = "<<phi-geometry.segmentation[j]<<" NextPhi =  "<<phi<< " geometry.sPhi+geometry.dPhi-NextPhi = "<<-phi+geometry.sPhi+geometry.dPhi<<" geometry.sPhi+geometry.dPhi-LastConsideredPhi = "<<-phi+geometry.sPhi+geometry.dPhi+geometry.segmentation[j];
+                                //streamlog_out(DEBUG2)<< "\nArrived to Dead Area.\tRing "<<j<<" LastConsideredPhi = "<<phi-geometry.segmentation[j]<<" NextPhi =  "<<phi<< " geometry.sPhi+geometry.dPhi-NextPhi = "<<-phi+geometry.sPhi+geometry.dPhi<<" geometry.sPhi+geometry.dPhi-LastConsideredPhi = "<<-phi+geometry.sPhi+geometry.dPhi+geometry.segmentation[j];
                                 break;
                         }
 
@@ -543,16 +543,16 @@ void BCalReco::processEvent(LCEvent * evt){
 
                 }while(phi<geometry.sPhi+2*TMath::Pi()-epsPhi);
 
-                //std::cout<<"\nOK\tRing "<<j<<" LastConsideredPhi = "<<phi-geometry.segmentation[j]<<" NextPhi = "<<phi<< " NextPhi-geometry.sPhi =  "<<phi-geometry.sPhi-2*TMath::Pi()<<" LastConsideredPhi-sPhi = "<<phi-geometry.sPhi-2*TMath::Pi()-geometry.segmentation[j];
+                //streamlog_out(DEBUG2)<<"\nOK\tRing "<<j<<" LastConsideredPhi = "<<phi-geometry.segmentation[j]<<" NextPhi = "<<phi<< " NextPhi-geometry.sPhi =  "<<phi-geometry.sPhi-2*TMath::Pi()<<" LastConsideredPhi-sPhi = "<<phi-geometry.sPhi-2*TMath::Pi()-geometry.segmentation[j];
 
                 nbPhis[j]=k;
         }
 
 
              if(_nEvt == 1){
-        std::cout<<"\n\n\nFINAL NUMBER OF PADS PER RING:\n";
+        streamlog_out(DEBUG2)<<"\n\n\nFINAL NUMBER OF PADS PER RING:\n";
         for(int j=0;j<nRings;j++)
-                std::cout<<"ring "<<j<<" = "<<nbPhis[j]<<"\n";
+                streamlog_out(DEBUG2)<<"ring "<<j<<" = "<<nbPhis[j]<<"\n";
               }
 
         try{//getCollection
@@ -564,7 +564,7 @@ void BCalReco::processEvent(LCEvent * evt){
                 //CellIDDecoder<SimCalorimeterHit> mydecoder(inParVecSim);
 		CellIDDecoder<CalorimeterHit> mydecoder(inParVecSim);
 
-//    std::cout<<"step 1 "<<"\n";
+//    streamlog_out(DEBUG2)<<"step 1 "<<"\n";
 
                 try{//getElementAt
                         evtEnergy=0; //total energy deposition for each event
@@ -591,7 +591,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
                                 E = hit->getEnergy();
 				
-				//std::cout << "CHECK:::" << E << endl;
+				//streamlog_out(DEBUG2) << "CHECK:::" << E << endl;
                                    
 
                                 //IF ROTSATION IS NEEDED
@@ -605,7 +605,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
 
                                 if(cylind<0 || cylind>nRings-1 || layer<1 || layer>nLayers+1 || sector<0 || sector>nbPhis[cylind]-1) {
-                                        std::cout<<" WRONG  I or J or K\n";
+                                        streamlog_out(DEBUG2)<<" WRONG  I or J or K\n";
                                         continue;
                                 }
 
@@ -638,7 +638,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
                                         evtEnergy+=E;
                          }//for
-                        // std::cout << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
+                        // streamlog_out(DEBUG2) << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
 
                         runEnergy+=evtEnergy;
                         totalEnergy+=evtEnergy;
@@ -648,7 +648,7 @@ void BCalReco::processEvent(LCEvent * evt){
                 }//try getElementAt)
                 catch(Exception& e){
                         fflush(stdout);
-                        std::cerr << "Exception in at least one getHit of Event "<<_nEvt <<": " << e.what() << std::endl;
+                        streamlog_out(DEBUG9) << "Exception in at least one getHit of Event "<<_nEvt <<": " << e.what() << std::endl;
                 }
 
 
@@ -656,14 +656,14 @@ void BCalReco::processEvent(LCEvent * evt){
         }//try getCollection
         catch(Exception& e){
                 fflush(stdout);
-                std::cerr<<"Exception in Event "<<_nEvt<<" with get BeamCalCollection: " << e.what() << endl;
+                streamlog_out(DEBUG9) <<"Exception in Event "<<_nEvt<<" with get BeamCalCollection: " << e.what() << endl;
         }
 
 
    TFile f(backgroundfilename.c_str());
   if ( f.IsZombie() ) {
-      cerr << "Could not read data file. Exit." << endl;
-      exit(1);
+    streamlog_out(ERROR) << "Could not read data file. Exit." << endl;
+    exit(1);
    }
 
 
@@ -671,7 +671,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
 
   if(t->IsZombie()) 
-      cerr<<"bgcoeff: Tree \"tBcDensAverage\" not found"<<endl;
+      streamlog_out(DEBUG9) <<"bgcoeff: Tree \"tBcDensAverage\" not found"<<endl;
     
 
 
@@ -1201,10 +1201,10 @@ void BCalReco::check(LCEvent *evt){
 
 void BCalReco::end(){
 
-//        std::cout<<"\n\n\nEND OF RUN "<<_nRun<<":\n"<<_nEvt<<" TOTAL EVENTS\nTOTAL DEPOSITED SENSOR ENERGY = "<<runEnergy<<" [GeV]\nZNMIN = "<<znmin<<" [mm]\nZNMAX = "<<znmax<<" [mm]\nZPMIN = "<<zpmin<<" [mm]\nZPMAX = "<<zpmax<<" [mm]"<<std::endl;
+//        streamlog_out(MESSAGE)<<"\n\n\nEND OF RUN "<<_nRun<<":\n"<<_nEvt<<" TOTAL EVENTS\nTOTAL DEPOSITED SENSOR ENERGY = "<<runEnergy<<" [GeV]\nZNMIN = "<<znmin<<" [mm]\nZNMAX = "<<znmax<<" [mm]\nZPMIN = "<<zpmin<<" [mm]\nZPMAX = "<<zpmax<<" [mm]"<<std::endl;
 
 
-        std::cout<<"\n\n\nEND OF JOB:\n"<<totalEvt<<" EVENTS IN "<<_nRun << " RUNS\nTOTAL DEPOSITED SENSOR ENERGY = "<<totalEnergy<<" [GeV]"<<std::endl;
+        streamlog_out(MESSAGE)<<"\n\n\nEND OF JOB:\n"<<totalEvt<<" EVENTS IN "<<_nRun << " RUNS\nTOTAL DEPOSITED SENSOR ENERGY = "<<totalEnergy<<" [GeV]"<<std::endl;
 
    // write the histos out
 

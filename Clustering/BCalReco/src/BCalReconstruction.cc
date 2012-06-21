@@ -14,6 +14,8 @@
 
 #include "BCalReconstruction.h"
 
+#include "marlin/VerbosityLevels.h"
+
 using namespace std;
 
 TROOT root("root", "root");
@@ -599,7 +601,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
     }//loop over firstLoop
   }//if clu.size>0
   else
-    std::cerr << "no towers in calorimeter " << std::endl;
+     streamlog_out(DEBUG2) << "no towers in calorimeter " << std::endl;
           
           
   // ------- Work with clusters ----- 2D vector -----------
@@ -1007,7 +1009,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     }//loop over firstLoop
   }//if clu.size>0
   else
-    std::cerr << "no towers in calorimeter " << std::endl;
+    streamlog_out(DEBUG2) << "no towers in calorimeter " << std::endl;
           
           
   // ------- Work with clusters ----- 2D vector -----------

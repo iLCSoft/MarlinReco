@@ -1665,7 +1665,7 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
   
   
    
-  streamlog_out( DEBUG ) <<  " mergeTrackerHitRelations: copied collection parameters ... " << std::endl ;
+  streamlog_out( DEBUG2 ) <<  " mergeTrackerHitRelations: copied collection parameters ... " << std::endl ;
 
   
   
@@ -1719,7 +1719,7 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
     
   }    
    
-  _navMergedTrackerHitRel = new LCRelationNavigator( _mergedTrackerHitRelCol );
+  if( nCol != 0 ) _navMergedTrackerHitRel = new LCRelationNavigator( _mergedTrackerHitRelCol );
   
 }
 

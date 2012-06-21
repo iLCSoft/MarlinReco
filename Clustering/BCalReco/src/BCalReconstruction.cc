@@ -350,7 +350,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
                 IP = TMath::Abs(IP);
 
 
- // std::cout << "Check clu " << clu.size() << std::endl;
+ // streamlog_out(DEBUG2) << "Check clu " << clu.size() << std::endl;
 
 
 	nBcCells = new BCalReconstruction::CellType** [the_Layers];
@@ -426,7 +426,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
         newTower.sDphi   = nBcCells[l][r][p].sDphi;
         newTower.in      = 1;
         clu.push_back(newTower);
-        //std::cout<<" cell number = "<<clu.size()<<" R ="<<newTower.sPos[1]<<" Phi = "<<newTower.sPos[2]<<" sDphi ="<<newTower.s$
+        //streamlog_out(DEBUG2)<<" cell number = "<<clu.size()<<" R ="<<newTower.sPos[1]<<" Phi = "<<newTower.sPos[2]<<" sDphi ="<<newTower.s$
        
       }
         
@@ -436,7 +436,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
           }
         }
         
-  //std::cout << "found " << clu.size() << " towers in this cluster" << std::endl;
+  //streamlog_out(DEBUG2) << "found " << clu.size() << " towers in this cluster" << std::endl;
         
         
  if ( clu.size() > 1 ) {
@@ -482,7 +482,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
     //print out all rest cells
     for(unsigned int t=0; t < clu.size(); ++t) {
       if((clu[t].sEdepPos>0.)&&(clu[t].sPos[0]>0)&&(clu[t].sPos[0]<31) && clu[t].sPos[2] > 0 && clu[t].sPos[2] < 1000)
-        {         // std::cout<<" cell number = "<<t<<" R ="<<clu[t].sPos[1]<<" Phi = "<<clu[t].sPos[2]<<" sDphi ="<<clu[t].sDphi <<" sSphi = "<<clu[t].sSphi<< std::endl;
+        {         // streamlog_out(DEBUG2)<<" cell number = "<<t<<" R ="<<clu[t].sPos[1]<<" Phi = "<<clu[t].sPos[2]<<" sDphi ="<<clu[t].sDphi <<" sSphi = "<<clu[t].sSphi<< std::endl;
              
         }//if(clu[t].sEdepPos>0.)
     }//for(int t=0; t<numclu; t++)
@@ -554,7 +554,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
             }// if looooong stuff
         } // end if
       }//loop over np
-      //std::cout << " next max " << allClu[fLoop]
+      //streamlog_out(DEBUG2) << " next max " << allClu[fLoop]
                  
       if(fabs( - EnMaxNei + allClu[fLoop][0].sEdepPos) > 0.9*allClu[fLoop][0].sEdepPos) {
         for (unsigned int np = 0; np < clu.size(); ++np ) {//loop over all clu to find neigb
@@ -568,7 +568,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
                    && fabs(allClu[fLoop][maxennei].sSphi-clu[np].sSphi)<=1.5*allClu[fLoop][maxennei].sDphi))
               {
                 //      ++nnei;
-                //std::cout<< "R ->" << clu[np].sPos[1] << " ; Phi ->" << clu[np].sPos[2] << std::endl;
+                //streamlog_out(DEBUG2)<< "R ->" << clu[np].sPos[1] << " ; Phi ->" << clu[np].sPos[2] << std::endl;
               allClu[fLoop].push_back(clu[np]);//cope of element from clu - is a neighbour
               clu[np].sEdepPos = 0.;//energy set 0
       
@@ -620,18 +620,18 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
   double CluPhiSearch2 = 0.;
           
   unsigned int clusterNum    = 0 ;
-  //std::cout << "number of clusters" << allClu.size() << std::endl;
-  //std::cout << "-------------------------------" <<  std::endl;
+  //streamlog_out(DEBUG2) << "number of clusters" << allClu.size() << std::endl;
+  //streamlog_out(DEBUG2) << "-------------------------------" <<  std::endl;
   
   for (unsigned int fLoop =0; fLoop < allClu.size(); ++fLoop) {//loop over first coeff in allClu
-    //std::cout << "number of cluster " << fLoop << std::endl;
+    //streamlog_out(DEBUG2) << "number of cluster " << fLoop << std::endl;
     En_cluster = 0.;
     clusterSize= 0;
-    //std::cout << "--------Cluster Information-----------------------" <<  std::endl;
+    //streamlog_out(DEBUG2) << "--------Cluster Information-----------------------" <<  std::endl;
   
     for (unsigned int secLoop =0; secLoop < allClu[fLoop].size(); ++secLoop) {//loop over sec coeff
       En_cluster += allClu[fLoop][secLoop].sEdepPos;
-      //std::cout << "R=" <<allClu[fLoop][secLoop].sPos[1] <<"-> Phi=" << allClu[fLoop][secLoop].sPos[2] << "-> En=" << allClu[fL$
+      //streamlog_out(DEBUG2) << "R=" <<allClu[fLoop][secLoop].sPos[1] <<"-> Phi=" << allClu[fLoop][secLoop].sPos[2] << "-> En=" << allClu[fL$
       clusterSize += 1;
       CluPositionSearch2 += (( allClu[fLoop][secLoop].sPos[1] + 1. ) * allClu[fLoop][secLoop].sEdepPos);
       CluPositionSearch  += (  allClu[fLoop][secLoop].sPos[1] + 1. );
@@ -640,7 +640,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       CluPhiSearch  += (  allClu[fLoop][secLoop].sPos[2] + 1. );
     }//sec loop
     
-    //std::cout << "Cluster energy = " << En_cluster << "; Cluster size = " << clusterSize <<std::endl;
+    //streamlog_out(DEBUG2) << "Cluster energy = " << En_cluster << "; Cluster size = " << clusterSize <<std::endl;
     //    if ( MaxCluSize < clusterSize && En_cluster < 5.) {
     if ( MaxCluSize < clusterSize ) {
       MaxCluSize = clusterSize;
@@ -654,7 +654,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
     }
   }//first loop
     
-  //std::cout << "chosen cluster ->" << clusterNum << "-> clu En =" << MaxEn_cluster << std::endl;
+  //streamlog_out(DEBUG2) << "chosen cluster ->" << clusterNum << "-> clu En =" << MaxEn_cluster << std::endl;
   // sort vertion for output in file for later analizis
 
   if(
@@ -675,7 +675,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       ((int) CluPos == 14 && CluPhi >= 108) ||
       ((int) CluPos == 15 && CluPhi >= 117) ||
       ((int) CluPos == 16 && CluPhi >= 125))
-              std::cout << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
+              streamlog_out(DEBUG2) << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
 
   if(MaxCluSize >=2 &&
     (
@@ -698,7 +698,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       ((int) CluPos == 16 && CluPhi < 125))
 
     ){
-  //  std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
+  //  streamlog_out(DEBUG2) <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[0] = GetEnergyCalib(MaxEn_cluster);
     reconstructed_object.ErrEne[0] = GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[0] = (double) CluPos;
@@ -709,8 +709,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
     reconstructed_object.side[0] = 1;
   }  
   else {
- //   std::cout << "no cluster found >=2" << std::endl;
- //   std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
+ //   streamlog_out(DEBUG2) << "no cluster found >=2" << std::endl;
+ //   streamlog_out(DEBUG2) <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
 
     reconstructed_object.RecEne[0] = 0.;
     reconstructed_object.ErrEne[0] = 0.;
@@ -756,7 +756,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
                 IP = -TMath::Abs(IP);
 
 
-  //std::cout << "Check clu " << clu.size() << std::endl;
+  //streamlog_out(DEBUG2) << "Check clu " << clu.size() << std::endl;
 
 
 
@@ -833,7 +833,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
         newTower.sDphi   = nBcCells[l][r][p].sDphi;
         newTower.in      = 1;
         clu.push_back(newTower);
-        //std::cout<<" cell number = "<<clu.size()<<" R ="<<newTower.sPos[1]<<" Phi = "<<newTower.sPos[2]<<" sDphi ="<<newTower.s$
+        //streamlog_out(DEBUG2)<<" cell number = "<<clu.size()<<" R ="<<newTower.sPos[1]<<" Phi = "<<newTower.sPos[2]<<" sDphi ="<<newTower.s$
        
       }
         
@@ -843,7 +843,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
           }
         }
         
- // std::cout << "found " << clu.size() << " towers in this cluster" << std::endl;
+ // streamlog_out(DEBUG2) << "found " << clu.size() << " towers in this cluster" << std::endl;
         
 
         
@@ -890,7 +890,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     //print out all rest cells
     for(unsigned int t=0; t < clu.size(); ++t) {
       if((clu[t].sEdepNeg>0.)&&(clu[t].sPos[0]>0)&&(clu[t].sPos[0]<31) && clu[t].sPos[2] > 0 && clu[t].sPos[2] < 1000)
-        {         // std::cout<<" cell number = "<<t<<" R ="<<clu[t].sPos[1]<<" Phi = "<<clu[t].sPos[2]<<" sDphi ="<<clu[t].sDphi <<" sSphi = "<<clu[t].sSphi<< std::endl;
+        {         // streamlog_out(DEBUG2)<<" cell number = "<<t<<" R ="<<clu[t].sPos[1]<<" Phi = "<<clu[t].sPos[2]<<" sDphi ="<<clu[t].sDphi <<" sSphi = "<<clu[t].sSphi<< std::endl;
              
         }//if(clu[t].sEdepNeg>0.)
     }//for(int t=0; t<numclu; t++)
@@ -962,7 +962,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
             }// if looooong stuff
         } // end if
       }//loop over np
-      //std::cout << " next max " << allClu[fLoop]
+      //streamlog_out(DEBUG2) << " next max " << allClu[fLoop]
                  
       if(fabs( - EnMaxNei + allClu[fLoop][0].sEdepNeg) > 0.9*allClu[fLoop][0].sEdepNeg) {
         for (unsigned int np = 0; np < clu.size(); ++np ) {//loop over all clu to find neigb
@@ -976,7 +976,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
                    && fabs(allClu[fLoop][maxennei].sSphi-clu[np].sSphi)<=1.5*allClu[fLoop][maxennei].sDphi))
               {
                 //      ++nnei;
-                //std::cout<< "R ->" << clu[np].sPos[1] << " ; Phi ->" << clu[np].sPos[2] << std::endl;
+                //streamlog_out(DEBUG2)<< "R ->" << clu[np].sPos[1] << " ; Phi ->" << clu[np].sPos[2] << std::endl;
               allClu[fLoop].push_back(clu[np]);//cope of element from clu - is a neighbour
               clu[np].sEdepNeg = 0.;//energy set 0
       
@@ -1028,18 +1028,18 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
   double CluPhiSearch2 = 0.;
           
   unsigned int clusterNum    = 0 ;
-  //std::cout << "number of clusters" << allClu.size() << std::endl;
-  //std::cout << "-------------------------------" <<  std::endl;
+  //streamlog_out(DEBUG2) << "number of clusters" << allClu.size() << std::endl;
+  //streamlog_out(DEBUG2) << "-------------------------------" <<  std::endl;
   
   for (unsigned int fLoop =0; fLoop < allClu.size(); ++fLoop) {//loop over first coeff in allClu
-    //std::cout << "number of cluster " << fLoop << std::endl;
+    //streamlog_out(DEBUG2) << "number of cluster " << fLoop << std::endl;
     En_cluster = 0.;
     clusterSize= 0;
-    //std::cout << "--------Cluster Information-----------------------" <<  std::endl;
+    //streamlog_out(DEBUG2) << "--------Cluster Information-----------------------" <<  std::endl;
   
     for (unsigned int secLoop =0; secLoop < allClu[fLoop].size(); ++secLoop) {//loop over sec coeff
       En_cluster += allClu[fLoop][secLoop].sEdepNeg;
-      //std::cout << "R=" <<allClu[fLoop][secLoop].sPos[1] <<"-> Phi=" << allClu[fLoop][secLoop].sPos[2] << "-> En=" << allClu[fL$
+      //streamlog_out(DEBUG2) << "R=" <<allClu[fLoop][secLoop].sPos[1] <<"-> Phi=" << allClu[fLoop][secLoop].sPos[2] << "-> En=" << allClu[fL$
       clusterSize += 1;
       CluPositionSearch2 += (( allClu[fLoop][secLoop].sPos[1] + 1. ) * allClu[fLoop][secLoop].sEdepNeg);
       CluPositionSearch  += (  allClu[fLoop][secLoop].sPos[1] + 1. );
@@ -1048,7 +1048,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       CluPhiSearch  += (  allClu[fLoop][secLoop].sPos[2] + 1. );
     }//sec loop
     
-    //std::cout << "Cluster energy = " << En_cluster << "; Cluster size = " << clusterSize <<std::endl;
+    //streamlog_out(DEBUG2) << "Cluster energy = " << En_cluster << "; Cluster size = " << clusterSize <<std::endl;
     //    if ( MaxCluSize < clusterSize && En_cluster < 5.) {
     if ( MaxCluSize < clusterSize ) {
       MaxCluSize = clusterSize;
@@ -1062,7 +1062,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     }
   }//first loop
     
-  //std::cout << "chosen cluster ->" << clusterNum << "-> clu En =" << MaxEn_cluster << std::endl;
+  //streamlog_out(DEBUG2) << "chosen cluster ->" << clusterNum << "-> clu En =" << MaxEn_cluster << std::endl;
   // sort vertion for output in file for later analizis
 
 
@@ -1084,7 +1084,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       (CluPos == 14 && CluPhi >= 108) ||
       (CluPos == 15 && CluPhi >= 117) ||
       (CluPos == 16 && CluPhi >= 125))
-              std::cout << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
+              streamlog_out(DEBUG2) << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
 
   if(MaxCluSize >=2 &&
     (
@@ -1106,7 +1106,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       (CluPos == 15 && CluPhi < 117) ||
       (CluPos == 16 && CluPhi < 125))
     ){
- //   std::cout <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
+ //   streamlog_out(DEBUG2) <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[1] = GetEnergyCalib(MaxEn_cluster);
     reconstructed_object.ErrEne[1] = GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[1] = (double) CluPos;
@@ -1117,8 +1117,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     reconstructed_object.side[1] = 1;
   }  
   else {
-//    std::cout << "no cluster found >=2" << std::endl;
-//    std::cout <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
+//    streamlog_out(DEBUG2) << "no cluster found >=2" << std::endl;
+//    streamlog_out(DEBUG2) <<"En=0"<<"; Rad=0"<< "; Phi=0" << std::endl;
     reconstructed_object.RecEne[1] = 0.;
     reconstructed_object.ErrEne[1] = 0.;
     reconstructed_object.RecRad[1] = 0.;
@@ -1365,9 +1365,9 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
 void BCalReconstruction::Print(BCalReconstruction::RecCorr obj){
 
      if(obj.side[0] == 1)
-        cout << "FW BeamCal " <<obj.RecEne[0]  << " * " << obj.ErrEne[0] <<" * " << obj.CoordX[0]  << " * " <<obj.CoordY[0] <<" * " << obj.CoordZ[0] <<endl;
+       streamlog_out(DEBUG2) << "FW BeamCal " <<obj.RecEne[0]  << " * " << obj.ErrEne[0] <<" * " << obj.CoordX[0]  << " * " <<obj.CoordY[0] <<" * " << obj.CoordZ[0] <<endl;
      else if(obj.side[1] == 1)
-        cout << "BW BeamCal " <<obj.RecEne[1]  << " * " << obj.ErrEne[1] <<" * " << obj.CoordX[1]  << " * " <<obj.CoordY[1] <<" * " << obj.CoordZ[1] <<endl;
+       streamlog_out(DEBUG2) << "BW BeamCal " <<obj.RecEne[1]  << " * " << obj.ErrEne[1] <<" * " << obj.CoordX[1]  << " * " <<obj.CoordY[1] <<" * " << obj.CoordZ[1] <<endl;
 }
 
 vector<vector<int> > BCalReconstruction::getVector(int rows, int cols){

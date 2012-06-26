@@ -428,8 +428,8 @@ void FPCCDDigitizer::getInOutPosOnLadder(int layer, gear::Vector3D* outpos, gear
     *outpos = gear::Vector3D( bottom_x, bottom_y, -f_z);
   }
 
-  ModifyIntoLadder( inpos, layer, inpos, mom);
-  ModifyIntoLadder( outpos, layer, outpos, mom);
+  ModifyIntoLadder( inpos, layer, pos, mom);
+  ModifyIntoLadder( outpos, layer, pos, mom);
 
   *pos = gear::Vector3D((outpos->x()+inpos->x())/2 ,
                         (outpos->y()+inpos->y())/2 ,

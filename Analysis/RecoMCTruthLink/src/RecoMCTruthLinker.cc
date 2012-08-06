@@ -513,22 +513,29 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
 
       float  weight = float(MCPhits[iii]  )/float(nHit) ; 
       
-      
-      streamlog_out( DEBUG4 ) << " track " << trk->id() << " has " << MCPhits[iii]  << " hits of " 
-			      << nSimHit << " SimHits ("
-			      << nHit <<    " TrackerHits) "
-			      << " [ " << int(weight*100) << " %] " 
-			      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG() 
-			      << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
-			      << " id: " << theMCPs[iii]
-			      << std::endl ;
-
       trackTruthRelNav.addRelation(   trk , theMCPs[iii] , weight ) ;
       
-      weight = float(MCPhits[iii]  ) / simHitMap[ theMCPs[iii] ]  ; 
+      int Total_SimHits_forMCP = simHitMap[ theMCPs[iii] ];
       
-      truthTrackRelNav.addRelation(   theMCPs[iii] , trk , weight ) ;
-    }   
+      float inv_weight = float(MCPhits[iii]  ) / Total_SimHits_forMCP  ;
+      
+      truthTrackRelNav.addRelation(   theMCPs[iii] , trk , inv_weight ) ;
+
+      
+      streamlog_out( DEBUG4 ) << " track " << trk->id() << " has " << MCPhits[iii]  << " hits of "
+      << nSimHit << " SimHits ("
+      << nHit <<    " TrackerHits) "
+      << " weight = [ " << int(weight*100) << " %] "
+      << " inv rel weight = [ " << int(inv_weight*100) << " %] "
+      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG()
+      << " total SimHits " <<  Total_SimHits_forMCP
+      << " and genstat : " << theMCPs[iii]->getGeneratorStatus()
+      << " id: " << theMCPs[iii]
+      << std::endl ;
+
+      
+    
+    }
     
     ifoundch=ifound;
   } 

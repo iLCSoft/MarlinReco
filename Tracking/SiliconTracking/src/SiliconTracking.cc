@@ -2503,8 +2503,8 @@ void SiliconTracking::FinalRefit() {
 	      xP[iC] = float(trkHit->getPosition()[iC]);
 	      xPS[iC] = float(trkHitS->getPosition()[iC]);
 	    }
-	    float Point[3];
-	    float PointS[3];
+	    float Point[6];
+	    float PointS[6];
 	    if (det == 2) {
 	      float time = helix->getPointInZ(xP[2],Pos,Point);
 	      time = helix->getPointInZ(xPS[2],Pos,PointS);

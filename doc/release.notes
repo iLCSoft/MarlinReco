@@ -4,6 +4,13 @@
 
 ===============================
 
+
+ --------
+| v01-04 |
+ --------
+
+   - corrected use of getPointOnCircle from HelixClass (MarlinUtil) documentaion wrong said that a float[3] is required, when in fact a float[6] is needed. 
+
  --------
 | v01-03 |
  --------
@@ -40,7 +47,8 @@
 
         - The LCRelation Collections for TrackerHit to SimTrackerHits have been merged into a list of collections. Internally a single collection of LCRelations is created.
         - create track and cluster relations in any case as they are needed for the final recomctruth-link
-        - converted exit to exception
+	- The LCRelation Collections for TrackerHit to SimTrackerHits have been merged into a list of collections. 
+	  Internally a single temporary collection of LCRelations is created.
 
 
  --------

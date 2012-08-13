@@ -469,7 +469,7 @@ void  Wolf::defineIntersection( TrackExtended * track) {
     }
   }
   else {
-    float point[3];
+    float point[6];
     float tt = helix->getPointOnCircle(_rofbarrel,ref,point);
     if (tt < time_min) {
       time_min = tt;

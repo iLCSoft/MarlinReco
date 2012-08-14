@@ -9,7 +9,17 @@
 | v01-04 |
  --------
 
-   - corrected use of getPointOnCircle from HelixClass (MarlinUtil) documentaion wrong said that a float[3] is required, when in fact a float[6] is needed. 
+   - SiliconTracker, SiliconTrack_CLIC, TruthTracker: Corrected use of getPointOnCircle from HelixClass (MarlinUtil) 
+     documentaion wrong said that a float[3] is required, when in fact a float[6] is needed. 
+
+   - RecoMCTruthLinker: Improved Debug output for track mcparticle relations.
+     			Fix for the case were no tracker collections are present.  
+
+   - FPCCDDigitizer:    Bug fixed - process for the point on ladder edge.
+
+   - BCalReco: 		Removed more uses of cout and cerr. Replaced with streamlog.
+     			Corrected float instead of integer value for cluster position
+
 
  --------
 | v01-03 |

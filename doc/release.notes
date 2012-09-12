@@ -4,6 +4,12 @@
 
 ===============================
 
+ -----------
+| v01-04-01 |
+ -----------
+     - fixed TPCDigiProcessor :
+        - added bfield correction factor to point resolution
+          ( 4.0 / bField )
 
  --------
 | v01-04 |

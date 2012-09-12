@@ -688,7 +688,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       padheight = padLayout.getPadHeight(padLayout.getNearestPad(thisPoint.perp(),thisPoint.phi()));
       
-      double bReso = ( (_diffRPhi * _diffRPhi) / _nEff ) * sin(padTheta) * ( 6.0 / (padheight) );
+      double bReso = ( (_diffRPhi * _diffRPhi) / _nEff ) * sin(padTheta) * ( 6.0 / (padheight) )  * ( 4.0 / bField  ) ;
       
       double tpcRPhiRes = sqrt( aReso + bReso * (driftLength / 10.0) ); // driftLength in cm
       

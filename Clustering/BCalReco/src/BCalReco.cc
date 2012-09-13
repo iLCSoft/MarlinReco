@@ -78,7 +78,7 @@ BCalReco::BCalReco() : Processor("BCalReco"){
        registerProcessorParameter( "BackgroundFilename"  ,
                                 " Name of input file for background energy density" ,
                                 backgroundfilename ,
-                                std::string("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root") );
+                                std::string("bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root") );
 
         registerProcessorParameter( "EventClustersHistoRange",
                                 " Event Clusters Histgram X axis range [n] (10 by default)",
@@ -614,13 +614,12 @@ void BCalReco::processEvent(LCEvent * evt){
                                 if(side==0) cells[layer][cylind][sector].sEdepPos+=E;
 
 
-/*
+
                                 if( pos[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
                                 else geometry.xAngle=TMath::Abs(geometry.xAngle);
                                 pos[0] = TMath::Cos(geometry.xAngle/2000)*pos[0]-TMath::Sin(geometry.xAngle/2000)*pos[2];
                                 pos[1] = pos[1];
                                 pos[2] = TMath::Sin(geometry.xAngle/2000)*pos[0]+TMath::Cos(geometry.xAngle/2000)*pos[2];
-*/
 
 
 
@@ -772,17 +771,28 @@ void BCalReco::processEvent(LCEvent * evt){
 
                     for(int i = 0; i < index - 1; i++)
                     {
+		    
+		       EdepTotPosSig += EdepPos[i]; 
+                       EdepTotNegSig += EdepNeg[i];
+		    
+		    if(EdepPos[i] > bgc[2*i].sEnDensErr)
+		                        counter++;
 
-                      if(EdepPos[i] > bgc[2*i].sEnDensErr*bgc[2*i].cell_area){
-                         EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr*bgc[2*i].cell_area);
+			EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr);
+			EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr);
+			
+
+
+                      if(EdepPosNoiseTmp[i] > bgc[2*i].sEnDensErr){
+                         EdepPosNoiseTmp[i] = EdepPosNoiseTmp[i];
                          EdepPosTmp[i] = EdepPos[i];
                       }
                       else {
                          EdepPosTmp[i] = 0.;
 			 EdepPosNoiseTmp[i] = 0.;
                       }
-                      if(EdepNeg[i] > bgc[2*i+1].sEnDensErr*bgc[2*i+1].cell_area){
-                         EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr*bgc[2*i+1].cell_area);
+                      if(EdepNegNoiseTmp[i] > bgc[2*i+1].sEnDensErr){
+                         EdepNegNoiseTmp[i] = EdepNegNoiseTmp[i];
                          EdepNegTmp[i] = EdepNeg[i];
                       }
                       else {
@@ -961,8 +971,6 @@ void BCalReco::processEvent(LCEvent * evt){
 		    
         }
 	
-        if (obiect.side[0] == 0 && obiect.side[1] == 0)
-                  cout << "Unreconstructed object in event = " <<" " <<_nEvt << endl;
 
         evt->addCollection(BCALClusters, _BCALClustersName);
         evt->addCollection(BCALCol, _BCALcolName);

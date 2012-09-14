@@ -189,7 +189,7 @@ void BCalReco::init(){
         coordhitsxyN = new TH2F("coordhitsxyN", "Hits XY plane", 150, -150., 150., 150, -150., 150.); //
 
         coordhitszP = new TH1F("coordhitszP", "Hits YZ", 100, 3000., 4000.); //
-       coordhitszN = new TH1F("coordhitszN", "Hits YZ", 100, -4000., -3000.); //
+        coordhitszN = new TH1F("coordhitszN", "Hits YZ", 100, -4000., -3000.); //
         coordclusterzP = new TH1F("coordclusterzP", "Clusters Coord Z", 100, 3000., 4000.); //
         coordclusterzN = new TH1F("coordclusterzN", "Clusters Coord Z", 100, -4000., -3000.); //
 
@@ -216,8 +216,8 @@ void BCalReco::init(){
 	MCparticlePos3DHistoAll = new TH3F("MCparticlePos3DHistoAll", "Particles 3D", 150, -4000., 4000., 150, -150., 150., 150, -150., 150.); //
 
 
-        numberclusters = new TH1F("numberclusters", "Clusters", 10, 0., 10.); //
-        numberparticles = new TH1F("numberparticles", "Particles", 10, 0., 10.); //
+        numberclusters = new TH1F("numberclusters", "Clusters", 10, 0., 10.); // number of clusters in an event
+        numberparticles = new TH1F("numberparticles", "Particles", 10, 0., 10.); // number of particles in an event
 
 
 
@@ -1025,7 +1025,7 @@ void BCalReco::check(LCEvent *evt){
 			//cout << "numElements = " << numElements << endl;
 
                         //first very basic histo
-                        _numClustersHisto->fill(numElements);
+                 
                          numberclusters->Fill(numElements,1);
 
 
@@ -1083,7 +1083,7 @@ void BCalReco::check(LCEvent *evt){
 
         catch(DataNotAvailableException &e)
        {
-                _numClustersHisto->fill( 0 ); // no clusters found in event
+              //  _numClustersHisto->fill( 0 ); // no clusters found in event
         } //catch
 
 
@@ -1101,7 +1101,7 @@ void BCalReco::check(LCEvent *evt){
                         numPartElements = particle->getNumberOfElements()  ;
 
                         //first very basic histo
-                        _numParticHisto->fill(numPartElements);
+                       
                          numberparticles->Fill(numPartElements,1);
 			 
 			 
@@ -1192,7 +1192,7 @@ void BCalReco::check(LCEvent *evt){
 
         catch(DataNotAvailableException &e)
        {
-                _numParticHisto->fill( 0 ); // no clusters found in event
+             //   _numParticHisto->fill( 0 ); // no clusters found in event
         } //catch
 
 

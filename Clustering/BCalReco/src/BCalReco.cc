@@ -772,11 +772,6 @@ void BCalReco::processEvent(LCEvent * evt){
                     for(int i = 0; i < index - 1; i++)
                     {
 		    
-		       EdepTotPosSig += EdepPos[i]; 
-                       EdepTotNegSig += EdepNeg[i];
-		    
-		    if(EdepPos[i] > bgc[2*i].sEnDensErr)
-		                        counter++;
 
 			EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr);
 			EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr);

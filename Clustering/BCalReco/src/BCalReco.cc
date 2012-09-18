@@ -561,97 +561,102 @@ void BCalReco::processEvent(LCEvent * evt){
     totalEvt++;
 
     LCCollection* inParVecSim = evt->getCollection(_HitCol); //save in inParVecSim all data related to the current event from the collection
-    //CellIDDecoder<SimCalorimeterHit> mydecoder(inParVecSim);
-    CellIDDecoder<CalorimeterHit> mydecoder(inParVecSim);
 
-    //    streamlog_out(DEBUG2)<<"step 1 "<<"\n";
+    nHits=inParVecSim->getNumberOfElements(); //get total number of hits from current event
 
-    try{//getElementAt
-      evtEnergy=0; //total energy deposition for each event
-      nHits=inParVecSim->getNumberOfElements(); //get total number of hits from current event
-      for(int j=0; j<nHits; j++){
-	//SimCalorimeterHit *hit = dynamic_cast<SimCalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
-				
-	CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
-	//CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
-				
-	if(hit){
-                    
-	  side    = mydecoder(hit)[ "S-1" ] ;
-	  //if(side!=0) continue;
-	  //side=0 -> pos, side=1 -> neg
-	  cylind  = mydecoder(hit)[ "I" ] ; //r 0-16
-	  sector  = mydecoder(hit)[ "J" ] ; //phi 0-max_nb_of_pads
-	  layer   = mydecoder(hit)[ "K" ]; //z with the Mokka codification: nLayers=30; layer=[1,30] for BeamCal; layer=31 for PairMonitor
-				
-				
+    if( nHits > 0 ) {  //fg: nothing to do if empty collection 
 
-	  double pos[3] = {hit->getPosition()[0], hit->getPosition()[1], hit->getPosition()[2] } ; //x,y,z
+      //CellIDDecoder<SimCalorimeterHit> mydecoder(inParVecSim);
+      CellIDDecoder<CalorimeterHit> mydecoder(inParVecSim);
+      
+      //    streamlog_out(DEBUG2)<<"step 1 "<<"\n";
+      
+      try{//getElementAt
+	evtEnergy=0; //total energy deposition for each event
+
+	for(int j=0; j<nHits; j++){
+	  //SimCalorimeterHit *hit = dynamic_cast<SimCalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+	  
+	  CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+	  //CalorimeterHit *hit = dynamic_cast<CalorimeterHit*>(inParVecSim->getElementAt(j)); // read each hit
+	  
+	  if(hit){
+	    
+	    side    = mydecoder(hit)[ "S-1" ] ;
+	    //if(side!=0) continue;
+	    //side=0 -> pos, side=1 -> neg
+	    cylind  = mydecoder(hit)[ "I" ] ; //r 0-16
+	    sector  = mydecoder(hit)[ "J" ] ; //phi 0-max_nb_of_pads
+	    layer   = mydecoder(hit)[ "K" ]; //z with the Mokka codification: nLayers=30; layer=[1,30] for BeamCal; layer=31 for PairMonitor
+	    
+	    
+	    
+	    double pos[3] = {hit->getPosition()[0], hit->getPosition()[1], hit->getPosition()[2] } ; //x,y,z
 							
 
-	  E = hit->getEnergy();
+	    E = hit->getEnergy();
 				
-	  //streamlog_out(DEBUG2) << "CHECK:::" << E << endl;
+	    //streamlog_out(DEBUG2) << "CHECK:::" << E << endl;
                                    
 
-	  //IF ROTSATION IS NEEDED
-	  /*
-	    if( posTemp[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
+	    //IF ROTSATION IS NEEDED
+	    /*
+	      if( posTemp[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
+	      else geometry.xAngle=TMath::Abs(geometry.xAngle);
+	      pos[0] = TMath::Cos(geometry.xAngle/2)*posTemp[0]-TMath::Sin(geometry.xAngle/2)*posTemp[2];
+	      pos[1] = posTemp[1];
+	      pos[2] = TMath::Sin(geometry.xAngle/2)*posTemp[0]+TMath::Cos(geometry.xAngle/2)*posTemp[2];
+	    */
+
+
+	    if(cylind<0 || cylind>nRings-1 || layer<1 || layer>nLayers+1 || sector<0 || sector>nbPhis[cylind]-1) {
+	      streamlog_out(DEBUG2)<<" WRONG  I or J or K\n";
+	      continue;
+	    }
+
+
+	    if(side==1) cells[layer][cylind][sector].sEdepNeg+=E;
+	    if(side==0) cells[layer][cylind][sector].sEdepPos+=E;
+
+
+
+	    if( pos[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
 	    else geometry.xAngle=TMath::Abs(geometry.xAngle);
-	    pos[0] = TMath::Cos(geometry.xAngle/2)*posTemp[0]-TMath::Sin(geometry.xAngle/2)*posTemp[2];
-	    pos[1] = posTemp[1];
-	    pos[2] = TMath::Sin(geometry.xAngle/2)*posTemp[0]+TMath::Cos(geometry.xAngle/2)*posTemp[2];
-	  */
-
-
-	  if(cylind<0 || cylind>nRings-1 || layer<1 || layer>nLayers+1 || sector<0 || sector>nbPhis[cylind]-1) {
-	    streamlog_out(DEBUG2)<<" WRONG  I or J or K\n";
-	    continue;
-	  }
-
-
-	  if(side==1) cells[layer][cylind][sector].sEdepNeg+=E;
-	  if(side==0) cells[layer][cylind][sector].sEdepPos+=E;
+	    pos[0] = TMath::Cos(geometry.xAngle/2000)*pos[0]-TMath::Sin(geometry.xAngle/2000)*pos[2];
+	    pos[1] = pos[1];
+	    pos[2] = TMath::Sin(geometry.xAngle/2000)*pos[0]+TMath::Cos(geometry.xAngle/2000)*pos[2];
 
 
 
-	  if( pos[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
-	  else geometry.xAngle=TMath::Abs(geometry.xAngle);
-	  pos[0] = TMath::Cos(geometry.xAngle/2000)*pos[0]-TMath::Sin(geometry.xAngle/2000)*pos[2];
-	  pos[1] = pos[1];
-	  pos[2] = TMath::Sin(geometry.xAngle/2000)*pos[0]+TMath::Cos(geometry.xAngle/2000)*pos[2];
+	    if(side==0){
+	      coordhitsxyP->Fill(pos[0],pos[1],1);
+	      coordhitszP->Fill(pos[2],1);
+	    }
+	    else{
+	      coordhitsxyN->Fill(pos[0],pos[1],1);
+	      coordhitszN->Fill(pos[2],1);
+	    }
+
+	    fflush(stdout);
 
 
+	    evtEnergy+=E;
+	  }//for
+	  // streamlog_out(DEBUG2) << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
 
-	  if(side==0){
-	    coordhitsxyP->Fill(pos[0],pos[1],1);
-	    coordhitszP->Fill(pos[2],1);
-	  }
-	  else{
-	    coordhitsxyN->Fill(pos[0],pos[1],1);
-	    coordhitszN->Fill(pos[2],1);
-	  }
-
-	  fflush(stdout);
+	  runEnergy+=evtEnergy;
+	  totalEnergy+=evtEnergy;
+	} // if (hit)	
 
 
-	  evtEnergy+=E;
-	}//for
-	// streamlog_out(DEBUG2) << "Run"<<_nRun<<" Event "<<_nEvt<<": Number of hits= "<< nHits<<" Energy deposition for event = " << evtEnergy << "  [GeV]"<<std::endl;
+      }//try getElementAt)
+      catch(Exception& e){
+	fflush(stdout);
+	streamlog_out(DEBUG9) << "Exception in at least one getHit of Event "<<_nEvt <<": " << e.what() << std::endl;
+      }
 
-	runEnergy+=evtEnergy;
-	totalEnergy+=evtEnergy;
-      } // if (hit)	
-
-
-    }//try getElementAt)
-    catch(Exception& e){
-      fflush(stdout);
-      streamlog_out(DEBUG9) << "Exception in at least one getHit of Event "<<_nEvt <<": " << e.what() << std::endl;
-    }
-
-
-
+    } // empty collection
+    
   }//try getCollection
   catch(Exception& e){
     fflush(stdout);

@@ -7,6 +7,8 @@
 
 #define MAXHITS 2000
 
+#define MAXNENTR 200000
+
 // includes for the BCalReconstruction
 
 #include "BCalReconstruction.h"
@@ -205,7 +207,7 @@ protected:
   double sEdep;
   double sCellArea,sEnDens,sEnDensErr;
 
-  scoeff bgc[73620];
+  scoeff bgc[MAXNENTR];
 
 
 

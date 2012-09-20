@@ -695,7 +695,7 @@ void BCalReco::processEvent(LCEvent * evt){
   t->SetBranchAddress("sEnDensErr", &sEnDensErr);
 
 
-  for (int i=0; i<Nentr; i++){
+  for (int i=0; i<MAXNENTR; i++){
     bgc[i].sPos[0] = 0;
     bgc[i].sPos[1] = 0;
     bgc[i].sPos[2] = 0;
@@ -710,6 +710,12 @@ void BCalReco::processEvent(LCEvent * evt){
     bgc[i].sEnDens = 0.;
     bgc[i].sEnDensErr = 0.;
   }
+
+  if( Nentr > MAXNENTR){
+     streamlog_out(ERROR) <<"background map has too many entries "<<endl;
+     exit(1);
+  }   
+
 
   sPos[0] = 0; sPos[1] = 0; sPos[2] = 0;
   sRin=0.;
@@ -743,13 +749,13 @@ void BCalReco::processEvent(LCEvent * evt){
 
 
   int index = 0;
-  double EdepPos[36810],EdepNeg[36810];
-  double EdepPosTmp[36810],EdepNegTmp[36810];
-  double EdepPosNoiseTmp[36810],EdepNegNoiseTmp[36810];
+  double EdepPos[MAXNENTR],EdepNeg[MAXNENTR];
+  double EdepPosTmp[MAXNENTR],EdepNegTmp[MAXNENTR];
+  double EdepPosNoiseTmp[MAXNENTR],EdepNegNoiseTmp[MAXNENTR];
   double EdepTotPos = 0.,EdepTotNeg = 0.;
   double EdepNoiseTotPos = 0.,EdepNoiseTotNeg = 0.;
   TRandom3 r;
-  for(int i = 0; i < 36810; i++){                
+  for(int i = 0; i < MAXNENTR; i++){                
     EdepPos[i] = 0.;
     EdepNeg[i] = 0.;
     EdepPosTmp[i] = 0.;
@@ -971,10 +977,13 @@ void BCalReco::processEvent(LCEvent * evt){
 		    
   }
 	
-
-  evt->addCollection(BCALClusters, _BCALClustersName);
-  evt->addCollection(BCALCol, _BCALcolName);
-
+   if(BCALCol->getNumberOfElements() <= 0 ) {
+      delete BCALCol;
+      delete BCALClusters;
+   } else {
+      evt->addCollection(BCALClusters, _BCALClustersName);
+      evt->addCollection(BCALCol, _BCALcolName);
+   }
   for (int i = 1; i < nLayers; ++i) {
     for (int j = 0; j < nRings; ++j)
       delete [] celule[i][j];

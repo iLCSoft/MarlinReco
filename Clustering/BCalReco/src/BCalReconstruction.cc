@@ -700,7 +700,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
      ){
     //  streamlog_out(DEBUG2) <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[0] = GetEnergyCalib(MaxEn_cluster);
-    reconstructed_object.ErrEne[0] = GetEnergyErr(CluPos,CluPhi);
+    reconstructed_object.ErrEne[0] = 0.; // GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[0] = (double) CluPos;
     reconstructed_object.RecPhi[0] = (double) CluPhi;
     reconstructed_object.CoordX[0] = GetCoordRotX(CluPos,CluPhi,IP,angle);
@@ -1108,7 +1108,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
      ){
     //   streamlog_out(DEBUG2) <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[1] = GetEnergyCalib(MaxEn_cluster);
-    reconstructed_object.ErrEne[1] = GetEnergyErr(CluPos,CluPhi);
+    reconstructed_object.ErrEne[1] = 0.; // GetEnergyErr(CluPos,CluPhi);
     reconstructed_object.RecRad[1] = (double) CluPos;
     reconstructed_object.RecPhi[1] = (double) CluPhi;
     reconstructed_object.CoordX[1] = GetCoordRotX(CluPos,CluPhi,IP,angle);
@@ -1234,9 +1234,9 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
 
   //      streamlog_out(DEBUG2) << "SUNT in GetEnergyErr" << endl;
 
+  const char filename[100] = "bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root";
 
-
-  TFile ftmp("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root");
+  TFile ftmp(filename);
 
   if ( ftmp.IsZombie() ) {
     cerr << "Could not read data file. Exit." << endl;
@@ -1294,7 +1294,7 @@ double  BCalReconstruction::GetEnergyErr(double ring, double pad){
   double sCellArea,sEnDens,sEnDensErr;
 
     
-  TFile f("bg_aver_LDC_3.5T_14mrad_AntiDID_NominalBeamParam.root");
+  TFile f(filename);
   if ( f.IsZombie() ) {
     cerr << "Could not read data file. Exit." << endl;
     exit(1);

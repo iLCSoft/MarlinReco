@@ -99,8 +99,9 @@ class BCalTagEfficiency : public Processor {
   int pdg[MCP];
   float energy[MCP], ePrime[MCP], pxPrime[MCP], pxIP[MCP], pyIP[MCP], pzIP[MCP];
   float phiIP[MCP], theIP[MCP];
-  float posx[MCP], posy[MCP], posz[MCP]; 
-  float radius[MCP], phi[MCP], ebkg[MCP]; 
+  float lposx[MCP], lposy[MCP], lposz[MCP]; 
+  float gposx[MCP], gposy[MCP], gposz[MCP]; 
+  float radius[MCP], phi[MCP], ebkg[MCP], ebkg_err[MCP]; 
   float efficiency[MCP], rand[MCP];
   int tag[MCP];
   float scaleP[MCP];
@@ -112,14 +113,22 @@ class BCalTagEfficiency : public Processor {
   float eBeam;
   float zbcal;
   float thresholdMin, thresholdMax;
+  float xingangle;
 
   //
+  bool DBDsample;
+  bool writeTree;
   bool detectAll;
   bool smearEnergy;
   
   // background handler
   BcEnergyDensity *bc_en;
-
+  
+  //helpers
+  double alpha;
+  double gamma;
+  double betagamma; 
+  
 } ;
 
 #endif

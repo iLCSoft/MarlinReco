@@ -117,6 +117,7 @@ class BCalTagEfficiency : public Processor {
 
   //
   bool DBDsample;
+  bool newMap;
   bool writeTree;
   bool detectAll;
   bool smearEnergy;

@@ -24,3 +24,7 @@ The efficiency for each particle can be accessed via
 ReconstructedParticle::getGoodnessOfPID()
 
 In addition, a root tree is written out for detailed studies.
+(use steering flag)
+
+Further steering flags allow to switch between LoI-style background map
+and MCParticles and DBD-Style ones.

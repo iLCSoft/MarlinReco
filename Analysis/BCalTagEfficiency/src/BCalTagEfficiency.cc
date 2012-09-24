@@ -140,6 +140,11 @@ BCalTagEfficiency::BCalTagEfficiency() : Processor("BCalTagEfficiency") {
                              DBDsample,
                              bool(1));
 
+  registerProcessorParameter("newMap",
+                             "true: new map with bcal layers 1 - 30, pair mon layer 31; false: old map with pair monitor in layer1",
+                             newMap,
+                             bool(1));
+
   registerProcessorParameter("writeTree",
                              "true: write root tree with debug info",
                              writeTree,
@@ -277,7 +282,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           theIP[mcp] = p4v.theta();
           
           // theta larger than 0.06 (r/z = 200mm / 3500m = 0.057) will go into main detector
-          if (theIP[mcp] > 0.06 && theIP[mcp] < PI-0.06) continue;  
+          if (theIP[mcp] > 0.06 && theIP[mcp] < PI-0.06 || theIP[mcp] < 0.003 || theIP[mcp] > PI-0.003) continue;  
 	  streamlog_out(DEBUG) << "energy  of electron/photon = " << energy[mcp] << std::endl;
 	  streamlog_out(DEBUG) << "phi at IP of electron/photon = " << phiIP[mcp] << std::endl;
 	  streamlog_out(DEBUG) << "pt of electron/photon = " << p4v.perp() << std::endl;
@@ -352,9 +357,9 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           // just debugging!
           Hep3Vector gvvec (gvout[0], gvout[1], gvout[2]);
           float gphi = gvvec.phi(); // gives [-PI, PI]
-          streamlog_out(DEBUG) << "pphi on BeamCal surface in global coordinates = " << gphi << std::endl;
+          streamlog_out(DEBUG) << "gphi on BeamCal surface in global coordinates = " << gphi << std::endl;
           if (gphi < 0) gphi += 2*PI;  // have [0, 2 PI] now
-          streamlog_out(DEBUG) << "phi after +2PI = " << gphi << std::endl;
+          streamlog_out(DEBUG) << "gphi after +2PI = " << gphi << std::endl;
           float gtheta = gvvec.theta();
           streamlog_out(DEBUG) << "gtheta on BeamCal surface in global coordinates = " << gtheta << std::endl;
           streamlog_out(DEBUG) << "radius on BeamCal surface in global coordinates = " << gvvec.perp()*lvvec.mag()/gvvec.mag() << std::endl;
@@ -370,7 +375,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           double en_dens_err = 0;
 
           for (int layer=1; layer<31; layer++) {
-            //if (!DBDsample && layer ==1) continue;  // skip layer if using old map!
+          if (!newMap && layer ==1) continue;  // skip layer if using old map!
 
             en_dens = 0;
             en_dens_err = 0;

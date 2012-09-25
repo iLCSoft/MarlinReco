@@ -1262,8 +1262,8 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
 void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlcol,  LCCollection* ctrlcol ,  LCCollectionVec** skimVec){
   
   
-  LCRelationNavigator      trackTruthRelNav = LCRelationNavigator(  ctrlcol );
-  LCRelationNavigator      clusterTruthRelNav = LCRelationNavigator(  ttrlcol );
+  LCRelationNavigator      trackTruthRelNav = LCRelationNavigator(  ttrlcol );
+  LCRelationNavigator      clusterTruthRelNav = LCRelationNavigator(  ctrlcol );
   
   
   //-------------- create skimmed MCParticle collection ------------------------

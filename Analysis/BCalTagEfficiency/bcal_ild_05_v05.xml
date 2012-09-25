@@ -28,22 +28,17 @@
 
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <execute>
-  <processor name="MyAIDAProcessor"/>
-  <processor name="MySimpleBCalDigi" />
-  <processor name="MyBCalReco"/>
   <processor name="MyBCalTagEfficiency"/>
   <processor name="MyLCIOOutputProcessor"/>  
  </execute>
 
  <global>
-  <!--parameter name="LCIOInputFiles">/afs/desy.de/user/m/montull/flc/MarlinWorkdir/data/DST01-04_ppr002_aa_cc_w12174_500_LDCPrime_02Sc_LCP_ep+0.0_em+0.0_Slac_SM_0002.slcio </parameter-->
-  <!--parameter name="LCIOInputFiles">/data/boehmej/flc/susy/data/DST01-06_ppr004_aa_cc_w12174_500_ILD_00_LCP_ep+0.0_em+0.0_Slac_SM_0001.slcio </parameter-->
-  <parameter name="LCIOInputFiles">E0500-TDR_ws.Paa_yyyy.Gwhizard-1.95.eW.pW.I37461.01-10.slcio</parameter>
+  <parameter name="LCIOInputFiles">/afs/desy.de/group/flc/pool/boehmej/MarlinWorkdir4/runit/E0500-TDR_ws.Paa_yyyy.Gwhizard-1.95.eW.pW.I37461.01-10.slcio</parameter>
   <!-- limit the number of processed records (run+evt): -->  
   <parameter name="MaxRecordNumber" value="0" />  
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile">GearOutput_ILD_o1_v05.xml</parameter>  
+  <parameter name="GearXMLFile">/afs/desy.de/group/flc/pool/boehmej/MarlinWorkdir4/runit/GearOutput_ILD_o1_v05.xml</parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
   <parameter name="RandomSeed" value="1234567890" />
  </global>
@@ -84,64 +79,16 @@
   <parameter name="zbcal" type="float">3594.9 </parameter>
   <!--true: assume MCParticles are already with xing angle. false: MCParticles are head-on-->
   <parameter name="DBDsample" type="bool">true</parameter>
+  <!--true: new map bcal 1-30, pair mon 31. false: old map, pair mon 1, bcal 2-31-->
+  <parameter name="newMap" type="bool">true</parameter>
   <!--true: awrite tree with DEBUG info-->
-  <parameter name="writeTree" type="bool">true</parameter>
+  <parameter name="writeTree" type="bool">false</parameter>
   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
   <parameter name="Verbosity" type="string">DEBUG </parameter>
 </processor>
 
-<!--######  SimpleBCALDigi ##########################################-->
 
-<processor name="MySimpleBCalDigi" type="SimpleLCalDigi">
-<!--Performs simple digitization of sim calo hits...-->
-  
-  <!--  INPUT --->
-  <!--LCAL Collection Names-->
-  <parameter name="LCALCollections" type="StringVec">BeamCalCollection</parameter>
-  <!--Calibration coefficients for LCAL-->
-  <parameter name="CalibrLCAL" type="FloatVec">1.0</parameter>
-  <!--Threshold for LCAL Hits in GeV-->
-  <parameter name="LCALThreshold" type="float">1e-06 </parameter>
-  
-  <!--  OUTPUT --->
-  <!--LCAL Collection of real Hits-->
-  <parameter name="LCALOutputCollection" type="string">BCalHits</parameter>
-  <!--MuonHit Relation Collection-->
-  <parameter name="RelationOutputCollection" type="string">RelationBCalHit </parameter>
-</processor>
-
-
-<!--######  BCalReco ##########################################-->
-
-<processor name="MyBCalReco" type="BCalReco">
-<!--Filling Histograms with deposited energy from beamstrahlung pairs in BeamCal-->
-  
-  <!--  INPUT --->
-  <!--Collection of SimCalorimeterHits in BeamCal-->
-  <parameter name="BeamCalHitCol" type="string">BCalHits </parameter>
-  <!--Name of the MCParticle collection-->
-  <parameter name="CollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
-  <!-- Name of input file for background energy density-->
-  <parameter name="BackgroundFilename" type="string">bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root </parameter>
-  
-  <!--  OUTPUT --->
-  <!--Name of the Beamcal clusters collection-->
-  <parameter name="BCALClusterName" type="string" lcioOutType="Cluster">BCalClusters </parameter>
-  <!--Name of the Beamcal reconstructed particles collection-->
-  <parameter name="RecoPartCollectionName" type="string" lcioOutType="ReconstructedParticle">BCalParticles </parameter>
-  <!--Name of the Beamcal cluster to mc-particle relation collection-->
-  <parameter name="BCALMCTruthLinkName" type="string" lcioOutType="LCRelation">BCalMCTruthLink </parameter>
- 
-  <!--  DEBUG OUTPUT --->
-  <!-- Event Clusters Histgram X axis range [n] (10 by default)-->
-  <parameter name="EventClustersHistoRange" type="int">10 </parameter>
-  <!--write histograms?-->
-  <parameter name="WriteHistograms" type="bool">true </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <parameter name="Verbosity" type="string">DEBUG </parameter>
-</processor>
-
-<!--######  BCalReco ##########################################-->
+<!--###### LCIOOutputProcessor  ##########################################-->
 
 <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
 <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
@@ -163,58 +110,6 @@
   <parameter name="Verbosity" type="string">DEBUG </parameter>
 </processor>
 
-<!--###### LCTuple  ##########################################-->
-
- <processor name="MyLCTuple" type="LCTuple">
- <!--LCTuple creates a ROOT TTRee with a column wise ntuple from LCIO collections ....-->
-  <!--Name of the Cluster collection-->
-  <parameter name="ClusterCollection" type="string" lcioInType="Cluster"> </parameter>
-  <!--Names of LCRelation collections - need parallel prefix names in RelPrefixes-->
-  <parameter name="LCRelationCollections" type="StringVec" lcioInType="LCRelation"> </parameter>
-  <!-- Names of prefixes for variables from LCRelation collections - needs to be parallel to LCRelationCollections (one prefix per collection)-->
-  <parameter name="LCRelationPrefixes" type="StringVec"> </parameter>
-  <!--Name of the MCParticle collection-->
-  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> </parameter>
-  <!--Name of the ReconstructedParticle collection-->
-  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle"> </parameter>
-  <!--Name of the SimCalorimeterHit collection-->
-  <parameter name="SimCalorimeterHitCollection" type="string" lcioInType="SimCalorimeterHit"> </parameter>
-  <!--Name of the SimTrackerHit collection-->
-  <parameter name="SimTrackerHitCollection" type="string" lcioInType="SimTrackerHit"> </parameter>
-  <!--Name of the Track collection-->
-  <parameter name="TrackCollection" type="string" lcioInType="Track"> </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
-  <!--Name of the Vertex collection-->
-  <parameter name="VertexCollection" type="string" lcioInType="Vertex"> </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteClusterCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteMCParticleCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteRecoParticleCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteSimCalorimeterHitCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteSimTrackerHitCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteTrackCollectionParameters" type="bool">false </parameter>
-  <!--Switch to write out collection parameters-->
-  <parameter name="WriteVertexCollectionParameters" type="bool">false </parameter>
-</processor>
-
-<!--###### LCTuple  ##########################################-->
-<processor name="MyAIDAProcessor" type="AIDAProcessor">
- <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
-  <!-- compression of output file 0: false >0: true (default) -->
-  <parameter name="Compress" type="int">1 </parameter>
-  <!-- filename without extension-->
-  <parameter name="FileName" type="string">aida_file </parameter>
-  <!-- type of output file root (default) or xml )-->
-  <parameter name="FileType" type="string">root </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
-</processor>
 
 
 </marlin>

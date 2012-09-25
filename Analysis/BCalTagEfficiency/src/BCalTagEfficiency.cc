@@ -21,6 +21,8 @@
 #include <IMPL/ClusterImpl.h>
 #include <IMPL/LCRelationImpl.h>
 #include <CLHEP/Vector/LorentzVector.h>
+#include <EVENT/LCRelation.h>
+#include <UTIL/LCRelationNavigator.h>
 
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
@@ -234,8 +236,10 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
  
   // Create output collection
   LCCollectionVec* BCALCol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  LCCollectionVec* BCALMCTruthLink = new LCCollectionVec(LCIO::LCRELATION);
+  //LCCollectionVec* BCALMCTruthLink = new LCCollectionVec(LCIO::LCRELATION);
+  LCCollection* BCALMCTruthLink = 0;
   LCCollectionVec* BCALClusters = new LCCollectionVec(LCIO::CLUSTER);
+  LCRelationNavigator bcalTruthRelNav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::MCPARTICLE  ) ;
 
   if( col != 0 ){
    
@@ -471,9 +475,11 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             
               ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
               ClusterImpl* cluster = new ClusterImpl;
-              LCRelationImpl* MCrel  = new LCRelationImpl;
-              MCrel->setFrom (particle);
-              MCrel->setTo (p);
+              streamlog_out(DEBUG) << "HALLO !" << endl;
+              bcalTruthRelNav.addRelation( particle , p , 0.5 ) ;
+              //LCRelationImpl* MCrel  = new LCRelationImpl(particle,p,0.5);
+              //MCrel->setFrom (particle);
+              //MCrel->setTo (p);
               
 	      //FG: take generator mass ( not necessarily euqal to PDG mass ) 
 	      const double m  = p->getMass() ;
@@ -524,7 +530,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
               particle->addCluster(cluster);
 
               BCALCol->addElement(particle);
-              BCALMCTruthLink->addElement(MCrel);
+              //BCALMCTruthLink->addElement(MCrel);
               BCALClusters->addElement(cluster);
 
               // store positions as single values in tree
@@ -565,8 +571,11 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
       }  // if photon or electron
 
     }  // end of MCparticle loop
-  
+    
   }
+  
+  BCALMCTruthLink = bcalTruthRelNav.createLCCollection() ;
+
   if ( BCALCol->getNumberOfElements() <= 0 ) {
      delete  BCALCol; 
      delete  BCALMCTruthLink; 

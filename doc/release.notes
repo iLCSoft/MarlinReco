@@ -10,14 +10,20 @@
      - fixed TPCDigiProcessor :
         - added bfield correction factor to point resolution
           ( 4.0 / bField )
-     - BCalRec:
+
+     - BCalRec (A.Rosca)
        - cleaned up code (removed unnecessary code)
        - introduced new default bg map file
        - enclosed code with  
              if( nHits > 0 ) {...}
          in order to prevent warning about missing CellIDEncoder string
-       - fixed indentation of code (using emacs defaults) (r4088)
+
+       - fixed indentation of code (fg, using emacs defaults) (r4088)
          No code change, i.e. same code as r4087 (use this for diffs)
+
+     - BCalTagEfficiency (J.List) 
+       - veryfied unchanged performance on LoI samples (modulo a bug fix); steering flag for
+         map format added
 
  --------
 | v01-04 |

@@ -1176,7 +1176,7 @@ double  BCalReconstruction::GetCoordRotX(double ring, double pad, float IP, floa
     coordZ = (double) IP - 5.*delta;
     
 
-  coordX = ((inrad+sizepad/2.) + ring*sizepad)*TMath::Cos(sPhi + (pad+1.)*phiradial[(int) ring]);
+  coordX = ((inrad) + ring*sizepad)*TMath::Cos(sPhi + (pad)*phiradial[(int) ring]);
 
   return  (TMath::Cos(angle)*coordX - TMath::Sin(angle)*coordZ);
   //    return coordX;
@@ -1196,7 +1196,7 @@ double  BCalReconstruction::GetCoordY(double ring, double pad){
 
 
     
-  return ((inrad+sizepad/2.) + ring*sizepad)*TMath::Sin(sPhi + (pad+1.)*phiradial[(int) ring]);
+  return (((inrad) + ring*sizepad)*TMath::Sin(sPhi + (pad)*phiradial[(int) ring]));
 
 }
 
@@ -1222,7 +1222,7 @@ double  BCalReconstruction::GetCoordRotZ(double ring, double pad, float IP, floa
     coordZ = (double) IP - 5.*delta;
       
 
-  coordX = ((inrad+sizepad/2.) + ring*sizepad)*TMath::Cos(sPhi + (pad+1.)*phiradial[(int) ring]);
+  coordX = ((inrad) + ring*sizepad)*TMath::Cos(sPhi + (pad)*phiradial[(int) ring]);
     
   return  (TMath::Sin(angle)*coordX + TMath::Cos(angle)*coordZ);
   //   return coordZ;

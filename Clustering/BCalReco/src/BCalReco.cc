@@ -619,13 +619,13 @@ void BCalReco::processEvent(LCEvent * evt){
 	    if(side==0) cells[layer][cylind][sector].sEdepPos+=E;
 
 
-
+/*
 	    if( pos[2] < 0) geometry.xAngle=-TMath::Abs(geometry.xAngle);
 	    else geometry.xAngle=TMath::Abs(geometry.xAngle);
 	    pos[0] = TMath::Cos(geometry.xAngle/2000)*pos[0]-TMath::Sin(geometry.xAngle/2000)*pos[2];
 	    pos[1] = pos[1];
 	    pos[2] = TMath::Sin(geometry.xAngle/2000)*pos[0]+TMath::Cos(geometry.xAngle/2000)*pos[2];
-
+*/
 
 
 	    if(side==0){

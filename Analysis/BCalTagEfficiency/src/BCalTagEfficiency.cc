@@ -152,6 +152,16 @@ BCalTagEfficiency::BCalTagEfficiency() : Processor("BCalTagEfficiency") {
                              writeTree,
                              bool(1));
 
+ registerProcessorParameter("writeSGVMap",
+                            "true: write ascii map for SGV",
+                             writeSGVMap,
+                             bool(0));
+
+ registerProcessorParameter("SGVMapFilename",
+                            "name of file for SGV map",
+                             SGVmapfilename,
+                             std::string("SGVmap.root") );
+
 }
 
 void BCalTagEfficiency::init() { 
@@ -182,6 +192,8 @@ void BCalTagEfficiency::init() {
 
   _nRun = 0 ;
   _nEvt = 0 ;
+  
+  PI = 4.*atan(1.);
 
   if (writeTree) { 
   
@@ -215,6 +227,84 @@ void BCalTagEfficiency::init() {
     tree->Branch("tag" ,   tag,"tag[mcp]/I");
   }
 
+  if (writeSGVMap) { 
+    nbinx = 50;
+    xmin = -140.;
+    xmax = 160.;
+    nbiny = 50;
+    ymin = -150.;
+    ymax = 150.;
+    TFile *SGVmaprootfile = new TFile(SGVmapfilename.c_str(),"recreate");
+    SGVmapP = new TH2D("hmapP","mapP", nbinx, xmin, xmax, nbiny, ymin, ymax);
+    SGVmapN = new TH2D("hmapN","mapN", nbinx, xmin, xmax, nbiny, ymin, ymax);
+    SGVmapP->Sumw2();
+    SGVmapN->Sumw2();
+    double wx = (xmax-xmin)/nbinx;
+    double wy = (ymax-ymin)/nbiny;
+    double vloc[3]; // local coordinates
+    for (int iz = -1; iz < 2; iz += 2) {
+      float halfxingangle = iz * alpha;   
+      for (int ix = 0; ix < nbinx; ++ix) {
+      // bin center in x
+        double x = xmin + (ix+0.5)*wx; 
+        // convert to local: rotation around y axis of -7 mrad. 
+        // rotation goes in different directions for +z / -z
+        vloc[0] = cos(-halfxingangle)* x + sin(-halfxingangle)* (iz*zbcal);
+        vloc[2] = -sin(-halfxingangle)* x + cos(-halfxingangle)* (iz*zbcal);
+        for (int iy = 0; iy < nbiny; ++iy) {
+          // bin center in y
+          vloc[1] = ymin + (iy+0.5)*wy; 
+          // Change from cartesian to cylindrical coordinates !LOCAL!
+          Hep3Vector lvec (vloc[0], vloc[1], vloc[2]);
+          double rloc = lvec.perp();
+          double philoc = lvec.phi(); // gives [-PI, PI]
+          if (philoc < 0) philoc += 2*PI;  // have [0, 2 PI] now
+          
+          double sumEDens = 0;
+          double sumEDensErr = 0;
+          double EDens = 0;
+          double EDensErr = 0;
+          bool ok = false;
+          
+          for (int layer=1; layer<31; layer++) {
+            if (!newMap && layer ==1) continue;  // skip layer if using old map!
+            ok = bc_en->GetEnergyDensity( layer * iz, rloc, philoc, &EDens, &EDensErr);
+            if (ok) {
+              sumEDens += EDens;
+              sumEDensErr += EDensErr/55.*EDensErr/55.;
+            } 
+            // in keyhole region
+            else {
+              sumEDens = -1.;
+              sumEDensErr = -1.;
+              layer = 31;
+            } 
+          } 
+          sumEDensErr = (sumEDensErr>=0) ? sqrt(sumEDensErr) : -1.;
+
+
+          //Scaling of the Energy density with scaling factor
+          if (sumEDens > 0) {
+            sumEDens *= densityScaling;
+            sumEDensErr *= densityScaling;
+          }  
+          if (iz > 0) SGVmapP->Fill(x,vloc[1],sumEDens);
+          else SGVmapN->Fill(x,vloc[1],sumEDens);
+	  streamlog_out(MESSAGE) << "SGVmap " << x << "  " << vloc[1] << "  " << iz*zbcal << "  " << sumEDens << "  " << sumEDensErr << std::endl;
+        }
+      }
+    }
+    
+    SGVmapP->Write();
+    SGVmapN->Write();
+    SGVmaprootfile->Write();
+    SGVmaprootfile->Close();
+    //delete SGVmaprootfile;
+    //delete SGVmapP;
+    //delete SGVmapN;
+    
+  } // if write SGV map
+  
 }
 
 void BCalTagEfficiency::processRunHeader( LCRunHeader* run) { 
@@ -227,9 +317,6 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
   streamlog_out(DEBUG) << "+++++++++++++++++ start processing event: " << evt->getEventNumber() 
                     << "   in run:  " << evt->getRunNumber() 
                     << std::endl ;
-
-
-  double PI = 4.*atan(1.);
  
   // Get elements for collection to study  
   LCCollection* col = evt->getCollection( _colName ) ;
@@ -381,10 +468,6 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
           for (int layer=1; layer<31; layer++) {
           if (!newMap && layer ==1) continue;  // skip layer if using old map!
 
-            en_dens = 0;
-            en_dens_err = 0;
-            res = 0;
-           
             int sign = 1; 
             if(lvout[2] < 0) sign = -1;
             res = bc_en->GetEnergyDensity( layer * sign, radius[mcp], phi[mcp], &en_dens, &en_dens_err);
@@ -476,7 +559,7 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
               ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
               ClusterImpl* cluster = new ClusterImpl;
               streamlog_out(DEBUG) << "HALLO !" << endl;
-              bcalTruthRelNav.addRelation( particle , p , 0.5 ) ;
+              bcalTruthRelNav.addRelation( particle , p , 1.0) ;
               //LCRelationImpl* MCrel  = new LCRelationImpl(particle,p,0.5);
               //MCrel->setFrom (particle);
               //MCrel->setTo (p);

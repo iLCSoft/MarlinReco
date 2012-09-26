@@ -111,6 +111,12 @@ Bool_t BcEnergyDensity::GetEnergyDensity(const Int_t& rLayer,
    the_cell = GetCellNumber(rLayer, rRadius, the_phi); // central cell
    if ( the_cell < 0 ) return false;
    Int_t the_ring = mCellStorage.at(the_cell)->Id[1];
+   
+   *pEnDens = mCellStorage.at(the_cell)->EnDens;
+   *pEnDensError = mCellStorage.at(the_cell)->EnDensErr;
+   
+   // skip all the interpolation junk for now (JL, 26.9.12)
+   return true;
 
    const Int_t nsegs = 3;
    const Int_t nrings = 3;
@@ -241,13 +247,15 @@ Bool_t BcEnergyDensity::MakeInterpolation ( const Double_t& rX,
 */
 
 
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,20,0)
-   Interpolation::Type interp_type = Interpolation::CSPLINE;
-   if (rXData.size()<3) interp_type = Interpolation::LINEAR;
-#else
-   Interpolation::Type interp_type = Interpolation::kCSPLINE;
-   if (rXData.size()<3) interp_type = Interpolation::kLINEAR;
-#endif
+// #if ROOT_VERSION_CODE < ROOT_VERSION(5,20,0)
+//    Interpolation::Type interp_type = Interpolation::CSPLINE;
+//    if (rXData.size()<10) interp_type = Interpolation::LINEAR;
+// #else
+//    Interpolation::Type interp_type = Interpolation::kCSPLINE;
+//    if (rXData.size()<10) interp_type = Interpolation::kLINEAR;
+// #endif
+
+   Interpolation::Type interp_type = Interpolation::kLINEAR;
 
 
 //    Interpolator interp(rXData.size(), interp_type);

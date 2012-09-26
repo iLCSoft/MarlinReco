@@ -108,6 +108,7 @@ class BCalTagEfficiency : public Processor {
 
   // parameters of detector
   std::string backgroundfilename;
+  std::string SGVmapfilename;
   float densityScaling;
   float bField;
   float eBeam;
@@ -121,6 +122,7 @@ class BCalTagEfficiency : public Processor {
   bool writeTree;
   bool detectAll;
   bool smearEnergy;
+  bool writeSGVMap;
   
   // background handler
   BcEnergyDensity *bc_en;
@@ -129,7 +131,14 @@ class BCalTagEfficiency : public Processor {
   double alpha;
   double gamma;
   double betagamma; 
+  double PI;
   
+  
+  // binning for SGV map
+  int nbinx, nbiny;
+  float xmin, xmax, ymin, ymax;
+  TH2D* SGVmapP;
+  TH2D* SGVmapN;
 } ;
 
 #endif

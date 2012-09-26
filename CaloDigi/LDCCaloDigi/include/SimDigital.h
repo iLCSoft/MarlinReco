@@ -288,6 +288,7 @@ class SimDigital : public Processor {
   float _minXYdistanceBetweenStep;
   AIDA::ITuple* _debugTupleStepFilter;
   AIDA::ITuple* _tupleStepFilter;
+  AIDA::ITuple* _tupleCollection;
   multiplicityChargeSplitterBase& getSplitter() { if (_splitChargeWithFunction) return _chargeSplitterFunction; else return _chargeSplitterUniform;}
 
   //predicate class to remove potential hit below threshold

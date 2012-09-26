@@ -36,6 +36,7 @@
 #include "TTree.h"
 #include "TH1F.h"
 
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace std;
@@ -267,17 +268,22 @@ void SimDigital::init(){
    _debugTupleStepFilter  = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepDebug",
 									"SimDigital_StepDebug",
 									"int filterlevel, float deltaI,deltaJ,deltaLayer,minIJdist"); 
-   std::cout << "Tuple for step debug has been initialized to " << _debugTupleStepFilter << std::endl;
-   std::cout << "it has " << _debugTupleStepFilter->columns() << " columns" <<std::endl;
+   streamlog_out(DEBUG) << "Tuple for step debug has been initialized to " << _debugTupleStepFilter << std::endl;
+   streamlog_out(DEBUG) << "it has " << _debugTupleStepFilter->columns() << " columns" <<std::endl;
 
 
    _tupleStepFilter   = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepStat",
 								    "SimDigital_StepStat",
 								    "int allsteps, absZfiltered, IJdistancefiltered");
-   std::cout << "Tuple for step stat has been initialized to " << _tupleStepFilter << std::endl;
-   std::cout << "it has " << _tupleStepFilter->columns() << " columns" <<std::endl;
+   streamlog_out(DEBUG) << "Tuple for step stat has been initialized to " << _tupleStepFilter << std::endl;
+   streamlog_out(DEBUG) << "it has " << _tupleStepFilter->columns() << " columns" <<std::endl;
 
 
+   _tupleCollection  = AIDAProcessor::tupleFactory( this )->create("CollectionStat",
+								    "Collection_statistics",
+								    "int NsimHit, NrecoHit, N1, N2, N3"); 
+   streamlog_out(DEBUG) << "Tuple for collection stat has been initialized to " << _tupleCollection << std::endl;
+   streamlog_out(DEBUG) << "it has " << _tupleCollection->columns() << " columns" <<std::endl;
 }
  
 
@@ -290,12 +296,10 @@ void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
     try{
       std::string colName =  _hcalCollections[i] ;    
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
+      _counters["NSim"]+=col->getNumberOfElements();
       CHT::Layout layout = layoutFromString( colName ); 
-#ifdef SDHCAL_MARLINUTIL_BUGFIX 
-      //FIXME should correct calorimeterHitType.cc in MarlinUtil instead
-      if (colName=="HcalEndCapRingsCollection") layout=CHT::ring;
-#endif
       LCCollectionVec *hcalcol = processHCALCollection(col,layout,flag);
+      _counters["NReco"]+=hcalcol->getNumberOfElements();
       evt->addCollection(hcalcol,_outputHcalCollections[i].c_str());
     }
     catch(DataNotAvailableException &e){  
@@ -367,7 +371,7 @@ void multiplicityChargeSplitterFunction::init()
 
 void multiplicityChargeSplitterFunction:: addCharge(float charge, float pos_I, float pos_J)
 {
-  if (_RPC_PadSeparation<_cellSize) return;
+  if (_RPC_PadSeparation>_cellSize) return;
   int icell=int(_range/_cellSize);
   for (int I=-icell; I<=icell; I++)
     {
@@ -381,7 +385,21 @@ void multiplicityChargeSplitterFunction:: addCharge(float charge, float pos_I, f
 	  float distJJ=(J+0.5)*_cellSize-pos_J-_RPC_PadSeparation/2;
 	  if (distJ<-_range) distJ=-_range;
 	  if (distJJ>_range) distJJ=_range;
-	  _chargeMap[I_J_Coordinates(I,J)]+=charge*_f2->Integral(distI,distII,distJ,distJJ)/_normalisation;
+	  double a[2],b[2];
+	  a[0]=distI; b[0]=distII;
+	  a[1]=distJ; b[1]=distJJ;
+	  double relerr(0); int nfnevl(0), ifail(1);
+	  double precision=1e-5;
+	  double integralResult(0);
+	  int maxpts=20;
+	  while (ifail !=0 && maxpts<=20000)
+	    {
+	      integralResult=_f2->IntegralMultiple(2,a,b,17,maxpts,precision,relerr,nfnevl,ifail);
+	      if (ifail!=0)  streamlog_out(DEBUG) << "ifail= " << ifail << " maxpts= " << maxpts << "  relerr=" << relerr << std::endl;
+	      maxpts*=10;
+	    }
+	  _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation;
+	  //_chargeMap[I_J_Coordinates(I,J)]+=charge*_f2->Integral(distI,distII,distJ,distJJ)/_normalisation;
 	}
     }
 }
@@ -390,20 +408,20 @@ void multiplicityChargeSplitterFunction:: addCharge(float charge, float pos_I, f
 AIDA::ITuple* SimDigitalGeomCellId::_tupleHit = NULL;
 AIDA::ITuple* SimDigitalGeomCellId::_tupleStep = NULL;
 
+
 void SimDigitalGeomCellId::bookTuples(const marlin::Processor* proc)
 {
   _tupleHit  = AIDAProcessor::tupleFactory( proc )->create("SimDigitalGeom",
 							   "SimDigital_Debug",
 							   "int detector,chtlayout,module,stave,layer,I,J, float x,y,z, normalx,normaly,normalz, Ix,Iy,Iz,Jx,Jy,Jz"); 
-  std::cout << "Tuple for Hit has been initialized to " << _tupleHit << std::endl;
-  std::cout << "it has " << _tupleHit->columns() << " columns" <<std::endl;
+  streamlog_out(DEBUG) << "Tuple for Hit has been initialized to " << _tupleHit << std::endl;
+  streamlog_out(DEBUG)<< "it has " << _tupleHit->columns() << " columns" <<std::endl;
   
   _tupleStep = AIDAProcessor::tupleFactory( proc )->create("SimDigitalStep",
 							   "SimDigital_DebugStep",
 							   "int detector,chtlayout,hitcellid,nstep, float hitx,hity,hitz,stepx,stepy,stepz,deltaI,deltaJ,deltaLayer");
-  std::cout << "Tuple for Step has been initialized to " << _tupleStep << std::endl;
-  std::cout << "it has " << _tupleStep->columns() << " columns" <<std::endl;
-
+  streamlog_out(DEBUG) << "Tuple for Step has been initialized to " << _tupleStep << std::endl;
+  streamlog_out(DEBUG) << "it has " << _tupleStep->columns() << " columns" <<std::endl;
 }
 
 
@@ -473,7 +491,7 @@ void SimDigitalGeomRPCFrame_TESLA_ENDCAP::setRPCFrame()
     }
   else
     {
-      std::cout << "ERROR ; TESLA detector : unknown module for endcap " << module() << std::endl;
+      streamlog_out(ERROR) << "ERROR ; TESLA detector : unknown module for endcap " << module() << std::endl;
     }      
 }
 
@@ -498,7 +516,7 @@ void SimDigitalGeomRPCFrame_VIDEAU_ENDCAP::setRPCFrame()
     }
   else
     {
-      std::cout << "ERROR : unknown module for endcap or endcapring " << module() << std::endl;
+      streamlog_out(ERROR) << "ERROR : unknown module for endcap or endcapring " << module() << std::endl;
     }
 }
 
@@ -524,10 +542,6 @@ std::vector<LCVector3D> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
       LCVector3D stepposvec;
       const float* steppos=hit->getStepPosition(imcp);
       if (NULL != steppos) stepposvec.set(steppos[0],steppos[1],steppos[2]);
-#ifdef SDHCAL_MOKKA_BUGFIX 
-      //FIXME : Mokka bug
-      if (_geom==VIDEAU && _currentHCALCollectionCaloLayout>=2 && hitpos.z()>0) stepposvec.set(-stepposvec.x(),stepposvec.y(),-stepposvec.z());
-#endif
       if (stepposvec.mag2() != 0)
 	{
 	  stepposvec-=hitpos;
@@ -717,6 +731,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       std::vector<LCVector3D> steps=aGeomCellId.decode(hit);
       fillTupleStep(steps,0);
 
+
       float cellSize=aGeomCellId.getCellSize();
       multiplicityChargeSplitterBase& mult=getSplitter();
       mult.newHit(cellSize);
@@ -741,7 +756,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       for (std::map<multiplicityChargeSplitterBase::I_J_Coordinates,float>::const_iterator it=mult.chargeMap().begin();
 	   it != mult.chargeMap().end(); it++)
 	{
-	  if (it->second > 0)
+	  if (it->second >= 0)
 	    {
 	      CalorimeterHitImpl *tmp=new CalorimeterHitImpl();
 	      aGeomCellId.encode(tmp,it->first.first,it->first.second);
@@ -804,6 +819,9 @@ void SimDigital::applyThresholds(std::map<int,hitMemory>& myHitMap)
     }else{
       calibr_coeff = _calibrCoeffHcal[ilevel];
     }
+    if (ilevel==0) _counters["N1"]++;
+    if (ilevel==1) _counters["N2"]++;
+    if (ilevel==2) _counters["N3"]++;
     currentHitMem.ahit->setEnergy(calibr_coeff);
   }
 }
@@ -842,7 +860,6 @@ LCCollectionVec * SimDigital::processHCALCollection(LCCollection * col, CHT::Lay
   return hcalcol;
 }
 
-
 void SimDigital::processEvent( LCEvent * evt ) {
 
   if( isFirstEvent() ) {
@@ -850,6 +867,12 @@ void SimDigital::processEvent( LCEvent * evt ) {
       }
 
   _counters["|ALL"]++;
+  if (_counters["|ALL"]%100==0) streamlog_out(MESSAGE) << "have processed " << _counters["|ALL"] << " events" << std::endl;
+  _counters["NSim"]=0;
+  _counters["NReco"]=0;
+  _counters["N1"]=0;
+  _counters["N2"]=0;
+  _counters["N3"]=0;
 
    // create the output collections
   _relcol = new LCCollectionVec(LCIO::LCRELATION); 
@@ -867,6 +890,13 @@ void SimDigital::processEvent( LCEvent * evt ) {
 
  
   evt->addCollection(_relcol,_outputRelCollection.c_str());
+
+  _tupleCollection->fill(0,_counters["NSim"]);
+  _tupleCollection->fill(1,_counters["NReco"]);
+  _tupleCollection->fill(2,_counters["N1"]);
+  _tupleCollection->fill(3,_counters["N2"]);
+  _tupleCollection->fill(4,_counters["N3"]);
+  _tupleCollection->addRow();
 }
 
 void SimDigital::check( LCEvent * evt ) { }

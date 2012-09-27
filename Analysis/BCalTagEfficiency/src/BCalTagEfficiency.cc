@@ -658,16 +658,17 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
   }
   
   BCALMCTruthLink = bcalTruthRelNav.createLCCollection() ;
+  streamlog_out(DEBUG) << "name of BCALCol: " << _BCALcolName << ", number of elements = " << BCALCol->getNumberOfElements() << endl;
 
-  if ( BCALCol->getNumberOfElements() <= 0 ) {
-     delete  BCALCol; 
-     delete  BCALMCTruthLink; 
-     delete  BCALClusters; 
-  } else {
+  //if ( BCALCol->getNumberOfElements() <= 0 ) {
+     //delete  BCALCol; 
+     //delete  BCALMCTruthLink; 
+     //delete  BCALClusters; 
+  //} else {
     evt->addCollection(BCALCol ,_BCALcolName) ;
     evt->addCollection(BCALMCTruthLink ,_BCALMCTruthLinkName) ;
     evt->addCollection(BCALClusters ,_BCALClustersName) ;
-  }
+  //}
 
 
   streamlog_out(DEBUG) << "+++++++++++++++++ finished processing event: " << evt->getEventNumber() 

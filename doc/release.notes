@@ -4,6 +4,32 @@
 
 ===============================
 
+
+ -----------
+| v01-04-02 |
+ -----------
+
+    - BCalTagEfficiency:
+        - threw out interpolation between BeamCal cells, introduced optional write-out of background map
+        - uses LCRelationNavigator now, cleaned up example steering
+        - write out also empty collections
+        - added 3.5T background map and up to date example steering for ILD00
+
+    - BCalReco:
+        - improved calculation of Cartesian coordinates from cell position given
+            in terms of ring/pad number.
+
+    - RecoMCTruthLink:
+        - exchanged ttrlcol and ctrlcol in makeSkim()
+            ( will have no effect except code sanity )
+
+    - LDCCaloDigi:
+        - Bug fix to get output hits stored in output collection+increase speed of integration
+
+    - FPCCDDigi:
+        - t.mori enable to difine pixel size for each layer.
+
+
  -----------
 | v01-04-01 |
  -----------

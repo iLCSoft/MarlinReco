@@ -126,6 +126,7 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   bool _ladder_Number_encoded_in_cellID;
   
   float _pixelSize;
+  FloatVec _PixelSizeVec;
   float _pixelheight;
 
   float _momCut;

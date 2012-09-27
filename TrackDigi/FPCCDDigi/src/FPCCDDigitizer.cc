@@ -42,6 +42,17 @@ namespace
 }
 
 
+// Start of New edit
+
+
+ // This is a initialization of Each ladder's PixelSize.
+                                                      // After this, PixelSizeVec may be changed by r.P.P..
+
+// End of New edit
+
+
+
+
 FPCCDDigitizer aFPCCDDigitizer ;
 
 
@@ -64,10 +75,14 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                               _modifySimTHit,
                               bool(true)); 
 
-  registerProcessorParameter( "FPCCD_pixelSize(mm)" ,
-                              "Pixel size of FPCCD (unit:mm) (default: 0.005)"  ,
-                              _pixelSize ,
-                              float(0.005) ) ;
+  FloatVec PixelSizeVec;
+for(int i=0;i<6;i++){PixelSizeVec.push_back(0.005);}
+  
+  registerProcessorParameter( "Each_FPCCD_pixelSize(mm)",
+                              "Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)",
+                              _PixelSizeVec,
+                              PixelSizeVec );
+
   
   registerProcessorParameter( "PixelHeight(mm)" , 
                               "Pixel Height(mm)",
@@ -243,6 +258,12 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
     ladderID = getLadderID( HitPosInMokka, layer);
   }
   
+  //----
+  // change pixel size due to the dependency of which ladder is used
+  //----
+
+  _pixelSize = _PixelSizeVec[layer];
+
   //----
   // get hit dir(mom) at hit points and other info.
   //----
@@ -428,8 +449,8 @@ void FPCCDDigitizer::getInOutPosOnLadder(int layer, gear::Vector3D* outpos, gear
     *outpos = gear::Vector3D( bottom_x, bottom_y, -f_z);
   }
 
-  ModifyIntoLadder( inpos, layer, pos, mom);
-  ModifyIntoLadder( outpos, layer, pos, mom);
+  ModifyIntoLadder( inpos, layer, inpos, mom);
+  ModifyIntoLadder( outpos, layer, outpos, mom);
 
   *pos = gear::Vector3D((outpos->x()+inpos->x())/2 ,
                         (outpos->y()+inpos->y())/2 ,

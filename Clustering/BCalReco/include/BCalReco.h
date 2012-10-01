@@ -106,6 +106,7 @@ protected:
     double sSphi;
     double sDphi;
     double sEdep;
+    double sEdepErr;
     double cell_area;
     double sCellArea;
     double sEnDens;
@@ -204,7 +205,7 @@ protected:
   double sRin, sRout;
   double sZstart, sZend;
   double sSphi, sDphi;
-  double sEdep;
+  double sEdep; double sEdepErr;
   double sCellArea,sEnDens,sEnDensErr;
 
   scoeff bgc[MAXNENTR];

@@ -84,7 +84,7 @@ private:
 private:
   void Init();
   void Destroy();
-  vector<vector<int> > SearchTowers(int the_Chains[maxrings][maxphis][maxlayers]);
+  vector<vector<int> > SearchTowers(int number_Chains[maxrings][maxphis][maxlayers]);
   RecCorr SearchClustersFW(CellType ***info_detector);
   RecCorr SearchClustersBW(CellType ***info_detector);
   double GetEnergyCalib(double energy);

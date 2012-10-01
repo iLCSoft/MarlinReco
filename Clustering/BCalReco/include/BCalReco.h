@@ -7,7 +7,7 @@
 
 #define MAXHITS 2000
 
-#define MAXNENTR 200000
+#define MAXNENTR 80000
 
 // includes for the BCalReconstruction
 

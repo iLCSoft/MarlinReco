@@ -22,6 +22,13 @@ TROOT root("root", "root");
 
 void BCalReconstruction::Init(){
 
+  the_Layers = 0;
+  the_Rings = 0;
+  for(int j = 0; j<maxrings;j++){
+    the_Phis[j] = 0;
+  }
+
+
   BcCells = new BCalReconstruction::CellType** [maxlayers]; 
   for (int i=1; i<maxlayers; ++i) {
     BcCells[i]=new BCalReconstruction::CellType* [maxrings];
@@ -71,7 +78,20 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
   for (int i=1; i<the_Layers; ++i) {
     for (int j=0; j<the_Rings; ++j) {
       for (int k=0; k<the_Phis[j]; ++k){
-	BcCells[i][j][k]=info_detector[i][j][k];
+	//BcCells[i][j][k]=info_detector[i][j][k];
+		
+	BcCells[i][j][k].sRin = info_detector[i][j][k].sRin;
+	BcCells[i][j][k].sRout = info_detector[i][j][k].sRout;
+	BcCells[i][j][k].sZstart = info_detector[i][j][k].sZstart;
+	BcCells[i][j][k].sZend = info_detector[i][j][k].sZend;
+	BcCells[i][j][k].sEdepNeg = info_detector[i][j][k].sEdepNeg;
+	BcCells[i][j][k].sEdepPos = info_detector[i][j][k].sEdepPos;
+	BcCells[i][j][k].sSphi = info_detector[i][j][k].sSphi;
+	BcCells[i][j][k].sDphi = info_detector[i][j][k].sDphi;
+	BcCells[i][j][k].sPos[0] = info_detector[i][j][k].sPos[0];
+	BcCells[i][j][k].sPos[1] = info_detector[i][j][k].sPos[1];
+	BcCells[i][j][k].sPos[2] = info_detector[i][j][k].sPos[2];
+	
       }
     }
   }      
@@ -96,6 +116,13 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
       }
     }
   }
+  
+    for(int r=0; r<maxrings; r++){
+    for(int p=0; p<maxphis; p++){
+      nRinFW[r][p]=0;
+      nRinBW[r][p]=0;
+    }
+  }  
                   
   int index = 0;
   for(int l=1; l<the_Layers; l++){
@@ -195,9 +222,30 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
           
 }
 
-vector<vector<int> > BCalReconstruction::SearchTowers(int the_Chains[maxrings][maxphis][maxlayers]){
+vector<vector<int> > BCalReconstruction::SearchTowers(int number_Chains[maxrings][maxphis][maxlayers]){
+
+//aici
+
+int the_Chains[maxrings][maxphis][maxlayers];
+
+ for(int r = 0; r < maxrings; r++) { 
+        for(int p = 0; p < maxphis; p++) {
+          for(int l = 0; l < maxlayers; l++) {           
+                 the_Chains[r][p][l] = 0;
+          }
+       }
+     }
 
 
+for(int r = 0; r < the_Rings; r++) {
+   for(int p = 0; p < the_Phis[r]; p++) {
+      for(int l = 0; l < the_Layers; l++) {
+
+             the_Chains[r][p][l] = number_Chains[r][p][l];
+     }
+   }
+ }
+ 
   //-------- count segments in stack------------
         
   //const  double  Pi    =  3.14159165;

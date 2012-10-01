@@ -38,6 +38,9 @@
 #define epsPhi 2e-05
 
 
+#define MAXLayers 35
+#define MAXRings 22 
+#define MAXPhis 200
 
 using namespace lcio;
 using namespace marlin;
@@ -690,6 +693,7 @@ void BCalReco::processEvent(LCEvent * evt){
   t->SetBranchAddress("sSphi",  &sSphi); // rad
   t->SetBranchAddress("sDphi",  &sDphi); // rad
   t->SetBranchAddress("sEdep",  &sEdep); // GeV
+  t->SetBranchAddress("sEdepErr",  &sEdepErr); // GeV
   t->SetBranchAddress("sCellArea", &sCellArea);
   t->SetBranchAddress("sEnDens", &sEnDens);
   t->SetBranchAddress("sEnDensErr", &sEnDensErr);
@@ -706,6 +710,7 @@ void BCalReco::processEvent(LCEvent * evt){
     bgc[i].sSphi   = 0.;
     bgc[i].sDphi   = 0.;
     bgc[i].sEdep   = 0.;
+    bgc[i].sEdepErr   = 0.;
     bgc[i].sCellArea = 0.;
     bgc[i].sEnDens = 0.;
     bgc[i].sEnDensErr = 0.;
@@ -723,7 +728,7 @@ void BCalReco::processEvent(LCEvent * evt){
   sZstart=0.;
   sZend=0.;
   sSphi=0.; sDphi=0.;
-  sEdep=0.;
+  sEdep=0.; sEdepErr=0.;
   sCellArea=0.;sEnDens=0.;sEnDensErr=0.;
 
     
@@ -739,6 +744,7 @@ void BCalReco::processEvent(LCEvent * evt){
     bgc[i].sSphi = sSphi;
     bgc[i].sDphi = sDphi;
     bgc[i].sEdep = sEdep;
+    bgc[i].sEdepErr = sEdepErr;
     bgc[i].cell_area = sCellArea;  // mm2
     bgc[i].sEnDens = sEnDens; // GeV/mm2
     bgc[i].sEnDensErr = sEnDensErr;
@@ -784,12 +790,12 @@ void BCalReco::processEvent(LCEvent * evt){
     {
 		    
 
-      EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEnDensErr);
-      EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEnDensErr);
+      EdepPosNoiseTmp[i] = EdepPos[i] + r.Gaus(0,bgc[2*i].sEdepErr);
+      EdepNegNoiseTmp[i] = EdepNeg[i] + r.Gaus(0,bgc[2*i+1].sEdepErr);
 			
 
 
-      if(EdepPosNoiseTmp[i] > bgc[2*i].sEnDensErr){
+      if(EdepPosNoiseTmp[i] > bgc[2*i].sEdepErr){
 	EdepPosNoiseTmp[i] = EdepPosNoiseTmp[i];
 	EdepPosTmp[i] = EdepPos[i];
       }
@@ -797,7 +803,7 @@ void BCalReco::processEvent(LCEvent * evt){
 	EdepPosTmp[i] = 0.;
 	EdepPosNoiseTmp[i] = 0.;
       }
-      if(EdepNegNoiseTmp[i] > bgc[2*i+1].sEnDensErr){
+      if(EdepNegNoiseTmp[i] > bgc[2*i+1].sEdepErr){
 	EdepNegNoiseTmp[i] = EdepNegNoiseTmp[i];
 	EdepNegTmp[i] = EdepNeg[i];
       }
@@ -842,7 +848,7 @@ void BCalReco::processEvent(LCEvent * evt){
 
 
   //reconstruction
-
+/*
   celule = new BCalReconstruction::CellType** [nLayers];
   for (int i=1; i<nLayers; ++i) {
     celule[i]=new BCalReconstruction::CellType* [nRings];
@@ -863,7 +869,49 @@ void BCalReco::processEvent(LCEvent * evt){
       }
     }
   }
+*/
+  celule = new BCalReconstruction::CellType** [MAXLayers];
+  for (int i=1; i<MAXLayers; ++i) {
+    celule[i]=new BCalReconstruction::CellType* [MAXRings];
+    for (int j=0; j<MAXRings; ++j) {
+      celule[i][j]=new BCalReconstruction::CellType [MAXPhis];
+      for (int k=0; k<MAXPhis; ++k){
+	celule[i][j][k].sRin=0.;
+	celule[i][j][k].sRout=0.;
+	celule[i][j][k].sZstart=0.;
+	celule[i][j][k].sZend=0.;
+	celule[i][j][k].sEdepNeg=0.;
+	celule[i][j][k].sEdepPos=0.;
+	celule[i][j][k].sSphi=0.;
+	celule[i][j][k].sDphi=0.;
+	celule[i][j][k].sPos[0]=i;
+	celule[i][j][k].sPos[1]=j;
+	celule[i][j][k].sPos[2]=k;
+      }
+    }
+  }
 
+
+  for (int i=1; i<nLayers; ++i) {
+    for (int j=0; j<nRings; ++j) {
+      for (int k=0; k<nbPhis[j]; ++k){
+      	celule[i][j][k].sRin=cells[i][j][k].sRin;
+	celule[i][j][k].sRout=cells[i][j][k].sRout;
+	celule[i][j][k].sZstart=cells[i][j][k].sZstart;
+	celule[i][j][k].sZend=cells[i][j][k].sZend;
+	celule[i][j][k].sEdepNeg=cells[i][j][k].sEdepNeg;
+	celule[i][j][k].sEdepPos=cells[i][j][k].sEdepPos;
+	celule[i][j][k].sSphi=cells[i][j][k].sSphi;
+	celule[i][j][k].sDphi=cells[i][j][k].sDphi;
+	celule[i][j][k].sPos[0]=cells[i][j][k].sPos[0];
+	celule[i][j][k].sPos[1]=cells[i][j][k].sPos[1];
+	celule[i][j][k].sPos[2]=cells[i][j][k].sPos[2];
+      }
+    }
+  }      
+
+
+ BCalReconstruction::RecCorr obiect = {{0},{0.}};
 
   obiect = bc_en->GetReconstrCoordinates(nLayers,nRings,nbPhis,celule);
 

@@ -977,13 +977,9 @@ void BCalReco::processEvent(LCEvent * evt){
 		    
   }
 	
-   if(BCALCol->getNumberOfElements() <= 0 ) {
-      delete BCALCol;
-      delete BCALClusters;
-   } else {
-      evt->addCollection(BCALClusters, _BCALClustersName);
-      evt->addCollection(BCALCol, _BCALcolName);
-   }
+  evt->addCollection(BCALClusters, _BCALClustersName);
+  evt->addCollection(BCALCol, _BCALcolName);
+  
   for (int i = 1; i < nLayers; ++i) {
     for (int j = 0; j < nRings; ++j)
       delete [] celule[i][j];

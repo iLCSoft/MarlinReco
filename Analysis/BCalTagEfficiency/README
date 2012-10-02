@@ -28,3 +28,5 @@ In addition, a root tree is written out for detailed studies.
 
 Further steering flags allow to switch between LoI-style background map
 and MCParticles and DBD-Style ones.
+
+The LDC 3.5Tesla 500 GeV map is kept here for reference / backwards compatibility. Otherwise please use TDR maps are in ILDCofing/StandardConfig/current.

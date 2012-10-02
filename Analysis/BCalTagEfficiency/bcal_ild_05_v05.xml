@@ -33,12 +33,12 @@
  </execute>
 
  <global>
-  <parameter name="LCIOInputFiles">/afs/desy.de/group/flc/pool/boehmej/MarlinWorkdir4/runit/E0500-TDR_ws.Paa_yyyy.Gwhizard-1.95.eW.pW.I37461.01-10.slcio</parameter>
+  <parameter name="LCIOInputFiles">input.slcio</parameter>
   <!-- limit the number of processed records (run+evt): -->  
   <parameter name="MaxRecordNumber" value="0" />  
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile">/afs/desy.de/group/flc/pool/boehmej/MarlinWorkdir4/runit/GearOutput_ILD_o1_v05.xml</parameter>  
+  <parameter name="GearXMLFile">GearOutput_ILD_o1_v05.xml</parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
   <parameter name="RandomSeed" value="1234567890" />
  </global>
@@ -52,7 +52,7 @@
   <!--Name of the MCParticle collection-->
   <parameter name="CollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
   <!--Name of input file for background energy density-->
-  <parameter name="BackgroundFilename" type="string">bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root</parameter>
+  <parameter name="BackgroundFilename" type="string">../../../ILDConfig/StandardConfig/current/bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root</parameter>
   
   <!--  OUTPUT --->
   <!--Name of the collection of clusters of tagged e's/gammas-->
@@ -67,7 +67,7 @@
   <parameter name="densityScaling" type="float">1 </parameter>
   <!--true: all electrons/photons in BCAL acceptance will be written to new collection-->
   <parameter name="detectAll" type="bool">false </parameter>
-  <!--Nominal Beam Energy (needed for LoI samples)-->
+  <!--Nominal Beam Energy (*not used*)-->
   <parameter name="eBeam" type="float">250 </parameter>
   <!--true: electrons/photons written to new collection with smeared energy (and momentum)-->
   <parameter name="smearEnergy" type="bool">true </parameter>
@@ -101,7 +101,7 @@
   <!--force keep of the named collections - overrules DropCollectionTypes (and DropCollectionNames)-->
   <!--parameter name="KeepCollectionNames" type="StringVec"> BCALClusters, BCALMCTruthLink, BCALParticles </parameter-->
   <!-- name of output file -->
-  <parameter name="LCIOOutputFile" type="string">E0500-TDR_ws.Paa_yyyy.Gwhizard-1.95.eW.pW.I37461.01-10_newmap.slcio</parameter>
+  <parameter name="LCIOOutputFile" type="string">output.slcio</parameter>
   <!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
   <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
   <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->

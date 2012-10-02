@@ -115,7 +115,7 @@ Bool_t BcEnergyDensity::GetEnergyDensity(const Int_t& rLayer,
    *pEnDens = mCellStorage.at(the_cell)->EnDens;
    *pEnDensError = mCellStorage.at(the_cell)->EnDensErr;
    
-   // skip all the interpolation junk for now (JL, 26.9.12)
+   // skip all the interpolation stuff for now (JL, 26.9.12)
    return true;
 
    const Int_t nsegs = 3;

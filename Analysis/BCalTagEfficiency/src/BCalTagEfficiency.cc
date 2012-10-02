@@ -558,7 +558,6 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             
               ReconstructedParticleImpl* particle = new ReconstructedParticleImpl;
               ClusterImpl* cluster = new ClusterImpl;
-              streamlog_out(DEBUG) << "HALLO !" << endl;
               bcalTruthRelNav.addRelation( particle , p , 1.0) ;
               //LCRelationImpl* MCrel  = new LCRelationImpl(particle,p,0.5);
               //MCrel->setFrom (particle);

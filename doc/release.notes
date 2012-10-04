@@ -4,6 +4,20 @@
 
 ===============================
 
+ --------
+| v01-05 |
+ --------
+
+   - BCalReco (A.Rosca)
+     - in BCalReco.h reduce memory use: #define MAXNENTR 80000	      
+     - introduced new variable EdepErr.
+     - small changes to read new variable, EdepErr, from the background map.
+     - fixed bug in SearchTowers().
+     - write also empty BCal collections
+
+   - BCalTagEfficiency (J.List)
+     - removed local copy of TDR background map, updated README and bcal_ild_05_v05.xml
+     - some minor clean-up of print statements, comments etc
 
  -----------
 | v01-04-02 |

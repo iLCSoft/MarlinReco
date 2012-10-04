@@ -871,7 +871,7 @@ void BCalReco::processEvent(LCEvent * evt){
   }
 */
   celule = new BCalReconstruction::CellType** [MAXLayers];
-  for (int i=1; i<MAXLayers; ++i) {
+  for (int i=0; i<MAXLayers; ++i) {
     celule[i]=new BCalReconstruction::CellType* [MAXRings];
     for (int j=0; j<MAXRings; ++j) {
       celule[i][j]=new BCalReconstruction::CellType [MAXPhis];
@@ -1028,8 +1028,8 @@ void BCalReco::processEvent(LCEvent * evt){
   evt->addCollection(BCALClusters, _BCALClustersName);
   evt->addCollection(BCALCol, _BCALcolName);
   
-  for (int i = 1; i < nLayers; ++i) {
-    for (int j = 0; j < nRings; ++j)
+  for (int i = 0; i < MAXLayers; ++i) {
+    for (int j = 0; j < MAXRings; ++j)
       delete [] celule[i][j];
     delete [] celule[i];
   }

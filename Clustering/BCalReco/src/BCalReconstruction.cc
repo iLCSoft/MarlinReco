@@ -30,7 +30,7 @@ void BCalReconstruction::Init(){
 
 
   BcCells = new BCalReconstruction::CellType** [maxlayers]; 
-  for (int i=1; i<maxlayers; ++i) {
+  for (int i=0; i<maxlayers; ++i) {
     BcCells[i]=new BCalReconstruction::CellType* [maxrings];
     for (int j=0; j<maxrings; ++j) {
       BcCells[i][j]=new BCalReconstruction::CellType [maxphis];
@@ -102,15 +102,23 @@ BCalReconstruction::RecCorr BCalReconstruction::GetReconstrCoordinates(int numbe
   double RenFW[maxrings][maxphis];
   double RenBW[maxrings][maxphis];
 
-  vector<vector<int> > nRinFW = getVector(maxrings,maxphis);
-  vector<vector<int> > nRinBW = getVector(maxrings,maxphis);
+
+  std::vector<std::vector<int> > nRinFW;
+  nRinFW.resize(maxrings);
+  for (int i = 0; i < maxrings; i++) nRinFW.at(i).resize(maxphis,0);
+
+  std::vector<std::vector<int> > nRinBW;
+  nRinBW.resize(maxrings);
+  for(int i = 0; i < maxrings; i++) nRinBW.at(i).resize(maxphis,0);
+
+
 
   //nulls in arays
-  for(int r=0; r<the_Rings; r++){
-    for(int p=0; p<the_Phis[r]; p++){
+  for(int r=0; r<maxrings; r++){
+    for(int p=0; p<maxphis; p++){
       RenFW[r][p]=0.;
       RenBW[r][p]=0.;
-      for(int l=1; l<the_Layers; l++){  
+      for(int l=0; l<maxlayers; l++){  
 	RingFW[r][p][l]=0;
 	RingBW[r][p][l]=0;
       }
@@ -294,12 +302,20 @@ for(int r = 0; r < the_Rings; r++) {
           
   int Stack[100][2];
 
-  vector<vector<int> > myVectorRin = getVector(maxrings,maxphis);
+  std::vector<std::vector<int> > myVectorRin;
+  myVectorRin.resize(maxrings);
+  for (int i = 0; i < maxrings; i++) myVectorRin.at(i).resize(maxphis,0);
 
   for(int t=0; t<100; t++){
     Stack[t][0]=0;
     Stack[t][1]=0;
   }
+  
+for(int r=0; r<maxrings; r++){
+     for(int p=0; p<maxphis; p++){
+       myVectorRin[r][p] = 0;
+     }
+}
 
 
   //------towers searching!------start-----------
@@ -400,7 +416,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
 
   // streamlog_out(DEBUG2) << "Check clu " << clu.size() << std::endl;
 
-
+/*
   nBcCells = new BCalReconstruction::CellType** [the_Layers];
   for (int i=1; i<the_Layers; ++i) {
     nBcCells[i]=new BCalReconstruction::CellType* [the_Rings];
@@ -411,6 +427,49 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
       }
     }
   }
+*/
+  nBcCells = new BCalReconstruction::CellType** [maxlayers];
+  for (int i=0; i<maxlayers; ++i) {
+    nBcCells[i]=new BCalReconstruction::CellType* [maxrings];
+    for (int j=0; j<maxrings; ++j) {
+      nBcCells[i][j]=new BCalReconstruction::CellType [maxphis];
+      for (int k=0; k<maxphis; ++k){
+	nBcCells[i][j][k].sRin=0.;
+	nBcCells[i][j][k].sRout=0.;
+	nBcCells[i][j][k].sZstart=0.;
+	nBcCells[i][j][k].sZend=0.;
+	nBcCells[i][j][k].sEdepNeg=0.;
+	nBcCells[i][j][k].sEdepPos=0.;
+	nBcCells[i][j][k].sSphi=0.;
+	nBcCells[i][j][k].sSphi=0.;
+	nBcCells[i][j][k].sDphi=0.;
+	nBcCells[i][j][k].sPos[0]=i;
+	nBcCells[i][j][k].sPos[1]=j;   
+	nBcCells[i][j][k].sPos[2]=k;
+      }
+    }
+  }	
+
+  for (int i=1; i<the_Layers; ++i) {
+    for (int j=0; j<the_Rings; ++j) {
+      for (int k=0; k<the_Phis[j]; ++k){
+		
+	nBcCells[i][j][k].sRin = info_detector[i][j][k].sRin;
+	nBcCells[i][j][k].sRout = info_detector[i][j][k].sRout;
+	nBcCells[i][j][k].sZstart = info_detector[i][j][k].sZstart;
+	nBcCells[i][j][k].sZend = info_detector[i][j][k].sZend;
+	nBcCells[i][j][k].sEdepNeg = info_detector[i][j][k].sEdepNeg;
+	nBcCells[i][j][k].sEdepPos = info_detector[i][j][k].sEdepPos;
+	nBcCells[i][j][k].sSphi = info_detector[i][j][k].sSphi;
+	nBcCells[i][j][k].sDphi = info_detector[i][j][k].sDphi;
+	nBcCells[i][j][k].sPos[0] = info_detector[i][j][k].sPos[0];
+	nBcCells[i][j][k].sPos[1] = info_detector[i][j][k].sPos[1];
+	nBcCells[i][j][k].sPos[2] = info_detector[i][j][k].sPos[2];
+	
+      }
+    }
+  }      
+
 
 
   std::vector<std::vector<int> > Rinput;
@@ -773,8 +832,8 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersFW(BCalReconstruct
 
   allInput.clear(); 
 
-  for (int i = 1; i < the_Layers; ++i) {
-    for (int j = 0; j < the_Rings; ++j)
+  for (int i = 0; i < maxlayers; ++i) {
+    for (int j = 0; j < maxrings; ++j)
       delete [] nBcCells[i][j];
    
     delete [] nBcCells[i];
@@ -807,7 +866,7 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
   //streamlog_out(DEBUG2) << "Check clu " << clu.size() << std::endl;
 
 
-
+/*
   nBcCells = new BCalReconstruction::CellType** [the_Layers];
   for (int i=1; i<the_Layers; ++i) {
     nBcCells[i]=new BCalReconstruction::CellType* [the_Rings];
@@ -818,6 +877,51 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
       }
     }
   }
+*/
+
+  nBcCells = new BCalReconstruction::CellType** [maxlayers];
+  for (int i=0; i<maxlayers; ++i) {
+    nBcCells[i]=new BCalReconstruction::CellType* [maxrings];
+    for (int j=0; j<maxrings; ++j) {
+      nBcCells[i][j]=new BCalReconstruction::CellType [maxphis];
+      for (int k=0; k<maxphis; ++k){
+	nBcCells[i][j][k].sRin=0.;
+	nBcCells[i][j][k].sRout=0.;
+	nBcCells[i][j][k].sZstart=0.;
+	nBcCells[i][j][k].sZend=0.;
+	nBcCells[i][j][k].sEdepNeg=0.;
+	nBcCells[i][j][k].sEdepPos=0.;
+	nBcCells[i][j][k].sSphi=0.;
+	nBcCells[i][j][k].sSphi=0.;
+	nBcCells[i][j][k].sDphi=0.;
+	nBcCells[i][j][k].sPos[0]=i;
+	nBcCells[i][j][k].sPos[1]=j;   
+	nBcCells[i][j][k].sPos[2]=k;
+      }
+    }
+  }	
+
+  for (int i=1; i<the_Layers; ++i) {
+    for (int j=0; j<the_Rings; ++j) {
+      for (int k=0; k<the_Phis[j]; ++k){
+		
+	nBcCells[i][j][k].sRin = info_detector[i][j][k].sRin;
+	nBcCells[i][j][k].sRout = info_detector[i][j][k].sRout;
+	nBcCells[i][j][k].sZstart = info_detector[i][j][k].sZstart;
+	nBcCells[i][j][k].sZend = info_detector[i][j][k].sZend;
+	nBcCells[i][j][k].sEdepNeg = info_detector[i][j][k].sEdepNeg;
+	nBcCells[i][j][k].sEdepPos = info_detector[i][j][k].sEdepPos;
+	nBcCells[i][j][k].sSphi = info_detector[i][j][k].sSphi;
+	nBcCells[i][j][k].sDphi = info_detector[i][j][k].sDphi;
+	nBcCells[i][j][k].sPos[0] = info_detector[i][j][k].sPos[0];
+	nBcCells[i][j][k].sPos[1] = info_detector[i][j][k].sPos[1];
+	nBcCells[i][j][k].sPos[2] = info_detector[i][j][k].sPos[2];
+	
+      }
+    }
+  }      
+
+
 
 
   std::vector<std::vector<int> > Rinput;
@@ -1115,44 +1219,44 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
 
 
   if(
-     (CluPos == 0 && CluPhi >= 24) ||
-     (CluPos == 1 && CluPhi >= 24) ||
-     (CluPos == 2 && CluPhi >= 32) ||
-     (CluPos == 3 && CluPhi >= 40) ||
-     (CluPos == 4 && CluPhi >= 40) ||
-     (CluPos == 5 && CluPhi >= 48) ||
-     (CluPos == 6 && CluPhi >= 56) ||
-     (CluPos == 7 && CluPhi >= 72) ||
-     (CluPos == 8 && CluPhi >= 72) ||
-     (CluPos == 9 && CluPhi >= 81) ||
-     (CluPos == 10 && CluPhi >= 90) ||
-     (CluPos == 11 && CluPhi >= 90) ||
-     (CluPos == 12 && CluPhi >= 99) ||
-     (CluPos == 13 && CluPhi >= 108) ||
-     (CluPos == 14 && CluPhi >= 108) ||
-     (CluPos == 15 && CluPhi >= 117) ||
-     (CluPos == 16 && CluPhi >= 125))
+     ((int) CluPos == 0 && CluPhi >= 24) ||
+     ((int) CluPos == 1 && CluPhi >= 24) ||
+     ((int) CluPos == 2 && CluPhi >= 32) ||
+     ((int) CluPos == 3 && CluPhi >= 40) ||
+     ((int) CluPos == 4 && CluPhi >= 40) ||
+     ((int) CluPos == 5 && CluPhi >= 48) ||
+     ((int) CluPos == 6 && CluPhi >= 56) ||
+     ((int) CluPos == 7 && CluPhi >= 72) ||
+     ((int) CluPos == 8 && CluPhi >= 72) ||
+     ((int) CluPos == 9 && CluPhi >= 81) ||
+     ((int) CluPos == 10 && CluPhi >= 90) ||
+     ((int) CluPos == 11 && CluPhi >= 90) ||
+     ((int) CluPos == 12 && CluPhi >= 99) ||
+     ((int) CluPos == 13 && CluPhi >= 108) ||
+     ((int) CluPos == 14 && CluPhi >= 108) ||
+     ((int) CluPos == 15 && CluPhi >= 117) ||
+     ((int) CluPos == 16 && CluPhi >= 125))
     streamlog_out(DEBUG2) << "Attention!!" << " " << "Rad = "<<CluPos << "; Phi = " << CluPhi << std::endl;
 
   if(MaxCluSize >=2 &&
      (
-      (CluPos == 0 && CluPhi < 24) ||
-      (CluPos == 1 && CluPhi < 24) ||
-      (CluPos == 2 && CluPhi < 32) ||
-      (CluPos == 3 && CluPhi < 40) ||
-      (CluPos == 4 && CluPhi < 40) ||
-      (CluPos == 5 && CluPhi < 48) ||
-      (CluPos == 6 && CluPhi < 56) ||
-      (CluPos == 7 && CluPhi < 72) ||
-      (CluPos == 8 && CluPhi < 72) ||
-      (CluPos == 9 && CluPhi < 81) ||
-      (CluPos == 10 && CluPhi < 90) ||
-      (CluPos == 11 && CluPhi < 90) ||
-      (CluPos == 12 && CluPhi < 99) ||
-      (CluPos == 13 && CluPhi < 108) ||
-      (CluPos == 14 && CluPhi < 108) ||
-      (CluPos == 15 && CluPhi < 117) ||
-      (CluPos == 16 && CluPhi < 125))
+      ((int) CluPos == 0 && CluPhi < 24) ||
+      ((int) CluPos == 1 && CluPhi < 24) ||
+      ((int) CluPos == 2 && CluPhi < 32) ||
+      ((int) CluPos == 3 && CluPhi < 40) ||
+      ((int) CluPos == 4 && CluPhi < 40) ||
+      ((int) CluPos == 5 && CluPhi < 48) ||
+      ((int) CluPos == 6 && CluPhi < 56) ||
+      ((int) CluPos == 7 && CluPhi < 72) ||
+      ((int) CluPos == 8 && CluPhi < 72) ||
+      ((int) CluPos == 9 && CluPhi < 81) ||
+      ((int) CluPos == 10 && CluPhi < 90) ||
+      ((int) CluPos == 11 && CluPhi < 90) ||
+      ((int) CluPos == 12 && CluPhi < 99) ||
+      ((int) CluPos == 13 && CluPhi < 108) ||
+      ((int) CluPos == 14 && CluPhi < 108) ||
+      ((int) CluPos == 15 && CluPhi < 117) ||
+      ((int) CluPos == 16 && CluPhi < 125))
      ){
     //   streamlog_out(DEBUG2) <<"En="<< MaxEn_cluster<<"; Rad="<<CluPos << "; Phi=" << CluPhi << std::endl;
     reconstructed_object.RecEne[1] = GetEnergyCalib(MaxEn_cluster);
@@ -1176,9 +1280,13 @@ BCalReconstruction::RecCorr BCalReconstruction::SearchClustersBW(BCalReconstruct
     reconstructed_object.CoordZ[1] = 0.;
     reconstructed_object.side[1] = 0;
   }
- 
-  for (int i = 1; i < the_Layers; ++i) {
-    for (int j = 0; j < the_Rings; ++j)  
+  
+
+  allInput.clear(); 
+
+
+  for (int i = 0; i < maxlayers; ++i) {
+    for (int j = 0; j < maxrings; ++j)  
       delete [] nBcCells[i][j];
                 
     delete [] nBcCells[i];
@@ -1418,16 +1526,6 @@ void BCalReconstruction::Print(BCalReconstruction::RecCorr obj){
     streamlog_out(DEBUG2) << "BW BeamCal " <<obj.RecEne[1]  << " * " << obj.ErrEne[1] <<" * " << obj.CoordX[1]  << " * " <<obj.CoordY[1] <<" * " << obj.CoordZ[1] <<endl;
 }
 
-vector<vector<int> > BCalReconstruction::getVector(int rows, int cols){
-
-  vector<vector<int> > retValue(rows);
-  vector<vector<int> >::iterator i;
-  for(i = retValue.begin(); i != retValue.end(); ++i) {
-    i->resize(cols);
-  }
-   
-  return retValue;
-}
 
 void BCalReconstruction::Free2DArray(int **p2DArray){
 

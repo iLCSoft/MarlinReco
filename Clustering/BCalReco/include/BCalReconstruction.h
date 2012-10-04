@@ -92,7 +92,6 @@ private:
   double GetCoordY(double ring, double pad);
   double GetCoordRotZ(double ring, double pad, float IP, float angle);
   double GetEnergyErr(double ring, double pad);
-  vector<vector<int> > getVector(int rows, int cols);
   void Free2DArray(int **p2DArray);
   void Free3DArray(CellType ***p3DArray);
 };

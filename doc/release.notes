@@ -14,6 +14,7 @@
      - small changes to read new variable, EdepErr, from the background map.
      - fixed bug in SearchTowers().
      - write also empty BCal collections
+     - fixed several programming flaws/reimplemented parts of code
 
    - BCalTagEfficiency (J.List)
      - removed local copy of TDR background map, updated README and bcal_ild_05_v05.xml

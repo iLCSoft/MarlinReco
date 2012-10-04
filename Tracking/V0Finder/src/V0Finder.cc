@@ -262,8 +262,7 @@ void V0Finder::processEvent( LCEvent * evt ) {
               energy2 = sqrt(pp2*pp2+MASSPion*MASSPion);
             }
             energyV0 = energy1 + energy2;
-            float massL0bar = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-moment\
-um[1]*momentum[1]-momentum[2]*momentum[2]);
+            float massL0bar = sqrt(energyV0*energyV0-momentum[0]*momentum[0]-momentum[1]*momentum[1]-momentum[2]*momentum[2]);
 
 
 

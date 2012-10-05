@@ -2,6 +2,7 @@
 
 #include "TPCDigiProcessor.h"
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <map>
 #include <cmath>
@@ -395,8 +396,14 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   _tpcHitMap.clear();
   _tpcRowHits.clear();
   
+  // fg: make sure we have one message in the log file with run and event number for the DBD production ....
+  streamlog_out(MESSAGE) << "  =========  processing event " 
+                         << std::setw(9) << evt->getEventNumber() << " run " 
+                         << std::setw(9) << evt->getRunNumber() 
+                         << "  ========= " << endl;
+
+
   if(firstEvent==true) {
-    streamlog_out(MESSAGE) << "TPCDigiProcessor called for first event" << endl;
     if (! _use_raw_hits_to_store_simhit_pointer ) {
 
       streamlog_out( DEBUG4 ) << "The relations to SimTrackerHits are now stored in relation collection " << _outRelColName << "\n SimTrackerHits are no longer stored in RawTrackerHits. Enable this deprecated feature by setting UseRawHitsToStoreSimhitPointer to true in steering file." << std::endl;

@@ -106,7 +106,7 @@ protected:
   
   int _energyDigitization;
   int _randomNoise;
-  float _pixelSize;
+  FloatVec _PixelSizeVec;
   float _pixelheight;
   float _pointResoRPhi;
   float _pointResoZ;

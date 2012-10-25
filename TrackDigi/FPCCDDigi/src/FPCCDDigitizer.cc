@@ -76,7 +76,7 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                               bool(true)); 
 
   FloatVec PixelSizeVec;
-for(int i=0;i<6;i++){PixelSizeVec.push_back(0.005);}
+  for(int i=0;i<6;i++){PixelSizeVec.push_back(0.005);}
   
   registerProcessorParameter( "Each_FPCCD_pixelSize(mm)",
                               "Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)",

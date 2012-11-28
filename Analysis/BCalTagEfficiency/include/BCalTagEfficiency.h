@@ -77,11 +77,12 @@ class BCalTagEfficiency : public Processor {
 
   /** Input collection name.
    */
-  std::string _colName ;
-  std::string _BCALcolName ;
-  std::string _particle;
-  std::string _BCALMCTruthLinkName;
-  std::string _BCALClustersName;
+  std::string _MCParticleName ;
+  std::string _BCALInputTruthLinkName;
+  std::string _BCALEffiMCTruthLinkName;
+  std::string _BCALClusterName;
+  std::string _BCALParticleName ;
+
 
   int _nRun ;
   int _nEvt ;
@@ -123,6 +124,7 @@ class BCalTagEfficiency : public Processor {
   bool detectAll;
   bool smearEnergy;
   bool writeSGVMap;
+  bool useInputClusters;
   
   // background handler
   BcEnergyDensity *bc_en;

@@ -1,0 +1,150 @@
+<marlin>
+
+<execute>
+<processor name="MyFastJetProcessor" />
+<processor name="MyIsolatedLeptonFinderProcessor" />
+</execute>
+
+<global>
+<parameter name="LCIOInputFiles">
+%%INPUT%%
+</parameter>
+<parameter name="MaxRecordNumber" value="%%EVT_PER_JOB%%" />
+<parameter name="SkipNEvents" value="%%NSKIP%%" />  
+<parameter name="SupressCheck" value="false" />  
+<parameter name="GearXMLFile"> ILD_o1_v05.xml </parameter>  
+<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter> 
+</global>
+
+
+<processor name="MyFastJetProcessor" type="FastJetProcessor">
+<parameter name="algorithm" type="StringVec">ee_kt_algorithm </parameter>
+<parameter name="clusteringMode" type="StringVec"> ExclusiveNJets 6 </parameter>
+<parameter name="recombinationScheme" type="string">E_scheme </parameter>
+<parameter name="recParticleIn" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+<parameter name="jetOut" type="string" lcioOutType="ReconstructedParticle">JetsForIsolep </parameter>
+</processor>
+
+<processor name="MyIsolatedLeptonFinderProcessor" type="IsolatedLeptonFinderProcessor2">
+<!--Isolated Lepton Finder Processor-->
+
+<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+<!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+
+<!---------------------------------->
+<!-- Input and output collections -->
+<!---------------------------------->
+
+<!--Input collection of ReconstructedParticles-->
+<parameter name="InputCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+<!--Output collection of isolated leptons-->
+<parameter name="OutputCollectionIsolatedLeptons" type="string" lcioOutType="ReconstructedParticle">Isolep </parameter>
+<!--Copy of input collection but without the isolated leptons-->
+<parameter name="OutputCollectionWithoutIsolatedLepton" type="string" lcioOutType="ReconstructedParticle">PFOsAfterIso </parameter>
+
+<!---------------------------->
+<!-- Isolation requirements -->
+<!---------------------------->
+
+<!--Cosine of the half-angle of the cone used in isolation criteria-->
+<parameter name="CosConeAngle" type="float">0.98 </parameter>
+
+<!--Use rectangular cuts on track and cone energy-->
+<parameter name="UseRectangularIsolation" type="bool">false </parameter>
+
+<!--Minimum cone energy for isolation requirement-->
+<parameter name="IsolationMinimumConeEnergy" type="float">0 </parameter>
+<!--Maximum cone energy for isolation requirement-->
+<parameter name="IsolationMaximumConeEnergy" type="float">1e+20 </parameter>
+
+<!--Minimum track energy for isolation requirement-->
+<parameter name="IsolationMinimumTrackEnergy" type="float">15 </parameter>
+<!--Maximum track energy for isolation requirement-->
+<parameter name="IsolationMaximumTrackEnergy" type="float">1e+20 </parameter>
+
+<!--Use polynomial cuts on track and cone energy-->
+<parameter name="UsePolynomialIsolation" type="bool">false </parameter>
+
+<!--Polynomial cut (A) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+<parameter name="IsolationPolynomialCutA" type="float">0 </parameter>
+<!--Polynomial cut (B) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+<parameter name="IsolationPolynomialCutB" type="float">20 </parameter>
+<!--Polynomial cut (C) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+<parameter name="IsolationPolynomialCutC" type="float">-300 </parameter>
+
+<!--Use jet-based isolation-->
+<parameter name="UseJetIsolation" type="bool">true </parameter>
+<parameter name="JetCollection" type="string">JetsForIsolep </parameter>
+<parameter name="JetIsolationVetoMinimumXt" type="float">0.</parameter>
+<parameter name="JetIsolationVetoMaximumXt" type="float">0.25</parameter>
+<parameter name="JetIsolationVetoMinimumZ" type="float">0.</parameter>
+<parameter name="JetIsolationVetoMaximumZ" type="float">0.6</parameter>
+
+<!---------------------->
+<!-- PID requirements -->
+<!---------------------->
+
+<!--Use primitive particle ID based on calorimeter energy deposits-->
+<parameter name="UsePID" type="bool">true </parameter>
+
+<!--Electron ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+<parameter name="ElectronMinEcalToHcalFraction" type="float">0.9 </parameter>
+<!--Electron ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+<parameter name="ElectronMaxEcalToHcalFraction" type="float">1 </parameter>
+<!--Electron ID: Minimum energy deposit divided by momentum-->
+<parameter name="ElectronMinEnergyDepositByMomentum" type="float">0.7 </parameter>
+<!--Electron ID: Maximum energy deposit divided by momentum-->
+<parameter name="ElectronMaxEnergyDepositByMomentum" type="float">1.4 </parameter>
+
+<!--Muon ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+<parameter name="MuonMinEcalToHcalFraction" type="float">0 </parameter>
+<!--Muon ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+<parameter name="MuonMaxEcalToHcalFraction" type="float">0.4 </parameter>
+<!--Muon ID: Minimum energy deposit divided by momentum-->
+<parameter name="MuonMinEnergyDepositByMomentum" type="float">0 </parameter>
+<!--Muon ID: Maximum energy deposit divided by momentum-->
+<parameter name="MuonMaxEnergyDepositByMomentum" type="float">0.3 </parameter>
+
+<!----------------------------------->
+<!-- Impact parameter requirements -->
+<!----------------------------------->
+
+<!--Use impact parameter cuts for consistency with primary/secondary track-->
+<parameter name="UseImpactParameter" type="bool">false </parameter>
+
+<!--Minimum d0 impact parameter-->
+<parameter name="ImpactParameterMinD0" type="float">0 </parameter>
+<!--Maximum d0 impact parameter-->
+<parameter name="ImpactParameterMaxD0" type="float">1e+20 </parameter>
+
+<!--Minimum z0 impact parameter-->
+<parameter name="ImpactParameterMinZ0" type="float">0 </parameter>
+<!--Maximum z0 impact parameter-->
+<parameter name="ImpactParameterMaxZ0" type="float">1e+20 </parameter>
+
+<!--Minimum impact parameter in 3D-->
+<parameter name="ImpactParameterMin3D" type="float">0 </parameter>
+<!--Maximum impact parameter in 3D-->
+<parameter name="ImpactParameterMax3D" type="float">0.01 </parameter>
+
+<!--Use impact parameter cuts for consistency with primary/secondary track-->
+<parameter name="UseImpactParameterSignificance" type="bool">true </parameter>
+
+<!--Minimum d0 impact parameter-->
+<parameter name="ImpactParameterMinD0Significance" type="float">0 </parameter>
+<!--Maximum d0 impact parameter-->
+<parameter name="ImpactParameterMaxD0Significance" type="float">10 </parameter>
+
+<!--Minimum z0 impact parameter-->
+<parameter name="ImpactParameterMinZ0Significance" type="float">0 </parameter>
+<!--Maximum z0 impact parameter-->
+<parameter name="ImpactParameterMaxZ0Significance" type="float">3 </parameter>
+
+<!--Minimum impact parameter in 3D-->
+<parameter name="ImpactParameterMin3DSignificance" type="float">0 </parameter>
+<!--Maximum impact parameter in 3D-->
+<parameter name="ImpactParameterMax3DSignificance" type="float">1e+20 </parameter>
+
+</processor>
+
+</marlin>

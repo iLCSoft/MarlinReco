@@ -15,6 +15,7 @@
 
 #include <TMath.h>
 #include <TVector3.h>
+#include <TLorentzVector.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -131,6 +132,46 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_maxR0,
 				float(0.01));
 
+		registerProcessorParameter( "UseImpactParameterSignificance",
+				"Use impact parameter significance cuts for consistency with primary/secondary track",
+				_useImpactParameterSignificance,
+				bool(false));
+
+		registerProcessorParameter( "ImpactParameterMinD0Significance",
+				"Minimum d0 impact parameter significance",
+				_minD0Sig,
+				float(0.0));
+
+		registerProcessorParameter( "ImpactParameterMaxD0Significance",
+				"Maximum d0 impact parameter significance",
+				_maxD0Sig,
+				float(1e20));
+
+		registerProcessorParameter( "ImpactParameterMinZ0Significance",
+				"Minimum z0 impact parameter significance",
+				_minZ0Sig,
+				float(0.0));
+
+		registerProcessorParameter( "ImpactParameterMaxZ0Significance",
+				"Maximum z0 impact parameter significance",
+				_maxZ0Sig,
+				float(1e20));
+
+		registerProcessorParameter( "ImpactParameterMin3DSignificance",
+				"Minimum impact parameter significance in 3D",
+				_minR0Sig,
+				float(0.0));
+
+		registerProcessorParameter( "ImpactParameterMax3DSignificance",
+				"Maximum impact parameter significance in 3D",
+				_maxR0Sig,
+				float(1e20));
+
+		registerProcessorParameter( "UseRectangularIsolation",
+				"Use rectangular cuts on track and cone energy",
+				_useRectangularIsolation,
+				bool(true));
+
 		registerProcessorParameter( "IsolationMinimumTrackEnergy",
 				"Minimum track energy for isolation requirement",
 				_isoMinTrackEnergy,
@@ -170,6 +211,37 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				"Polynomial cut (C) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C",
 				_isoPolynomialC,
 				float(-300));
+
+		registerProcessorParameter( "UseJetIsolation",
+				"Use jet-based isolation",
+				_useJetIsolation,
+				bool(false));
+
+		registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+				"JetCollection" ,
+				"Input collection of jets for isolation",
+				_jetCollectionName,
+				std::string("JetsForIsolation"));
+
+		registerProcessorParameter( "JetIsolationVetoMinimumXt",
+				"Minimum Xt in jet-based isolation",
+				_jetIsoVetoMinXt,
+				float(0.));
+
+		registerProcessorParameter( "JetIsolationVetoMaximumXt",
+				"Maximum Xt in jet-based isolation",
+				_jetIsoVetoMaxXt,
+				float(0.25));
+
+		registerProcessorParameter( "JetIsolationVetoMinimumZ",
+				"Mininum Z in jet-based isolation",
+				_jetIsoVetoMinZ,
+				float(0.));
+
+		registerProcessorParameter( "JetIsolationVetoMaximumZ",
+				"Maximum Z in jet-based isolation",
+				_jetIsoVetoMaxZ,
+				float(0.6));
 	}
 
 
@@ -183,6 +255,8 @@ void IsolatedLeptonFinderProcessor::processRunHeader( LCRunHeader* run) {
 
 void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) { 
 
+	_rpJetMap.clear();
+
 	_pfoCol = evt->getCollection( _inputPFOsCollection ) ;
 
 	// Output PFOs removed isolated leptons 
@@ -192,6 +266,19 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	// Output PFOs of isolated leptons
 	LCCollectionVec* otIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
 	otIsoLepCol->setSubset(true);
+
+	// Prepare jet/recoparticle map for jet-based isolation
+	if (_useJetIsolation) {
+		LCCollection *colJet = evt->getCollection(_jetCollectionName);
+		int njet = colJet->getNumberOfElements();
+		for (int i=0; i<njet; ++i) {
+			ReconstructedParticle* jet = dynamic_cast<ReconstructedParticle*>( colJet->getElementAt(i) );
+			for (ReconstructedParticleVec::const_iterator iter = jet->getParticles().begin();
+					iter != jet->getParticles().end(); ++iter) {
+				_rpJetMap.insert( std::make_pair( *iter, jet ) );
+			}
+		}
+	}
 
 	// PFO loop
 	int npfo = _pfoCol->getNumberOfElements();
@@ -262,29 +349,65 @@ bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo
 	if ( _useImpactParameter && !PassesImpactParameterCuts(pfo) )
 		return false ;
 
-	if ( !IsIsolated(pfo) )
+	if ( _useImpactParameterSignificance && !PassesImpactParameterSignificanceCuts(pfo) )
+		return false ;
+
+	if ( _useRectangularIsolation && !IsIsolatedRectangular(pfo) )
+		return false;
+
+	if ( _usePolynomialIsolation && !IsIsolatedPolynomial(pfo) )
+		return false;
+
+	if ( _useJetIsolation && !IsIsolatedJet(pfo) )
 		return false;
 
 	return true;
 }
 
-bool IsolatedLeptonFinderProcessor::IsIsolated( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsIsolatedRectangular( ReconstructedParticle* pfo ) {
 	float E     = pfo->getEnergy() ;
 	float coneE = getConeEnergy( pfo );
 
-	// rectangular cuts
 	if (E < _isoMinTrackEnergy) return false;
 	if (E > _isoMaxTrackEnergy) return false;
 	if (coneE < _isoMinConeEnergy) return false;
 	if (coneE > _isoMaxConeEnergy) return false;
 
-	// polynomial cut
-	if ( _usePolynomialIsolation ) {
-		if ( coneE*coneE <= _isoPolynomialA*E*E + _isoPolynomialB*E + _isoPolynomialC )
-			return true ;
+	return true;
+}
+
+bool IsolatedLeptonFinderProcessor::IsIsolatedPolynomial( ReconstructedParticle* pfo ) {
+	float E     = pfo->getEnergy() ;
+	float coneE = getConeEnergy( pfo );
+
+	if ( coneE*coneE <= _isoPolynomialA*E*E + _isoPolynomialB*E + _isoPolynomialC )
+		return true ;
+	return false;
+}
+
+bool IsolatedLeptonFinderProcessor::IsIsolatedJet( ReconstructedParticle* pfo ) {
+	// jet-based isolated lepton (LAL algorithm)
+
+	if ( _rpJetMap.find( pfo ) == _rpJetMap.end() ) {
+		// this is often the case when jet finding fails e.g. due to too few particles in event
 		return false;
 	}
 
+	ReconstructedParticle* jet = _rpJetMap[pfo];
+	TVector3 vec1( pfo->getMomentum() );
+	TVector3 jetmom( jet->getMomentum() );
+	TLorentzVector jetmom4( jet->getMomentum(), jet->getEnergy() );
+
+	float jetxt = vec1.Pt( jetmom )/jetmom4.M();
+	float jetz = pfo->getEnergy()/jet->getEnergy();
+
+	if (jetxt >= _jetIsoVetoMinXt && jetxt < _jetIsoVetoMaxXt
+			&& jetz >= _jetIsoVetoMinZ && jetz < _jetIsoVetoMaxZ) {
+		//printf("xt=%f z=%f (not pass)\n",jetxt,jetz);
+		return false;
+	}
+
+	//printf("xt=%f z=%f (PASS)\n",jetxt,jetz);
 	return true;
 }
 
@@ -304,6 +427,31 @@ bool IsolatedLeptonFinderProcessor::PassesImpactParameterCuts( ReconstructedPart
 	if ( z0 > _maxZ0 ) return false;
 	if ( r0 < _minR0 ) return false;
 	if ( r0 > _maxR0 ) return false;
+
+	return true;
+}
+
+bool IsolatedLeptonFinderProcessor::PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) {
+	const EVENT::TrackVec & trkvec = pfo->getTracks();
+
+	if (trkvec.size()==0) return false;
+
+	// TODO: more sophisticated pfo/track matching
+	float d0 = fabs(trkvec[0]->getD0());
+	float z0 = fabs(trkvec[0]->getZ0());
+	float d0err = sqrt(trkvec[0]->getCovMatrix()[0]);
+	float z0err = sqrt(trkvec[0]->getCovMatrix()[9]);
+
+	float d0sig = d0err != 0 ? d0/d0err : 0;
+	float z0sig = z0err != 0 ? z0/z0err : 0;
+	float r0sig = sqrt( d0sig*d0sig + z0sig*z0sig );
+
+	if ( d0sig < _minD0Sig ) return false;
+	if ( d0sig > _maxD0Sig ) return false;
+	if ( z0sig < _minZ0Sig ) return false;
+	if ( z0sig > _maxZ0Sig ) return false;
+	if ( r0sig < _minR0Sig ) return false;
+	if ( r0sig > _maxR0Sig ) return false;
 
 	return true;
 }

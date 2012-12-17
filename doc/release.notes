@@ -4,6 +4,23 @@
 
 ===============================
 
+
+ --------
+| v01-06 |
+ --------
+   - updated IsolatedLeptonfinder (T.Tanabe)
+     - LAL Lepton Finder included in IsolatedLeptonFinderProcessor
+
+   - updated BCalTagEfficiency (J.List)
+     - new option in BCalTagEfficiency: allows topick correct MCParticles from BCALMCTruthLink collection written by SGV
+
+  - updated FPCCDClustering (D.Kamai)
+     -  t.mori enable to difine pixel size for each layer.
+
+
+  - fixed memory leak in BCalReco - fix provided by D.Jeans 
+      - (loop variable in BCalReconstruction::Free3DArray )
+
  --------
 | v01-05 |
  --------

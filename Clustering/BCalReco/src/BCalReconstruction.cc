@@ -1537,7 +1537,7 @@ void BCalReconstruction::Free2DArray(int **p2DArray){
 
 void BCalReconstruction::Free3DArray(BCalReconstruction::CellType ***p3DArray){ 
 
-  for (int i = 2; i < maxlayers; ++i) {
+  for (int i = 0; i < maxlayers; ++i) {
     for (int j = 0; j < maxrings; ++j)
       delete [] p3DArray[i][j];
 

@@ -471,6 +471,7 @@ void NewLDCCaloDigi::fillECALGaps( ) {
 
   for (int is=0; is < MAX_STAVES; ++is) {
     for (int il=0; il < MAX_LAYERS; ++il) {
+
       if(_calHitsByStaveLayer[is][il].size()>1){
 	// compare all pairs of hits just once (j>i)
 
@@ -544,24 +545,44 @@ void NewLDCCaloDigi::fillECALGaps( ) {
 	      bool ygap = false;
 	      bool xygap = false;
 	      // criteria gaps in the z and t direction
-	      float xmin = 1.0*_endcapPixelSizeX[il]+slop;
-	      float xminm = 1.0*_endcapPixelSizeX[il]-slop;
-	      float xmax = 2.0*_endcapPixelSizeX[il]-slop;
-	      float ymin = 1.0*_endcapPixelSizeY[il]+slop;
-	      float yminm = 1.0*_endcapPixelSizeY[il]-slop;
-	      float ymax = 2.0*_endcapPixelSizeY[il]-slop;
+
+	      // x and y need to be swapped in different staves of endcap.
+	      float pixsizex, pixsizey;
+	      if ( is%2 == 1 ) {
+		pixsizex = _endcapPixelSizeY[il];
+		pixsizey = _endcapPixelSizeX[il];
+	      } else {
+		pixsizex = _endcapPixelSizeX[il];
+		pixsizey = _endcapPixelSizeY[il];
+	      }
+
+	      float xmin = 1.0*pixsizex+slop;
+	      float xminm = 1.0*pixsizex-slop;
+	      float xmax = 2.0*pixsizex-slop;
+	      float ymin = 1.0*pixsizey+slop;
+	      float yminm = 1.0*pixsizey-slop;
+	      float ymax = 2.0*pixsizey-slop;
 	      // look for gaps
 	      if(dx > xmin && dx < xmax && dy < yminm )xgap = true;
 	      if(dx < xminm && dy > ymin && dy < ymax )ygap = true;
 	      if(dx > xmin && dx < xmax && dy > ymin && dy < ymax )xygap=true;
 	    
 	      if(xgap||ygap||xygap){
+
+		// cout <<"NewLDCCaloDigi found endcap gap, adjusting energy! " << xgap << " " << ygap << " " << xygap << " , " << il << endl;
+		// cout << "stave " << is <<  " layer " << il << endl;
+		// cout << "  dx, dy " << dx<< " " << dy << " , sizes = " << pixsizex << " " << pixsizey << endl;
+		// cout << " xmin... " << xmin << " " << xminm << " " << xmax << " ymin... " << ymin << " " << yminm << " " << ymax << endl;
+
 		// found a gap make correction
 		float ecor = 1.;
 		float f = _ecalGapCorrectionFactor; // fudge
-		if(xgap)ecor = 1.+f*(dx - _endcapPixelSizeX[il])/2./_endcapPixelSizeX[il];
-		if(ygap)ecor = 1.+f*(dy - _endcapPixelSizeY[il])/2./_endcapPixelSizeY[il];
-		if(xygap)ecor= 1.+f*(dx - _endcapPixelSizeX[il])*(dy - _endcapPixelSizeY[il])/4./_endcapPixelSizeX[il]/_endcapPixelSizeY[il];     
+		if(xgap)ecor = 1.+f*(dx - pixsizex)/2./pixsizex;
+		if(ygap)ecor = 1.+f*(dy - pixsizey)/2./pixsizey;
+		if(xygap)ecor= 1.+f*(dx - pixsizex)*(dy - pixsizey)/4./pixsizex/pixsizey;     
+
+		// cout << "correction factor = " << ecor << endl;
+
 		hiti->setEnergy( hiti->getEnergy()*ecor );
 		hitj->setEnergy( hitj->getEnergy()*ecor );
 	      }

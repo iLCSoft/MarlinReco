@@ -340,13 +340,13 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
   LCCollection* col = 0;
   // read MCParticles and track to BeamCal
   if (!useInputClusters) {
-    streamlog_out(MESSAGE) << "Using MCParticle collection!" << std::endl;
+    streamlog_out(DEBUG) << "Using MCParticle collection!" << std::endl;
     col = evt->getCollection( _MCParticleName ) ;
     if (!col) streamlog_out(ERROR) << "MCParticle collection not found!!!" << std::endl;
   }
   // loop over BCalParticles, find corresponding MCParticle, track to BeamCal
   else {
-    streamlog_out(MESSAGE) << "Using BCALTruthLink collection!" << std::endl;
+    streamlog_out(DEBUG) << "Using BCALTruthLink collection!" << std::endl;
     col = evt->getCollection( _BCALInputTruthLinkName ) ;
     if (!col) streamlog_out(ERROR) << "TruthLinker not found!!!" << std::endl;
   }
@@ -550,13 +550,23 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
 
         efficiency[mcp] = 0;
 
-        if ( ebkg[mcp] > 0 ) {  // if == 0, then particle not in BCAL acceptance!
+        if ( ebkg[mcp] <= 0 && useInputClusters) {  // if == 0, then particle not in BCAL acceptance!
+          
+          streamlog_out(DEBUG) << "Particle made SGV cluster,  but ebkg[mcp] = " << ebkg[mcp] 
+                               << ", so not in map: radius[mcp] = " << radius[mcp] 
+                               << ", phi[mcp] = " <<  phi[mcp]*180/3.1415 << std::endl;
+        }                        
+         
+        else if ( ebkg[mcp] > 0 ) {  // if == 0, then particle not in BCAL acceptance!
         
           float p0, p1, p2;
         
           //energy[mcp] = sqrt(pow(pout[0],2)+pow(pout[1],2)+pow(pout[2],2));
 
-          if (ebkg[mcp]>=0 && ebkg[mcp]<35 && energy[mcp]>45 && energy[mcp]<255) {
+          if (ebkg[mcp]>=0 && ebkg[mcp]<35 && energy[mcp]>45 && energy[mcp]<345) {
+            if (energy[mcp]>255) {
+              streamlog_out(WARNING) << "not in original range of parametrisation , energy = " << energy[mcp] << std::endl;
+            }
 
             p0 = -3.2754e-2 + 8.62e-4*energy[mcp] -2.4424e-6*energy[mcp]*energy[mcp];
             p1 = -8.936e-3 + 6.05e-4*energy[mcp] -1.719e-6*energy[mcp]*energy[mcp];
@@ -568,9 +578,12 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             if (efficiency[mcp] < 0.) efficiency[mcp] = 0.;
         
           }
+          else if (ebkg[mcp]>=0 && ebkg[mcp]<35 && energy[mcp]>45 && energy[mcp]<550) {
+            efficiency[mcp] = 1.;        
+          }
           else {
         
-            streamlog_out(MESSAGE2) << "not in valid range of parametrisation , ebkg = "  
+            streamlog_out(ERROR) << "not in valid range of parametrisation , ebkg = "  
                                  << ebkg[mcp] << ", energy = " << energy[mcp] << std::endl;
         
           }
@@ -674,19 +687,19 @@ void BCalTagEfficiency::processEvent( LCEvent * evt ) {
             ePrime[mcp] = particle->getEnergy();
     
 
-            streamlog_out(MESSAGE1) << "Detected particle with ID " << pdg[mcp] << endl;
-            streamlog_out(MESSAGE1) << "Energy before smearing = " << energy[mcp] << endl;
-            streamlog_out(MESSAGE1) << "Energy after smearing = " << ePrime[mcp] << endl;
-            streamlog_out(MESSAGE1) << "Efficiency= " << efficiency[mcp] << endl;
-            streamlog_out(MESSAGE1) << "E background= " << ebkg[mcp] << endl;
-            streamlog_out(MESSAGE1) << "+++++++++++++++++++" << endl;
+            streamlog_out(DEBUG) << "Detected particle with ID " << pdg[mcp] << endl;
+            streamlog_out(DEBUG) << "Energy before smearing = " << energy[mcp] << endl;
+            streamlog_out(DEBUG) << "Energy after smearing = " << ePrime[mcp] << endl;
+            streamlog_out(DEBUG) << "Efficiency= " << efficiency[mcp] << endl;
+            streamlog_out(DEBUG) << "E background= " << ebkg[mcp] << endl;
+            streamlog_out(DEBUG) << "+++++++++++++++++++" << endl;
  
           }
      
           mcp++;
           
           if (writeTree) {
-            streamlog_out(MESSAGE1) << "filling tree, mcp = " << mcp << endl;
+            streamlog_out(DEBUG) << "filling tree, mcp = " << mcp << endl;
             tree->Fill();
           }  
 

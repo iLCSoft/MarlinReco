@@ -11,7 +11,7 @@
 #include <IMPL/LCRelationImpl.h>
 #include "UTIL/CellIDDecoder.h"
 
-#include <values.h>
+#include <limits.h>
 #include <string>
 #include <iostream>
 #include <cmath>
@@ -264,7 +264,8 @@ void G2CD::init() {
 	}
 	int tmpIndex = 0;
 	float NormalWeightFactor = 0;
-	float NormalWeight[SizeCSD];
+	//fg: variable length array is not ISO C++: float NormalWeight[SizeCSD];
+	std::vector<float> NormalWeight(SizeCSD);
 	int IndexA = 0; 
 	int IndexB = 0;		//Used to denote charge distributions...
 	float WeightA = 0; 

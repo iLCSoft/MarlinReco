@@ -4,7 +4,22 @@
 
 ===============================
 
- 
+ --------
+| v01-07 |
+ --------
+   
+  - Manqi Ruan: added new clas G2D:
+     Include G2CD, a general digitizer for gaseous hadron calorimeter. It takes 1mm simulated Hcal hits as input,
+     and output digitized hits with tunable sell size. Efficiency and Multiplicity effects are also taken into 
+     account, which can be adjusted in the steering file
+  
+  - J.List: fixed BCalTagEfficiency:
+      adapted efficiency parametrisation for ECM=1TeV
+
+  - Katsushige Coterra: updated NewLDCCaloDigi.cc
+    for the Scintillator Strip Ecal reconstruction
+
+
  --------
 | v01-06 |
  --------

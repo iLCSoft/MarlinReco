@@ -1068,6 +1068,7 @@ float ILDCaloDigi::analogueHcalCalibCoeff(CHT::Layout caloLayout, int layer ) {
 	calib_coeff = _calibrCoeffHcalEndCap[k];
 	break;
       case CHT::plug:
+      case CHT::ring:
 	calib_coeff = _calibrCoeffHcalOther[k];
 	break;
       default:

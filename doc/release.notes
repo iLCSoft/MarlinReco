@@ -5,6 +5,15 @@
 ===============================
 
  --------
+| v01-08 |
+ -------- 
+
+ - John Marshall:
+			Update fillECALGaps function, so that it remains identical to that implemented in NewLDCCaloDigi processor (i.e. copy the NewLDCCaloDigi updates from 9th Jan 2013).
+			Apply HCAL "other" calibration constant to both ring and plug calorimeter hit types.
+
+
+ --------
 | v01-07 |
  --------
    

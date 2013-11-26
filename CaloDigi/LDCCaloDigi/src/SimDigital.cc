@@ -7,6 +7,7 @@
 #include <IMPL/LCFlagImpl.h>
 #include <IMPL/LCRelationImpl.h>
 #include <marlin/Global.h>
+#include <marlin/Exceptions.h>
 #include <gear/GEAR.h>
 #include <gear/GearParameters.h>
 #include <gear/CalorimeterParameters.h>
@@ -47,12 +48,12 @@ using namespace std;
 
 SimDigital aSimDigital ;
 
-SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _chargeSplitterFunction() {
+SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _chargeSplitterFunction(), _chargeSplitterErfFunction(),_theChosenSplitter(NULL){
    _description = "the transfer Between Energy and Induced Charge for SDHCAL" ;
  
 #ifdef SIMDIGITAL_WITHECAL
    registerECALparameters(); 
- #endif 
+#endif 
   
    
    ///////////////////////////////////////////////////////////
@@ -67,7 +68,7 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
                             "HCALCollections" ,
                             "Sim Calorimeter Hit Collections" ,
                             _hcalCollections ,
-                             hcalCollections);
+			     hcalCollections);
 
    
    _outputHcalCollections.push_back(std::string("HCALBarrel"));
@@ -81,7 +82,7 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
    std::vector<float> hcalThresholds;
    hcalThresholds.push_back(0.01);
    registerProcessorParameter("HCALThreshold" ,
-                             "Threshold for HCAL Hits in pC" ,
+                              "Threshold for HCAL Hits in pC" ,
 			      _thresholdHcal,
 			      hcalThresholds);
    
@@ -97,7 +98,7 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 
 
    registerProcessorParameter("CalibrHCAL" , 
-			     "Calibration coefficients for HCAL" ,
+			      "Calibration coefficients for HCAL" ,
 			      _calibrCoeffHcal,
 			      calibrHcal);
 //    registerProcessorParameter("IfDigitalHcal" ,
@@ -105,185 +106,194 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 // 			      _digitalHcal , 
 // 			      1);
 
-   registerOutputCollection( LCIO::CALORIMETERHIT, 
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "HCALOutputCollection0" , 
 			    "HCAL Collection of real Hits" , 
 			    _outputHcalCollections[0], 
 			    std::string("HCALBarrel")  ); 
   
-   registerOutputCollection( LCIO::CALORIMETERHIT, 
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "HCALOutputCollection1" , 
 			    "HCAL Collection of real Hits" , 
 			    _outputHcalCollections[1], 
 			    std::string("HCALEndcap") );
 
-   registerOutputCollection( LCIO::CALORIMETERHIT, 
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "HCALOutputCollection2" , 
 			    "HCAL Collection of real Hits" , 
 			    _outputHcalCollections[2], 
 			    std::string("HCALOther") ) ; 
 
-   registerOutputCollection( LCIO::LCRELATION, 
+  registerOutputCollection( LCIO::LCRELATION, 
 			    "RelationOutputCollection" , 
 			    "CaloHit Relation Collection" , 
-			     _outputRelCollection , 
+			    _outputRelCollection , 
 			    std::string("RelationCaloHit")) ;
-   bool defaultPrinting=false;
-   _printSimDigital=false;
-   registerOptionalParameter("printSimDigital",
-			     "Print or not SimDigital",
-			     _printSimDigital,
-			     defaultPrinting);
-   
-   registerProcessorParameter( "CellEdgeDistance" ,
-                               "Distance (in mm) from the border of the cell that implies hit on neighbouring cell for 'Uniform' charge splitter : used if UseFunctionForChargeSplitting is false"  ,
-                               _chargeSplitterUniform._edgeSize,
-                               (float)2.0 ) ;
-
-   
-   registerProcessorParameter( "functionFormula" ,
-			       "ROOT TF2 formula for function describing the induced charge distribution, x and y are coordinates from the step position in I and J direction : : used if UseFunctionForChargeSplitting is true",
-			       _chargeSplitterFunction._function_description,
-			       std::string("1/cosh([0]*sqrt(x*x+y*y))") ); 
-   
-   registerProcessorParameter( "functionRange",
-			       "maximal distance (in mm) at which a step can induce charge using the 2D function defined with functionFormula",
-			       _chargeSplitterFunction._range,
-			       (float) 30 );
-
-   std::vector<float> chadisParameter;
-   chadisParameter.push_back(3.1415/0.24);
-   registerProcessorParameter( "functionParameters",
-			       "parameter values for the function defined with functionFormula",
-			       _chargeSplitterFunction._functionParameters,
-			       chadisParameter );
-
-   registerProcessorParameter( "RPC_PadSeparation",
-			       "distance in mm between two RPC pads : used if UseFunctionForChargeSplitting is true ", 
-			       _chargeSplitterFunction._RPC_PadSeparation,
-			       (float) 0.16 );
+  bool defaultPrinting=false;
+  _printSimDigital=false;
+  registerOptionalParameter("printSimDigital",
+			    "Print or not SimDigital",
+			    _printSimDigital,
+			    defaultPrinting);
    
 
-   _splitChargeWithFunction=true;
-   registerProcessorParameter( "UseFunctionForChargeSplitting",
-			       "If true, use function to split the charge between pads. If false split uniformely",
-			       _splitChargeWithFunction,
-			       true );
-
-   _doThresholds=true;
-   registerOptionalParameter("doThresholds",
-			     "Replace analog hit energy by value given in CalibrHCAL according to thresholds given in HCALThreshold",
-			     _doThresholds,
-			     true);
-
-   registerProcessorParameter( "PolyaAverageCharge" ,
-			       "Parameter for the Polya distribution used to simulate the induced charge distribution : mean of the distribution", 
-			       _polyaAverageCharge, 
-			       (double) 1.6 );
-
-   registerProcessorParameter( "PolyaWidthParameter" ,
-			       "Parameter for the Polya distribution used to simulate the induced charge distribution : related to the distribution width ",
-			       _polyaFunctionWidthParameter, 
-			       (double) 16.3 );
 
 
-   registerProcessorParameter( "StepCellCenterMaxDistanceLayerDirection",
-			       "Maximum distance (mm) between the Geant4 step position and the cell center, in the RPC width direction, to keep a step for digitization",
-			       _absZstepFilter,
-			       (float) 0.0005 );
+  //  multiplicityChargeSplitterUniform parameters
+  registerProcessorParameter( "CellEdgeDistance" ,
+			      "Distance (in mm) from the border of the cell that implies hit on neighbouring cell for 'Uniform' charge splitter : used if ChargeSplitterOption==Uniform"  ,
+			      _chargeSplitterUniform._edgeSize,
+			      (float)2.0 ) ;
 
-   registerProcessorParameter( "StepsMinDistanceRPCplaneDirection",
-			       "Minimum distance (mm) between 2 Geant4 steps, in the RPC plane, to keep the 2 steps",
-			       _minXYdistanceBetweenStep,
-			       (float) 0.5 );
+   
+  //  multiplicityChargeSplitterFuntion parameters
+  registerProcessorParameter( "functionFormula" ,
+			      "ROOT TF2 formula for function describing the induced charge distribution, x and y are coordinates from the step position in I and J direction : used if ChargeSplitterOption==Function",
+			      _chargeSplitterFunction._function_description,
+			      std::string("1/cosh([0]*sqrt(x*x+y*y))") ); 
+   
+  registerProcessorParameter( "functionRange",
+			      "maximal distance (in mm) at which a step can induce charge using the 2D function defined with functionFormula or when using ChargeSplitterOption==Erf",
+			      _chargeSplitterFunction._range,
+			      (float) 30 );
 
-   registerProcessorParameter( "KeepAtLeastOneStep",
-			       "if true, ensure that each hit will keep at least one step for digitisation independatly of filtering conditions (StepCellCenterMaxDistanceLayerDirection)",
-			       _keepAtLeastOneStep,
-			       true );
+  std::vector<float> chadisParameter;
+  chadisParameter.push_back(3.1415/0.24);
+  registerProcessorParameter( "functionParameters",
+			      "parameter values for the function defined with functionFormula",
+			      _chargeSplitterFunction._functionParameters,
+			      chadisParameter );
 
-   _relcol=0;
-   _debugTupleStepFilter=0;
-   _tupleStepFilter=0;
+
+  registerProcessorParameter( "RPC_PadSeparation",
+			      "distance in mm between two RPC pads : used if ChargeSplitterOption==Function or Erf", 
+			      _chargeSplitterFunction._RPC_PadSeparation,
+			      (float) 0.408 );
+
+  std::vector<float> erfWidth;
+  erfWidth.push_back(2);
+  registerProcessorParameter( "erfWidth",
+			      "Width values for the different Erf functions",
+			      _chargeSplitterErfFunction._erfWidth,
+			      erfWidth );
+
+  std::vector<float> erfWeigth;
+  erfWeigth.push_back(1);
+  registerProcessorParameter( "erfWeigth",
+			      "Weigth for the different Erf functions",
+			      _chargeSplitterErfFunction._erfWeigth,
+			      erfWeigth );
+   
+  _chargeSplitterOption="Erf";
+  registerProcessorParameter( "ChargeSplitterOption",
+			      "Define the charge splitter method. Possible option : Uniform, Function, Erf",
+			      _chargeSplitterOption,
+			      std::string("Erf") );
+
+  _doThresholds=true;
+  registerOptionalParameter("doThresholds",
+			    "Replace analog hit energy by value given in CalibrHCAL according to thresholds given in HCALThreshold",
+			    _doThresholds,
+			    true);
+
+  registerProcessorParameter( "PolyaAverageCharge" ,
+			      "Parameter for the Polya distribution used to simulate the induced charge distribution : mean of the distribution", 
+			      _polyaAverageCharge, 
+			      (double) 1.6 );
+
+  registerProcessorParameter( "PolyaWidthParameter" ,
+			      "Parameter for the Polya distribution used to simulate the induced charge distribution : related to the distribution width ",
+			      _polyaFunctionWidthParameter, 
+			      (double) 16.3 );
+
+
+  registerProcessorParameter( "StepCellCenterMaxDistanceLayerDirection",
+			      "Maximum distance (mm) between the Geant4 step position and the cell center, in the RPC width direction, to keep a step for digitization",
+			      _absZstepFilter,
+			      (float) 0.0005 );
+
+  registerProcessorParameter( "StepsMinDistanceRPCplaneDirection",
+			      "Minimum distance (mm) between 2 Geant4 steps, in the RPC plane, to keep the 2 steps",
+			      _minXYdistanceBetweenStep,
+			      (float) 0.5 );
+
+  registerProcessorParameter( "KeepAtLeastOneStep",
+			      "if true, ensure that each hit will keep at least one step for digitisation independatly of filtering conditions (StepCellCenterMaxDistanceLayerDirection)",
+			      _keepAtLeastOneStep,
+			      true );
+
+  _relcol=0;
+  _debugTupleStepFilter=0;
+  _tupleStepFilter=0;
+
 }
- //define a Polya Function 
+//define a Polya Function 
 
-  Double_t Polya(double* x, double* params)
-  {
-    // Polya function.
-    //0 = Polya - average charge
-    // 1 = Polya - free parameter
-    //  2 = Polya - amplitude
-    // Parameters:
-    // 0 = average charge (gain)
-    // 1 = free parameter determining the shape of the distribution
-    Double_t q, t;
-    if(*x <= 0)
-      return 0;
-    q = *x / params[0];
-    t = 1.0 + params[1];
-    return params[2]*(TMath::Power(t, t) 
-		      / TMath::Gamma(t)
-		      * TMath::Power(q, params[1])
-		      * TMath::Exp(-t*q));
-  } 
-  // for integral to get charge distribution 
-  Double_t ChaDis(Double_t *x, Double_t *par)
-  {
-
-    float a=3.66*TMath::Pi();
-    float xo=x[0]-par[1];
-    float yo=x[1]-par[2];
-    float r=sqrt(xo*xo+yo*yo);
-    float c=(par[0]*par[0])/a;
-    return c/(TMath::CosH(r*par[0]));
-    
-  }
-//
-
+Double_t Polya(double* x, double* params)
+{
+  // Polya function.
+  //0 = Polya - average charge
+  // 1 = Polya - free parameter related to the width
+  Double_t q, t;
+  if(*x <= 0)
+    return 0;
+  q = *x / params[0];
+  t = 1.0 + params[1];
+  return TMath::Power(t*q, params[1])* TMath::Exp(-t*q);
+} 
+  
 void SimDigital::init(){
 
   //a=1.05,b=-2.1,c=1.05,d=-1.05;//for 1 neighbor pad fired
   //previousLayer=1 ,previousmodule=1, previousstave=1,previousIy=1,previousJz=1;
-   //define a polya function to get induced charge
-   _QPolya = new TF1("QPolya",Polya,0.0,10.0,3);
-   _QPolya->SetParameters(_polyaAverageCharge,_polyaFunctionWidthParameter,1.0);
-   //define the function for charge distribution
-   //c2d=new TF2("c2d",ChaDis,-10,10,-10,10,3);
-   //c2d->SetParNames("width","x'value","y'value");
+  //define a polya function to get induced charge
+  _QPolya = new TF1("QPolya",Polya,0.0,10.0,2);
+  _QPolya->SetNpx(200);
+  _QPolya->SetParameters(_polyaAverageCharge,_polyaFunctionWidthParameter);
+  //define the function for charge distribution
+  //c2d=new TF2("c2d",ChaDis,-10,10,-10,10,3);
+  //c2d->SetParNames("width","x'value","y'value");
+  
+  _chargeSplitterFunction.init();
+  _chargeSplitterErfFunction._range=_chargeSplitterFunction._range;
+  _chargeSplitterErfFunction._RPC_PadSeparation=_chargeSplitterFunction._RPC_PadSeparation;
+  _chargeSplitterErfFunction.init();
+  
+  //fg: need to set default encoding in for reading old files...
+  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
 
-   _chargeSplitterFunction.init();
-
-   //fg: need to set default encoding in for reading old files...
-   CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+  if(_chargeSplitterOption=="Erf") _theChosenSplitter=&_chargeSplitterErfFunction;
+  else if(_chargeSplitterOption=="Function") _theChosenSplitter=&_chargeSplitterFunction;
+  else if(_chargeSplitterOption=="Uniform") _theChosenSplitter=&_chargeSplitterUniform;
+  else throw ParseException( _chargeSplitterOption + std::string(" option for charge splitting is not available ") );
 
 #ifdef SIMDIGITAL_WITHECAL
-   setECALgeometry();
+  setECALgeometry();
 #endif 
 
-   //assure SDHCAL _thresholdHcal are in increasing order
-   std::sort(_thresholdHcal.begin(),_thresholdHcal.end());
+  //assure SDHCAL _thresholdHcal are in increasing order
+  std::sort(_thresholdHcal.begin(),_thresholdHcal.end());
 
-   //book tuples
-   _debugTupleStepFilter  = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepDebug",
-									"SimDigital_StepDebug",
-									"int filterlevel, float deltaI,deltaJ,deltaLayer,minIJdist"); 
-   streamlog_out(DEBUG) << "Tuple for step debug has been initialized to " << _debugTupleStepFilter << std::endl;
-   streamlog_out(DEBUG) << "it has " << _debugTupleStepFilter->columns() << " columns" <<std::endl;
-
-
-   _tupleStepFilter   = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepStat",
-								    "SimDigital_StepStat",
-								    "int allsteps, absZfiltered, IJdistancefiltered");
-   streamlog_out(DEBUG) << "Tuple for step stat has been initialized to " << _tupleStepFilter << std::endl;
-   streamlog_out(DEBUG) << "it has " << _tupleStepFilter->columns() << " columns" <<std::endl;
+  //book tuples
+  _debugTupleStepFilter  = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepDebug",
+								       "SimDigital_StepDebug",
+								       "int filterlevel, float deltaI,deltaJ,deltaLayer,minIJdist"); 
+  streamlog_out(DEBUG) << "Tuple for step debug has been initialized to " << _debugTupleStepFilter << std::endl;
+  streamlog_out(DEBUG) << "it has " << _debugTupleStepFilter->columns() << " columns" <<std::endl;
 
 
-   _tupleCollection  = AIDAProcessor::tupleFactory( this )->create("CollectionStat",
-								    "Collection_statistics",
-								    "int NsimHit, NrecoHit, N1, N2, N3"); 
-   streamlog_out(DEBUG) << "Tuple for collection stat has been initialized to " << _tupleCollection << std::endl;
-   streamlog_out(DEBUG) << "it has " << _tupleCollection->columns() << " columns" <<std::endl;
+  _tupleStepFilter   = AIDAProcessor::tupleFactory( this )->create("SimDigitalStepStat",
+								   "SimDigital_StepStat",
+								   "int allsteps, absZfiltered, IJdistancefiltered");
+  streamlog_out(DEBUG) << "Tuple for step stat has been initialized to " << _tupleStepFilter << std::endl;
+  streamlog_out(DEBUG) << "it has " << _tupleStepFilter->columns() << " columns" <<std::endl;
+
+
+  _tupleCollection  = AIDAProcessor::tupleFactory( this )->create("CollectionStat",
+								  "Collection_statistics",
+								  "int NsimHit, NrecoHit, N1, N2, N3"); 
+  streamlog_out(DEBUG) << "Tuple for collection stat has been initialized to " << _tupleCollection << std::endl;
+  streamlog_out(DEBUG) << "it has " << _tupleCollection->columns() << " columns" <<std::endl;
 }
  
 
@@ -307,10 +317,17 @@ void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
   }
 }
 
-
+//multiplicityChargeSplitterBase& SimDigital::getSplitter()
+//{
+//  if(_chargeSplitterOption=="Erf") return _chargeSplitterErfFunction;
+//  else if(_chargeSplitterOption=="Uniform") return _chargeSplitterUniform;
+//  else if(_chargeSplitterOption=="Function") return _chargeSplitterFunction;
+//  else throw ParseException( _chargeSplitterOption + std::string(" option for charge splitting is not available ") );
+//}
 
 multiplicityChargeSplitterBase::multiplicityChargeSplitterBase() : _chargeMap()
 {}
+
 
 multiplicityChargeSplitterUniform::multiplicityChargeSplitterUniform()
   : multiplicityChargeSplitterBase()
@@ -367,6 +384,24 @@ void multiplicityChargeSplitterFunction::init()
   for (unsigned int i=0; i<_functionParameters.size(); i++)
     _f2->SetParameter(i,_functionParameters[i]);
   _normalisation=_f2->Integral(-_range,+_range,-_range,+_range);
+
+  double a[2],b[2];
+  a[0]=-_range; b[0]=_range;
+  a[1]=-_range; b[1]=_range;
+  double relerr(0); int nfnevl(0), ifail(1);
+  double precision=1e-5;
+  int maxpts=1000;
+  float _normalisation2=0;
+  while (ifail !=0 && maxpts<=20000)
+    {
+      _normalisation2=_f2->IntegralMultiple(2,a,b,17,maxpts,precision,relerr,nfnevl,ifail);
+      if (ifail!=0)  streamlog_out(DEBUG) << "ifail= " << ifail << " maxpts= " << maxpts << "  relerr=" << relerr << std::endl;
+      maxpts*=10;
+    }
+  streamlog_out( DEBUG ) << "Charge splitter normalisation factor: " << _normalisation << std::endl;
+  streamlog_out( DEBUG ) << "range : " << _range << " ; padseparation : " << _RPC_PadSeparation << std::endl;
+
+
 }
 
 void multiplicityChargeSplitterFunction:: addCharge(float charge, float pos_I, float pos_J)
@@ -391,19 +426,82 @@ void multiplicityChargeSplitterFunction:: addCharge(float charge, float pos_I, f
 	  double relerr(0); int nfnevl(0), ifail(1);
 	  double precision=1e-5;
 	  double integralResult(0);
-	  int maxpts=20;
+	  int maxpts=1000;
 	  while (ifail !=0 && maxpts<=20000)
 	    {
 	      integralResult=_f2->IntegralMultiple(2,a,b,17,maxpts,precision,relerr,nfnevl,ifail);
 	      if (ifail!=0)  streamlog_out(DEBUG) << "ifail= " << ifail << " maxpts= " << maxpts << "  relerr=" << relerr << std::endl;
 	      maxpts*=10;
 	    }
-	  _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation;
-	  //_chargeMap[I_J_Coordinates(I,J)]+=charge*_f2->Integral(distI,distII,distJ,distJJ)/_normalisation;
+	  if(integralResult>=0) _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation;
+	  else _chargeMap[I_J_Coordinates(I,J)]+=charge*_f2->Integral(distI,distII,distJ,distJJ)/_normalisation;
 	}
     }
 }
 
+
+multiplicityChargeSplitterErfFunction::multiplicityChargeSplitterErfFunction()
+  : multiplicityChargeSplitterBase(),
+    _range(1),_erfWidth(),_erfWeigth(),
+    _normalisation(0),_RPC_PadSeparation(0)
+{}
+
+multiplicityChargeSplitterErfFunction::~multiplicityChargeSplitterErfFunction()
+{
+
+}
+
+void multiplicityChargeSplitterErfFunction::init()
+{
+  if(_erfWidth.size()!=_erfWeigth.size()) throw ParseException( " Different size for erfWidth erfWeigth " );
+  for(unsigned int i=0; i<_erfWidth.size(); i++){
+    streamlog_out( DEBUG ) << "Erf function parameters " << i+1 << " : " << _erfWidth[i] << ", " << _erfWeigth[i] << std::endl;
+    _normalisation+=_erfWeigth[i]*_erfWidth[i]*_erfWidth[i]*TMath::Pi()*TMath::Erf(_range/_erfWidth[i])*TMath::Erf(_range/_erfWidth[i]);
+  }
+  streamlog_out( DEBUG ) << "Charge splitter normalisation factor: " << _normalisation << std::endl;
+  streamlog_out( DEBUG ) << "range : " << _range << " ; padseparation : " << _RPC_PadSeparation << std::endl;
+
+}
+
+void multiplicityChargeSplitterErfFunction:: addCharge(float charge, float pos_I, float pos_J)
+{
+  if (_RPC_PadSeparation>_cellSize) return;
+  int icell=int(_range/_cellSize);
+  double chargeTotCheck=0;
+  for (int I=-icell; I<=icell; I++)
+    {
+      float distI=(I-0.5)*_cellSize-pos_I+_RPC_PadSeparation/2;
+      float distII=(I+0.5)*_cellSize-pos_I-_RPC_PadSeparation/2;
+      if (distI<-_range) distI=-_range;
+      if (distII>_range) distII=_range;
+      for (int J=-icell; J<=icell; J++)
+	{
+	  float distJ=(J-0.5)*_cellSize-pos_J+_RPC_PadSeparation/2;
+	  float distJJ=(J+0.5)*_cellSize-pos_J-_RPC_PadSeparation/2;
+	  if (distJ<-_range) distJ=-_range;
+	  if (distJJ>_range) distJJ=_range;
+	  double a[2],b[2];
+	  a[0]=distI; b[0]=distII;
+	  a[1]=distJ; b[1]=distJJ;
+	  
+	  double integralResult=0;
+	  for(unsigned int n=0; n<_erfWidth.size(); n++){
+	    integralResult+=abs(TMath::Erf(distII/_erfWidth[n])-TMath::Erf(distI/_erfWidth[n]))*
+	      abs(TMath::Erf(distJJ/_erfWidth[n])-TMath::Erf(distJ/_erfWidth[n]))*
+	      _erfWeigth[n]*TMath::Pi()*_erfWidth[n]*_erfWidth[n]/4;
+	  }
+	  _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation ;
+	  if(_chargeMap[I_J_Coordinates(I,J)]<0) 
+	    streamlog_out( MESSAGE ) << "!!!!!!!!!!Negative Charge!!!!!!!!!!" << std::endl
+				     << " X " << pos_J << " " << distJ << " " << distJJ << std::endl
+				     << " Y " << pos_I << " " << distI << " " << distII << std::endl;
+	  chargeTotCheck+=_chargeMap[I_J_Coordinates(I,J)];
+	}
+    }
+  streamlog_out( DEBUG ) << " Charge = " << charge
+			 << " ; total splitted charge = " << chargeTotCheck 
+			 << std::endl;
+}
 
 AIDA::ITuple* SimDigitalGeomCellId::_tupleHit = NULL;
 AIDA::ITuple* SimDigitalGeomCellId::_tupleStep = NULL;
@@ -723,7 +821,6 @@ void SimDigital::fillTupleStep(std::vector<LCVector3D>& vec,int level)
 
 void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LCCollection *col, SimDigitalGeomCellId& aGeomCellId )
 {
-
   int numElements = col->getNumberOfElements();
   for (int j(0); j < numElements; ++j) 
     {
@@ -746,7 +843,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       
 
       for (std::vector<LCVector3D>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++)
-	{      	  
+	{
 	  float Minduced=_QPolya->GetRandom();
 	  if(Minduced<0.4)streamlog_out(DEBUG) <<" "<<Minduced<<std::endl;   
 	  mult.addCharge(Minduced,itstep->x(),itstep->y());
@@ -783,8 +880,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
 	    }
 	} //loop on added hits for this hit
 	
-  } // end of for (int j(0); j < numElements; ++j)  //loop on elements in collection
-
+    } // end of for (int j(0); j < numElements; ++j)  //loop on elements in collection
 }
 
 
@@ -864,17 +960,16 @@ void SimDigital::processEvent( LCEvent * evt ) {
 
   if( isFirstEvent() ) {
     SimDigitalGeomCellId::bookTuples(this);
-      }
+  }
 
   _counters["|ALL"]++;
-  if (_counters["|ALL"]%100==0) streamlog_out(MESSAGE) << "have processed " << _counters["|ALL"] << " events" << std::endl;
   _counters["NSim"]=0;
   _counters["NReco"]=0;
   _counters["N1"]=0;
   _counters["N2"]=0;
   _counters["N3"]=0;
 
-   // create the output collections
+  // create the output collections
   _relcol = new LCCollectionVec(LCIO::LCRELATION); 
  
   /////////////////for ECAL---------------------------------------------------
@@ -883,8 +978,8 @@ void SimDigital::processEvent( LCEvent * evt ) {
   LCFlagImpl flag;
   flag.setBit(LCIO::CHBIT_LONG);
   flag.setBit(LCIO::RCHBIT_ENERGY_ERROR);    //open the energy error flag to store the MC Truth (for easy comparison == not a eligent way!!)
- #ifdef SIMDIGITAL_WITHECAL
- processECAL(evt,flag);
+#ifdef SIMDIGITAL_WITHECAL
+  processECAL(evt,flag);
 #endif 
   processHCAL(evt,flag);
 
@@ -897,6 +992,8 @@ void SimDigital::processEvent( LCEvent * evt ) {
   _tupleCollection->fill(3,_counters["N2"]);
   _tupleCollection->fill(4,_counters["N3"]);
   _tupleCollection->addRow();
+
+  streamlog_out(MESSAGE) << "have processed " << _counters["|ALL"] << " events" << std::endl;
 }
 
 void SimDigital::check( LCEvent * evt ) { }
@@ -940,7 +1037,7 @@ void SimDigital::fillECALGaps( ) {
 	    // *** BARREL CORRECTION ***
 	    if( fabs(zi)<_zOfEcalEndcap && fabs(zj)<_zOfEcalEndcap){
 	      // account for stave directions using normals
-	    // calculate difference in hit postions in z and along stave
+	      // calculate difference in hit postions in z and along stave
 	      float dx = xi-xj;
 	      float dy = yi-yj;
 	      float dt = fabs(dx*_barrelStaveDir[is][0] + dy*_barrelStaveDir[is][1]);
@@ -985,7 +1082,7 @@ void SimDigital::fillECALGaps( ) {
 		hitj->setEnergy(ej);
 	      }
 	      
-	    // *** ENDCAP CORRECTION ***
+	      // *** ENDCAP CORRECTION ***
 	    }else if(fabs(zi)>_zOfEcalEndcap && fabs(zj)>_zOfEcalEndcap&&dz<100){
 	      float dx = fabs(xi-xj);
 	      float dy = fabs(yi-yj);
@@ -1031,7 +1128,7 @@ void SimDigital::fillECALGaps( ) {
 
 void SimDigital::registerECALparameters()
 {
-   // the realtion should be with ECAL
+  // the realtion should be with ECAL
 
   std::vector<std::string> ecalCollections;
   ecalCollections.push_back(std::string("EcalBarrelCollection"));
@@ -1056,8 +1153,8 @@ void SimDigital::registerECALparameters()
   _outputEcalCollections.push_back(std::string("ECALOtherPreShower"));
 
   ///////////////////////////////////////////////////////////
-   //////////////////ECAL//////////////////
-registerOutputCollection( LCIO::CALORIMETERHIT, 
+  //////////////////ECAL//////////////////
+  registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "ECALOutputCollection0" , 
 			    "ECAL Collection of real Hits" , 
 			    _outputEcalCollections[0], 
@@ -1067,7 +1164,7 @@ registerOutputCollection( LCIO::CALORIMETERHIT,
   registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "ECALOutputCollection1" , 
 			    "ECAL Collection of real Hits" , 
-			     _outputEcalCollections[1], 
+			    _outputEcalCollections[1], 
 			    std::string("ECALEndcap") ); 
   
   registerOutputCollection( LCIO::CALORIMETERHIT, 
@@ -1086,7 +1183,7 @@ registerOutputCollection( LCIO::CALORIMETERHIT,
   registerOutputCollection( LCIO::CALORIMETERHIT,
                             "ECALOutputCollection4" ,
                             "ECAL Collection of real Hits" ,
-                             _outputEcalCollections[4],
+			    _outputEcalCollections[4],
                             std::string("ECALEndcapPreShower") );
 
   registerOutputCollection( LCIO::CALORIMETERHIT,
@@ -1110,7 +1207,7 @@ registerOutputCollection( LCIO::CALORIMETERHIT,
 			     _ecalLayers,
 			     ecalLayers);
 
-   std::vector<float> calibrEcal;
+  std::vector<float> calibrEcal;
   calibrEcal.push_back(40.91);
   calibrEcal.push_back(81.81);
 
@@ -1120,12 +1217,12 @@ registerOutputCollection( LCIO::CALORIMETERHIT,
 			     _calibrCoeffEcal,
 			     calibrEcal);
 
-   registerProcessorParameter("IfDigitalEcal" ,
+  registerProcessorParameter("IfDigitalEcal" ,
 			     "Digital Ecal" , 
 			     _digitalEcal , 
 			     0);
 
- registerProcessorParameter("ECALGapCorrection" , 
+  registerProcessorParameter("ECALGapCorrection" , 
 			     "Correct for ECAL gaps" ,
 			     _ecalGapCorrection,
 			     (int)1);
@@ -1153,46 +1250,46 @@ void SimDigital::setECALgeometry()
   const float pi = acos(-1.0);
   const float twopi = 2.0*pi;
 
-   // Calorimeter geometry from GEAR
-   const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
-   const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
-   //  const gear::CalorimeterParameters& pHcalBarrel = Global::GEAR->getHcalBarrelParameters();
+  // Calorimeter geometry from GEAR
+  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
+  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+  //  const gear::CalorimeterParameters& pHcalBarrel = Global::GEAR->getHcalBarrelParameters();
   //  const gear::CalorimeterParameters& pHcalEndcap = Global::GEAR->getHcalEndcapParameters();
-   const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
-   const gear::LayerLayout& ecalEndcapLayout = pEcalEndcap.getLayerLayout();
-   // const gear::LayerLayout& hcalBarrelLayout = pHcalBarrel.getLayerLayout();
-   // const gear::LayerLayout& hcalEndcapLayout = pHcalEndcap.getLayerLayout();
+  const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
+  const gear::LayerLayout& ecalEndcapLayout = pEcalEndcap.getLayerLayout();
+  // const gear::LayerLayout& hcalBarrelLayout = pHcalBarrel.getLayerLayout();
+  // const gear::LayerLayout& hcalEndcapLayout = pHcalEndcap.getLayerLayout();
 
 
-   // determine geometry of ECAL
-   int symmetry = pEcalBarrel.getSymmetryOrder();
-   _zOfEcalEndcap = (float)pEcalEndcap.getExtent()[2];
+  // determine geometry of ECAL
+  int symmetry = pEcalBarrel.getSymmetryOrder();
+  _zOfEcalEndcap = (float)pEcalEndcap.getExtent()[2];
 
-   // Determine ECAL polygon angles
-   // Store radial vectors perpendicular to stave layers in _ecalBarrelStaveDir 
-   // ASSUMES Mokka Stave numbering 0 = top, then numbering increases anti-clockwise
-   if(symmetry>1){
-     float nFoldSymmetry = static_cast<float>(symmetry);
-     float phi0 = pEcalBarrel.getPhi0();
-     for(int i=0;i<symmetry;++i){
-       float phi  = phi0 + i*twopi/nFoldSymmetry;
-       _barrelStaveDir[i][0] = cos(phi);
-       _barrelStaveDir[i][1] = sin(phi);
+  // Determine ECAL polygon angles
+  // Store radial vectors perpendicular to stave layers in _ecalBarrelStaveDir 
+  // ASSUMES Mokka Stave numbering 0 = top, then numbering increases anti-clockwise
+  if(symmetry>1){
+    float nFoldSymmetry = static_cast<float>(symmetry);
+    float phi0 = pEcalBarrel.getPhi0();
+    for(int i=0;i<symmetry;++i){
+      float phi  = phi0 + i*twopi/nFoldSymmetry;
+      _barrelStaveDir[i][0] = cos(phi);
+      _barrelStaveDir[i][1] = sin(phi);
 
-       //	cout<<i<<"\t"<<symmetry<<endl;
-     }
-   }  
+      //	cout<<i<<"\t"<<symmetry<<endl;
+    }
+  }  
 
 
-   for(int i=0;i<ecalBarrelLayout.getNLayers();++i){
-     _barrelPixelSizeT[i] = ecalBarrelLayout.getCellSize0(i);
-     _barrelPixelSizeZ[i] = ecalBarrelLayout.getCellSize1(i);
-   }
+  for(int i=0;i<ecalBarrelLayout.getNLayers();++i){
+    _barrelPixelSizeT[i] = ecalBarrelLayout.getCellSize0(i);
+    _barrelPixelSizeZ[i] = ecalBarrelLayout.getCellSize1(i);
+  }
 
-   for(int i=0;i<ecalEndcapLayout.getNLayers();++i){
-     _endcapPixelSizeX[i] = ecalEndcapLayout.getCellSize0(i);
-     _endcapPixelSizeY[i] = ecalEndcapLayout.getCellSize1(i);
-   }
+  for(int i=0;i<ecalEndcapLayout.getNLayers();++i){
+    _endcapPixelSizeX[i] = ecalEndcapLayout.getCellSize0(i);
+    _endcapPixelSizeY[i] = ecalEndcapLayout.getCellSize1(i);
+  }
 
 }
 

@@ -196,6 +196,22 @@ class multiplicityChargeSplitterFunction : public multiplicityChargeSplitterBase
   friend class SimDigital;
 };
 
+class multiplicityChargeSplitterErfFunction : public multiplicityChargeSplitterBase
+{
+ public:
+  multiplicityChargeSplitterErfFunction();
+  virtual ~multiplicityChargeSplitterErfFunction();
+  void init();
+  void addCharge(float charge, float pos_I, float pos_J);
+ private:
+  float _range;
+  std::vector<float> _erfWidth;
+  std::vector<float> _erfWeigth;
+  float _normalisation;
+  float _RPC_PadSeparation; //distance between cells
+  friend class SimDigital;
+};
+
 
 class SimDigital : public Processor {
  public:
@@ -281,15 +297,17 @@ class SimDigital : public Processor {
   };
   multiplicityChargeSplitterUniform _chargeSplitterUniform;
   multiplicityChargeSplitterFunction _chargeSplitterFunction;
+  multiplicityChargeSplitterErfFunction _chargeSplitterErfFunction;
+  multiplicityChargeSplitterBase* _theChosenSplitter;
   bool _doThresholds;
-  bool _splitChargeWithFunction;
+  std::string  _chargeSplitterOption;
   float _absZstepFilter;
   bool _keepAtLeastOneStep;
   float _minXYdistanceBetweenStep;
   AIDA::ITuple* _debugTupleStepFilter;
   AIDA::ITuple* _tupleStepFilter;
   AIDA::ITuple* _tupleCollection;
-  multiplicityChargeSplitterBase& getSplitter() { if (_splitChargeWithFunction) return _chargeSplitterFunction; else return _chargeSplitterUniform;}
+  multiplicityChargeSplitterBase& getSplitter() { return *_theChosenSplitter; }
 
   //predicate class to remove potential hit below threshold
   class ThresholdIsBelow

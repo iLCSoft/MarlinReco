@@ -5,6 +5,16 @@
 ===============================
 
  --------
+| v01-09 |
+ -------- 
+
+     - improved SDHCAL digitizer (G.Grenier):
+        charge simulation : simplifies Polya function. 
+	Charge dispatching on pads : fix integration if using functions (slows the process)
+	and add new dispatching using sum of Erf functions (recommended option)
+
+
+ --------
 | v01-08 |
  -------- 
 

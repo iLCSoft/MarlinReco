@@ -42,17 +42,6 @@ namespace
 }
 
 
-// Start of New edit
-
-
- // This is a initialization of Each ladder's PixelSize.
-                                                      // After this, PixelSizeVec may be changed by r.P.P..
-
-// End of New edit
-
-
-
-
 FPCCDDigitizer aFPCCDDigitizer ;
 
 
@@ -65,6 +54,36 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
   
   // register steering parameters: name, description, class-variable, default value
 
+  registerProcessorParameter( "CutOption_mode",
+                              "true make the Cut option active.",
+                              _cutMode,
+                              bool(false)); 
+
+  registerProcessorParameter( "CutOption_theta_From",
+                              "from",
+                              _cutThetaFrom,
+                              double(0)); 
+
+  registerProcessorParameter( "CutOption_theta_To",
+                              "To",
+                              _cutThetaTo,
+                              double(0)); 
+
+  registerProcessorParameter( "CutOption_phi_From",
+                              "phi From",
+                              _cutPhiFrom,
+                              double(0)); 
+
+  registerProcessorParameter( "CutOption_phi_To",
+                              "phi To",
+                              _cutPhiTo,
+                              double(0)); 
+
+  registerProcessorParameter( "isSignalEvent_isBGEvent_forLinkerInClustering",
+                              "1:SignalEvent 0:BGEvent for FPCCDOverlayBX process and linker in FPCCDClustering.",
+                              _signalProperty,
+                              int(1)); 
+  
   registerProcessorParameter( "Debug",
                               "Debugging option",
                               _debug,
@@ -75,17 +94,26 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                               _modifySimTHit,
                               bool(true)); 
 
-  FloatVec PixelSizeVec;
-  for(int i=0;i<6;i++){PixelSizeVec.push_back(0.005);}
-  
+  registerProcessorParameter( "OccupancyStudyMode" ,
+                              "OccupancyStudyMode==1: We discreminate direct and backscatter.  0:NormalMode for tracking. Make sure HitQuality Option for discreminating signal and BG " ,
+                              _OccupancyStudy ,
+                              int(0) ) ;
+
+  registerProcessorParameter( "FPCCD_pixelSize(mm)" ,
+                              "Pixel size of FPCCD (unit:mm) (default: 0.005)"  ,
+                              _pixelSize ,
+                              float(0.005) ) ;
+ 
+  FloatVec pixelSizeVec; // This is a temporary variable. Each ladder's PixelSize are different. 
+    for(int i=0;i<6;i++){pixelSizeVec.push_back(0.005);}
+
   registerProcessorParameter( "Each_FPCCD_pixelSize(mm)",
                               "Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)",
-                              _PixelSizeVec,
-                              PixelSizeVec );
-
+                              _pixelSizeVec,
+                              pixelSizeVec );
   
   registerProcessorParameter( "PixelHeight(mm)" , 
-                              "Pixel Height(mm)",
+                              "Pixel Height(mm).",
                               _pixelheight ,
                               float(0.015));
 
@@ -95,21 +123,25 @@ FPCCDDigitizer::FPCCDDigitizer() : Processor("FPCCDDigitizer") {
                              double(1600/0.05));
 
   registerProcessorParameter("HitQuality",
-                             "Hit Quality of the Event",
+                             "If OccupancyStydyMode == 0, this becomes active. Then, true: digitize evt as signal. false: digitize as bkg. Then TrackerHit output from FPCCDClustering has a quality identifying signal hit or bkg hit. If you use FPCCDOverlayBX, I recommend to differentiate inputfile by this option.",
                              _isSignal,
                              bool(true));
 
   registerProcessorParameter( "HelixTMomentumCriteria(MeV)" ,
                               "Transverse momentum criteria for helix approximation (MeV)",
                               _momCut ,
-                              float(1.0));
+                              float(100.0));//old:1.0 
 
   registerProcessorParameter( "Ladder_Number_encoded_in_cellID" ,
                               "Mokka has encoded the ladder number in the cellID" ,
                               _ladder_Number_encoded_in_cellID ,
+                              bool(true));//old:false
+
+  registerProcessorParameter( "EnergyLoss_almostOFF" ,
+                              "false : normal mode, true : for computing Spatial Resolution." ,
+                              _EL_almostOFF ,
                               bool(false));
 
-  
   // Input collections
   registerInputCollection( LCIO::SIMTRACKERHIT,
                            "VTXCollectionName" , 
@@ -184,33 +216,58 @@ void FPCCDDigitizer::modifyEvent( LCEvent * evt )
   
   col = 0 ;
   
-  try{
-    col = evt->getCollection( _colNameVTX ) ;
-  }
+  try{ col = evt->getCollection( _colNameVTX ) ; }
   catch(DataNotAvailableException &e){
-    if (_debug == 1) {   
-      std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl;
-    }
+    if (_debug == 1) {   std::cout << "Collection " << _colNameVTX.c_str() << " is unavailable in event " << _nEvt << std::endl; }
   }
-  
   if( col != 0 ){    
-
     LCCollectionVec* fpccdDataVec = new LCCollectionVec( LCIO::LCGENERICOBJECT )  ;
-
     FPCCDData theData(_nLayer, _maxLadder);  // prepare object to make pixelhits
+    //mori: _maxLadder is number of ladders which belong to the n-th(in FPCCD case, 5 or 6th.00) layer with most number of ladders. 
+    //--> In case of default setteing, _nLayer = 6 and _maxLadder = 17.
+    // Constructor does only resize matrix whose element is _pxHits derived from std::vector< std::vector<std::map<unsigned int, FPCCDPixelHit*>> > 
     
     int nSimHits = col->getNumberOfElements()  ;
-
     // Loop over all VXD hits
     
+/************************area D1 *****function of BG Cut******************/
+    if(_debug == 1) { std::cout << "Now Range shows " << std::endl
+              << "theta from , to" << _cutThetaFrom << " , " << _cutThetaTo << std::endl
+              << "phi from , to" << _cutPhiFrom << " , " << _cutPhiTo << std::endl;}
+#if 1               
     for(int i=0; i< nSimHits; i++){
       SimTrackerHitImpl* SimTHitImpl = dynamic_cast<SimTrackerHitImpl*>( col->getElementAt( i ) ) ;
-
-      makePixelHits(SimTHitImpl,  theData);        
-
+      double pos_x = SimTHitImpl->getPosition()[0]; double pos_y = SimTHitImpl->getPosition()[1]; double pos_z = SimTHitImpl->getPosition()[2]; 
+      double length_pos = sqrt(pow(pos_x,2) + pow(pos_y,2) + pow(pos_z,2));
+      double theta = 180/M_PI* acos( pos_z / length_pos  ); //from 0 to pi
+      double phi = 180/M_PI* atan2( pos_y ,pos_x); // from -pi to pi 
+     
+      if(_debug==2){std::cout << "3-pos = " << pos_x <<" , "<< pos_y <<" , "<< pos_z << std::endl;
+        std::cout << "then Calc theta, phi = " << theta << " , " << phi << std::endl;
+        std::cout << "theta Cut = " << "from " << _cutThetaFrom << " to " << _cutThetaTo << std::endl;
+        std::cout << "phi Cut = " << "from " << _cutPhiFrom << " to " << _cutPhiTo << std::endl;
+      }
+      if(_cutMode == false || ((_cutThetaFrom < theta && theta < _cutThetaTo ) && (_cutPhiFrom < phi && phi < _cutPhiTo ) ) ){
+         //makePixelHits(SimTHitImpl,  theData);//Mainly, _pxHits (the member valiable of FPCCDData.) will be set.
+         if(_signalProperty == 1){
+            makePixelHits(SimTHitImpl,  theData, i);//New Version. Put nth of simthit in 3rd argument. 
+         }                                         //Mainly, _pxHits (the member valiable of FPCCDData.) will be set.
+         else if(_signalProperty == 0){
+            makePixelHits(SimTHitImpl,  theData, -1);//From 2013_01_25, -1 is regarded as Background data.
+         }
+         else std::cout << "something wrong at FPCCDDigitizer at line 246 to 256" << std::endl;
+         if(_debug==2) std::cout << "accepted." << std::endl;
+      }
+      else{
+       //  makePixelHits(SimTHitImpl,  theData); 
+       //  std::cout << "exclusion occurs." << std::endl;
+      }
     } // End of loop over all SimTrackerHits
+#endif 
+
+/*===================area D1 end=============================================*/    
     
-    theData.packPixelHits( *fpccdDataVec );
+    theData.packPixelHits( *fpccdDataVec );// Save _pxHits info in *LCCollectionVec ( in this case the elements of LCCollectionVec have LCGenericObject)
     
     evt->addCollection( fpccdDataVec , _outColNameVTX ) ;
     if(_debug == 1){
@@ -222,54 +279,31 @@ void FPCCDDigitizer::modifyEvent( LCEvent * evt )
 }
 
 // =====================================================================
-void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVec)
-{
+void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVec, int nth_simthit)
+{//The type of FPCCDData is not Vector. So the word "&hitVec" is confusing. Pay attention to it. 
+ //nth_simthit is the number of the element of STHcol. Namely, it is the nth_simthit of STHcol->getElementAt(nth_simthit).
+ //This makes data remember which simthit a pixel hit is originated from. 
   gear::Vector3D* HitPosInMokka = new gear::Vector3D(SimTHit->getPosition()[0],SimTHit->getPosition()[1],SimTHit->getPosition()[2]);
-
-  //----
-  // get basic info.
-  //----
+  /************get basic info.**************/
   const gear::BField& gearBField = Global::GEAR->getBField();
   double posphi = HitPosInMokka->phi();
   if(HitPosInMokka->y()<0) posphi += 2*M_PI;
-
-  int layer = 0 ;
-  int ladderID = 0 ;
+  int layer = 0 ; int ladderID = 0 ;
   const int cellId = SimTHit->getCellID0();
 
   if(_ladder_Number_encoded_in_cellID) {
     streamlog_out( DEBUG3 ) << "Get Layer Number using StandardILD Encoding from ILDConf.h : cellId = " << cellId << std::endl;
     UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
     encoder.setValue(cellId) ;
-    layer    = encoder[lcio::ILDCellID0::layer] ;
-    ladderID = encoder[lcio::ILDCellID0::module] ;
-    streamlog_out( DEBUG3 ) << "layer Number = " << layer << std::endl;
-    streamlog_out( DEBUG3 ) << "ladder Number = " << ladderID << std::endl;
+    layer    = encoder[lcio::ILDCellID0::layer] ; ladderID = encoder[lcio::ILDCellID0::module] ;
+    streamlog_out( DEBUG3 ) << "layer Number = " << layer << std::endl; streamlog_out( DEBUG3 ) << "ladder Number = " << ladderID << std::endl;
   }
-  else{
-    layer = cellId  - 1 ;
-  }
-
-  //----
-  // check which ladder hit on
-  //----
-
-  if( !_ladder_Number_encoded_in_cellID ) {    
-    ladderID = getLadderID( HitPosInMokka, layer);
-  }
-  
-  //----
-  // change pixel size due to the dependency of which ladder is used
-  //----
-
-  _pixelSize = _PixelSizeVec[layer];
-
-  //----
-  // get hit dir(mom) at hit points and other info.
-  //----
-  
+  else{ layer = cellId  - 1 ; }
+  /*********** check which ladder hit on*************************************/
+  if( !_ladder_Number_encoded_in_cellID ) {    ladderID = getLadderID( HitPosInMokka, layer); }
+  _pixelSize = _pixelSizeVec[layer]; 
+  /*********** get hit dir(mom) at hit points and other info.****************/
   gear::Vector3D* MomAtHitPos = new gear::Vector3D(SimTHit->getMomentum()[0],SimTHit->getMomentum()[1],SimTHit->getMomentum()[2]);
-
   double momphi = MomAtHitPos->phi();
   if(MomAtHitPos->y()<0) momphi += 2*M_PI;
   gear::Vector3D origin;
@@ -278,11 +312,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   MCParticle* mcp = SimTHit -> getMCParticle();
   if( mcp == 0 ) return ;
   float charge = mcp->getCharge();
-  
-  //----
-  // get local pos and dir on each ladder
-  //----
-  
+  /*********** get local pos and dir on each ladder **************************/
   gear::Vector3D*      LocalHitPos = getLocalPos(HitPosInMokka, layer, ladderID);
   gear::Vector3D* MomAtLocalHitPos = new gear::Vector3D(MomAtHitPos->x()*_geodata[layer].sinphi[ladderID]-MomAtHitPos->y()*_geodata[layer].cosphi[ladderID],
                                                         MomAtHitPos->z(),
@@ -292,61 +322,59 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
                                                          _geodata[layer].cosphi[ladderID]*BField->x()+_geodata[layer].sinphi[ladderID]*BField->y());
   gear::Vector3D* PosOutFromLadder = new gear::Vector3D(0,0,0);
   gear::Vector3D*    PosInToLadder = new gear::Vector3D(0,0,0);
-
- //----
-  // get the intersections with the surface of sensitive region
-  //----
+  /*********** get the intersections with the surface of sensitive region**********************/
   if( sqrt(MomAtLocalHitPos->x()*MomAtLocalHitPos->x() + MomAtLocalHitPos->z()*MomAtLocalHitPos->z()) < _momCut*1e-03){ // transvers momentum criteria for helix approximation
     if( _debug == 1 ) cout << "========== Track of this hit is trated as a helix ==========" << endl;
     getInOutPosOfHelixOnLadder(layer, PosOutFromLadder, PosInToLadder, LocalHitPos, MomAtLocalHitPos, LocalBField,charge);
   }
   else{
     getInOutPosOnLadder(layer, PosOutFromLadder,PosInToLadder,LocalHitPos,MomAtLocalHitPos); 
+    if(_debug == 1){
+    std::cout <<" layer  = " << layer << " : PosIntoLadder = "<< PosInToLadder->x() << "," << PosInToLadder->y() << "," << PosInToLadder->z() << std::endl;
+    std::cout <<" layer  = " << layer << " : PosOutFromLadder = "<< PosOutFromLadder->x() << "," << PosOutFromLadder->y() << "," << PosOutFromLadder->z() << std::endl;
+    }
   }
 
   if( inSensitiveRegion( PosOutFromLadder, layer) && inSensitiveRegion( PosInToLadder, layer) ){ // check if the particle through the sensitive region.
   
-    //----
-    // make new SimTrackerHit for seinsitive thickness of FPCCD 
-    //----
+    /********* make new SimTrackerHit for seinsitive thickness of FPCCD***************/ 
     if(_modifySimTHit){
-      
-      gear::Vector3D Path(PosOutFromLadder->x()-PosInToLadder->x(),
-                          PosOutFromLadder->y()-PosInToLadder->y(),
+      gear::Vector3D Path(PosOutFromLadder->x()-PosInToLadder->x(), PosOutFromLadder->y()-PosInToLadder->y(),
                           PosOutFromLadder->z()-PosInToLadder->z()); 
       double PathLength = Path.r();
-      
       makeNewSimTHit(SimTHit, LocalHitPos, MomAtLocalHitPos, layer, ladderID, PathLength);
     }
-
-    //----
-    // get hit points incoming and outgoiong each pixel (@ edge of pixel)
-    //----
-    
+    /******** get hit points incoming and outgoiong each pixel (@ edge of pixel)************/
     std::vector<std::pair<const gear::Vector3D*,int> >EdgeOfPixel = getIntersectionOfTrkAndPix(layer,PosOutFromLadder,PosInToLadder);
-    
-    //----
-    // calculate length that particle pass through pixel & central point of pixel
-    //----
-    
+    /*********calculate length that particle pass through pixel & central point of pixel*********/
     sort( EdgeOfPixel.begin(), EdgeOfPixel.end(), SortByPosX<std::pair<const gear::Vector3D*, int>, const gear::Vector3D*, int >() );
-
     std::map< std::pair< int, int>*, double> pixel_local = getLocalPixel(SimTHit,EdgeOfPixel);
-
     std::map< std::pair< int, int>*, double>::iterator i_pixel_local = pixel_local.begin();
+    
     while( i_pixel_local != pixel_local.end() ){
       int    xiID = (*i_pixel_local).first->first;
       int  zetaID = (*i_pixel_local).first->second;
       float    dE = (float)(*i_pixel_local).second; //  [mm]   
       FPCCDPixelHit::HitQuality_t quality;
-      if( _isSignal && mcp->getParents().size() == 0 ){ quality = FPCCDPixelHit::kSingle; }
-      else{ quality = FPCCDPixelHit::kBKG;}
-      FPCCDPixelHit aHit(layer, ladderID, xiID, zetaID, dE, quality, mcp);
-        hitVec.addPixelHit(aHit,quality);
-       if(_debug ==1 ) aHit.print();
-
-        i_pixel_local++;
+      if(_OccupancyStudy == 0){
+	     if( _isSignal && mcp->getParents().size() == 0 ){ quality = FPCCDPixelHit::kSingle; }
+        else{ quality = FPCCDPixelHit::kBKG;}
+      }
+	   else{
+	     if( SimTHit->getTime() >10 ){ quality = FPCCDPixelHit::kSingle; }
+	     else{ quality = FPCCDPixelHit::kBKG; }
+      }
+	   FPCCDPixelHit aHit(layer, ladderID, xiID, zetaID, dE, quality, mcp);
+      if(nth_simthit > -1){ aHit.setOrderID(nth_simthit); } 
+      else if(nth_simthit == -1){ aHit.setOrderID(-1); }// From 2013_01_25, -1 is regarded as Background data. 
+      else{std::cout << "3rd argument in makepixelhit is something wrong. Please set nth_simthit value. wrong number is " << nth_simthit << std::endl;}
+      
+      hitVec.addPixelHit(aHit,quality);//The type of "hitVec" is FPCCDData.
+      
+      if(_debug == 1 ) aHit.print();
+      i_pixel_local++;
     }
+  
   }
   else{
     if(_debug == 1) cout << "This particle didn't through the sensitive region." << endl;
@@ -361,6 +389,8 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
   
   return ;
 }
+
+
 
 // =====================================================================
 void FPCCDDigitizer::check( LCEvent * evt ) { 
@@ -381,6 +411,8 @@ void FPCCDDigitizer::end(){
 // =====================================================================
 // =====================================================================
 int FPCCDDigitizer::getLadderID(const gear::Vector3D* pos, const int layer){
+  
+  std::cout << "layer is " << layer << std::endl;
   double layerthickness = _geodata[layer].sthick;
   double         radius = _geodata[layer].rmin+0.5*layerthickness;
   int           nladder = _geodata[layer].nladder;
@@ -423,10 +455,11 @@ gear::Vector3D* FPCCDDigitizer::getLocalPos(const gear::Vector3D* pos, const int
   double   posR = pos->rho();
   double posphi = pos->phi();
   double radius = _geodata[layer].rmin+0.5*_pixelheight + (layer%2)*(_geodata[layer].sthick-_pixelheight);
-  gear::Vector3D* LocalPos = new gear::Vector3D(posR*(cos(posphi)*_geodata[layer].sinphi[ladder]-sin(posphi)*_geodata[layer].cosphi[ladder]),
-                                           pos->z(),
-                                           posR*(cos(posphi)*_geodata[layer].cosphi[ladder]+sin(posphi)*_geodata[layer].sinphi[ladder])-radius);
-  
+  gear::Vector3D* LocalPos = new gear::Vector3D(
+     posR*(cos(posphi)*_geodata[layer].sinphi[ladder]-sin(posphi)*_geodata[layer].cosphi[ladder]),
+     pos->z(),
+     posR*(cos(posphi)*_geodata[layer].cosphi[ladder]+sin(posphi)*_geodata[layer].sinphi[ladder])-radius
+  );
   return LocalPos;
 }
 
@@ -516,7 +549,7 @@ void FPCCDDigitizer::getInOutPosOfHelixOnLadder(int layer, gear::Vector3D* outpo
   double PI = M_PI;
   
   double      radius = (tmom.r()/(0.29979*BField->r()*fabs(Charge)))*1e+03;
-  if( radius/2 < _pixelheight ){
+  if( radius/2 < _pixelheight ){ 
     *outpos = gear::Vector3D( pos->x(), pos->y(), outerZ);
     *inpos  = gear::Vector3D( pos->x(), pos->y(), innerZ);
     *pos    = gear::Vector3D( pos->x(), pos->y(), 0);
@@ -632,7 +665,8 @@ std::vector<std::pair<const gear::Vector3D*, int> > FPCCDDigitizer::getIntersect
   else { large_localx = bottom->x(); small_localx = top->x(); }
   if(top->y()>=bottom->y()) {large_localy = top->y(); small_localy = bottom->y(); }
   else { large_localy = bottom->y(); small_localy = top->y(); }
-
+  
+  
   int sloopx = (int)ceil((small_localx-sximin)/_pixelSize) ;
   int eloopx = (int)ceil((large_localx-sximin)/_pixelSize) - 1;
   int sloopy = (int)ceil((small_localy-szetamin)/_pixelSize) ;
@@ -640,7 +674,15 @@ std::vector<std::pair<const gear::Vector3D*, int> > FPCCDDigitizer::getIntersect
 
   int nloopx = eloopx - sloopx + 1;
   int nloopy = eloopy - sloopy + 1;
-   
+  if(_debug  == 1){
+    std::cout << "check sximin,szetamin = " << sximin << " , " << szetamin << std::endl;
+    std::cout << "check small_localx, large_localx = " << small_localx << " , " << large_localx << std::endl;
+    std::cout << "check small_localy, large_localy = " << small_localy << " , " << large_localy << std::endl;
+    std::cout << "check sloopx, eloopx = " << sloopx << " , " << eloopx << std::endl;
+    std::cout << "check sloopy, eloopy = " << sloopy << " , " << eloopy << std::endl;
+    std::cout << "check nloopx, nloopy = " << nloopx << " , " << nloopy << std::endl;
+  }
+
   for(int j=0; j<nloopx; j++){
     double XEdgeOfPixelZ = ((top->z()-bottom->z())/(top->x()-bottom->x()))*(sximin+(sloopx+j)*_pixelSize-(top->x()+bottom->x())/2.)+(top->z()+bottom->z())/2.;
     double XEdgeOfPixelX = sximin+(sloopx+j)*_pixelSize;
@@ -668,7 +710,18 @@ std::map< pair<int, int>*, double> FPCCDDigitizer::getLocalPixel(SimTrackerHitIm
   UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
   encoder.setValue(simthit->getCellID0()) ;
   int f_layer    = encoder[lcio::ILDCellID0::layer] ;
-  double dEdx = simthit->getEDep()*1e+9; // Energy deposit of 50um thickness ladder. [eV]
+  double dEdx = 0.0;
+  if(_EL_almostOFF == false){
+     dEdx = simthit->getEDep()*1e+9; // Energy deposit of 50um thickness ladder. [eV]
+  }
+  else{
+     dEdx = 23290; 
+     /** Energy deposit of 50um thickness ladder. [eV] 
+         If you want to inspect position resolution of clusters with energy loss almost zero,
+         set _EL_almostOff : true */ 
+  }
+
+
   double path_length = simthit->getPathLength(); // Path length of 50um thickness ladder. [mm]
 
   double   mpv = 0.;

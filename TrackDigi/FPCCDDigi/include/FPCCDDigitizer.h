@@ -17,7 +17,18 @@
 #include <gear/ZPlanarParameters.h>
 #include <gear/ZPlanarLayerLayout.h>
 
+#include <TFile.h>
+#include <TTree.h>
+
 /** ======= FPCCDDigitizer ========== <br>
+ *
+ * Some modifications are done.
+ * 1. pixel size is changeable in each layer.
+ * 2. some utilities for pair-BG study are set.
+ * @author Tatsuya Mori, Tohoku University: 2014-02-10
+ *
+ *
+ *
  * Produces VTXPixelHits collection from VXDCollection collections. <br> 
  * VXDCollection is a SimTrackerHit object and VTXPixelHits collection
  * is a LCGenericObject object, where FPCCD pixel hit information is stored.
@@ -94,6 +105,7 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
 
   // make PixelHits from SimTrackerHits.
   void makePixelHits(IMPL::SimTrackerHitImpl *simHit, FPCCDData &pxHits);
+  void makePixelHits(IMPL::SimTrackerHitImpl *simHit, FPCCDData &pxHits, int nth_simthit);
 
   // Initialize Geometry data
   void InitGeometry();
@@ -121,13 +133,64 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   int _nRun ;
   int _nEvt ;
   int _debug;
+  int _OccupancyStudy;
+  int _signalProperty;
+  double _cutThetaFrom;
+  double _cutThetaTo;
+  double _cutPhiFrom;
+  double _cutPhiTo;
 
+  bool _cutMode;
   bool _modifySimTHit;
   bool _ladder_Number_encoded_in_cellID;
-  
+  bool _EL_almostOFF;
   float _pixelSize;
-  FloatVec _PixelSizeVec;
+  FloatVec _pixelSizeVec;
+  IntVec _escapedEvtVec;
+  int _esc_count;
   float _pixelheight;
+  
+  static int _mcp_number;
+
+  static const int _ARRAY_NUM = 2000;
+  struct{
+     double x[_ARRAY_NUM];
+     double y[_ARRAY_NUM];
+  }_position;
+  struct{
+     int nsimthits;
+     double x[_ARRAY_NUM];
+     double y[_ARRAY_NUM];
+     double z[_ARRAY_NUM];
+     int pdg[_ARRAY_NUM];
+     int nloopx[_ARRAY_NUM];
+     int nloopy[_ARRAY_NUM];
+     int xiID[_ARRAY_NUM];
+     int zetaID[_ARRAY_NUM];
+  }_simthits;
+  struct{
+     double px[_ARRAY_NUM];
+     double py[_ARRAY_NUM];
+     double pz[_ARRAY_NUM];
+     double vx[_ARRAY_NUM];
+     double vy[_ARRAY_NUM];
+     double vz[_ARRAY_NUM];
+  }_ori_mcp;
+    
+  struct{
+     int ideal_condition;
+  }_something;
+ 
+  struct{
+     int x[6];
+     int y[6];
+  }_counter;
+
+ 
+  TFile* _rootf;
+  TTree* _tree;
+  std::string _rootFileName;
+  std::string _treeName;
 
   float _momCut;
   

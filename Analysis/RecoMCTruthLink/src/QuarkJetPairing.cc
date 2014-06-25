@@ -36,8 +36,6 @@
 #include "IMPL/ReconstructedParticleImpl.h"
 #include "IMPL/LCCollectionVec.h" 
 //#include <root/TLorentzVector.h>
-#include "JetFitObject.h"
-#include "TextTracer.h"
 #include "IMPL/LCCollectionVec.h"
 
 

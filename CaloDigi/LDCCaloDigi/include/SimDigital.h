@@ -60,6 +60,16 @@ const int MAX_STAVES =  16;
 
 
 class SimDigitalGeomRPCFrame;
+
+struct StepAndCharge
+{
+  StepAndCharge() : step(), charge(0) {}
+  StepAndCharge(LCVector3D vec) : step(vec), charge(0) {}
+  LCVector3D step;
+  float charge;
+};
+
+
 //helper class to manage cellId and local geometry
 class SimDigitalGeomCellId 
 {
@@ -68,7 +78,7 @@ class SimDigitalGeomCellId
   SimDigitalGeomCellId(LCCollection *inputCol, LCCollectionVec *outputCol);
   ~SimDigitalGeomCellId();
   //return the list of step positions in coordinates corresponding to 'I' ,'J' and 'layer'
-  std::vector<LCVector3D> decode(SimCalorimeterHit *hit);
+  std::vector<StepAndCharge> decode(SimCalorimeterHit *hit);
   void encode(CalorimeterHitImpl *hit,int delta_I, int delta_J);
   void setLayerLayout( CHT::Layout layout);
   float getCellSize();
@@ -286,11 +296,6 @@ class SimDigital : public Processor {
 #endif 
   void processHCAL(LCEvent* evt, LCFlagImpl& flag);
 
-  struct StepAndCharge
-  {
-    LCVector3D step;
-    float charge;
-  };
   static bool sortStepWithCharge(StepAndCharge s1, StepAndCharge s2){return s1.charge>s2.charge;}
 
   //intermediate storage class
@@ -330,13 +335,13 @@ class SimDigital : public Processor {
   {
   public:
     absZGreaterThan(float val) : _value(val) {}
-      bool operator()(LCVector3D& v) { return fabs( v.z() ) >_value;}
+      bool operator()(StepAndCharge& v) { return fabs( v.step.z() ) >_value;}
   private:
     float _value;
   };
   //helper function to remove steps too close in I,J
   void remove_adjacent_step(std::vector<StepAndCharge>& vec);
-  void fillTupleStep(std::vector<LCVector3D>& vec,int level);
+  void fillTupleStep(std::vector<StepAndCharge>& vec,int level);
 
   LCCollectionVec * processHCALCollection(LCCollection * col ,CHT::Layout layout, LCFlagImpl& flag);
   void createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LCCollection *col, SimDigitalGeomCellId& aGeomCellId);

@@ -620,7 +620,7 @@ void SimDigitalGeomRPCFrame_VIDEAU_ENDCAP::setRPCFrame()
 
 
 
-std::vector<LCVector3D> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
+std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 {
   _trueLayer = _decoder( hit )["K-1"]; // + 1;
   _stave     = _decoder( hit )["S-1"];
@@ -632,7 +632,7 @@ std::vector<LCVector3D> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 
   _normal_I_J_setter->setRPCFrame();
 
-  std::vector<LCVector3D> stepsInIJZcoord;
+  std::vector<StepAndCharge> stepsInIJZcoord;
   LCVector3D hitpos;
   if (NULL != _hitPosition) hitpos.set(_hitPosition[0],_hitPosition[1],_hitPosition[2]);
   for (int imcp=0; imcp<hit->getNMCContributions(); imcp++)
@@ -643,14 +643,14 @@ std::vector<LCVector3D> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
       if (stepposvec.mag2() != 0)
 	{
 	  stepposvec-=hitpos;
-	  stepsInIJZcoord.push_back( LCVector3D(stepposvec*_Iaxis,stepposvec*_Jaxis,stepposvec*_normal) );
+	  stepsInIJZcoord.push_back( StepAndCharge(LCVector3D(stepposvec*_Iaxis,stepposvec*_Jaxis,stepposvec*_normal)) );
 	}
       else
 	streamlog_out(WARNING) << "DIGITISATION : STEP POSITION IS (0,0,0)" << std::endl;
     }
 
   //if no steps have been found, then put one step at the center of the cell :
-  if (stepsInIJZcoord.size()==0) stepsInIJZcoord.push_back(LCVector3D(0,0,0));
+  if (stepsInIJZcoord.size()==0) stepsInIJZcoord.push_back(StepAndCharge(LCVector3D(0,0,0)));
   
 
   //these tuples are for debugging geometry aspects
@@ -703,7 +703,7 @@ std::vector<LCVector3D> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 	      else {_tupleStep->fill(TS_STEPX+i,notset);}
 	      {
 		if (imcp<(int)stepsInIJZcoord.size())
-		  _tupleStep->fill(TS_DELTAI+i,stepsInIJZcoord[imcp][i]);
+		  _tupleStep->fill(TS_DELTAI+i,stepsInIJZcoord[imcp].step[i]);
 		else
 		  _tupleStep->fill(TS_DELTAI+i,notset);
 	      }
@@ -798,20 +798,20 @@ void SimDigital::remove_adjacent_step(std::vector<StepAndCharge>& vec)
 }
 
 
-void SimDigital::fillTupleStep(std::vector<LCVector3D>& vec,int level)
+void SimDigital::fillTupleStep(std::vector<StepAndCharge>& vec,int level)
 {
   _tupleStepFilter->fill(level,int(vec.size()));
-  for (std::vector<LCVector3D>::iterator it=vec.begin(); it != vec.end(); it++)
+  for (std::vector<StepAndCharge>::iterator it=vec.begin(); it != vec.end(); it++)
     {
       _debugTupleStepFilter->fill(0,level);
-      _debugTupleStepFilter->fill(1,it->x());
-      _debugTupleStepFilter->fill(2,it->y());
-      _debugTupleStepFilter->fill(3,it->z());
+      _debugTupleStepFilter->fill(1,it->step.x());
+      _debugTupleStepFilter->fill(2,it->step.y());
+      _debugTupleStepFilter->fill(3,it->step.z());
       float minDist=20000;
-      for (std::vector<LCVector3D>::iterator itB=vec.begin(); itB != vec.end(); itB++)
+      for (std::vector<StepAndCharge>::iterator itB=vec.begin(); itB != vec.end(); itB++)
 	{
 	  if (itB==it) continue;
-	  float dist=((*it)-(*itB)).perp();
+	  float dist=((it->step)-(itB->step)).perp();
 	  if (dist<minDist) minDist=dist;
 	}
       _debugTupleStepFilter->fill(4,minDist);
@@ -825,7 +825,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
   for (int j(0); j < numElements; ++j) 
     {
       SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
-      std::vector<LCVector3D> steps=aGeomCellId.decode(hit);
+      std::vector<StepAndCharge> steps=aGeomCellId.decode(hit);
       fillTupleStep(steps,0);
 
 
@@ -833,29 +833,25 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       multiplicityChargeSplitterBase& mult=getSplitter();
       mult.newHit(cellSize);
       
-      std::vector<LCVector3D>::iterator remPos=std::remove_if(steps.begin(), steps.end(), absZGreaterThan(_absZstepFilter) );
+      std::vector<StepAndCharge>::iterator remPos=std::remove_if(steps.begin(), steps.end(), absZGreaterThan(_absZstepFilter) );
       if (steps.size() > 0 &&_keepAtLeastOneStep && remPos==steps.begin()) remPos++;
       steps.erase(remPos,steps.end());
       fillTupleStep(steps,1);
 
 
-      std::vector<StepAndCharge> theSteps;
-      for (std::vector<LCVector3D>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
-	StepAndCharge stepCharge;
-	stepCharge.step=(*itstep);
-	stepCharge.charge=_QPolya->GetRandom();
-	if(stepCharge.charge<0.4)streamlog_out(DEBUG) <<" "<<stepCharge.charge<<std::endl;  
-	theSteps.push_back(stepCharge);
-	streamlog_out( DEBUG ) << "step at : " << stepCharge.step
-			       << "\t with a charge of : " << stepCharge.charge
+      for (std::vector<StepAndCharge>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
+	itstep->charge=_QPolya->GetRandom();
+	if(itstep->charge<0.4)streamlog_out(DEBUG) <<" "<<itstep->charge<<std::endl;  
+	streamlog_out( DEBUG ) << "step at : " << itstep->step
+			       << "\t with a charge of : " << itstep->charge
 			       << std::endl;
       } //loop on itstep
       
-      std::sort(theSteps.begin(), theSteps.end(), sortStepWithCharge );
+      std::sort(steps.begin(), steps.end(), sortStepWithCharge );
       streamlog_out( DEBUG ) << "sim hit at " << hit << std::endl;
       if (streamlog::out.write< DEBUG >() )
 	{
-	  for(std::vector<StepAndCharge>::iterator it=theSteps.begin(); it!=theSteps.end(); ++it){
+	  for(std::vector<StepAndCharge>::iterator it=steps.begin(); it!=steps.end(); ++it){
 	    streamlog_out( DEBUG ) << "step at : " << (*it).step
 				   << "\t with a charge of : " << (*it).charge 
 				   << std::endl;
@@ -864,15 +860,11 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       
       
 
-      remove_adjacent_step(theSteps);
-      //FIXME :: CPU IS WASTED HERE
-      steps.clear();
-      for (std::vector<StepAndCharge>::iterator it=theSteps.begin(); it!=theSteps.end(); ++it)
-	steps.push_back(it->step);
+      remove_adjacent_step(steps);
       fillTupleStep(steps,2);
       _tupleStepFilter->addRow();
       
-      for (std::vector<StepAndCharge>::iterator itstep=theSteps.begin(); itstep != theSteps.end(); itstep++){
+      for (std::vector<StepAndCharge>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
 	mult.addCharge((*itstep).charge,(*itstep).step.x(),(*itstep).step.y());
       } //loop on itstep
 	  

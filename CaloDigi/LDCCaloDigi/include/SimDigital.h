@@ -286,6 +286,13 @@ class SimDigital : public Processor {
 #endif 
   void processHCAL(LCEvent* evt, LCFlagImpl& flag);
 
+  struct StepAndCharge
+  {
+    LCVector3D step;
+    float charge;
+  };
+  static bool sortStepWithCharge(StepAndCharge s1, StepAndCharge s2){return s1.charge>s2.charge;}
+
   //intermediate storage class
   struct hitMemory
   {
@@ -328,7 +335,7 @@ class SimDigital : public Processor {
     float _value;
   };
   //helper function to remove steps too close in I,J
-  void remove_adjacent_step(std::vector<LCVector3D>& vec);
+  void remove_adjacent_step(std::vector<StepAndCharge>& vec);
   void fillTupleStep(std::vector<LCVector3D>& vec,int level);
 
   LCCollectionVec * processHCALCollection(LCCollection * col ,CHT::Layout layout, LCFlagImpl& flag);

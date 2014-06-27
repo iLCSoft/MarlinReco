@@ -247,7 +247,7 @@ void SimDigital::init(){
   //a=1.05,b=-2.1,c=1.05,d=-1.05;//for 1 neighbor pad fired
   //previousLayer=1 ,previousmodule=1, previousstave=1,previousIy=1,previousJz=1;
   //define a polya function to get induced charge
-  _QPolya = new TF1("QPolya",Polya,0.0,10.0,2);
+  _QPolya = new TF1("QPolya",Polya,0.0,30.0,2);
   _QPolya->SetNpx(200);
   _QPolya->SetParameters(_polyaAverageCharge,_polyaFunctionWidthParameter);
   //define the function for charge distribution
@@ -486,8 +486,8 @@ void multiplicityChargeSplitterErfFunction:: addCharge(float charge, float pos_I
 	  
 	  double integralResult=0;
 	  for(unsigned int n=0; n<_erfWidth.size(); n++){
-	    integralResult+=abs(TMath::Erf(distII/_erfWidth[n])-TMath::Erf(distI/_erfWidth[n]))*
-	      abs(TMath::Erf(distJJ/_erfWidth[n])-TMath::Erf(distJ/_erfWidth[n]))*
+	    integralResult+=fabs(TMath::Erf(distII/_erfWidth[n])-TMath::Erf(distI/_erfWidth[n]))*
+	      fabs(TMath::Erf(distJJ/_erfWidth[n])-TMath::Erf(distJ/_erfWidth[n]))*
 	      _erfWeigth[n]*TMath::Pi()*_erfWidth[n]*_erfWidth[n]/4;
 	  }
 	  _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation ;
@@ -768,19 +768,19 @@ float SimDigitalGeomCellId::getCellSize() {return _layerLayout->getCellSize0(_tr
 
 
 
-void SimDigital::remove_adjacent_step(std::vector<LCVector3D>& vec)
+void SimDigital::remove_adjacent_step(std::vector<StepAndCharge>& vec)
 {
   if (vec.size()==0) return;
-  std::vector<LCVector3D>::iterator first=vec.begin();
-  std::vector<LCVector3D>::iterator lasttobekept=vec.end();
+  std::vector<StepAndCharge>::iterator first=vec.begin();
+  std::vector<StepAndCharge>::iterator lasttobekept=vec.end();
   lasttobekept--;
   while (int(first-lasttobekept)<0)
     {
-      std::vector<LCVector3D>::iterator second=first;
+      std::vector<StepAndCharge>::iterator second=first;
       second++;
       while (int(second-lasttobekept) < 0)
 	{
-	  if ( ((*first)-(*second)).perp() > _minXYdistanceBetweenStep ) // do nothing
+	  if ( ((*first).step-(*second).step).perp() > _minXYdistanceBetweenStep ) // do nothing
 	    second++;
 	  else //second is too close of first : second should be removed so put it at the end 
 	    {
@@ -788,10 +788,10 @@ void SimDigital::remove_adjacent_step(std::vector<LCVector3D>& vec)
 	      lasttobekept--;
 	    }
 	}
-      if ( ((*first)-(*lasttobekept)).perp() <= _minXYdistanceBetweenStep ) lasttobekept--; 
+      if ( ((*first).step-(*lasttobekept).step).perp() <= _minXYdistanceBetweenStep ) lasttobekept--; 
       first++;
     }
-  std::vector<LCVector3D>::iterator firstToremove=lasttobekept;
+  std::vector<StepAndCharge>::iterator firstToremove=lasttobekept;
   firstToremove++;
   if (_keepAtLeastOneStep && firstToremove==vec.begin()) firstToremove++;
   vec.erase(firstToremove,vec.end());
@@ -837,17 +837,45 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       if (steps.size() > 0 &&_keepAtLeastOneStep && remPos==steps.begin()) remPos++;
       steps.erase(remPos,steps.end());
       fillTupleStep(steps,1);
-      remove_adjacent_step(steps);
+
+
+      std::vector<StepAndCharge> theSteps;
+      for (std::vector<LCVector3D>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
+	StepAndCharge stepCharge;
+	stepCharge.step=(*itstep);
+	stepCharge.charge=_QPolya->GetRandom();
+	if(stepCharge.charge<0.4)streamlog_out(DEBUG) <<" "<<stepCharge.charge<<std::endl;  
+	theSteps.push_back(stepCharge);
+	streamlog_out( DEBUG ) << "step at : " << stepCharge.step
+			       << "\t with a charge of : " << stepCharge.charge
+			       << std::endl;
+      } //loop on itstep
+      
+      std::sort(theSteps.begin(), theSteps.end(), sortStepWithCharge );
+      streamlog_out( DEBUG ) << "sim hit at " << hit << std::endl;
+      if (streamlog::out.write< DEBUG >() )
+	{
+	  for(std::vector<StepAndCharge>::iterator it=theSteps.begin(); it!=theSteps.end(); ++it){
+	    streamlog_out( DEBUG ) << "step at : " << (*it).step
+				   << "\t with a charge of : " << (*it).charge 
+				   << std::endl;
+	  }
+	}
+      
+      
+
+      remove_adjacent_step(theSteps);
+      //FIXME :: CPU IS WASTED HERE
+      steps.clear();
+      for (std::vector<StepAndCharge>::iterator it=theSteps.begin(); it!=theSteps.end(); ++it)
+	steps.push_back(it->step);
       fillTupleStep(steps,2);
       _tupleStepFilter->addRow();
       
-
-      for (std::vector<LCVector3D>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++)
-	{
-	  float Minduced=_QPolya->GetRandom();
-	  if(Minduced<0.4)streamlog_out(DEBUG) <<" "<<Minduced<<std::endl;   
-	  mult.addCharge(Minduced,itstep->x(),itstep->y());
-	} //loop on itstep
+      for (std::vector<StepAndCharge>::iterator itstep=theSteps.begin(); itstep != theSteps.end(); itstep++){
+	mult.addCharge((*itstep).charge,(*itstep).step.x(),(*itstep).step.y());
+      } //loop on itstep
+	  
     
     
       for (std::map<multiplicityChargeSplitterBase::I_J_Coordinates,float>::const_iterator it=mult.chargeMap().begin();

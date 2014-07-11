@@ -21,6 +21,8 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <time.h>
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 #include "CalorimeterHitType.h"
@@ -48,7 +50,8 @@ using namespace std;
 
 SimDigital aSimDigital ;
 
-SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _chargeSplitterFunction(), _chargeSplitterErfFunction(),_theChosenSplitter(NULL){
+
+SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _chargeSplitterFunction(), _chargeSplitterErfFunction(),_theChosenSplitter(NULL), _effMap(NULL) {
    _description = "the transfer Between Energy and Induced Charge for SDHCAL" ;
  
 #ifdef SIMDIGITAL_WITHECAL
@@ -137,7 +140,20 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			    defaultPrinting);
    
 
+  registerProcessorParameter("EffMapOption",
+			     "Step efficiency correction method : should be Constant or PrototypeMap",
+			     _effMapOption,
+			     std::string("Constant")) ;
 
+  registerProcessorParameter("EffMapConstantValue",
+			    "Value of the constant term for efficiency correction if EffMapOption==Constant",
+			    _constEffMapValue,
+			    (float)0.97);
+
+  registerProcessorParameter("EffMapPrototypeFileName",
+			    "File name where prototype efficiency corresction is stored if EffMapOption==PrototypeMap",
+			    _effMapFileName,
+			    std::string("map.txt"));
 
   //  multiplicityChargeSplitterUniform parameters
   registerProcessorParameter( "CellEdgeDistance" ,
@@ -267,6 +283,17 @@ void SimDigital::init(){
   else if(_chargeSplitterOption=="Uniform") _theChosenSplitter=&_chargeSplitterUniform;
   else throw ParseException( _chargeSplitterOption + std::string(" option for charge splitting is not available ") );
 
+  if (_effMap!=NULL) delete _effMap;
+  if (_effMapOption=="Constant") _effMap=new effMapConstant(_constEffMapValue);
+  else if (_effMapOption=="PrototypeMap") _effMap=new effMapProtoByAsic(_effMapFileName);
+  else throw ParseException( _effMapOption + std::string(" option for efficiency correction is not available") );
+
+  streamlog_out( MESSAGE ) << "_effMapOption = " << _effMapOption << std::endl;
+  if (_effMapOption=="Constant")   
+    streamlog_out( MESSAGE ) << "_constEffMapValue = " << _constEffMapValue << std::endl;
+  else if (_effMapOption=="PrototypeMap") 
+    streamlog_out( MESSAGE ) << "_effMapFileName = " << _effMapFileName << std::endl;
+
 #ifdef SIMDIGITAL_WITHECAL
   setECALgeometry();
 #endif 
@@ -302,6 +329,7 @@ void SimDigital::processRunHeader( LCRunHeader* run) {}
 
 void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
 {
+  depositedEnergyInRPC=0.;
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
     try{
       std::string colName =  _hcalCollections[i] ;    
@@ -315,6 +343,7 @@ void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
     catch(DataNotAvailableException &e){  
     }     
   }
+  evt->parameters().setValue("totalVisibleEnergy",depositedEnergyInRPC);
 }
 
 //multiplicityChargeSplitterBase& SimDigital::getSplitter()
@@ -379,6 +408,8 @@ multiplicityChargeSplitterFunction::~multiplicityChargeSplitterFunction()
 
 void multiplicityChargeSplitterFunction::init()
 {
+  srand(time(NULL));
+
   if (_f2) delete _f2;
   _f2=new TF2("chadis",_function_description.c_str(),-_range,+_range,-_range,+_range);
   for (unsigned int i=0; i<_functionParameters.size(); i++)
@@ -502,6 +533,25 @@ void multiplicityChargeSplitterErfFunction:: addCharge(float charge, float pos_I
 			 << " ; total splitted charge = " << chargeTotCheck 
 			 << std::endl;
 }
+
+
+effMapProtoByAsic::effMapProtoByAsic(std::string fileName)
+{
+  std::ifstream in;
+  in.open(fileName.c_str());
+  if(!in.is_open())
+    {streamlog_out(ERROR) << fileName << "\t NO SUCH FILE IN CURRENT DIRECTORY" << std::endl;}
+  else {streamlog_out(DEBUG) << "MAP FILE IN \t " << fileName << std::endl;}
+  int asickey,nevent;
+  double efficiency,multiplicity,efficiencyError;
+  while(1){
+    if(!in.good()) break;
+    in >> asickey >> nevent >> efficiency >> efficiencyError >> multiplicity;
+    _effMap[asickey]=efficiency;
+  } 
+}
+
+
 
 AIDA::ITuple* SimDigitalGeomCellId::_tupleHit = NULL;
 AIDA::ITuple* SimDigitalGeomCellId::_tupleStep = NULL;
@@ -825,6 +875,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
   for (int j(0); j < numElements; ++j) 
     {
       SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      depositedEnergyInRPC+=hit->getEnergy()/1e6;
       std::vector<StepAndCharge> steps=aGeomCellId.decode(hit);
       fillTupleStep(steps,0);
 
@@ -832,12 +883,16 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       float cellSize=aGeomCellId.getCellSize();
       multiplicityChargeSplitterBase& mult=getSplitter();
       mult.newHit(cellSize);
-      
+     
+
       std::vector<StepAndCharge>::iterator remPos=std::remove_if(steps.begin(), steps.end(), absZGreaterThan(_absZstepFilter) );
       if (steps.size() > 0 &&_keepAtLeastOneStep && remPos==steps.begin()) remPos++;
       steps.erase(remPos,steps.end());
       fillTupleStep(steps,1);
 
+      float effCorr=_effMap->getEfficiency(aGeomCellId.I(), aGeomCellId.J(), aGeomCellId.K(), aGeomCellId.stave(), aGeomCellId.module());
+      steps.erase(std::remove_if(steps.begin(), steps.end(),randomGreater(effCorr)), steps.end());
+      fillTupleStep(steps,2);
 
       for (std::vector<StepAndCharge>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
 	itstep->charge=_QPolya->GetRandom();
@@ -861,7 +916,7 @@ void SimDigital::createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LC
       
 
       remove_adjacent_step(steps);
-      fillTupleStep(steps,2);
+      fillTupleStep(steps,3);
       _tupleStepFilter->addRow();
       
       for (std::vector<StepAndCharge>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){

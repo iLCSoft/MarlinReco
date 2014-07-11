@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <stdlib.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/SimCalorimeterHit.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -85,6 +86,12 @@ class SimDigitalGeomCellId
   const LCVector3D& normalToRPCPlane() {return _normal;}
   const LCVector3D& Iaxis() {return _Iaxis;}
   const LCVector3D& Jaxis() {return _Jaxis;}
+
+  int I() {return _Iy;}
+  int J() {return _Jz;}
+  int K() {return _trueLayer;}
+  int stave() {return _stave;}
+  int module() {return _module;}
 
  private:
   enum HCAL_GEOM {VIDEAU,TESLA};
@@ -223,6 +230,37 @@ class multiplicityChargeSplitterErfFunction : public multiplicityChargeSplitterB
 };
 
 
+//helper class to manage efficiency maps
+class effMapBase
+{
+ public:
+  virtual float getEfficiency(int I, int J, int K, int stave, int module)=0;
+};
+
+class effMapConstant : public effMapBase
+{
+ public:
+ effMapConstant(float val=1.0) : value(val) {}
+  virtual float getEfficiency(int I, int J, int K, int stave, int module) { return value;}
+ private:
+  float value;
+};
+
+
+class effMapProtoByAsic : public effMapBase
+{
+ public:
+  effMapProtoByAsic(std::string fileName);
+  virtual float getEfficiency(int I, int J, int K, int stave, int module) 
+  {
+    std::map<int,float>::iterator it=_effMap.find( (I-1)/8+((J-1)/8)*12+K*1000 );
+    return (it != _effMap.end() ? it->second : 1.0);
+  }
+ private:
+  std::map<int,float> _effMap;
+};
+
+
 class SimDigital : public Processor {
  public:
   virtual Processor*  newProcessor() { return new SimDigital;}
@@ -307,12 +345,17 @@ class SimDigital : public Processor {
     float maxEnergydueToHit;
     int rawHit;
   };
+  float depositedEnergyInRPC;
   multiplicityChargeSplitterUniform _chargeSplitterUniform;
   multiplicityChargeSplitterFunction _chargeSplitterFunction;
   multiplicityChargeSplitterErfFunction _chargeSplitterErfFunction;
   multiplicityChargeSplitterBase* _theChosenSplitter;
   bool _doThresholds;
   std::string  _chargeSplitterOption;
+  std::string _effMapFileName;
+  float _constEffMapValue;
+  std::string _effMapOption;
+  effMapBase *_effMap;
   float _absZstepFilter;
   bool _keepAtLeastOneStep;
   float _minXYdistanceBetweenStep;
@@ -336,6 +379,14 @@ class SimDigital : public Processor {
   public:
     absZGreaterThan(float val) : _value(val) {}
       bool operator()(StepAndCharge& v) { return fabs( v.step.z() ) >_value;}
+  private:
+    float _value;
+  };
+  class randomGreater
+  {
+  public:
+  randomGreater(float val) : _value(val) {}
+    bool operator()(StepAndCharge& v) { return double(rand())/RAND_MAX>_value;}
   private:
     float _value;
   };

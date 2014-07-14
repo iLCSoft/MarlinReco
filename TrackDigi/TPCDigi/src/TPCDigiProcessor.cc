@@ -167,7 +167,7 @@ void TPCDigiProcessor::init()
   // From GNU documentation:
   // A replacement for the standard terminate_handler which prints 
   // more information about the terminating exception (if any) on stderr. Call ...
-  std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
+  //std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
   
 #ifdef DIGIPLOTS
   /// Hook an AIDA implementation -----------------------------------------------

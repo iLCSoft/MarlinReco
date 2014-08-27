@@ -3,6 +3,7 @@
 
 #include "marlin/Processor.h"
 #include <IMPL/CalorimeterHitImpl.h>
+#include <IMPL/LCFlagImpl.h>
 #include "CalorimeterHitType.h"
 #include "lcio.h"
 #include <string>
@@ -10,7 +11,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
-
+#include "ScintillatorEcalDigi.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -98,24 +99,31 @@ class ILDCaloDigi : public Processor {
   float digitalEcalCalibCoeff(int layer );
 
   float analogueEcalCalibCoeff(int layer );
-  
+
  protected:
+
+  float ecalEnergyDigi(float energy);
+  float siliconDigi(float energy);
+  float scintillatorDigi(float energy, bool isEcal);
+  LCCollection* combineVirtualStripCells(LCCollection* col, bool isBarrel, int orientation );
+
+  int getNumberOfVirtualCells();
+  std::vector < std::pair <int, int> > & getLayerConfig();
+  void checkConsistency(std::string colName, int layer);
+  std::pair < int, int > getLayerProperties( std::string colName, int layer );
+  int getStripOrientationFromColName( std::string colName );
+
 
   int _nRun ;
   int _nEvt ;
   
+  LCFlagImpl _flag;
+
   std::vector<std::string> _ecalCollections;
   std::vector<std::string> _hcalCollections;
-
-
-  std::string _outputEcalCollection0;
-  std::string _outputEcalCollection1;
-  std::string _outputEcalCollection2;
-  std::string _outputHcalCollection0;
-  std::string _outputHcalCollection1;
-  std::string _outputHcalCollection2;
   std::vector<std::string> _outputEcalCollections;
   std::vector<std::string> _outputHcalCollections;
+
   std::string _outputRelCollection;
 
   float _thresholdEcal;
@@ -124,6 +132,8 @@ class ILDCaloDigi : public Processor {
   int _digitalEcal;
   int _mapsEcalCorrection;
   int _digitalHcal;
+
+  bool _ECAL_stripHits;
 
   std::vector<float> _calibrCoeffEcal;
   std::vector<float> _calibrCoeffHcalBarrel;
@@ -169,6 +179,40 @@ class ILDCaloDigi : public Processor {
   float _hcalEndcapTimeWindowMax;
   float _hcalDeltaTimeHitResolution;
   float _hcalTimeResolution;
+
+  ScintillatorEcalDigi* _scDigi;
+
+
+  // parameters for extra ECAL digitization effects
+  float _calibEcalMip;                // MIP calibration factor
+  int   _applyEcalDigi;               // which realistic calib to apply
+  float _ecal_PPD_pe_per_mip;         // # photoelectrons/MIP for MPPC
+  int   _ecal_PPD_n_pixels;           // # pixels in MPPC
+  float _ehEnergy;                    // energy to create e-h pair in silicon
+  float _ecal_misCalibNpix;           // miscalibration of # MPPC pixels
+  float _misCalibEcal;                // general ECAL miscalibration
+  float _deadCellFractionEcal;        // fraction of random dead channels
+  float _strip_abs_length;            // absorption length along strip for non-uniformity modeling
+  float _ecal_pixSpread;              // relative spread of MPPC pixel signal
+  float _ecal_elec_noise;             // electronics noise (as fraction of MIP)
+  float _ecalMaxDynMip;               // electronics dynamic range (in terms of MIPs)
+  int _ecalStrip_default_nVirt;       // # virtual cells used in Mokka simulation of strips (if available, this is taken from gear file)
+  std::string _ecal_deafult_layer_config; // ECAL layer configuration (if available, this is taken from gear file)
+
+  // internal variables
+  std::vector < std::pair <int, int> > _layerTypes;
+  int   _strip_virt_cells;
+  int _countWarnings;
+  std::string _ecalLayout;
+
+  enum {
+    SQUARE,
+    STRIP_ALIGN_ALONG_SLAB,
+    STRIP_ALIGN_ACROSS_SLAB,
+    SIECAL=0,
+    SCECAL
+  };
+
   
   TH1F* fEcal;
   TH1F* fHcal;

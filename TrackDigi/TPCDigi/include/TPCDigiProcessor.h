@@ -208,6 +208,8 @@ protected:
 
   std::vector< std::vector <Voxel_tpc *> > _tpcRowHits;
   std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap;
+  std::vector<float> _length;
+  int lenpos;
 
   LCCollectionVec* _trkhitVec;
   LCCollectionVec* _relCol;  

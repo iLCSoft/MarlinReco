@@ -449,6 +449,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   catch(DataNotAvailableException &e){
   }
   
+  float length=0.0;
+  float edep=0.0;
   if( STHcol != 0 ){
     
     int n_sim_hits = STHcol->getNumberOfElements()  ;
@@ -481,7 +483,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       
       _SimTHit = dynamic_cast<SimTrackerHit*>( STHcol->getElementAt( i ) ) ;
       
-      float edep;
       double padPhi(0.0);
       double padTheta (0.0);
       
@@ -560,6 +561,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           // in both cases set the angles to 90 degrees
           padTheta = twopi/4.0 ;
           padPhi = twopi/4.0 ;    
+          length=1.0e+50;
         }
         else{
           
@@ -602,6 +604,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             // get phi and theta using functions defined below
             padPhi = getPadPhi( &thisPoint, &precedingPoint, &thisPoint, &followingPoint);
             padTheta = getPadTheta(&precedingPoint, &thisPoint, &followingPoint);
+
+            //cal flight path of the particle for dedx
+            length=std::sqrt(std::pow(_previousSimTHit->getPosition()[0]-_nextSimTHit->getPosition()[0],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[1]-_nextSimTHit->getPosition()[1],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[2]-_nextSimTHit->getPosition()[2],2.0));
             
           }
           else if ( _mcp==_nextMCP     && _mcp==_nPlus2MCP )  { // first  hit of 3 from the same MCParticle
@@ -613,6 +620,10 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             padPhi = getPadPhi( &thisPoint, &thisPoint, &followingPoint, &nPlus2Point);
             padTheta = getPadTheta(&thisPoint, &followingPoint, &nPlus2Point);
             
+            //cal flight path of the particle for dedx
+            length=std::sqrt(std::pow(_previousSimTHit->getPosition()[0]-_nPlus2SimHit->getPosition()[0],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[1]-_nPlus2SimHit->getPosition()[1],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[2]-_nPlus2SimHit->getPosition()[2],2.0));
           }
           else if ( _mcp==_previousMCP && _mcp==_nMinus2MCP ) { // last   hit of 3 from the same MCParticle
             
@@ -623,10 +634,15 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
             padPhi = getPadPhi( &thisPoint, &nMinus2Point, &precedingPoint, &thisPoint);
             padTheta = getPadTheta(&nMinus2Point, &precedingPoint, &thisPoint);
             
+            //cal flight path of the particle for dedx
+            length=std::sqrt(std::pow(_previousSimTHit->getPosition()[0]-_nMinus2SimHit->getPosition()[0],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[1]-_nMinus2SimHit->getPosition()[1],2.0)
+                                +std::pow(_previousSimTHit->getPosition()[2]-_nMinus2SimHit->getPosition()[2],2.0));
           }
           else{ // the hit is isolated as either a single hit, or a pair of hits, from a single MCParticle  
             padTheta = twopi/4.0 ;
             padPhi = twopi/4.0 ;    
+            length=1.0e+50;
           }
         }
         
@@ -668,8 +684,6 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       if(_rejectCellID0 && (layerNumber<1)) {
         continue;
       }
-      
-      edep = _SimTHit->getEDep();
       
       // Calculate Point Resolutions according to Ron's Formula 
       
@@ -738,9 +752,13 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       }
       
       // create a tpc voxel hit and store it for this row
+      if(_SimTHit->getPathLength()!=0.0) edep = _SimTHit->getEDep()/_SimTHit->getPathLength();
+      else edep = 0.0;    //_SimTHit->getEDep();
       Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, edep, tpcRPhiRes, tpcZRes);
-      
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
+
+      //store length for dedx
+      _length.push_back(_SimTHit->getPathLength());
       ++numberOfVoxelsCreated;
       
       // store the simhit pointer for this tpcvoxel hit in the hit map
@@ -820,9 +838,14 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double tpcZRes = _binningZ;
       
       // create a tpc voxel hit for this simhit and store it for this tpc pad row
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, _SimTHit->getEDep(), tpcRPhiRes, tpcZRes);
+      if(_SimTHit->getPathLength()!=0.0) edep=_SimTHit->getEDep()/_SimTHit->getPathLength();
+      else edep = 0.0;      //_SimTHit->getEDep();
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, edep, tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
+
+      //store length for dedx
+      _length.push_back(_SimTHit->getPathLength());
       ++numberOfVoxelsCreated;      
       
       // store the simhit pointer for this voxel hit in a map
@@ -839,6 +862,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   
   vector <Voxel_tpc *> row_hits;
   
+  //initialize lenpos
+  lenpos=0;
   // loop over the tpc rows containing hits and check for merged hits
   for (unsigned int i = 0; i<_tpcRowHits.size(); ++i){
     
@@ -932,17 +957,20 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     
     
     // now all hits have been checked for adjacent hits, go throught and write out the hits or merge
-    
+    //get again
+    row_hits = _tpcRowHits.at(i);    
     for (unsigned int j = 0; j<row_hits.size(); ++j){
       
       Voxel_tpc* seed_hit = row_hits[j];
       
       if(seed_hit->IsMerged() || seed_hit->IsClusterHit()) { 
+        lenpos++;
         continue;
       }
       
       if(seed_hit->getNumberOfAdjacent()==0){ // no adjacent hits so smear and write to hit collection
         writeVoxelToHit(seed_hit);        
+        lenpos++;
       }
       
       else if(seed_hit->getNumberOfAdjacent() < (_maxMerge)){ // potential 3-hit cluster, can use simple average merge. 
@@ -956,7 +984,8 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           writeMergedVoxelsToHit(hitsToMerge);  
         }
         delete hitsToMerge;
-      } 
+        lenpos++;  //seed_hit->getNumberOfAdjacent();
+      }else lenpos++;
     } 
   }
   
@@ -1009,6 +1038,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }
   }
   
+  //clear length
+  _length.clear();
+
 #ifdef DIGIPLOTS
   _NSimTPCHitsHisto->fill(_NSimTPCHits);
   _NBackgroundSimTPCHitsHisto->fill(_NBackgroundSimTPCHits);
@@ -1107,6 +1139,9 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   double pos[3] = {point.x(),point.y(),point.z()}; 
   trkHit->setPosition(pos);
   trkHit->setEDep(seed_hit->getEDep());
+  //save length for dedx study
+  trkHit->setEDepError(_length[lenpos]);
+
   //  trkHit->setType( 500 );
   
 //  int side = lcio::ILDDetID::barrel ;
@@ -1209,6 +1244,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   double sumZ = 0;
   double sumPhi = 0;
   double sumEDep = 0;
+  double sumlen = 0;
   //  double R = 0;
   double lastR = 0;
   
@@ -1220,6 +1256,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
     sumZ += hitsToMerge->at(ihitCluster)->getZ();
     sumPhi += hitsToMerge->at(ihitCluster)->getPhi();
     sumEDep += hitsToMerge->at(ihitCluster)->getEDep();
+    sumlen += _length[lenpos+ihitCluster];
     hitsToMerge->at(ihitCluster)->setIsMerged();
     lastR = hitsToMerge->at(ihitCluster)->getR();
 
@@ -1235,6 +1272,9 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
     _relCol->addElement(rel);
     
   }
+  //set dedx as mean of merged hits(is it OK?)//
+  sumEDep=sumEDep/(double)number_of_hits_to_merge;
+  sumlen=sumlen/(double)number_of_hits_to_merge;
   
   double avgZ = sumZ/(hitsToMerge->size());
   double avgPhi = sumPhi/(hitsToMerge->size());
@@ -1271,6 +1311,7 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   //---------------------------------------------------------------------------------
   trkHit->setPosition(pos);
   trkHit->setEDep(sumEDep);
+  trkHit->setEDepError(sumlen);
   //  trkHit->setType( 500 );
   
   // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?

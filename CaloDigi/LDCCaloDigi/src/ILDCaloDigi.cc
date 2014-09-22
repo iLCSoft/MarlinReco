@@ -1412,7 +1412,7 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
     //   in "usual" (non-preshower) ecal collections, km1 = 0 is the first layer AFTER the preshower
     int km1 = idDecoder(hit)["K-1"];
 
-    int gearlayer = km1+1;
+    int gearlayer = km1+1; // in "gearlayer", preshower is 0, first layer after absorber is 1
 
     // after fix of MOKKA, this should be not needed
     // int gearlayer(-99); // this is the layer index which the GEAR geometry knows about. depends on driver version...
@@ -1452,93 +1452,61 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
       stripOrientation==STRIP_ALIGN_ALONG_SLAB : // I is the index along the slab (R-phi in barrel)
       stripOrientation==STRIP_ALIGN_ACROSS_SLAB ;// for some reason seems to be reversed in endcap...!!
 
-    //cout << "K-1 " << km1 << " " << "gear layer " << gearlayer << " " << _barrelPixelSizeZ[gearlayer] << " " << _barrelPixelSizeT[gearlayer] << endl;
+    streamlog_out ( DEBUG ) << "isBarrel = " << isBarrel << " : stripOrientation= " << stripOrientation << endl;
 
     // let's get the length of the virtual cell in the direction of the strip
+    //    fixed rare crashes, and streamlined code to get virtualCellSizeAlongStrip. Sept 2014
     float virtualCellSizeAlongStrip(0);
+
+    float* layerpixsize(0);
+    float* savedPixSize(0);
     if (isBarrel) {
       if (stripOrientation==STRIP_ALIGN_ACROSS_SLAB) {
-
-	virtualCellSizeAlongStrip = _barrelPixelSizeT[gearlayer];
-
-	// after fix of MOKKA, this should be not needed
-	//if ( _ecal_driver_version == 0 ) { // older version SEcal04
-	//  virtualCellSizeAlongStrip = _barrelPixelSizeT[gearlayer];
-	//} else if ( _ecal_driver_version == 1 ) { // SEcal05
-	//  //	  virtualCellSizeAlongStrip = _barrelPixelSizeZ[gearlayer];
-	//  virtualCellSizeAlongStrip = _barrelPixelSizeT[gearlayer];
-	//} else {
-	//  streamlog_out ( ERROR ) << "ERROR unknown ECAL driver version!" << endl;
-	//}
-	  
-	if (scTVirtLengthBar<0 && virtualCellSizeAlongStrip>0) { // stupid trick to deal with last layer which doesn't have info in gear file
-	  scTVirtLengthBar=virtualCellSizeAlongStrip;
-	} else {
-	  virtualCellSizeAlongStrip=scTVirtLengthBar;
-	}
-
-
+	layerpixsize=_barrelPixelSizeT;
+	savedPixSize=&scTVirtLengthBar;
       } else {
-
-	virtualCellSizeAlongStrip = _barrelPixelSizeZ[gearlayer];
-	// // after fix of MOKKA, this should be not needed
-	// if ( _ecal_driver_version == 0 ) { // older version SEcal04
-	//   virtualCellSizeAlongStrip = _barrelPixelSizeZ[gearlayer];
-	// } else if ( _ecal_driver_version == 1 ) { // SEcal05
-	//   //	  virtualCellSizeAlongStrip = _barrelPixelSizeT[gearlayer];
-	//   virtualCellSizeAlongStrip = _barrelPixelSizeZ[gearlayer];
-	// } else {
-	//   streamlog_out ( ERROR ) << "unknown ECAL driver version!" << endl;
-	// }
-
-	if (scLVirtLengthBar<0 && virtualCellSizeAlongStrip>0) { // stupid trick to deal with last layer which doesn't have info in gear file
-	  scLVirtLengthBar=virtualCellSizeAlongStrip;
-	} else {
-	  virtualCellSizeAlongStrip=scLVirtLengthBar;
-	}
-
+	layerpixsize=_barrelPixelSizeZ;
+	savedPixSize=&scLVirtLengthBar;
       }
-    } else { // endcap
+    } else { 
       if (stripOrientation==STRIP_ALIGN_ACROSS_SLAB) {
-
-	virtualCellSizeAlongStrip= _endcapPixelSizeX[gearlayer];
-	// after fix of MOKKA, this should be not needed
-	// if ( _ecal_driver_version == 0 ) { // older version SEcal04
-	//   virtualCellSizeAlongStrip= _endcapPixelSizeX[gearlayer];
-	// } else if ( _ecal_driver_version == 1 ) { // SEcal05
-	//   //	  virtualCellSizeAlongStrip= _endcapPixelSizeY[gearlayer];
-	//   virtualCellSizeAlongStrip= _endcapPixelSizeX[gearlayer];
-	// } else {
-	//   streamlog_out ( ERROR ) << "unknown ECAL driver version!" << endl;
-	// }
-
-        if (scTVirtLengthEnd<0 && virtualCellSizeAlongStrip>0) {
-          scTVirtLengthEnd=virtualCellSizeAlongStrip;
-        } else {
-          virtualCellSizeAlongStrip=scTVirtLengthEnd;
-        }
+	layerpixsize=_endcapPixelSizeX;
+	savedPixSize=&scTVirtLengthEnd;
       } else {
+	layerpixsize=_endcapPixelSizeY;
+	savedPixSize=&scLVirtLengthEnd;
+      }
+    }      
 
-	virtualCellSizeAlongStrip=_endcapPixelSizeY[gearlayer];
+    virtualCellSizeAlongStrip = layerpixsize[gearlayer];
+    if ( virtualCellSizeAlongStrip>0 ) { // looks OK
+      if ( *savedPixSize<0 ) { // no saved size yet, keep this one
+	*savedPixSize=virtualCellSizeAlongStrip;
+      }
+    } else { // no valid info in gear file for this layer
+      if ( *savedPixSize>0 ) { // use saved value from other layer
+	virtualCellSizeAlongStrip=*savedPixSize;
+      } else { // look at previous layers for one with same orientation (extra check, sept 2014)
 
-	// after fix of MOKKA, this should be not needed
-	//if ( _ecal_driver_version == 0 ) { // older version SEcal04
-	//} else if ( _ecal_driver_version == 1 ) { // SEcal05
-	//  //	  virtualCellSizeAlongStrip=_endcapPixelSizeX[gearlayer];
-	//  virtualCellSizeAlongStrip=_endcapPixelSizeY[gearlayer];
-	//} else {
-	//  streamlog_out ( ERROR ) << "unknown ECAL driver version!" << endl;
-	//}
+	streamlog_out ( DEBUG ) 
+	  << "could not get valid info from gear file..." << endl
+	  << "looking through previous layers to get a matching orientation" << endl
+	  << "this gear layer " << gearlayer << " type: " << _layerTypes[gearlayer].first << " " << _layerTypes[gearlayer].second << endl;
 
-        if (scLVirtLengthEnd<0 && virtualCellSizeAlongStrip>0) {
-          scLVirtLengthEnd=virtualCellSizeAlongStrip;
-        } else {
-          virtualCellSizeAlongStrip=scLVirtLengthEnd;
-        }
+	for ( int il=gearlayer-1; il>=0; il--) {
+	  // layer types include the preshower at posn "0"
+	  // gearlayer has preshower as layer 0
+	  if ( _layerTypes[il] == _layerTypes[gearlayer] ) { // found layer with same setup
+	    streamlog_out ( DEBUG ) 
+	      << "found a match! " << il << " " << 
+	      _layerTypes[il].first << " " << _layerTypes[il].second << " : " << layerpixsize[il] << endl;
+	    virtualCellSizeAlongStrip=layerpixsize[il];
+	    *savedPixSize=virtualCellSizeAlongStrip;
+	    break;
+	  }
+	}
       }
     }
-
-
     streamlog_out ( DEBUG ) << "virtualCellSizeAlongStrip = " << virtualCellSizeAlongStrip << endl;
 
     // calculate the new strip's I,J coordinates
@@ -1726,6 +1694,7 @@ int ILDCaloDigi::getNumberOfVirtualCells() {
 
 std::vector < std::pair <int, int> > & ILDCaloDigi::getLayerConfig() {
   // get the layer layout (silicon, scintillator)
+  // first element of layerTypes is the preshower
 
   if ( _layerTypes.size()==0 ) {
     for ( std::string::const_iterator ic=_ecalLayout.begin(); ic!=_ecalLayout.end(); ic++) {
@@ -1774,6 +1743,7 @@ std::vector < std::pair <int, int> > & ILDCaloDigi::getLayerConfig() {
       }
     }
   }
+
   return _layerTypes;
 }
 

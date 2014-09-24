@@ -1452,7 +1452,7 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
       stripOrientation==STRIP_ALIGN_ALONG_SLAB : // I is the index along the slab (R-phi in barrel)
       stripOrientation==STRIP_ALIGN_ACROSS_SLAB ;// for some reason seems to be reversed in endcap...!!
 
-    streamlog_out ( DEBUG ) << "isBarrel = " << isBarrel << " : stripOrientation= " << stripOrientation << endl;
+    streamlog_out ( DEBUG ) << "isBarrel = " << isBarrel << " : stripOrientation= " << stripOrientation << " gear layer = " << gearlayer << endl;
 
     // let's get the length of the virtual cell in the direction of the strip
     //    fixed rare crashes, and streamlined code to get virtualCellSizeAlongStrip. Sept 2014
@@ -1488,18 +1488,22 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
 	virtualCellSizeAlongStrip=*savedPixSize;
       } else { // look at previous layers for one with same orientation (extra check, sept 2014)
 
+	std::vector < std::pair <int, int> > layerTypes = getLayerConfig();
+
 	streamlog_out ( DEBUG ) 
 	  << "could not get valid info from gear file..." << endl
 	  << "looking through previous layers to get a matching orientation" << endl
-	  << "this gear layer " << gearlayer << " type: " << _layerTypes[gearlayer].first << " " << _layerTypes[gearlayer].second << endl;
+	  << "this gear layer " << gearlayer << " type: " << layerTypes[gearlayer].first << " " << layerTypes[gearlayer].second << endl;
+
+
 
 	for ( int il=gearlayer-1; il>=0; il--) {
 	  // layer types include the preshower at posn "0"
 	  // gearlayer has preshower as layer 0
-	  if ( _layerTypes[il] == _layerTypes[gearlayer] ) { // found layer with same setup
+	  if ( layerTypes[il] == layerTypes[gearlayer] ) { // found layer with same setup
 	    streamlog_out ( DEBUG ) 
 	      << "found a match! " << il << " " << 
-	      _layerTypes[il].first << " " << _layerTypes[il].second << " : " << layerpixsize[il] << endl;
+	      layerTypes[il].first << " " << layerTypes[il].second << " : " << layerpixsize[il] << endl;
 	    virtualCellSizeAlongStrip=layerpixsize[il];
 	    *savedPixSize=virtualCellSizeAlongStrip;
 	    break;

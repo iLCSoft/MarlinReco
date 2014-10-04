@@ -1,0 +1,86 @@
+This event illustrates most of the features:
+
+  It is mixed gadrons/leptonic
+  It contains a hard gluon readiation
+  It contains a cluster
+
+(there is, however, no inner-brem, and there are no MCParticles that needed to
+change identity from created-in-generator to created-in-simulation)
+
+The listing is produced by setting verbosity level to DEBUG4 (or lower).
+
+
+The beginning of listing shows the propertie of the 9 jets (4 hadronic,
+2 leptonic, 2 ISR and one overlay)
+
+Jet 1 comes from a string (type 1), but originates from a gluon radiated
+      off the originator of jet 3.
+Jet 2 comes from a string (type 1), originating at the hard interaction.
+Jet 3 and 4 comes from leptons (type 2). Hardly anything is seen:
+      jet 4 is the neutrino, jet 3 a muon hitting the BCal +
+      a brems that is seen.
+jet 5 comes from a cluster (type 3), but originate at the hard
+      interaction
+jet 6 also comes from a clusterm but originates from a gluon radiated
+      off the originator of jet 3.
+jet 7 and 8 are from ISR (type 4). Both have E=0, so there was
+      no ISR in the event.
+jet 9 it overlay (type 5). The total energy is ~ 2*500 GeV, indicating
+      that there were 2 overlayed interactions. 14 GeV of that was
+      actually seen (meassured as 17 GeV)
+
+The differnt ancestors listed are the values at different steps
+of the parton-shower. Wich one is expected to be reproduced by
+the jet-energy depends on wether there was gluon readiation or
+not, and wether the jet was type 1 or type 3.:
+      type    glue     ancestor
+       1       w/o       2 and 3
+       1        w        1 and 2
+       3       w/o       1
+       3        w        1 and 2  
+
+For leptons, they are expected to be identical, for ISR only the 
+first is relevent, and for overlay, none is relevant.
+
+The full listing follows. The two status numbers are the modified
+pythia ones and the final ones going into the weight of the jet->
+mcparticle relation. The latter is zero for particles in the beginning,
+up to the end of the parton shower. It is also zero for particles
+created in simulation. (For overlay particles the modified pythia
+code is the original one + 30). PDG and parent daughter relations
+are as in Pythia. Note that the parent-daughter releation is not
+usaable for  particles created in simulation: they do not reflect
+the position in the particle stack as they do in the generator.
+Instead the getParent/getDaugher methods of MCParticle must be
+used.
+p. E and M needs no explanation. jet is the jet of the particle.
+It is negative for particles before the end of the parton shower
+(0 for gluons). The companion jet is the jet with which the jet
+of the particle forms the _final_ colour neutral system.
+Type is as explained in the README, and PFO/energy is the link to
+and energy of the actually detected particles. Only given for
+MCParticles there were seen, or might have been seen (status 1),
+but weren't (marked by N.A.).
+
+Then follows the various relations of each jet
+fafp (meaning fermion/anti-fermion pair) is given at the
+beginning and end of the parton shower. This are the fafp
+that goes into the object defining the colour-neutral system
+For ISR and overlay, both these are 0. For the leptons
+jet 3 and 4 beginning and end is the same (9 and 10), which is also
+the case for jet 2 (13), since nothing significant happened
+with the that quark in the parton shower. It is also true for
+jet 5, although it did join to form a cluster.
+For jets 1 and 6, which originates from a gluon, the two are
+different (14/14 and 37/36, respectively), but the fafp of the gluon 
+is the same as that of the begining (14).
+The qrk/lept is the last originator before the final colour neutral
+system, ie. the quark going into the string (jets 1/2, lines 37/41), or
+cluster (jets 5/6 lines 35/36). As one can see comparing eg. 13
+(fasp for jet 2) and 41 (quark) with the true energy of the jet,
+the fsap one is the quark that most looks like the jet. The qrk
+one has it's energy split in to all the glouns between lines 34 and 41.
+
+The following two tables sorts all this out:
+The first initial colour neutral is formed by jets 1,2 5 and 6,
+and indeed has a mass close to the W (pdg 24)

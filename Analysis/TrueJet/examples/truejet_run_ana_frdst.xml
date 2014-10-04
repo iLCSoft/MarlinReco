@@ -1,0 +1,55 @@
+<?xml-stylesheet type="text/xsl" href="tools/marlin.xsl"?>
+<!--##########################################
+    #                                        #
+    #     Example steering file for marlin   #
+    #     Use Use_TrueJet to analyse the     #
+    #     the true-jets collections on the   #
+    #     written to a DST beforehand        #                           
+    #                                        #
+    ##########################################-->
+
+
+<marlin>
+ <execute>
+  <processor name="MyAIDAProcessor"/>
+  <processor name="myuse_truejet"/>
+  </execute>
+
+ <global>
+
+<parameter name="LCIOInputFiles">
+/tmp/newhej.slcio
+</parameter>
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="10" />  
+  <parameter name="SkipNEvents" value="" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="GearXMLFile"> gear_ild.xml </parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG5 </parameter> 
+ </global>
+
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">my_root </parameter>
+  <!-- type of output file xml (default) or root ( only OpenScientist)-->
+  <parameter name="FileType" type="string">root </parameter>
+</processor>
+
+
+
+
+
+
+<processor name="myuse_truejet" type="Use_TrueJet">
+ <!-- If TrueJets were run with its defaults when creating the DST, only your "own" parameters are needed 
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed</parameter>
+  <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
+  <parameter name="RecoMCTruthLinkName" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
+  -->
+
+</processor>
+
+</marlin>

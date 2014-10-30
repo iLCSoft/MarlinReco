@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
+#include <cstdlib>
+#include <sstream>
 
 #include "CLHEP/Random/RandPoisson.h"
 #include "CLHEP/Random/RandGauss.h"
@@ -337,10 +339,15 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              _ecal_misCalibNpix,
                              float (0.05) );
 
-  registerProcessorParameter("ECAL_miscalibration" ,
-                             "ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
-                             _misCalibEcal,
-                             (float)0.01);
+  registerProcessorParameter("ECAL_miscalibration_uncorrel" ,
+                             "uncorrelated ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
+                             _misCalibEcal_uncorrel,
+                             (float)0.0);
+
+  registerProcessorParameter("ECAL_miscalibration_correl" ,
+                             "correlated ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
+                             _misCalibEcal_correl,
+                             (float)0.0);
 
   registerProcessorParameter("ECAL_deadCellRate" ,
                              "ECAL random dead cell fraction (as a fraction: 0->1) " ,
@@ -381,6 +388,66 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              "default ECAL layer configuration (used if not found in gear file)",
                              _ecal_deafult_layer_config,
                              std::string("000000000000000") );
+
+  // HCAL realistic digi parameters
+  registerProcessorParameter("CalibHCALMIP" ,
+                             "calibration to convert HCAL deposited energy to MIPs" ,
+                             _calibHcalMip,
+                             (float)1.0e-4);
+
+  registerProcessorParameter("HCAL_apply_realistic_digi" ,
+                             "apply realistic digitisation to HCAL hits? (0=none, 1=scintillator/SiPM)" ,
+                             _applyHcalDigi,
+                             int(0));
+
+  registerProcessorParameter("HCAL_PPD_PE_per_MIP" ,
+                             "# Photo-electrons per MIP (for AHCAL): used to poisson smear #PEs if >0" ,
+                             _hcal_PPD_pe_per_mip,
+                             (float)10.);
+
+  registerProcessorParameter("HCAL_PPD_N_Pixels" ,
+                             "HCAL total number of MPPC/SiPM pixels for implementation of saturation effect" ,
+                             _hcal_PPD_n_pixels,
+                             (int)400);
+
+  registerProcessorParameter("HCAL_PPD_N_Pixels_uncertainty" ,
+                             "HCAL fractional uncertainty of effective total number of MPPC/SiPM pixels" ,
+                             _hcal_misCalibNpix,
+                             float (0.05) );
+
+  registerProcessorParameter("HCAL_miscalibration_uncorrel" ,
+                             "uncorrelated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
+                             _misCalibHcal_uncorrel,
+                             (float)0.0);
+
+  registerProcessorParameter("HCAL_miscalibration_correl" ,
+                             "correlated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
+                             _misCalibHcal_correl,
+                             (float)0.0);
+
+  registerProcessorParameter("HCAL_deadCellRate" ,
+                             "HCAL random dead cell fraction (as a fraction: 0->1) " ,
+                             _deadCellFractionHcal,
+                             (float)0.);
+
+  registerProcessorParameter("HCAL_pixel_spread",
+                             "variation of mppc/sipm pixels capacitance in HCAL (as a fraction: 0.01=1%)",
+                             _hcal_pixSpread,
+                             float (0.));
+
+  registerProcessorParameter("HCAL_elec_noise_mips",
+                             "typical electronics noise (HCAL, in MIP units)",
+                             _hcal_elec_noise,
+                             float (0.));
+
+  registerProcessorParameter("HCAL_maxDynamicRange_MIP",
+                             "maximum of dynamic range for HCAL (in MIPs)",
+                             _hcalMaxDynMip,
+                             float (200.) );
+
+
+
+
   
   // end daniel
 
@@ -500,7 +567,15 @@ void ILDCaloDigi::init() {
   } catch(gear::UnknownParameterException &e) { 
     try {                                                           // otherwise look in the mokka parameters section
       std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
-      _strip_virt_cells = std::atoi( nVirtualMokkaS.c_str() );
+
+      //      _strip_virt_cells = std::atoi( nVirtualMokkaS.c_str() );
+
+      std::stringstream convert(nVirtualMokkaS);
+      if ( !(convert >> _strip_virt_cells) ) {
+	streamlog_out (ERROR) << "could not decipher number of virtual cells! " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
+	assert(0);
+      }
+
       streamlog_out (MESSAGE) << "taking number of virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
     } catch(gear::UnknownParameterException &e) {                  // if still not found, use default from processor parameter
       _strip_virt_cells = _ecalStrip_default_nVirt;
@@ -524,13 +599,25 @@ void ILDCaloDigi::init() {
 
 
   // set up the scintillator/MPPC digitiser
-  _scDigi = new ScintillatorEcalDigi();
-  _scDigi->setPEperMIP(_ecal_PPD_pe_per_mip);
-  _scDigi->setCalibMIP(_calibEcalMip);
-  _scDigi->setNPix(_ecal_PPD_n_pixels);
-  _scDigi->setRandomMisCalibNPix(_ecal_misCalibNpix);
-  _scDigi->setPixSpread(_ecal_pixSpread);
-  _scDigi->setElecNoise(_ecal_elec_noise);
+  _scEcalDigi = new ScintillatorPpdDigi();
+  _scEcalDigi->setPEperMIP(_ecal_PPD_pe_per_mip);
+  _scEcalDigi->setCalibMIP(_calibEcalMip);
+  _scEcalDigi->setNPix(_ecal_PPD_n_pixels);
+  _scEcalDigi->setRandomMisCalibNPix(_ecal_misCalibNpix);
+  _scEcalDigi->setPixSpread(_ecal_pixSpread);
+  _scEcalDigi->setElecNoise(_ecal_elec_noise);
+  cout << "ECAL sc digi:" << endl;
+  _scEcalDigi->printParameters();
+
+  _scHcalDigi = new ScintillatorPpdDigi();
+  _scHcalDigi->setPEperMIP(_hcal_PPD_pe_per_mip);
+  _scHcalDigi->setCalibMIP(_calibHcalMip);
+  _scHcalDigi->setNPix(_hcal_PPD_n_pixels);
+  _scHcalDigi->setRandomMisCalibNPix(_hcal_misCalibNpix);
+  _scHcalDigi->setPixSpread(_hcal_pixSpread);
+  _scHcalDigi->setElecNoise(_hcal_elec_noise);
+  cout << "HCAL sc digi:" << endl;
+  _scHcalDigi->printParameters();
 
 
 }
@@ -550,6 +637,10 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 
   // copy the flags from the input collection
   _flag.setBit(LCIO::CHBIT_LONG);
+
+  // decide on this event's correlated miscalibration
+  _event_correl_miscalib_ecal = CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_correl );
+  _event_correl_miscalib_hcal = CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_correl );
 
   //
   // * Reading Collections of ECAL Simulated Hits *
@@ -732,9 +823,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                       calhit->setEnergy(calibr_coeff*energyi);
                       // calhit->setEnergy(energyi);
                     }
-
+		    
                     eCellOutput+= energyi*calibr_coeff;
-
+		    
                     calhit->setTime(timei);
                     calhit->setPosition(hit->getPosition());
                     calhit->setType( CHT( CHT::em, CHT::ecal , caloLayout ,  layer ) );
@@ -862,6 +953,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           float z = hit->getPosition()[2];
           //      float r = sqrt(x*x+y*y);
           if(_useHcalTiming){
+
             float hcalTimeWindowMax = _hcalEndcapTimeWindowMax;
             if(caloLayout==CHT::barrel)hcalTimeWindowMax = _hcalBarrelTimeWindowMax;
 
@@ -917,6 +1009,11 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                   fHcalC2->Fill(timei-dt,energyi*calibr_coeff);
                 }
                 //fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
+		
+                // apply extra energy digitisation effects
+		
+                energyi = ahcalEnergyDigi(energyi);
+
                 if (energyi > _thresholdHcal[0]){
                   if(hit->getPosition()[2]>0){
                     float rxy = sqrt(x*x+y*y);
@@ -970,11 +1067,17 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 }
               }
             }
-          }else{
+          }else{ // don't use timing
             CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
             calhit->setCellID0(cellid);
             calhit->setCellID1(cellid1);
             float energyi = hit->getEnergy();
+
+	    // apply realistic digitisation
+            energyi = ahcalEnergyDigi(energyi);
+
+
+
             if(_digitalHcal){
               calhit->setEnergy(calibr_coeff);
             }else{
@@ -1325,9 +1428,31 @@ float ILDCaloDigi::ecalEnergyDigi(float energy) {
   // add electronics dynamic range
   if (_ecalMaxDynMip>0) e_out = min (e_out, _ecalMaxDynMip*_calibEcalMip);
   // random miscalib
-  if (_misCalibEcal>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibEcal );
+  if (_misCalibEcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_uncorrel );
+  if (_misCalibEcal_correl>0) e_out*=_event_correl_miscalib_ecal;
+
   // random cell kill
   if (_deadCellFractionEcal>0 && CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionEcal ) e_out=0;
+
+  return e_out;
+}
+
+
+float ILDCaloDigi::ahcalEnergyDigi(float energy) {
+  // some extra digi effects (daniel)
+  // controlled by _applyHcalDigi = 0 (none), 1 (scintillator/SiPM)
+
+  float e_out(energy);
+  if ( _applyHcalDigi==1 ) e_out = scintillatorDigi(energy, false);  // scintillator digi
+
+  // add electronics dynamic range
+  if (_hcalMaxDynMip>0) e_out = min (e_out, _hcalMaxDynMip*_calibHcalMip);
+  // random miscalib
+  if (_misCalibHcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
+  if (_misCalibHcal_correl>0)   e_out*=_event_correl_miscalib_hcal;
+
+  // random cell kill
+  if (_deadCellFractionHcal>0 && CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionHcal ) e_out=0;
 
   return e_out;
 }
@@ -1355,13 +1480,13 @@ float ILDCaloDigi::scintillatorDigi(float energy, bool isEcal) {
   // - applies PPD saturation according to #pixels
   // Daniel Jeans, Jan/Feb 2014.
 
-  if (!isEcal) {
-    streamlog_out ( ERROR ) << "this detailed scintillator digi only implemented for ECAL!" << endl;
-    return -1;
+  float digiEn(0);
+  if (isEcal) {
+    digiEn = _scEcalDigi->getDigitisedEnergy(energy);
+  } else {
+    digiEn = _scHcalDigi->getDigitisedEnergy(energy);
   }
-
-  return _scDigi->getDigitisedEnergy(energy);
-
+  return digiEn;
 }
 
 LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBarrel, int stripOrientation) {
@@ -1525,9 +1650,6 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
     float relativePos = relativeIndx%getNumberOfVirtualCells(); // this is index within strip wrt strip end (0->_strip_virt_cells-1)
     relativePos -= (getNumberOfVirtualCells()-1)/2.0;    // index wrt strip centre
     relativePos *= virtualCellSizeAlongStrip;    // distance wrt strip centre
-
-
-    //    cout << "NEW: " << i_new << " " << j_new << " " << relativeIndx << " " << relativeIndx%getNumberOfVirtualCells() << " " << relativePos << endl;
 
     // effect of absorbtion length within scintillator
     //     TODO: should check the polarity is consistent with mppc position, to make sure larger response nearer to mppc....
@@ -1700,11 +1822,15 @@ std::vector < std::pair <int, int> > & ILDCaloDigi::getLayerConfig() {
   // get the layer layout (silicon, scintillator)
   // first element of layerTypes is the preshower
 
-  if ( _layerTypes.size()==0 ) {
-    for ( std::string::const_iterator ic=_ecalLayout.begin(); ic!=_ecalLayout.end(); ic++) {
-      const char cc = *ic;
-      int type = std::atoi( &cc );
 
+  if ( _layerTypes.size()==0 ) {
+
+    for(std::string::size_type i = 0; i < _ecalLayout.size(); ++i) {
+
+      // convert each element of string to integer
+      // int type = std::atoi( &ccdd ); // this is not well done (must be null-terminated)
+      int type = _ecalLayout[i] - '0'; // this is less obvious, but works...
+      
       switch ( type ) { // these originally defined in Mokka driver SEcalSD04
       case 0:
 	_layerTypes.push_back(std::pair < int, int > (SIECAL, SQUARE) );

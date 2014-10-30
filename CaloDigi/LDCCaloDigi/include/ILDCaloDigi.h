@@ -11,7 +11,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "ScintillatorEcalDigi.h"
+#include "ScintillatorPpdDigi.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -103,6 +103,8 @@ class ILDCaloDigi : public Processor {
  protected:
 
   float ecalEnergyDigi(float energy);
+  float ahcalEnergyDigi(float energy);
+
   float siliconDigi(float energy);
   float scintillatorDigi(float energy, bool isEcal);
   LCCollection* combineVirtualStripCells(LCCollection* col, bool isBarrel, int orientation );
@@ -180,7 +182,8 @@ class ILDCaloDigi : public Processor {
   float _hcalDeltaTimeHitResolution;
   float _hcalTimeResolution;
 
-  ScintillatorEcalDigi* _scDigi;
+  ScintillatorPpdDigi* _scEcalDigi;
+  ScintillatorPpdDigi* _scHcalDigi;
 
 
   // parameters for extra ECAL digitization effects
@@ -190,7 +193,10 @@ class ILDCaloDigi : public Processor {
   int   _ecal_PPD_n_pixels;           // # pixels in MPPC
   float _ehEnergy;                    // energy to create e-h pair in silicon
   float _ecal_misCalibNpix;           // miscalibration of # MPPC pixels
-  float _misCalibEcal;                // general ECAL miscalibration
+
+  float _misCalibEcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
+  float _misCalibEcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels)
+  
   float _deadCellFractionEcal;        // fraction of random dead channels
   float _strip_abs_length;            // absorption length along strip for non-uniformity modeling
   float _ecal_pixSpread;              // relative spread of MPPC pixel signal
@@ -199,11 +205,32 @@ class ILDCaloDigi : public Processor {
   int _ecalStrip_default_nVirt;       // # virtual cells used in Mokka simulation of strips (if available, this is taken from gear file)
   std::string _ecal_deafult_layer_config; // ECAL layer configuration (if available, this is taken from gear file)
 
+  // parameters for extra AHCAL digitization effects
+  float _calibHcalMip;                // MIP calibration factor
+  int   _applyHcalDigi;               // which realistic calib to apply
+  float _hcal_PPD_pe_per_mip;         // # photoelectrons/MIP for MPPC
+  int   _hcal_PPD_n_pixels;           // # pixels in MPPC
+  float _hcal_misCalibNpix;           // miscalibration of # MPPC pixels
+
+  float _misCalibHcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
+  float _misCalibHcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels) 
+
+  float _deadCellFractionHcal;        // fraction of random dead channels
+  float _hcal_pixSpread;              // relative spread of MPPC pixel signal
+  float _hcal_elec_noise;             // electronics noise (as fraction of MIP)
+  float _hcalMaxDynMip;               // electronics dynamic range (in terms of MIPs)
+
+
+
   // internal variables
   std::vector < std::pair <int, int> > _layerTypes;
   int   _strip_virt_cells;
   int _countWarnings;
   std::string _ecalLayout;
+
+  float _event_correl_miscalib_ecal;
+  float _event_correl_miscalib_hcal;
+
 
   enum {
     SQUARE,

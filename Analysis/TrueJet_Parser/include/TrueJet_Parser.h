@@ -18,7 +18,7 @@ struct MCPpyjet : LCIntExtension<MCPpyjet> {} ;
 struct JetIndex : LCIntExtension<JetIndex> {} ;
 struct IcnIndex : LCIntExtension<IcnIndex> {} ;
 struct FcnIndex : LCIntExtension<FcnIndex> {} ;
-LCRelationNavigator* reltrue =0;
+LCRelationNavigator* reltrue_tj =0;
 
 class TrueJet_Parser {
   
@@ -106,7 +106,7 @@ class TrueJet_Parser {
     LCRelationNavigator* relip ;
     LCRelationNavigator* reltjreco ;
     LCRelationNavigator* reltjmcp ;
-    LCRelationNavigator* reltrue ;
+    LCRelationNavigator* reltrue_tj ;
     LCCollection* tjcol ;
     LCCollection* fcncol ;
     LCCollection* icncol ;

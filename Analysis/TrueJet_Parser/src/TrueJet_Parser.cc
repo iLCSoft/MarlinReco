@@ -130,7 +130,7 @@ const double* TrueJet_Parser::p4quark(int ijet) {
 
 
 double TrueJet_Parser::Etrueseen(int ijet) {
-  if (  reltrue == 0 ) {
+  if (  reltrue_tj == 0 ) {
     LCCollection* rmclcol = NULL;
     try{
      rmclcol = evt->getCollection( get_recoMCTruthLink() );
@@ -140,13 +140,13 @@ double TrueJet_Parser::Etrueseen(int ijet) {
       streamlog_out(WARNING) << get_recoMCTruthLink()   << " collection not available" << std::endl;
         rmclcol = NULL;
     }
-    reltrue = new LCRelationNavigator( rmclcol );
+    reltrue_tj = new LCRelationNavigator( rmclcol );
   }  
   LCObjectVec mcpvec = reltjmcp->getRelatedToObjects( jets->at(ijet) );
   double E=0.0;
   for ( unsigned kk=0 ; kk<mcpvec.size() ; kk++ ) {
     MCParticle* mcp  = dynamic_cast<MCParticle*>(mcpvec[kk]);
-    LCObjectVec recovec = reltrue->getRelatedFromObjects( mcp);
+    LCObjectVec recovec = reltrue_tj->getRelatedFromObjects( mcp);
    if ( recovec.size() > 0 ) { // if reconstructed
       E+=mcp->getEnergy();
     }
@@ -163,7 +163,7 @@ double TrueJet_Parser::Mtrueseen(int ijet) {
   return M ;
 }
 const double* TrueJet_Parser::ptrueseen(int ijet) {
-  if (  reltrue == 0 ) {
+  if (  reltrue_tj == 0 ) {
     LCCollection* rmclcol = NULL;
      try{
       rmclcol = evt->getCollection( get_recoMCTruthLink() );
@@ -173,14 +173,14 @@ const double* TrueJet_Parser::ptrueseen(int ijet) {
       streamlog_out(WARNING) << get_recoMCTruthLink()   << " collection not available" << std::endl;
         rmclcol = NULL;
     }
-    reltrue = new LCRelationNavigator( rmclcol );
+    reltrue_tj = new LCRelationNavigator( rmclcol );
   }  
   LCObjectVec mcpvec = reltjmcp->getRelatedToObjects( jets->at(ijet) );
   //double* p=0; 
   p3[0]=0 ; p3[1]=0 ; p3[2]=0 ; 
   for ( unsigned kk=0 ; kk<mcpvec.size() ; kk++ ) {
     MCParticle* mcp  = dynamic_cast<MCParticle*>(mcpvec[kk]);
-    LCObjectVec recovec = reltrue->getRelatedFromObjects( mcp);
+    LCObjectVec recovec = reltrue_tj->getRelatedFromObjects( mcp);
     if ( recovec.size() > 0 ) { // if reconstructed
       const double* mom = mcp->getMomentum();
       for (int kk=0 ; kk<3 ; kk++ ) {
@@ -571,7 +571,7 @@ void TrueJet_Parser::getall( LCEvent * event ) {
         fcnlcol  = NULL;
     }
     reltjmcp = new LCRelationNavigator( tjmcplcol );
-    reltrue =NULL ;
+    reltrue_tj =NULL ;
 
 }
 void TrueJet_Parser::delall( ) { 
@@ -584,5 +584,5 @@ void TrueJet_Parser::delall( ) {
     if (  jets != NULL) delete  jets;
     if (  finalcns != NULL) delete  finalcns;
     if (  initialcns!= NULL ) delete   initialcns;
-    if ( reltrue != NULL ) delete reltrue;
+    if ( reltrue_tj != NULL ) delete reltrue_tj;
 }

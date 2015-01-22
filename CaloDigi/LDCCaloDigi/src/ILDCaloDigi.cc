@@ -344,6 +344,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              _misCalibEcal_uncorrel,
                              (float)0.0);
 
+  registerProcessorParameter("ECAL_miscalibration_uncorrel_memorise" ,
+                             "store oncorrelated ECAL miscalbrations in memory? (WARNING: can take a lot of memory if used...) " ,
+                             _misCalibEcal_uncorrel_keep,
+                             (bool)false);
+
   registerProcessorParameter("ECAL_miscalibration_correl" ,
                              "correlated ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
                              _misCalibEcal_correl,
@@ -419,6 +424,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              "uncorrelated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
                              _misCalibHcal_uncorrel,
                              (float)0.0);
+
+  registerProcessorParameter("HCAL_miscalibration_uncorrel_memorise" ,
+                             "store oncorrelated HCAL miscalbrations in memory? (WARNING: can take a lot of memory if used...) " ,
+                             _misCalibHcal_uncorrel_keep,
+                             (bool)false);
 
   registerProcessorParameter("HCAL_miscalibration_correl" ,
                              "correlated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) " ,
@@ -802,7 +812,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 }
 
                 // apply extra energy digitisation effects
-                energyi = ecalEnergyDigi(energyi);
+                energyi = ecalEnergyDigi(energyi, cellid, cellid1);
 
                 if (energyi > _thresholdEcal) {
                   float timeCor=0;
@@ -848,7 +858,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
             float energyi = hit->getEnergy();
 
             // apply extra energy digitisation effects
-            energyi = ecalEnergyDigi(energyi);
+            energyi = ecalEnergyDigi(energyi, cellid, cellid1);
 
             calhit->setCellID0(cellid);
             calhit->setCellID1(cellid1);
@@ -1012,7 +1022,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 		
                 // apply extra energy digitisation effects
 		
-                energyi = ahcalEnergyDigi(energyi);
+                energyi = ahcalEnergyDigi(energyi, cellid, cellid1);
 
                 if (energyi > _thresholdHcal[0]){
                   if(hit->getPosition()[2]>0){
@@ -1074,7 +1084,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
             float energyi = hit->getEnergy();
 
 	    // apply realistic digitisation
-            energyi = ahcalEnergyDigi(energyi);
+            energyi = ahcalEnergyDigi(energyi, cellid, cellid1);
 
 
 
@@ -1416,10 +1426,12 @@ float ILDCaloDigi::analogueEcalCalibCoeff(int layer ) {
 
 }
 
-float ILDCaloDigi::ecalEnergyDigi(float energy) {
+float ILDCaloDigi::ecalEnergyDigi(float energy, int id0, int id1) {
 
   // some extra digi effects (daniel)
   // controlled by _applyEcalDigi = 0 (none), 1 (silicon), 2 (scintillator)
+
+  // small update for time-constant uncorrelated miscalibrations. DJ, Jan 2015
 
   float e_out(energy);
   if      ( _applyEcalDigi==1 ) e_out = siliconDigi(energy);   // silicon digi
@@ -1428,7 +1440,23 @@ float ILDCaloDigi::ecalEnergyDigi(float energy) {
   // add electronics dynamic range
   if (_ecalMaxDynMip>0) e_out = min (e_out, _ecalMaxDynMip*_calibEcalMip);
   // random miscalib
-  if (_misCalibEcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_uncorrel );
+
+  if (_misCalibEcal_uncorrel>0) {
+    float miscal(0);
+    if ( _misCalibEcal_uncorrel_keep ) {
+      std::pair <int, int> id(id0, id1);
+      if ( _ECAL_cell_miscalibs.find(id)!=_ECAL_cell_miscalibs.end() ) { // this cell was previously seen, and a miscalib stored
+	miscal = _ECAL_cell_miscalibs[id]; 
+      } else {                                                           // we haven't seen this one yet, get a miscalib for it
+	miscal = CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_uncorrel );
+	_ECAL_cell_miscalibs[id]=miscal;
+      }
+    } else {
+      miscal = CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_uncorrel );
+    }
+    e_out*=miscal;
+  }
+
   if (_misCalibEcal_correl>0) e_out*=_event_correl_miscalib_ecal;
 
   // random cell kill
@@ -1438,17 +1466,36 @@ float ILDCaloDigi::ecalEnergyDigi(float energy) {
 }
 
 
-float ILDCaloDigi::ahcalEnergyDigi(float energy) {
+float ILDCaloDigi::ahcalEnergyDigi(float energy, int id0, int id1) {
   // some extra digi effects (daniel)
   // controlled by _applyHcalDigi = 0 (none), 1 (scintillator/SiPM)
+
+  // small update for time-constant uncorrelated miscalibrations. DJ, Jan 2015
 
   float e_out(energy);
   if ( _applyHcalDigi==1 ) e_out = scintillatorDigi(energy, false);  // scintillator digi
 
   // add electronics dynamic range
   if (_hcalMaxDynMip>0) e_out = min (e_out, _hcalMaxDynMip*_calibHcalMip);
+
   // random miscalib
-  if (_misCalibHcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
+  //  if (_misCalibHcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
+  if (_misCalibHcal_uncorrel>0) {
+    float miscal(0);
+    if ( _misCalibHcal_uncorrel_keep ) {
+      std::pair <int, int> id(id0, id1);
+      if ( _HCAL_cell_miscalibs.find(id)!=_HCAL_cell_miscalibs.end() ) { // this cell was previously seen, and a miscalib stored
+	miscal = _HCAL_cell_miscalibs[id]; 
+      } else {                                                           // we haven't seen this one yet, get a miscalib for it
+	miscal = CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
+	_HCAL_cell_miscalibs[id]=miscal;
+      }
+    } else {
+      miscal = CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
+    }
+    e_out*=miscal;
+  }
+
   if (_misCalibHcal_correl>0)   e_out*=_event_correl_miscalib_hcal;
 
   // random cell kill

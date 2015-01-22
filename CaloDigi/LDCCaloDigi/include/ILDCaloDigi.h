@@ -102,8 +102,8 @@ class ILDCaloDigi : public Processor {
 
  protected:
 
-  float ecalEnergyDigi(float energy);
-  float ahcalEnergyDigi(float energy);
+  float ecalEnergyDigi(float energy, int id0, int id1);
+  float ahcalEnergyDigi(float energy, int id0, int id1);
 
   float siliconDigi(float energy);
   float scintillatorDigi(float energy, bool isEcal);
@@ -195,8 +195,9 @@ class ILDCaloDigi : public Processor {
   float _ecal_misCalibNpix;           // miscalibration of # MPPC pixels
 
   float _misCalibEcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
+  bool  _misCalibEcal_uncorrel_keep;  // if true, use the same ECAL cell miscalibs in each event (requires more memory)
   float _misCalibEcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels)
-  
+
   float _deadCellFractionEcal;        // fraction of random dead channels
   float _strip_abs_length;            // absorption length along strip for non-uniformity modeling
   float _ecal_pixSpread;              // relative spread of MPPC pixel signal
@@ -213,6 +214,7 @@ class ILDCaloDigi : public Processor {
   float _hcal_misCalibNpix;           // miscalibration of # MPPC pixels
 
   float _misCalibHcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
+  bool  _misCalibHcal_uncorrel_keep;  // if true, use the same AHCAL cell miscalibs in each event (requires more memory)
   float _misCalibHcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels) 
 
   float _deadCellFractionHcal;        // fraction of random dead channels
@@ -231,6 +233,8 @@ class ILDCaloDigi : public Processor {
   float _event_correl_miscalib_ecal;
   float _event_correl_miscalib_hcal;
 
+  std::map < std::pair <int, int> , float > _ECAL_cell_miscalibs;
+  std::map < std::pair <int, int> , float > _HCAL_cell_miscalibs;
 
   enum {
     SQUARE,

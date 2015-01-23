@@ -521,90 +521,92 @@ void ILDCaloDigi::init() {
   const gear::GearParameters& pMokka = Global::GEAR->getGearParameters("MokkaParameters");
 
   // Calorimeter geometry from GEAR
-  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
-  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
-  //  const gear::CalorimeterParameters& pHcalBarrel = Global::GEAR->getHcalBarrelParameters();
-  //  const gear::CalorimeterParameters& pHcalEndcap = Global::GEAR->getHcalEndcapParameters();
-  const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
-  const gear::LayerLayout& ecalEndcapLayout = pEcalEndcap.getLayerLayout();
-  // const gear::LayerLayout& hcalBarrelLayout = pHcalBarrel.getLayerLayout();
-  // const gear::LayerLayout& hcalEndcapLayout = pHcalEndcap.getLayerLayout();
-
-  // determine geometry of ECAL
-  int symmetry = pEcalBarrel.getSymmetryOrder();
-  _zOfEcalEndcap = (float)pEcalEndcap.getExtent()[2];
-
-  // Determine ECAL polygon angles
-  // Store radial vectors perpendicular to stave layers in _ecalBarrelStaveDir
-  // ASSUMES Mokka Stave numbering 0 = top, then numbering increases anti-clockwise
-  if(symmetry>1){
-    float nFoldSymmetry = static_cast<float>(symmetry);
-    float phi0 = pEcalBarrel.getPhi0();
-    for(int i=0;i<symmetry;++i){
-      float phi  = phi0 + i*twopi/nFoldSymmetry;
-      _barrelStaveDir[i][0] = cos(phi);
-      _barrelStaveDir[i][1] = sin(phi);
-    }
-  }
-
-  for(int i=0;i<ecalBarrelLayout.getNLayers();++i){
-    _barrelPixelSizeT[i] = ecalBarrelLayout.getCellSize0(i);
-    _barrelPixelSizeZ[i] = ecalBarrelLayout.getCellSize1(i);
-    streamlog_out ( DEBUG ) << "barrel pixel size " << i << " " << _barrelPixelSizeT[i] << " " << _barrelPixelSizeZ[i] << endl;
-  }
-
-  for(int i=0;i<ecalEndcapLayout.getNLayers();++i){
-    _endcapPixelSizeX[i] = ecalEndcapLayout.getCellSize0(i);
-    _endcapPixelSizeY[i] = ecalEndcapLayout.getCellSize1(i);
-    streamlog_out ( DEBUG ) << "endcap pixel size " << i << " " << _endcapPixelSizeX[i] << " " << _endcapPixelSizeY[i] << endl;
-  }
 
 
-  // check we are using a recent version of the mokka ecal driver
-  // old ones had a bug in the gear file
   try {
-    pEcalBarrel.getIntVal("Ecal_barrel_gear_per_sensitiveLayer");
-  } catch(gear::UnknownParameterException &e) { 
-    streamlog_out (WARNING) << "You seem to be using an older version of the Mokka ECAL driver, affected by a bug in the gear file output" << endl;
-    streamlog_out (WARNING) << "If you have a mix of silicon/scintillator layers in the ECAL, this may cause some confusion" << endl;
-    streamlog_out (WARNING) << "You are recommended to use a later Mokka version, at least for hybrid (si+sc) ECALs" << endl;
-  }
+    const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
+    const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
+    const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
+    const gear::LayerLayout& ecalEndcapLayout = pEcalEndcap.getLayerLayout();
+    // determine geometry of ECAL
+    int symmetry = pEcalBarrel.getSymmetryOrder();
+    _zOfEcalEndcap = (float)pEcalEndcap.getExtent()[2];
 
-  // number of virtual cells in ECAL scint strips   
-  try {                                                             // first try to get from ECAL barrel section of gear file (it's here for "latest" Mokka versions)
-    _strip_virt_cells=pEcalBarrel.getIntVal("Ecal_Sc_number_of_virtual_cells");
-    streamlog_out (MESSAGE) << "taking number of virtual cells from calo section of gear file: " << _strip_virt_cells << endl;
-  } catch(gear::UnknownParameterException &e) { 
-    try {                                                           // otherwise look in the mokka parameters section
-      std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
-
-      //      _strip_virt_cells = std::atoi( nVirtualMokkaS.c_str() );
-
-      std::stringstream convert(nVirtualMokkaS);
-      if ( !(convert >> _strip_virt_cells) ) {
-	streamlog_out (ERROR) << "could not decipher number of virtual cells! " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
-	assert(0);
+    // Determine ECAL polygon angles
+    // Store radial vectors perpendicular to stave layers in _ecalBarrelStaveDir
+    // ASSUMES Mokka Stave numbering 0 = top, then numbering increases anti-clockwise
+    if(symmetry>1){
+      float nFoldSymmetry = static_cast<float>(symmetry);
+      float phi0 = pEcalBarrel.getPhi0();
+      for(int i=0;i<symmetry;++i){
+        float phi  = phi0 + i*twopi/nFoldSymmetry;
+        _barrelStaveDir[i][0] = cos(phi);
+        _barrelStaveDir[i][1] = sin(phi);
       }
-
-      streamlog_out (MESSAGE) << "taking number of virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
-    } catch(gear::UnknownParameterException &e) {                  // if still not found, use default from processor parameter
-      _strip_virt_cells = _ecalStrip_default_nVirt;
-      streamlog_out (WARNING) << "taking number of virtual cells from steering file (not found in gear file): " << _strip_virt_cells << endl;
     }
-  }
 
-  // the ECAL layer layout code
-  try {
-    _ecalLayout = pEcalBarrel.getStringVal("Ecal_Barrel_Sc_Si_mix");
-    streamlog_out (MESSAGE) << "taking layer layout from calo sections of gear file: " << _ecalLayout << endl;
-  } catch(gear::UnknownParameterException &e) {
+    for(int i=0;i<ecalBarrelLayout.getNLayers();++i){
+      _barrelPixelSizeT[i] = ecalBarrelLayout.getCellSize0(i);
+      _barrelPixelSizeZ[i] = ecalBarrelLayout.getCellSize1(i);
+      streamlog_out ( DEBUG ) << "barrel pixel size " << i << " " << _barrelPixelSizeT[i] << " " << _barrelPixelSizeZ[i] << endl;
+    }
+
+    for(int i=0;i<ecalEndcapLayout.getNLayers();++i){
+      _endcapPixelSizeX[i] = ecalEndcapLayout.getCellSize0(i);
+      _endcapPixelSizeY[i] = ecalEndcapLayout.getCellSize1(i);
+      streamlog_out ( DEBUG ) << "endcap pixel size " << i << " " << _endcapPixelSizeX[i] << " " << _endcapPixelSizeY[i] << endl;
+    }
+
+
+    // check we are using a recent version of the mokka ecal driver
+    // old ones had a bug in the gear file
     try {
-      _ecalLayout = pMokka.getStringVal("Ecal_Sc_Si_mix");
-      streamlog_out (MESSAGE) << "taking layer layout from mokka section of gear file: " << _ecalLayout << endl;
+      pEcalBarrel.getIntVal("Ecal_barrel_gear_per_sensitiveLayer");
     } catch(gear::UnknownParameterException &e) {
-      _ecalLayout = _ecal_deafult_layer_config;
-      streamlog_out (WARNING) << "taking layer layout from steering file (not found in gear file): " << _ecalLayout << endl;
+      streamlog_out (WARNING) << "You seem to be using an older version of the Mokka ECAL driver, affected by a bug in the gear file output" << endl;
+      streamlog_out (WARNING) << "If you have a mix of silicon/scintillator layers in the ECAL, this may cause some confusion" << endl;
+      streamlog_out (WARNING) << "You are recommended to use a later Mokka version, at least for hybrid (si+sc) ECALs" << endl;
     }
+
+    // number of virtual cells in ECAL scint strips
+    try {                                                             // first try to get from ECAL barrel section of gear file (it's here for "latest" Mokka versions)
+      _strip_virt_cells=pEcalBarrel.getIntVal("Ecal_Sc_number_of_virtual_cells");
+      streamlog_out (MESSAGE) << "taking number of virtual cells from calo section of gear file: " << _strip_virt_cells << endl;
+    } catch(gear::UnknownParameterException &e) {
+      try {                                                           // otherwise look in the mokka parameters section
+        std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
+
+        //      _strip_virt_cells = std::atoi( nVirtualMokkaS.c_str() );
+
+        std::stringstream convert(nVirtualMokkaS);
+        if ( !(convert >> _strip_virt_cells) ) {
+          streamlog_out (ERROR) << "could not decipher number of virtual cells! " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
+          assert(0);
+        }
+
+        streamlog_out (MESSAGE) << "taking number of virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
+      } catch(gear::UnknownParameterException &e) {                  // if still not found, use default from processor parameter
+        _strip_virt_cells = _ecalStrip_default_nVirt;
+        streamlog_out (WARNING) << "taking number of virtual cells from steering file (not found in gear file): " << _strip_virt_cells << endl;
+      }
+    }
+
+    // the ECAL layer layout code
+    try {
+      _ecalLayout = pEcalBarrel.getStringVal("Ecal_Barrel_Sc_Si_mix");
+      streamlog_out (MESSAGE) << "taking layer layout from calo sections of gear file: " << _ecalLayout << endl;
+    } catch(gear::UnknownParameterException &e) {
+      try {
+        _ecalLayout = pMokka.getStringVal("Ecal_Sc_Si_mix");
+        streamlog_out (MESSAGE) << "taking layer layout from mokka section of gear file: " << _ecalLayout << endl;
+      } catch(gear::UnknownParameterException &e) {
+        _ecalLayout = _ecal_deafult_layer_config;
+        streamlog_out (WARNING) << "taking layer layout from steering file (not found in gear file): " << _ecalLayout << endl;
+      }
+    }
+
+  } catch(gear::UnknownParameterException &e) {
+    streamlog_out (WARNING) << "WARNING, could not get ECAL gear parameters!" << endl;
   }
 
 

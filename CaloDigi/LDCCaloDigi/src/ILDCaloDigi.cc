@@ -132,12 +132,23 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              _thresholdEcal,
                              (float)5.0e-5);
 
+  registerProcessorParameter("ECALThresholdUnit" ,
+                             "Unit for ECAL Threshold. Can be \"GeV\", \"MIP\" or \"px\". MIP and px need properly set calibration constants" ,
+                             _unitThresholdEcal,
+                             std::string("GeV"));
+
+  
   std::vector<float> hcalThresholds;
   hcalThresholds.push_back(0.00004);
   registerProcessorParameter("HCALThreshold" ,
                              "Threshold for HCAL Hits in GeV" ,
                              _thresholdHcal,
                              hcalThresholds);
+
+  registerProcessorParameter("HCALThresholdUnit" ,
+                             "Unit for HCAL Threshold. Can be \"GeV\", \"MIP\" or \"px\". MIP and px need properly set calibration constants" ,
+                             _unitThresholdHcal,
+                             std::string("GeV"));
 
 
   std::vector<int> ecalLayers;
@@ -610,6 +621,38 @@ void ILDCaloDigi::init() {
   }
 
 
+  //convert ECAL thresholds to GeV units
+  if (_unitThresholdEcal.compare("GeV") == 0){
+	  //ECAL threshold unit is GeV, do nothing
+  } else if (_unitThresholdEcal.compare("MIP") == 0){
+	  //ECAL threshold unit is MIP, convert via MIP2GeV
+	  _thresholdEcal *= _calibEcalMip;
+  } else if (_unitThresholdEcal.compare("px") == 0){
+	  //ECAL threshold unit is pixels, convert via MIP2GeV and lightyield
+	  _thresholdEcal *= _ecal_PPD_pe_per_mip * _calibEcalMip;
+  } else {
+	  streamlog_out(ERROR) << "could not identify ECAL threshold unit. Please use \"GeV\", \"MIP\" or \"px\"! Aborting." << std::endl;
+	  assert(0);
+  }
+  
+  //convert HCAL thresholds to GeV units
+  if (_unitThresholdHcal.compare("GeV") == 0){
+	  //HCAL threshold unit is GeV, do nothing
+  } else if (_unitThresholdHcal.compare("MIP") == 0){
+	  //HCAL threshold unit is MIP, convert via MIP2GeV
+	  for (unsigned int i=0; i<_thresholdHcal.size(); i++){
+		_thresholdHcal.at(i) *= _calibHcalMip;
+	  }
+  } else if (_unitThresholdHcal.compare("px") == 0){
+	  //HCAL threshold unit is pixels, convert via MIP2GeV and lightyield
+	  for (unsigned int i=0; i<_thresholdHcal.size(); i++){
+		_thresholdHcal.at(i) *= _hcal_PPD_pe_per_mip * _calibHcalMip;
+	  }
+  } else {
+	  streamlog_out(ERROR) << "could not identify HCAL threshold unit. Please use \"GeV\", \"MIP\" or \"px\"! Aborting." << std::endl;
+	  assert(0);
+  }
+  
   // set up the scintillator/MPPC digitiser
   _scEcalDigi = new ScintillatorPpdDigi();
   _scEcalDigi->setPEperMIP(_ecal_PPD_pe_per_mip);
@@ -749,7 +792,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           }else{
             calibr_coeff = this->analogueEcalCalibCoeff(layer);
           }
-          if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
+          // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
+	  if (caloLayout!=CHT::barrel) calibr_coeff *= _ecalEndcapCorrectionFactor; // more robust
 
           if(_useEcalTiming){
             float ecalTimeWindowMax = _ecalEndcapTimeWindowMax;
@@ -804,7 +848,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 }else{
                   calibr_coeff = this->analogueEcalCalibCoeff(layer);
                 }
-                if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
+                // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
+		if (caloLayout!=CHT::barrel) calibr_coeff *= _ecalEndcapCorrectionFactor; // more robust
 
                 if(_histograms){
                   fEcal->Fill(timei,energyi*calibr_coeff);
@@ -957,7 +1002,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           }else{
             calibr_coeff = this->analogueHcalCalibCoeff(caloLayout,layer);
           }
-          if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
+          // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
+	  if (caloLayout!=CHT::barrel) calibr_coeff*=_hcalEndcapCorrectionFactor; // more robust
+
 
           //float energyCal = energy*calibr_coeff
           float x = hit->getPosition()[0];
@@ -1012,7 +1059,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 }else{
                   calibr_coeff = this->analogueHcalCalibCoeff(caloLayout,layer);
                 }
-                if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
+                // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
+		if (caloLayout!=CHT::barrel) calibr_coeff*=_hcalEndcapCorrectionFactor; // more robust
 
                 if(_histograms){
                   fHcal->Fill(timei,energyi*calibr_coeff);

@@ -129,7 +129,9 @@ class ILDCaloDigi : public Processor {
   std::string _outputRelCollection;
 
   float _thresholdEcal;
+  std::string _unitThresholdEcal;
   std::vector<float> _thresholdHcal;
+  std::string _unitThresholdHcal;
 
   int _digitalEcal;
   int _mapsEcalCorrection;

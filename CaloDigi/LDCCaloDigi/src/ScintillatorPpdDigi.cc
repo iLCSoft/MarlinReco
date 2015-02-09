@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "CLHEP/Random/RandPoisson.h"
 #include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandBinomial.h"
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -48,6 +49,9 @@ float ScintillatorPpdDigi::getDigitisedEnergy(float energy) {
   // 1. convert energy to expected # photoelectrons (via MIPs)
   float npe = _pe_per_mip*energy/_calib_mip;
 
+  //oh: commented out Daniel's digitisation model. (npe -> poisson -> saturation -> stoykov smearing).
+  // Stoykov smearing used with Gaussian shape for lack of better model.
+  /*
   // 2. smear according to poisson (PE statistics)
   npe = CLHEP::RandPoisson::shoot( npe );
 
@@ -64,7 +68,22 @@ float ScintillatorPpdDigi::getDigitisedEnergy(float energy) {
 
     npe += dpix;
   }
-
+*/
+  
+  //AHCAL TB style digitisation: npe -> saturation -> binomial smearing
+  //shown to be mathematically equivalent to Daniel's model above, but slightly faster and automatically generates correct shape instead of Gaussian approximation
+  
+  if (_npix>0){
+    // apply average sipm saturation behaviour
+    npe = _npix*(1.0 - exp( -npe/_npix ) );
+    
+    //apply binomial smearing
+    float p = npe/_npix; // fraction of hit pixels on SiPM
+    npe = CLHEP::RandBinomial::shoot(_npix, p); //npe now quantised to integer pixels
+  }
+   
+  
+  
   if (_pixSpread>0) {
     // variations in pixel capacitance
     npe *= CLHEP::RandGauss::shoot(1, _pixSpread/sqrt(npe) );

@@ -711,13 +711,14 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       continue;
     }
 
-    //fg: need to establish the subdetetcor part here
-    //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = layoutFromString (colName);
-
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
+
+      //fg: need to establish the subdetetcor part here
+      //    use collection name as cellID does not seem to have that information
+      // moved inside try{} to avoid complaints when collection doesn't exist (D.Jeans)
+      CHT::Layout caloLayout = layoutFromString (colName);
 
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
 
@@ -974,14 +975,15 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       continue;
     }
 
-    //fg: need to establish the subdetetcor part here
-    //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = layoutFromString (colName);
-
-
     try{
       LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
+
+      //fg: need to establish the subdetetcor part here
+      //    use collection name as cellID does not seem to have that information
+      // moved inside try{} to avoid complaints when collection doesn't exist (D.Jeans)
+      CHT::Layout caloLayout = layoutFromString (colName);
+
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder(col);
       LCCollectionVec *hcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);

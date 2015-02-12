@@ -124,6 +124,12 @@ class NewLDCCaloDigi : public Processor {
   float _ecalEndcapCorrectionFactor;
   float _hcalEndcapCorrectionFactor;
 
+
+  std::string _cellIDLayerString ;
+  std::string _cellIDModuleString ;
+  std::string _cellIDStaveString ;
+
+
   std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
   std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];
 
@@ -133,6 +139,7 @@ class NewLDCCaloDigi : public Processor {
   float _endcapPixelSizeX[MAX_LAYERS];
   float _endcapPixelSizeY[MAX_LAYERS];
   float _barrelStaveDir[MAX_STAVES][2];
+
 
 } ;
 

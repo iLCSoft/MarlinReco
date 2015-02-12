@@ -85,7 +85,12 @@ SimpleMuonDigi::SimpleMuonDigi() : Processor("SimpleMuonDigi") {
 			     keepEndcapLayersVec);
 
 
-
+  registerProcessorParameter("CellIDLayerString" ,
+			     "name of the part of the cellID that holds the layer" , 
+			     _cellIDLayerString , 
+			     std::string("K-1")
+			     );
+  
 }
 
 void SimpleMuonDigi::init() {
@@ -185,7 +190,7 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 	int cellid = hit->getCellID0();
 	int cellid1 = hit->getCellID1();
 	//Get The LayerNumber 
-	unsigned int layer = abs(idDecoder(hit)["K-1"]);
+	unsigned int layer = abs( idDecoder(hit)[ _cellIDLayerString ] ) ;
 	//Check if we want to use this layer, else go to the next hit
 	if( !useLayer(caloLayout, layer) ) continue;
 	float calibr_coeff(1.);
@@ -198,7 +203,7 @@ void SimpleMuonDigi::processEvent( LCEvent * evt ) {
 	  calhit->setCellID1(cellid1);
 	  calhit->setEnergy(hitEnergy);
 	  calhit->setPosition(hit->getPosition());
-	  calhit->setType( CHT( CHT::muon, CHT::yoke, caloLayout ,  idDecoder(hit)["K-1"] ) );
+	  calhit->setType( CHT( CHT::muon, CHT::yoke, caloLayout ,  idDecoder(hit)[ _cellIDLayerString ] ) );
 	  calhit->setRawHit(hit);
 	  muoncol->addElement(calhit);
 	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);

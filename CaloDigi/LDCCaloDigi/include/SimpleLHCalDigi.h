@@ -48,6 +48,7 @@ class SimpleLHCalDigi : public Processor {
   std::string _outputLHCalCollection;
   std::string _outputRelCollection;
 
+  std::string _cellIDLayerString ;
 
   float _thresholdLHCal;
   float _calibrCoeffLHCal;

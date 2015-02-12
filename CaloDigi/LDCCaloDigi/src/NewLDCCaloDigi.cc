@@ -197,6 +197,26 @@ NewLDCCaloDigi::NewLDCCaloDigi() : Processor("NewLDCCaloDigi") {
 			     _ecalModuleGapCorrectionFactor,
 			     (float)0.5);
 
+
+
+  registerProcessorParameter("CellIDLayerString" ,
+			     "name of the part of the cellID that holds the layer" , 
+			     _cellIDLayerString , 
+			     std::string("K-1")
+			     );
+
+  registerProcessorParameter("CellIDModuleString" ,
+			     "name of the part of the cellID that holds the module" , 
+			     _cellIDModuleString , 
+			     std::string("M")
+			     );
+ registerProcessorParameter("CellIDStaveString" ,
+			     "name of the part of the cellID that holds the stave" , 
+			     _cellIDStaveString , 
+			     std::string("S-1")
+			     );
+
+
 }
 
 void NewLDCCaloDigi::init() {
@@ -295,19 +315,34 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 	}
       }
 
+      int layerIndex=0 ;
+      int staveIndex=0 ;
+      int moduleIndex=0 ;
+
+
       int numElements = col->getNumberOfElements();
       for (int j(0); j < numElements; ++j) {
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+	
+	if( j == 0 ){
+	  layerIndex  = idDecoder( hit ).index( _cellIDLayerString  ) ;
+	  staveIndex  = idDecoder( hit ).index( _cellIDStaveString  ) ;
+	  moduleIndex = idDecoder( hit ).index( _cellIDModuleString ) ;
+	}
+
 	float energy = hit->getEnergy();
+
+	streamlog_out( DEBUG0 )  << " Hit energy " << energy << " in cellID : " << idDecoder( hit ).valueString() << std::endl;
+
 	// apply threshold cut
 	if (energy > _thresholdEcal) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 	  int cellid = hit->getCellID0();
 	  int cellid1 = hit->getCellID1();
 	  float calibr_coeff(1.);
-	  int layer = idDecoder(hit)["K-1"];
-	  int stave = idDecoder(hit)["S-1"];
-	  int module= idDecoder(hit)["M"];
+	  int layer = idDecoder(hit)[ layerIndex  ];
+	  int stave = idDecoder(hit)[ staveIndex  ];
+	  int module= idDecoder(hit)[ moduleIndex ];
 	  // save hits by module/stave/layer if required later
 	  if(_ecalGapCorrection!=0){
 	    _calHitsByStaveLayer[stave][layer].push_back(calhit);
@@ -373,6 +408,8 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
 
     CHT::Layout caloLayout = layoutFromString( colName ) ;
     
+    int layerIndex=0 ;
+
     try{
       LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -381,15 +418,23 @@ void NewLDCCaloDigi::processEvent( LCEvent * evt ) {
       LCCollectionVec *hcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
       hcalcol->setFlag(flag.getFlag());
       for (int j(0); j < numElements; ++j) {
+
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+
+	layerIndex  = idDecoder( hit ).index( _cellIDLayerString  ) ;
 	float energy = hit->getEnergy();
-	//std::cout << " Hit energy " << energy << std::endl;
+
+	streamlog_out( DEBUG0 )  << " Hit energy " << energy << " in cellID : " << idDecoder( hit ).valueString() << std::endl;
+
 	if (energy > _thresholdHcal[0]) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 	  int cellid = hit->getCellID0();
 	  int cellid1 = hit->getCellID1();
 	  float calibr_coeff(1.);
-	  int layer =idDecoder(hit)["K-1"];
+
+	  int layer =idDecoder(hit)[ layerIndex ];
+
+
 	  // NOTE : for a digital HCAL this does not allow for varying layer thickness
 	  // with depth - would need a simple mod to make response proportional to layer thickness
 	  if(_digitalHcal){
@@ -569,10 +614,10 @@ void NewLDCCaloDigi::fillECALGaps( ) {
 	    
 	      if(xgap||ygap||xygap){
 
-		// cout <<"NewLDCCaloDigi found endcap gap, adjusting energy! " << xgap << " " << ygap << " " << xygap << " , " << il << endl;
-		// cout << "stave " << is <<  " layer " << il << endl;
-		// cout << "  dx, dy " << dx<< " " << dy << " , sizes = " << pixsizex << " " << pixsizey << endl;
-		// cout << " xmin... " << xmin << " " << xminm << " " << xmax << " ymin... " << ymin << " " << yminm << " " << ymax << endl;
+		streamlog_out( DEBUG0 )  <<"NewLDCCaloDigi found endcap gap, adjusting energy! " << xgap << " " << ygap << " " << xygap << " , " << il << endl;
+		streamlog_out( DEBUG0 )  << "stave " << is <<  " layer " << il << endl;
+		streamlog_out( DEBUG0 )  << "  dx, dy " << dx<< " " << dy << " , sizes = " << pixsizex << " " << pixsizey << endl;
+		streamlog_out( DEBUG0 )  << " xmin... " << xmin << " " << xminm << " " << xmax << " ymin... " << ymin << " " << yminm << " " << ymax << endl;
 
 		// found a gap make correction
 		float ecor = 1.;
@@ -581,7 +626,7 @@ void NewLDCCaloDigi::fillECALGaps( ) {
 		if(ygap)ecor = 1.+f*(dy - pixsizey)/2./pixsizey;
 		if(xygap)ecor= 1.+f*(dx - pixsizex)*(dy - pixsizey)/4./pixsizex/pixsizey;     
 
-		// cout << "correction factor = " << ecor << endl;
+		streamlog_out( DEBUG0 )  << "correction factor = " << ecor << endl;
 
 		hiti->setEnergy( hiti->getEnergy()*ecor );
 		hitj->setEnergy( hitj->getEnergy()*ecor );

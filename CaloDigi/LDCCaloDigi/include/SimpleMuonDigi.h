@@ -56,6 +56,7 @@ class SimpleMuonDigi : public Processor {
   std::string _outputMuonCollection;
   std::string _outputRelCollection;
 
+  std::string _cellIDLayerString ;
 
   float _thresholdMuon;
   float _calibrCoeffMuon;

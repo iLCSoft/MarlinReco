@@ -52,6 +52,7 @@ class SimpleLCalDigi : public Processor {
   std::string _outputLCalCollection;
   std::string _outputRelCollection;
 
+  std::string _cellIDLayerString ;
 
   float _thresholdLCal;
   float _calibrCoeffLCal;

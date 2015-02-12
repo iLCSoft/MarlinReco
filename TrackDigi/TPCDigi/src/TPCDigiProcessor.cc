@@ -1154,7 +1154,12 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   //SJA:FIXME: for now don't use side
   //  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = side ;
+
+#if 1 // dont use side
   (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
+#else // use side
+  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] =  ( pos[2] < 0.0  ? -1  : 1 ) ;
+#endif
   
   _cellid_encoder->setCellID( trkHit ) ;
   

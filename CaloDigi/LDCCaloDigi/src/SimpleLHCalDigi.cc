@@ -56,6 +56,13 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
 			     "Calibration coefficients for LHCAL" ,
 			     _calibrCoeffLHCal,
 			     (float)31.);
+
+  registerProcessorParameter("CellIDLayerString" ,
+			     "name of the part of the cellID that holds the layer" , 
+			     _cellIDLayerString , 
+			     std::string("K-1")
+			     );
+
 }
 
 void SimpleLHCalDigi::init() {
@@ -116,7 +123,7 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
 	  pos[2] = hit->getPosition()[2];
 	  calhit->setPosition(pos);
 
-	  calhit->setType( CHT( CHT::had, CHT::lhcal, CHT::endcap ,  idDecoder(hit)["K-1"] ) );
+	  calhit->setType( CHT( CHT::had, CHT::lhcal, CHT::endcap ,  idDecoder(hit)[ _cellIDLayerString ] ) );
 
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);

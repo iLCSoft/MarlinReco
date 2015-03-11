@@ -12,6 +12,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "ScintillatorPpdDigi.h"
+#include "CLHEP/Random/MTwistEngine.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -175,6 +176,7 @@ class ILDCaloDigi : public Processor {
   float _ecalEndcapTimeWindowMax;
   float _ecalDeltaTimeHitResolution;
   float _ecalTimeResolution;
+  bool  _ecalSimpleTimingCut;
 
   int   _useHcalTiming;
   int   _hcalCorrectTimesForPropagation;
@@ -183,7 +185,8 @@ class ILDCaloDigi : public Processor {
   float _hcalEndcapTimeWindowMax;
   float _hcalDeltaTimeHitResolution;
   float _hcalTimeResolution;
-
+  bool  _hcalSimpleTimingCut;
+  
   ScintillatorPpdDigi* _scEcalDigi;
   ScintillatorPpdDigi* _scHcalDigi;
 
@@ -201,6 +204,8 @@ class ILDCaloDigi : public Processor {
   float _misCalibEcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels)
 
   float _deadCellFractionEcal;        // fraction of random dead channels
+  bool  _deadCellEcal_keep;           // keep same cells dead between events?
+
   float _strip_abs_length;            // absorption length along strip for non-uniformity modeling
   float _ecal_pixSpread;              // relative spread of MPPC pixel signal
   float _ecal_elec_noise;             // electronics noise (as fraction of MIP)
@@ -220,6 +225,7 @@ class ILDCaloDigi : public Processor {
   float _misCalibHcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels) 
 
   float _deadCellFractionHcal;        // fraction of random dead channels
+  bool  _deadCellHcal_keep;           // keep same cells dead between events?
   float _hcal_pixSpread;              // relative spread of MPPC pixel signal
   float _hcal_elec_noise;             // electronics noise (as fraction of MIP)
   float _hcalMaxDynMip;               // electronics dynamic range (in terms of MIPs)
@@ -234,9 +240,14 @@ class ILDCaloDigi : public Processor {
 
   float _event_correl_miscalib_ecal;
   float _event_correl_miscalib_hcal;
+  
+  CLHEP::MTwistEngine *_randomEngineDeadCellEcal;
+  CLHEP::MTwistEngine *_randomEngineDeadCellHcal;
 
   std::map < std::pair <int, int> , float > _ECAL_cell_miscalibs;
+  std::map < std::pair <int, int> , bool > _ECAL_cell_dead;
   std::map < std::pair <int, int> , float > _HCAL_cell_miscalibs;
+  std::map < std::pair <int, int> , bool > _HCAL_cell_dead;
 
   enum {
     SQUARE,

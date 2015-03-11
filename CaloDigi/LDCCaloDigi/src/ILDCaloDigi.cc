@@ -38,7 +38,7 @@ const float pi = acos(-1.0);
 const float twopi = 2.0*pi;
 
 ILDCaloDigi aILDCaloDigi ;
-
+	
 
 // helper struct for string comparision
 struct XToLower{
@@ -286,6 +286,10 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              _ecalTimeResolution,
                              (float)10.);
 
+  registerProcessorParameter("ECALSimpleTimingCut" ,
+                             "Use simple time window cut on hit times? If false: use original hit-time clustering algorithm. If true: use time window defined by ECALBarrelTimeWindowMin and ECALBarrelTimeWindowMax" ,
+                             _ecalSimpleTimingCut,
+                             (bool)true);
 
   registerProcessorParameter("UseHcalTiming" ,
                              "Use HCAL hit times" ,
@@ -322,6 +326,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              "HCAL Time Resolution used to smear hit times" ,
                              _hcalTimeResolution,
                              (float)10.);
+  
+  registerProcessorParameter("HCALSimpleTimingCut" ,
+                             "Use simple time window cut on hit times? If false: use original hit-time clustering algorithm. If true: use time window defined by HCALBarrelTimeWindowMin and HCALBarrelTimeWindowMax" ,
+                             _hcalSimpleTimingCut,
+                             (bool)true);
 
   // additional digi effects (Daniel Jeans)
 
@@ -369,6 +378,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              "ECAL random dead cell fraction (as a fraction: 0->1) " ,
                              _deadCellFractionEcal,
                              (float)0.);
+  
+  registerProcessorParameter("ECAL_deadCell_memorise" ,
+                             "store dead ECAL cells in memory? (WARNING: can take a lot of memory if used...) " ,
+                             _deadCellEcal_keep,
+                             (bool)false);
 
   registerProcessorParameter("ECAL_strip_absorbtionLength",
                              "length scale for absorbtion along scintillator strip (mm)",
@@ -450,6 +464,11 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              "HCAL random dead cell fraction (as a fraction: 0->1) " ,
                              _deadCellFractionHcal,
                              (float)0.);
+  
+  registerProcessorParameter("HCAL_deadCell_memorise" ,
+                             "store dead HCAL cells in memory? (WARNING: can take a lot of memory if used...) " ,
+                             _deadCellHcal_keep,
+                             (bool)false);
 
   registerProcessorParameter("HCAL_pixel_spread",
                              "variation of mppc/sipm pixels capacitance in HCAL (as a fraction: 0.01=1%)",
@@ -673,8 +692,21 @@ void ILDCaloDigi::init() {
   _scHcalDigi->setElecNoise(_hcal_elec_noise);
   cout << "HCAL sc digi:" << endl;
   _scHcalDigi->printParameters();
-
-
+  
+  //set up the random engines for ecal and hcal dead cells: (could use a steering parameter though)
+  if (_deadCellEcal_keep){
+	_randomEngineDeadCellEcal = new CLHEP::MTwistEngine(0, 0);
+  } else {
+	_randomEngineDeadCellEcal = 0;
+  }
+  
+  if (_deadCellHcal_keep){
+	_randomEngineDeadCellHcal = new CLHEP::MTwistEngine(0, 0);
+  } else {
+	_randomEngineDeadCellHcal = 0;
+  }
+  
+  
 }
 
 
@@ -692,6 +724,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 
   // copy the flags from the input collection
   _flag.setBit(LCIO::CHBIT_LONG);
+  _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
 
   // decide on this event's correlated miscalibration
   _event_correl_miscalib_ecal = CLHEP::RandGauss::shoot( 1.0, _misCalibEcal_correl );
@@ -711,14 +744,13 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       continue;
     }
 
+    //fg: need to establish the subdetetcor part here
+    //    use collection name as cellID does not seem to have that information
+    CHT::Layout caloLayout = layoutFromString (colName);
+
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
-
-      //fg: need to establish the subdetetcor part here
-      //    use collection name as cellID does not seem to have that information
-      // moved inside try{} to avoid complaints when collection doesn't exist (D.Jeans)
-      CHT::Layout caloLayout = layoutFromString (colName);
 
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
 
@@ -796,14 +828,15 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff *= _ecalEndcapCorrectionFactor;
 	  if (caloLayout!=CHT::barrel) calibr_coeff *= _ecalEndcapCorrectionFactor; // more robust
 
+	  // if you want to understand the timing cut code, please refer to the hcal timing cut further below. it is functionally identical, but has comments, explanations and excuses.
           if(_useEcalTiming){
             float ecalTimeWindowMax = _ecalEndcapTimeWindowMax;
             if(caloLayout==CHT::barrel)ecalTimeWindowMax = _ecalBarrelTimeWindowMax;
             float dt = r/300.-0.1;
             const unsigned int n = hit->getNMCContributions();
 
-            std::vector<bool> used(n) ;
-            for(unsigned int i =0; i<n;i++) used[i] = false;
+            std::vector<bool> used(n, false) ;
+            //for(unsigned int i =0; i<n;i++) used[i] = false;
 
             int count = 0;
             float eCellInTime = 0.;
@@ -812,6 +845,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
             for(unsigned int i =0; i<n;i++){
               float timei   = hit->getTimeCont(i);
               float energyi = hit->getEnergyCont(i);
+      	      float energySum = 0;
+
               float deltat = 0;
               if(_ecalCorrectTimesForPropagation)deltat=dt;
               if(timei-deltat > _ecalTimeWindowMin && timei-deltat < ecalTimeWindowMax){
@@ -827,14 +862,27 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                     float timej   = hit->getTimeCont(j);
                     float energyj = hit->getEnergyCont(j);
                     float deltat = fabs(timei-timej);
-                    if(deltat<_ecalDeltaTimeHitResolution){
-                      if(energyj>energyi)timei=timej;
-                      energyi+=energyj;
-                      used[j] = true;
-                    }
+		    if (_ecalSimpleTimingCut){
+			    float deltat = _ecalCorrectTimesForPropagation?dt:0;
+			    if (timej-deltat>_ecalTimeWindowMin && timej-deltat<ecalTimeWindowMax){
+				    energySum += energyj;
+				    if (timej < timei){
+					    timei = timej;
+				    }
+			    }
+		    } else {
+			if(deltat<_ecalDeltaTimeHitResolution){
+			if(energyj>energyi)timei=timej;
+			energyi+=energyj;
+			used[j] = true;
+			}
+		    }
                   }
                 }
-
+		if (_ecalSimpleTimingCut){
+			used = vector<bool>(n, true); // mark everything as used to terminate for loop on next run
+			energyi += energySum; //fill energySum back into energyi to have rest of loop behave the same.
+		}
                 if(_digitalEcal){
                   calibr_coeff = this->digitalEcalCalibCoeff(layer);
                   if(_mapsEcalCorrection){
@@ -975,24 +1023,23 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       continue;
     }
 
+    //fg: need to establish the subdetetcor part here
+    //    use collection name as cellID does not seem to have that information
+    CHT::Layout caloLayout = layoutFromString (colName);
+
+
     try{
       LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
-
-      //fg: need to establish the subdetetcor part here
-      //    use collection name as cellID does not seem to have that information
-      // moved inside try{} to avoid complaints when collection doesn't exist (D.Jeans)
-      CHT::Layout caloLayout = layoutFromString (colName);
-
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder(col);
       LCCollectionVec *hcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
       hcalcol->setFlag(_flag.getFlag());
-      for (int j(0); j < numElements; ++j) {
+      for (int j(0); j < numElements; ++j) { //loop over all SimCalorimeterHits in this collection
         SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
         float energy = hit->getEnergy();
 
-        if (energy > _thresholdHcal[0]) {
+        if (energy > _thresholdHcal[0]/2) { //preselect for SimHits with energySum>threshold. Doubtful at least, as lower energy hit might fluctuate up and still be counted
           int cellid = hit->getCellID0();
           int cellid1 = hit->getCellID1();
           float calibr_coeff(1.);
@@ -1005,7 +1052,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
             calibr_coeff = this->analogueHcalCalibCoeff(caloLayout,layer);
           }
           // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
-	  if (caloLayout!=CHT::barrel) calibr_coeff*=_hcalEndcapCorrectionFactor; // more robust
+	  if (caloLayout!=CHT::barrel) calibr_coeff*=_hcalEndcapCorrectionFactor; // more robust, is applied to ALL hits outside of barrel.
 
 
           //float energyCal = energy*calibr_coeff
@@ -1014,107 +1061,102 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           float z = hit->getPosition()[2];
           //      float r = sqrt(x*x+y*y);
           if(_useHcalTiming){
+            float hcalTimeWindowMax;
+            if(caloLayout==CHT::barrel){ //current SimHit is in barrel, use barrel timing cut
+		    hcalTimeWindowMax = _hcalBarrelTimeWindowMax;
+	    } else { //current simhit is not in barrel, use endcap timing cut
+		    hcalTimeWindowMax = _hcalEndcapTimeWindowMax;
+	    }
 
-            float hcalTimeWindowMax = _hcalEndcapTimeWindowMax;
-            if(caloLayout==CHT::barrel)hcalTimeWindowMax = _hcalBarrelTimeWindowMax;
+            float r = sqrt(x*x+y*y+z*z);//this is a crude approximation. assumes initial particle originated at the very center of the detector.
+            float dt = r/300-0.1;//magic numbers! ~
+            const unsigned int n = hit->getNMCContributions(); //number of subhits of this SimHit
 
-            float r = sqrt(x*x+y*y+z*z);
-            float dt = r/300-0.1;
-            const unsigned int n = hit->getNMCContributions();
-
-            std::vector<bool> used(n) ;
-            for(unsigned int i =0; i<n;i++)used[i] = false;
+            std::vector<bool> used(n, false) ;
 
             int count = 0;
-            float eCellInTime = 0.;
-            float eCellOutput = 0.;
-
-            for(unsigned int i =0; i<n;i++){
-              float timei   = hit->getTimeCont(i);
-              float energyi = hit->getEnergyCont(i);
+         
+            for(unsigned int i =0; i<n;i++){ // loop over all subhits
+              float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
+              float energyi = hit->getEnergyCont(i); //energy of current subhit
+	      float energySum = 0;
               float deltat = 0;
-              if(_hcalCorrectTimesForPropagation)deltat=dt;
-              if(timei-deltat > _hcalTimeWindowMin && timei-deltat < hcalTimeWindowMax)eCellInTime+=energyi*calibr_coeff;
+              if(_hcalCorrectTimesForPropagation)deltat=dt;  //deltat now carries hit timing correction.
+	      //std::cout <<"outer:" << i << " " << n << std::endl;
 
-              if(!used[i]){
+              //idea of the following section: 
+              //if simpletimingcut == false
+              //sum up hit energies which lie within one calo timing resolution to "timecluster" of current subhit
+              //then treat each single timecluster as one hit over threshold and digitise separately. this means there can be more than one CalorimeterHit with the same cellIDs, but different hit times (!)
+              //
+              //if simpletimingcut == true
+              //i'm very sorry. this is the worst code you will ever see.
+              //sum up hit energies within timeWindowMin and timeWindowMax, use earliest subhit in this window as hit time for resulting calohit.
+              //only one calorimeterhit will be generated from this.
+              
+              if(!used[i]){ //if current subhit has not been merged with previous hits already, take current hit as starting point to merge hits
                 // merge with other hits?
                 used[i] = true;
-                for(unsigned int j =i+1; j<n;j++){
+                for(unsigned int j =i; j<n;j++){//loop through all hits after current hit
+		  //std::cout << "inner:" << i << " " << j << " " << n << std::endl;
                   if(!used[j]){
                     float timej   = hit->getTimeCont(j);
                     float energyj = hit->getEnergyCont(j);
                     float deltat = fabs(timei-timej);
                     //              std::cout << " HCAL  deltat : " << deltat << std::endl;
-                    if(deltat<_hcalDeltaTimeHitResolution){
-                      if(energyj>energyi)timei=timej;
-                      //std::cout << timei << " - " << timej << std::endl;
-                      //std::cout << energyi << " - " << energyj << std::endl;
-                      energyi+=energyj;
-                      used[j] = true;
-                      //std::cout << timei << " " << energyi << std::endl;
-                    }
+		    if (_hcalSimpleTimingCut){
+			    float deltat = _hcalCorrectTimesForPropagation?dt:0;
+			    if (timej-deltat>_hcalTimeWindowMin && timej-deltat<hcalTimeWindowMax){
+				    energySum += energyj;
+				    if (timej<timei){
+					    timei = timej; //use earliest hit time for simpletimingcut
+				    }
+			    }
+		    } else {
+			if(deltat<_hcalDeltaTimeHitResolution){ //if this subhit is close to current subhit, add this hit's energy to timecluster
+			if(energyj>energyi)timei=timej; //this is probably not what was intended. i guess this should find the largest hit of one timecluster and use its hittime for the cluster, but instead it compares the current hit energy to the sum of already found hit energies
+			//std::cout << timei << " - " << timej << std::endl;
+			//std::cout << energyi << " - " << energyj << std::endl;
+			energyi+=energyj;
+			used[j] = true;
+			//std::cout << timei << " " << energyi << std::endl;
+			}
+		    }
                   }
                 }
-
-                if(_digitalHcal){
-                  calibr_coeff = this->digitalHcalCalibCoeff(caloLayout,energyi);
-                }else{
-                  calibr_coeff = this->analogueHcalCalibCoeff(caloLayout,layer);
-                }
-                // if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)calibr_coeff*=_hcalEndcapCorrectionFactor;
-		if (caloLayout!=CHT::barrel) calibr_coeff*=_hcalEndcapCorrectionFactor; // more robust
-
-                if(_histograms){
-                  fHcal->Fill(timei,energyi*calibr_coeff);
-                  fHcalC->Fill(timei-dt,energyi*calibr_coeff);
-                  fHcalC1->Fill(timei-dt,energyi*calibr_coeff);
-                  fHcalC2->Fill(timei-dt,energyi*calibr_coeff);
-                }
-                //fHcalCvsE->Fill(timei-dt,energyi*calibr_coeff);
+                if (_hcalSimpleTimingCut){
+			used = vector<bool>(n, true); //mark everything as used to terminate loop. this is worse than goto. i'm sorry.
+			energyi += energySum; //fill energySum back into energyi to have rest of loop behave the same.
+		}
+		
+		//variables and their behaviour at this point:
+		//if SimpleTimingCut == false
+		//energyi carries the sum of subhit energies within +- one hcal time resolution - the timecluster energy.
+		//timei carries something vaguely similar to the central hit time of the merged subhits
+		
+		//if SimpleTimingCut == true
+		//energyi carries the sum of subhit energies within timeWindowMin and timeWindowMax
+		//timei carries the time of the earliest hit within this window
+          
 		
                 // apply extra energy digitisation effects
-		
-                energyi = ahcalEnergyDigi(energyi, cellid, cellid1);
+	        energyi = ahcalEnergyDigi(energyi, cellid, cellid1); //this only uses the current subhit "timecluster"!
 
-                if (energyi > _thresholdHcal[0]){
-                  if(hit->getPosition()[2]>0){
-                    float rxy = sqrt(x*x+y*y);
-                    //std::cout << j << " "
-                    if(_histograms){
-                      if(layer==1)fHcalLayer1->Fill(x,y);
-                      if(layer==11)fHcalLayer11->Fill(x,y);
-                      if(layer==21)fHcalLayer21->Fill(x,y);
-                      if(layer==31)fHcalLayer31->Fill(x,y);
-                      if(layer==41)fHcalLayer41->Fill(x,y);
-                      if(layer==51)fHcalLayer51->Fill(x,y);
-                      if(layer==61)fHcalLayer61->Fill(x,y);
-                      if(layer==61)fHcalLayer71->Fill(x,y);
-                      if(layer==1)fHcalRLayer1->Fill(rxy);
-                      if(layer==11)fHcalRLayer11->Fill(rxy);
-                      if(layer==21)fHcalRLayer21->Fill(rxy);
-                      if(layer==31)fHcalRLayer31->Fill(rxy);
-                      if(layer==41)fHcalRLayer41->Fill(rxy);
-                      if(layer==51)fHcalRLayer51->Fill(rxy);
-                      if(layer==61)fHcalRLayer61->Fill(rxy);
-                      if(layer==61)fHcalRLayer71->Fill(rxy);
-                    }
-                  }
-
-
+                if (energyi > _thresholdHcal[0]){ //now would be the correct time to do threshold comparison
                   float timeCor=0;
                   if(_hcalCorrectTimesForPropagation)timeCor=dt;
                   timei = timei - timeCor;
-                  if(timei > _hcalTimeWindowMin && timei < hcalTimeWindowMax){
+                  if(timei > _hcalTimeWindowMin && timei < hcalTimeWindowMax){ //if current subhit timecluster is within specified timing window, create new CalorimeterHit and add to collections etc.
                     count++;
                     CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
                     calhit->setCellID0(cellid);
                     calhit->setCellID1(cellid1);
                     if(_digitalHcal){
                       calhit->setEnergy(calibr_coeff);
-                      eCellOutput+= calibr_coeff;
+                      //eCellOutput+= calibr_coeff;
                     }else{
                       calhit->setEnergy(calibr_coeff*energyi);
-                      eCellOutput+= energyi*calibr_coeff;
+                      //eCellOutput+= energyi*calibr_coeff;
                     }
                     calhit->setTime(timei);
                     calhit->setPosition(hit->getPosition());
@@ -1128,6 +1170,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                   }
                 }
               }
+              //std::cout <<"hello" << std::endl;
             }
           }else{ // don't use timing
             CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
@@ -1218,6 +1261,15 @@ void ILDCaloDigi::end(){
 
     hfile->Close();
     delete hfile;
+  }
+  
+  //delete randomengines if needed
+  if (_randomEngineDeadCellHcal != 0){
+	  delete _randomEngineDeadCellHcal;
+  }
+
+  if (_randomEngineDeadCellEcal != 0){
+	  delete _randomEngineDeadCellEcal;
   }
 
 }
@@ -1512,7 +1564,27 @@ float ILDCaloDigi::ecalEnergyDigi(float energy, int id0, int id1) {
   if (_misCalibEcal_correl>0) e_out*=_event_correl_miscalib_ecal;
 
   // random cell kill
-  if (_deadCellFractionEcal>0 && CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionEcal ) e_out=0;
+  if (_deadCellFractionEcal>0){
+    if (_deadCellEcal_keep == true){
+          std::pair <int, int> id(id0, id1);
+	  
+	  if (_ECAL_cell_dead.find(id)!=_ECAL_cell_dead.end() ) { // this cell was previously seen
+		  if (_ECAL_cell_dead[id] == true){
+			  e_out = 0;
+		  }
+	  } else { // we haven't seen this one yet, get a miscalib for it
+		  bool thisDead = (CLHEP::RandFlat::shoot(_randomEngineDeadCellEcal, .0, 1.0) < _deadCellFractionEcal);
+		  _ECAL_cell_dead[id] = thisDead;
+		  if (thisDead == true){
+			  e_out = 0;
+		  }
+	  }
+	    
+    } else {
+      if (CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionEcal ) e_out=0;
+    }
+	
+  }
 
   return e_out;
 }
@@ -1551,8 +1623,27 @@ float ILDCaloDigi::ahcalEnergyDigi(float energy, int id0, int id1) {
   if (_misCalibHcal_correl>0)   e_out*=_event_correl_miscalib_hcal;
 
   // random cell kill
-  if (_deadCellFractionHcal>0 && CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionHcal ) e_out=0;
-
+  if (_deadCellFractionHcal>0){
+    if (_deadCellHcal_keep == true){
+          std::pair <int, int> id(id0, id1);
+	  
+	  if (_HCAL_cell_dead.find(id)!=_HCAL_cell_dead.end() ) { // this cell was previously seen
+		  if (_HCAL_cell_dead[id] == true){
+			e_out = 0;
+		  }
+	  } else { // we haven't seen this one yet, get a miscalib for it
+		  bool thisDead = (CLHEP::RandFlat::shoot(_randomEngineDeadCellHcal, .0, 1.0) < _deadCellFractionHcal);
+		  _HCAL_cell_dead[id] = thisDead;
+		  if (thisDead == true){
+			e_out = 0;
+		  }
+	}
+	    
+    } else {
+      if (CLHEP::RandFlat::shoot(0.0,1.0)<_deadCellFractionHcal ) e_out=0;
+    }
+	
+  }
   return e_out;
 }
 

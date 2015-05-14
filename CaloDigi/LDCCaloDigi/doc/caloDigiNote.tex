@@ -10,25 +10,45 @@
 
 \sloppy
 
-\title{Realistic calorimeter hit digitisation in the {\tt ILDCaloDigi} processor}
-
-\author{Daniel Jeans, The University of Tokyo,\\
-Oskar Hartbrich, DESY.
-}
-
-
-\date{\today}
 
 \begin{document}
 
-\maketitle
+{
+\flushright
+LC-TOOL-2014-011\\
+}
 
-\begin{abstract}
+\vspace{0.5cm}
 
+{
+\center
+\Huge
+Realistic calorimeter hit digitisation in the {\tt ILDCaloDigi} processor\\
+}
+%                                                                                                                                                             
+\vspace{1cm}
+%                                                                                                                                                             
+{
+\center
+\Large
+Daniel Jeans, The University of Tokyo, \\
+Oskar Hartbrich, DESY.\\
+}
+%                                                                                                                                                             
+\vspace{1cm}
+%                                                                                                                                                             
+{
+\center
+15 May 2015.\\
+}
+
+\vspace{1cm}
+
+{
+\center
 Description of quasi-realistic calorimeter hit digitisation in ILD, as implemented in
 the {\tt ILDCaloDigi} processor in the {\tt MarlinReco} package.
-
-\end{abstract}
+}
 
 
 \section{Introduction}
@@ -37,7 +57,7 @@ Possibilities for more realistic treatment of calorimeter hits from silicon-- an
 implemented in the {\tt ILDCaloDigi} processor within {\tt MarlinReco}. The aim of these is to allow the study of the effects 
 of various detector ``defects'' such as mis-calibrations, limited dynamic ranges, and signal fluctuations, 
 and also to allow more robust comparisons between technologies under more realistic conditions.
-This notes discusses the implementation as defined by rev. 4777 of the {\tt MarlinReco} package, available at
+This notes discusses the implementation as defined by rev. 4800 of the {\tt MarlinReco} package, available at
 {\tt https://svnsrv.desy.de/viewvc/marlinreco/MarlinReco/}.
 
 The energy of {\tt SimCalorimeterHits} produced by the {\tt Mokka} simulation is the energy deposited in the detection
@@ -60,7 +80,7 @@ of energy deposits. This pre-existing functionality was extended from the origin
 The various effects implemented for realistic digitisation are controlled by parameters of the {\tt ILDCaloDigi}
 processor which can be set at run time via the {\tt Marlin} steering file (i.e. without recompiling).
 Most parameters are duplicated, with one set for the ECAL, and the other for the HCAL, allowing different
-parameters to be used for the each of the systems. In this note, we denote there duplicated parameters as ``*\S CAL*'':
+parameters to be used for the each of the systems. In this note, we denote these duplicated parameters as ``*\S CAL*'':
 ``\S'' should be replace by ``E'' for the ECAL, and ``H'' for the HCAL.
 
 Which type of digitisation to apply to ECAL hits is controlled by the {\tt ECAL\_apply\_realistic\_digi} parameter: a value of

@@ -263,11 +263,21 @@ N_{pix} = \text{\tt \S CAL\_PPD\_N\_Pixels} \times
 \end{equation*}
 
 This mis-calibrated number of total pixels is then used to 
-unfold the PPD response by using the inverse of the saturation curve:
+unfold the PPD response by using the inverse of the saturation curve.
+If the fraction of fired pixels $r$ is less than 95\%, the unfolding is done as
 \begin{equation*}
-n_{pe}^\text{unfold} = - N_{pix} \times log ( 1 - min ( n_{pix}^{sig}, N_{pix}-\epsilon) / N_{pix} ) ),
+n_{pe}^\text{unfold} = - N_{pix} \times log ( 1 - n_{pix}^{sig} / N_{pix} ) ),
 \end{equation*}
-where $\epsilon = 1$ is a small number which ensures that the logarithm is well behaved.
+while if $r > 0.95$,  a linearised approximation is used:
+%      npe = 1/(1-r)*(npe-r*smearedNpix)-smearedNpix*std::log(1-r);
+\begin{equation*}
+n_{pe}^\text{unfold} =  
+(n_{pix}^{sig} - r \times N_{pix})/(1-r) - n_{pix}^{sig} \times log ( 1 - r ).
+\end{equation*}
+
+%where $\epsilon = 1$ is a small number which ensures that the logarithm is well behaved.
+
+
 
 \subsection*{Conversion back to energy}
 The unfolded number of p.e. is then converted back into a scintillator energy deposit using the parameters

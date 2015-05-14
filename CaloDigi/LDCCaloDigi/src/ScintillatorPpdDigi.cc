@@ -98,11 +98,23 @@ float ScintillatorPpdDigi::getDigitisedEnergy(float energy) {
     // 4. unfold the saturation
     // - miscalibration of npix
     float smearedNpix = _misCalibNpix>0 ? _npix*CLHEP::RandGauss::shoot( 1.0, _misCalibNpix ) : _npix;
+    
+    //oh: commented out daniel's implmentation of dealing with hits>smearedNpix. using linearisation of saturation-reconstruction for high amplitude hits instead.
+    /*
     // - this is to deal with case when #pe is larger than #pixels (would mean taking log of negative number)
     float epsilon=1; // any small number...
     if ( npe>smearedNpix-epsilon ) npe=smearedNpix-epsilon;
     // - unfold saturation
     npe = -smearedNpix * std::log ( 1. - ( npe / smearedNpix ) );
+    */
+    
+    const float r = 0.95; //this is the fraction of SiPM pixels fired above which a linear continuation of the saturation-reconstruction function is used. 0.95 of nPixel corresponds to a energy correction of factor ~3.
+
+    if (npe < r*smearedNpix){ //current hit below linearisation threshold, reconstruct energy normally:
+      npe = -smearedNpix * std::log ( 1. - ( npe / smearedNpix ) );
+    } else { //current hit is aove linearisation threshold, reconstruct using linear continuation function:
+      npe = 1/(1-r)*(npe-r*smearedNpix)-smearedNpix*std::log(1-r);
+    }
   }
 
   // convert back to energy

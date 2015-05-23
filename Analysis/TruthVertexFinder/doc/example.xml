@@ -1,0 +1,26 @@
+<marlin>
+<!--########  Execute  ######################################## -->
+<execute>
+   <processor name="MyMCVertexTest"/>
+</execute>
+<!--########  Global  ######################################## -->
+<global>
+<parameter name="LCIOInputFiles">
+DST.slcio
+</parameter>
+<parameter name="SkipNEvents" value="0"/>
+<parameter name="SupressCheck" value="false"/>
+<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG </parameter>
+<parameter name="RandomSeed" value="1234567890" />
+</global>
+
+<!--########  MyMCVertexTest  ######################################## -->
+<processor name="MyMCVertexTest" type="TruthVertexFinder">
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG </parameter>
+  <parameter name="CollectionName" type="string" lcioInType="MCParticle"> MCParticlesSkimmed </parameter>
+  <parameter name="DecayChainPDGs" type="IntVec">5500	4400	0</parameter>
+  <parameter name="writeROOT" type="int">2</parameter>
+  <parameter name="ROOTFileName" type="string">MyMCTest.root</parameter>
+</processor>
+</marlin>
+

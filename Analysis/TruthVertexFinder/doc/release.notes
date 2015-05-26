@@ -1,0 +1,17 @@
+////////////////////////////////////////////////////////
+/// TruthVertexFinder - processor that finds	     ///
+/// non-primary decay vertices in MCParticle 	     ///
+/// collection					     ///
+////////////////////////////////////////////////////////
+/// Author: BILOKIN Sviatoslav, PhD student          ///
+///         POESCHL Roman, Supervisor                ///
+///         RICHARD Francois, Supervisor             ///
+///                             designed: 2015-2017  ///
+////////////////////////////////////////////////////////
+
+
+   -------
+  | v00-01 |
+   -------
+   - first public release (26/05/15)
+

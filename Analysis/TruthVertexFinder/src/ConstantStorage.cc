@@ -11,6 +11,7 @@ namespace TTbarAnalysis
 	vector<int> ConstantStorage::myCharmedHadronsPDGs;
 	vector<int> ConstantStorage::myTrackableParticlesPDGs;
 	vector<int> ConstantStorage::myNonTrackableParticlesPDGs;
+	vector<int> ConstantStorage::myEmptyPDGs;
 
 	ConstantStorage::_init ConstantStorage::_initializer;
 
@@ -73,7 +74,7 @@ namespace TTbarAnalysis
 			case NONTRACKABLE_PARTICLES:
 			return NONTRACKABLE_PARTICLES_PGD();
 			default:
-			return *(new vector<int>());
+			return ConstantStorage::myEmptyPDGs;
 		}
 	}
 

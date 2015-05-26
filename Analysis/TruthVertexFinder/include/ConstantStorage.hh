@@ -238,6 +238,7 @@ namespace TTbarAnalysis
 			static std::vector<int> myCharmedHadronsPDGs; 
 			static std::vector<int> myTrackableParticlesPDGs; 
 			static std::vector<int> myNonTrackableParticlesPDGs; 
+			static std::vector<int> myEmptyPDGs; 
 		//
 		//	Private methods
 		//

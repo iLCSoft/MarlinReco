@@ -187,7 +187,7 @@ protected:
   // gsl random number generator
   gsl_rng * _random ;
 
-
+  bool _dontEncodeSide ;
 
   float _pointResoRPhi0; // Coefficient for RPhi point res independant of drift length 
   float _pointResoPadPhi; // Coefficient for the point res dependance on relative phi angle to the pad verticle 

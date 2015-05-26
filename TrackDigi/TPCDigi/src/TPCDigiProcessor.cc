@@ -157,6 +157,11 @@ TPCDigiProcessor::TPCDigiProcessor() : Processor("TPCDigiProcessor")
                              "Defines the maximum number of adjacent hits which can be merged"  ,
                              _maxMerge ,
                              (int)3) ;
+
+  registerProcessorParameter( "DontEncodeSide" ,
+                              "Do not encode the side in the cellID of the TrackerHit",
+                             _dontEncodeSide ,
+                             (bool) true ) ;
 }
 
 
@@ -1117,10 +1122,13 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   (*_cellid_encoder)[ lcio::ILDCellID0::layer  ] = seed_hit->getRowIndex() ;
   (*_cellid_encoder)[ lcio::ILDCellID0::module ] = 0 ;
   
-  //SJA:FIXME: for now don't use side
-  //  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = side ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
   
+  //fg: optionally encode the side (should become the default eventually)
+  if( ! _dontEncodeSide )
+    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
+  else
+    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
+
   _cellid_encoder->setCellID( trkHit ) ;
   
   
@@ -1273,20 +1281,19 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   trkHit->setEDep(sumEDep);
   //  trkHit->setType( 500 );
   
-  // SJA:FIXME: here you can use the value 2 but not 3 which is odd as the width of the field is 1, only 0 and 1 should be allowed?
-  int side = 1 ;
   int padIndex = padLayout.getNearestPad(mergedPoint->perp(),mergedPoint->phi());  
-  int row = padLayout.getRowNumber(padIndex);
-  
-  if( pos[2] < 0.0 ) side = 1 ;
+  int row = padLayout.getRowNumber(padIndex);  
   
   (*_cellid_encoder)[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::TPC ;
   (*_cellid_encoder)[ lcio::ILDCellID0::layer  ] = row ;
   (*_cellid_encoder)[ lcio::ILDCellID0::module ] = 0 ;
-  //SJA:FIXME: for now don't use side
-  //  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = side ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = 0 ;
-  
+
+  //fg: optionally encode the side (should become the default eventually)
+  if( ! _dontEncodeSide )
+    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
+  else
+    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
+
   _cellid_encoder->setCellID( trkHit ) ;
   
   

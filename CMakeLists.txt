@@ -28,7 +28,7 @@ ENDIF()
 
 # project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 1 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 10 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 11 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 
@@ -121,6 +121,7 @@ ADD_MARLINRECO_PKG( ./Analysis/RecoMCTruthLink )
 ADD_MARLINRECO_PKG( ./Analysis/ZFinder )
 ADD_MARLINRECO_PKG( ./Analysis/TrueJet )
 ADD_MARLINRECO_PKG( ./Analysis/TrueJet_Parser )
+ADD_MARLINRECO_PKG( ./Analysis/TruthVertexFinder )
 ADD_MARLINRECO_PKG( ./Calibration/AbsCalibration )
 ADD_MARLINRECO_PKG( ./CaloDigi/LDCCaloDigi )
 ADD_MARLINRECO_PKG( ./Clustering/BCalReco) 

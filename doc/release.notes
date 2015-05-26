@@ -5,6 +5,26 @@
 ===============================
 
  --------
+| v01-11-pre |
+ -------- 
+
+    - F.Gaede: add parameter DontEncodeSide to TPCDigiProcessor
+        - allows to process old Mokka and new DD4hep based simulation 
+       
+    - to be done ...
+
+
+
+
+ --------
+| v01-10 |
+ -------- 
+    - no release notes, use 
+       svn -v log 
+      to see changes ... 
+
+
+ --------
 | v01-09 |
  -------- 
 

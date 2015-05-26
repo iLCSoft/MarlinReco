@@ -333,7 +333,7 @@ namespace TTbarAnalysis
 		}
 		std::cout << '\n';*/
 		vector< float > direction = getDirection(converted);
-		double pt[3];
+		double * pt = new double[3];
 		double product = 0.0;
 		for (int i = 0; i < 3; i++) 
 		{

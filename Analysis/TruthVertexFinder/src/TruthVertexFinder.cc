@@ -152,12 +152,14 @@ namespace TTbarAnalysis
 		_hVertexTree->Branch("momentumOfParticles", _momentumOfParticles, "momentumOfParticles[numberOfVertexes][15]/F");
 		_hVertexTree->Branch("massOfParticles", _massOfParticles, "massOfParticles[numberOfVertexes][15]/F");
 		_hVertexTree->Branch("interactionOfParticles", _interactionOfParticles, "interactionOfParticles[numberOfVertexes][15]/I");
+		_hTree = new TTree( "Stats", "My test tree!" );
+		_hTree->Branch("tag", &_tag, "tag/I");
+		_hTree->Branch("btotalnumber", &_btotalnumber, "btotalnumber/I");
+		_hTree->Branch("bbartotalnumber", &_bbartotalnumber, "bbartotalnumber/I");
 		if (_writeROOTparameter < 2) 
 		{
 			return;
 		}
-		_hTree = new TTree( "Stats", "My test tree!" );
-		_hTree->Branch("tag", &_tag, "tag/I");
 		_hTree->Branch("cosquark", &_cosquark, "cosquark/F");
 		_hTree->Branch("cosantiquark", &_cosantiquark, "cosantiquark/F");
 		_hTree->Branch("totalBcharge", &_totalBcharge, "totalBcharge/I");
@@ -181,8 +183,6 @@ namespace TTbarAnalysis
 		_hTree->Branch("bbarnumber", &_bbarnumber, "bbarnumber/I");
 		_hTree->Branch("cnumber", &_cnumber, "cnumber/I");
 		_hTree->Branch("cbarnumber", &_cbarnumber, "cbarnumber/I");
-		_hTree->Branch("btotalnumber", &_btotalnumber, "btotalnumber/I");
-		_hTree->Branch("bbartotalnumber", &_bbartotalnumber, "bbartotalnumber/I");
 		_hTree->Branch("bptmiss", &_bptmiss, "bptmiss/F");
 		_hTree->Branch("bbarptmiss", &_bbarptmiss, "bbarptmiss/F");
 		_hTree->Branch("bnumber_f", &_bnumber_f, "bnumber_f/I");
@@ -317,6 +317,8 @@ namespace TTbarAnalysis
 		}
 		else 
 		{
+			_bbartotalnumber = (_bbartotalnumber > 0)? _bbartotalnumber : 0;
+			_btotalnumber = (_btotalnumber > 0)? _btotalnumber: 0;
 			PrintParticle(chain->Get(0));
 			vector< MCParticle * > bdaughters = opera.SelectStableCloseDaughters(chain->Get(0));
 			streamlog_out(DEBUG)<< "Prongs for quark " << chain->GetParentPDG() << ": \n";
@@ -330,9 +332,16 @@ namespace TTbarAnalysis
 				for (unsigned int i = 0; i < bdaughters.size(); i++) 
 				{
 					col->addElement(bdaughters[i]);
+					if (chain->GetParentPDG() > 0) 
+					{
+						_btotalnumber++;
+					}
+					else 
+					{
+						_bbartotalnumber++;
+					}
 				}
 			}
-			
 		}
 	}
 
@@ -409,11 +418,11 @@ namespace TTbarAnalysis
 				_numberOfVertexes = 0;
 				Write(bverticies,_numberOfVertexes);
 				Write(bbarverticies, _numberOfVertexes);
+				_hTree->Fill();
 				if (_writeROOTparameter > 1) 
 				{
 					Write(opera, bChain,bverticies);
 					Write(opera, bbarChain,bbarverticies);
-					_hTree->Fill();
 					_bnumber = (_bnumber < 0)? 0: _bnumber;
 					_bbarnumber = (_bbarnumber < 0)? 0: _bbarnumber;
 					_cnumber = (_cnumber < 0)? 0: _cnumber;
@@ -425,8 +434,10 @@ namespace TTbarAnalysis
 				_hVertexTree->Fill();
 				ClearVariables();
 			}
-			streamlog_out(DEBUG)<<"B cos: " << _cosquark << '\n';
-			streamlog_out(DEBUG)<<"Bbar cos: " <<_cosantiquark << '\n';
+			//streamlog_out(DEBUG)<<"B cos: " << _cosquark << '\n';
+			//streamlog_out(DEBUG)<<"Bbar cos: " <<_cosantiquark << '\n';
+			streamlog_out(DEBUG)<< "b number: " << _btotalnumber << "\n";
+			streamlog_out(DEBUG)<< "bbar number: " << _bbartotalnumber << "\n";
 	
 		}
 		catch( DataNotAvailableException &e)
@@ -565,7 +576,6 @@ namespace TTbarAnalysis
 	void TruthVertexFinder::Write(const vector< MCParticle * > daughters, int v)
 	{
 		float * offset = NULL;
-		float * pt = NULL;
 		float * p = NULL;
 		float * eta = NULL;
 		switch(v)

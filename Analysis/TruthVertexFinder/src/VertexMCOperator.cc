@@ -23,7 +23,7 @@ namespace TTbarAnalysis
 		
 		vector< Vertex * > * result = new vector< Vertex * >();
 		const double * ip = chain->Get(0)->getVertex();
-		for (unsigned int i = 1; i < chain->GetSize(); i++) // <<==============================
+		for (int i = 1; i < chain->GetSize(); i++) // <<==============================
 		{
 			result->push_back(construct(chain->Get(i), ip, chain->GetParentPDG(), i+1));
 		}

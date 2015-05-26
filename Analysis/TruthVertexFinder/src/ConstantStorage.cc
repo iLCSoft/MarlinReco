@@ -73,7 +73,7 @@ namespace TTbarAnalysis
 			case NONTRACKABLE_PARTICLES:
 			return NONTRACKABLE_PARTICLES_PGD();
 			default:
-			return vector<int>();
+			return *(new vector<int>());
 		}
 	}
 

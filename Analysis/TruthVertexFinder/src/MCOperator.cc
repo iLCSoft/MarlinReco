@@ -180,7 +180,7 @@ namespace TTbarAnalysis
 		vector< MCParticle * > daughters = SelectDaughtersOfType(service, type); //service->getDaughters();
 		streamlog_out(DEBUG) << "Parent PDG: " << parent->getPDG() << ";\n";
 		int size = daughters.size();
-		float angle[size];
+		vector<float> angle;
 		if (size == 1) 
 		{
 			 //streamlog_out(DEBUG) << "We have only 1 meson of type " << type << '\n';
@@ -205,12 +205,12 @@ namespace TTbarAnalysis
 				//streamlog_out(DEBUG) << "Same sign of charge!\n";
 				return daughter;
 			}
-			angle[i] = MathOperator::getAngle(daughter->getMomentum(), parent->getMomentum());
+			angle.push_back(MathOperator::getAngle(daughter->getMomentum(), parent->getMomentum()));
 		}
 		float minAngle = myAngleCut;
 		int winner = -1;
 		//streamlog_out(DEBUG) << "Checking angles...\n";
-		for (int i = 0; i < size; i++) 
+		for (unsigned int i = 0; i < angle.size(); i++) 
 		{
 			//streamlog_out(DEBUG) << "Angle " << i << ": " << angle[i] << '\n';
 			if (angle[i] < minAngle)// && 
@@ -248,7 +248,6 @@ namespace TTbarAnalysis
 		const vector< float > weights = navigator.getRelatedFromWeights(particle);
 		if (nvtx > 0) 
 		{
-			bool matched = false;
 			int winner = -1;
 			float maxweight = 0.0;
 			for (unsigned int j = 0; j < obj.size(); j++) 

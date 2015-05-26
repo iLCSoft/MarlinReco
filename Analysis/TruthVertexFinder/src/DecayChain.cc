@@ -56,7 +56,7 @@ namespace TTbarAnalysis
 		vector<int> pdg =  ConstantStorage::GET_PDG(type);
 		for (int i = 0; i < GetSize(); i++) 
 		{
-			for (int j = 0; j < pdg.size(); j++) 
+			for (unsigned int j = 0; j < pdg.size(); j++) 
 			{
 				if (abs(myParticles[i]->getPDG()) == pdg[i]) 
 				{
@@ -64,6 +64,7 @@ namespace TTbarAnalysis
 				}
 			}
 		}
+		return NULL;
 	}
 	
 	

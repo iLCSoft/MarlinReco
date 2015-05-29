@@ -14,6 +14,7 @@ namespace TTbarAnalysis
 		BOTTOM_HADRONS = 5500,
 		CHARMED_BARYONS = 4000,
 		CHARMED_HADRONS = 4400,
+		TAU_LEPTON = 15,
 		TRACKABLE_PARTICLES = 1,
 		NONTRACKABLE_PARTICLES = 1000000,     //Should be a large number
 		_max_MESONS = NONTRACKABLE_PARTICLES  //Because of this line
@@ -40,6 +41,7 @@ namespace TTbarAnalysis
 		static const std::vector<int> & BOTTOM_HADRONS_PGD();
 		static const std::vector<int> & CHARMED_BARYONS_PGD();
 		static const std::vector<int> & CHARMED_HADRONS_PGD();
+		static const std::vector<int> & TAU_LEPTON_PGD();
 		static const std::vector<int> & TRACKABLE_PARTICLES_PGD();
 		static const std::vector<int> & NONTRACKABLE_PARTICLES_PGD();
 		
@@ -209,6 +211,8 @@ namespace TTbarAnalysis
 				myBottomHadronsPDGs.reserve( myBottomBaryonsPDGs.size() + myBottomMesonsPDGs.size() );
 				myBottomHadronsPDGs.insert(myBottomHadronsPDGs.end(), myBottomMesonsPDGs.begin(), myBottomMesonsPDGs.end());
 				myBottomHadronsPDGs.insert(myBottomHadronsPDGs.end(), myBottomBaryonsPDGs.begin(), myBottomBaryonsPDGs.end());
+				///////////////NONTRACKABLE//////////////////////
+				myTauLeptonPDGs.push_back(15);
 				///////////////TRACKABLE//////////////////////
 				myTrackableParticlesPDGs.push_back(11);
 				myTrackableParticlesPDGs.push_back(13);
@@ -238,6 +242,7 @@ namespace TTbarAnalysis
 			static std::vector<int> myCharmedHadronsPDGs; 
 			static std::vector<int> myTrackableParticlesPDGs; 
 			static std::vector<int> myNonTrackableParticlesPDGs; 
+			static std::vector<int> myTauLeptonPDGs; 
 			static std::vector<int> myEmptyPDGs; 
 		//
 		//	Private methods

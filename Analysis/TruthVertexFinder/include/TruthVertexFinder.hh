@@ -9,6 +9,7 @@
 #include <EVENT/MCParticle.h>
 #include <EVENT/Vertex.h>
 #include "marlin/VerbosityLevels.h"
+#include "streamlog/streamlog.h"
 #include "marlin/Processor.h"
 #include "lcio.h"
 

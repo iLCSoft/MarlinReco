@@ -115,7 +115,7 @@ namespace TTbarAnalysis
 
 	void TruthVertexFinder::init() 
 	{ 
-		streamlog_out(DEBUG) << "   init called  " << std::endl;
+		streamlog_out(MESSAGE)  << "   init called  " << std::endl;
 		printParameters() ;
 		if (inputPdg.size() < 2) 
 		{
@@ -130,7 +130,6 @@ namespace TTbarAnalysis
 		}
 		_nRun = 0 ;
 		_nEvt = 0 ;
-		_hfilename = "TrashMCTest.root";
 		if (_writeROOTparameter == 0) 
 		{
 			return;
@@ -148,7 +147,7 @@ namespace TTbarAnalysis
 		_hVertexTree->Branch("charge", _charge, "charge[numberOfVertexes]/I");
 		_hVertexTree->Branch("generation", _generation, "generation[numberOfVertexes]/I");
 		_hVertexTree->Branch("numberOfParticles", _numberOfParticles, "numberOfParticles[numberOfVertexes]/I");
-		_hVertexTree->Branch("energyOfParticles", _energyOfParticles, "energyOfParticles[numberOfVertexes][15]/F");
+		//_hVertexTree->Branch("energyOfParticles", _energyOfParticles, "energyOfParticles[numberOfVertexes][15]/F");
 		_hVertexTree->Branch("momentumOfParticles", _momentumOfParticles, "momentumOfParticles[numberOfVertexes][15]/F");
 		_hVertexTree->Branch("massOfParticles", _massOfParticles, "massOfParticles[numberOfVertexes][15]/F");
 		_hVertexTree->Branch("interactionOfParticles", _interactionOfParticles, "interactionOfParticles[numberOfVertexes][15]/I");
@@ -234,8 +233,8 @@ namespace TTbarAnalysis
 		{
 			return;
 		}
-		streamlog_out(DEBUG) << std::fixed << std::setw( 6 ) << std::setprecision( 3 ) << std::setfill( ' ' );
-		streamlog_out(DEBUG)<<"|"<<particle->getPDG() <<"\t\t|"<<particle->getMass()<<"\t\t|"<<particle->getCharge()  <<"\t\t|"<<particle->getEnergy()<<"\t\t|"<<particle->getVertex()[0]<<"\t\t|"<<particle->getVertex()[1]<<"\t\t|"<<particle->getVertex()[2] <<"\t\t|\n";
+		streamlog_out(MESSAGE)  << std::fixed << std::setw( 6 ) << std::setprecision( 3 ) << std::setfill( ' ' );
+		streamlog_out(MESSAGE) <<"|"<<particle->getPDG() <<"\t\t|"<<particle->getMass()<<"\t\t|"<<particle->getCharge()  <<"\t\t|"<<particle->getEnergy()<<"\t\t|"<<particle->getVertex()[0]<<"\t\t|"<<particle->getVertex()[1]<<"\t\t|"<<particle->getVertex()[2] <<"\t\t|\n";
 	
 	}
 	void TruthVertexFinder::Write(vector< Vertex * > * vertices, int & number)
@@ -250,6 +249,9 @@ namespace TTbarAnalysis
 			_PDG[_numberOfVertexes] = vertex->getParameters()[1];
 			_generation[_numberOfVertexes] = vertex->getParameters()[2];
 			ReconstructedParticle * particle = vertex->getAssociatedParticle();
+			_coordinates[_numberOfVertexes][0] = vertex->getPosition()[0];
+			_coordinates[_numberOfVertexes][1] = vertex->getPosition()[1];
+			_coordinates[_numberOfVertexes][2] = vertex->getPosition()[2];
 			_charge[_numberOfVertexes] = particle->getCharge();
 			_numberOfParticles[_numberOfVertexes] = particle->getParticles().size();
 			_distanceFromIP[_numberOfVertexes] = vertex->getParameters()[0];
@@ -279,8 +281,8 @@ namespace TTbarAnalysis
 		IMPL::LCCollectionVec * mc = new IMPL::LCCollectionVec ( LCIO::MCPARTICLE ) ;
 		if (quarks.size() == 2) 
 		{
-			//streamlog_out(DEBUG) << "PDG: " << quarks[0]->getPDG() << '\n';
-			//streamlog_out(DEBUG) << "PDG: " << quarks[1]->getPDG() << '\n';
+			//streamlog_out(MESSAGE)  << "PDG: " << quarks[0]->getPDG() << '\n';
+			//streamlog_out(MESSAGE)  << "PDG: " << quarks[1]->getPDG() << '\n';
 			mc->addElement(quarks[0]);
 			mc->addElement(quarks[1]);
 		}
@@ -321,7 +323,7 @@ namespace TTbarAnalysis
 			_btotalnumber = (_btotalnumber > 0)? _btotalnumber: 0;
 			PrintParticle(chain->Get(0));
 			vector< MCParticle * > bdaughters = opera.SelectStableCloseDaughters(chain->Get(0));
-			streamlog_out(DEBUG)<< "Prongs for quark " << chain->GetParentPDG() << ": \n";
+			streamlog_out(MESSAGE) << "Prongs for quark " << chain->GetParentPDG() << ": \n";
 			for (unsigned int i = 0; i < bdaughters.size(); i++) 
 			{
 				 PrintParticle(bdaughters[i]);
@@ -350,7 +352,7 @@ namespace TTbarAnalysis
 		try
 		{
 			LCCollection* col = evt->getCollection( _colName );
-			streamlog_out(DEBUG)<< "***********TruthVertexFinder*"<<_nEvt<<"***************\n";
+			streamlog_out(MESSAGE) << "***********TruthVertexFinder*"<<_nEvt<<"***************\n";
 			LCCollection* rel = evt->getCollection(_colRelName);
 			MCOperator opera(col,rel);
 			VertexMCOperator vertexOperator(rel);
@@ -360,7 +362,7 @@ namespace TTbarAnalysis
 	 		//GetAsymmetry(bquarks);
 			_nEvt ++ ;
 			int initQuark = abs(_initialQuarkPDGparameter);
-			streamlog_out(DEBUG)<<"\t|PDG\t\t|Mass\t\t|Charge\t\t|Energy\t\t|Vtx X\t\t|Vtx Y\t\t|Vtx Z\t\t|\n";
+			streamlog_out(MESSAGE) <<"\t|PDG\t\t|Mass\t\t|Charge\t\t|Energy\t\t|Vtx X\t\t|Vtx Y\t\t|Vtx Z\t\t|\n";
 			DecayChain * bChainRaw = opera.Construct(string("b-quark decay chain"), initQuark, _pdgs);
 			DecayChain * bChain = opera.RefineDecayChain(bChainRaw, _pdgs);
 			IMPL::LCCollectionVec * mc = new IMPL::LCCollectionVec ( LCIO::MCPARTICLE ) ;
@@ -368,7 +370,7 @@ namespace TTbarAnalysis
 			if (bChain) 
 			{
 				vector< MCParticle * > daughters = opera.SelectStableCloseDaughters(bChainRaw->Get(0), bChain->Get(0)->getPDG());	
-				streamlog_out(DEBUG)<<"Additional B particles: \n";
+				streamlog_out(MESSAGE) <<"Additional B particles: \n";
 				for (unsigned int i = 0; i < daughters.size(); i++) 
 				{
 					vector< float > direction = MathOperator::getDirection(daughters[i]->getMomentum());
@@ -383,7 +385,7 @@ namespace TTbarAnalysis
 			if (bbarChain) 
 			{
 				vector< MCParticle * > daughters = opera.SelectStableCloseDaughters(bbarChainRaw->Get(0), bbarChain->Get(0)->getPDG());	
-				streamlog_out(DEBUG)<<"Additional Bbar particles: \n";
+				streamlog_out(MESSAGE) <<"Additional Bbar particles: \n";
 				for (unsigned int i = 0; i < daughters.size(); i++) 
 				{
 					vector< float > direction = MathOperator::getDirection(daughters[i]->getMomentum());
@@ -418,7 +420,6 @@ namespace TTbarAnalysis
 				_numberOfVertexes = 0;
 				Write(bverticies,_numberOfVertexes);
 				Write(bbarverticies, _numberOfVertexes);
-				_hTree->Fill();
 				if (_writeROOTparameter > 1) 
 				{
 					Write(opera, bChain,bverticies);
@@ -430,19 +431,20 @@ namespace TTbarAnalysis
 					_hTrackTree->Fill();
 						
 				}
+				_hTree->Fill();
 				_hBStarTree->Fill();
 				_hVertexTree->Fill();
 				ClearVariables();
 			}
-			//streamlog_out(DEBUG)<<"B cos: " << _cosquark << '\n';
-			//streamlog_out(DEBUG)<<"Bbar cos: " <<_cosantiquark << '\n';
-			streamlog_out(DEBUG)<< "b number: " << _btotalnumber << "\n";
-			streamlog_out(DEBUG)<< "bbar number: " << _bbartotalnumber << "\n";
+			//streamlog_out(MESSAGE) <<"B cos: " << _cosquark << '\n';
+			//streamlog_out(MESSAGE) <<"Bbar cos: " <<_cosantiquark << '\n';
+			streamlog_out(MESSAGE) << "b number: " << _btotalnumber << "\n";
+			streamlog_out(MESSAGE) << "bbar number: " << _bbartotalnumber << "\n";
 	
 		}
 		catch( DataNotAvailableException &e)
 		{
-			streamlog_out(DEBUG) << "No collection!" << std::endl ;
+			streamlog_out(MESSAGE)  << "No collection!" << std::endl ;
 		}
 	}
 	void TruthVertexFinder::GetAsymmetry(std::vector< MCParticle * > & particles)
@@ -482,7 +484,7 @@ namespace TTbarAnalysis
 			_bnumber_f = opera.SelectStableCloseDaughters(chain->Get(0), chain->Get(1)->getPDG(),true).size();//opera.SelectStableCloseDaughters(chain->Get(0), chain->Get(1)->getPDG(),true).size();//opera.CheckDaughterVisibility(daughters).size();
 			_bIPdistance = verticies->at(0)->getParameters()[0];
 			Write(daughters, 1);
-			streamlog_out(DEBUG)<<"Vertex b-quark: " << verticies->at(0)->getParameters()[0]<< " n-tracks: " << _bnumber << '\n';
+			streamlog_out(MESSAGE) <<"Vertex b-quark: " << verticies->at(0)->getParameters()[0]<< " n-tracks: " << _bnumber << '\n';
 
 			const vector< MCParticle * > cdaughters =static_cast< MyVertex * >(verticies->at(1))->__GetMCParticles(); //opera.SelectStableCloseDaughters(chain->Get(1)); //opera.ScanForVertexParticles(bverticies->at(1)->getPosition(), 1e-3);
 			_cnumber = cdaughters.size();
@@ -491,17 +493,17 @@ namespace TTbarAnalysis
 			opera.CheckDaughterVisibility(daughters);
 			Write(cdaughters, 2);
 			
-			streamlog_out(DEBUG)<<"Vertex c-quark: " << verticies->at(1)->getParameters()[0] <<" n-tracks: " << _cnumber <<  '\n';
+			streamlog_out(MESSAGE) <<"Vertex c-quark: " << verticies->at(1)->getParameters()[0] <<" n-tracks: " << _cnumber <<  '\n';
 			opera.CheckDaughterVisibility(cdaughters);
 			_bdistance = MathOperator::getDistance(verticies->at(1)->getPosition(), verticies->at(0)->getPosition());
 			_btotalnumber = _cnumber + _bnumber;
-			streamlog_out(DEBUG)<<"Checking b-quark meson...\n";
+			streamlog_out(MESSAGE) <<"Checking b-quark meson...\n";
 			bool compatible = opera.CheckCompatibility(daughters, chain->Get(0), chain->Get(1)->getCharge());
 				
-			streamlog_out(DEBUG)<<"Checking c-quark meson...\n";
+			streamlog_out(MESSAGE) <<"Checking c-quark meson...\n";
 			compatible = opera.CheckCompatibility(cdaughters, chain->Get(1));
 			_bptmiss = getMissingPt(daughters, cdaughters, verticies->at(0));
-			streamlog_out(DEBUG)<<"Missing pt for b-quark hadron: " << _bptmiss << "\n";	
+			streamlog_out(MESSAGE) <<"Missing pt for b-quark hadron: " << _bptmiss << "\n";	
 			_ccharge = (int)chain->Get(1)->getCharge();
 			_bmomentum = MathOperator::getModule(chain->Get(0)->getMomentum());
 			_baccuracy = opera.GetAccuracy(chain->Get(0), _aParameter, _bParameter); 
@@ -517,11 +519,11 @@ namespace TTbarAnalysis
 			_bbarnumber = daughters.size();
 			_bbarIPdistance = verticies->at(0)->getParameters()[0];
 			_bbarnumber_f = opera.SelectStableCloseDaughters(chain->Get(0), chain->Get(1)->getPDG(),true).size();//opera.CheckDaughterVisibility(daughters).size();
-		        streamlog_out(DEBUG)<<"Vertex bbar-quark"<< 0 <<": " << verticies->at(0)->getParameters()[0] <<" n-tracks: " << _bbarnumber <<  '\n';
+		        streamlog_out(MESSAGE) <<"Vertex bbar-quark"<< 0 <<": " << verticies->at(0)->getParameters()[0] <<" n-tracks: " << _bbarnumber <<  '\n';
 			const vector< MCParticle * > cdaughters= static_cast< MyVertex * >(verticies->at(1))->__GetMCParticles(); //opera.SelectStableCloseDaughters(chain->Get(1)); //opera.ScanForVertexParticles(bbarverticies->at(1)->getPosition(), 1e-3);
 			_cbarnumber = cdaughters.size();
 			opera.CheckDaughterVisibility(daughters);
-			streamlog_out(DEBUG)<<"Vertex cbar-quark: " << verticies->at(1)->getParameters()[0] <<" n-tracks: " <<_cbarnumber << '\n';
+			streamlog_out(MESSAGE) <<"Vertex cbar-quark: " << verticies->at(1)->getParameters()[0] <<" n-tracks: " <<_cbarnumber << '\n';
 			opera.CheckDaughterVisibility(cdaughters);
 			_cbarnumber_f = opera.SelectStableCloseDaughters(chain->Get(1),0,true).size();//opera.CheckDaughterVisibility(cdaughters).size();
 			_bbardistance = MathOperator::getDistance(verticies->at(1)->getPosition(), verticies->at(0)->getPosition());
@@ -529,7 +531,7 @@ namespace TTbarAnalysis
 			_cbarcharge = (int) chain->Get(1)->getCharge();
 			Write(cdaughters, -2);
 			_bbarptmiss = getMissingPt(daughters, cdaughters, verticies->at(0));
-			streamlog_out(DEBUG)<<"Missing pt for bbar-quark hadron: " << _bbarptmiss << "\n";	
+			streamlog_out(MESSAGE) <<"Missing pt for bbar-quark hadron: " << _bbarptmiss << "\n";	
 			_bbarmomentum = MathOperator::getModule(chain->Get(0)->getMomentum());
 			_bbaraccuracy = opera.GetAccuracy(chain->Get(0), _aParameter, _bParameter); 
 			_cbarmomentum = MathOperator::getModule(chain->Get(1)->getMomentum());
@@ -542,7 +544,7 @@ namespace TTbarAnalysis
 	void TruthVertexFinder::WriteMisReco(vector< MCParticle * > * particles)
 	{
 
-		streamlog_out(DEBUG) << "Misreco: " << _misreconumber << " particles: " << particles->size() << '\n';
+		streamlog_out(MESSAGE)  << "Misreco: " << _misreconumber << " particles: " << particles->size() << '\n';
 		for (unsigned int i = _misreconumber; i < _misreconumber + particles->size(); i++) 
 		{
 			vector< float > direction = MathOperator::getDirection(particles->at(i-_misreconumber)->getMomentum());
@@ -558,9 +560,9 @@ namespace TTbarAnalysis
 		const float * position = vertex->getPosition();
 		for (int i = 0; i < 3; i++) 
 		{
-			streamlog_out(DEBUG) << i << ": " << position[i];
+			streamlog_out(MESSAGE)  << i << ": " << position[i];
 		}
-		streamlog_out(DEBUG) << '\n';
+		streamlog_out(MESSAGE)  << '\n';
 		vector< const double * > vectors;
 		for (unsigned int i = 0; i < bdaugthers.size(); i++) 
 		{
@@ -695,6 +697,11 @@ namespace TTbarAnalysis
 			_charge[i] = 0;
 			_PDG[i] = 0;
 			_generation[i] = 0;
+			_numberOfParticles[i] = 0;
+			for (int j = 0; j < 3; j++) 
+			{
+				_coordinates[i][j] = -100.0;
+			}
 			for (int j = 0; j < MAXV; j++) 
 			{
 				_energyOfParticles[i][j] = -1.0;
@@ -723,7 +730,7 @@ namespace TTbarAnalysis
 		_hfile->Write();
 		_hfile->Close();
 	
-	    //   streamlog_out(DEBUG) << "TruthVertexFinder::end()  " << name() 
+	    //   streamlog_out(MESSAGE)  << "TruthVertexFinder::end()  " << name() 
 	    // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
 	    // 	    << std::endl ;
 	

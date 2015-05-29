@@ -497,7 +497,7 @@ namespace TTbarAnalysis
 		pdg = abs(pdg);
 		if (pdg < 1) 
 		{
-		        return false;
+		        return NULL;
 		}
 		MCParticle * particle = NULL;
 		MCParticle * antiparticle = NULL;

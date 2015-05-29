@@ -59,7 +59,7 @@ namespace TTbarAnalysis
 			EVENT::LCCollection * myRelCollection;
 			double myPrimaryVertex[3];
 			float myAngleCut;
-			int myCurrentParentPDG;
+		//	int myCurrentParentPDG;
 		//
 		//	Private methods
 		//

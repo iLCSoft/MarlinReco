@@ -34,16 +34,16 @@ namespace TTbarAnalysis
 		//
 		//	Methods
 		//
-		static const std::vector<int> & CHARMED_MESONS_PGD();
-		static const std::vector<int> & STRANGE_MESONS_PGD();
-		static const std::vector<int> & BOTTOM_MESONS_PGD();
-		static const std::vector<int> & BOTTOM_BARYONS_PGD();
-		static const std::vector<int> & BOTTOM_HADRONS_PGD();
-		static const std::vector<int> & CHARMED_BARYONS_PGD();
-		static const std::vector<int> & CHARMED_HADRONS_PGD();
-		static const std::vector<int> & TAU_LEPTON_PGD();
-		static const std::vector<int> & TRACKABLE_PARTICLES_PGD();
-		static const std::vector<int> & NONTRACKABLE_PARTICLES_PGD();
+		static const std::vector<int> & CHARMED_MESONS_PDG();
+		static const std::vector<int> & STRANGE_MESONS_PDG();
+		static const std::vector<int> & BOTTOM_MESONS_PDG();
+		static const std::vector<int> & BOTTOM_BARYONS_PDG();
+		static const std::vector<int> & BOTTOM_HADRONS_PDG();
+		static const std::vector<int> & CHARMED_BARYONS_PDG();
+		static const std::vector<int> & CHARMED_HADRONS_PDG();
+		static const std::vector<int> & TAU_LEPTON_PDG();
+		static const std::vector<int> & TRACKABLE_PARTICLES_PDG();
+		static const std::vector<int> & NONTRACKABLE_PARTICLES_PDG();
 		
 		static const std::vector<int> & GET_PDG(PDGTYPE type);
 		//static constructor pattern

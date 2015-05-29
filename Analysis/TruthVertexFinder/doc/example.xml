@@ -25,7 +25,7 @@ DST.slcio
   <!-- PDG code of initial quark that is used seed a decay chain. Should be consistent with first value of DecayChainPDGs parameter -->
   <parameter name="initialQuarkPDG" type="int">5</parameter>
   <!-- Input pdg codes to look for particle decays -->
-  <!-- Possible values: 500 - B-mesons, 400 - D-mesons, 300 - K-mesons, 5000 - b-baryons, 4000 - c-baryons, 5500 - b-hadrons, 4400 - c-hadrons, 0 - any other particle -->
+  <!-- Possible values: 15 - tau lepton, 500 - B-mesons, 400 - D-mesons, 300 - K-mesons, 5000 - b-baryons, 4000 - c-baryons, 5500 - b-hadrons, 4400 - c-hadrons, 0 - any other particle -->
   <parameter name="DecayChainPDGs" type="IntVec">5500	4400	0</parameter>
   <!-- This parameter regulates ROOT output: 0 - no ROOT output, 1 - basic ROOT file, 2 - extended ROOT file only if DecayChainPDGs has 3 parameters! -->
   <parameter name="writeROOT" type="int">2</parameter>

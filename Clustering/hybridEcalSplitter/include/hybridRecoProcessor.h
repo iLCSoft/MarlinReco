@@ -89,6 +89,7 @@ class hybridRecoProcessor : public Processor {
   float _cellSize;
   int   _symmetry;
   int   _nVirtual;
+  int _ecalStrip_default_nVirt;
 
   bool _saveIntersections;
   IMPL::LCCollectionVec* intersectionHits;

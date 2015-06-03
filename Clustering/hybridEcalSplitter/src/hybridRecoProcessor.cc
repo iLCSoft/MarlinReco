@@ -2,7 +2,6 @@
 #include <iostream>
 #include <map>
 
-using std::cout;
 using std::endl;
 
 #include <EVENT/LCCollection.h>
@@ -75,6 +74,12 @@ hybridRecoProcessor::hybridRecoProcessor() : Processor("hybridRecoProcessor") {
 			    _ecalCollectionsLongStrips,
 			    ecalCollectionsLongStrips);
 
+
+  registerProcessorParameter( "virtualCellsDefault",
+			      "number of virtual cells per strip (used if info not found in gear file)",
+			      _ecalStrip_default_nVirt,
+			      int(1) );
+
   registerProcessorParameter( "saveIntersectionCollection",
 			      "save collection with strip interactions?",
 			      _saveIntersections,
@@ -84,7 +89,7 @@ hybridRecoProcessor::hybridRecoProcessor() : Processor("hybridRecoProcessor") {
 			      "save root file with debugging histograms?",
 			      _makePlots,
 			      false);
-  
+
 }
 
 
@@ -144,22 +149,57 @@ void hybridRecoProcessor::setupGeometry() {
 
   // read gear information about strip sizes
 
-  cout << "hello from hybridRecoProcessor::setupGeometry" << endl;
+  streamlog_out ( DEBUG )<< "hello from hybridRecoProcessor::setupGeometry" << endl;
 
   const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
   const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
+  const gear::GearParameters& pMokka = Global::GEAR->getGearParameters("MokkaParameters");
 
-  cout << "nlayers = " << ecalBarrelLayout.getNLayers() << endl;
+  
+  // number of virtual cells in ECAL scint strips
+  // this is the number of virtual cells used in Mokka: it's just used to calculate the true strip size
+  // from the gear file information. (in the case of >1 virtual cells in the simulation, the cell size in the gear
+  // file is that of the virtual cell, not of the whole strip
+  int nMokkaVirtualCells  = 1;
+  try {
+    // first try to get from ECAL barrel section of gear file (it's here for "latest" Mokka versions)
+    nMokkaVirtualCells = pEcalBarrel.getIntVal("Ecal_Sc_number_of_virtual_cells");
+    streamlog_out (MESSAGE) << "taking number of Mokka virtual cells from calo section of gear file: " << nMokkaVirtualCells << endl;
+  } catch(gear::UnknownParameterException &e) {
+    try {
+      // otherwise look in the mokka parameters section
+      std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
+      std::stringstream convert(nVirtualMokkaS);
+      if ( !(convert >> nMokkaVirtualCells) ) {
+	streamlog_out (ERROR) << "could not decipher number of Mokka virtual cells! " << nVirtualMokkaS << endl;
+	assert(0);
+      }
+      streamlog_out (MESSAGE) << "taking number of Mokka virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << nMokkaVirtualCells << endl;
+    } catch(gear::UnknownParameterException &e) {
+      // if still not found, use default from processor parameter
+      nMokkaVirtualCells = _ecalStrip_default_nVirt;
+      streamlog_out (WARNING) << "taking number of Mokka virtual cells from steering file (not found in gear file): " << nMokkaVirtualCells << endl;
+    }
+  }
 
+
+  // this part assumes that all strips in the calo have the same size, as do all cells
+  // (there may be a mix of strips and cells)
   for(int i=0; i<ecalBarrelLayout.getNLayers(); i++){
     float size0 = ecalBarrelLayout.getCellSize0(i);
     float size1 = ecalBarrelLayout.getCellSize1(i);
 
-    cout << "layer " << i << " " << size0 << " " << size1 << " " << min(size0, size1)/max(size0, size1) << endl;
+    // the gear file has size of virtual strips. we need to convert to the whole strip length
+    //    if (i%2==0) size1*=_nSimVirt;
+    //    else        size0*=_nSimVirt;
+    if (i%2==0) size1*=nMokkaVirtualCells;
+    else        size0*=nMokkaVirtualCells;
+
+    streamlog_out ( DEBUG ) << "layer " << i << " " << size0 << " " << size1 << " " << min(size0, size1)/max(size0, size1) << endl;
 
     _stripAspectRatio = max(size0, size1)/min(size0, size1);
 
-    if ( max(size0, size1)/min(size0, size1) > 1.5 ) { // it's a strip
+    if ( _stripAspectRatio > 1.5 ) { // it's a strip
       _stripLength = max(size0, size1);
       _stripWidth = min(size0, size1);
       break;
@@ -170,9 +210,10 @@ void hybridRecoProcessor::setupGeometry() {
 
   _symmetry = pEcalBarrel.getSymmetryOrder();
 
+  streamlog_out ( DEBUG ) << "strip length = " << _stripLength << " width " << _stripWidth << " aspect ratio " << _stripAspectRatio << " cell size " << _cellSize << " ; symmetry = " << _symmetry << endl;
 
-  cout << "strip length = " << _stripLength << " width " << _stripWidth << " aspect ratio " << _stripAspectRatio << " cell size " << _cellSize << " ; symmetry = " << _symmetry << endl;
-
+  // this is the number of virtual cells we will split the strip into
+  // it's completely unrelated to the number of virtual cells used in the Mokka simulation.
   _nVirtual = int(_stripLength/_stripWidth);
 
   return;
@@ -201,8 +242,8 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
   }
 
   if ( _stripAspectRatio<2.0 ) {
-    cout << " -- not a strip, not worth splitting -- length, width, aspect ratio: " << _stripLength << " " << _stripWidth << " " << _stripAspectRatio << endl;
-    cout << "doing nothing" << endl;
+    streamlog_out ( WARNING ) << " -- not a long enough strip, not worth splitting -- length, width, aspect ratio: " << 
+      _stripLength << " " << _stripWidth << " " << _stripAspectRatio << ", doing nothing" << endl;
     return;
   }
 
@@ -237,7 +278,7 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
       stripSplitter = &_ecalCollectionsTranStrips;
       break;
     default:
-      cout << "ERROR crazy stuff!!! abandoning event..." << endl;
+      streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;
       return;
     }
 
@@ -256,7 +297,7 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 	} else if (name.Contains("Endcap") || name.Contains("endcap")) {
 	  barrel = false;
 	} else {
-	  cout << "WARNING: cannot tell if collection is for barrel or endcap..." << name << endl;
+	  streamlog_out ( ERROR ) << "WARNING: cannot tell if collection is for barrel or endcap..." << name << endl;
 	}
 
 	// make new collections for split and unsplit strips
@@ -276,7 +317,7 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 	for (int j=0; j < nelem; ++j) {
 	  CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
 	  if (!hit) {
-	    cout << "ERROR  null hit in collection " << toSplit->at(i).c_str() << " " << j << endl;
+	    streamlog_out ( ERROR ) << "ERROR  null hit in collection " << toSplit->at(i).c_str() << " " << j << endl;
 	    continue;
 	  }
 	  // split the hits
@@ -388,7 +429,7 @@ std::vector <CalorimeterHit*> hybridRecoProcessor::getVirtualHits(LCEvent* evt, 
     splitterOrientation = TRANSVERSE;
     splitterCols = &_ecalCollectionsTranStrips;
   } else {
-    cout << "no need to split this orientation";
+    streamlog_out ( DEBUG ) << "no need to split this orientation";
     return newhits;
   }
 
@@ -413,7 +454,7 @@ std::vector <CalorimeterHit*> hybridRecoProcessor::getVirtualHits(LCEvent* evt, 
 	for (int j=0; j < nelem; ++j) {
 	  CalorimeterHit * hit2 = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
 	  if (!hit2) {
-	    cout << "ERROR  null hit2 in collection " <<  splitter->at(i).c_str() << " " << j << endl;
+	    streamlog_out ( ERROR ) << "ERROR  null hit2 in collection " <<  splitter->at(i).c_str() << " " << j << endl;
 	    continue;
 	  }
 	  
@@ -494,10 +535,10 @@ std::vector <CalorimeterHit*> hybridRecoProcessor::getVirtualHits(LCEvent* evt, 
 		}
 
 	      } else {
-		cout << "strange segment " << segment << " frac = " << frac << " nvirt = " << _nVirtual << endl;
+		streamlog_out ( WARNING ) << "strange segment " << segment << " frac = " << frac << " nvirt = " << _nVirtual << endl;
 	      }
 	    } else {
-	      cout << "strange frac " << frac << endl;
+	      streamlog_out ( WARNING ) << "strange frac " << frac << endl;
 	    }
 
 	  }
@@ -600,8 +641,7 @@ void hybridRecoProcessor::check( LCEvent * evt ) {
 }
 
 void hybridRecoProcessor::end(){
-  std::cout << "hybridRecoProcessor::end()  " << name() << std::endl ;
-
+  streamlog_out ( MESSAGE ) << "hybridRecoProcessor::end()  " << name() << std::endl ;
   if (_makePlots && _fout) {
     _fout->Write(0);
     _fout->Close();
@@ -640,7 +680,7 @@ TVector3 hybridRecoProcessor::stripIntersect(CalorimeterHit* hit0, TVector3 axis
     stripDir[i]*=1./stripDir[i].Mag();
   }
 
-  if (!isStrip[0]) cout << "ERROR from hybridRecoProcessor::stripIntersect, first hit should be a strip" << endl;
+  if (!isStrip[0]) streamlog_out ( ERROR ) << "ERROR from hybridRecoProcessor::stripIntersect, first hit should be a strip" << endl;
 
   TVector3 p[2][2]; // ends of strips
   for (int j=0; j<2; j++) {

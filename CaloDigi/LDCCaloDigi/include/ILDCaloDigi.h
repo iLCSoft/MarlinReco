@@ -257,7 +257,12 @@ class ILDCaloDigi : public Processor {
     SCECAL
   };
 
-  
+  std::string _cellIDLayerString ;
+  std::string _cellIDModuleString ;
+  std::string _cellIDStaveString ;
+  std::string _cellIDIndexIString ;
+  std::string _cellIDIndexJString ;
+    
   TH1F* fEcal;
   TH1F* fHcal;
   TH1F* fEcalC;

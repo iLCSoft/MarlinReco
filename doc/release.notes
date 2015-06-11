@@ -27,11 +27,13 @@
     - F.Gaede: add parameter DontEncodeSide to TPCDigiProcessor
         - allows to process old Mokka and new DD4hep based simulation 
        
-    - F.Gaede: added parameters to all calo digitizers in CaloDigi/LDCCaloDigi:
-       CellIDLayerString, CellIDModuleString, CellIDStaveString
+    - F.Gaede: modified calo digitizers in CaloDigi/LDCCaloDigi:
+      ILDCaloDigi, NewLDCCaloDigi, SimpleLCalDigi, SimpleLHCalDigi, SimpleMuonDigi
+      added parameters
+        CellIDLayerString, CellIDModuleString, CellIDStaveString
       to allow to switch between old cellId encoding string
       using K/K-1,M,S and new one using layer,module,sensor
- 
+      ( additionally added CellIDIndexIString, CellIDIndexJString to ILDCaloDigi)
  
  --------
 | v01-10 |

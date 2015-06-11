@@ -485,11 +485,36 @@ ILDCaloDigi::ILDCaloDigi() : Processor("ILDCaloDigi") {
                              _hcalMaxDynMip,
                              float (200.) );
 
-
-
-
-  
   // end daniel
+
+  registerProcessorParameter("CellIDLayerString" ,
+			     "name of the part of the cellID that holds the layer" , 
+			     _cellIDLayerString , 
+			     std::string("K-1")
+			     );
+
+  registerProcessorParameter("CellIDModuleString" ,
+			     "name of the part of the cellID that holds the module" , 
+			     _cellIDModuleString , 
+			     std::string("M")
+			     );
+ registerProcessorParameter("CellIDStaveString" ,
+			     "name of the part of the cellID that holds the stave" , 
+			     _cellIDStaveString , 
+			     std::string("S-1")
+			     );
+
+ registerProcessorParameter("CellIDIndexIString" ,
+			     "name of the part of the cellID that holds the index I" , 
+			     _cellIDIndexIString , 
+			     std::string("I")
+			     );
+
+ registerProcessorParameter("CellIDIndexJString" ,
+			     "name of the part of the cellID that holds the index J" , 
+			     _cellIDIndexJString , 
+			     std::string("J")
+			     );
 
 }
 
@@ -787,9 +812,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
         if (energy > _thresholdEcal) {
           int cellid = hit->getCellID0();
           int cellid1 = hit->getCellID1();
-          int layer = idDecoder(hit)["K-1"];
-          int stave = idDecoder(hit)["S-1"];
-          int module= idDecoder(hit)["M"];
+          int layer = idDecoder(hit)[_cellIDLayerString];
+          int stave = idDecoder(hit)[_cellIDStaveString];
+          int module= idDecoder(hit)[_cellIDModuleString];
 
           // check that layer and assumed layer type are compatible
 	  checkConsistency(colName, layer);
@@ -1043,7 +1068,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
           int cellid = hit->getCellID0();
           int cellid1 = hit->getCellID1();
           float calibr_coeff(1.);
-          int layer =idDecoder(hit)["K-1"];
+          int layer =idDecoder(hit)[_cellIDLayerString];
           // NOTE : for a digital HCAL this does not allow for varying layer thickness
           // with depth - would need a simple mod to make response proportional to layer thickness
           if(_digitalHcal){
@@ -1725,7 +1750,7 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
 
     // for now, ignore preshower layer.
     //   in "usual" (non-preshower) ecal collections, km1 = 0 is the first layer AFTER the preshower
-    int km1 = idDecoder(hit)["K-1"];
+    int km1 = idDecoder(hit)[_cellIDLayerString];
 
     int gearlayer = km1+1; // in "gearlayer", preshower is 0, first layer after absorber is 1
 
@@ -1739,10 +1764,10 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
     // }
     // assert (gearlayer>=0);
 
-    int m = idDecoder(hit)["M"];
-    int s = idDecoder(hit)["S-1"];
-    int i_index = idDecoder(hit)["I"];
-    int j_index = idDecoder(hit)["J"];
+    int m = idDecoder(hit)[_cellIDModuleString];
+    int s = idDecoder(hit)[_cellIDStaveString];
+    int i_index = idDecoder(hit)[_cellIDIndexIString];
+    int j_index = idDecoder(hit)[_cellIDIndexJString];
 
     //cout << "ORIG: " << km1 << " " << m << " " << s << " " << i_index << " " << j_index << " : " << 
     //  hit->getPosition()[0] << " "<< hit->getPosition()[1] << " "<< hit->getPosition()[2] << endl;
@@ -1856,11 +1881,11 @@ LCCollection* ILDCaloDigi::combineVirtualStripCells(LCCollection* col, bool isBa
     SimCalorimeterHitImpl * newhit = new SimCalorimeterHitImpl( );
 
     // set it's ID
-    idEncoder["M"] = m;
-    idEncoder["S-1"] = s;
-    idEncoder["K-1"] = km1;
-    idEncoder["I"] = i_new;
-    idEncoder["J"] = j_new;
+    idEncoder[_cellIDModuleString] = m;
+    idEncoder[_cellIDStaveString] = s;
+    idEncoder[_cellIDLayerString] = km1;
+    idEncoder[_cellIDIndexIString] = i_new;
+    idEncoder[_cellIDIndexJString] = j_new;
     idEncoder.setCellID( newhit ) ;
 
     int newid0 = newhit->getCellID0();

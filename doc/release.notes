@@ -5,17 +5,34 @@
 ===============================
 
  --------
-| v01-11-pre |
+| v01-11 |
  -------- 
+
+     LDCCaloDigi/ILDCaloDigi: D.Jeans & O. Hartbrich
+     - improved realism of silicon and sintillator/PPD calorimeter hit digitisation
+     - ScintillatorPpdDigi class defines PPD response model
+     - default behaviour is no realism: must be switched on in steering file
+     - added documentation (also described in LC-TOOL-2014-011)
+     - can regroup the virtual cells of a scintillator strip
+     
+     Clustering/hybridEcalSplitter: D. Jeans
+     - can deal with scintillator strips with >1 virtual cells
+
+    - S.Bilokin: new package TruthVertexFinder added 
+      ( see ./Analysis/TruthVertexFinder )
+
+    - M.Berggren: added new packages TrueJet and TrueJet_Parser 
+      (./Analysis/TrueJet, ./Analysis/TrueJet_Parser)
 
     - F.Gaede: add parameter DontEncodeSide to TPCDigiProcessor
         - allows to process old Mokka and new DD4hep based simulation 
        
-    - to be done ...
-
-
-
-
+    - F.Gaede: added parameters to all calo digitizers in CaloDigi/LDCCaloDigi:
+       CellIDLayerString, CellIDModuleString, CellIDStaveString
+      to allow to switch between old cellId encoding string
+      using K/K-1,M,S and new one using layer,module,sensor
+ 
+ 
  --------
 | v01-10 |
  -------- 

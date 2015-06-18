@@ -1,9 +1,13 @@
 #include "TMath.h"
 #include "streamlog/streamlog.h"
+#include "marlin/Global.h"
+#include <gear/BField.h>
+#include <gearimpl/Vector3D.h>
 
 #include "algebraImplementation.h"
 
 using namespace lcio;
+using namespace marlin;
 
 
 // ====================================================================
@@ -59,13 +63,13 @@ int getCovMatrixMomenta(ReconstructedParticle const *par,
   const int rows      = 3; // n rows jacobian
   const int columns   = 4; // n columns jacobian
 
-  const double BFIELD = 3.5;
+  double bField       = Global::GEAR->getBField().at(gear::Vector3D(0,0,0)).z() ;
   const double CT     = 2.99792458E-4;
 
   double track_omega  = mytrack->getOmega();
   double track_tanL   = mytrack->getTanLambda();
   double track_phi    = mytrack->getPhi();
-  double track_pt     = (CT*BFIELD) / fabs(track_omega);
+  double track_pt     = (CT*bField) / fabs(track_omega);
   double track_pz     = (track_pt*track_tanL);
   double track_p      = sqrt( (track_pt * track_pt)+(track_pz * track_pz) );
   double track_px     = track_pt * TMath::Cos(track_phi);

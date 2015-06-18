@@ -34,6 +34,9 @@
       to allow to switch between old cellId encoding string
       using K/K-1,M,S and new one using layer,module,sensor
       ( additionally added CellIDIndexIString, CellIDIndexJString to ILDCaloDigi)
+  
+    - C.Calancha: new package Analysis/FourMomentumCovMat
+
  
  --------
 | v01-10 |

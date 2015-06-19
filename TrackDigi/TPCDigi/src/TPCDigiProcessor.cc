@@ -454,6 +454,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   catch(DataNotAvailableException &e){
   }
   
+  float edep=0.0;
   if( STHcol != 0 ){
     
     int n_sim_hits = STHcol->getNumberOfElements()  ;
@@ -742,6 +743,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         continue; 
       }
       
+      //get energy deposit of this row
+      edep=_SimTHit->getEDep();
+
       // create a tpc voxel hit and store it for this row
       Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, edep, tpcRPhiRes, tpcZRes);
       
@@ -824,8 +828,11 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
       double tpcRPhiRes = _padWidth;
       double tpcZRes = _binningZ;
       
-      // create a tpc voxel hit for this simhit and store it for this tpc pad row
-      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, _SimTHit->getEDep(), tpcRPhiRes, tpcZRes);
+      //get energy deposit of this hit
+      edep=_SimTHit->getEDep();
+
+     // create a tpc voxel hit for this simhit and store it for this tpc pad row
+      Voxel_tpc * atpcVoxel = new Voxel_tpc(iRowHit,iPhiHit,iZHit, thisPoint, edep, tpcRPhiRes, tpcZRes);
       
       _tpcRowHits.at(iRowHit).push_back(atpcVoxel);
       ++numberOfVoxelsCreated;      
@@ -1246,6 +1253,9 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   
   double avgZ = sumZ/(hitsToMerge->size());
   double avgPhi = sumPhi/(hitsToMerge->size());
+
+  //set deposit energy as mean of merged hits
+  sumEDep=sumEDep/(double)number_of_hits_to_merge;
   
   CLHEP::Hep3Vector* mergedPoint = new CLHEP::Hep3Vector(1.0,1.0,1.0);
   mergedPoint->setPerp(lastR);

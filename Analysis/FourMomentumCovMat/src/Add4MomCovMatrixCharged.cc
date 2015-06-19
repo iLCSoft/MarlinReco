@@ -19,10 +19,8 @@ Add4MomCovMatrixCharged aAdd4MomCovMatrixCharged ;
 Add4MomCovMatrixCharged::Add4MomCovMatrixCharged() : Processor("Add4MomCovMatrixCharged") {
 
   // modify processor description
-  _description = "Add4MomCovMatrixCharged calculate the covariance";
-  _description += " matrix in the momenta space." ;
-
-
+  _description = "Set the convariance matrix in (P,E) for all charged pfos";
+  _description += " in PandoraPFOs Collection";
   // register steering parameters: name, description,
   // class-variable, default value
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
@@ -69,7 +67,14 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
           getCovMatrixMomenta(recPar, covarianceP);
           recPar->setCovMatrix (covarianceP);
       }
-      streamlog_out(MESSAGE3) << "Set covariance matrix for charged pfo:" << std::endl
+      
+      streamlog_out(MESSAGE3) << "Set covariance matrix for charged pfo with charge "
+                              << (int) recPar->getCharge() << " and (px,py,pz,e) = ("
+                              << recPar->getMomentum()[0] << ","
+                              << recPar->getMomentum()[1] << ","
+                              << recPar->getMomentum()[2] << ","
+                              << recPar->getEnergy() << "):" << std::endl
+                              << "(null charged pfo covariance matrix not implemented yet)" << std::endl
                               << std::setprecision(6)
                               << " cov1[px px] " <<  recPar->getCovMatrix()[0] << std::endl
                               << " cov1[py px] " <<  recPar->getCovMatrix()[1] << std::endl
@@ -82,7 +87,6 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
                               << " cov1[e pz] "  <<  recPar->getCovMatrix()[8] << std::endl
                               << " cov1[e e] "   <<  recPar->getCovMatrix()[9] << std::endl
                               << std::endl;
-
   }
   
 

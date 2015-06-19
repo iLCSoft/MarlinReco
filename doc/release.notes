@@ -37,7 +37,7 @@
   
     - C.Calancha: new package Analysis/FourMomentumCovMat
  
-    - M.Kurata: add PIDTools: TPC track dEdx calculation, 
+    - M.Kurata: new package Analysis/PIDTools: TPC track dEdx calculation, 
       Cluster shower profile extraction, and Likelihood Particle Identification
 
  

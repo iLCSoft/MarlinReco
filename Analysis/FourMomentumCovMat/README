@@ -1,0 +1,28 @@
+Add4MomCovMatrixCharged:
+A Marlin processor for filling the covariance matrix in (P,E) space for
+PandoraPFOs.
+
+Author:
+Constantino Calancha <calancha@post.kek.jp>
+
+Description:
+Takes as input one collection of ReconstructedParticle (default is PandoraPFOs).
+No new collections are created: the input collection itself is modified.
+That means this collection should not be read from disk (a slcio file),
+it should be on memory.
+
+This processor can be plugin in the official reconstruction steering file
+right after MarlinPandora: thereby the output PandoraPFOs will have set the
+covariance matrix.
+
+In the example directory there is one steering file
+example_covmatrix.xml
+
+This steering file is the ILD official steering file for the reconstruction
+at 250 GeV.
+To run the example you need to edit as follows:
+
+%%INPUT%%         ---> input  simulated file
+%%OUTPUT-REC%%    ---> output reconstructed file
+%%OUTPUT-DST%%    ---> output reconstructed DST file
+%%INPUT-OVERLAY%% ---> input overlay aa->hadrons file

@@ -68,7 +68,7 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
           recPar->setCovMatrix (covarianceP);
       }
       
-      streamlog_out(MESSAGE3) << "Set covariance matrix for charged pfo with charge "
+      streamlog_out(DEBUG5) << "Set covariance matrix for charged pfo with charge "
                               << (int) recPar->getCharge() << " and (px,py,pz,e) = ("
                               << recPar->getMomentum()[0] << ","
                               << recPar->getMomentum()[1] << ","

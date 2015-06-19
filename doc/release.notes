@@ -36,6 +36,9 @@
       ( additionally added CellIDIndexIString, CellIDIndexJString to ILDCaloDigi)
   
     - C.Calancha: new package Analysis/FourMomentumCovMat
+ 
+    - M.Kurata: add PIDTools: TPC track dEdx calculation, 
+      Cluster shower profile extraction, and Likelihood Particle Identification
 
  
  --------

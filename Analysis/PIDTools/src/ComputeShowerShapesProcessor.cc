@@ -44,13 +44,13 @@ ComputeShowerShapesProcessor::ComputeShowerShapesProcessor()
 			     _X02,
 			     float(17.57));
   
-  registerProcessorParameter("InteractionLength_Ecal",
-			     "Interaction Length of Absorbers",
+  registerProcessorParameter("MoliereRadius_Ecal",
+			     "Moliere radius of Absorbers",
 			     _Rm1,
 			     float(9.00));
   
-  registerProcessorParameter("InteractionLength_Hcal",
-			     "Interaction Length of Absorbers",
+  registerProcessorParameter("MoliereRadius_Hcal",
+			     "Moliere radius of Absorbers",
 			     _Rm2,
 			     float(17.19));
   

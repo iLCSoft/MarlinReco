@@ -307,6 +307,7 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 
 	IMPL::LCCollectionVec* unSplitStripHits = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
 	unSplitStripHits->setSubset();
+	unSplitStripHits->parameters().setValue(LCIO::CellIDEncoding, layerCodingString);
 	
 	// get the cellid decoder for this collection
 	CellIDDecoder<CalorimeterHit> id( col ) ;

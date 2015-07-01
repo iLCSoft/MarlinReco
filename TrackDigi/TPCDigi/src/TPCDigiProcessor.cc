@@ -1152,12 +1152,12 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   }
   
   // For no error in R
-  float covMat[TRKHITNCOVMATRIX]={sin(unsmearedPhi)*sin(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes,
-    -cos(unsmearedPhi)*sin(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes,
-    cos(unsmearedPhi)*cos(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes,
-    0.,
-    0.,
-    float(tpcZRes*tpcZRes)};
+  float covMat[TRKHITNCOVMATRIX]={float(sin(unsmearedPhi)*sin(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(-cos(unsmearedPhi)*sin(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(cos(unsmearedPhi)*cos(unsmearedPhi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(0.),
+                                  float(0.),
+                                  float(tpcZRes*tpcZRes) };
   
   trkHit->setCovMatrix(covMat);      
   
@@ -1322,12 +1322,12 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   }
   
   // For no error in R
-  float covMat[TRKHITNCOVMATRIX]={sin(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
-    -cos(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes,
-    cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes,
-    0.,
-    0.,
-    float(tpcZRes*tpcZRes)};
+  float covMat[TRKHITNCOVMATRIX]={float(sin(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(-cos(phi)*sin(phi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(cos(phi)*cos(phi)*tpcRPhiRes*tpcRPhiRes),
+                                  float(0.),
+                                  float(0.),
+                                  float(tpcZRes*tpcZRes)};
   
   trkHit->setCovMatrix(covMat);      
   

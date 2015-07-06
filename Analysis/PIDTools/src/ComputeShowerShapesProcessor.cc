@@ -142,7 +142,7 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
 	    }
 	}
     
-      pClusterShapes = new ClusterShapes(nHitsInCluster, pHitE, pHitX, pHitY, pHitZ);
+      pClusterShapes = new marlinreco::ClusterShapes(nHitsInCluster, pHitE, pHitX, pHitY, pHitZ);
       pClusterShapes->setHitTypes(typ);   //set hit types
 
       //here is cluster shape study - cluster transverse & longitudinal information

@@ -1,0 +1,26 @@
+TrackToRecoParticleConverter
+============================
+
+Authors: Tomohiko Tanabe & Taikan Suehara
+
+Date: July 8, 2015
+
+Description:
+
+This is a Marlin processor for converting Track objects into
+ReconstructedParticle objects.
+
+It takes as input a collection of lcio::Track objects and writes
+as output a collection of lcio::ReconstructedParticle objects.
+
+The momentum of the particle is calculated from the helical
+track parameters.  The energy is set assuming the pion mass.
+The charge is set according to the curvature (omega parameter).
+
+Below is an example of the steering file:
+
+<!-- Convert tracks into reconstructed particles-->
+<processor name="myTrackToRecoParticleConverter" type="TrackToRecoParticleConverter">
+  <parameter name="InputTracks" value="MarlinTrkTracks" />
+  <parameter name="OutputPFOCollection" value="RecoParticlesFrom" />
+</processor>

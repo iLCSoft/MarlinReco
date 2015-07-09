@@ -19,6 +19,9 @@ risk-minimization and MAP
  */
 
 #include <string>
+#include <sstream>
+#include <TFile.h>
+#include <TH1F.h>
 #include "LikelihoodPID.hh"
 
 using namespace std;

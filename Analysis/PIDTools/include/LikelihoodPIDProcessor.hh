@@ -21,16 +21,24 @@ public:
   virtual void processEvent( LCEvent * evt );
   virtual void check( LCEvent * evt );
   virtual void end();
-
+ 
 private:
+  void createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput);
+  
   LikelihoodPID *_myPID;
   std::string _description;
   std::string _inputPFOsCollection;
   std::string _PDFName;
+  std::string _weightFileName;
   EVENT::FloatVec _energyBoundary;
   LCCollection* _pfoCol;
   std::vector<int> _pdgTable;
   std::vector<std::string> _particleNames;
+  std::vector<std::string> _dEdxNames;
+
+  bool _basicFlg;
+  bool _dEdxFlg;
+  bool _showerShapesFlg;
 };
 
 #endif 

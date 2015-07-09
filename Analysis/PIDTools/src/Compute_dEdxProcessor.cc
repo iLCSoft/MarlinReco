@@ -34,7 +34,7 @@ Compute_dEdxProcessor::Compute_dEdxProcessor()
   registerProcessorParameter( "EnergyLossErrorTPC",
 			      "Fractional error of dEdx in the TPC",
 			      _energyLossErrorTPC,
-			      float(0.05));
+			      float(0.054));
   
   registerInputCollection(LCIO::TRACK,
 			  "LDCTrackCollection",
@@ -115,7 +115,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
   float *depe= new float[tH];
   //float *depe2= new float[tH];
   int itpc=0; 
-  double dx=0.0,dy=0.0,dz=0.0,length=0.0;
+  double dx=0.0,dy=0.0,dz=0.0,length=0.0,totlength=0.0;
   for(int iH=1;iH<tH;iH++){
     TrackerHit * hit = hitVec[iH];
     //std::cout << "hit type: " << hit->getType() << std::endl;
@@ -132,6 +132,9 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
       double l=r*theta;
       //total helix length
       length=sqrt(l*l+dz*dz);
+
+      //sum of flight length
+      totlength += length;
 
       depe[itpc]=hit->getEDep()/length;  //20150421   changed to the distance between 2 hits
       //depe2[iH]=depe[iH];
@@ -185,7 +188,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
 
   float *ret=new float[2];
   ret[0]=normdedx;
-  ret[1]=normdedx/sqrt(nTruncate);
+  ret[1]=normdedx*std::pow(0.001*totlength, -0.34)*std::pow(nTruncate, -0.45);   //todo: what is gas pressure in TPC?
 
   if(ret[0]!=ret[0]){
     ret[0]=0.0;

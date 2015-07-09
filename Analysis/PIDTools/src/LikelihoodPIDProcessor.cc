@@ -11,6 +11,8 @@
 #include "LikelihoodPIDProcessor.hh"
 #include "LikelihoodPID.hh"
 
+
+
 LikelihoodPIDProcessor aLikelihoodPIDProcessor ;
 
 LikelihoodPIDProcessor::LikelihoodPIDProcessor()
@@ -34,6 +36,11 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
 			      "rootfile of PDF",
 			      _PDFName,
 			      std::string("pdf_ParticleID_ok.root") );
+  
+  //registerProcessorParameter( "FileWeightFormupiSeparationName" ,
+  //			      "weight file for low momentum mu pi separation",
+  //			      _weightFileName,
+  //			      EVENT::StringVec("weight1.xml","weight2.xml","weight3.xml") );
 } 
 
 void LikelihoodPIDProcessor::init() { 
@@ -45,13 +52,41 @@ void LikelihoodPIDProcessor::init() {
   _pdgTable.push_back(321);
   _pdgTable.push_back(2212);
   
-  _particleNames.push_back("electron");
-  _particleNames.push_back("muon");
-  _particleNames.push_back("pion");
-  _particleNames.push_back("kaon");
-  _particleNames.push_back("proton");
+  //for parameters except for dEdxPID
+  _particleNames.push_back("electronLikelihood");
+  _particleNames.push_back("muonLikelihood");
+  _particleNames.push_back("pionLikelihood");
+  _particleNames.push_back("kaonLikelihood");
+  _particleNames.push_back("protonLikelihood");
+  _particleNames.push_back("MVAOutput_mupiSeparation");
+  _particleNames.push_back("electronProbability");
+  _particleNames.push_back("muonProbability");
+  _particleNames.push_back("pionProbability");
+  _particleNames.push_back("kaonProbability");
+  _particleNames.push_back("protonProbability");
+ 
+  //for parameters of dEdxPID
+  _dEdxNames.push_back("electronLikelihood");
+  _dEdxNames.push_back("muonLikelihood");
+  _dEdxNames.push_back("pionLikelihood");
+  _dEdxNames.push_back("kaonLikelihood");
+  _dEdxNames.push_back("protonLikelihood");
+  _dEdxNames.push_back("MVAOutput_mupiSeparation");
+  _dEdxNames.push_back("electronProbability");
+  _dEdxNames.push_back("muonProbability");
+  _dEdxNames.push_back("pionProbability");
+  _dEdxNames.push_back("kaonProbability");
+  _dEdxNames.push_back("protonProbability");
+  _dEdxNames.push_back("electron_dEdxdistance");
+  _dEdxNames.push_back("muon_dEdxdistance");
+  _dEdxNames.push_back("pion_dEdxdistance");
+  _dEdxNames.push_back("kaon_dEdxdistance");
+  _dEdxNames.push_back("proton_dEdxdistance");
 
   _myPID = new LikelihoodPID(_PDFName); 
+
+  //mupi separation class
+  //_mupi = new Class(_weightFileName);
   
   printParameters();
   
@@ -62,11 +97,13 @@ void LikelihoodPIDProcessor::processRunHeader( LCRunHeader* run) {
 
 void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) { 
   _pfoCol = evt->getCollection( _inputPFOsCollection ) ;
-
   
   int npfo = _pfoCol->getNumberOfElements();
-  PIDHandler pidh(_pfoCol);
-  int algoID = pidh.addAlgorithm("LikelihoodPID", _particleNames);
+  PIDHandler pidh(_pfoCol);   //BasicPID
+  int algoID1 = pidh.addAlgorithm("BasicVariablePID", _particleNames);
+  int algoID2 = pidh.addAlgorithm("dEdxPID", _dEdxNames);
+  int algoID3 = pidh.addAlgorithm("ShowerShapesPID", _particleNames);
+  int algoID4 = pidh.addAlgorithm("LikelihoodPID", _particleNames);
   for (int i = 0; i < npfo; i++ ) {
     ReconstructedParticleImpl* part = dynamic_cast<ReconstructedParticleImpl*>( _pfoCol->getElementAt(i) );
     
@@ -79,20 +116,92 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
 		      part->getMomentum()[2],
 		      part->getEnergy());
     
-    Int_t parttype=_myPID->Classification(pp, trk, clu);
+    Int_t parttype=-1;
+
+    //several partivle IDs performed
+    //use just basic variables
+    _myPID->setBasicFlg(true);
+    _myPID->setdEdxFlg(false);
+    _myPID->setShowerShapesFlg(false);
+    parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
-    Double_t *posterior=_myPID->GetPosterior();
-    std::vector<float> likelihoodProb;
-    for(int j=0;j<5;j++) likelihoodProb.push_back(posterior[j]);
 
-    //std::cout << "check posterior: " << posterior[0] << " " 
-    //	    << posterior[1] << " "
-    //	    << posterior[2] << " "
-    //	    << posterior[3] << " "
-    //	    << posterior[4] << " " << std::endl;
+    //mu/pi for very low momentum tracks
+    Float_t MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && pp.P()<2.0){
+      //your code will be performed
+      //calculate E/P
+      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
+      //perform Hale's code 
+      //parttype =; //Hales function
+      //MVAoutput = getMVAOutput(); 
+    }
 
-    //set pid results
-    pidh.setParticleID(part, 0, _pdgTable[parttype], (float)posterior[parttype], algoID, likelihoodProb);
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID1, MVAoutput);
+
+    //use just dEdx variables
+    _myPID->setBasicFlg(false);
+    _myPID->setdEdxFlg(true);
+    _myPID->setShowerShapesFlg(false);
+    parttype = _myPID->Classification(pp, trk, clu);
+    if(parttype<0) parttype=2;
+
+    //mu/pi for very low momentum tracks
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && pp.P()<2.0){
+      //your code will be performed
+      //calculate E/P
+      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
+      //perform Hale's code 
+      //parttype =; //Hales function
+      //MVAoutput = getMVAOutput(); 
+    }
+
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID2, MVAoutput);
+
+    //use just Shower Profile variables
+    _myPID->setBasicFlg(false);
+    _myPID->setdEdxFlg(false);
+    _myPID->setShowerShapesFlg(true);
+    parttype = _myPID->Classification(pp, trk, clu);
+    if(parttype<0) parttype=2;
+
+    //mu/pi for very low momentum tracks
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && pp.P()<2.0){
+      //your code will be performed
+      //calculate E/P
+      // ep=clu[0]->getEnergy()/part->getMomentum().Mag();
+      //perform Hale's code 
+      //parttype =; //Hales function
+      //MVAoutput = getMVAOutput(); 
+    }
+
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID3, MVAoutput);
+
+    //calculate global likelihood
+    _myPID->setBasicFlg(true);
+    _myPID->setdEdxFlg(true);
+    _myPID->setShowerShapesFlg(true);
+    parttype = _myPID->Classification(pp, trk, clu);
+    if(parttype<0) parttype=2;
+
+    //mu/pi for very low momentum tracks
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && pp.P()<2.0){
+      //your code will be performed
+      //calculate E/P
+      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
+      //perform Hale's code 
+      //parttype =; //Hales function
+      //MVAoutput = getMVAOutput(); 
+    }
+
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
 
     /*ParticleIDImpl *PIDImpl=new ParticleIDImpl();
     if(parttype==0){
@@ -140,4 +249,40 @@ void LikelihoodPIDProcessor::check( LCEvent * evt ) {
 
 void LikelihoodPIDProcessor::end() { 
   delete _myPID;
+}
+
+void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput){
+
+  Double_t *posterior = _myPID->GetPosterior();
+  Double_t *likelihood = _myPID->GetLikelihood();
+  std::vector<float> likelihoodProb;
+  for(int j=0;j<5;j++) likelihoodProb.push_back(likelihood[j]);
+  likelihoodProb.push_back(MVAoutput);
+  for(int j=0;j<5;j++) likelihoodProb.push_back(posterior[j]);
+
+  //std::cout << "check likelihood: " << parttype << " " << algoID << " "
+  //	    << likelihoodProb[0] << " " << likelihoodProb[1] << " " << likelihoodProb[2] << " " << likelihoodProb[3] << " " << likelihoodProb[4] << std::endl;
+  
+  //for dEdx PID
+  if(pidh.getAlgorithmName(algoID)=="dEdxPID"){
+    likelihoodProb.push_back((float)_myPID->get_dEdxDist(0));  //electron hypothesis
+    likelihoodProb.push_back((float)_myPID->get_dEdxDist(1));  //muon hypothesis
+    likelihoodProb.push_back((float)_myPID->get_dEdxDist(2));  //pion hypothesis
+    likelihoodProb.push_back((float)_myPID->get_dEdxDist(3));  //kaon hypothesis
+    likelihoodProb.push_back((float)_myPID->get_dEdxDist(4));  //proton hypothesis
+
+    //std::cout << "check dedx: " << parttype << " " << algoID << " "
+    //	      << likelihoodProb[11] << " " << likelihoodProb[12] << " " << likelihoodProb[13] << " " << likelihoodProb[14] << " " << likelihoodProb[15] << std::endl;
+  }
+
+  //std::cout << "check posterior: " << posterior[0] << " " 
+  //	    << posterior[1] << " "
+  //	    << posterior[2] << " "
+  //	    << posterior[3] << " "
+  //	    << posterior[4] << " " << std::endl;
+  
+  //set pid results
+  pidh.setParticleID(part, 0, _pdgTable[parttype], (float)likelihood[parttype], algoID, likelihoodProb);
+  
+  return;
 }

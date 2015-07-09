@@ -14,6 +14,8 @@
 
 //#include "Api/PandoraApi.h"
 
+#include "TVector3.h"
+
 #include "ComputeShowerShapesProcessor.hh"
 
 ComputeShowerShapesProcessor aComputeShowerShapesProcessor ;
@@ -53,9 +55,7 @@ ComputeShowerShapesProcessor::ComputeShowerShapesProcessor()
 			     "Moliere radius of Absorbers",
 			     _Rm2,
 			     float(17.19));
-  
-  
-  
+    
 } 
 
 void ComputeShowerShapesProcessor::init( LCEvent * evt ) { 
@@ -82,7 +82,11 @@ void ComputeShowerShapesProcessor::init( LCEvent * evt ) {
   ClusterShapeNames.push_back("showerMax_hit");
   ClusterShapeNames.push_back("xt90");
   ClusterShapeNames.push_back("xl20");
-  
+  ClusterShapeNames.push_back("depth_of_cluster");
+  ClusterShapeNames.push_back("meanOf_hitradius");
+  ClusterShapeNames.push_back("rmsOf_hitradius");
+  // ClusterShapeNames.push_back("Eclus_over_Ptrue");
+
   _PFOCol->parameters().setValues("ClusterShapeParameters",ClusterShapeNames);
   
   printParameters();
@@ -190,6 +194,10 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
       //float maxed=a*pow(b/c,b)*exp(-b);   //for simple fitting
       float maxed = a*c*gsl_sf_gammainv(b)*pow(b-1,b-1)*exp(-b+1);  //for advanced multiply with fabs(d) to avoid NaN
       float maxlength_pho=(1.0*std::log(clusterEnergy/(X0[0] * 0.021/Rm[0]))-0.5);  //this definition, +0.5 if gamma
+
+      TVector3 cludir(CoG[0]-xStart[0],CoG[1]-xStart[1],CoG[2]-xStart[2]);
+
+
       EVENT::FloatVec shapes;
       //these variables are fit based variables
       shapes.push_back(chi2);
@@ -211,6 +219,11 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
       shapes.push_back(pClusterShapes->getxt90(xStart,index_xStart,X0,Rm));
       shapes.push_back(pClusterShapes->getxl20(xStart,index_xStart,X0,Rm));
       
+      //20150708 add variables by Hale
+      shapes.push_back(cludir.Mag());
+      shapes.push_back(0.0);   //pClusterShapes->getRhitMean(xStart,index_xStart,X0,Rm));
+      shapes.push_back(0.0);   //pClusterShapes->getRhitRMS(xStart,index_xStart,X0,Rm));
+
       //add shower shapes
       pCluster->setShape(shapes);
 

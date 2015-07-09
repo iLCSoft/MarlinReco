@@ -1,0 +1,16 @@
+////////////////////////////////////////////////////////
+/// ChargeVertexRecovery - processor that recovers   ///
+/// charge of secondary vertices		     ///
+////////////////////////////////////////////////////////
+/// Author: BILOKIN Sviatoslav, PhD student          ///
+///         POESCHL Roman, Supervisor                ///
+///         RICHARD Francois, Supervisor             ///
+///                             designed: 2015-2017  ///
+////////////////////////////////////////////////////////
+
+
+   -------
+  | v00-01 |
+   -------
+   - first public release (09/07/15)
+

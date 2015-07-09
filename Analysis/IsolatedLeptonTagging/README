@@ -1,0 +1,19 @@
+#########
+A new MVA based Isolated Lepton Tagging Processor
+### -- C.Duerig & J.Tian
+### see recent introduction
+https://agenda.linearcollider.org/event/6787/session/10/contribution/17/material/slides/0.pdf
+
+
+#a minimum instruction to use
+1.) see steering in example/isolep.xml
+2.) make sure to set the correct links to weights trained by MVA
+3.) several weights trained for different analyses are available, but the dependence shall be rather weak;
+    the existing ones are insed weights/ (released together with this package)
+4.) the default processor "IsolatedLeptonProcessor" selects one isoalted lepton with highest tagging;
+    one can just change the flag in steering "isSelectingOneIsoLep" to select all possible ones
+5.) output collection "ISOLeptons", associated by parameter "ISOLepTagging" which can be further used to
+    apply cut, and "ISOLepType" which is 13 for muon, and is 11 for electron.
+
+#more to be added
+

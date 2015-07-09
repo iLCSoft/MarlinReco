@@ -65,29 +65,42 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
       // Only for charged particles
       if (TMath::Abs(recPar->getCharge()) > 0.5) {
           getCovMatrixMomenta(recPar, covarianceP);
-          recPar->setCovMatrix (covarianceP);
+          try
+              {
+              
+                  recPar->setCovMatrix (covarianceP);
      
-          streamlog_out(DEBUG5) << "Set covariance matrix for charged pfo with charge "
-                                << (int) recPar->getCharge() << " and (px,py,pz,e) = ("
-                                << recPar->getMomentum()[0] << ","
-                                << recPar->getMomentum()[1] << ","
-                                << recPar->getMomentum()[2] << ","
-                                << recPar->getEnergy() << "):" << std::endl
-                                << std::setprecision(6)
-                                << " cov1[px px] " <<  recPar->getCovMatrix()[0] << std::endl
-                                << " cov1[py px] " <<  recPar->getCovMatrix()[1] << std::endl
-                                << " cov1[py py] " <<  recPar->getCovMatrix()[2] << std::endl
-                                << " cov1[pz px] " <<  recPar->getCovMatrix()[3] << std::endl
-                                << " cov1[pz py] " <<  recPar->getCovMatrix()[4] << std::endl
-                                << " cov1[pz pz] " <<  recPar->getCovMatrix()[5] << std::endl
-                                << " cov1[e px] "  <<  recPar->getCovMatrix()[6] << std::endl
-                                << " cov1[e py] "  <<  recPar->getCovMatrix()[7] << std::endl
-                                << " cov1[e pz] "  <<  recPar->getCovMatrix()[8] << std::endl
-                                << " cov1[e e] "   <<  recPar->getCovMatrix()[9] << std::endl
-                                << std::endl;
+                  streamlog_out(DEBUG5) << "Set covariance matrix for charged pfo with charge "
+                                        << (int) recPar->getCharge() << " and (px,py,pz,e) = ("
+                                        << recPar->getMomentum()[0] << ","
+                                        << recPar->getMomentum()[1] << ","
+                                        << recPar->getMomentum()[2] << ","
+                                        << recPar->getEnergy() << "):" << std::endl
+                                        << std::setprecision(6)
+                                        << " cov1[px px] " <<  recPar->getCovMatrix()[0] << std::endl
+                                        << " cov1[py px] " <<  recPar->getCovMatrix()[1] << std::endl
+                                        << " cov1[py py] " <<  recPar->getCovMatrix()[2] << std::endl
+                                        << " cov1[pz px] " <<  recPar->getCovMatrix()[3] << std::endl
+                                        << " cov1[pz py] " <<  recPar->getCovMatrix()[4] << std::endl
+                                        << " cov1[pz pz] " <<  recPar->getCovMatrix()[5] << std::endl
+                                        << " cov1[e px] "  <<  recPar->getCovMatrix()[6] << std::endl
+                                        << " cov1[e py] "  <<  recPar->getCovMatrix()[7] << std::endl
+                                        << " cov1[e pz] "  <<  recPar->getCovMatrix()[8] << std::endl
+                                        << " cov1[e e] "   <<  recPar->getCovMatrix()[9] << std::endl
+                                        << std::endl;
+              }
+          
+          catch (EVENT::ReadOnlyException &e)
+              {
+                  std::cout << "WARNING::we cannot set member of pfo because "
+                            << "PandoraPFO is read only "
+                            << "'" << e.what() << "'" << std::endl;
+              }
       }
-      
+        
   }
+  
+  
   
   
 

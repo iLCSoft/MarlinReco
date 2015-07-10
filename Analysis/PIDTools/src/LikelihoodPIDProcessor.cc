@@ -20,6 +20,28 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   
   // Processor description
   _description = "Particle ID code using Bayesian Classifier" ;
+
+  std::vector< std::string > xmlfiles;
+  xmlfiles.push_back( "weight1.xml" );
+  xmlfiles.push_back( "weight2.xml" );
+  xmlfiles.push_back( "weight3.xml" );
+  xmlfiles.push_back( "weight4.xml" );
+  xmlfiles.push_back( "weight5.xml" );
+  xmlfiles.push_back( "weight6.xml" );
+  xmlfiles.push_back( "weight7.xml" );
+  xmlfiles.push_back( "weight8.xml" );
+  xmlfiles.push_back( "weight9.xml" );
+  xmlfiles.push_back( "weight10.xml" );
+  xmlfiles.push_back( "weight11.xml" );
+  xmlfiles.push_back( "weight12.xml" );
+  xmlfiles.push_back( "weight13.xml" );
+  xmlfiles.push_back( "weight14.xml" );
+  xmlfiles.push_back( "weight15.xml" );
+  xmlfiles.push_back( "weight16.xml" );
+  xmlfiles.push_back( "weight17.xml" );
+  xmlfiles.push_back( "weight18.xml" );
+  xmlfiles.push_back( "weight19.xml" );
+  xmlfiles.push_back( "weight20.xml" );
   
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			   "RecoParticleCollection" ,
@@ -37,10 +59,10 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
 			      _PDFName,
 			      std::string("pdf_ParticleID_ok.root") );
   
-  //registerProcessorParameter( "FileWeightFormupiSeparationName" ,
-  //			      "weight file for low momentum mu pi separation",
-  //			      _weightFileName,
-  //			      EVENT::StringVec("weight1.xml","weight2.xml","weight3.xml") );
+  registerProcessorParameter( "FileWeightFormupiSeparationName" ,
+  			      "weight file for low momentum mu pi separation",
+  			      _weightFileName,
+  			      xmlfiles );
 } 
 
 void LikelihoodPIDProcessor::init() { 

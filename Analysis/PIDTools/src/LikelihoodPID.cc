@@ -78,10 +78,11 @@ LikelihoodPID::LikelihoodPID(string fname){
   pmass=0.938272;
 
   //get pdf plots
-  string ffstr1 = fname;        //"pdf/pdf_ParticleID_ok.root";
+  string ffstr1 = "pdf/pdf_ParticleID_ok.root";
   fpdf=new TFile(ffstr1.c_str());
 
   string hname,hname2;
+  //for(Int_t i=0;i<6;i++) pdf[i] =new TH1F()[14];
   for(Int_t i=0;i<6;i++){
     //ep
     hname="hep" + itos(i+1);
@@ -368,15 +369,15 @@ Int_t LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT:
   var[8]=get_dEdxChi2(2,pp.Vect(),trk->getdEdxError(),trk->getdEdx());
   var[9]=get_dEdxChi2(3,pp.Vect(),trk->getdEdxError(),trk->getdEdx());
   var[10]=get_dEdxChi2(4,pp.Vect(),trk->getdEdxError(),trk->getdEdx());
-  var[6]=-0.5*fabs(var[6]);
-  var[7]=-0.5*fabs(var[7]);
-  var[8]=-0.5*fabs(var[8]);
-  var[9]=-0.5*fabs(var[9]);
-  var[10]=-0.5*fabs(var[10]);
+  var[6]=-0.5*fabs(var[6]);    //+TMath::Log(sqrt(2.0*TMath::Pi()*0.05*trk->getdEdx()));
+  var[7]=-0.5*fabs(var[7]);    //+TMath::Log(sqrt(2.0*TMath::Pi()*0.05*trk->getdEdx()));
+  var[8]=-0.5*fabs(var[8]);    //+TMath::Log(sqrt(2.0*TMath::Pi()*0.05*trk->getdEdx()));
+  var[9]=-0.5*fabs(var[9]);    //+TMath::Log(sqrt(2.0*TMath::Pi()*0.05*trk->getdEdx()));
+  var[10]=-0.5*fabs(var[10]);    //+TMath::Log(sqrt(2.0*TMath::Pi()*0.05*trk->getdEdx()));
 
   //get likelihood for each class
   Double_t posterior[5]={0.0,0.0,0.0,0.0,0.0};
-  //Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
+  Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
   Double_t okval[5]={0.0,0.0,0.0,0.0,0.0};
   Double_t total=0.0;
   Double_t priorprob[5]={0.0,0.0,0.0,0.0,0.0};
@@ -411,6 +412,8 @@ Int_t LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT:
     if(!_showerShapesFlg && j>=2 && j<=5) continue;
     //for dEdx flg
     if(!_dEdxFlg && j>=6) continue; 
+
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=5 || j==6 || j==10)) continue;   //don't use some dEdxin the case of LikelihoodPID
    
     //to avoid strange value for dE/dx
     if(j>=6 && var[j]<=-50.0) continue;
@@ -441,7 +444,7 @@ Int_t LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT:
   
   //cal. risk
   //first. get penalty
-  /*for(Int_t i=0;i<5;i++){   //particle type
+  for(Int_t i=0;i<5;i++){   //particle type
     for(Int_t j=0;j<5;j++){
       penalty[i][j]=1.0;  
       if(i==j) penalty[i][j]=1.0e-50;
@@ -451,36 +454,38 @@ Int_t LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT:
   for(Int_t i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
       +penalty[i][2]*TMath::Exp(posterior[2])+penalty[i][3]*TMath::Exp(posterior[3])+penalty[i][4]*TMath::Exp(posterior[4]);
-      }*/
+  }
 
   //check the rule
   Int_t okflg=-1;
   Double_t tmppp=-1.0e+100;
-  //---------- here is likelihood based determination rule -----------
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Max(posterior[i], tmppp);
-    //if(posterior[0]<posterior[i]){
-    //  okflg=false;
-    //  break;
-    //}
+  if(!(_basicFlg && _dEdxFlg && _showerShapesFlg)){
+    //---------- here is likelihood based determination rule -----------
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Max(posterior[i], tmppp);
+      //if(posterior[0]<posterior[i]){
+      //  okflg=false;
+      //  break;
+      //}
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
+    }
+    //------------------------------------------------------------------
+  }else{
+    //---------- here is risk based determination rule ----------- 
+    tmppp=1.0e+100;
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Min(risk[i], tmppp);
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-risk[i])<1.0e-8) okflg=i;
+    }
+    //------------------------------------------------------------------
   }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
-  }
-  //------------------------------------------------------------------
 
-  //---------- here is risk based determination rule ----------- 
-  /*tmppp=1.0e+100;
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Min(risk[i], tmppp);
-  }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-risk[i])<1.0e-8) okflg=i;
-    }*/
-  //------------------------------------------------------------------
-  
   //threshold is set.
   //if(okflg==0 && posterior[okflg]<TMath::Log(threshold[okflg])) okflg=-1;
 
@@ -535,7 +540,7 @@ Int_t LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
 
   //get likelihood for each class
   Double_t posterior[5]={0.0,0.0,0.0,0.0,0.0};
-  //Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
+  Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
   Int_t valtype=0;
   Double_t okval[5]={0.0,0.0,0.0,0.0,0.0};
   Double_t total=0.0;     //[5]={0.0,0.0,0.0,0.0,0.0};
@@ -544,12 +549,12 @@ Int_t LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
 
     if(var[0]>0.0){
       //avoid pion misID when energy deposit to mucal is zero
-      if(var[2]==0.0 && (j==2 || j==8)) continue;
+      if(var[2]==0.0 && (j==2 || j==7 || j>=9)) continue;
       //don't use when ep>0.0
-      else if(var[2]>0.0 && j>=8) continue;
+      else if(var[2]>0.0 && j>=9) continue;
     }else{
       //avoid very low momentum tracks (no energy deposit in the cal.)
-      if(j<=6 || j>=8) continue;
+      if(j<=6 || j==7 || j>=9) continue;
     }
 
     //first, get likelihood
@@ -578,6 +583,8 @@ Int_t LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
     //for dEdx flg
     if(!_dEdxFlg && j>6) continue; 
     
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=6 || j==8 || j==10)) continue;   //don't use some dEdxin the case of LikelihoodPID
+
     //to avoid strange value for dE/dx
     if(j>=7 && j<=11 && var[j]<=-50.0) continue;
     
@@ -603,7 +610,7 @@ Int_t LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
 
   //cal. risk
   //first. get penalty
-  /*for(Int_t i=0;i<5;i++){   //particle type
+  for(Int_t i=0;i<5;i++){   //particle type
     for(Int_t j=0;j<5;j++){
       penalty[i][j]=1.0; 
       if(i==j) penalty[i][j]=1.0e-50; 
@@ -613,36 +620,38 @@ Int_t LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   for(Int_t i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
       +penalty[i][2]*TMath::Exp(posterior[2])+penalty[i][3]*TMath::Exp(posterior[3])+penalty[i][4]*TMath::Exp(posterior[4]);
-      }*/
+  }
 
   //check the rule
   Int_t okflg=-1;
   Double_t tmppp=-1.0e+100;
-  //---------- here is likelihood based determination rule -----------
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Max(posterior[i], tmppp);
-    //if(posterior[0]<posterior[i]){
-    //  okflg=false;
-    //  break;
-    //}
+  if(!(_basicFlg && _dEdxFlg && _showerShapesFlg)){
+    //---------- here is likelihood based determination rule -----------
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Max(posterior[i], tmppp);
+      //if(posterior[0]<posterior[i]){
+      //  okflg=false;
+      //  break;
+      //}
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
+    }
+    //------------------------------------------------------------------
+  }else{
+    //---------- here is risk based determination rule ----------- 
+    tmppp=1.0e+100;
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Min(risk[i], tmppp);
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-risk[i])<1.0e-8) okflg=i;
+    }
+    //------------------------------------------------------------------
   }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
-  }
-  //------------------------------------------------------------------
 
-  //---------- here is risk based determination rule ----------- 
-  /*tmppp=1.0e+100;
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Min(risk[i], tmppp);
-  }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-risk[i])<1.0e-8) okflg=i;
-    }*/
-  //------------------------------------------------------------------
-  
   //if(okflg==1 && posterior[okflg]<TMath::Log(threshold[okflg])) okflg=-1;   //threshold is set.
 
   //save posterior
@@ -694,7 +703,7 @@ Int_t LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
 
   //get likelihood for each class
   Double_t posterior[5]={TMath::Log(0.20),TMath::Log(0.20),TMath::Log(0.20),TMath::Log(0.20),TMath::Log(0.20)};
-  //Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
+  Double_t risk[5]={0.0,0.0,0.0,0.0,0.0};
   Int_t valtype=0;
   Double_t okval[5]={0.0,0.0,0.0,0.0,0.0};
   Double_t total[5]={0.0,0.0,0.0,0.0,0.0};
@@ -726,6 +735,8 @@ Int_t LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     //for dEdx flg
     if(!_dEdxFlg && j>=5) continue; 
     
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=4 || j==7 || j==8 || j==9)) continue;   //don't use some dEdxin the case of LikelihoodPID
+
     //to avoid strange value for dE/dx
     if(j>=5 && var[j]<=-50.0) continue;
     
@@ -753,7 +764,7 @@ Int_t LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     
   //cal. risk
   //first. get penalty
-  /*for(Int_t i=2;i<5;i++){   //particle type
+  for(Int_t i=2;i<5;i++){   //particle type
     for(Int_t j=2;j<5;j++){
       penalty[i][j]=getPenalty(i,j,pp.P());
     }
@@ -763,45 +774,46 @@ Int_t LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
       penalty[i][j]=penalty[i][j]-1.0;
       
     }
-    }
+  }
 
   for(Int_t i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
       +penalty[i][2]*TMath::Exp(posterior[2])+penalty[i][3]*TMath::Exp(posterior[3])+penalty[i][4]*TMath::Exp(posterior[4]);
-      }*/
+  }
 
   //check the rule
   Int_t okflg=-1;
   Double_t tmppp=-1.0e+100;
-  //---------- here is likelihood based determination rule -----------
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Max(posterior[i], tmppp);
-    //if(posterior[0]<posterior[i]){
-    //  okflg=false;
-    //  break;
-    //}
-  }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
-  }
+  if(!(_basicFlg && _dEdxFlg && _showerShapesFlg)){
+    //---------- here is likelihood based determination rule -----------
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Max(posterior[i], tmppp);
+      //if(posterior[0]<posterior[i]){
+      //  okflg=false;
+      //  break;
+      //}
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-posterior[i])<1.0e-6) okflg=i;
+    }
 
-  //move to pion when very bad
-  if(TMath::Exp(tmppp)<0.21) okflg=2;
-  //------------------------------------------------------------------
-
-  //---------- here is risk based determination rule ----------- 
-  /*tmppp=1.0e+100;
-  for(Int_t i=0;i<5;i++){
-    tmppp=TMath::Min(risk[i], tmppp);
+    //move to pion when very bad
+    if(TMath::Exp(tmppp)<0.21) okflg=2;
+    //------------------------------------------------------------------
+  }else{
+    //---------- here is risk based determination rule ----------- 
+    tmppp=1.0e+100;
+    for(Int_t i=0;i<5;i++){
+      tmppp=TMath::Min(risk[i], tmppp);
+    }
+    
+    for(Int_t i=0;i<5;i++){
+      if(fabs(tmppp-risk[i])<1.0e-6) okflg=i;
+    }
+    if(posterior[okflg]<=TMath::Log(0.21)) okflg=TMath::Max(2,okflg);  //do not go to leptons
+    //------------------------------------------------------------------
   }
-  
-  for(Int_t i=0;i<5;i++){
-    if(fabs(tmppp-risk[i])<1.0e-6) okflg=i;
-  }
-  if(posterior[okflg]<=TMath::Log(0.2)) okflg=TMath::Max(2,okflg);  //do not go to leptons*/
-  //------------------------------------------------------------------
-  
   //check penalty -1 means undefined
   //if(okflg>=2 && posterior[okflg]<TMath::Log(threshold[okflg])) okflg=-1;   //threshold is set.
 

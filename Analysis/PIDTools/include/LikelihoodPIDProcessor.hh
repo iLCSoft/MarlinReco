@@ -29,7 +29,7 @@ private:
   std::string _description;
   std::string _inputPFOsCollection;
   std::string _PDFName;
-  std::string _weightFileName;
+  std::vector<std::string> _weightFileName;
   EVENT::FloatVec _energyBoundary;
   LCCollection* _pfoCol;
   std::vector<int> _pdgTable;

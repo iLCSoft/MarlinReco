@@ -42,18 +42,8 @@ using namespace lcio ;
  *  Hence: trackwgt = (int(wgt)%10000)/1000. and  clusterwgt = (int(wgt)/10000)/1000. 
  *  Which of the two is used is selected by the processor flag "FullRecoRelation" (default=true)
  *
- *  Setting the flag "FullRecoRelation" to false gives the same interpretation of "recoMCTruthLink" as 
- *  in the old version of the processor. If, in  addition "OutputTrackRelation" and  "OutputClusterRelation" 
- *  are also changed from the default true value to false, the created  output collections also agrees 
- *  with the old behaviour.
- *
- *  The calohitMCTruthLink LCRelation fixes errors in the "SimCalorimeterHitRelation", so that
- *  the originating true particle is always a particle entering the calorimeter : either it starts 
- *  outside a calorimeter, and ends inside, or back-scatters inside a calorimeter, then also ends 
- *  inside, but is not in the same cluster as it's pre-backscatter ancestors. Note that this is 
- *  a relation CalorimeterHit <-> MCParticle, not  SimCalorimeterHit <-> MCParticle as the 
- *  "SimCalorimeterHitRelation !
- *
+ *  For example a weight of 0.95 for a charged particle link implies that 95 percent of the 
+ *  SimTrackerHits used in the particles' track fit have been caused by the linked MCParticle.<br>
  *  If a neutral particle with one cluster has no MC contribution assigned the MCParticle 
  *  pointing closest to the cluster is assigned and the weight is set to the negative scalar product
  *  of the MCParticle's momentum direction and the direction to the Cluster position. 
@@ -138,12 +128,14 @@ public:
    */
   virtual void processEvent( LCEvent * evt ) ; 
   
-  virtual void trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol,  LCCollection** ttrlInversecol)  ;
-  virtual void clusterLinker(  LCCollection* mcpCol ,  LCCollection* clusterCol, 
-                               LCCollection* cHitRelCol , 
-                               LCCollection** ctrcol, LCCollection** chittrlcol)  ;
-  virtual void particleLinker(  LCCollection* particleCol ,  LCCollection* ttrcol, 
-                               LCCollection* ctrlcol, LCCollection** ptrlcol )  ;
+  virtual void trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrcol ,  LCCollection** trtcol )  ;
+  virtual void clusterLinker(  LCEvent * evt,   LCCollection* mcpCol ,  LCCollection* clusterCol, 
+                                LCCollection** ctrcol, LCCollection** trccol,LCCollection** chittrlcol)  ;
+  virtual void particleLinker(  LCCollection* mcpCol ,  LCCollection* particleCol ,  
+                                LCCollection* ttrcol,  LCCollection* ctrlcol, 
+                                LCCollection* trtlcol, LCCollection* trclcol,
+                                LCCollection** ptrlcol , LCCollection** trplcol )  ;
+  virtual void linkPrinter (  LCCollection* mcpCol, LCCollection* particleCol, LCCollection* ptrlcol, LCCollection* trplcol) ;
   virtual void check( LCEvent * evt ) ; 
   
   virtual void makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrcol,  LCCollection* ctrcol ,LCCollectionVec**  skimVec) ; 
@@ -156,10 +148,12 @@ public:
 protected:
   
   virtual void mergeTrackerHitRelations(LCEvent * evt);
+  virtual void mergeCaloHitRelations(LCEvent * evt);
   
   void keepMCParticle( MCParticle* mcp ) ; 
 
   const LCObjectVec* getSimHits( TrackerHit* trkhit, const FloatVec* weights = NULL);
+  const LCObjectVec* getCaloHits( CalorimeterHit* calohit, const FloatVec* weights = NULL);
   
   UTIL::BitField64* _encoder;
   int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::ILDCellID0::subdet]; }
@@ -171,28 +165,37 @@ protected:
   std::string _trackCollectionName ;
   std::string _clusterCollectionName ;
   std::string _recoParticleCollectionName ;
-  std::string _caloHitRelationName;
+ 
   StringVec   _simTrkHitCollectionNames ;
-  
+  StringVec   _simCaloHitCollectionNames ;
+ 
   StringVec  _colNamesTrackerHitRelations ;
+  StringVec   _caloHitRelationNames;
   
   LCCollection* _mergedTrackerHitRelCol ;
   LCRelationNavigator* _navMergedTrackerHitRel;
-  
+   LCCollection* _mergedCaloHitRelCol ;
+  LCRelationNavigator* _navMergedCaloHitRel;
+ 
   bool _use_tracker_hit_relations;
   
   /**  output collection names */
   std::string _trackMCTruthLinkName;
-  std::string _mcTruthTrackLinkName ;
+  std::string _mCTruthTrackLinkName;
   std::string _clusterMCTruthLinkName;
+  std::string _mCTruthClusterLinkName;
   std::string _recoMCTruthLinkName;
+  std::string _mCTruthRecoLinkName;
   std::string _mcParticlesSkimmedName;
   std::string _calohitMCTruthLinkName;
   /**  output collection steering */
   bool  _FullRecoRelation;
-  bool  _OutputTrackRelation;
-  bool  _OutputClusterRelation;
+  bool  _OutputTrackTruthRelation;
+  bool  _OutputTruthTrackRelation;
+  bool  _OutputClusterTruthRelation;
+  bool  _OutputTruthClusterRelation;
   bool  _OutputCalohitRelation;
+  bool  _OutputTruthRecoRelation;
   float _eCutMeV ;
   bool   _saveBremsstrahlungPhotons;
   float _bremsstrahlungEnergyCut;

@@ -39,6 +39,8 @@ struct MCPKeep :  public LCIntExtension<MCPKeep> {} ;
 
 typedef std::map< MCParticle* , int > MCPMap ;
 
+typedef std::map< Track* , int > TrackMap ;
+
 typedef std::map< MCParticle* , double > MCPMapDouble ;
 
 typedef std::map< MCParticle* , MCParticle* >  Remap_as_you_go;
@@ -57,13 +59,9 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   
   _encoder = new UTIL::BitField64(lcio::ILDCellID0::encoder_string);
   
-  registerProcessorParameter(  "KeepDaughtersPDG" , 
-			       "PDG codes of particles of which the daughters will be "
-			       "kept in the skimmmed MCParticle collection"  ,
-			       _pdgVec ,
-			       pdgVecDef ) ;
-  
-  
+ 
+   //  >>>>> reconstructed or simulated thingis 
+ 
   
   registerInputCollection( LCIO::MCPARTICLE,
 			   "MCParticleCollection" , 
@@ -75,7 +73,7 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			   "TrackCollection" , 
 			   "Name of the Tracks input collection"  ,
 			   _trackCollectionName ,
-			   std::string("LDCTracks") ) ;
+			   std::string("MarlinTrkTracks") ) ;
   
   registerInputCollection( LCIO::CLUSTER,
 			   "ClusterCollection" , 
@@ -89,14 +87,23 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			   _recoParticleCollectionName ,
 			   std::string("PandoraPFOs") ) ;
   
-  StringVec exampleSimHits ;
-  exampleSimHits.push_back("TPCCollection") ;
+ // <<<<<<
+ 
+//  >>>>> tracker hits and sim<->seen relations 
+
+ StringVec trackerHitsInputColNamesDefault ;
+     trackerHitsInputColNamesDefault.push_back("VXDCollection ");
+     trackerHitsInputColNamesDefault.push_back("SITCollection"); 
+     trackerHitsInputColNamesDefault.push_back("FTD_PIXELCollection"); 
+     trackerHitsInputColNamesDefault.push_back("FTD_STRIPCollection"); 
+     trackerHitsInputColNamesDefault.push_back("TPCCollection"); 
+     trackerHitsInputColNamesDefault.push_back("SETCollection");
   
   registerInputCollections( LCIO::SIMTRACKERHIT,
 			   "SimTrackerHitCollections" ,
 			   "Names of the SimTrackerHits input collection"  ,
 			   _simTrkHitCollectionNames ,
-			    exampleSimHits ) ;
+			    trackerHitsInputColNamesDefault ) ;
 
   registerProcessorParameter("UseTrackerHitRelations",
 			     "true: use relations for TrackerHits, false : use getRawHits ",
@@ -106,11 +113,11 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   
   StringVec trackerHitsRelInputColNamesDefault;
   trackerHitsRelInputColNamesDefault.push_back( "VXDTrackerHitRelations" );
-  trackerHitsRelInputColNamesDefault.push_back( "SITTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "SITSpacePointRelations" );
   trackerHitsRelInputColNamesDefault.push_back( "FTDPixelTrackerHitRelations" );
   trackerHitsRelInputColNamesDefault.push_back( "FTDSpacePointRelations" );
   trackerHitsRelInputColNamesDefault.push_back( "TPCTrackerHitRelations" );
-  trackerHitsRelInputColNamesDefault.push_back( "SETTrackerHitRelations" );
+  trackerHitsRelInputColNamesDefault.push_back( "SETSpacePointRelations" );
   
   
   registerInputCollections("LCRelation",
@@ -119,18 +126,55 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
                            _colNamesTrackerHitRelations,
                            trackerHitsRelInputColNamesDefault );
 
+  // <<<<<<
     
-  registerInputCollection( LCIO::LCRELATION,
-			   "SimCalorimeterHitRelationName" , 
-			   "Name of the  SimCalorimeterHit - CalorimeterHit relation"  ,
-			   _caloHitRelationName ,
-			   std::string("RelationCaloHit") ) ;
+  //  >>>>> Calorimeter hits and sim<->seen relations 
+
+   StringVec caloHitsInputColNamesDefault ;
+     caloHitsInputColNamesDefault.push_back("BeamCalCollection");
+     caloHitsInputColNamesDefault.push_back("EcalBarrelSiliconCollection");
+     caloHitsInputColNamesDefault.push_back("EcalBarrelSiliconPreShowerCollection");
+     caloHitsInputColNamesDefault.push_back("EcalEndcapRingCollection");
+     caloHitsInputColNamesDefault.push_back("EcalEndcapRingPreShowerCollection");
+     caloHitsInputColNamesDefault.push_back("EcalEndcapSiliconCollection");
+     caloHitsInputColNamesDefault.push_back("EcalEndcapSiliconPreShowerCollection");
+     caloHitsInputColNamesDefault.push_back("HcalBarrelRegCollection");
+     caloHitsInputColNamesDefault.push_back("HcalEndCapRingsCollection");
+     caloHitsInputColNamesDefault.push_back("HcalEndCapsCollection");
+     caloHitsInputColNamesDefault.push_back("LHcalCollection");
+     caloHitsInputColNamesDefault.push_back("LumiCalCollection");
+     caloHitsInputColNamesDefault.push_back("MuonBarrelCollection");
+     caloHitsInputColNamesDefault.push_back("MuonEndCapCollection");
+
+  registerInputCollections( LCIO::SIMCALORIMETERHIT,
+			   "SimCaloHitCollections" ,
+			   "Names of the SimCaloHits input collections"  ,
+			   _simCaloHitCollectionNames ,
+			    caloHitsInputColNamesDefault ) ;
+
+  StringVec caloHitsRelInputColNamesDefault;
+  caloHitsRelInputColNamesDefault.push_back( "RelationCaloHit" );
+  caloHitsRelInputColNamesDefault.push_back( "RelationLcalHit" );
+  caloHitsRelInputColNamesDefault.push_back( "RelationLHcalHit" );
+  caloHitsRelInputColNamesDefault.push_back( "RelationBCalHit" ) ;
+  caloHitsRelInputColNamesDefault.push_back( "RelationMuonHit" );
+
+  registerInputCollections( "LCRelation",
+                            "SimCalorimeterHitRelationNames" , 
+			   "Name of the  lcrelation collections, that link the SimCalorimeterHit to CalorimeterHit"  ,
+			   _caloHitRelationNames ,
+			    caloHitsRelInputColNamesDefault );
   
-  
-  // registerProcessorParameter("OutputTrackRelation",
-  //                            "true: Create TrackMCTruthLink collection, false : dont ",
-  //                            _OutputTrackRelation,
-  //                            bool(true));
+  // <<<<<<
+
+  //  >>>> Output true<->seen realations
+
+  registerOutputCollection( LCIO::LCRELATION,
+			    "MCTruthTrackLinkName" , 
+			    "Name of the trackMCTruthLink output collection"  ,
+			    _mCTruthTrackLinkName ,
+			    std::string("") ) ;
+
   
   registerOutputCollection( LCIO::LCRELATION,
 			    "TrackMCTruthLinkName" , 
@@ -138,25 +182,22 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			    _trackMCTruthLinkName ,
 			    std::string("") ) ;
 
-  registerOutputCollection( LCIO::LCRELATION,
-			    "MCTruthTrackLinkName" , 
-			    "Name of the MCParticle to Track relation output collection - not created if empty()"  ,
-			    _mcTruthTrackLinkName ,
-			    std::string("") ) ;
-  
-  // registerProcessorParameter("OutputClusterRelation",
-  //                            "true: Create ClusterMCTruthLink collection, false : dont ",
-  //                            _OutputClusterRelation,
-  //                            bool(true));
   
   registerOutputCollection( LCIO::LCRELATION,
 			    "ClusterMCTruthLinkName" , 
 			    "Name of the clusterMCTruthLink output collection - not created if empty()"  ,
 			    _clusterMCTruthLinkName ,
 			    std::string("") ) ;
-  
-  
-  registerProcessorParameter("FullRecoRelation",
+
+
+ registerOutputCollection( LCIO::LCRELATION,
+			    "MCTruthClusterLinkName" , 
+			    "Name of the MCTruthClusterLink output collection"  ,
+			    _mCTruthClusterLinkName ,
+			    std::string("") ) ;
+
+
+ registerProcessorParameter("FullRecoRelation",
                              "true: All reco <-> true relations are given, with weight = 10000*calo weight+"
                              "track weight (weights in permill). false: Only highest contributor linked,"
                              "and only to tracks, not clusters if there are any tracks",   
@@ -168,25 +209,38 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			    "RecoMCTruthLinkName" ,
 			    "Name of the RecoMCTruthLink output collection - not created if empty()"  ,
 			    _recoMCTruthLinkName ,
-			    std::string("") ) ;
-  
-  // registerProcessorParameter("OutputCalohitRelation",
-  //                            "true: Create CalohitMCTruthLink collection, false : dont ",
-  //                            _OutputCalohitRelation,
-  //                            bool(false));
+			    std::string("RecoMCTruthLink") ) ;
   
   registerOutputCollection( LCIO::LCRELATION,
+                            "MCTruthRecoLinkName" ,
+                            "Name of the MCTruthRecoLink output collection"  ,
+                            _mCTruthRecoLinkName ,
+                            std::string("") ) ;
+
+  
+   registerOutputCollection( LCIO::LCRELATION,
 			    "CalohitMCTruthLinkName" ,
 			    "Name of the updated calo-hit MCTruthLink output collection - not created if empty()"  ,
 			    _calohitMCTruthLinkName ,
 			    std::string("") ) ;
   
+   // <<<<<<<
+   // Output skimmed MCParticles
+
+  registerProcessorParameter(  "KeepDaughtersPDG" , 
+			       "PDG codes of particles of which the daughters will be "
+			       "kept in the skimmmed MCParticle collection"  ,
+			       _pdgVec ,
+			       pdgVecDef ) ;
+ 
   registerOutputCollection( LCIO::MCPARTICLE,
 			    "MCParticlesSkimmedName" , 
 			    "Name of the skimmed MCParticle  output collection - not created if empty()"  ,
 			    _mcParticlesSkimmedName ,
 			    std::string("") ) ;
-  
+  // <<<<<<<
+
+  // various steering parameters 
   
   registerProcessorParameter( "daughtersECutMeV" , 
 			      "energy cut for daughters that are kept from KeepDaughtersPDG"  ,
@@ -235,10 +289,13 @@ void RecoMCTruthLinker::init() {
   }
 
   // don't write outpur collections that have an empty name
-  _OutputClusterRelation =  ! _clusterMCTruthLinkName.empty() ;  
-  _OutputCalohitRelation =  ! _calohitMCTruthLinkName.empty() ;
-  //  _OutputTrackRelation   =  ! _trackMCTruthLinkName.empty() ;
-  
+   _OutputClusterTruthRelation =   ! _clusterMCTruthLinkName.empty() ;  
+   _OutputTruthClusterRelation =  !  _mCTruthClusterLinkName.empty() ;  
+   _OutputCalohitRelation =   ! _calohitMCTruthLinkName.empty() ;
+   _OutputTrackTruthRelation   =  ! _trackMCTruthLinkName.empty() ;
+   _OutputTruthTrackRelation   =   ! _mCTruthTrackLinkName.empty() ;
+   _OutputTruthRecoRelation    = ! _mCTruthRecoLinkName.empty()   ;
+
   
   if( ! _use_tracker_hit_relations ){
 
@@ -247,7 +304,7 @@ void RecoMCTruthLinker::init() {
   }
    
    _nRun = 0 ;
- _nEvt = 0 ;
+   _nEvt = 0 ;
 }
 
 
@@ -262,20 +319,18 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   _nEvt ++ ;
   
   
-  streamlog_out( DEBUG4 ) << " processEvent "  <<  evt->getEventNumber() << "  - " << evt->getRunNumber() 
+  streamlog_out( MESSAGE0 ) << " processEvent "  <<  evt->getEventNumber() << "  - " << evt->getRunNumber() 
   << std::endl ; 
   
   LCCollection* mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
-  
-  //    LCCollection* tHitRelCol = evt->getCollection( _trackHitRelationName ) ;
-  
   
   
   // find track to MCParticle relations
   
   LCCollection* trackCol = 0 ;
   LCCollection* ttrlcol  = 0 ;
-  LCCollection* ttrlInverseCol  = 0 ;
+  LCCollection* trtlcol = 0 ;
+
   bool haveTracks = true  ;
   
   try{ trackCol = evt->getCollection( _trackCollectionName ) ;  }   catch(DataNotAvailableException&){  haveTracks=false ; }
@@ -287,27 +342,23 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     
   } else {  //if ( haveTracks ) {
     
-    //    if (_OutputTrackRelation )  {
-      
-    trackLinker(  evt, mcpCol ,  trackCol  ,  &ttrlcol , &ttrlInverseCol );
-    
-    if( ! _trackMCTruthLinkName.empty() )
-      evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
-    
-    if( ! _mcTruthTrackLinkName.empty() )
-      evt->addCollection(  ttrlInverseCol  , _mcTruthTrackLinkName  ) ;
-    // }
+      trackLinker( evt,  mcpCol ,  trackCol  ,  &ttrlcol , &trtlcol);
+
+      if (_OutputTrackTruthRelation ) 
+         evt->addCollection(  ttrlcol  , _trackMCTruthLinkName  ) ;
+      if (_OutputTruthTrackRelation ) 
+         evt->addCollection(  trtlcol  , _mCTruthTrackLinkName  ) ;
   }
   
   // find cluster to MCParticle relations and the updated calohit to MCParticle relations.
   
   LCCollection* clusterCol = 0 ;
-  LCCollection* cHitRelCol = 0 ;
-  
+   
   bool haveClusters = true ;
   bool haveCaloHitRel = true ;
   
   LCCollection* ctrlcol = 0;
+  LCCollection* trclcol = 0;
   LCCollection* chittrlcol = 0;
   
   try{ clusterCol = evt->getCollection( _clusterCollectionName ) ; }   catch(DataNotAvailableException&){  haveClusters=  false ; } 
@@ -318,19 +369,13 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   }
   
   
-  try{ cHitRelCol = evt->getCollection( _caloHitRelationName ) ;   }   catch(DataNotAvailableException&){  haveCaloHitRel = false ; } 
-  
-  if( ! haveCaloHitRel ) {
-    streamlog_out( DEBUG9 ) << " CaloHit relation : " << _caloHitRelationName 
-    << " not found - cannot create relation " << std::endl ;
-  }
-  
-  if( haveTracks && haveClusters && haveCaloHitRel  ) {
+  if( haveTracks && haveClusters ) {
     
-    clusterLinker(  mcpCol ,  clusterCol,  cHitRelCol ,  &ctrlcol , &chittrlcol);
+    clusterLinker( evt, mcpCol ,  clusterCol, 
+		   &ctrlcol , &trclcol , &chittrlcol );
     
-    if (_OutputClusterRelation ) evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
-    
+    if (_OutputClusterTruthRelation )   evt->addCollection(  ctrlcol  , _clusterMCTruthLinkName  ) ;
+    if (_OutputTruthClusterRelation )   evt->addCollection(  trclcol  , _mCTruthClusterLinkName );
     if (_OutputCalohitRelation ) evt->addCollection(  chittrlcol  , _calohitMCTruthLinkName ) ;
   }
   
@@ -350,12 +395,14 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   }
   
   LCCollection* ptrlcol = 0;
-  
+  LCCollection* trplcol = 0;
   if( haveRecoParticles &&  haveTracks && haveClusters && haveCaloHitRel && !_recoMCTruthLinkName.empty() ) {
     
-    particleLinker(   particleCol, ttrlcol,  ctrlcol, &ptrlcol);
+    particleLinker(   mcpCol , particleCol, ttrlcol,  ctrlcol, trtlcol,  trclcol, &ptrlcol, &trplcol);
     
     evt->addCollection(  ptrlcol  , _recoMCTruthLinkName  ) ;
+    if (_OutputTruthRecoRelation )  evt->addCollection(  trplcol  , _mCTruthRecoLinkName  ) ;
+    
   }
   
   if( haveTracks && haveClusters && haveCaloHitRel && !_mcParticlesSkimmedName.empty() ) {
@@ -363,18 +410,24 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     LCCollectionVec* skimVec = new LCCollectionVec( LCIO::MCPARTICLE )  ;
     
     makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
-    evt->addCollection(  skimVec , _mcParticlesSkimmedName ) ;
+    evt->addCollection(   skimVec , _mcParticlesSkimmedName ) ;
+    if( streamlog::out.write<streamlog::DEBUG6>() ){ linkPrinter (  skimVec , particleCol, ptrlcol,  trplcol ); }
   }
 
   //If either collection has not been added to the event, we have to delete it now!
   //Don't delete them before, because they are used
-  if(!_OutputClusterRelation) { delete ctrlcol; }
+  if(!_OutputClusterTruthRelation) { delete ctrlcol; }
+  if(!_OutputTruthClusterRelation) { delete trclcol; }
+  if(!_OutputTrackTruthRelation) { delete ttrlcol; }
+  if(!_OutputTruthTrackRelation) { delete trtlcol; }
   if(!_OutputCalohitRelation) { delete chittrlcol; }
+  if(!_OutputTruthRecoRelation ) { delete trplcol ; }
   
 }
+void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  
+                                       LCCollection** ttrlcol,  LCCollection** trtlcol) { 
 
 
-void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  LCCollection** ttrlcol,  LCCollection** ttrlInversecol) { 
   
   // merge all the SimTrackerHit - TrackerHit relations into on collection and set up the combined navigator
   mergeTrackerHitRelations(evt);
@@ -394,10 +447,10 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     try{ col = evt->getCollection( _simTrkHitCollectionNames[i] ) ; } catch(DataNotAvailableException&) {}
     if( col )
       for( int j=0, jN= col->getNumberOfElements() ; j<jN ; ++j ) {
-	
-	SimTrackerHit* simHit = (SimTrackerHit*) col->getElementAt( j ) ; 
-	MCParticle* mcp = simHit->getMCParticle() ;
-	simHitMap[ mcp ] ++ ;
+        
+        SimTrackerHit* simHit = (SimTrackerHit*) col->getElementAt( j ) ; 
+        MCParticle* mcp = simHit->getMCParticle() ;
+        simHitMap[ mcp ] ++ ;
     }
   }    
   //===========================================================================
@@ -410,7 +463,7 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   for(int i=0;i<nTrack;++i){
     
     Track* trk = dynamic_cast<Track*> ( trackCol->getElementAt(i) ) ;
-    
+
     // charged particle  or V0  -> analyse track. We need to find all seen hits
     // this track is made of, wich sim hits each of the seen hits came from,
     // and finally which true particle actually created each sim hit
@@ -426,13 +479,20 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
       TrackerHit* hit = * hitIt ; // ... and a seen hit ... 
       
       const LCObjectVec& simHits  = _use_tracker_hit_relations ? *(this->getSimHits(hit)) : hit->getRawHits() ;
-      
+      MCParticle* mcp2 = 0;       
       for( LCObjectVec::const_iterator objIt = simHits.begin() ; objIt != simHits.end() ; ++objIt ) {
-	
+        
+
         SimTrackerHit* simHit = dynamic_cast<SimTrackerHit*>( *objIt ) ; // ...and a sim hit ...
-        
+ 
         MCParticle* mcp = simHit->getMCParticle() ; // ... and a true particle !
-        
+        if ( simHits.size() > 1 ) {
+          if ( mcp2 != 0 && mcp2 != mcp ) { 
+  	    //  In  this case, the mcp:s will count double !!
+            streamlog_out( DEBUG3 ) << " ghost/double " << mcp << " " << mcp2 << " " << hit->getCellID0() <<std::endl;
+          }
+          mcp2=mcp;
+        }       
         if ( mcp != 0 ) {
           mcpMap[ mcp ]++ ;   // count the hit caused by this true particle
         } else {
@@ -448,7 +508,15 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
     if( nSimHit == 0 ){
       
       streamlog_out( WARNING ) << " No simulated tracker hits found. Set UseTrackerHitRelations to true in steering file to enable using TrackerHit relations if they are available." <<  std::endl ;
+      streamlog_out( WARNING ) << trk->id() <<" " << i << " " << trk->getTrackerHits().size()  <<  std::endl ; 
+ 
+      for( TrackerHitVec::const_iterator hitIt = trkHits.begin() ; hitIt != trkHits.end() ; ++hitIt ) { 
       
+        TrackerHit* hit = * hitIt ; // ... and a seen hit ... 
+	streamlog_out( WARNING ) << hit->getPosition()[0]  <<  " " <<  hit->getPosition()[1]  <<  " " <<  hit->getPosition()[2]  <<  " " << std::endl ;       
+        const LCObjectVec& simHits  = *(this->getSimHits(hit)) ;
+	streamlog_out( WARNING ) <<  simHits.size()  <<  std::endl ; 
+      }
       continue ;  // won't find a particle 
     }
     
@@ -525,12 +593,12 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
       streamlog_out( DEBUG4 ) << " track " << trk->id() << " has " << MCPhits[iii]  << " hits of "
       << nSimHit << " SimHits ("
       << nHit <<    " TrackerHits) "
-      << " weight = [ " << int(weight*100) << " %] "
-      << " inv rel weight = [ " << int(inv_weight*100) << " %] "
-      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG()
-      << " total SimHits " <<  Total_SimHits_forMCP
+      << " weight = " << weight << " , "
+      << " inv rel weight = " << inv_weight << "  "
+      << " of MCPart with pdg : " << theMCPs[iii]->getPDG()
+      << " , SimHits " <<  Total_SimHits_forMCP
       << " and genstat : " << theMCPs[iii]->getGeneratorStatus()
-      << " id: " << theMCPs[iii]
+			      << " id: " << theMCPs[iii]->id()
       << std::endl ;
 
       
@@ -543,102 +611,51 @@ void RecoMCTruthLinker::trackLinker( LCEvent * evt, LCCollection* mcpCol ,  LCCo
   
   streamlog_out( DEBUG4 ) << " track linking complete, create collection " << std::endl;
   
+  *trtlcol = truthTrackRelNav.createLCCollection() ;
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
-  *ttrlInversecol = truthTrackRelNav.createLCCollection() ;
-  
   
   delete _navMergedTrackerHitRel ; _navMergedTrackerHitRel = 0;
+  delete _navMergedCaloHitRel ; _navMergedCaloHitRel = 0;
   
 }
 
 
 
-void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* clusterCol, 
-                                      LCCollection* cHitRelCol , 
-                                      LCCollection** ctrlcol, LCCollection** chittrlcol) { 
+void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  LCCollection* clusterCol, 
+                                         LCCollection** ctrlcol, LCCollection** trclcol,LCCollection** chittrlcol) { 
+
   
   
   
   
+  mergeCaloHitRelations(evt);
   LCRelationNavigator clusterTruthRelNav(LCIO::CLUSTER , LCIO::MCPARTICLE  ) ;
+  LCRelationNavigator truthClusterRelNav( LCIO::MCPARTICLE  , LCIO::CLUSTER ) ;
   LCRelationNavigator chitTruthRelNav(LCIO::CALORIMETERHIT , LCIO::MCPARTICLE  ) ;
-  LCRelationNavigator cHitRelNav( cHitRelCol ) ;
-  
-  
-  
-  
-  // loop over reconstructed particles
-  int nCluster = clusterCol->getNumberOfElements() ;
-  streamlog_out( DEBUG4 ) <<" Number of Clusters "<< nCluster <<std::endl;
-  
-  std::vector<Cluster*> missingMC ;
-  missingMC.reserve( nCluster ) ;
-  int ifoundclu =0;
-  // now for the clusters
-  
+   
   
   Remap_as_you_go remap_as_you_go ;  // map from true tracks linked to hits to 
                                      // those that really should have been linked
-  MCParticle* mother = 0;
-  
-  
-  
-  for(int i=0;i<nCluster;i++){
-    
-    MCPMapDouble mcpEnergy ;
-    double eTot = 0 ;
-    Cluster* clu = dynamic_cast<Cluster*> ( clusterCol->getElementAt(i) ) ;
-    
-    
-    
-    
-    // We need to find all seen hits this clutser is made of, wich sim hits each 
-    // of the seen hits came from, and finally which true particles actually created 
-    // each sim hit. Contrary to the sim tracker hits above, a sim-calo hit can be
-    // made by several true particles. They also have a signal size (energy) value.
-    // In addition, the true particle creating sometimes needs to be back-tracked
-    // to the particle actually entering tha calorimeter. 
-    
-    
-    
-    streamlog_out( DEBUG4 ) <<"Cluster clu = "<< clu << " (i = " << i << " )" << std::endl;
-    
-    const CalorimeterHitVec& cluHits = clu->getCalorimeterHits() ;
-    double ecalohitsum=0.;        
-    for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
-        hitIt != cluHits.end() ; ++hitIt ) { 
-      
-      
-      CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
-      streamlog_out( DEBUG1 ) <<"   hit = "<< hit << " e " << hit->getEnergy()<< std::endl;
-      ecalohitsum+= hit->getEnergy();       
-      // (MB: the below was commented out by Frank, and replaced by the navigator
-      // below. I don't kow if this is due to a bug that might be fixed now. If so
-      // getRawHit could be used, and the bit below would be simplified to work
-      // the ame way as it does for the tracks above)
-      //         SimCalorimeterHit* simHit = 
-      //             dynamic_cast<SimCalorimeterHit*>( hit->getRawHit() ) ;
-      //         streamlog_out( DEBUG4 ) << "   raw hit ptr : " << simHit << std::endl ;
-      
-      
-      const LCObjectVec& simHits = cHitRelNav.getRelatedToObjects( (LCObject*) hit )  ;
-      double ehit = 0.0; 
-      int nsimhit = 0;        
-      for( LCObjectVec::const_iterator objIt = simHits.begin() ;
-          objIt != simHits.end() ; ++objIt ){
-        
-        SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( *objIt ) ; // ... and a sim hit ....
-        
+  MCPMapDouble simHitMapEnergy ;  //  counts total simhits for every MCParticle
+  for( unsigned i=0,iN=_simCaloHitCollectionNames.size() ; i<iN ; ++i){
+    const LCCollection* col = 0 ;
+    try{ col = evt->getCollection( _simCaloHitCollectionNames[i] ) ; } catch(DataNotAvailableException&) {}
+    if( col ) {
+      for( int j=0, jN= col->getNumberOfElements() ; j<jN ; ++j ) {
+       
+        SimCalorimeterHit* simHit = (SimCalorimeterHit*) col->getElementAt( j ) ; 
+
+
         streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
-        nsimhit++;
-        for(int j=0;j<simHit->getNMCContributions() ;j++){
-          
-          MCParticle* mcp = simHit->getParticleCont( j ) ;
-          double e  = simHit->getEnergyCont( j ) ;
+        for(int k=0;k<simHit->getNMCContributions() ;k++){
+          MCParticle* mcp = simHit->getParticleCont( k ) ;
+          if ( mcp != 0 ) {
+          double e  = simHit->getEnergyCont( k ) ;
           streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
           if ( remap_as_you_go.find(mcp) != remap_as_you_go.end() ) {
             mcp=remap_as_you_go.find(mcp)->second;
           } else {
+            MCParticle* mother = 0;
             MCParticle* this_Kid = mcp ;     // ... and a true particle !
             
             //Particle gun particles dont have parents, but are "created in the simulation" and have genStat 0
@@ -667,7 +684,7 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
               //   treated as the first case.
               
               
-              streamlog_out( DEBUG3 ) << " hit " <<hit<<","<< j << 
+              streamlog_out( DEBUG3 ) << " simHit " <<simHit->id()<<","<< j << 
               " not created by generator particle. backtracking ..." 
               << std::endl;
               streamlog_out( DEBUG2 ) <<"       "<<mcp<<" gs "<<mcp->getGeneratorStatus()<<
@@ -725,7 +742,8 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
                   mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
                   NoChange=false;
                 }
-                //If mother genStatus==0 and it is not backscattering and there are no parents (because mother is coming from particle gun), we may never get out of this loop
+                //If mother genStatus==0 and it is not backscattering and there are no parents (because mother 
+                //is coming from particle gun), we may never get out of this loop
                 if(NoChange) break;
               }
               streamlog_out( DEBUG2 ) <<"  mother "<<mother<<
@@ -780,30 +798,124 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
               " "<<mcp->getEndpoint()[0]<<
               " "<<mcp->getEndpoint()[1]<<
               " "<<mcp->getEndpoint()[2]<<std::endl;
-            }
+            } else {
+              remap_as_you_go[mcp]=mcp;
+	    }
           }  // genstat if - then - else
-             //        if( e == 0.0 )
-             //          streamlog_out( WARNING ) << " zero energy in MCContribution " 
-             //                                   << mcp->getPDG()  << std::endl ;
           
-          chitTruthRelNav.addRelation(  hit , mcp , float(e) ) ;
+          simHitMapEnergy[ mcp ] += e ;
+	} else {
+	    streamlog_out( DEBUG4 ) <<" Sim hit with no mcp "  <<std::endl;
+	}
+        } // mc-contributon-to-simHit loop
+      }
+    }
+  }    
+  
+  
+  // loop over reconstructed particles
+  int nCluster = clusterCol->getNumberOfElements() ;
+  streamlog_out( DEBUG4 ) <<" Number of Clusters "<< nCluster <<std::endl;
+  
+  std::vector<Cluster*> missingMC ;
+  missingMC.reserve( nCluster ) ;
+  int ifoundclu =0;
+  // now for the clusters
+  
+  
+  MCParticle* mother = 0;
+	
+  MCPMapDouble mcpEnergyTot ;
+	
+
+  for(int i=0;i<nCluster;i++){
+    
+    MCPMapDouble mcpEnergy ;
+    double eTot = 0 ;
+    Cluster* clu = dynamic_cast<Cluster*> ( clusterCol->getElementAt(i) ) ;
+
+//    FloatVec pe = clu->getSubdetectorEnergies();
+//    if (pe[3] != 0.0 || pe[5] !=0.0 ) {
+//      if ( fabs(clu->getPosition()[2]) > 2300. || pe[5] !=0.0 ){
+//	continue ;
+//      }
+//    }
+//
+    
+    
+    
+    // We need to find all seen hits this clutser is made of, wich sim hits each 
+    // of the seen hits came from, and finally which true particles actually created 
+    // each sim hit. Contrary to the sim tracker hits above, a sim-calo hit can be
+    // made by several true particles. They also have a signal size (energy) value.
+    // In addition, the true particle creating sometimes needs to be back-tracked
+    // to the particle actually entering tha calorimeter. 
+    
+    
+    
+    streamlog_out( DEBUG4 ) <<"Cluster clu = "<< clu << " (i = " << i << " )" << std::endl;
+    
+    const CalorimeterHitVec& cluHits = clu->getCalorimeterHits() ;
+    double ecalohitsum=0.;        
+    double ecalohitsum_unknown=0.;	  
+    int no_sim_hit = 0;
+    for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
+        hitIt != cluHits.end() ; ++hitIt ) { 
+      
+      
+      CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
+      streamlog_out( DEBUG1 ) <<"   hit = "<< hit << " e " << hit->getEnergy()<< std::endl;
+      ecalohitsum+= hit->getEnergy();       
+      
+      
+      const LCObjectVec& simHits  = *(this->getCaloHits(hit)) ;
+      double ehit = 0.0; 
+      int nsimhit = 0;        
+      for( LCObjectVec::const_iterator objIt = simHits.begin() ;
+          objIt != simHits.end() ; ++objIt ){
+        
+        SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( *objIt ) ; // ... and a sim hit ....
+        
+        streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
+        nsimhit++;
+        for(int j=0;j<simHit->getNMCContributions() ;j++){
+          
+          MCParticle* mcp = simHit->getParticleCont( j ) ;
+          double e  = simHit->getEnergyCont( j ) ;
+          streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
+          mcp=remap_as_you_go.find(mcp)->second;
           mcpEnergy[ mcp ] +=  e ;// count the hit-energy caused by this true particle
           eTot += e ;             // total energy
           ehit+= e;
+          chitTruthRelNav.addRelation(  hit , mcp , float(e) ) ;
         } // mc-contributon-to-simHit loop
       } // simHit loop 
+
       streamlog_out( DEBUG2 )<< "   summed contributed e: " << ehit << " ratio : " << ehit/hit->getEnergy()
-      << " nsimhit " << nsimhit <<std::endl;
+                             << " nsimhit " << nsimhit <<std::endl;
+      if ( nsimhit == 0 ) {
+        
+        streamlog_out( DEBUG1 ) << " Warning: no simhits for calohit " << hit << 
+             ". Will have to guess true particle ... " << std::endl;
+        no_sim_hit = 1;
+        ecalohitsum_unknown+= hit->getEnergy();	    
+	streamlog_out( DEBUG2 )<< " sim-less calohit E and position " << hit->getEnergy() << " "
+             << hit->getPosition()[0] << " " <<  hit->getPosition()[1] << " " <<  hit->getPosition()[2] << " " << std::endl;	    
+	streamlog_out( DEBUG2 )<<  " sim-less calohit clust E and position " << clu->getEnergy() 
+             << " "<< clu->getPosition()[0] << " " <<  clu->getPosition()[1] << " " <<  clu->getPosition()[2] << " " << std::endl;	    
+      }
     } // hit loop
     streamlog_out( DEBUG3 ) << " Sum of calohit E: " <<  ecalohitsum << " cluster E " 
-    << clu->getEnergy() << " Sum of Simcalohit E: " << eTot << std::endl;
+                            << clu->getEnergy() << " Sum of Simcalohit E: " << eTot 
+                            << "  no_sim_hit: " <<  no_sim_hit << ". Energy from unknow source : " 
+                            << ecalohitsum_unknown << std::endl;
     if( eTot == 0.0 ){ // fixme - this might happen if clusters are from Lcal/Muon only
       
       
       // save reco particle in missingMC 
       missingMC.push_back( clu  ) ;
       
-      streamlog_out( DEBUG4 ) << " no calorimeter hits found for " 
+      streamlog_out( MESSAGE ) << " no calorimeter hits found for " 
       << " cluster particle: e:"  << clu->getEnergy()  
       //   << " charge: " << rec->getCharge() 
       //   << " px: " << rec->getMomentum()[0]
@@ -847,21 +959,21 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
     
     for( MCPMapDouble::iterator it = mcpEnergy.begin() ;  // iterate trough the map.
         it != mcpEnergy.end() ; ++it ){
-      if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
+     if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
                                                     // creating true particle: enter it into 
                                                     // the list, and note how much energy it 
                                                     // contributed.
         theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
       } else { // not genstat 1. What should we do with it ?
         if (  it->first->getParents().size() != 0 ) { 
-          mother= dynamic_cast<MCParticle*>(it->first->getParents()[0]);
+         mother= dynamic_cast<MCParticle*>(it->first->getParents()[0]);
         } else { 
-          mother = 0 ; 
+         mother = 0 ; 
         }
         if ( mother != 0 ) {
           if ( mother->isDecayedInTracker() &&            // ... so the partic apeared in the 
               // tracker ...
-              _pdgSet.find( abs (mother->getPDG())) != _pdgSet.end() ) {  
+             _pdgSet.find( abs (mother->getPDG())) != _pdgSet.end() ) {  
             // ... and is of a type we want to
             // save (it's mother is in _pdgSet) 
             // -> also a bona fide creator.
@@ -919,7 +1031,6 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
     // I couldn't figure out a more efficient way of figuring this out than the
     // almost-always-do-nothing loop below ;(
     
-    
     mother = 0;
     for (int iii=0 ; iii<morefound ; iii++ ) {
       if (  moreMCPs[iii]->getParents().size() != 0 ) { 
@@ -963,10 +1074,6 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
         // find out if this ancestor actually directly gives rise to hits in this cluster. 
         // If so, we attribute the hits of  moreMCPs[iii] to that true particle instead.
         
-        // (this ought to work, but it doesn't:)
-        //aa       for (MCParticleVec::iterator itfind=theMCPs.begin();  
-        //aa                               itfind != theMCPs.end() ; ++itfind) 
-        //aa  MCParticle* tmcp = dynamic_cast<MCParticle*>(*itfind);
         
         for (int kkk=0 ; kkk<ifound ; kkk++){
           MCParticle* tmcp = theMCPs[kkk];
@@ -1004,22 +1111,26 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
     
     float totwgt =0.0;
     for (int iii=0 ; iii<ifound ; iii++ ) {
-      
-      float  weight = MCPes[iii]/eTot;
+//      int  iweight = int((MCPes[iii]*1000./ eTot)+0.5) ;
+//      float  weight = float(iweight); // weight is in per million, with 4 digits
+
+//      float  weight = MCPes[iii]/eTot;
+      float  weight = (MCPes[iii]/eTot)*(clu->getEnergy()-ecalohitsum_unknown)/clu->getEnergy();
+      mcpEnergyTot[ theMCPs[iii] ] +=   weight*clu->getEnergy();
       
       totwgt+= weight;
       if( theMCPs[iii] == 0 ) {
         
         streamlog_out( ERROR ) << " cluster has " << MCPes[iii] << " GeV of " << eTot 
-        << " GeV [ " << int(weight) << " ] true energy " 
+        << " GeV [ " << weight << " ] true energy " 
         << " but no MCParticle " << std::endl ;
         
         continue ;
         
       }
       
-      streamlog_out( DEBUG4 ) << " cluster has " <<  MCPes[iii] << " GeV of " << eTot 
-      << " GeV [ " << int(weight) << " ] " 
+      streamlog_out( DEBUG3 ) << " cluster has " <<  MCPes[iii] << " of " << eTot 
+      << "  [ " << weight << " ] " 
       << " of MCParticle with pdg : " << theMCPs[iii]->getPDG() 
       << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
       << " id: " << theMCPs[iii]
@@ -1027,25 +1138,31 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
       
       //Particle gun particles dont have parents but have genStat 0      
       if (  theMCPs[iii]->getGeneratorStatus() == 0 &&  ( theMCPs[iii]->getParents().empty() == false) ) {
-        streamlog_out( DEBUG4 ) << " mother id " << theMCPs[iii]->getParents()[0] 
+        streamlog_out( DEBUG3 ) << " mother id " << theMCPs[iii]->getParents()[0] 
         << " and genstat " 
         << theMCPs[iii]->getParents()[0]->getGeneratorStatus() << std::endl ;
         
       }
       
-      // add relation. 
+
       
       clusterTruthRelNav.addRelation(   clu , theMCPs[iii] , weight ) ;
+      // The reverse map. Differs in what the weight means: here it means:
+      // "this cluster got wgt of all seen cluster energy the true produced"
+      // (in the  other one it means:
+      // "this true contributed wgt to the total seen energy of the cluster")
+      weight=(MCPes[iii]/simHitMapEnergy[theMCPs[iii]]);
+      truthClusterRelNav.addRelation(   theMCPs[iii] , clu , weight ) ;
       
     }
     ifoundclu=ifound;
   } // cluster loop
   
   
-  // recover missing MCParticles for neutrals :
+  // recover missing MCParticles for neutrals, typically LCal. Not fixed in DBD ... :
   // attach the MCParticle with smallest angle to cluster
   
-  // (This is from the original RecoMCTrueLinker. I didn't revise it/MB)
+  // (This is from the original RecoMCTruthLinker. I didn't revise it/MB)
   
   for( unsigned i=0 ; i < missingMC.size() ; ++i ) {
     
@@ -1087,11 +1204,8 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
     }
     if ( maxProd > 0. ) {
       
-      streamlog_out( DEBUG4 ) << "  neutral cluster particle recovered"  
+      streamlog_out( MESSAGE ) << "  neutral cluster particle recovered"  
       << clu->getEnergy()
-      //<< " px: " << rec->getMomentum()[0]
-      //<< " py: " << rec->getMomentum()[1]
-      //<< " pz: " << rec->getMomentum()[2]
       << " maxProd: " << maxProd 
       << " px: " << closestMCP->getMomentum()[0]
       << " py: " << closestMCP->getMomentum()[1]                                           
@@ -1103,22 +1217,29 @@ void RecoMCTruthLinker::clusterLinker(  LCCollection* mcpCol ,  LCCollection* cl
     
     
   }
+
   //  seen-true relation complete. add the collection
   
   streamlog_out( DEBUG4 ) << " cluster linking complete, create collection " << std::endl;
+  *trclcol = truthClusterRelNav.createLCCollection() ;
   *ctrlcol = clusterTruthRelNav.createLCCollection() ;
   *chittrlcol = chitTruthRelNav.createLCCollection() ;
 } 
 
 
-void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection* ttrlcol, 
-                                       LCCollection* ctrlcol, LCCollection** ptrlcol) {
-  
+void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* particleCol, 
+                                          LCCollection* ttrlcol, LCCollection* ctrlcol,
+                                          LCCollection* trtlcol, LCCollection* trclcol,
+                                          LCCollection** ptrlcol, LCCollection** trplcol) {
+
   LCRelationNavigator particleTruthRelNav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::MCPARTICLE  ) ;
-  
+  LCRelationNavigator truthParticleRelNav( LCIO::MCPARTICLE , LCIO::RECONSTRUCTEDPARTICLE ) ;
+
   LCRelationNavigator      trackTruthRelNav = LCRelationNavigator(  ttrlcol );
   LCRelationNavigator      clusterTruthRelNav = LCRelationNavigator(  ctrlcol );
-  
+  LCRelationNavigator      truthTrackRelNav = LCRelationNavigator(  trtlcol );
+  LCRelationNavigator      truthClusterRelNav = LCRelationNavigator(  trclcol );
+
   LCObjectVec mcvec; 
   int nPart = particleCol->getNumberOfElements() ;
   
@@ -1137,8 +1258,9 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
     int ntrk =  part->getTracks().size();
     ClusterVec clusters=part->getClusters();
     int nclu =  part->getClusters().size();
-    streamlog_out( DEBUG4 ) << " Treating particle " << part << " with index " << i 
+    streamlog_out( DEBUG3 ) << " Treating particle " << part << " with index " << i 
     << " it has " << ntrk << " tracks, and " << nclu << " clusters " <<std::endl;  
+    
     int nhit[100] ;
     int nhitT = 0;
     if ( ntrk > 1 ) {
@@ -1227,12 +1349,12 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
            mcit !=  mcmap.end() ; mcit++ ) { 
         // loop all MCparticles releted to the particle 
         // get the true particle
-        streamlog_out( DEBUG3 ) << " particle has weight "<<mcit->second
+        streamlog_out( DEBUG5 ) << " particle " << part->id() <<" has weight "<<mcit->second
         << " (Track: " << int(mcit->second)%10000 
         << " , Cluster: " << int(mcit->second)/10000 << " ) " 
         << " of MCParticle with pdg : " << mcit->first->getPDG() 
         << " and genstat : " <<  mcit->first->getGeneratorStatus() 
-        << " id: " << mcit->first 
+				<< " id: " << mcit->first->id() 
         << std::endl ;
         
         particleTruthRelNav.addRelation(   part ,  mcit->first ,  mcit->second ) ;
@@ -1242,10 +1364,10 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
         //AS: FixMe: There is still something going wrong with particles from the particle gun.
         //Although there are perfect PFOs no link with the MCParticle is established.
         particleTruthRelNav.addRelation(   part ,  mcmax ,  maxwgt ) ;
-        streamlog_out( DEBUG3 ) << " particle has weight "<<maxwgt
+        streamlog_out( DEBUG3 ) << " particle " << part->id() << " has weight "<<maxwgt
         << " of MCParticle with pdg : " << mcmax->getPDG() 
         << " and genstat : " <<  mcmax->getGeneratorStatus() 
-        << " id: " << mcmax 
+				<< " id: " << mcmax->id() 
         << ". Particle charge and ntracks : " << part->getCharge()<<" "<<ntrk
         << std::endl ;
       } else { 
@@ -1256,8 +1378,57 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* particleCol, LCCollection
       }
     }
   }
-  streamlog_out( DEBUG4 ) << " particle linking complete, create collection " << std::endl;
+  // The reverse map. Differs in what the weight means: here it means:
+  // "this cluster got wgt of all seen cluster energy the true produced"
+  // (in the  other one it means:
+  // "this true contributed wgt to the total seen energy of the cluster")
+  LCObjectVec partvec; 
+  static FloatVec www_clu ;
+  static FloatVec www_trk ;
+  LCObjectVec cluvec_t;
+  LCObjectVec trkvec_t;
+  ClusterVec cluvec_p;
+  TrackVec trkvec_p;
+  int nMCP  = mcpCol->getNumberOfElements() ;
+  for(int i=0;i< nMCP;i++){
+    MCParticle* mcp =dynamic_cast<MCParticle*> ( mcpCol->getElementAt( i ) ) ;
+    partvec  = particleTruthRelNav.getRelatedFromObjects(mcp);
+    cluvec_t = truthClusterRelNav.getRelatedToObjects(mcp);
+    www_clu  = truthClusterRelNav.getRelatedToWeights(mcp);
+    trkvec_t = truthTrackRelNav.getRelatedToObjects(mcp);
+    www_trk  = truthTrackRelNav.getRelatedToWeights(mcp);
+
+    for ( unsigned j=0 ;  j<partvec.size() ; j++ ) {
+      ReconstructedParticle* msp = dynamic_cast<ReconstructedParticle*>(partvec[j]) ;
+      cluvec_p = msp->getClusters() ;
+      trkvec_p = msp->getTracks() ;
+      float  c_wgt=0. ;
+      for ( unsigned k=0 ; k<cluvec_p.size() ; k++ ) {
+        for ( unsigned l=0 ; l<cluvec_t.size() ; l++ ) {
+          if ( cluvec_p[k] == cluvec_t[l] ) {
+            c_wgt+=www_clu[l];
+          }
+        }
+      }
+      float  t_wgt=0. ;
+      for ( unsigned k=0 ; k<trkvec_p.size() ; k++ ) {
+        for ( unsigned l=0 ; l<trkvec_t.size() ; l++ ) {
+          if ( trkvec_p[k] == trkvec_t[l] ) {
+            t_wgt+=www_trk[l];
+          }
+        }
+      }
+      float wgt=int(c_wgt*1000)*10000 + int(t_wgt*1000) ;
+      truthParticleRelNav.addRelation(   mcp, msp  , wgt ) ;
+      streamlog_out( DEBUG5 ) << " True Particle " << mcp->id() << " ( pdg " << mcp->getPDG()  
+			      << " ) has weight " << c_wgt <<" / " << t_wgt << "( " << int(wgt) << " ) to particle "  
+			      << msp->id() << "  with " << cluvec_p.size() << " clusters, and " 
+                     << trkvec_p.size() << " tracks " <<  std::endl; 
+    }
+  }
+  streamlog_out( DEBUG5 ) << " particle linking complete, create collection " << std::endl;
   *ptrlcol = particleTruthRelNav.createLCCollection() ;
+  *trplcol = truthParticleRelNav.createLCCollection() ;
 }
 void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlcol,  LCCollection* ctrlcol ,  LCCollectionVec** skimVec){
   
@@ -1284,25 +1455,6 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
       continue ;    // particle allready in skim 
     }
     
-    //       if ( mcp->isCreatedInSimulation()  && mcp->getGeneratorStatus()  != 0  ) 
-    
-    //  streamlog_out( WARNING ) << " mcp->isCreatedInSimulation()  && mcp->getGeneratorStatus()  != 0 TRUE" 
-    //                           <<  " :" << mcp->getEnergy()  
-    //                           << " charge: " << mcp->getCharge() 
-    //                           << " genstat: " << mcp->getGeneratorStatus() 
-    
-    //                           << " simstat: " << std::hex << mcp->getSimulatorStatus()  << std::dec 
-    
-    //                           << " : "  << std::endl 
-    //                           << " isCreatedInSimulation :" << mcp->isCreatedInSimulation()  << std::endl
-    //                           << " isBackscatter :" << mcp->isBackscatter()  << std::endl
-    //                           << " vertexIsNotEndpointOfParent :" << mcp->vertexIsNotEndpointOfParent() << std::endl
-    //                           << " isDecayedInTracker :" << mcp->isDecayedInTracker() << std::endl
-    //                           << " isDecayedInCalorimeter :" << mcp->isDecayedInCalorimeter() << std::endl
-    //                           << " hasLeftDetector :" << mcp->hasLeftDetector() << std::endl
-    //                           << " isStopped :" << mcp->isStopped() << "  : " 
-    //                           << " pdg " << mcp->getPDG()
-    //                           << std::endl ;
     
     
     
@@ -1329,7 +1481,7 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
       
       if( trackObjects.size() > 0 || clusterObjects.size()>0){
         
-        streamlog_out( DEBUG4 ) << " keep MCParticle - e :" << mcp->getEnergy()  
+        streamlog_out( DEBUG5 ) << " keep MCParticle - e :" << mcp->getEnergy()  
         << " charge: " << mcp->getCharge() 
         << " px: " << mcp->getMomentum()[0]
         << " py: " << mcp->getMomentum()[1]
@@ -1350,7 +1502,7 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
       // --- loop again and add daughters of particles that are in the skimmed list and have a pdg in
       //     the parameter vector 'KeepDaughtersPDG 
   
-  streamlog_out( DEBUG4 ) << " First loop done. Now search for KeepDaughtersPDG:s" << std::endl;
+  streamlog_out( DEBUG5 ) << " First loop done. Now search for KeepDaughtersPDG:s" << std::endl;
   
   
   if(_saveBremsstrahlungPhotons){
@@ -1363,12 +1515,6 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
             const float x = mcp->getVertex()[0];
             const float y = mcp->getVertex()[1];
             const float z = mcp->getVertex()[2];
-            // const float r = sqrt(x*x+z*z);
-            // const MCParticleVec& daughters = parent->getDaughters() ;
-            // const float xp = fabs(parent->getVertex()[0]);
-            // const float yp = fabs(parent->getVertex()[1]);
-            // const float zp = fabs(parent->getVertex()[2]);
-            // const float rp= sqrt(x*x+z*z);
             const float xpe = parent->getEndpoint()[0];
             const float ype = parent->getEndpoint()[1];
             const float zpe = parent->getEndpoint()[2];
@@ -1377,10 +1523,6 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
             const float dz  = z - zpe;
             const float dr = sqrt(dx*dx+dy*dy+dz*dz);
             if(dr>100.){
-              //std::cout << " Brem candidate " << mcp->getPDG() << " E = " << mcp->getEnergy() << std::endl; 
-              //std::cout << mcp->getParents().size() << " parent pdg : " << parent->getPDG() << " E = " << parent->getEnergy() << " Daughters : " << daughters.size() << std::endl; 
-              
-              //std::cout << " parent " << xp << "," << yp << " " << zp << " ->  " << xpe << "," << ype << " " << zpe << std::endl; 
               keepMCParticle( mcp ) ;
             }
           }
@@ -1403,7 +1545,7 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
         
         const MCParticleVec& daughters = mcp->getDaughters() ;
         
-        streamlog_out( DEBUG4 ) << " keeping daughters of particle with pdg : " << mcp->getPDG() << " : " 
+        streamlog_out( DEBUG5 ) << " keeping daughters of particle with pdg : " << mcp->getPDG() << " : " 
         << " [" << mcp->getGeneratorStatus() << "] :";
         //                                << " e :" << mcp->getEnergy() 
         //                                << " isCreatedInSimulation :" << mcp->isCreatedInSimulation() << std::endl
@@ -1414,12 +1556,11 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
         //                                << " hasLeftDetector :" << mcp->hasLeftDetector()     << std::endl
         //                                << " isStopped :" << mcp->isStopped()    << "  : " 
         
-        streamlog_message( DEBUG4 , 
+        streamlog_message( DEBUG5 , 
                           if( mcp->getParents().size() ) ,
                           " parent pdg : " << mcp->getParents()[0]->getPDG() << " : "  ;
                           ) ;
         
-        streamlog_out( DEBUG4 ) << std::endl ;
         
         //      << std::endl ;
         
@@ -1433,11 +1574,11 @@ void RecoMCTruthLinker::makeSkim(   LCCollection* mcpCol ,  LCCollection* ttrlco
             
             (*dIt)->ext<MCPKeep>() = true ;
             
-            streamlog_out( DEBUG4 ) <<  (*dIt)->getPDG() << ", " ;
+            streamlog_out( DEBUG5 ) <<  (*dIt)->getPDG() << ", " ;
           }
         }
         
-        streamlog_out( DEBUG4 ) << std::endl ;
+        streamlog_out( DEBUG5 ) << std::endl ;
         
       }
     }
@@ -1466,7 +1607,7 @@ void  RecoMCTruthLinker::keepMCParticle( MCParticle* mcp ){
   
   const MCParticleVec& parents = mcp->getParents() ;
   
-  streamlog_out( DEBUG4 ) << " keepMCParticle keep particle with pdg : " << mcp->getPDG() 
+  streamlog_out( DEBUG3 ) << " keepMCParticle keep particle with pdg : " << mcp->getPDG() 
   << std::endl ;
   
   for( MCParticleVec::const_iterator pIt = parents.begin() ;
@@ -1614,7 +1755,9 @@ const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const Floa
     
   }
   else {
-    streamlog_out( DEBUG2 ) << "getSimHits :  TrackerHit : " << trkhit << " has no sim hits related. CellID0 = " << trkhit->getCellID0() << " pos = " << trkhit->getPosition()[0] << " " << trkhit->getPosition()[1] << " " << trkhit->getPosition()[2] << std::endl ;
+    streamlog_out( WARNING ) << "getSimHits :  TrackerHit : " << trkhit << " has no sim hits related. CellID0 = " << 
+         trkhit->getCellID0() << " pos = " << trkhit->getPosition()[0] << " " << trkhit->getPosition()[1] << " " << 
+         trkhit->getPosition()[2] << std::endl ;
   }
   
   return obj;
@@ -1624,7 +1767,7 @@ const LCObjectVec* RecoMCTruthLinker::getSimHits( TrackerHit* trkhit, const Floa
 
 void RecoMCTruthLinker::end(){ 
   
-  streamlog_out(DEBUG4) << " processed " << _nEvt << " events in " << _nRun << " runs "
+  streamlog_out(DEBUG6) << " processed " << _nEvt << " events in " << _nRun << " runs "
   << std::endl ;
   
 }
@@ -1663,7 +1806,6 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
     if( col != 0 ){ 
       
       colVec.push_back( col ) ;
-      
     } else {
       
       streamlog_out(DEBUG2) << " mergeTrackerHitRelations: input collection missing : " << _colNamesTrackerHitRelations[i] << std::endl ;
@@ -1733,6 +1875,218 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
 
 
 
+
+
+
+void RecoMCTruthLinker::mergeCaloHitRelations(LCEvent * evt){
+  
+  unsigned nCol = _caloHitRelationNames.size() ;
+  
+  //--- copy existing collections to a vector first
+  std::vector<LCCollection*> colVec ;
+  
+  for( unsigned i=0; i < nCol ; ++i) {
+    
+    LCCollection* col  =  getCollection ( evt , _caloHitRelationNames[i] ) ;
+    
+    if( col != 0 ){ 
+      
+      colVec.push_back( col ) ;
+      
+    } else {
+      
+      streamlog_out(DEBUG2) << " mergeCaloHitRelations: input collection missing : " << _caloHitRelationNames[i] << std::endl ;
+    }
+  }
+  
+  
+   
+  streamlog_out( DEBUG2 ) <<  " mergeCaloHitRelations: copied collection parameters ... " << std::endl ;
+
+  
+  
+  nCol = colVec.size() ;
+  
+  for( unsigned i=0; i < nCol ; ++i) {
+    
+    LCCollection* col  =  colVec[i] ;
+    
+    if( i == 0 ){
+      // copy collection flags and collection parameters from first collections
+      
+      _mergedCaloHitRelCol = new LCCollectionVec( col->getTypeName() )  ;
+
+      
+      _mergedCaloHitRelCol->setFlag( col->getFlag() ) ;
+ 
+      StringVec stringKeys ;
+      col->getParameters().getStringKeys( stringKeys ) ;
+      for(unsigned i=0; i< stringKeys.size() ; i++ ){
+        StringVec vals ;
+        col->getParameters().getStringVals(  stringKeys[i] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  stringKeys[i] , vals ) ;   
+      }
+      StringVec intKeys ;
+      col->getParameters().getIntKeys( intKeys ) ;
+      for(unsigned i=0; i< intKeys.size() ; i++ ){
+        IntVec vals ;
+        col->getParameters().getIntVals(  intKeys[i] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  intKeys[i] , vals ) ;   
+      }
+      StringVec floatKeys ;
+      col->getParameters().getFloatKeys( floatKeys ) ;
+      for(unsigned i=0; i< floatKeys.size() ; i++ ){
+        FloatVec vals ;
+        col->getParameters().getFloatVals(  floatKeys[i] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  floatKeys[i] , vals ) ;   
+      }
+
+      
+      
+    }
+    
+    int nEle = col->getNumberOfElements() ;
+    
+    for(int j=0; j < nEle ; ++j){
+      
+      _mergedCaloHitRelCol->addElement(  col->getElementAt(j) ) ;
+      
+    }
+    
+  }    
+   
+  if( nCol != 0 ) _navMergedCaloHitRel = new LCRelationNavigator( _mergedCaloHitRelCol );
+  
+}
+
+const LCObjectVec* RecoMCTruthLinker::getCaloHits( CalorimeterHit* calohit, const FloatVec* weights ){
+  
+  const LCObjectVec* obj = & _navMergedCaloHitRel->getRelatedToObjects(calohit);
+  
+  if( obj->empty() == false  ) { 
+
+    if(weights != 0 ) weights = & _navMergedCaloHitRel->getRelatedToWeights(calohit);
+    
+  }
+  else {
+    
+    streamlog_out( DEBUG2 ) << "getCaloHits :  CalorimeterHit : " << calohit << " has no sim hits related. CellID0 = " << 
+       calohit->getCellID0() << " pos = " << calohit->getPosition()[0] << " " << calohit->getPosition()[1] << " " << 
+       calohit->getPosition()[2] << std::endl ;
+  }
+  return obj;
+  
+}
+
+
+
+void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* particleCol, LCCollection* ptrlcol, LCCollection* trplcol) {
+
+  LCRelationNavigator      particleTruthRelNav = LCRelationNavigator(  ptrlcol );
+  LCRelationNavigator      truthParticleRelNav  = LCRelationNavigator(  trplcol );
+
+  if ( ! _FullRecoRelation ) {
+    // Not useful in this case ...
+    return;
+  }
+  static FloatVec www ; 
+  static FloatVec www_other_way ; 
+
+  LCObjectVec mcvec; 
+  int nPart = particleCol->getNumberOfElements() ;
+  LCObjectVec partvec; 
+
+  for(int i=0;i<nPart;++i){
+    
+    ReconstructedParticle* part = dynamic_cast<ReconstructedParticle*> ( particleCol->getElementAt(i) ) ;
+    double clu_e=0.0;
+    if ( part->getClusters().size() > 0 ) {
+      Cluster* clu = part->getClusters()[0];
+      if ( clu != 0 ) {
+        clu_e=clu->getEnergy();
+      }
+    }
+    mcvec = particleTruthRelNav.getRelatedToObjects( part);
+    www = particleTruthRelNav.getRelatedToWeights( part);
+    int ntp= mcvec.size();
+    streamlog_out( DEBUG6 ) << "    Particle " <<  part->id() << " (q: " <<  int(part->getCharge()) << 
+      " ) has " << ntp << " true particles. E= "<< part->getEnergy() << " " << clu_e ;
+    streamlog_out( DEBUG3 )<< std::endl;  
+    if ( ntp > 0 ) {
+      if ( mcvec[0] != 0 ) {
+        double total_trk_weight = 0.0;
+        double total_clu_weight = 0.0;
+        double total_e_from_neutrals = 0.0;
+        double true_charged_E=0.0;
+        double total_ecalo_in_this_true=0.;
+        double total_ecalo_neutral_in_charged=0.;
+        for ( int kkk=0 ; kkk < ntp ; kkk++ ) {
+          total_trk_weight+=(int(www[kkk])%10000)/1000.0;
+          total_clu_weight+=(int(www[kkk])/10000)/1000.0;
+          MCParticle* mcp = dynamic_cast< MCParticle*>( mcvec[kkk]);
+          streamlog_out( DEBUG3 ) << kkk << " " << mcp->id()  << " " << mcp->getPDG()  << " " << mcp->getEnergy()  << std::endl ;
+          if ( part->getCharge() != 0 ) {
+            if ( mcp->getCharge() != 0 && (int(www[kkk])%10000)/1000.0 > 0.6 ) {
+              true_charged_E=mcp->getEnergy();
+              double ecalo_from_this_true=((int(www[kkk])/10000)/1000.0)*clu_e;
+              if ( ecalo_from_this_true != 0.0 ) {
+                partvec = truthParticleRelNav.getRelatedToObjects( mcp);
+                www_other_way =  truthParticleRelNav.getRelatedToWeights( mcp);
+                for ( unsigned jjj=0 ; jjj < partvec.size() ; jjj++ ) {
+                  if ( partvec[jjj] == part ) {
+                    total_ecalo_in_this_true = ecalo_from_this_true/(int(www_other_way[jjj]/10000)/1000.0) ;
+                    break;
+                  }
+                }
+              }
+            } else {
+              total_ecalo_neutral_in_charged+=((int(www[kkk])/10000)/1000.0)*clu_e;
+            }
+          } else {
+            if ( mcp->getCharge() == 0 ) {
+              total_e_from_neutrals+=((int(www[kkk])/10000)/1000.0)*clu_e;
+	    }
+	  }
+        }
+        if ( part->getCharge() != 0 ) {
+	  streamlog_out( DEBUG6 ) << " " << true_charged_E << " " << total_ecalo_in_this_true << " " << total_ecalo_neutral_in_charged << " " << 
+          total_trk_weight << " " << total_clu_weight  << std::endl ;
+        } else {
+	  streamlog_out( DEBUG6 ) << " " <<  total_e_from_neutrals << " " << 
+          total_trk_weight << " " << total_clu_weight  << std::endl ;
+        }
+      }
+    }
+  }  
+
+  int nMCPart = mcpCol->getNumberOfElements() ;
+
+  for(int i=0;i<nMCPart;++i){
+    
+    MCParticle* mcpart = dynamic_cast<MCParticle*> ( mcpCol->getElementAt(i) ) ;
+
+    partvec = truthParticleRelNav.getRelatedToObjects( mcpart);
+    www =  truthParticleRelNav.getRelatedToWeights( mcpart);
+    int nsp= partvec.size();
+    if ( nsp > 0 ) {
+      streamlog_out( DEBUG6 ) << "    TrueParticle " <<  mcpart->id() << " (q: " <<  int(mcpart->getCharge()) << 
+        " ) has " << nsp << " seen particles. E= "<<mcpart->getEnergy() << " pt= " <<
+	sqrt(mcpart->getMomentum()[0]* mcpart->getMomentum()[0]+ mcpart->getMomentum()[1]* mcpart->getMomentum()[1]);
+       streamlog_out( DEBUG3  )<< std::endl;  
+      if ( partvec[0] != 0 ) {
+        double total_trk_weight = 0.0;
+        double total_clu_weight = 0.0;
+        for ( int kkk=0 ; kkk < nsp ; kkk++ ) {
+          total_trk_weight+=(int(www[kkk])%10000)/1000.0;
+          total_clu_weight+=(int(www[kkk])/10000)/1000.0;
+           ReconstructedParticle* recopart = dynamic_cast< ReconstructedParticle*>(partvec[kkk]);
+          streamlog_out( DEBUG3 ) << kkk << " " << recopart->id()  << " " << recopart->getEnergy()    << std::endl ; 
+        }
+        streamlog_out( DEBUG6 ) << " " << total_trk_weight << " " << total_clu_weight << std::endl ;
+      }
+    }
+  } 
+}
 
 
 

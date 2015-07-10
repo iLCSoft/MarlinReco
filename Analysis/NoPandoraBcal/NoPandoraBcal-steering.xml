@@ -1,0 +1,91 @@
+<?xml-stylesheet type="text/xsl" href="tools/marlin.xsl"?>
+<!--##########################################
+
+  Steering for running NoPandoraBcal on a RECO-file.
+  This solves the problem that in the DBD, Pandora
+  did include hits in the BCal in low-angle clusters,
+  although it wasn't supposed to. 
+  Doing this causes two problems:
+   a) It is wrong to use BCal for anything, if the
+      background form beam-strahalung pairs is not
+      included. The BCal specific processors
+      must be used for this.
+   b) There is no navigators between hits in the BCal and
+      the true event info. This means that RecoMCTruthLinker
+      with break now and then if this isn't fixed,  
+
+    ##########################################-->
+
+
+<marlin>
+ <execute>
+  <processor name="MyAIDAProcessor"/>
+  <processor name="MyNoPandoraBcal"/>
+ <!-- processor name="MyStuff"/-->
+  </execute>
+
+ <global>
+ <parameter name="LCIOInputFiles">
+    /pnfs/desy.de/ilc/prod/ilc/mc-dbd/ild/rec/500-TDR_ws/4f_WW_semileptonic/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.I250020.P4f_ww_sl.eR.pL-00006-REC.slcio
+</parameter>
+<!--
+/afs/naf.desy.de/user/b/berggren/scratch/tests/blubblab2wgtext2rr2tidy2-new.slcio
+-->
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="" />  
+  <parameter name="SkipNEvents" value="" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="GearXMLFile"> gear.xml </parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE  </parameter> 
+ </global>
+
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">my_root </parameter>
+  <!-- type of output file xml (default) or root ( only OpenScientist)-->
+  <parameter name="FileType" type="string">root </parameter>
+</processor>
+
+
+
+ <processor name="MyNoPandoraBcal" type="NoPandoraBcal">
+   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG2  </parameter> 
+   <!-- Inputs. These are the defauls -->
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraPFOs
+   </parameter>
+   <parameter name="CluCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraClusters
+   </parameter>
+
+   <!-- Outputs. These are the defaults. They are sub-set collections of the inputs,
+     so don't try to write them out to the DST -->
+   <parameter name="NewRecoCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraPFOsnoBcal
+   </parameter>
+   <parameter name="NewCluCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraClustersnoBcal
+   </parameter>
+
+</processor>
+
+<processor name="MyStuff" type="Stuff">
+   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE  </parameter>
+   <!-- IMPORTANT : You must do this in Your Processor AND in any other processors that provides input
+        to Your processor -->
+   <!-- Inputs. Replace defaults !!!  -->
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraPFOsnoBcal
+   </parameter>
+   <parameter name="CluCollectionName" type="string" lcioInType="ReconstructedParticle">
+      PandoraClustersnoBcal
+   </parameter>
+   <!--  etc ... Note that is you only access clusters with the getClusters method of ReconstructedParticle,
+         and the PFOs come from the PandoraPFOsnoBcal collection, you are safe. Only if you
+         directly access the cluster collection do you need to specify PandoraClustersnoBcal -->      
+</processor>
+
+</marlin>

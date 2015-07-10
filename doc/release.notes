@@ -4,6 +4,41 @@
 
 ===============================
 
+
+ --------
+| v01-12 |
+ --------
+
+  J.Tian
+   - added new Analysis/IsolatedLeptonTagging
+      MVA based isolated lepton finder
+
+  T.Calancha
+    - fixes for Analysis/FourMomentumCovMat
+       - printout and read-only exception
+
+  M.Kurata
+  - update PIDTools for several kinds of likelihood calculation
+
+  S.Bilokin
+   - added Analysis/VertexChargeRecovery
+
+  T.Suehara:
+   - Analysis/TauFinder added
+
+  F.Gaede
+
+  - added copy of ClusterShapes from MarlinUtil 
+    -> use "include "ClusterShapesMR.hh"
+       and marlinreco::ClusterShapes
+  - applied to ComputeShowerShapesProcessor.cc
+  - eventuall changes should be merged back to MarlinUtil
+  
+  - fixed warning  -Wc++11-narrowing in TPCDigitizer
+
+
+
+
  --------
 | v01-11 |
  -------- 

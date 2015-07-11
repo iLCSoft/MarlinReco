@@ -1,0 +1,42 @@
+<!--########################################################-->
+<!--#                                                      #-->
+<!--#     Example steering file for marlin                 #-->
+<!--#     for finding pi0s with pi0->gamma gamma           #-->
+<!--#                                                      #-->
+<!--########################################################-->
+
+<marlin>
+ <execute>
+   <processor name="MyPi0Finder"/> 
+   <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+
+ <global>
+   <parameter name="LCIOInputFiles"> input.slcio </parameter> 
+   <parameter name="SkipNEvents" value="0" />
+   <parameter name="MaxRecordNumber" value="10" />
+   <parameter name="SupressCheck" value="false" />
+   <parameter name="GearXMLFile" value="ILD_o1_v05.gearxml" />
+   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG </parameter>
+ </global>
+
+ <processor name="MyPi0Finder" type="GammaGammaCandidateFinder">
+    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />
+    <parameter name="GammaGammaResonanceName" value="Pi0" />
+    <parameter name="GammaGammaResonanceMass" value="0.1349766" />
+    <parameter name="MaxDeltaMgg" value="0.04" />
+    <parameter name="GammaMomentumCut" value="0.5" />
+    <parameter name="Printing" value="2" />
+    <parameter name="OutputParticleCollectionName" value="GammaGammaCandidatePi0s" />
+ </processor>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+     <!--   standard output: full reconstruction keep all collections -->
+     <parameter name="LCIOOutputFile" type="string" >
+       ./myfile_OUT.slcio
+     </parameter>
+     <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+     <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+ </processor>
+
+</marlin>

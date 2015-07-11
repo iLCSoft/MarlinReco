@@ -1,0 +1,16 @@
+GammaGammaCandidateFinder Processor
+
+Purpose: Assemble a collection of ReconstructedParticles consisting of pairs of photons consistent with known 
+         particles which can decay to two photons, including 
+         pi0 -> gamma gamma, eta0 -> gamma gamma, etaprime(958)0 -> gamma gamma.
+
+Note that the same photon will often be a constituent of more than one GammaGammaCandidate. 
+The "photon matching" problem of assigning individual photons uniquely to at most one GammaGammaParticle 
+or similar composite particle is to be treated in a separate processor after the creation of these GammaGammaCandidates.
+
+Currently the algorithm does not do any mass-constrained fitting, but this is one of the main reasons for 
+this processor, and the eventual GammaGammaCandidate collections will be mass-constrained.
+
+An example xml steering file is examples/example_GGFinder.xml
+
+Graham W. Wilson, 10th July 2015.

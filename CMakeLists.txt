@@ -114,7 +114,7 @@ MACRO( ADD_MARLINRECO_PKG _input_dir )
     #INSTALL_DIRECTORY( ${_input_dir}/include/ DESTINATION include/marlinreco FILES_MATCHING PATTERN "*.h" )
 ENDMACRO()
 
-
+ADD_MARLINRECO_PKG( ./Analysis/GammaGammaCandidateFinder )
 ADD_MARLINRECO_PKG( ./Analysis/IsolatedLeptonFinder )
 ADD_MARLINRECO_PKG( ./Analysis/CLICPfoSelector )
 ADD_MARLINRECO_PKG( ./Analysis/RecoMCTruthLink )

@@ -295,7 +295,11 @@ namespace marlinreco {
      */
     inline float getElipsoid_r_back() { return _r1_back; }
 
+ //Mean of the radius of the hits
+ float getRhitMean(float* xStart, int& index_xStart, float* X0, float* Rm);
 
+  //RMS of the radius of the hits
+  float getRhitRMS(float* xStart, int& index_xStart, float* X0, float* Rm);
 
 
 

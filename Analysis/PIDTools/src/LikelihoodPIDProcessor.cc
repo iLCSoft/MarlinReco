@@ -10,8 +10,7 @@
 
 #include "LikelihoodPIDProcessor.hh"
 #include "LikelihoodPID.hh"
-
-
+#include "LowMomentumMuPiSeparationPID_BDTG.hh"
 
 LikelihoodPIDProcessor aLikelihoodPIDProcessor ;
 
@@ -20,28 +19,27 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   
   // Processor description
   _description = "Particle ID code using Bayesian Classifier" ;
-
+ 
   std::vector< std::string > xmlfiles;
-  xmlfiles.push_back( "weight1.xml" );
-  xmlfiles.push_back( "weight2.xml" );
-  xmlfiles.push_back( "weight3.xml" );
-  xmlfiles.push_back( "weight4.xml" );
-  xmlfiles.push_back( "weight5.xml" );
-  xmlfiles.push_back( "weight6.xml" );
-  xmlfiles.push_back( "weight7.xml" );
-  xmlfiles.push_back( "weight8.xml" );
-  xmlfiles.push_back( "weight9.xml" );
-  xmlfiles.push_back( "weight10.xml" );
-  xmlfiles.push_back( "weight11.xml" );
-  xmlfiles.push_back( "weight12.xml" );
-  xmlfiles.push_back( "weight13.xml" );
-  xmlfiles.push_back( "weight14.xml" );
-  xmlfiles.push_back( "weight15.xml" );
-  xmlfiles.push_back( "weight16.xml" );
-  xmlfiles.push_back( "weight17.xml" );
-  xmlfiles.push_back( "weight18.xml" );
-  xmlfiles.push_back( "weight19.xml" );
-  xmlfiles.push_back( "weight20.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_02GeVP_clusterinfo.weights.xml" );  
+  xmlfiles.push_back( "TMVAClassification_BDTG_03GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_04GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_05GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_06GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_07GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_08GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_09GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_10GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_11GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_12GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_13GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_14GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_15GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_16GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_17GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_18GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_19GeVP_clusterinfo.weights.xml" );
+  xmlfiles.push_back( "TMVAClassification_BDTG_20GeVP_clusterinfo.weights.xml" );
   
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			   "RecoParticleCollection" ,
@@ -63,7 +61,9 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   			      "weight file for low momentum mu pi separation",
   			      _weightFileName,
   			      xmlfiles );
-} 
+}  
+  
+
 
 void LikelihoodPIDProcessor::init() { 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
@@ -109,7 +109,8 @@ void LikelihoodPIDProcessor::init() {
 
   //mupi separation class
   //_mupi = new Class(_weightFileName);
-  
+    _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);
+
   printParameters();
   
 }
@@ -148,17 +149,13 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu/pi for very low momentum tracks
+    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
     Float_t MVAoutput = -1.0;
     if((parttype==1 || parttype==2) && pp.P()<2.0){
-      //your code will be performed
-      //calculate E/P
-      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
-      //perform Hale's code 
-      //parttype =; //Hales function
-      //MVAoutput = getMVAOutput(); 
+        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+        MVAoutput = _mupiPID->getMVAOutput();   
     }
-
+    
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID1, MVAoutput);
 
@@ -169,16 +166,12 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu/pi for very low momentum tracks
-    MVAoutput = -1.0;
+     //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
     if((parttype==1 || parttype==2) && pp.P()<2.0){
-      //your code will be performed
-      //calculate E/P
-      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
-      //perform Hale's code 
-      //parttype =; //Hales function
-      //MVAoutput = getMVAOutput(); 
+        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+        MVAoutput = _mupiPID->getMVAOutput();   
     }
+    
 
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID2, MVAoutput);
@@ -190,16 +183,12 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu/pi for very low momentum tracks
-    MVAoutput = -1.0;
+     //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
     if((parttype==1 || parttype==2) && pp.P()<2.0){
-      //your code will be performed
-      //calculate E/P
-      // ep=clu[0]->getEnergy()/part->getMomentum().Mag();
-      //perform Hale's code 
-      //parttype =; //Hales function
-      //MVAoutput = getMVAOutput(); 
+        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+        MVAoutput = _mupiPID->getMVAOutput();   
     }
+    
 
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID3, MVAoutput);
@@ -211,17 +200,12 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu/pi for very low momentum tracks
-    MVAoutput = -1.0;
+    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
     if((parttype==1 || parttype==2) && pp.P()<2.0){
-      //your code will be performed
-      //calculate E/P
-      //ep=clu[0]->getEnergy()/part->getMomentum().Mag();
-      //perform Hale's code 
-      //parttype =; //Hales function
-      //MVAoutput = getMVAOutput(); 
+        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+        MVAoutput = _mupiPID->getMVAOutput();   
     }
-
+    
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
 

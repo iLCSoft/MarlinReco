@@ -195,7 +195,7 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
       float maxed = a*c*gsl_sf_gammainv(b)*pow(b-1,b-1)*exp(-b+1);  //for advanced multiply with fabs(d) to avoid NaN
       float maxlength_pho=(1.0*std::log(clusterEnergy/(X0[0] * 0.021/Rm[0]))-0.5);  //this definition, +0.5 if gamma
 
-      TVector3 cludir(CoG[0]-xStart[0],CoG[1]-xStart[1],CoG[2]-xStart[2]);
+      TVector3 clusdirection(CoG[0]-xStart[0],CoG[1]-xStart[1],CoG[2]-xStart[2]);
 
 
       EVENT::FloatVec shapes;
@@ -220,9 +220,9 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
       shapes.push_back(pClusterShapes->getxl20(xStart,index_xStart,X0,Rm));
       
       //20150708 add variables by Hale
-      shapes.push_back(cludir.Mag());
-      shapes.push_back(0.0);   //pClusterShapes->getRhitMean(xStart,index_xStart,X0,Rm));
-      shapes.push_back(0.0);   //pClusterShapes->getRhitRMS(xStart,index_xStart,X0,Rm));
+      shapes.push_back(clusdirection.Mag());  // depth of the cluster
+      shapes.push_back(pClusterShapes->getRhitMean(xStart,index_xStart,X0,Rm));  // mean of the radius of the hits wrt cog
+      shapes.push_back(pClusterShapes->getRhitRMS(xStart,index_xStart,X0,Rm));   // RMS of the radius of the hits wrt cog
 
       //add shower shapes
       pCluster->setShape(shapes);

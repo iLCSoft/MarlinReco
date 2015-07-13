@@ -2,7 +2,7 @@
 #define LikelihoodPIDProcessor_hh 1
 
 #include <string>
-
+#include <vector>
 #include <marlin/Processor.h>
 
 #include <EVENT/LCCollection.h>
@@ -11,6 +11,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 class LikelihoodPID;
+class LowMomentumMuPiSeparationPID_BDTG;
 
 class LikelihoodPIDProcessor : public Processor{
 public:
@@ -35,6 +36,8 @@ private:
   std::vector<int> _pdgTable;
   std::vector<std::string> _particleNames;
   std::vector<std::string> _dEdxNames;
+
+  LowMomentumMuPiSeparationPID_BDTG *_mupiPID;
 
   bool _basicFlg;
   bool _dEdxFlg;

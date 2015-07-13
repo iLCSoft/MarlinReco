@@ -64,9 +64,7 @@ LowMomentumMuPiSeparationPID_BDTG::LowMomentumMuPiSeparationPID_BDTG(std::vector
    reader->AddVariable( "Rrms",     &Rrms);
 
    // Book method(s)  with weight file                                                                           
-    TString dir    = "/afs/desy.de/group/flc/pool/halesert/CodePool/TMVA/TMVA-v4.2.0/workdir/MyAna/Analysis/weights/";
- 
-    std::vector<std::string> Pvalue;
+   std::vector<std::string> Pvalue;
     Pvalue.push_back("02GeVP");
     Pvalue.push_back("03GeVP");
     Pvalue.push_back("04GeVP");
@@ -92,7 +90,7 @@ LowMomentumMuPiSeparationPID_BDTG::LowMomentumMuPiSeparationPID_BDTG(std::vector
     
     for(int i=0; i < 19; i++){
         myMethod = "BDTG_"+ Pvalue[i]+ "_clusterinfo";   
-        weightfile =dir + fname[i];
+        weightfile = name[i];
         reader->BookMVA( myMethod, weightfile );     
       }
 }

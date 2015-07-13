@@ -21,7 +21,7 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   _description = "Particle ID code using Bayesian Classifier" ;
  
   std::vector< std::string > xmlfiles;
-  xmlfiles.push_back( "TMVAClassification_BDTG_02GeVP_clusterinfo.weights.xml" );  
+  xmlfiles.push_back( " /weightFiles_forLowMomentumMuPiSeparation/TMVAClassification_BDTG_02GeVP_clusterinfo.weights.xml" );  
   xmlfiles.push_back( "TMVAClassification_BDTG_03GeVP_clusterinfo.weights.xml" );
   xmlfiles.push_back( "TMVAClassification_BDTG_04GeVP_clusterinfo.weights.xml" );
   xmlfiles.push_back( "TMVAClassification_BDTG_05GeVP_clusterinfo.weights.xml" );

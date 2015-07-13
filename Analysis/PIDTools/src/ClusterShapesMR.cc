@@ -1,3 +1,5 @@
+
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 
 #include "ClusterShapesMR.h"
@@ -2225,5 +2227,65 @@ namespace marlinreco{
   
     return;
   }
+
+
+float ClusterShapes::getRhitMean(float* xStart, int& index_xStart, float* X0, float* Rm){
+
+  if (_ifNotEigensystem == 1){
+    transformToEigensystem(xStart,index_xStart,X0,Rm);
+  }
+
+  float MainCentre[3];
+
+  MainCentre[0] = _analogGravity[0];
+  MainCentre[1] = _analogGravity[1];
+  MainCentre[2] = _analogGravity[2];
+
+  // float Rhit[_nHits]={0};
+  float Rhit=0;
+
+  float Rhitsum=0;
+  float Rhitmean=0;
+
+  for (int i = 0; i < _nHits; ++i) {
+    Rhit = sqrt(pow((_xHit[i]-MainCentre[0]),2) + pow((_yHit[i]-MainCentre[1]),2));
+    Rhitsum += Rhit;
+  }
+    // cogx-- xx[0]  
+  
+  Rhitmean = Rhitsum/_nHits;
+
+  return Rhitmean;
+}
+
+float ClusterShapes::getRhitRMS(float* xStart, int& index_xStart, float* X0, float* Rm){
+
+  if (_ifNotEigensystem == 1){
+    transformToEigensystem(xStart,index_xStart,X0,Rm);
+  }
+
+  float MainCentre[3];
+
+  MainCentre[0] = _analogGravity[0];
+  MainCentre[1] = _analogGravity[1];
+  MainCentre[2] = _analogGravity[2];
+
+  // float Rhit[_nHits]={0};
+  float Rhit=0;
+
+  float Rhit2sum=0;
+  float Rhitrms=0;
+
+  for (int i = 0; i < _nHits; ++i) {
+    Rhit = sqrt(pow((_xHit[i]-MainCentre[0]),2) + pow((_yHit[i]-MainCentre[1]),2));
+    Rhit2sum += pow(Rhit,2);
+  }
+    // cogx-- xx[0]  
+  
+  Rhitrms = sqrt(Rhit2sum/_nHits);
+
+  return Rhitrms;
+}
+
 
 } // namespace

@@ -90,7 +90,7 @@ LowMomentumMuPiSeparationPID_BDTG::LowMomentumMuPiSeparationPID_BDTG(std::vector
     
     for(int i=0; i < 19; i++){
         myMethod = "BDTG_"+ Pvalue[i]+ "_clusterinfo";   
-        weightfile = name[i];
+        weightfile = fname[i];
         reader->BookMVA( myMethod, weightfile );     
       }
 }
@@ -98,7 +98,7 @@ LowMomentumMuPiSeparationPID_BDTG::LowMomentumMuPiSeparationPID_BDTG(std::vector
 Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec){
    
     double tmpid=-1;
-    std::cout << "==> start ClassApplication" << std::endl;
+    //  std::cout << "==> start ClassApplication" << std::endl;
     
     Dclus=0;
     EclOvPtr=0;
@@ -127,19 +127,17 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
    Float_t cut20 = -0.2328;  // S/sqrt(S+B) = 95.7793    
    
    
-   //get variables used low momentum muon and pion separation -- cluster shape parameters
+   // get variables used low momentum muon and pion separation --
+   // cluster shape parameters
    if(cluvec.size()!=0){      
        shapes=cluvec[0]->getShape();  
-       //cout << "clus energy: " <<  cluvec[0]->getEnergy()  << ", momentum:  " << pp.P() <<",  " << cluvec[0]->getEnergy()/pp.P() << endl;  
-       // EclOvPtr[0] = cluvec[0]->getEnergy()/pp.P();	
        EclOvPtr = cluvec[0]->getEnergy()/pp.P();	
    }
    if(shapes.size()!=0){
-       //cout << "cluster shape size: " <<  shapes.size() << endl;  
        Dclus = shapes[17];
        Rmean = shapes[18];
        Rrms = shapes[19];
-       //   cout << "Discriminative Variables: "<< "; Dclus: " << Dclus << ", Rmean: "<< Rmean << ", Rrms: " << Rrms << ", eclovPtr: " << EclOvPtr << endl;
+       //cout << "Discriminative Variables: "<< "; Dclus: " << Dclus << ", Rmean: "<< Rmean << ", Rrms: " << Rrms << ", eclovPtr: " << EclOvPtr << endl;
        
        //std::cout << " Momentum of track: " << pp.P() << endl;
        if(0.15< pp.P() && pp.P()<= 0.25){
@@ -238,7 +236,6 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
            else tmpid=2;
        }
        else mvaout = 0;
-       //    cout<<",mvaout: " << mvaout << ", cut06: "<< cut06 << ", tmpid: " << tmpid << endl; 
    } // shape size
    
    return tmpid;

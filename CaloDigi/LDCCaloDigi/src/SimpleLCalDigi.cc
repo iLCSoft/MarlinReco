@@ -125,8 +125,6 @@ void SimpleLCalDigi::processEvent( LCEvent * evt ) {
 	  pos[2] = hit->getPosition()[2];
 	  calhit->setPosition(pos);
 
-
-
 	  calhit->setType( CHT( CHT::em, CHT::lcal, CHT::endcap ,  idDecoder(hit)[ _cellIDLayerString ] ) );
 
 	  calhit->setRawHit(hit);

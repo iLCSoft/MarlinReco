@@ -50,6 +50,14 @@ class SimpleLHCalDigi : public Processor {
 
   std::string _cellIDLayerString ;
 
+  std::string  _defaultEncoding;
+  std::string  _caloLayout;
+  std::string  _caloID;
+  //std::string  _caloType;
+  
+  // jl: replace by string as soon as MarlinUtil is updated
+  int _caloType;
+  
   float _thresholdLHCal;
   float _calibrCoeffLHCal;
 

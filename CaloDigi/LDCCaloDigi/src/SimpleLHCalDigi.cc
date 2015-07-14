@@ -34,7 +34,7 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
 			    "LHCal Collection Names" ,
 			    _lhcalCollections ,
 			    lhcalCollections);
-  
+    
   registerOutputCollection( LCIO::CALORIMETERHIT, 
 			    "LHCALOutputCollection" , 
 			    "LHCal Collection of real Hits" , 
@@ -63,6 +63,35 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
 			     std::string("K-1")
 			     );
 
+  registerProcessorParameter("CaloType" ,
+			     "type of calorimeter: em = 0, had = 1, muon = 2" , 
+			     _caloType , 
+			     int(0)
+			     );
+//   registerProcessorParameter("CaloType" ,
+// 			     "type of calorimeter: em, had, muon" , 
+// 			     _caloType , 
+// 			     std::string("had")
+// 			     );
+
+  registerProcessorParameter("CaloID" ,
+			     "ID of calorimeter: lcal, lhcal, bcal", 
+			     _caloID , 
+			     std::string("lhcal")
+			     );
+
+  registerProcessorParameter("CaloLayout" ,
+			     "subdetector layout: barrel, endcap, plug, ring", 
+			     _caloLayout , 
+			     std::string("endcap")
+			     );
+
+  registerProcessorParameter("DefaultEncoding" ,
+			     "string defining cell encoding" , 
+			     _defaultEncoding , 
+			     std::string("M:3,S-1:3,I:9,J:9,K-1:6")
+			     );
+
 }
 
 void SimpleLHCalDigi::init() {
@@ -71,7 +100,8 @@ void SimpleLHCalDigi::init() {
   _nEvt = 0;
 
   //fg: need to set default encoding in for reading old files...
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+  //CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding(_defaultEncoding.c_str()) ;
 
 }
 
@@ -123,7 +153,11 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
 	  pos[2] = hit->getPosition()[2];
 	  calhit->setPosition(pos);
 
-	  calhit->setType( CHT( CHT::had, CHT::lhcal, CHT::endcap ,  idDecoder(hit)[ _cellIDLayerString ] ) );
+	  //calhit->setType( CHT( CHT::had, _CHType, CHT::endcap ,  idDecoder(hit)[ _cellIDLayerString ] ) );
+	  // jl: change to following line as soon as MarlinUtil is updated
+          // calhit->setType( caloTypeFromString(_caloType), caloIDFromString(_caloID), layoutFromString(_caloLayout.c_str()),  idDecoder(hit)[ _cellIDLayerString ] ) );
+
+          calhit->setType( CHT( CHT::CaloType(_caloType), caloIDFromString(_caloID), layoutFromString(_caloLayout.c_str()),  idDecoder(hit)[ _cellIDLayerString ] ) );
 
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);

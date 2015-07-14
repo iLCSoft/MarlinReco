@@ -55,7 +55,7 @@ using namespace std;
 
 LowMomentumMuPiSeparationPID_BDTG::LowMomentumMuPiSeparationPID_BDTG(std::vector<std::string> fname){
 
-    reader = new TMVA::Reader();
+    reader = new TMVA::Reader("Silent");
 
    //Add variables to Reader
    reader->AddVariable( "Dclus", &Dclus);

@@ -649,7 +649,36 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
         for(int k=0;k<simHit->getNMCContributions() ;k++){
           MCParticle* mcp = simHit->getParticleCont( k ) ;
-          if ( mcp != 0 ) {
+//	  if ( i == 11 ) { 
+//            streamlog_out( DEBUG7 ) << simHit->getNMCContributions() << " " << j << " " << " " << k << " " << mcp << std::endl;
+//            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getPosition()[0] << " " << 
+//                                                               simHit->getPosition()[1] << " " << 
+//                                                               simHit->getPosition()[2] << " " << std::endl;
+//            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getCellID0() << " " << 
+//	      simHit->getCellID1() << std::endl;
+//            if ( mcp != 0 ) {
+//               streamlog_out( DEBUG7 ) <<"     mcp p : " << mcp->getMomentum()[0] << " " << 
+//                                                               mcp->getMomentum()[1] << " " << 
+//	        mcp->getMomentum()[2] << " " << std::endl;
+//            }
+//          }
+          if ( mcp == 0 ) {
+	    streamlog_out( DEBUG7 ) <<" col nb "  << i <<  " nhits " << jN << " hit " << j << " contr " << k << std::endl;
+	    streamlog_out( DEBUG7 ) <<" Sim hit with no mcp. N contrib is "  <<
+                  simHit->getNMCContributions() <<std::endl;
+            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getPosition()[0] << " " << 
+                                                               simHit->getPosition()[1] << " " << 
+                                                               simHit->getPosition()[2] << " " << std::endl;
+            if ( simHit->getNMCContributions() > 0 ) {
+              for (int l=0;l<simHit->getNMCContributions() ;l++){
+                streamlog_out( DEBUG7 ) <<" Contrib " << l << " : " <<std::endl;
+                streamlog_out( DEBUG7 ) <<"     Energy: " << simHit->getEnergyCont(l) <<std::endl;
+                streamlog_out( DEBUG7 ) <<"     PDG:    " << simHit->getPDGCont(l) <<std::endl;
+                streamlog_out( DEBUG7 ) <<"     MCPart: " << simHit->getParticleCont(l) <<std::endl;
+              }
+            }
+            continue;
+	  }
           double e  = simHit->getEnergyCont( k ) ;
           streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
           if ( remap_as_you_go.find(mcp) != remap_as_you_go.end() ) {
@@ -804,9 +833,6 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
           }  // genstat if - then - else
           
           simHitMapEnergy[ mcp ] += e ;
-	} else {
-	    streamlog_out( DEBUG4 ) <<" Sim hit with no mcp "  <<std::endl;
-	}
         } // mc-contributon-to-simHit loop
       }
     }
@@ -882,7 +908,12 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
           
           MCParticle* mcp = simHit->getParticleCont( j ) ;
           double e  = simHit->getEnergyCont( j ) ;
-          streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
+          streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e << " mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
+          if ( mcp == 0 ) {
+            streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << std::endl;
+            streamlog_out( DEBUG7 ) <<"         true contributor = "<< mcp << " e: " << e <<" mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
+            continue ; 
+          }
           mcp=remap_as_you_go.find(mcp)->second;
           mcpEnergy[ mcp ] +=  e ;// count the hit-energy caused by this true particle
           eTot += e ;             // total energy
@@ -895,13 +926,13 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
                              << " nsimhit " << nsimhit <<std::endl;
       if ( nsimhit == 0 ) {
         
-        streamlog_out( DEBUG1 ) << " Warning: no simhits for calohit " << hit << 
+        streamlog_out( DEBUG7 ) << " Warning: no simhits for calohit " << hit << 
              ". Will have to guess true particle ... " << std::endl;
         no_sim_hit = 1;
         ecalohitsum_unknown+= hit->getEnergy();	    
-	streamlog_out( DEBUG2 )<< " sim-less calohit E and position " << hit->getEnergy() << " "
+	streamlog_out( DEBUG7 )<< " sim-less calohit E and position " << hit->getEnergy() << " "
              << hit->getPosition()[0] << " " <<  hit->getPosition()[1] << " " <<  hit->getPosition()[2] << " " << std::endl;	    
-	streamlog_out( DEBUG2 )<<  " sim-less calohit clust E and position " << clu->getEnergy() 
+	streamlog_out( DEBUG7 )<<  " sim-less calohit clust E and position " << clu->getEnergy() 
              << " "<< clu->getPosition()[0] << " " <<  clu->getPosition()[1] << " " <<  clu->getPosition()[2] << " " << std::endl;	    
       }
     } // hit loop
@@ -915,7 +946,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       // save reco particle in missingMC 
       missingMC.push_back( clu  ) ;
       
-      streamlog_out( MESSAGE ) << " no calorimeter hits found for " 
+      streamlog_out( DEBUG8 ) << " no calorimeter hits found for " 
       << " cluster particle: e:"  << clu->getEnergy()  
       //   << " charge: " << rec->getCharge() 
       //   << " px: " << rec->getMomentum()[0]
@@ -959,7 +990,13 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     
     for( MCPMapDouble::iterator it = mcpEnergy.begin() ;  // iterate trough the map.
         it != mcpEnergy.end() ; ++it ){
-     if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
+      if ( it->first == 0 ) {   // ( if == 0, this cluster contains some (but not all) sim-hits with unknown origin.
+                                //   If *all* sim-hits would have had unknown origin, we would already have "continue":ed above)
+	streamlog_out( MESSAGE ) << " SimHit with unknown origin in cluster " << clu << " ( " << clu->id() << " ) " << std::endl;
+	continue;
+      }  
+                                            
+      if (it->first->getGeneratorStatus() == 1 ) {  // genstat 1 particle, ie. it is a bona fide
                                                     // creating true particle: enter it into 
                                                     // the list, and note how much energy it 
                                                     // contributed.
@@ -1204,7 +1241,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     }
     if ( maxProd > 0. ) {
       
-      streamlog_out( MESSAGE ) << "  neutral cluster particle recovered"  
+      streamlog_out( DEBUG8 ) << "  neutral cluster particle recovered"  
       << clu->getEnergy()
       << " maxProd: " << maxProd 
       << " px: " << closestMCP->getMomentum()[0]
@@ -1970,7 +2007,7 @@ const LCObjectVec* RecoMCTruthLinker::getCaloHits( CalorimeterHit* calohit, cons
   }
   else {
     
-    streamlog_out( DEBUG2 ) << "getCaloHits :  CalorimeterHit : " << calohit << " has no sim hits related. CellID0 = " << 
+    streamlog_out( DEBUG7 ) << "getCaloHits :  CalorimeterHit : " << calohit << " has no sim hits related. CellID0 = " << 
        calohit->getCellID0() << " pos = " << calohit->getPosition()[0] << " " << calohit->getPosition()[1] << " " << 
        calohit->getPosition()[2] << std::endl ;
   }

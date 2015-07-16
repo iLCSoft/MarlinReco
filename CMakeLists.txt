@@ -43,6 +43,7 @@ INCLUDE( ilcsoft_default_settings )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil 1.4 REQUIRED )
+FIND_PACKAGE( MarlinKinfit 0.0 REQUIRED )
 FIND_PACKAGE( GSL REQUIRED )
 FIND_PACKAGE( ROOT 5.27 REQUIRED COMPONENTS MathMore TMVA)  
 
@@ -54,7 +55,7 @@ IF( MARLINRECO_AIDA )
     ENDIF()
 ENDIF()
 
-FOREACH( pkg Marlin MarlinUtil GSL AIDA ROOT )
+FOREACH( pkg Marlin MarlinUtil MarlinKinfit GSL AIDA ROOT )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${${pkg}_LIBRARIES} )

@@ -8,6 +8,12 @@ Note that the same photon will often be a constituent of more than one GammaGamm
 The "photon matching" problem of assigning individual photons uniquely to at most one GammaGammaParticle 
 or similar composite particle is to be treated in a separate processor after the creation of these GammaGammaCandidates.
 
+trunk v>=5052
+Include mass-constrained fit (and MarlinKinfit dependency). 
+Fit probability currently stored in GoodnessOfPID, and gamma-gamma 4-vector is now fitted.
+Implementation still needs work on handling covariance matrix from input - and covariance matrix on output.
+
+trunk v5021 
 Currently the algorithm does not do any mass-constrained fitting, but this is one of the main reasons for 
 this processor, and the eventual GammaGammaCandidate collections will be mass-constrained.
 

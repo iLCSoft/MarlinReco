@@ -60,8 +60,16 @@ class SimpleLHCalDigi : public Processor {
   
   float _thresholdLHCal;
   float _calibrCoeffLHCal;
+  bool _fixLCalHits; 
 
-
+  float xing_angle ;
+  float zMin       ;
+  float dZ         ;
+  float rMin       ;
+  float cellDimR   ;
+  float cellDimPhi ;
+  float WThickness ;
+ 
 } ;
 
 #endif

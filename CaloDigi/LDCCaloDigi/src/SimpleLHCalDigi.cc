@@ -75,7 +75,7 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
   registerProcessorParameter("FixLCalHits" ,
 			     "Fix the hit positions in LCal using the cellID (for DBD simulated samples)" , 
 			     _fixLCalHits , 
-			     bool(true)
+			     bool(false)
 			     );
 //   registerProcessorParameter("CaloType" ,
 // 			     "type of calorimeter: em, had, muon" , 

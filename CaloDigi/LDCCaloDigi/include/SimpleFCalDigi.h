@@ -1,5 +1,5 @@
-#ifndef DIGITIZERLHCAL_H
-#define DIGITIZERLHCAL_H 1
+#ifndef SimpleFCalDigi_H
+#define SimpleFCalDigi_H 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -10,20 +10,20 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === SimpleLHCalDigi Processor === <br>
+/** === SimpleFCalDigi Processor === <br>
  *  Simple calorimeter digitizer for the LCal Processor. <br>
  *  Converts SimCalorimeterHit collections to one 
  *  CalorimeterHit collection applying a threshold and an calibration constant...
  */
 
-class SimpleLHCalDigi : public Processor {
+class SimpleFCalDigi : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new SimpleLHCalDigi ; }
+  virtual Processor*  newProcessor() { return new SimpleFCalDigi ; }
   
   
-  SimpleLHCalDigi() ;
+  SimpleFCalDigi() ;
   
   virtual void init() ;
   
@@ -43,9 +43,9 @@ class SimpleLHCalDigi : public Processor {
   int _nRun ;
   int _nEvt ;
   
-  std::vector<std::string> _lhcalCollections;
+  std::vector<std::string> _fcalCollections;
 
-  std::string _outputLHCalCollection;
+  std::string _outputFcalCollection;
   std::string _outputRelCollection;
 
   std::string _cellIDLayerString ;
@@ -58,8 +58,8 @@ class SimpleLHCalDigi : public Processor {
   // jl: replace by string as soon as MarlinUtil is updated
   int _caloType;
   
-  float _thresholdLHCal;
-  float _calibrCoeffLHCal;
+  float _thresholdFcal;
+  float _calibrCoeffFcal;
   bool _fixLCalHits; 
 
   float xing_angle ;

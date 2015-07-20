@@ -1,4 +1,4 @@
-#include "SimpleLHCalDigi.h"
+#include "SimpleFCalDigi.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/SimCalorimeterHit.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -22,43 +22,43 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-SimpleLHCalDigi aSimpleLHCalDigi ;
+SimpleFCalDigi aSimpleFCalDigi ;
 
 
-SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
+SimpleFCalDigi::SimpleFCalDigi() : Processor("SimpleFCalDigi") {
 
-  _description = "Performs simple digitization of sim lhcal hits..." ;
+  _description = "Performs simple digitization of SimCalorimeter hits in forward calorimeters ..." ;
   
-  std::vector<std::string> lhcalCollections;
+  std::vector<std::string> fcalCollections;
 
-  lhcalCollections.push_back(std::string("LHcalCollection"));
+  fcalCollections.push_back(std::string("LcalCollection"));
   
   registerInputCollections( LCIO::SIMCALORIMETERHIT, 
-			    "LHCALCollections" , 
-			    "LHCal Collection Names" ,
-			    _lhcalCollections ,
-			    lhcalCollections);
+			    "FCALCollections" , 
+			    "Fcal Collection Names" ,
+			    _fcalCollections ,
+			    fcalCollections);
     
   registerOutputCollection( LCIO::CALORIMETERHIT, 
-			    "LHCALOutputCollection" , 
-			    "LHCal Collection of real Hits" , 
-			    _outputLHCalCollection , 
-			    std::string("LHCAL")) ; 
+			    "FCALOutputCollection" , 
+			    "Fcal Collection of real Hits" , 
+			    _outputFcalCollection , 
+			    std::string("FCAL")) ; 
   
   registerOutputCollection( LCIO::LCRELATION, 
 			    "RelationOutputCollection" , 
 			    "CaloHit Relation Collection" , 
 			    _outputRelCollection , 
-			    std::string("RelationLHCalHit")) ; 
+			    std::string("RelationFcalHit")) ; 
   
-  registerProcessorParameter("LHCalThreshold" , 
-			     "Threshold for LHCal Hits in GeV" ,
-			     _thresholdLHCal,
+  registerProcessorParameter("FcalThreshold" , 
+			     "Threshold for Fcal Hits in GeV" ,
+			     _thresholdFcal,
 			     (float)0.0);
 
-  registerProcessorParameter("CalibrLHCAL" , 
-			     "Calibration coefficients for LHCAL" ,
-			     _calibrCoeffLHCal,
+  registerProcessorParameter("CalibrFCAL" , 
+			     "Calibration coefficients for FCAL" ,
+			     _calibrCoeffFcal,
 			     (float)31.);
 
   registerProcessorParameter("CellIDLayerString" ,
@@ -84,9 +84,9 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
 // 			     );
 
   registerProcessorParameter("CaloID" ,
-			     "ID of calorimeter: lcal, lhcal, bcal", 
+			     "ID of calorimeter: lcal, fcal, bcal", 
 			     _caloID , 
-			     std::string("lhcal")
+			     std::string("fcal")
 			     );
 
   registerProcessorParameter("CaloLayout" ,
@@ -103,7 +103,7 @@ SimpleLHCalDigi::SimpleLHCalDigi() : Processor("SimpleLHCalDigi") {
 
 }
 
-void SimpleLHCalDigi::init() {
+void SimpleFCalDigi::init() {
 
   _nRun = -1;
   _nEvt = 0;
@@ -129,12 +129,12 @@ void SimpleLHCalDigi::init() {
 }
 
 
-void SimpleLHCalDigi::processRunHeader( LCRunHeader* run) { 
+void SimpleFCalDigi::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
   _nEvt = 0;
 } 
 
-void SimpleLHCalDigi::processEvent( LCEvent * evt ) { 
+void SimpleFCalDigi::processEvent( LCEvent * evt ) { 
     
 
   LCCollectionVec *lcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
@@ -147,12 +147,12 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
   lcalcol->setFlag(flag.getFlag());
 
   // 
-  // * Reading Collections of LHCAL Simulated Hits * 
+  // * Reading Collections of FCAL Simulated Hits * 
   // 
   string initString;
-  for (unsigned int i(0); i < _lhcalCollections.size(); ++i) {
+  for (unsigned int i(0); i < _fcalCollections.size(); ++i) {
     try{
-      LCCollection * col = evt->getCollection( _lhcalCollections[i].c_str() ) ;
+      LCCollection * col = evt->getCollection( _fcalCollections[i].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
@@ -160,12 +160,12 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
 	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 	float energy = hit->getEnergy();
 
-	if (energy > _thresholdLHCal) {
+	if (energy > _thresholdFcal) {
 	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
 	  int cellid = hit->getCellID0();
 	  int cellid1 = hit->getCellID1();
 	  float calibr_coeff(1.);
-	  calibr_coeff = _calibrCoeffLHCal;
+	  calibr_coeff = _calibrCoeffFcal;
 	  calhit->setCellID0(cellid);
 	  calhit->setCellID1(cellid1);
 	  calhit->setEnergy(calibr_coeff*energy);
@@ -227,7 +227,7 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
     }
   }
   lcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
-  evt->addCollection(lcalcol,_outputLHCalCollection.c_str());
+  evt->addCollection(lcalcol,_outputFcalCollection.c_str());
   evt->addCollection(relcol,_outputRelCollection.c_str());
 
 
@@ -236,6 +236,6 @@ void SimpleLHCalDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void SimpleLHCalDigi::check( LCEvent * evt ) { }
+void SimpleFCalDigi::check( LCEvent * evt ) { }
   
-void SimpleLHCalDigi::end(){ } 
+void SimpleFCalDigi::end(){ } 

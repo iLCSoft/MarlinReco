@@ -53,10 +53,7 @@ class SimpleFCalDigi : public Processor {
   std::string  _defaultEncoding;
   std::string  _caloLayout;
   std::string  _caloID;
-  //std::string  _caloType;
-  
-  // jl: replace by string as soon as MarlinUtil is updated
-  int _caloType;
+  std::string  _caloType;
   
   float _thresholdFcal;
   float _calibrCoeffFcal;

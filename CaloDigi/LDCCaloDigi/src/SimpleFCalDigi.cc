@@ -67,21 +67,17 @@ SimpleFCalDigi::SimpleFCalDigi() : Processor("SimpleFCalDigi") {
 			     std::string("K-1")
 			     );
 
-  registerProcessorParameter("CaloType" ,
-			     "type of calorimeter: em = 0, had = 1, muon = 2" , 
-			     _caloType , 
-			     int(0)
-			     );
   registerProcessorParameter("FixLCalHits" ,
 			     "Fix the hit positions in LCal using the cellID (for DBD simulated samples)" , 
 			     _fixLCalHits , 
 			     bool(false)
 			     );
-//   registerProcessorParameter("CaloType" ,
-// 			     "type of calorimeter: em, had, muon" , 
-// 			     _caloType , 
-// 			     std::string("had")
-// 			     );
+                                                          
+  registerProcessorParameter("CaloType" ,
+                             "type of calorimeter: em, had, muon" , 
+                             _caloType , 
+                             std::string("had")
+                             );
 
   registerProcessorParameter("CaloID" ,
 			     "ID of calorimeter: lcal, fcal, bcal", 
@@ -209,11 +205,7 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
           }
 	  calhit->setPosition(pos);
 
-	  //calhit->setType( CHT( CHT::had, _CHType, CHT::endcap ,  idDecoder(hit)[ _cellIDLayerString ] ) );
-	  // jl: change to following line as soon as MarlinUtil is updated
-          // calhit->setType( caloTypeFromString(_caloType), caloIDFromString(_caloID), layoutFromString(_caloLayout.c_str()),  idDecoder(hit)[ _cellIDLayerString ] ) );
-
-          calhit->setType( CHT( CHT::CaloType(_caloType), caloIDFromString(_caloID), layoutFromString(_caloLayout.c_str()),  idDecoder(hit)[ _cellIDLayerString ] ) );
+          calhit->setType( CHT ( caloTypeFromString(_caloType), caloIDFromString(_caloID), layoutFromString(_caloLayout.c_str()),  idDecoder(hit)[ _cellIDLayerString ] ) );
 
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);

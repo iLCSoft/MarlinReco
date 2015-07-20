@@ -4,6 +4,43 @@
 
 ===============================
 
+ --------
+| v01-13 |
+ --------
+
+  F.Gaede
+   - renamed SimpleLHCalDigi to SimpleFCalDigi
+   - deleted SimpleLCalDigi
+   => old steering files need to be updated !!
+
+  M. Berggren 
+   - added  parameter FixLCalHits SimpleLHCalDigi in order to:
+    - fix of the wrong xyz for hits in LCal. LCal CaloHits (collection LCAL) 
+      are now within a few micron of their correct position. LCal SimCaloHits 
+      (collection LumiCalCollection) still have the flawed xyz.
+
+  J.List
+  - updated SimpleLHCalDigi to include functionality fromm SimpleLCalDigi
+   -> can be used for all fwd calos
+
+  J.Tian
+   - added new package:
+     Analysis/OverlayRemoval
+
+  H.Sert
+  - new processor low momentum pi/mu separation:
+    Analysis/PIDTools/LowMomentumMuPiSeparationPID_BDTG
+
+  G.Wilson
+  - new photon finder package: 
+    Analysis/GammaGammaCandidateFinder
+    - provides a 4-vector w/  mass-constrained fit (using MarlinKinfit  - new dependency )
+
+  M Berggren
+  - fixed links in RecoMCTruthLink/src/RecoMCTruthLinker.cc
+  - full links in both directions (true->seen, seen->true) for PFOs, Tracks and Clusters.
+
+
 
  --------
 | v01-12 |

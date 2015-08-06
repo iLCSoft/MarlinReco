@@ -674,6 +674,11 @@ namespace marlinreco{
     if (_ifNotGravity == 1) findGravity() ;
     return &_analogGravity[0] ;
   }
+  float* ClusterShapes::getCentreOfGravityErrors() {
+    // this is a pure dummy to allow MarlinPandora development!
+    if (_ifNotGravity == 1) findGravity() ;
+    return &_analogGravity[0] ;
+  }
 
   //=============================================================================
 
@@ -681,10 +686,20 @@ namespace marlinreco{
     if (_ifNotInertia == 1) findInertia();
     return &_ValAnalogInertia[0] ;
   }
+  float* ClusterShapes::getEigenValInertiaErrors() {
+    // this is a pure dummy to allow MarlinPandora development!
+    if (_ifNotInertia == 1) findInertia();
+    return &_ValAnalogInertia[0] ;
+  }
 
   //=============================================================================
 
   float* ClusterShapes::getEigenVecInertia() {
+    if (_ifNotInertia == 1) findInertia();
+    return &_VecAnalogInertia[0] ;
+  }
+  float* ClusterShapes::getEigenVecInertiaErrors() {
+    // this is a pure dummy to allow MarlinPandora development!
     if (_ifNotInertia == 1) findInertia();
     return &_VecAnalogInertia[0] ;
   }

@@ -75,15 +75,21 @@ namespace marlinreco {
      * of gravity is calculated with the energy of the entries of the cluster.
      */
     float* getCentreOfGravity();
+    // this is (for now) a pure dummy to allow MarlinPandora development!
+    float* getCentreOfGravityErrors();
 
     /** US spelling of getCentreOfGravity */
     inline float* getCenterOfGravity() { return getCentreOfGravity() ; }
+    // this is (for now) a pure dummy to allow MarlinPandora development!
+    inline float* getCenterOfGravityErrors() { return getCentreOfGravityErrors() ; }
   
     /**
      * array of the inertias of mass (i.\ e.\ energy) corresponding to the three main axes 
      * of inertia. The array is sorted in ascending order.
      */
     float* getEigenValInertia();
+    // this is (for now) a pure dummy to allow MarlinPandora development!
+    float* getEigenValInertiaErrors();
 
     /**
      * array of the three main axes of inertia (9 entries) starting
@@ -92,6 +98,8 @@ namespace marlinreco {
      * of 1.
      */
     float* getEigenVecInertia();
+    // this is (for now) a pure dummy to allow MarlinPandora development!
+    float* getEigenVecInertiaErrors();
 
     /**
      * 'mean' width of the cluster perpendicular to the main 

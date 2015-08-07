@@ -5,6 +5,9 @@
 //#include "marlin/StringParameters.h"
 //#define SLM streamlog_out(MESSAGE)
 
+#include <marlin/Global.h>
+#include <gear/BField.h>
+
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/ReconstructedParticleImpl.h>
@@ -82,7 +85,11 @@ void TrackToRecoParticleConverter::processEvent( LCEvent * evt ) {
 		rp->setEnergy(e);
 
 		// FIXME verify charge calculation
-		double chrg = om<0 ? 1 : -1;
+		double bz = marlin::Global::GEAR->getBField().at(gear::Vector3D(0.,0.,0.)).z();
+		int signbz = (bz > 0 ? 1 : -1);
+		int signom = (om > 0 ? 1 : -1);
+
+		double chrg = signbz * signom;
 		rp->setCharge( chrg );
 
 		outCol->addElement( rp );

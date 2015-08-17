@@ -344,7 +344,7 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
   }
   Int_t nleptons = isoLeptons.size();
 
-  if (nleptons < 1) throw marlin::SkipEventException(this);
+  //  if (nleptons < 1) throw marlin::SkipEventException(this); // leave it to user for specific application
 
   LCCollectionVec *pPFOsWithoutIsoLepCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   LCCollectionVec *pIsoLepCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);

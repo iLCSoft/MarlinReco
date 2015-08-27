@@ -86,6 +86,11 @@ void LikelihoodPIDProcessor::init() {
   _particleNames.push_back("pionProbability");
   _particleNames.push_back("kaonProbability");
   _particleNames.push_back("protonProbability");
+  _particleNames.push_back("electron_dEdxdistance");
+  _particleNames.push_back("muon_dEdxdistance");
+  _particleNames.push_back("pion_dEdxdistance");
+  _particleNames.push_back("kaon_dEdxdistance");
+  _particleNames.push_back("proton_dEdxdistance");
  
   //for parameters of dEdxPID
   _dEdxNames.push_back("electronLikelihood");
@@ -270,7 +275,7 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
   //	    << likelihoodProb[0] << " " << likelihoodProb[1] << " " << likelihoodProb[2] << " " << likelihoodProb[3] << " " << likelihoodProb[4] << std::endl;
   
   //for dEdx PID
-  if(pidh.getAlgorithmName(algoID)=="dEdxPID"){
+  //if(pidh.getAlgorithmName(algoID)=="dEdxPID"){
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(0));  //electron hypothesis
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(1));  //muon hypothesis
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(2));  //pion hypothesis
@@ -279,7 +284,7 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
 
     //std::cout << "check dedx: " << parttype << " " << algoID << " "
     //	      << likelihoodProb[11] << " " << likelihoodProb[12] << " " << likelihoodProb[13] << " " << likelihoodProb[14] << " " << likelihoodProb[15] << std::endl;
-  }
+    //}
 
   //std::cout << "check posterior: " << posterior[0] << " " 
   //	    << posterior[1] << " "

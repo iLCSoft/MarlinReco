@@ -113,7 +113,6 @@ void LikelihoodPIDProcessor::init() {
   _myPID = new LikelihoodPID(_PDFName); 
 
   //mupi separation class
-  //_mupi = new Class(_weightFileName);
     _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);
 
   printParameters();
@@ -132,6 +131,8 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   int algoID2 = pidh.addAlgorithm("dEdxPID", _dEdxNames);
   int algoID3 = pidh.addAlgorithm("ShowerShapesPID", _particleNames);
   int algoID4 = pidh.addAlgorithm("LikelihoodPID", _particleNames);
+  int algoID5 = pidh.addAlgorithm("LowMomMuID", _particleNames);
+ 
   for (int i = 0; i < npfo; i++ ) {
     ReconstructedParticleImpl* part = dynamic_cast<ReconstructedParticleImpl*>( _pfoCol->getElementAt(i) );
     
@@ -145,8 +146,9 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
 		      part->getEnergy());
     
     Int_t parttype=-1;
-
-    //several partivle IDs performed
+    Float_t MVAoutput = 0.0;
+//////////////////////////////////////////////////////////////////////////////////
+    //several partivle IDs performed (Algorithm 1)
     //use just basic variables
     _myPID->setBasicFlg(true);
     _myPID->setdEdxFlg(false);
@@ -154,65 +156,56 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
-    Float_t MVAoutput = -1.0;
-    if((parttype==1 || parttype==2) && pp.P()<2.0){
-        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
-        MVAoutput = _mupiPID->getMVAOutput();   
-    }
-    
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID1, MVAoutput);
 
-    //use just dEdx variables
+//////////////////////////////////////////////////////////////////////////////////
+    //use just dEdx variables  (Algorithm 2)
     _myPID->setBasicFlg(false);
     _myPID->setdEdxFlg(true);
     _myPID->setShowerShapesFlg(false);
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-     //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
-    if((parttype==1 || parttype==2) && pp.P()<2.0){
-        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
-        MVAoutput = _mupiPID->getMVAOutput();   
-    }
-    
-
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID2, MVAoutput);
 
-    //use just Shower Profile variables
+//////////////////////////////////////////////////////////////////////////////////
+    //use just Shower Profile variables  (Algorithm 3)
     _myPID->setBasicFlg(false);
     _myPID->setdEdxFlg(false);
     _myPID->setShowerShapesFlg(true);
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-     //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
-    if((parttype==1 || parttype==2) && pp.P()<2.0){
-        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
-        MVAoutput = _mupiPID->getMVAOutput();   
-    }
-    
-
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID3, MVAoutput);
 
-    //calculate global likelihood
+//////////////////////////////////////////////////////////////////////////////////
+    //calculate global likelihood (Algorithm 4)
     _myPID->setBasicFlg(true);
     _myPID->setdEdxFlg(true);
     _myPID->setShowerShapesFlg(true);
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
-    if((parttype==1 || parttype==2) && pp.P()<2.0){
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
+
+//////////////////////////////////////////////////////////////////////////////////
+  //Low momentum Muon identification  (Algorithm 5)
+    // (from 0.2 GeV until 2 GeV)   
+    parttype = -1;   
+    if(pp.P()<2.0){
         parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
         MVAoutput = _mupiPID->getMVAOutput();   
     }
-    
     //create PIDHandler
-    createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
+    createParticleIDClass(parttype, part, pidh, algoID5, MVAoutput);
+
+//////////////////////////////////////////////////////////////////////////////////
+
+
 
     /*ParticleIDImpl *PIDImpl=new ParticleIDImpl();
     if(parttype==0){
@@ -260,6 +253,7 @@ void LikelihoodPIDProcessor::check( LCEvent * evt ) {
 
 void LikelihoodPIDProcessor::end() { 
   delete _myPID;
+  delete _mupiPID;
 }
 
 void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput){

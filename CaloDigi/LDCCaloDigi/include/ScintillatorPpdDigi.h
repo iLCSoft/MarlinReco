@@ -26,6 +26,9 @@ class ScintillatorPpdDigi {
   // electronics noise (in MIP units)
   void setElecNoise(float x)          {_elecNoise=x;}
 
+  // electronics dynamic range (in MIP units)
+  void setElecRange(float x)          {_elecMaxDynRange_MIP=x;}
+
   float getDigitisedEnergy( float energy );
 
   void printParameters();
@@ -38,6 +41,7 @@ class ScintillatorPpdDigi {
   float _misCalibNpix;
   float _pixSpread;
   float _elecNoise;
+  float _elecMaxDynRange_MIP;
 
 };
 

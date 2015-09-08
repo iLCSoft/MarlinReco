@@ -705,6 +705,7 @@ void ILDCaloDigi::init() {
   _scEcalDigi->setRandomMisCalibNPix(_ecal_misCalibNpix);
   _scEcalDigi->setPixSpread(_ecal_pixSpread);
   _scEcalDigi->setElecNoise(_ecal_elec_noise);
+  _scEcalDigi->setElecRange(_ecalMaxDynMip);
   cout << "ECAL sc digi:" << endl;
   _scEcalDigi->printParameters();
 
@@ -715,6 +716,7 @@ void ILDCaloDigi::init() {
   _scHcalDigi->setRandomMisCalibNPix(_hcal_misCalibNpix);
   _scHcalDigi->setPixSpread(_hcal_pixSpread);
   _scHcalDigi->setElecNoise(_hcal_elec_noise);
+  _scHcalDigi->setElecRange(_hcalMaxDynMip);
   cout << "HCAL sc digi:" << endl;
   _scHcalDigi->printParameters();
   
@@ -1567,9 +1569,10 @@ float ILDCaloDigi::ecalEnergyDigi(float energy, int id0, int id1) {
   else if ( _applyEcalDigi==2 ) e_out = scintillatorDigi(energy, true);  // scintillator digi
 
   // add electronics dynamic range
-  if (_ecalMaxDynMip>0) e_out = min (e_out, _ecalMaxDynMip*_calibEcalMip);
-  // random miscalib
+  // Sept 2015: Daniel moved this to the ScintillatorDigi part, so it is applied before unfolding of sipm response
+  // if (_ecalMaxDynMip>0) e_out = min (e_out, _ecalMaxDynMip*_calibEcalMip);
 
+  // random miscalib
   if (_misCalibEcal_uncorrel>0) {
     float miscal(0);
     if ( _misCalibEcal_uncorrel_keep ) {
@@ -1625,7 +1628,8 @@ float ILDCaloDigi::ahcalEnergyDigi(float energy, int id0, int id1) {
   if ( _applyHcalDigi==1 ) e_out = scintillatorDigi(energy, false);  // scintillator digi
 
   // add electronics dynamic range
-  if (_hcalMaxDynMip>0) e_out = min (e_out, _hcalMaxDynMip*_calibHcalMip);
+  // Sept 2015: Daniel moved this to the ScintillatorDigi part, so it is applied before unfolding of sipm response
+  //  if (_hcalMaxDynMip>0) e_out = min (e_out, _hcalMaxDynMip*_calibHcalMip);
 
   // random miscalib
   //  if (_misCalibHcal_uncorrel>0) e_out*=CLHEP::RandGauss::shoot( 1.0, _misCalibHcal_uncorrel );
@@ -1681,6 +1685,10 @@ float ILDCaloDigi::siliconDigi(float energy) {
 
   // fluctuate it by Poisson
   float smeared_energy = energy*CLHEP::RandPoisson::shoot( nehpairs )/nehpairs;
+
+  // limited electronics dynamic range // Daniel moved electronics dyn range to here
+  if (_ecalMaxDynMip>0)
+    smeared_energy = std::min ( smeared_energy, _ecalMaxDynMip*_calibEcalMip);
 
   // add electronics noise
   if ( _ecal_elec_noise > 0 )

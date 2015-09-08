@@ -30,6 +30,7 @@ void ScintillatorPpdDigi::printParameters() {
   cout << " npix         = " <<  _npix << endl;
   cout << " misCalibNpix = " <<  _misCalibNpix << endl;
   cout << " pixSpread    = " <<  _pixSpread << endl;
+  cout << " elecDynRange = " <<  _elecMaxDynRange_MIP << endl;
   cout << " elecNoise    = " <<  _elecNoise << endl;    
   cout << "--------------------------------" << endl;
   return;
@@ -87,6 +88,12 @@ float ScintillatorPpdDigi::getDigitisedEnergy(float energy) {
   if (_pixSpread>0) {
     // variations in pixel capacitance
     npe *= CLHEP::RandGauss::shoot(1, _pixSpread/sqrt(npe) );
+  }
+
+  if ( _elecMaxDynRange_MIP > 0 ) {
+    // limited dynamic range of readout electronics
+    // Daniel moved this here, before the unfolding of saturation (September 2015)
+    npe = std::min ( npe, _elecMaxDynRange_MIP*_pe_per_mip );
   }
 
   if (_elecNoise>0) {

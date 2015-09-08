@@ -45,6 +45,10 @@ For any comments or questions: hale.sert@desy.de
 #include "TFile.h"
 #include "TH1.h"
 
+#include "EVENT/ReconstructedParticle.h"
+#include "IMPL/ClusterImpl.h"
+#include <lcio.h>
+
 #include "LowMomentumMuPiSeparationPID_BDTG.hh"
 
 #include "TMVA/Tools.h"
@@ -129,116 +133,191 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
    
    // get variables used low momentum muon and pion separation --
    // cluster shape parameters
-   if(cluvec.size()!=0){      
-       shapes=cluvec[0]->getShape();  
-       EclOvPtr = cluvec[0]->getEnergy()/pp.P();	
-   }
-   if(shapes.size()!=0){
-       Dclus = shapes[17];
-       Rmean = shapes[18];
-       Rrms = shapes[19];
-       //cout << "Discriminative Variables: "<< "; Dclus: " << Dclus << ", Rmean: "<< Rmean << ", Rrms: " << Rrms << ", eclovPtr: " << EclOvPtr << endl;
-       
-       //std::cout << " Momentum of track: " << pp.P() << endl;
-       if(0.15< pp.P() && pp.P()<= 0.25){
-           mvaout = reader->EvaluateMVA("BDTG_02GeVP_clusterinfo");
-           if(mvaout > cut02) tmpid=1; 
-           else tmpid=2;
-       }
-       else if(0.25< pp.P() && pp.P()<=0.35){
-           mvaout = reader->EvaluateMVA("BDTG_03GeVP_clusterinfo");
-           if(mvaout > cut03) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.35< pp.P() && pp.P()<=0.45){
-           mvaout = reader->EvaluateMVA("BDTG_04GeVP_clusterinfo");
-           if(mvaout > cut04) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.45< pp.P() && pp.P()<=0.55){
-           mvaout = reader->EvaluateMVA("BDTG_05GeVP_clusterinfo");
-           if(mvaout > cut05) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.55< pp.P() && pp.P()<=0.65){
-           mvaout = reader->EvaluateMVA("BDTG_06GeVP_clusterinfo");
-           if(mvaout > cut06) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.65< pp.P() && pp.P()<=0.75){
-           mvaout = reader->EvaluateMVA("BDTG_07GeVP_clusterinfo");
-           if(mvaout > cut07) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.75< pp.P() && pp.P()<=0.85){
-           mvaout = reader->EvaluateMVA("BDTG_08GeVP_clusterinfo");
-           if(mvaout > cut08) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.85< pp.P() && pp.P()<=0.95){
-           mvaout = reader->EvaluateMVA("BDTG_09GeVP_clusterinfo");
-           if(mvaout > cut09) tmpid=1;
-           else tmpid=2;
-       }
-       else if(0.95< pp.P() && pp.P()<=1.05){
-           mvaout = reader->EvaluateMVA("BDTG_10GeVP_clusterinfo");
-           if(mvaout > cut10) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.05< pp.P() && pp.P()<=1.15){
-           mvaout = reader->EvaluateMVA("BDTG_11GeVP_clusterinfo");
-           if(mvaout > cut11) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.15< pp.P() && pp.P()<=1.25){
-           mvaout = reader->EvaluateMVA("BDTG_12GeVP_clusterinfo");
-           if(mvaout > cut12) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.25< pp.P() && pp.P()<=1.35){
-           mvaout = reader->EvaluateMVA("BDTG_13GeVP_clusterinfo");
-           if(mvaout > cut13) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.35< pp.P() && pp.P()<=1.45){
-           mvaout = reader->EvaluateMVA("BDTG_14GeVP_clusterinfo");
-           if(mvaout > cut14) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.45< pp.P() && pp.P()<=1.55){
-           mvaout = reader->EvaluateMVA("BDTG_15GeVP_clusterinfo");
-           if(mvaout > cut15) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.55< pp.P() && pp.P()<=1.65){
-           mvaout = reader->EvaluateMVA("BDTG_16GeVP_clusterinfo");
-           if(mvaout > cut16) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.65< pp.P() && pp.P()<=1.75){
-           mvaout = reader->EvaluateMVA("BDTG_17GeVP_clusterinfo");
-           if(mvaout > cut17) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.75< pp.P() && pp.P()<=1.85){
-           mvaout = reader->EvaluateMVA("BDTG_18GeVP_clusterinfo");
-           if(mvaout > cut18) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.85< pp.P() && pp.P()<=1.95){
-           mvaout = reader->EvaluateMVA("BDTG_19GeVP_clusterinfo");
-           if(mvaout > cut19) tmpid=1;
-           else tmpid=2;
-       }
-       else if(1.95< pp.P() && pp.P()<=2.05){
-           mvaout = reader->EvaluateMVA("BDTG_20GeVP_clusterinfo");
-           if(mvaout > cut20) tmpid=1;
-           else tmpid=2;
-       }
-       else mvaout = 0;
-   } // shape size
-   
-   return tmpid;
+    if(cluvec.size()!=0){      
+        shapes=cluvec[0]->getShape();  
+    }
+
+   float clene=0;
+   float clpox=0;
+   float clpoy=0;
+   float clpoz=0;
+   float chene[10000]={0};
+   float chpox[10000]={0};
+   float chpoy[10000]={0};
+   float chpoz[10000]={0};
+
+   int nhit=0;
+
+  float Rhits_clu = 0;
+  float Rhits2_clu = 0;
+  float rsum_2cluster =0;
+  float r2sum_2cluster =0;
+  float isum_2cluster =0;
+  int m_clu=0;
+  float cosalphacluster=0;
+  unsigned nch=0;
+ 
+  const EVENT::TrackStateVec & tss = trk->getTrackStates() ;
+  
+  const lcio::TrackState* ts ;
+  
+  ts = trk->getTrackState( lcio::TrackState::AtCalorimeter )  ;
+  
+  float tscpx = ts->getReferencePoint()[0] ;
+  float tscpy = ts->getReferencePoint()[1] ;
+  float tscpz = ts->getReferencePoint()[2] ;
+  
+  for(int iclu=0; iclu < cluvec.size(); iclu++){
+      
+      float Eclu=0;
+      if(cluvec[iclu]->getEnergy() > Eclu){
+          Eclu=cluvec[iclu]->getEnergy();
+          clene =  cluvec[iclu]->getEnergy();
+          clpox =  cluvec[iclu]->getPosition()[0];
+          clpoy =  cluvec[iclu]->getPosition()[1];
+          clpoz =  cluvec[iclu]->getPosition()[2];
+          
+          EVENT::CalorimeterHitVec tempvec= cluvec[iclu]->getCalorimeterHits();
+          
+          nch =tempvec.size();
+          for( unsigned jhit=0; jhit < nch ; ++jhit ) {
+              nhit = tempvec.size();
+              chene[jhit] =  tempvec[jhit]->getEnergy();
+              chpox[jhit] =  tempvec[jhit]->getPosition()[0];
+              chpoy[jhit] =  tempvec[jhit]->getPosition()[1];
+              chpoz[jhit] =  tempvec[jhit]->getPosition()[2];
+          }
+      }
+  }
+  for(int iclu=0; iclu < cluvec.size(); iclu++){
+      for( unsigned jhit=0; jhit < nch ; ++jhit ) {
+          
+          Rhits_clu=sqrt(pow(chpox[jhit]-clpox,2)+pow(chpoy[jhit]-clpoy,2));
+          Rhits2_clu=pow(chpox[jhit]-clpox,2)+pow(chpoy[jhit]-clpoy,2);
+          
+          rsum_2cluster +=Rhits_clu;
+          r2sum_2cluster += Rhits2_clu;
+          isum_2cluster = m_clu++;
+      }
+      
+      // if cluster cog is at endcap 
+      if(abs(clpoz) > 2450){              
+          cosalphacluster = (clpoz - tscpz)/(sqrt(pow(clpox -tscpx,2)+pow(clpoy - tscpy,2)+pow(clpoz- tscpz,2)));
+          Dclus = (clpoz - tscpz)/cosalphacluster;
+          EclOvPtr = clene/pp.P(); //truemom; 
+          Rmean = rsum_2cluster/isum_2cluster;
+          Rrms = sqrt(r2sum_2cluster/isum_2cluster);
+      }
+      else {
+          Dclus=0;
+          EclOvPtr=0;
+          Rmean=0;
+          Rrms=0;
+      } 
+  }
+  
+  if(shapes.size()!=0){
+      if(Dclus!=0 && EclOvPtr!=0 && Rmean !=0 &&  Rrms!=0){ 
+          if(0.15< pp.P() && pp.P()<= 0.25){
+              mvaout = reader->EvaluateMVA("BDTG_02GeVP_clusterinfo");
+              if(mvaout > cut02) tmpid=1; 
+              else tmpid=2;
+          }
+          else if(0.25< pp.P() && pp.P()<=0.35){
+              mvaout = reader->EvaluateMVA("BDTG_03GeVP_clusterinfo");
+              if(mvaout > cut03) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.35< pp.P() && pp.P()<=0.45){
+              mvaout = reader->EvaluateMVA("BDTG_04GeVP_clusterinfo");
+              if(mvaout > cut04) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.45< pp.P() && pp.P()<=0.55){
+              mvaout = reader->EvaluateMVA("BDTG_05GeVP_clusterinfo");
+              if(mvaout > cut05) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.55< pp.P() && pp.P()<=0.65){
+              mvaout = reader->EvaluateMVA("BDTG_06GeVP_clusterinfo");
+              if(mvaout > cut06) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.65< pp.P() && pp.P()<=0.75){
+              mvaout = reader->EvaluateMVA("BDTG_07GeVP_clusterinfo");
+              if(mvaout > cut07) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.75< pp.P() && pp.P()<=0.85){
+              mvaout = reader->EvaluateMVA("BDTG_08GeVP_clusterinfo");
+              if(mvaout > cut08) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.85< pp.P() && pp.P()<=0.95){
+              mvaout = reader->EvaluateMVA("BDTG_09GeVP_clusterinfo");
+              if(mvaout > cut09) tmpid=1;
+              else tmpid=2;
+          }
+          else if(0.95< pp.P() && pp.P()<=1.05){
+              mvaout = reader->EvaluateMVA("BDTG_10GeVP_clusterinfo");
+              if(mvaout > cut10) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.05< pp.P() && pp.P()<=1.15){
+              mvaout = reader->EvaluateMVA("BDTG_11GeVP_clusterinfo");
+              if(mvaout > cut11) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.15< pp.P() && pp.P()<=1.25){
+              mvaout = reader->EvaluateMVA("BDTG_12GeVP_clusterinfo");
+              if(mvaout > cut12) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.25< pp.P() && pp.P()<=1.35){
+              mvaout = reader->EvaluateMVA("BDTG_13GeVP_clusterinfo");
+              if(mvaout > cut13) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.35< pp.P() && pp.P()<=1.45){
+              mvaout = reader->EvaluateMVA("BDTG_14GeVP_clusterinfo");
+              if(mvaout > cut14) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.45< pp.P() && pp.P()<=1.55){
+              mvaout = reader->EvaluateMVA("BDTG_15GeVP_clusterinfo");
+              if(mvaout > cut15) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.55< pp.P() && pp.P()<=1.65){
+              mvaout = reader->EvaluateMVA("BDTG_16GeVP_clusterinfo");
+              if(mvaout > cut16) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.65< pp.P() && pp.P()<=1.75){
+              mvaout = reader->EvaluateMVA("BDTG_17GeVP_clusterinfo");
+              if(mvaout > cut17) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.75< pp.P() && pp.P()<=1.85){
+              mvaout = reader->EvaluateMVA("BDTG_18GeVP_clusterinfo");
+              if(mvaout > cut18) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.85< pp.P() && pp.P()<=1.95){
+              mvaout = reader->EvaluateMVA("BDTG_19GeVP_clusterinfo");
+              if(mvaout > cut19) tmpid=1;
+              else tmpid=2;
+          }
+          else if(1.95< pp.P() && pp.P()<=2.05){
+              mvaout = reader->EvaluateMVA("BDTG_20GeVP_clusterinfo");
+              if(mvaout > cut20) tmpid=1;
+              else tmpid=2;
+          }
+          else mvaout = 0;
+      }
+  } // shape size
+  
+return tmpid;
    
 }// end of loop
 

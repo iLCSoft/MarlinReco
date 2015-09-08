@@ -196,7 +196,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   //Low momentum Muon identification  (Algorithm 5)
     // (from 0.2 GeV until 2 GeV)   
     parttype = -1;   
-    if(pp.P()<2.0){
+    if(pp.P()<2.5){
         parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
         MVAoutput = _mupiPID->getMVAOutput();   
     }

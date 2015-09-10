@@ -4,7 +4,7 @@
 #include <marlin/Processor.h>
 #include "EVENT/LCCollection.h"
 
-#include "ClusterShapesMR.h"
+#include "ClusterShapes.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -20,7 +20,7 @@ public:
   virtual void end();
  
 private:
-  marlinreco::ClusterShapes *pClusterShapes;
+  ClusterShapes *pClusterShapes;
   std::string _PfoCollection;
   std::string _ClusterCollection;
   float _X01,_X02;

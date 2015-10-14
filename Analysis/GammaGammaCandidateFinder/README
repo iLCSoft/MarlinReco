@@ -6,7 +6,11 @@ Purpose: Assemble a collection of ReconstructedParticles consisting of pairs of 
 
 Note that the same photon will often be a constituent of more than one GammaGammaCandidate. 
 The "photon matching" problem of assigning individual photons uniquely to at most one GammaGammaParticle 
-or similar composite particle is to be treated in a separate processor after the creation of these GammaGammaCandidates.
+or similar composite particle is planned to be treated in a separate processor after the creation of 
+these GammaGammaCandidates.
+
+trunk v>=5186
+Gamma-gamma four-vector (px, py, pz, E) output covariance matrix now calculated and filled.
 
 trunk v>=5052
 Include mass-constrained fit (and MarlinKinfit dependency). 

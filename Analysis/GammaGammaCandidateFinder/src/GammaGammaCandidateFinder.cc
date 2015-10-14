@@ -21,6 +21,10 @@ typedef CLHEP::Hep3Vector Vector3D ;
 #include <marlin/Global.h>
 // the event display
 
+// ROOT stuff
+#include "TMath.h"
+#include "TMatrixD.h"
+
 #include <cstdlib>
 
 using namespace lcio;
@@ -260,58 +264,86 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
           double Energy;
           double Mom[3];
       // The 4-vector of the fitted gamma-gamma is the sum of the two fitted 4-vectors.
-          Energy = j1.getE()  + j2.getE();
-          Mom[0] = j1.getPx() + j2.getPx();
-          Mom[1] = j1.getPy() + j2.getPy();
-          Mom[2] = j1.getPz() + j2.getPz();
+
+      // Get the individual fitted photon 4-vectors - needed to calculate the four-momentum covariance matrix of the gamma-gamma system
+          double Mom1[3],Mom2[3];
+          double E1,E2;
+          double pT1,pT2;
+
+          E1 = j1.getE();
+          Mom1[0] = j1.getPx();
+          Mom1[1] = j1.getPy();
+          Mom1[2] = j1.getPz();
+          pT1 = sqrt(Mom1[0]*Mom1[0] + Mom1[1]*Mom1[1]);
+
+          E2 = j2.getE();
+          Mom2[0] = j2.getPx();
+          Mom2[1] = j2.getPy();
+          Mom2[2] = j2.getPz();
+          pT2 = sqrt(Mom2[0]*Mom2[0] + Mom2[1]*Mom2[1]);
+
+          Energy = E1 + E2;
+          Mom[0] = Mom1[0] + Mom2[0];
+          Mom[1] = Mom1[1] + Mom2[1];
+          Mom[2] = Mom1[2] + Mom2[2];
+
+      //  Follow for now implementation in FourMomentumCovMat based on TMatrixD
+
+          const int nrows      = 6; // n rows jacobian
+          const int ncolumns   = 4; // n columns jacobian
+
+      //  Transformation matrix D (6*4) between (E1, theta1, phi1, E2, theta2, phi2) and (px, py, pz, E)
+          double jacobian_by_columns[nrows*ncolumns] = {
+             Mom1[0]/E1, Mom1[0]*Mom1[2]/pT1, -Mom1[1], Mom2[0]/E2, Mom2[0]*Mom2[2]/pT2, -Mom2[1],
+             Mom1[1]/E1, Mom1[1]*Mom1[2]/pT1,  Mom1[0], Mom2[1]/E2, Mom2[1]*Mom2[2]/pT2,  Mom2[0],
+             Mom1[2]/E1,        -pT1        ,    0.0  , Mom2[2]/E2,        -pT2        ,     0.0 ,
+                1.0    ,         0.0        ,    0.0  ,    1.0    ,         0.0        ,     0.0   };
+
+      //  Now set up to calculate the new covariance matrix, namely  V' = D^T V D
+          TMatrixD Dmatrix(nrows,ncolumns, jacobian_by_columns, "F");
+          TMatrixD Vmatrix(nrows,nrows, cov, "F");                      // May need to have the filling array explicitly dimensioned ??
+          TMatrixD Covmatrix(ncolumns,ncolumns);                        // Hopefully this is good enough for initialization ?
+
+          Covmatrix.Mult( TMatrixD( Dmatrix, TMatrixD::kTransposeMult, Vmatrix) ,Dmatrix);   // Is this what we want ?
+
+          for(int ii=0;ii<4;ii++){
+              for(int jj=0;jj<4;jj++){
+                  if(_printing>3)std::cout << "4-vector cov. " << ii << " " << jj << " " << Covmatrix(ii,jj) << std::endl;
+              }                  
+          }
+
+          FloatVec covP(10, 0.0);
+          //  (px,py,pz,E)
+          covP[0] = Covmatrix(0,0); // px-px
+          covP[1] = Covmatrix(0,1); // px-py
+          covP[2] = Covmatrix(1,1); // py-py
+          covP[3] = Covmatrix(0,2); // px-pz
+          covP[4] = Covmatrix(1,2); // py-pz
+          covP[5] = Covmatrix(2,2); // pz-pz
+          covP[6] = Covmatrix(0,3); // px-E
+          covP[7] = Covmatrix(1,3); // py-E
+          covP[8] = Covmatrix(2,3); // pz-E
+          covP[9] = Covmatrix(3,3); // E-E
+
           recoPart->setEnergy( Energy );
           recoPart->setMomentum( Mom );
           recoPart->setMass( mass_constraint );
           recoPart->setCharge( 0.0 );
-      // Also need eventually to fill other data-members 
-      // Most important to store the fit probability and the 4-vector covariance matrix. 
-      // May need some math to convert the 6*6 covariance matrix into the 4*4 one.
+          recoPart->setCovMatrix( covP );
+
       // For now - store the fit probability in the goodnessofPiD variable
           float goodnessOfPID = float(fit_probability);
 //          if( mgg  < _ggResonanceMass)goodnessOfPID = - goodnessOfPID;
           recoPart->setGoodnessOfPID( goodnessOfPID );
 
-/*    // Make the reconstructed particle 
-      // Was initially set to the sum of the measured photon vectors.
-          double Energy;
-          double Mom[3];
-          ReconstructedParticleImpl * recoPart = new ReconstructedParticleImpl();
-          recoPart->addParticle(pGammai);
-          recoPart->addParticle(pGammaj);
-          double pxi = pGammai->getMomentum()[0];
-          double pyi = pGammai->getMomentum()[1];
-          double pzi = pGammai->getMomentum()[2];
-          double ei  = pGammai->getEnergy();
-          double pxj = pGammaj->getMomentum()[0];
-          double pyj = pGammaj->getMomentum()[1];
-          double pzj = pGammaj->getMomentum()[2];
-          double ej  = pGammaj->getEnergy();
-          Energy = ei+ej;
-          Mom[0] = pxi + pxj;
-          Mom[1] = pyi + pyj;
-          Mom[2] = pzi + pzj;
-      // set reconstructed particle parameters
-          float MassSquared = (Energy*Energy-Mom[0]*Mom[0]-Mom[1]*Mom[1]-Mom[2]*Mom[2]);
-          float Mass = 0.0;
-          if(MassSquared>0)Mass=sqrt(MassSquared);
-          recoPart->setMomentum( Mom );
-          recoPart->setEnergy( Energy );
-          recoPart->setMass( Mass );
-          recoPart->setCharge( 0. );
-*/
       // Default choice is Pi0
           recoPart->setType( 111 );
           if(_ggResonanceName=="Eta")recoPart->setType( 221 );
           if(_ggResonanceName=="EtaPrime")recoPart->setType( 331 );
 
-          if(_printing>1)std::cout << "Fitted " << _ggResonanceName << " gg candidate " 
+          if(_printing>1)std::cout << "Fitting " << _ggResonanceName << " gg candidate  M= " 
                                    << mgg << " " << i << " " << j << " " << pgi.e() << " " << pgj.e() << 
-                                   "Fitted: " << j1.getE() << " " << j2.getE() 
+                                   " Fitted energies: " << j1.getE() << " " << j2.getE() 
                                    << " Fit probability = " << fit_probability << std::endl; 
 
       // add it to the collection

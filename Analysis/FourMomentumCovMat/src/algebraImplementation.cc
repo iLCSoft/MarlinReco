@@ -140,10 +140,10 @@ int getCovMatrixMomenta(ReconstructedParticle const *par,  FloatVec &covP)
   covP.at(4) = static_cast<float>(covMatrixMomenta(2,1) ); // z-y
 
   covP.at(5) = static_cast<float>(covMatrixMomenta(2,2) ); // z-z
-  covP.at(6) = static_cast<float>(covMatrixMomenta(3,1) ); // e-x
-  covP.at(7) = static_cast<float>(covMatrixMomenta(3,2) ); // e-y
-  covP.at(8) = static_cast<float>(covMatrixMomenta(3,3) ); // e-z
-  covP.at(9) = static_cast<float>(covMatrixMomenta(3,0) ); // e-e
+  covP.at(6) = static_cast<float>(covMatrixMomenta(3,0) ); // e-x
+  covP.at(7) = static_cast<float>(covMatrixMomenta(3,1) ); // e-y
+  covP.at(8) = static_cast<float>(covMatrixMomenta(3,2) ); // e-z
+  covP.at(9) = static_cast<float>(covMatrixMomenta(3,3) ); // e-e
 
   return 0;
 }

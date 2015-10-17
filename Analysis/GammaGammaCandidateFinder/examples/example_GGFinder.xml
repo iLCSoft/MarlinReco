@@ -32,6 +32,9 @@
     <parameter name="GammaGammaResonanceMass" value="0.1349766" />
     <parameter name="MaxDeltaMgg" value="0.04" />
     <parameter name="GammaMomentumCut" value="0.5" />
+    <!-- 0 = OPALFitter, 1 = NewFitter, 2 = NewtonFitter (default: 0) -->
+    <parameter name="fitter" type="int"> 0 </parameter>
+    <parameter name="FitProbabilityCut" value="0.001" />
     <parameter name="Printing" value="2" />
     <parameter name="OutputParticleCollectionName" value="GammaGammaCandidatePi0s" />
  </processor>
@@ -42,6 +45,9 @@
     <parameter name="GammaGammaResonanceMass" value="0.547862" />
     <parameter name="MaxDeltaMgg" value="0.14" />
     <parameter name="GammaMomentumCut" value="1.0" />
+    <!-- 0 = OPALFitter, 1 = NewFitter, 2 = NewtonFitter (default: 0) -->
+    <parameter name="fitter" type="int"> 0 </parameter>
+    <parameter name="FitProbabilityCut" value="0.01" />
     <parameter name="Printing" value="2" />
     <parameter name="OutputParticleCollectionName" value="GammaGammaCandidateEtas" />
  </processor>
@@ -52,6 +58,9 @@
     <parameter name="GammaGammaResonanceMass" value="0.95778" />
     <parameter name="MaxDeltaMgg" value="0.19" />
     <parameter name="GammaMomentumCut" value="2.0" />
+    <!-- 0 = OPALFitter, 1 = NewFitter, 2 = NewtonFitter (default: 0) -->
+    <parameter name="fitter" type="int"> 0 </parameter>
+    <parameter name="FitProbabilityCut" value="0.05" />
     <parameter name="Printing" value="2" />
     <parameter name="OutputParticleCollectionName" value="GammaGammaCandidateEtaPrimes" />
  </processor>

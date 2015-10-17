@@ -53,6 +53,8 @@ private:
   float _gammaMomentumCut;
   float _ggResonanceMass;
   float _dmggcut;
+  double _fitProbabilityCut;
+  int _ifitter;
 
 protected:
 

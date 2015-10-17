@@ -73,6 +73,17 @@ GammaGammaCandidateFinder::GammaGammaCandidateFinder() : marlin::Processor("Gamm
 			      _dmggcut,
 			      (float)0.040);
 
+  registerProcessorParameter( "FitProbabilityCut" , 
+			      "Minimum fit probability"  ,
+			      _fitProbabilityCut,
+			      (double)0.001);
+
+  registerProcessorParameter( "fitter" ,
+                              "0 = OPALFitter, 1 = NewFitter, 2 = NewtonFitter",
+                              _ifitter,
+                              (int)0);
+
+
   return;
 
 }
@@ -165,7 +176,7 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
       bool photon = true;
 // Many neutral PFOs are not photons - so also explicitly reject if this is not identified as a photon
       if(_pfovec[i]->getType()!=22)photon=false;
-// Kinematic reduction of combinatorics with energy cut on accepted photons - but will also loose efficiency
+// Kinematic reduction of combinatorics with energy cut on accepted photons - but will also lose efficiency ...
       if(_pfovec[i]->getEnergy()<_gammaMomentumCut)photon=false;
       if(photon){
         if(_printing>1)std::cout << "FindGammaGammaCandidates : Photon " << _pfovec[i]->getType() << std::endl;        
@@ -215,8 +226,8 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
           mc.addToFOList(j1);
           mc.addToFOList(j2);
 
-// Choose fit engine method TODO Add these as options to the steering file.
-          int _ifitter = 0;
+// Choose fit engine method according to the steering file option
+
           BaseFitter *pfitter;
           if (_ifitter == 1) {
             pfitter = new NewFitterGSL();
@@ -287,43 +298,50 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
           Mom[1] = Mom1[1] + Mom2[1];
           Mom[2] = Mom1[2] + Mom2[2];
 
+          FloatVec covP(10, 0.0);
+      //  (px,py,pz,E)
+
       //  Follow for now implementation in FourMomentumCovMat based on TMatrixD
 
-          const int nrows      = 6; // n rows jacobian
-          const int ncolumns   = 4; // n columns jacobian
+          if(cov_dim == 6 ){
+      // Note some cases of cov_dim != 6 have been seen ...
+             const int nrows      = 6; // n rows jacobian
+             const int ncolumns   = 4; // n columns jacobian
 
       //  Transformation matrix D (6*4) between (E1, theta1, phi1, E2, theta2, phi2) and (px, py, pz, E)
-          double jacobian_by_columns[nrows*ncolumns] = {
-             Mom1[0]/E1, Mom1[0]*Mom1[2]/pT1, -Mom1[1], Mom2[0]/E2, Mom2[0]*Mom2[2]/pT2, -Mom2[1],
-             Mom1[1]/E1, Mom1[1]*Mom1[2]/pT1,  Mom1[0], Mom2[1]/E2, Mom2[1]*Mom2[2]/pT2,  Mom2[0],
-             Mom1[2]/E1,        -pT1        ,    0.0  , Mom2[2]/E2,        -pT2        ,     0.0 ,
-                1.0    ,         0.0        ,    0.0  ,    1.0    ,         0.0        ,     0.0   };
+             double jacobian_by_columns[nrows*ncolumns] = {
+                Mom1[0]/E1, Mom1[0]*Mom1[2]/pT1, -Mom1[1], Mom2[0]/E2, Mom2[0]*Mom2[2]/pT2, -Mom2[1],
+                Mom1[1]/E1, Mom1[1]*Mom1[2]/pT1,  Mom1[0], Mom2[1]/E2, Mom2[1]*Mom2[2]/pT2,  Mom2[0],
+                Mom1[2]/E1,        -pT1        ,    0.0  , Mom2[2]/E2,        -pT2        ,     0.0 ,
+                   1.0    ,         0.0        ,    0.0  ,    1.0    ,         0.0        ,     0.0   };
 
       //  Now set up to calculate the new covariance matrix, namely  V' = D^T V D
-          TMatrixD Dmatrix(nrows,ncolumns, jacobian_by_columns, "F");
-          TMatrixD Vmatrix(nrows,nrows, cov, "F");                      // May need to have the filling array explicitly dimensioned ??
-          TMatrixD Covmatrix(ncolumns,ncolumns);                        // Hopefully this is good enough for initialization ?
+             TMatrixD Dmatrix(nrows,ncolumns, jacobian_by_columns, "F");
+             TMatrixD Vmatrix(nrows,nrows, cov, "F");                      // May need to have the filling array explicitly dimensioned ??
+             TMatrixD Covmatrix(ncolumns,ncolumns);                        // Hopefully this is good enough for initialization ?
 
-          Covmatrix.Mult( TMatrixD( Dmatrix, TMatrixD::kTransposeMult, Vmatrix) ,Dmatrix);   // Is this what we want ?
+             Covmatrix.Mult( TMatrixD( Dmatrix, TMatrixD::kTransposeMult, Vmatrix) ,Dmatrix);   // Is this what we want ?
 
-          for(int ii=0;ii<4;ii++){
-              for(int jj=0;jj<4;jj++){
-                  if(_printing>3)std::cout << "4-vector cov. " << ii << " " << jj << " " << Covmatrix(ii,jj) << std::endl;
-              }                  
+             for(int ii=0;ii<4;ii++){
+                 for(int jj=0;jj<4;jj++){
+                    if(_printing>3)std::cout << "4-vector cov. " << ii << " " << jj << " " << Covmatrix(ii,jj) << std::endl;
+                 }                  
+             }
+
+             covP[0] = Covmatrix(0,0); // px-px
+             covP[1] = Covmatrix(0,1); // px-py
+             covP[2] = Covmatrix(1,1); // py-py
+             covP[3] = Covmatrix(0,2); // px-pz
+             covP[4] = Covmatrix(1,2); // py-pz
+             covP[5] = Covmatrix(2,2); // pz-pz
+             covP[6] = Covmatrix(0,3); // px-E
+             covP[7] = Covmatrix(1,3); // py-E
+             covP[8] = Covmatrix(2,3); // pz-E
+             covP[9] = Covmatrix(3,3); // E-E
           }
-
-          FloatVec covP(10, 0.0);
-          //  (px,py,pz,E)
-          covP[0] = Covmatrix(0,0); // px-px
-          covP[1] = Covmatrix(0,1); // px-py
-          covP[2] = Covmatrix(1,1); // py-py
-          covP[3] = Covmatrix(0,2); // px-pz
-          covP[4] = Covmatrix(1,2); // py-pz
-          covP[5] = Covmatrix(2,2); // pz-pz
-          covP[6] = Covmatrix(0,3); // px-E
-          covP[7] = Covmatrix(1,3); // py-E
-          covP[8] = Covmatrix(2,3); // pz-E
-          covP[9] = Covmatrix(3,3); // E-E
+          else{
+               if(_printing>1)std::cout << " Fit has no valid covariance information (cov_dim = " << cov_dim << " )" << std::endl;              
+          }
 
           recoPart->setEnergy( Energy );
           recoPart->setMomentum( Mom );
@@ -346,15 +364,15 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
                                    " Fitted energies: " << j1.getE() << " " << j2.getE() 
                                    << " Fit probability = " << fit_probability << std::endl; 
 
-      // add it to the collection
-          recparcol->addElement( recoPart );
+      // Add it to the collection if it exceeds the required miminum fit probability
+          if(fit_probability > _fitProbabilityCut){
+             if(_printing>1)std::cout << "GG candidate passes fit probability cut - KEEP" << std::endl;
+             recparcol->addElement( recoPart );
+          }
         }
       }
     }
   }
-// unclear whether this is ever needed/useful - likely does no harm
-  pgamma.clear();
-  pGammaPfoVec.clear();
 
   return;
 }

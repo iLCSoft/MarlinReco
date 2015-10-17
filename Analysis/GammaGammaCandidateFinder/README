@@ -9,6 +9,9 @@ The "photon matching" problem of assigning individual photons uniquely to at mos
 or similar composite particle is planned to be treated in a separate processor after the creation of 
 these GammaGammaCandidates.
 
+trunk v>=5196
+check fit covariance matrix dimensions (sometimes 0 ...)
+
 trunk v>=5186
 Gamma-gamma four-vector (px, py, pz, E) output covariance matrix now calculated and filled.
 

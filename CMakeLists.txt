@@ -119,6 +119,8 @@ ENDMACRO()
 
 ADD_MARLINRECO_PKG( ./Analysis/OverlayRemoval )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaCandidateFinder )
+ADD_MARLINRECO_PKG( ./Analysis/GammaGammaSolutionFinder )
+ADD_MARLINRECO_PKG( ./Analysis/DistilledPFOCreator )
 ADD_MARLINRECO_PKG( ./Analysis/IsolatedLeptonTagging )
 ADD_MARLINRECO_PKG( ./Analysis/IsolatedLeptonFinder )
 ADD_MARLINRECO_PKG( ./Analysis/PIDTools )

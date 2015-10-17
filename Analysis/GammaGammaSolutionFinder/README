@@ -1,0 +1,25 @@
+GammaGammaSolutionFinder Processor
+
+Purpose: Assemble a collection of ReconstructedParticles consisting of pairs of photons fitted to known 
+         particles which can decay to two photons, including 
+         pi0 -> gamma gamma, eta0 -> gamma gamma, etaprime(958)0 -> gamma gamma, and which represent 
+         a potential solution of the di-photon assignment problem in the event where no constituent photon is 
+         used more than once.
+
+Method:  Read in candidates from the following three collections: 
+         1. GammaGammaCandidatePi0s
+         2. GammaGammaCandidateEtas
+         3. GammaGammaCandidateEtaPrimes
+         and select a "solution" set of GammaGammaCandidates from the 3 collections that 
+         does not double count any constituent photon.
+         The output collection is a GammaGammaSolution collection of ReconstructedParticles.
+
+The GammaGammaSolution collection will then be used in a downstream processor to create an updated PFO collection containing 
+the ReconstructedParticles of the GammaGammaSolution collection and the original PandoraPFOs that 
+are NOT the photon constituent ReconstructedParticles of the GammaGammaSolution collection. 
+This updated PFO collection, provisionally named DistilledPFOs, can be used as a replacement 
+for PandoraPFOs in jet energy reconstruction.
+
+An example xml steering file is examples/example_GGSolutionFinder.xml
+
+Graham W. Wilson, 14th October 2015.

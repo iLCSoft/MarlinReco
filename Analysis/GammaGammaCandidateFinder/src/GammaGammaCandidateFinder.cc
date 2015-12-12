@@ -90,7 +90,8 @@ GammaGammaCandidateFinder::GammaGammaCandidateFinder() : marlin::Processor("Gamm
 
 //===================================================================================
 
-void GammaGammaCandidateFinder::init() { 
+void GammaGammaCandidateFinder::init() {
+  if(_printing>1)printParameters(); 
   return;
 }
 

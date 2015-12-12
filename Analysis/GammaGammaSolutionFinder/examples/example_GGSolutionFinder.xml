@@ -25,9 +25,8 @@
  </global>
 
  <processor name="MyGammaGammaSolutionFinder" type="GammaGammaSolutionFinder">
-    <parameter name="InputParticleCollectionName1" value="GammaGammaCandidatePi0s" />
-    <parameter name="InputParticleCollectionName2" value="GammaGammaCandidateEtas" />
-    <parameter name="InputParticleCollectionName3" value="GammaGammaCandidateEtaPrimes" />
+    <parameter name="GammaGammaCandidateCollections" 
+               type="StringVec">GammaGammaCandidatePi0s GammaGammaCandidateEtas GammaGammaCandidateEtaPrimes</parameter>
     <parameter name="Printing" value="2" />
     <parameter name="OutputParticleCollectionName" value="GammaGammaParticles" />
  </processor>

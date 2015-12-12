@@ -58,7 +58,8 @@ DistilledPFOCreator::DistilledPFOCreator() : marlin::Processor("DistilledPFOCrea
 
 //===================================================================================
 
-void DistilledPFOCreator::init() { 
+void DistilledPFOCreator::init() {
+  if(_printing>1)printParameters(); 
   return;
 }
 
@@ -157,6 +158,15 @@ void DistilledPFOCreator::CreateDistilledPFOs(LCCollectionVec * recparcol) {
   float esumgg = 0.0;                          // GammaGammaParticles
   float esump = 0.0;                           // PandoraPFOs
   float esumd;                                 // DistilledPFOs
+  float esumch = 0.0;
+  float esumph = 0.0;
+  int nphotons = 0;
+  int ncharged = 0;
+  int nothers = 0;
+  float esumothers = 0.0;
+  float chargesum = 0.0;
+  float esumNH = 0.0;
+  int nNH=0;
   int npi0=0; int neta=0; int netap=0;
   float epi0=0.0; float eeta=0.0; float eetap=0.0;
   float Vpi0=0.0; float Veta=0.0; float Vetap=0.0;
@@ -204,6 +214,25 @@ void DistilledPFOCreator::CreateDistilledPFOs(LCCollectionVec * recparcol) {
   esumd = esumgg;
   for(unsigned int i = 0; i < _pfovec.size(); i++){
       esump += _pfovec[i]->getEnergy();
+      if(abs(_pfovec[i]->getCharge())>0.5){
+         ncharged++;
+         chargesum+=_pfovec[i]->getCharge();
+         esumch+= _pfovec[i]->getEnergy();
+      }
+      else{
+         if(_pfovec[i]->getType()==2112){
+            nNH++;
+            esumNH += _pfovec[i]->getEnergy();
+         }
+         else if(_pfovec[i]->getType()==22){
+            nphotons++;
+            esumph += _pfovec[i]->getEnergy();
+         }
+         else{
+            nothers++;
+            esumothers += _pfovec[i]->getEnergy();
+         }
+      }
       if( particles_used.find(_pfovec[i]) == particles_used.end() ){   // Condition is true if the i'th PandoraPFO is not in the particles_used set 
   // So can add this PFO to the output
           recparcol->addElement(_pfovec[i]);
@@ -216,7 +245,11 @@ void DistilledPFOCreator::CreateDistilledPFOs(LCCollectionVec * recparcol) {
 
   if(_printing>3)std::cout << "CreateDistilledPFOs : (nPFOs finally = " << recparcol->getNumberOfElements() << " )" << std::endl;
 
-  if(_printing>3)std::cout << "CreateDistilledPFOs SUMMARY " << ntot << " " << nppfo << " "
+  if(_printing>3)std::cout << "CreateDistilledPFOs SUMMARY " << ntot << " " << nppfo << " " 
+                                                             << ncharged << " " << chargesum << " " << esumch << " "
+                                                             << nphotons << " " << esumph << " "
+                                                             << nNH << " " << esumNH << " "
+                                                             << nothers << " " << esumothers << " "
                                                              << esump << " " 
                                                              << esumd << " "
                                                              << esumgg << " " 

@@ -119,6 +119,7 @@ MACRO( ADD_MARLINRECO_PKG _input_dir )
     #INSTALL_DIRECTORY( ${_input_dir}/include/ DESTINATION include/marlinreco FILES_MATCHING PATTERN "*.h" )
 ENDMACRO()
 
+#ADD_MARLINRECO_PKG( ./Analysis/AddClusterProperties )
 ADD_MARLINRECO_PKG( ./Analysis/OverlayRemoval )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaCandidateFinder )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaSolutionFinder )

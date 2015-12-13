@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="us-ascii"?>
+
+<!--##########################################
+                                            
+         Example steering file for marlin running the AddClusterProperties
+         processor to add position and direction (w/ covariance) for clusters
+         and 4-momentum (w/ covariance) to neutral PFPs, and writing out a
+         DST with the added information. 
+                                            
+    ##########################################-->
+
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+ <execute>
+   <processor name="MyAIDAProcessor"/> 
+   <processor name="MyAddClusterProperties"/>
+   <processor name="DSTOutput"/>
+  </execute>
+
+ <global>
+  <parameter name="LCIOInputFiles"> 
+a_RECO_file.slcio
+   </parameter>
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="10000" />  
+  <parameter name="SkipNEvents" value="0" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="AllowToModifyEvent" value="true" />  
+  <parameter name="GearXMLFile"> gear.xml </parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG3  </parameter> 
+  <parameter name="RandomSeed" value="1234567890" />
+ </global>
+
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">aida_file </parameter>
+  <!-- type of output file root (default) or xml )-->
+  <parameter name="FileType" type="string">root </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+
+ <processor name="MyAddClusterProperties" type="AddClusterProperties">
+ <!--AddClusterProperties does whatever it does ...-->
+  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <parameter name="Verbosity" type="string">DEBUG4 </parameter>
+</processor>
+
+
+<processor name="DSTOutput" type="LCIOOutputProcessor">
+   <!--   
+     DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles 
+     TO DO:  add LCFI flavour tag stuff
+   -->
+   <parameter name="LCIOOutputFile" type="string" >
+  a_DST_file.slcio
+   </parameter>
+   <parameter name="DropCollectionTypes" type="StringVec"> 
+       MCParticle 
+       LCRelation 
+       SimTrackerHit 
+       SimCalorimeterHit
+       TrackerHit 
+       CalorimeterHit 
+       Track 
+       ReconstructedParticle
+       LCFloatVec      
+       LCGenericObject
+       TrackerHitPlane
+    </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed2"/>
+    <parameter name="KeepCollectionNames" type="StringVec"> 
+       MCParticlesSkimmed
+       RecoMCTruthLink
+       MarlinTrkTracksMCTruthLink
+       LDCTracks
+       LDCTracksMCP
+       MarlinTrkTracks
+       PandoraPFOs
+       BCALParticles
+       PandoraClusters
+       BCALClusters
+       Durham_2Jets
+       Durham_3Jets
+       Durham_4Jets
+       Durham_5Jets
+       Durham_6Jets 
+       BuildUpVertex
+       BuildUpVertex_RP
+       BuildUpVertex_V0
+       BuildUpVertex_V0_RP
+       PrimaryVertex
+       PrimaryVertex_RP
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+ </processor>
+ 

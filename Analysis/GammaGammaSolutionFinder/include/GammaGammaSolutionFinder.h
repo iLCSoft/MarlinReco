@@ -100,6 +100,7 @@ private:
   std::string _outputParticleCollectionName;
   double _maxCombinationsCut;
   int _nToRemove;                         // Number of edges less than maximal to consider
+  int _algorithm;                         // Solution Finding Algorithm (1=Greedy, 2=Exhaustive)
   static bool PfoProbabilitySortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs);
 
 protected:

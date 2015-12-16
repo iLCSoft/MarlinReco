@@ -14,7 +14,8 @@ Method:  Read in candidates potentially from the following three collections:
          does not double count any constituent photon.
          The output collection is a GammaGammaSolution collection of ReconstructedParticles.
 
-Solution Finder Algorithm:
+Solution Finding Algorithms:
+         Current Default = Algorithm 2, namely.
          Given n photons and m GammaGammaCandidates, 
          the current implementation essentially does an exhaustive search of all possible 
          matchings in the graph with n vertices (photons) and m edges (GammaGammaCandidates). 
@@ -24,7 +25,13 @@ Solution Finder Algorithm:
          Solutions are required to use each photon at most once.
          The algorithm is highly factorial and there is some CPU timing monitoring included. 
          In cases where the expected solution time based on an estimate of the number of combinations that will need 
-         to be explored (controlled by MaxCombinationsCut steering parameter) the solution is chosen as the "greedy solution".
+         to be explored is large (controlled by MaxCombinationsCut steering parameter) the solution is chosen as the "greedy solution".
+
+         Solution Finding Algorithm 1 (Greedy ie fast solution)
+         Form sorted list of candidates. Sort by pi0, eta, etaprime. Then within each type sort by fit probability. 
+         First candidate in sorted list is highest probability pi0, last candidate is lowest probability etaprime.
+         Then loop through candidates in sorted order and assign candidates to solution if both photons in the candidate have not yet 
+         been assigned to the solution.
 
 The GammaGammaSolution collection will then be used in a downstream processor to create an updated PFO collection containing 
 the ReconstructedParticles of the GammaGammaSolution collection and the original PandoraPFOs that 
@@ -35,4 +42,5 @@ for PandoraPFOs in jet energy reconstruction.
 An example xml steering file is examples/example_GGSolutionFinder.xml
 
 Graham W. Wilson, 14th October 2015.
-Updated 12th December 2015. 
+Updated 12th December 2015.
+Updated 16th December 2015. 

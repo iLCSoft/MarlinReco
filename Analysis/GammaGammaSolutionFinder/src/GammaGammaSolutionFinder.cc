@@ -59,6 +59,11 @@ GammaGammaSolutionFinder::GammaGammaSolutionFinder() : marlin::Processor("GammaG
                               _nToRemove,
                                (int)0) ;            // (set to huge number - like 999 if want to explore all)
 
+  registerProcessorParameter( "SolutionFindingAlgorithm" , 
+                              "Solution Finding Algorithm"  ,
+                              _algorithm,
+                               (int)2) ;            
+
   return;
 
 }
@@ -95,13 +100,22 @@ void GammaGammaSolutionFinder::processEvent( LCEvent * evt ) {
     unsigned long int nCr = this->CombinatorialFactor(nedges,nphotons/2);
     if(_printing>1)std::cout << "Naive combinatorial factor of " << std::setw(22) << nCr << std::endl;
 
-    if(double(nCr) < _maxCombinationsCut){
-       if(_printing>1)std::cout << " Pursuing full combinatoric exploration " << std::endl; 
-       this->FindGammaGammaSolutions(recparcol);
+    if(_algorithm == 1 ){
+// Greedy algorithm
+       this->FindGammaGammaSolutionZero(recparcol);        
+    }
+    else if(_algorithm == 2){
+       if(double(nCr) < _maxCombinationsCut){
+          if(_printing>1)std::cout << " Pursuing full combinatoric exploration " << std::endl; 
+          this->FindGammaGammaSolutions(recparcol);
+       }
+       else{
+          if(_printing>1)std::cout << " Too many combinations - assigning quick greedy solution " << std::endl;
+          this->FindGammaGammaSolutionZero(recparcol);
+       }
     }
     else{
-       if(_printing>1)std::cout << " Too many combinations - assigning quick greedy solution " << std::endl;
-       this->FindGammaGammaSolutionZero(recparcol);       
+       std::cout << "Unsupported solution finding algorithm " << _algorithm << std::endl;
     }
   }
 

@@ -219,9 +219,11 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
 // photon 4-vectors is not yet properly filled on input 
 // TODO: Also need to account for the different/better errors implicit in photon conversions ..
 
-          JetFitObject j1(pgi.e(), pgi.theta(), pgi.phi(), 0.16*std::sqrt(pgi.e()), 0.001, 0.001, 0.0);
+          JetFitObject j1(pgi.e(), pgi.theta(), pgi.phi(), 
+              0.16*std::sqrt(pgi.e()), 0.001/std::sqrt(pgi.e()), 0.001/std::sqrt(pgi.e()), 0.0);
 //          j1->setName("Photon1");
-          JetFitObject j2(pgj.e(), pgj.theta(), pgj.phi(), 0.16*std::sqrt(pgj.e()), 0.001, 0.001, 0.0);
+          JetFitObject j2(pgj.e(), pgj.theta(), pgj.phi(), 
+              0.16*std::sqrt(pgj.e()), 0.001/std::sqrt(pgj.e()), 0.001/std::sqrt(pgj.e()), 0.0);
 //          j2->setName("Photon2");
 
           mc.addToFOList(j1);

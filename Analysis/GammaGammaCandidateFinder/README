@@ -9,6 +9,9 @@ The "photon matching" problem of assigning individual photons uniquely to at mos
 or similar composite particle is planned to be treated in a separate processor after the creation of 
 these GammaGammaCandidates.
 
+trunk v>=5283
+set nominal angle error to 1 mrad/sqrt(E (GeV) (was 1 mrad).
+
 trunk v>=5196
 check fit covariance matrix dimensions (sometimes 0 ...)
 

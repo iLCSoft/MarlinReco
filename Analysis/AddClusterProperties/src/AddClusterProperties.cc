@@ -83,6 +83,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
     try{
         clucol = evt->getCollection( _clusterCollectionName  );
         StringVec shapeParams ;
+        shapeParams = clucol->getParameters().getStringVals ("ClusterShapeParameters", shapeParams);
         shapeParams.push_back("npoints") ;
         shapeParams.push_back("sum_wgt^2") ;
         shapeParams.push_back("sum_wgt^4") ;
@@ -176,13 +177,14 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         streamlog_out(DEBUG3) << "i DirectionError : "  << std::endl;  streamlog_out(DEBUG3) << "i " ;
         for ( int iii=0 ; iii < 3 ; iii++ ) { streamlog_out(DEBUG3) << DirectionError[iii] << " " ;}  ;streamlog_out(DEBUG3) << std::endl;
  
-        FloatVec shape ;
         StringVec shape_keys ;
         shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
+        FloatVec shape = clu->getShape() ; 
+	shape.resize(shape_keys.size());
         for ( unsigned kkk=0 ; kkk < shape_keys.size() ; kkk++ ) {
-	  if ( shape_keys[kkk] == "npoints" )   {  shape.push_back(1.0*hits.size()) ; }
-	  if ( shape_keys[kkk] == "sum_wgt^2" ) {  shape.push_back(sum_wgtsqr); }
-          if ( shape_keys[kkk] == "sum_wgt^4" ) {   shape.push_back(sum_wgt4); }
+	  if ( shape_keys[kkk] == "npoints" )   {  shape[kkk]=1.0*hits.size() ; }
+	  if ( shape_keys[kkk] == "sum_wgt^2" ) {  shape[kkk]=sum_wgtsqr; }
+          if ( shape_keys[kkk] == "sum_wgt^4" ) {   shape[kkk]=sum_wgt4; }
         }
  
 
@@ -363,7 +365,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
     }
     //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
 
-    streamlog_out(DEBUG4) << "   processing event: " << evt->getEventNumber() 
+    streamlog_out(DEBUG4) << "   processing event: " << _nEvt << " which is event " << evt->getEventNumber() 
         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
@@ -395,9 +397,9 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           vector<double> cog_fr_clu ;
           for (int iii=0; iii<3 ; iii++) { cog_fr_clu.push_back(cogv[iii]);}
           FloatVec PositionError = clu->getPositionError();
-          FloatVec wgts_sumv = clu->getShape() ;  
           StringVec shape_keys ;
           shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
+          FloatVec wgts_sumv = clu->getShape() ; 
           int npnt = 0 ;
           double wgt_sq_sum= 0.0;
           double wgt_4_sum= 0.0;

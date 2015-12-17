@@ -206,7 +206,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   int algoID2 = pidh.addAlgorithm("dEdxPID", _dEdxNames);
   int algoID3 = pidh.addAlgorithm("ShowerShapesPID", _particleNames);
   int algoID4 = pidh.addAlgorithm("LikelihoodPID", _particleNames);
-  int algoID5 = pidh.addAlgorithm("LowMomMuID", _particleNames);
+  //int algoID5 = pidh.addAlgorithm("LowMomMuID", _particleNames);
  
   for (int i = 0; i < npfo; i++ ) {
     ReconstructedParticleImpl* part = dynamic_cast<ReconstructedParticleImpl*>( _pfoCol->getElementAt(i) );
@@ -221,7 +221,6 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
 		      part->getEnergy());
     
     Int_t parttype=-1;
-    Float_t MVAoutput = 0.0;
 //////////////////////////////////////////////////////////////////////////////////
     //several partivle IDs performed (Algorithm 1)
     //use just basic variables
@@ -294,7 +293,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
         MVAoutput = _mupiPID->getMVAOutput();   
     }
     //create PIDHandler
-    createParticleIDClass(parttype, part, pidh, algoID5, MVAoutput);
+    createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
 
 //////////////////////////////////////////////////////////////////////////////////
 

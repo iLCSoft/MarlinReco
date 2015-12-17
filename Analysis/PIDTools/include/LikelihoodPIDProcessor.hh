@@ -37,11 +37,20 @@ private:
   std::vector<std::string> _particleNames;
   std::vector<std::string> _dEdxNames;
 
+  std::vector<float> _dEdxParamsElectron;
+  std::vector<float> _dEdxParamsMuon;
+  std::vector<float> _dEdxParamsPion;
+  std::vector<float> _dEdxParamsKaon;
+  std::vector<float> _dEdxParamsProton;
+
   LowMomentumMuPiSeparationPID_BDTG *_mupiPID;
 
   bool _basicFlg;
   bool _dEdxFlg;
   bool _showerShapesFlg;
+  int _UseBayes;
+  bool _UseMVA;
+  float _dEdxNormalization;
 };
 
 #endif 

@@ -61,13 +61,88 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   			      "weight file for low momentum mu pi separation",
   			      _weightFileName,
   			      xmlfiles );
+
+  std::vector< float > parselectron,parsmuon,parspion,parskaon,parsproton;
+  parselectron.push_back(-2.40638e-03);
+  parselectron.push_back(7.10337e-01);
+  parselectron.push_back(2.87718e-01);
+  parselectron.push_back(-1.71591e+00);
+  parselectron.push_back(0.0);
+  registerProcessorParameter( "dEdxParameter_electron" ,
+  			      "dEdx Parameters for electron",
+  			      _dEdxParamsElectron,
+  			      parselectron);
+
+  parsmuon.push_back(8.11408e-02);
+  parsmuon.push_back(9.92207e-01);
+  parsmuon.push_back(7.58509e+05);
+  parsmuon.push_back(-1.70167e-01);
+  parsmuon.push_back(4.63670e-04);
+  registerProcessorParameter( "dEdxParameter_muon" ,
+  			      "dEdx Parameters for muon",
+  			      _dEdxParamsMuon,
+  			      parsmuon);
+
+  parspion.push_back(8.10756e-02);
+  parspion.push_back(-1.45051e+06);
+  parspion.push_back(-3.09843e+04);
+  parspion.push_back(2.84056e-01);
+  parspion.push_back(3.38131e-04);
+  registerProcessorParameter( "dEdxParameter_pion" ,
+  			      "dEdx Parameters for pion",
+  			      _dEdxParamsPion,
+  			      parspion);
+
+  parskaon.push_back(7.96117e-02);
+  parskaon.push_back(4.13335e+03);
+  parskaon.push_back(1.13577e+06);
+  parskaon.push_back(1.80555e-01);
+  parskaon.push_back(-3.15083e-04);
+  registerProcessorParameter( "dEdxParameter_kaon" ,
+  			      "dEdx Parameters for Kaon",
+  			      _dEdxParamsKaon,
+  			      parskaon);
+
+  parsproton.push_back(7.78772e-02);
+  parsproton.push_back(4.49300e+04);
+  parsproton.push_back(9.13778e+04);
+  parsproton.push_back(1.50088e-01);
+  parsproton.push_back(-6.64184e-04);
+  registerProcessorParameter( "dEdxParameter_proton" ,
+  			      "dEdx Parameters for proton",
+  			      _dEdxParamsProton,
+  			      parsproton);
+
+  registerProcessorParameter( "dEdxNormalization" ,
+  			      "dEdx Normalization",
+  			      _dEdxNormalization,
+  			      float(1.350e-7));
+
+  registerProcessorParameter( "UseBayesian" ,
+  			      "PID is based on Bayesian or Likeihood",
+  			      _UseBayes,
+  			      int(0) );
+
+  registerProcessorParameter( "UseLowMomentumMuPiSeparation" ,
+  			      "MVA mu/pi separation should be used or not",
+  			      _UseMVA,
+  			      bool(false) );
+
 }  
   
-
-
 void LikelihoodPIDProcessor::init() { 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
   
+  //dEdx parameters
+  double pars[27];
+  for(int i=0;i<5;i++) pars[i]=_dEdxParamsElectron[i];
+  for(int i=0;i<5;i++) pars[i+5]=_dEdxParamsMuon[i];
+  for(int i=0;i<5;i++) pars[i+10]=_dEdxParamsPion[i];
+  for(int i=0;i<5;i++) pars[i+15]=_dEdxParamsKaon[i];
+  for(int i=0;i<5;i++) pars[i+20]=_dEdxParamsProton[i];
+  pars[25] =(double) _UseBayes;
+  pars[26] =(double) _dEdxNormalization;
+
   _pdgTable.push_back(11);
   _pdgTable.push_back(13);
   _pdgTable.push_back(211);
@@ -110,7 +185,7 @@ void LikelihoodPIDProcessor::init() {
   _dEdxNames.push_back("kaon_dEdxdistance");
   _dEdxNames.push_back("proton_dEdxdistance");
 
-  _myPID = new LikelihoodPID(_PDFName); 
+  _myPID = new LikelihoodPID(_PDFName, pars); 
 
   //mupi separation class
     _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);
@@ -156,6 +231,13 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
+    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
+    Float_t MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && (_UseMVA && pp.P()<2.0 && clu.size()!=0)){
+        parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+        MVAoutput = _mupiPID->getMVAOutput();   
+    }
+    
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID1, MVAoutput);
 
@@ -167,6 +249,14 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
+     //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && (_UseMVA && pp.P()<2.0 && clu.size()!=0)){
+      parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+      MVAoutput = _mupiPID->getMVAOutput();   
+    }
+    
+
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID2, MVAoutput);
 
@@ -177,6 +267,14 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     _myPID->setShowerShapesFlg(true);
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
+    
+    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && (_UseMVA && pp.P()<2.0 && clu.size()!=0)){
+      parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+      MVAoutput = _mupiPID->getMVAOutput();   
+    }
+    
 
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID3, MVAoutput);
@@ -189,14 +287,9 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     parttype = _myPID->Classification(pp, trk, clu);
     if(parttype<0) parttype=2;
 
-    //create PIDHandler
-    createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
-
-//////////////////////////////////////////////////////////////////////////////////
-  //Low momentum Muon identification  (Algorithm 5)
-    // (from 0.2 GeV until 2 GeV)   
-    parttype = -1;   
-    if(pp.P()<2.5){
+    //mu-pi Separation for very low momentum tracks (from 0.2 GeV until 2 GeV)
+    MVAoutput = -1.0;
+    if((parttype==1 || parttype==2) && (_UseMVA && pp.P()<2.0 && clu.size()!=0)){
         parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
         MVAoutput = _mupiPID->getMVAOutput();   
     }

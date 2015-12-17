@@ -206,7 +206,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   int algoID2 = pidh.addAlgorithm("dEdxPID", _dEdxNames);
   int algoID3 = pidh.addAlgorithm("ShowerShapesPID", _particleNames);
   int algoID4 = pidh.addAlgorithm("LikelihoodPID", _particleNames);
-  //int algoID5 = pidh.addAlgorithm("LowMomMuID", _particleNames);
+  int algoID5 = pidh.addAlgorithm("LowMomMuID", _particleNames);
  
   for (int i = 0; i < npfo; i++ ) {
     ReconstructedParticleImpl* part = dynamic_cast<ReconstructedParticleImpl*>( _pfoCol->getElementAt(i) );
@@ -297,6 +297,19 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
 
 //////////////////////////////////////////////////////////////////////////////////
 
+    //Low momentum Muon identification  (Algorithm 5)
+    // (from 0.2 GeV until 2.5 GeV)   
+    MVAoutput = -1.0;
+    parttype = -1;   
+    if(pp.P()<2.5){
+      parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+      MVAoutput = _mupiPID->getMVAOutput();   
+    }
+    //create PIDHandler
+    createParticleIDClass(parttype, part, pidh, algoID5, MVAoutput);
+ 
+ //////////////////////////////////////////////////////////////////////////////////
+ 
 
 
     /*ParticleIDImpl *PIDImpl=new ParticleIDImpl();

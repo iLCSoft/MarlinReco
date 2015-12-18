@@ -1,0 +1,81 @@
+<!--#############################################################-->
+<!--#                                                           #-->
+<!--#     Example steering file for marlin                      #-->
+<!--#     for selecting subsets of gammagamma candidates        #-->
+<!--#     corresponding to correct gamma gamma combination      #-->
+<!--#     using MC information.                                 #-->
+<!--#                                                           #--> 
+<!--#############################################################-->
+
+<marlin>
+ <execute>
+   <processor name="MyPi0CandidateTruthFilter"/>
+   <processor name="MyEtaCandidateTruthFilter"/>
+   <processor name="MyEtaPrimeCandidateTruthFilter"/>
+   <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+
+ <global>
+   <parameter name="LCIOInputFiles"> myfile_OUT.slcio </parameter> 
+   <parameter name="SkipNEvents" value="0" />
+   <parameter name="MaxRecordNumber" value="10" />
+   <parameter name="SupressCheck" value="false" />
+   <parameter name="GearXMLFile" value="ILD_o1_v05.gearxml" />
+   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG </parameter>
+ </global>
+
+ <processor name="MyPi0CandidateTruthFilter" type="GammaGammaCandidateTruthFilter">
+    <parameter name="GammaGammaCandidateCollection" value="GammaGammaCandidatePi0s" />
+    <parameter name="GammaGammaResonanceName" value="Pi0" />
+    <!--true - reco relation collection-->
+    <parameter name="MCTruth2RecoLinkCollectionName" type="string" lcioInType="Track"> MCTruthRecoLink </parameter>
+    <!--reco - true relation collection-->
+    <parameter name="Reco2MCTruthLinkCollectionName" type="string" lcioInType="Track"> RecoMCTruthLink </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticlesSkimmed </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> DEBUG </parameter>
+    <parameter name="Printing" value="2" />
+    <parameter name="OutputParticleCollectionName" value="TrueGammaGammaPi0s" />
+ </processor>
+
+ <processor name="MyEtaCandidateTruthFilter" type="GammaGammaCandidateTruthFilter">
+    <parameter name="GammaGammaCandidateCollection" value="GammaGammaCandidateEtas" />
+    <parameter name="GammaGammaResonanceName" value="Eta" />
+    <!--true - reco relation collection-->
+    <parameter name="MCTruth2RecoLinkCollectionName" type="string" lcioInType="Track"> MCTruthRecoLink </parameter>
+    <!--reco - true relation collection-->
+    <parameter name="Reco2MCTruthLinkCollectionName" type="string" lcioInType="Track"> RecoMCTruthLink </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticlesSkimmed </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> DEBUG </parameter>
+    <parameter name="Printing" value="2" />
+    <parameter name="OutputParticleCollectionName" value="TrueGammaGammaEtas" />
+ </processor>
+
+ <processor name="MyEtaPrimeCandidateTruthFilter" type="GammaGammaCandidateTruthFilter">
+    <parameter name="GammaGammaCandidateCollection" value="GammaGammaCandidateEtaPrimes" />
+    <parameter name="GammaGammaResonanceName" value="EtaPrime" />
+    <!--true - reco relation collection-->
+    <parameter name="MCTruth2RecoLinkCollectionName" type="string" lcioInType="Track"> MCTruthRecoLink </parameter>
+    <!--reco - true relation collection-->
+    <parameter name="Reco2MCTruthLinkCollectionName" type="string" lcioInType="Track"> RecoMCTruthLink </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticlesSkimmed </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> DEBUG </parameter>
+    <parameter name="Printing" value="2" />
+    <parameter name="OutputParticleCollectionName" value="TrueGammaGammaEtaPrimes" />
+ </processor>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+     <!--   standard output: full reconstruction keep all collections -->
+     <parameter name="LCIOOutputFile" type="string" >
+       ./myfile_OUT_AGAIN.slcio
+     </parameter>
+     <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+     <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+ </processor>
+
+</marlin>

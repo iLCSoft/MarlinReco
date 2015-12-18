@@ -47,8 +47,9 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
   for(int i=0;i<5;i++) par[4][i]=pars[i+20];
                                                 
   //choose method
-  usebayes=(int)pars[25];
-  dEdxnorm=(float)pars[26];
+  _usebayes=(int)pars[25];
+  _dEdxnorm=(float)pars[26];
+  _dEdxerrfact=pars[27];
 
   //set mass
   emass=0.000510998;
@@ -58,7 +59,7 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
   pmass=0.938272;
 
   //get pdf plots
-  string ffstr1 = fname;    //"pdf/pdf_ParticleID_ok.root";
+  string ffstr1 = fname;   //"pdf/pdf_ParticleID_ok.root";
   fpdf=new TFile(ffstr1.c_str());
 
   string hname,hname2;
@@ -279,9 +280,10 @@ double LikelihoodPID::get_dEdxChi2(int parttype, TVector3 p, float hit, double d
   double ExpdEdx=BetheBloch(p.Mag(),tmpmass,tmppar);
 
   //cout << "check " << emass << " " << tmpmass << " " << trkcos << " " << dEdx_Norm << " " << ExpdEdx << endl;
+  double dEdx_Error = _dEdxerrfact * dEdx_Norm * hit/dEdx;    //change 20151218
 
-  //get chi2!!(so far 5% error imposed. conservative)
-  double chi2=TMath::Power((dEdx_Norm-ExpdEdx)/(0.05*dEdx_Norm),2.0);
+  //get chi2!!
+  double chi2=TMath::Power((dEdx_Norm-ExpdEdx)/dEdx_Error,2.0);
   if(dEdx_Norm-ExpdEdx<0.0) chi2=-chi2;    //get signed chi2
   return chi2;
 }
@@ -316,9 +318,10 @@ double LikelihoodPID::get_dEdxFactor(int parttype, TVector3 p, float hit, double
   double dEdx_Norm=get_Norm(dEdx, hit, trkcos);
 
   //cout << "check " << emass << " " << tmpmass << " " << trkcos << " " << dEdx_Norm << " " << ExpdEdx << endl;
+  double dEdx_Error = _dEdxerrfact * dEdx_Norm * hit/dEdx;    //change 20151218
 
-  //get likelihood factor(so far 5% error imposed. conservative)
-  double factor=-0.5*TMath::Log(2.0*TMath::Pi()*(0.05*dEdx_Norm)*(0.05*dEdx_Norm));
+  //get likelihood factor
+  double factor=-0.5*TMath::Log(2.0*TMath::Pi()*dEdx_Error*dEdx_Error);
   return factor;
 }
 
@@ -339,7 +342,7 @@ double LikelihoodPID::get_Norm(double dedx, float hit, double trkcos){
   //double c=1.0/sqrt(1.0-trkcos*trkcos);
   double f2=1.0;   //1.0/(1.0-0.08887*TMath::Log(c));    //already corrected
   
-  return dedx*f1*f2/dEdxnorm;
+  return dedx*f1*f2/_dEdxnorm;
 }
 
 double LikelihoodPID::BetheBloch(double x, double mass, double *pars){
@@ -476,7 +479,7 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   //check the rule
   int okflg=-1;
   double tmppp=-1.0e+100;
-  if(usebayes==0){
+  if(_usebayes==0){
     //---------- here is likelihood based determination rule -----------
     for(int i=0;i<5;i++){
       tmppp=TMath::Max(_likelihood[i], tmppp);
@@ -648,7 +651,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   //check the rule
   int okflg=-1;
   double tmppp=-1.0e+100;
-  if(usebayes==0){
+  if(_usebayes==0){
     //---------- here is likelihood based determination rule -----------
     for(int i=0;i<5;i++){
       tmppp=TMath::Max(_likelihood[i], tmppp);
@@ -812,7 +815,7 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   //check the rule
   int okflg=-1;
   double tmppp=-1.0e+100;
-  if(usebayes==0){
+  if(_usebayes==0){
     //---------- here is likelihood based determination rule -----------
     for(int i=0;i<5;i++){
       tmppp=TMath::Max(_likelihood[i], tmppp);

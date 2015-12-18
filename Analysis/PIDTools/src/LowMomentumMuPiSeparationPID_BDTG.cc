@@ -200,8 +200,10 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
           isum_2cluster = m_clu++;
       }
       
-      // if cluster cog is at endcap 
-      if(abs(clpoz) > 2450){              
+      // if cluster cog is at endcap
+      _isValid=false;
+      if(abs(clpoz) > 2450){
+	_isValid=true;
           cosalphacluster = (clpoz - tscpz)/(sqrt(pow(clpox -tscpx,2)+pow(clpoy - tscpy,2)+pow(clpoz- tscpz,2)));
           Dclus = (clpoz - tscpz)/cosalphacluster;
           EclOvPtr = clene/pp.P(); //truemom; 
@@ -313,7 +315,7 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
               if(mvaout > cut20) tmpid=1;
               else tmpid=2;
           }
-          else mvaout = 0;
+          else mvaout = -100.0;
       }
   } // shape size
   
@@ -324,6 +326,10 @@ return tmpid;
 
 Float_t LowMomentumMuPiSeparationPID_BDTG::getMVAOutput(){
     return mvaout;
+}
+
+bool LowMomentumMuPiSeparationPID_BDTG::isValid(){
+    return _isValid;
 }
 
 LowMomentumMuPiSeparationPID_BDTG::~LowMomentumMuPiSeparationPID_BDTG(){

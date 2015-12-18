@@ -139,9 +139,9 @@ void TrueJet::processRunHeader( LCRunHeader* run) {
 void TrueJet::processEvent( LCEvent * event ) { 
 
     evt=event;
-    streamlog_out(DEBUG7) << " processing event: " << evt->getEventNumber() 
+    streamlog_out(WARNING) << " processing event: " << evt->getEventNumber() 
         << "   in run:  " << evt->getRunNumber() << std::endl ;
-    streamlog_out(DEBUG6) << " =====================================" << std::endl;
+    streamlog_out(MESSAGE4) << " =====================================" << std::endl;
 
 
     LCCollection* mcpcol = NULL;
@@ -332,7 +332,7 @@ void TrueJet::processEvent( LCEvent * event ) {
              // OK, add jet-to-true link
 
 	     streamlog_out(DEBUG1) << std::setw(10) << i << " ("  <<mcp_pyjets[i] << ")" << std::setw(10) <<  k[i][1]%30 << 
-                 std::setw(10) <<  k[i][2] << std::setw(10) <<  k[i][3] << 
+                 std::setw(10) <<  k[i][2] << std::setw(10) << k[i][3] << 
                  std::setw(10) <<  k[i][4] << std::setw(10) << k[i][5] << std::setw(10) << jet[i]  ;
 
 
@@ -405,7 +405,7 @@ void TrueJet::processEvent( LCEvent * event ) {
 
                 } // end if not yet used
                 else{
-		  streamlog_out(DEBUG6) << " seen more than once ! "<< std::endl;
+		  streamlog_out(DEBUG6) << " " << reco_part << " seen more than once ! ";
 		}
               } // end reco-of-this-true loop
 
@@ -680,7 +680,9 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       for (int kk=1 ; kk<=n_djb ; kk++ ) {
         double E=0, M=0 , mom[3]={0,0.0} ; 
-        int pdg[10]={0,0,0,0,0,0,0,0,0,0}; int boson=23 ;
+        int pdg[10]={0,0,0,0,0,0,0,0,0,0}; 
+        //JL assume Z as default, check for W, H later
+        int bosonid=23 ;
              // E and P is sum of (unique) direct decendants of the
              // initial ffbar. Normally, there is only one
              // (a 94), so the sum is actualy just copying the descendant. 
@@ -698,14 +700,23 @@ void TrueJet::processEvent( LCEvent * event ) {
           }
 	  //          pdg[jj]=k[fafp[jets_begin[jj][kk]]][2];
           pdg[jj]=k[elementon[jets_begin[jj][kk]]][2];
-          if ( pdg[0] == 0 ) {
-            pdg[0]=abs(k[fafp[jets_begin[jj][kk]]][2]);
-          }   else if ( boson==23 && abs(k[fafp[jets_begin[jj][kk]]][2]) != pdg[0] ) {
-            boson=24;
-          } 
-            
+          // JL: first check whether we have an explicit mother in the event listing, like for Higgs events
+          if ( k[fafp[jets_begin[jj][kk]]][3] > 0) {
+            bosonid = abs(k [k[fafp[jets_begin[jj][kk]]][3]] [2]);
+            streamlog_out(DEBUG3) << " elementon " << fafp[jets_begin[jj][kk]] << " has explicit mother with PDG = " << bosonid << std::endl;
+          }
+          else {
+            if ( pdg[0] == 0 ) {
+              //JL this is _not_ the mother boson pdg yet, but a temporary storage for the pdg of the (first) elementon of this boson
+              pdg[0]=abs(k[fafp[jets_begin[jj][kk]]][2]);
+              //JL if ID of one of the following elementons of this boson has a different pdg, assume we have a W
+            } 
+            else if ( bosonid==23 && abs(k[fafp[jets_begin[jj][kk]]][2]) != pdg[0] ) {
+              bosonid=24;
+            } 
+          }  
         }
-        pdg[0]=boson;
+        pdg[0]=bosonid;
         if ( last == first ) {
           E=  p[first][4];
           for ( int ll=1 ; ll<=3 ; ll++ ) {
@@ -934,6 +945,8 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
 
   int i=0;
   int nMCP = mcpcol->getNumberOfElements()  ;
+  //JL: added so that first_line is the same in all events!
+  first_line=1;
   
   for(int j=0; j< nMCP ; j++){
 
@@ -968,6 +981,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
     k[j][4] = 0;
     k[j][5] = 0;
   }
+  streamlog_out(DEBUG1) << " before Motherless check: first_line = " << first_line << std::endl ; 
   for(int j=0; j< nMCP ; j++){
 
     MCParticle* mcp = dynamic_cast<MCParticle*>( mcpcol->getElementAt( j ) ) ;
@@ -977,10 +991,12 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
       if (  mcp->getParents().size() != 0 ) {
         k[i][3]=mcp->getParents()[0]->ext<MCPpyjet>();
       } else {
-        if ( i > first_line+2 &&  ! mcp->isOverlay() &&  k[i][3] == 0 && abs(mcp->getPDG()) != 6 && abs(mcp->getPDG()) != 24 ) {
-          streamlog_out(WARNING) << " Motherless generator particle " << i << ". pdg: " << mcp->getPDG() << std::endl ; 
-          streamlog_out(WARNING) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-          k[i][3]=3;
+//JL  was i > first_line+2, but due to the > sign, this skips the 3 first particles, while we just want to omit the first 2 here!        
+        if ( i > first_line+1 &&  ! mcp->isOverlay() &&  k[i][3] == 0 && abs(mcp->getPDG()) != 6 && abs(mcp->getPDG()) != 24 ) {
+          streamlog_out(MESSAGE4) << " Motherless generator particle " << i << ". pdg: " << mcp->getPDG() << std::endl ; 
+          streamlog_out(MESSAGE4) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
+//JL          k[i][3]=3;
+          k[i][3]=-1;
         }
        
       }
@@ -1251,16 +1267,29 @@ void TrueJet::true_lepton()
 
    n_hard_lepton = 0;
    for ( int kk=1 ; kk<= nlund ; kk++ ) {
-     if ( ( abs(k[kk][2]) >= 11 && abs(k[kk][2]) <= 16  &&
-          ((k[kk][3] == 3) || (k[kk][3] == 1 && k[kk][4] ==k[kk][5] && abs(k[k[kk][5]][2])==11 )))) {
-       n_hard_lepton++;
-       ihard_lepton_1[n_hard_lepton]=kk;
-       ihard_lepton[n_hard_lepton]=0;
+     if ( ( abs(k[kk][2]) >= 11 && abs(k[kk][2]) <= 16 ) )  {
+       streamlog_out(DEBUG1) << " found lepton, kk = " << kk << ", k[kk][3] = " << k[kk][3] << ", k[3][3] = " << k[3][3] <<  std::endl ; 
+       if (
+//JL          ((k[kk][3] == 3) || (k[kk][3] == 1 && k[kk][4] ==k[kk][5] && abs(k[k[kk][5]][2])==11 ))) {
+// make sure that line 3 has a parent, thus it is not a parentless particle in Higgs sample
+//JL          ((k[kk][3] == 3 && k[3][3] > 0) || (k[kk][3] == 0 && kk > 2) || (k[kk][3] == 1 && k[kk][4] ==k[kk][5] && abs(k[k[kk][5]][2])==11 )))) {
+          ((k[kk][3] == 3 && k[3][3] > 0) || (k[kk][3] == -1) || (k[kk][3] == 1 && k[kk][4] ==k[kk][5] && abs(k[k[kk][5]][2])==11 ))) {
+         n_hard_lepton++;
+         ihard_lepton_1[n_hard_lepton]=kk;
+         ihard_lepton[n_hard_lepton]=0;
+       }
+       //JL also count leptons as hard if their mother or grandma is a Higgs boson
+       //JL necessary to protect into W bosons from semi-leptonic quark decays etc
+       else if (abs(k[k[kk][3]][2]) == 25 || ((abs(k[k[kk][3]][2]) == 24 || abs(k[k[kk][3]][2]) == 23) && abs(k[k[k[kk][3]][3]][2]) == 25)) {
+         n_hard_lepton++;
+         ihard_lepton_1[n_hard_lepton]=kk;
+         ihard_lepton[n_hard_lepton]=0;
+       }
      }
    }
    if ( n_hard_lepton == 0 ) return ;
 
-      //! Sort the leptons in "color singlets", ie. in groips of flavour/anti-flavour. In most events this is
+      //! Sort the leptons in "color singlets", ie. in groups of flavour/anti-flavour. In most events this is
       //! the order they come in, but in the case of all flavour being the same, it isn't
 
    nCMshowers=0 ;
@@ -1276,7 +1305,9 @@ void TrueJet::true_lepton()
      int line=k[CMshowers[kk]][3];
        // DO WHILE ( (.NOT. ANY (ihard_lepton_1(1:n_hard_lepton) == line )) .AND. line > 3 ) ; line=k(line,3) ; ENDDO
      gotit=0;
-     while ( line > 3 ) {
+//JL     while ( line > 3 ) {
+//JL  include line 3 if parent is -1 (means has been set above because mother is missing)
+     while ( line > 3 || k[line][3] == -1) {
        for ( int jj=1 ; jj <= n_hard_lepton ; jj++ ) {
          if (  ihard_lepton_1[jj] == line ) { 
            gotit=1 ; 
@@ -1288,7 +1319,9 @@ void TrueJet::true_lepton()
          line=k[line][3];
        }
      }   
-     if ( line <= 3 ) { continue ; }
+//JL      if ( line <= 3 ) { continue ; }
+//JL  exclude line 3 if parent is -1 (means has been set above because mother is missing)
+     if ( line <= 3 && k[line][3] != -1) { continue ; }
        // ll = transfer(maxloc( [(1,kk=1,n_hard_lepton)] ,(ihard_lepton_1(1:n_hard_lepton) == line)),ll) 
      int ll=0;
      for ( int jj=1 ; jj <= n_hard_lepton ; jj++ ) {
@@ -1301,7 +1334,9 @@ void TrueJet::true_lepton()
      ihard_lepton[n_94_related] =  ihard_lepton_1[ll]  ; ihard_lepton_1[ll]=0 ;
      line=k[CMshowers[kk]][6];
      gotit=0;
-     while ( line > 3 ) {
+//JL     while ( line > 3 ) {
+//JL  include line 3 if parent is -1 (means has been set above because mother is missing)
+     while ( line > 3 || k[line][3] == -1) {
        for ( int jj=1 ; jj <= n_hard_lepton ; jj++ ) {
          if (  ihard_lepton_1[jj] == line ) { 
            gotit=1 ; 
@@ -1313,7 +1348,9 @@ void TrueJet::true_lepton()
          line=k[line][3];
        }
      }   
-     if ( line <= 3 ) { std::cout << " oups ! " << std::endl; }
+//JL     if ( line <= 3 ) { std::cout << " oups ! " << std::endl; }
+//JL  exclude line 3 if parent is -1 (means has been set above because mother is missing)
+     if ( line <= 3 && k[line][3] != -1) {  std::cout << " oups ! " << std::endl; }
      for ( int jj=1 ; jj <= n_hard_lepton ; jj++ ) {
        if ( ihard_lepton_1[jj] == line ) {
          ll=jj;
@@ -1350,11 +1387,14 @@ void TrueJet::true_lepton()
    for ( int  kk=1; kk<=n_hard_lepton ; kk++ ) {
 
      lept = ihard_lepton[kk];
+     streamlog_out(DEBUG1) << " assigning leptons to jets: ihard_lepton[" << kk << "] = " << ihard_lepton[kk] << " and has PDG " << k[lept][2] << std::endl ; 
 
         // ! initially, set to -kk
 
      jet[lept]=-(i_jet+kk);
-     elementon[i_jet+kk]=k[lept][4];  // Behold the beuty of my new word !
+     //JL this is premature - set elementon below after checking for 94 daughters of leptons (tau's!)
+     //elementon[i_jet+kk]=k[lept][4];  // Behold the beauty of my new word !
+     streamlog_out(DEBUG1) << "not setting elementon[" << i_jet+kk << "] = " << k[lept][4] << ", lept =  " << lept << ", i_jet = " << i_jet << std::endl ; 
      fafp_last[i_jet+kk]=lept;  // so it goes when too specific variable names were choosen ...
 
         // ! loop until either stable or 94 descendent found
@@ -1387,9 +1427,12 @@ void TrueJet::true_lepton()
         // ! Here we know for sure that line lept in pyjets is a post-first-94-if-any lepton:
         // ! set jet to +ve.
      jet[lept]=i_jet+kk ;
+     //JL set elementon here after 94 check!
+     elementon[i_jet+kk]=lept;  // Behold the beauty of my new word !
+     streamlog_out(DEBUG0) << " setting elementon[" << i_jet+kk << "] = " << lept << std::endl ; 
    }
 
-     // ! set jet for all further descendants of hard leptons . Don't change allready set assignments,
+     // ! set jet for all further descendants of hard leptons . Don't change already set assignments,
      
    for ( int kk=1; kk<=nlund ; kk++ ) {
      if ( jet[kk] == 0 && abs(jet[k[kk][3]]) > i_jet && abs(jet[k[kk][3]]) <= i_jet+n_hard_lepton ) {
@@ -1452,7 +1495,7 @@ void TrueJet::isr()
    //                     .AND.(k(kk,4)==k(kk,5)) .AND. (k(k(kk,4),2) ==22) ), kk=1,nlund)  ] )
    nisr=0;
    for (int kk=1; kk<=nlund ; kk++ ) {
-     if ( (k[kk][3] == 1 || k[kk][3] == 3 ) &&  ( k[kk][2]==22 ) && (k[kk][4]==k[kk][5]) && (k[k[kk][4]][2] ==22) ) {
+     if ( (k[kk][3] == 1 || k[kk][3] == 3 || k[kk][3] == 0 ) &&  ( k[kk][2]==22 ) && (k[kk][4]==k[kk][5]) && (k[k[kk][4]][2] ==22) ) {
        nisr++;
        iisr[nisr] = kk ;
      }
@@ -1533,6 +1576,7 @@ void TrueJet::string()
 
    n_left=0; sstr=0;
    for ( int kk=1 ; kk<= nlund ; kk++ ) {
+     streamlog_out(DEBUG0) << " particle " << kk << " with PDG " << k[kk][2] << " is assigned to jet " << jet[kk] << std::endl;
      if (jet[kk]==0 && k[kk][2] != 91 &&  k[kk][2] != 21 && k[kk][1] < 30 ){
        n_left++;
        str_index[n_left]=kk;
@@ -1559,8 +1603,11 @@ void TrueJet::string()
   
    while( istr >= str_index[sstr]) {
   
+     streamlog_out(DEBUG0) << "calculating jet1/2 from i_jet = " << i_jet << ", str_nb = " << str_nb  << std::endl;
+     streamlog_out(DEBUG0) << "istr =  = " << istr << ", k[istr][3] = " << k[istr][3]  << ", lquark = " << lquark << std::endl;
      jet1= i_jet+2*(str_nb-1)+1 ; jet2=i_jet+2*(str_nb-1)+2 ; elementon[jet1]=k[istr][3] ; elementon[jet2]=lquark ;
 
+     streamlog_out(DEBUG0) << "calling assign_jet with jet1, jet2 = " << jet1 << ", " << jet2 << std::endl;
      assign_jet(jet1,jet2,istr) ;
 
 
@@ -1587,7 +1634,7 @@ void TrueJet::string()
          //!! of one string that eventually ends up in a later _string_ (not a cluster, that would have
          //!! been taken care of),
        streamlog_out(DEBUG3) << "  Non-contigous string ancestors (2) " << std:: endl;
-       while (  k[lquark][4] != istr ) {
+       while (  lquark>-1 && k[lquark][4] != istr ) {
          lquark=lquark-1;
        }
        if ( lquark == 0 ) { 
@@ -1608,7 +1655,10 @@ void TrueJet::assign_jet(int jet1,int jet2,int fafp)
 {
  double dir_diff[4];
  int first_p1, first_p2;
-
+  streamlog_out(DEBUG0) << "assign_jet: elementon[" << jet1 << "] = " << elementon[jet1] 
+                                  << ", elementon[" << jet2 << "] = " << elementon[jet2] << std::endl;
+  
+  
   first_parton( elementon[jet1], jet1 , first_p1, fafp_last[jet1], nfsr[jet1], boson[jet1], fafp_boson[jet1]);
   first_parton( elementon[jet2], jet2 , first_p2, fafp_last[jet2], nfsr[jet2], boson[jet2], fafp_boson[jet2]);
 
@@ -1670,6 +1720,10 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
    this_quark=this_partic;
    jet[this_quark]=-this_jet;
    quark_pdg=k[this_quark][2];
+   
+   streamlog_out(DEBUG0) << "first_parton: this_quark = " << this_quark 
+                         << ",  quark_pdg = " <<  quark_pdg << std::endl;
+                     
 
    last_94_parent =  0;
 
@@ -1679,8 +1733,16 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
 
       //! start at this_quark, which might on entry actually be something else (a gluon or a W)
 
-   while (  abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   &&  abs(k[k[this_quark][3]][2]) != 24  ) {
+//JL   while (  abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   &&  abs(k[k[this_quark][3]][2]) != 24  ) {
+// JL and what about Z?
+   while (  abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   
+        &&  abs(k[k[this_quark][3]][2]) != 23 &&  abs(k[k[this_quark][3]][2]) != 24    &&  abs(k[k[this_quark][3]][2]) != 25  ) {
  
+     streamlog_out(DEBUG0) << "start of while loop:  this_quark = " << this_quark 
+                           << ", its PDG = " << k[this_quark][2] 
+                           << ", its parent = " << k[this_quark][3] 
+                           << ", parent's PDG  = " << abs(k[k[this_quark][3]][2])  
+                           << ", quark_pdg  = " << quark_pdg << std::endl;
      this_quark_save =   this_quark ;
 
      //! step back in the history
@@ -1700,6 +1762,7 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
 	    //! well, actually it wasn't a quark, but a 94. Need to step
 	    //! back one step further and find the right parent to go on following
 
+//JL         if ( abs(k[k[this_quark][3]][2]) == 24 ||  abs(k[k[this_quark][3]][2]) == 21 ) {
          if ( abs(k[k[this_quark][3]][2]) == 24 ||  abs(k[k[this_quark][3]][2]) == 21 ) {
 
 	        //! first parent of the 94 was the boson => the quark is the second one:
@@ -1719,12 +1782,15 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
        }
      } 
      if (   k[this_quark][2] == 94 ) {
+       streamlog_out(DEBUG0) << "this_quark is a 94, its parent = " << k[this_quark][3] 
+                             << ", parent's PDG  = " << k[k[this_quark][3]][2]  
+                             << ", quark_pdg  = " << quark_pdg << std::endl;
 
 
 	 //! the current line is (still) a 94. Select which of the two parents of it
 	 //! is to be followed. It is the one with the right flavour. A special case
 	 //! is if the parents are tops: then we must either already be following a top -
-	 //! in whcih case there is no problem - or a b. In the latter case the right top
+	 //! in which case there is no problem - or a b. In the latter case the right top
 	 //! to follow is the one with the right sign,
         
        if (  k[k[this_quark][3]][2] == quark_pdg ||
@@ -1735,6 +1801,9 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
        } else {
          this_quark =  k[this_quark][6];
        }
+
+       streamlog_out(DEBUG0) << "this_quark was a 94, new this_quark = " << this_quark
+                             << ", its PDG  = " << k[this_quark][2] << std::endl;
 
             //! save this line - it might turnout to be the parent of the last 94 (looking 
             //! towards the beginning of the history)
@@ -1766,6 +1835,11 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
          nfsr=nfsr+1;
        }
      } 
+     streamlog_out(DEBUG0) << "  end of while loop: this_quark = " << this_quark 
+                           << ", its PDG = " << k[this_quark][2] 
+                           << ", its parent = " << k[this_quark][3] 
+                           << ", parent's PDG  = " << abs(k[k[this_quark][3]][2])  
+                           << ", quark_pdg  = " << quark_pdg << std::endl;
    }
 
      //! we are here because we've reached the end of the chain. If this happened
@@ -1777,6 +1851,7 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
        //! jet-number set to 0 => do not assign jet numbers anymore. The untimate first
        //! partic will go into boson_ancestor, parent of the last 94 into boson_last_94_parent.
 
+     streamlog_out(DEBUG0) << "in while loop calling first_parton with: k[this_quark][3] = " << k[this_quark][3] << std::endl;
      first_parton(k[this_quark][3],0 ,boson_ancestor, boson_last_94_parent, nfsr, istat,istat2);
 
        //! the way this bottoms-out: second to last argument (istat in the call) is set to 0 if

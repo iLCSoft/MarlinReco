@@ -34,7 +34,7 @@ TrueJet::TrueJet() : Processor("TrueJet") {
  
 
    // Inputs: MC-particles, Reco-particles, the link between the two
-
+   
  registerInputCollection( LCIO::MCPARTICLE,
                            "MCParticleCollection" , 
                            "Name of the MCParticle collection"  ,

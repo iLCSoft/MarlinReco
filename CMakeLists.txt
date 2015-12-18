@@ -120,6 +120,7 @@ MACRO( ADD_MARLINRECO_PKG _input_dir )
 ENDMACRO()
 
 #ADD_MARLINRECO_PKG( ./Analysis/AddClusterProperties )
+ADD_MARLINRECO_PKG( ./Analysis/GammaGammaCandidateTruthFilter )
 ADD_MARLINRECO_PKG( ./Analysis/OverlayRemoval )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaCandidateFinder )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaSolutionFinder )

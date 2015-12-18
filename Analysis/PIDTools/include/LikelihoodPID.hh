@@ -73,8 +73,8 @@ private:
   EVENT::FloatVec shapes;
 
   bool _basicFlg, _dEdxFlg, _showerShapesFlg;
-  int usebayes;
-  float dEdxnorm;
+  int _usebayes;
+  float _dEdxnorm, _dEdxerrfact;
 };
 
 #endif 

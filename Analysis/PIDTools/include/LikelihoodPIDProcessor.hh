@@ -45,12 +45,10 @@ private:
 
   LowMomentumMuPiSeparationPID_BDTG *_mupiPID;
 
-  bool _basicFlg;
-  bool _dEdxFlg;
-  bool _showerShapesFlg;
+  bool _basicFlg, _dEdxFlg, _showerShapesFlg;
   int _UseBayes;
   bool _UseMVA;
-  float _dEdxNormalization;
+  float _dEdxNormalization, _dEdxErrorFactor;
 };
 
 #endif 

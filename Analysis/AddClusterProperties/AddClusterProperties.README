@@ -1,5 +1,5 @@
  AddClusterProperties: A Marlin processor to add the information on cluster
-position and direction and theire errors to the Cluster:s, and to add
+position and direction and their errors to the Cluster:s, and to add
 the 4-momentum covariance matrix to neutral PFO:s 
 
 Author:
@@ -13,11 +13,11 @@ addition of AddClusterProperties to MarlinReco: make sure you have a version
 of MarlinUtil recent enough to contain that class! ), the position of the centre-of-gravity
 of the cluster is calculated as the mean of the hits of the cluster, weighted with the
 hit-energies. The covariance matrix of the C-of-G is also calculated from the weighted
-hits, and the direction of the cluster is calculated as the direction of the mayor
-axis (ie. the eigen-vector corresponding to the arges eigen valus) of the covariance matrix.
-(This is direction is the same as the mayor axis of inertia of the hits interpreted as
-a mass ditribution, or the direction of an axis that minimises the distance from the 
-axis to the points, in a Xi^2 sense.) Furthermore, the uncertainty of the mayor axis 
+hits, and the direction of the cluster is calculated as the direction of the major
+axis (ie. the eigen-vector corresponding to the largest eigen-value) of the covariance matrix.
+(This is direction is the same as the major axis of inertia of the hits interpreted as
+a mass distribution, or the direction of an axis that minimises the distance from the 
+axis to the points, in a Xi^2 sense.) Furthermore, the uncertainty of the major axis 
 direction is also calculated.
 
 These values are entered in to the Cluster object by the setters
@@ -31,11 +31,11 @@ these allows to use  WeightedPoints3D to extract other information (eigen-values
 other eigen-vectors, ... ) about the the cluster, without the need to have access 
 to the hits, ie. at DST level.
 
-It is also checked if clu->getEnergyError() returns 0.0. If so, a simple estimate of the
+It is also checks if clu->getEnergyError() returns 0.0. If so, a simple estimate of the
 energy error is done. It uses the total cluster energy and the sub-detector energies to
-guess which constants to use. clu->setEnergyError(Eerror) is the called.
+guess which constants to use. clu->setEnergyError(Eerror) is then called.
 
-Once all clusters in the event have been processesed, the 4-momentum with covariance matrix
+Once all clusters in the event have been processed, the 4-momentum with covariance matrix
 is added to the neutral PFOs in the event. This is done by using the energy of the cluster, and its error, 
 together with the  C-of-G of the cluster and its covariance matrix. One assumes that the cluster is 
 created by a neutral particle that comes from (0,0,0). The values are added to the PFO by

@@ -78,7 +78,16 @@ void AddClusterProperties::processRunHeader( LCRunHeader* run) {
 void AddClusterProperties::processEvent( LCEvent * evt ) { 
 
 
-
+    int npoints_index=0;
+    int sum_wgt2_index=0 ;
+    int sum_wgt4_index=0 ;
+    int ecal_index=0 ;
+    int hcal_index=0 ;
+    int yoke_index=0 ;
+    int lcal_index=0 ;
+    int lhcal_index=0 ;
+    int bcal_index=0 ;
+    StringVec shape_keys ;
     LCCollection* clucol = NULL;
     try{
         clucol = evt->getCollection( _clusterCollectionName  );
@@ -88,7 +97,22 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         shapeParams.push_back("sum_wgt^2") ;
         shapeParams.push_back("sum_wgt^4") ;
         clucol->parameters().setValues( "ClusterShapeParameters" , shapeParams ) ;
-        
+        shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
+        for ( unsigned kkk=0 ; kkk < shape_keys.size() ; kkk++ ) {
+	  if ( shape_keys[kkk] == "npoints" )   { npoints_index  = kkk ; }
+	  if ( shape_keys[kkk] == "sum_wgt^2" ) { sum_wgt2_index = kkk ; }
+          if ( shape_keys[kkk] == "sum_wgt^4" ) { sum_wgt4_index = kkk ; }
+        }
+        StringVec subDetectorNames;
+        subDetectorNames = clucol->getParameters().getStringVals ("ClusterSubdetectorNames", subDetectorNames);
+        for ( unsigned kkk=0 ; kkk <  subDetectorNames.size() ; kkk++ ) {
+	  if ( subDetectorNames[kkk] == "ecal"  )   { ecal_index  = kkk ;  }
+	  if ( subDetectorNames[kkk] == "hcal"  )   { hcal_index  = kkk ;  }
+	  if ( subDetectorNames[kkk] == "yoke"  )   { yoke_index  = kkk ;  }
+	  if ( subDetectorNames[kkk] == "lcal"  )   { lcal_index  = kkk ;  }
+	  if ( subDetectorNames[kkk] == "lhcal" )   { lhcal_index = kkk ;  }
+	  if ( subDetectorNames[kkk] == "bcal"  )   { bcal_index  = kkk ;  }
+        }
     }
     catch( lcio::DataNotAvailableException e )
     {
@@ -177,15 +201,11 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         streamlog_out(DEBUG3) << "i DirectionError : "  << std::endl;  streamlog_out(DEBUG3) << "i " ;
         for ( int iii=0 ; iii < 3 ; iii++ ) { streamlog_out(DEBUG3) << DirectionError[iii] << " " ;}  ;streamlog_out(DEBUG3) << std::endl;
  
-        StringVec shape_keys ;
-        shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
         FloatVec shape = clu->getShape() ; 
 	shape.resize(shape_keys.size());
-        for ( unsigned kkk=0 ; kkk < shape_keys.size() ; kkk++ ) {
-	  if ( shape_keys[kkk] == "npoints" )   {  shape[kkk]=1.0*hits.size() ; }
-	  if ( shape_keys[kkk] == "sum_wgt^2" ) {  shape[kkk]=sum_wgtsqr; }
-          if ( shape_keys[kkk] == "sum_wgt^4" ) {   shape[kkk]=sum_wgt4; }
-        }
+	shape[npoints_index]=1.0*hits.size() ; 
+	shape[sum_wgt2_index]=sum_wgtsqr; 
+        shape[sum_wgt4_index]=sum_wgt4; 
  
 
         float Eerror=clu->getEnergyError();
@@ -193,8 +213,8 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
             // not set, so as per HLRWS:
           float E=clu->getEnergy();
           const FloatVec pec  = clu->getSubdetectorEnergies();
-          float Eem = pec[0]+pec[3]+pec[5];
-          float Ehad = pec[1]+pec[2]+pec[4];
+          float Eem = pec[ecal_index]+pec[lcal_index]+pec[bcal_index];
+          float Ehad = pec[hcal_index]+pec[yoke_index]+pec[lhcal_index];
           float Eerror=0.0;
           if ( Eem/E < 0.95 ) {
             Eerror=sqrt((0.6*sqrt(E))*(0.6*sqrt(E)) + (0.03*E)*(0.03*E));
@@ -205,7 +225,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
 	  streamlog_out(DEBUG3) << " energies : " << E << " " << Eem << " " << Ehad << " " << Eerror << " " << Eerror/sqrt(E) << std::endl;
         }
 
-        for ( int kkk = 0 ; kkk < 2 ; kkk++ ) {if ( shape_keys[kkk] !=  shape_keys[kkk] ) { streamlog_out(WARNING) << " shape_keys " << kkk << " is NaN " << std::endl ; }}
+        for ( int kkk = npoints_index ; kkk <=sum_wgt4_index ; kkk++ ) {if (shape_keys[kkk] !=  shape_keys[kkk] ) { streamlog_out(WARNING) << " shape_keys " << kkk << " is NaN " << std::endl ; }}
         for ( int kkk = 0 ; kkk < 2 ; kkk++ ) {if ( Position[kkk] !=  Position[kkk] ) { streamlog_out(WARNING)<< " Position " << kkk << " is NaN " << std::endl ; }}
         for ( int kkk = 0 ; kkk < 6 ; kkk++ ) {if ( PositionError[kkk] !=  PositionError[kkk] ) { streamlog_out(WARNING) << " PositionError " << kkk << " is NaN " << std::endl ; }}
         for ( int kkk = 0 ; kkk < 3 ; kkk++ ) {if ( DirectionError[kkk] !=  DirectionError[kkk] ) { streamlog_out(WARNING) << " DirectionError " << kkk << " is NaN " << std::endl ; }}
@@ -270,7 +290,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
           streamlog_out(DEBUG3)  << "i pfo-mom: " ; for (int kkk=0 ; kkk<4 ; kkk++ ) { streamlog_out(DEBUG3)  << mom[kkk] << " " ;} streamlog_out(DEBUG3)  << std::endl;
           part->setMomentum(mom);
           FloatVec PositionError = clu->getPositionError();
-          double covmat[5][5];
+          double covmat[4][4];
           int nnn = 0;
           for ( int kkk=0 ; kkk < 3 ; kkk++ ) {
             for ( int lll=0 ; lll<=kkk ; lll++) {
@@ -279,64 +299,59 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
               nnn++ ;
             }
           }
-          for ( int kkk=0 ; kkk < 5 ; kkk++ ) {
-            covmat[kkk][3] =  0.0;
-            covmat[3][kkk] =  0.0;
-          }
-          covmat[3][3]=Eerror*Eerror;
-          // remains col 5 which is the error on dist and it's correlation with r_i :
-          for ( int kkk=0 ; kkk < 3 ; kkk++ ) {
-            covmat[kkk][4]=0. ;
-            for ( int iii = 0 ; iii < 3 ; iii++ ) {
-              covmat[kkk][4]+=cogv[iii]*covmat[kkk][iii]/dist;
-            } 
-	    covmat[4][kkk]=covmat[kkk][4];
-          }
-          covmat[3][4]=0. ; 
-          covmat[4][3]=0. ; 
-          covmat[4][4]=0.0 ;
-          for ( int jjj=0 ; jjj < 3 ; jjj++ ) {
-            for ( int iii = 0 ; iii < 3 ; iii++) {
-              covmat[4][4]+=cogv[iii]*cogv[jjj]*covmat[iii][jjj]/(dist*dist);
-            }
-          }
-	  streamlog_out(DEBUG2) << " covmat : " << std::endl;
-	  for ( int kkk=0 ; kkk <5 ; kkk++ ) {
-  	    for ( int iii=0 ; iii <5 ; iii++ ) {streamlog_out(DEBUG2)  << covmat[kkk][iii] << " " ;}
-            streamlog_out(DEBUG2) << std::endl; 
+          for ( int kkk=0 ; kkk < 4 ; kkk++ ) {
+            covmat[kkk][3] = 0. ;  
+            covmat[3][kkk] = 0. ;  
           }  
-          double dp_drEd[5][4] ;
+          covmat[3][3] = Eerror*Eerror;
+	  streamlog_out(DEBUG3)  << "i covmat : " << std::endl;
+	  for ( int kkk=0 ; kkk <4 ; kkk++ ) {
+  	    for ( int iii=0 ; iii <4 ; iii++ ) { streamlog_out(DEBUG3) << covmat[kkk][iii] << " " ;}
+            streamlog_out(DEBUG3) << std::endl; 
+          }  
+
+          double dp_drE[4][4] ;
+          double prefact= E/(dist*dist*dist);
           for ( int kkk=0 ; kkk < 4 ; kkk++ ) {
             if ( kkk < 3 ) {
               for ( int lll=0 ; lll< 3 ; lll++) {
-                dp_drEd[lll][kkk] = E/dist ;
+                if ( lll == kkk ) {
+                  dp_drE[lll][kkk] = prefact*(dist*dist+cogv[kkk]*cogv[kkk]);
+                } else {
+                  dp_drE[lll][kkk] = prefact*cogv[kkk]*cogv[lll];
+                }
               }
-              dp_drEd[3][kkk] = cogv[kkk]/dist ;
-              dp_drEd[4][kkk] = E*cogv[kkk]/(dist*dist) ;
             } else {
               for ( int lll=0 ; lll< 3 ; lll++) {
-                dp_drEd[lll][kkk] = 0 ;
+                dp_drE[lll][3] = 0 ;
               }
-	      dp_drEd[3][kkk] = 1.0 ;
-	      dp_drEd[4][kkk] = 0.0 ;
+              for ( int lll=0 ; lll< 3 ; lll++) {
+                dp_drE[3][lll] = prefact*cogv[lll]*dist*dist/E ;
+              }
+	      dp_drE[3][3] = prefact*dist*dist*dist/E;
             }
           }
-          // propagate
+	  streamlog_out(DEBUG3)  << "i dp_drE : " << std::endl;
+	  for ( int kkk=0 ; kkk <4 ; kkk++ ) {
+  	    for ( int iii=0 ; iii <4 ; iii++ ) { streamlog_out(DEBUG3) << dp_drE[kkk][iii] << " " ;}
+            streamlog_out(DEBUG3) << std::endl; 
+          }
+           // propagate
           double p_cov[4][4];
-          double tmp_mat [5][4];
-          for ( int iii =0 ; iii < 5 ; iii++ ) {
+          double tmp_mat [4][4];
+          for ( int iii =0 ; iii < 4 ; iii++ ) {
             for ( int jjj=0 ; jjj < 4 ; jjj++ ) {
               tmp_mat [iii][jjj] = 0. ;
-              for (int kkk=0 ; kkk < 5 ; kkk++ ) {
-                tmp_mat [iii][jjj] += covmat[iii][kkk]* dp_drEd[kkk][jjj];
+              for (int kkk=0 ; kkk < 4 ; kkk++ ) {
+                tmp_mat [iii][jjj] += covmat[iii][kkk]* dp_drE[kkk][jjj];
               }
             }
           }
           for ( int iii =0 ; iii < 4 ; iii++ ) {
             for ( int jjj=0 ; jjj < 4 ; jjj++ ) {
               p_cov[iii][jjj] = 0. ;
-              for (int kkk=0 ; kkk < 5 ; kkk++ ) {
-	        p_cov[iii][jjj] += dp_drEd[kkk][iii]*tmp_mat[kkk][jjj] ;
+              for (int kkk=0 ; kkk < 4 ; kkk++ ) {
+	        p_cov[iii][jjj] += dp_drE[kkk][iii]*tmp_mat[kkk][jjj] ;
               }
             }
           }
@@ -354,6 +369,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
               nnn++ ;
 	    }
           }
+
           part->setCovMatrix(p_cov_v);
 
         } else {
@@ -378,8 +394,8 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           streamlog_out(DEBUG2) << " input: covariance mat         " << cov[0*3+0] << " "  << cov[0*3+1] << " " << cov[0*3+2] <<   std::endl;  
           streamlog_out(DEBUG2) << " input: covariance mat         " << cov[1*3+0] << " "  << cov[1*3+1] << " " << cov[1*3+2] <<   std::endl;  
           streamlog_out(DEBUG2) << " input: covariance mat         " << cov[2*3+0] << " "  << cov[2*3+1] << " " << cov[2*3+2] <<   std::endl;  
-          streamlog_out(DEBUG2) << " input: eigenvals              " << eval[0] << " "  << eval[1] << " "  << eval[1] << std::endl; 
-          streamlog_out(DEBUG2) << " input: V(eigenvals)           " << eval_err[0] << " "  << eval_err[1] << " "  << eval_err[1] << std::endl; 
+          streamlog_out(DEBUG2) << " input: eigenvals              " << eval[0] << " "  << eval[1] << " "  << eval[2] << std::endl; 
+          streamlog_out(DEBUG2) << " input: V(eigenvals)           " << eval_err[0] << " "  << eval_err[1] << " "  << eval_err[2] << std::endl; 
           streamlog_out(DEBUG2) << " input: eigen vec 1 (p)        " << evp[0*3+0] << " "  << evp[1*3+0] <<  std::endl; 
           streamlog_out(DEBUG2) << " input: eigen vec 2 (p)        " << evp[0*3+1] << " "  << evp[1*3+1] <<  std::endl; 
           streamlog_out(DEBUG2) << " input: eigen vec 3 (p)        " << evp[0*3+2] << " "  << evp[1*3+2] <<  std::endl; 
@@ -455,8 +471,8 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           streamlog_out(DEBUG2) << " read back: covariance mat         " << cov_readback[0][0] << " "  << cov_readback[0][1] << " " << cov_readback[0][2] <<   std::endl;  
           streamlog_out(DEBUG2) << " read back: covariance mat         " << cov_readback[1][0] << " "  << cov_readback[1][1] << " " << cov_readback[1][2] <<   std::endl;  
           streamlog_out(DEBUG2) << " read back: covariance mat         " << cov_readback[2][0] << " "  << cov_readback[2][1] << " " << cov_readback[2][2] <<   std::endl;  
-          streamlog_out(DEBUG2) << " read back: eigenvals              " << eval_readback[0] << " "  << eval_readback[1] << " "  << eval_readback[1] << std::endl; 
-          streamlog_out(DEBUG2) << " read back: V(eigenvals)           " << eval_err_readback[0] << " "  << eval_err_readback[1] << " "  << eval_err_readback[1] << std::endl; 
+          streamlog_out(DEBUG2) << " read back: eigenvals              " << eval_readback[0] << " "  << eval_readback[1] << " "  << eval_readback[2] << std::endl; 
+          streamlog_out(DEBUG2) << " read back: V(eigenvals)           " << eval_err_readback[0] << " "  << eval_err_readback[1] << " "  << eval_err_readback[2] << std::endl; 
           streamlog_out(DEBUG2) << " read back: eigen vec 1 (p)        " << evp_readback[0][0] << " "  << evp_readback[1][0] <<  std::endl; 
           streamlog_out(DEBUG2) << " read back: eigen vec 2 (p)        " << evp_readback[0][1] << " "  << evp_readback[1][1] <<  std::endl; 
           streamlog_out(DEBUG2) << " read back: eigen vec 3 (p)        " << evp_readback[0][2] << " "  << evp_readback[1][2] <<  std::endl; 

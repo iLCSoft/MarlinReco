@@ -321,7 +321,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   
   streamlog_out( MESSAGE0 ) << " processEvent "  <<  evt->getEventNumber() << "  - " << evt->getRunNumber() 
   << std::endl ; 
-  
+
   LCCollection* mcpCol = evt->getCollection( _mcParticleCollectionName ) ;
   
   
@@ -434,11 +434,11 @@ void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LC
   
 
   LCRelationNavigator trackTruthRelNav(LCIO::TRACK , LCIO::MCPARTICLE  ) ;
-  
+   
   // the inverse relation from MCTruth particles to tracks 
   // weight is the realtive number of hits from a given MCParticle on the track
   LCRelationNavigator truthTrackRelNav(LCIO::MCPARTICLE , LCIO::TRACK  ) ;
-
+ 
   //========== fill a map with #SimTrackerHits per MCParticle ==================
   MCPMap simHitMap ;  //  counts total simhits for every MCParticle
   for( unsigned i=0,iN=_simTrkHitCollectionNames.size() ; i<iN ; ++i){
@@ -1119,7 +1119,15 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             "(iii= "<<iii <<")" << kkk << 
             " to be related to "<<mother <<
             " add e : " <<  moreMCPes[iii] << std::endl;
-            MCPes[kkk]+= moreMCPes[iii];  
+            MCPes[kkk]+= moreMCPes[iii]; 
+            // find hits related to moreMCPs[iii]
+            LCObjectVec hitvec = chitTruthRelNav.getRelatedFromObjects(moreMCPs[iii]);
+            FloatVec evec=chitTruthRelNav.getRelatedFromWeights(moreMCPs[iii]);
+            for ( unsigned kkk=0 ; kkk<hitvec.size() ; kkk++ ) {
+                 CalorimeterHit* hit  = dynamic_cast<CalorimeterHit*>(hitvec[kkk]);
+                 chitTruthRelNav.removeRelation(  hit ,moreMCPs[iii] );  
+                 chitTruthRelNav.addRelation(  hit , mother , evec[kkk] ) ;
+            }
             goto endwhile;
           }
         }   

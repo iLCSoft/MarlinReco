@@ -79,6 +79,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
 
 
     int npoints_index=0;
+    int sum_wgt_index=0 ;
     int sum_wgt2_index=0 ;
     int sum_wgt4_index=0 ;
     int ecal_index=0 ;
@@ -94,12 +95,14 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         StringVec shapeParams ;
         shapeParams = clucol->getParameters().getStringVals ("ClusterShapeParameters", shapeParams);
         shapeParams.push_back("npoints") ;
+        shapeParams.push_back("sum_wgt") ;
         shapeParams.push_back("sum_wgt^2") ;
         shapeParams.push_back("sum_wgt^4") ;
         clucol->parameters().setValues( "ClusterShapeParameters" , shapeParams ) ;
         shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
         for ( unsigned kkk=0 ; kkk < shape_keys.size() ; kkk++ ) {
 	  if ( shape_keys[kkk] == "npoints" )   { npoints_index  = kkk ; }
+	  if ( shape_keys[kkk] == "sum_wgt" ) { sum_wgt_index = kkk ; }
 	  if ( shape_keys[kkk] == "sum_wgt^2" ) { sum_wgt2_index = kkk ; }
           if ( shape_keys[kkk] == "sum_wgt^4" ) { sum_wgt4_index = kkk ; }
         }
@@ -204,6 +207,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         FloatVec shape = clu->getShape() ; 
 	shape.resize(shape_keys.size());
 	shape[npoints_index]=1.0*hits.size() ; 
+	shape[sum_wgt_index]=sum_wgt; 
 	shape[sum_wgt2_index]=sum_wgtsqr; 
         shape[sum_wgt4_index]=sum_wgt4; 
  
@@ -282,12 +286,16 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
             dist+=cogv[iii]*cogv[iii];
           }
           dist = sqrt(dist);
-          float E = clu->getEnergy();
+          float Eclu = clu->getEnergy();
+          float E = part->getEnergy();
+	  streamlog_out(DEBUG3) << " pfo/cluster E " << E << " / " << Eclu << std::endl;
           float Eerror = clu->getEnergyError();
+          const double* mompfo=part->getMomentum();
           double mom[4] ;
           for ( int kkk=0 ; kkk<3 ; kkk++) {mom[kkk] = E*cogv[kkk]/dist;}
           mom[3] = E ;
-          streamlog_out(DEBUG3)  << "i pfo-mom: " ; for (int kkk=0 ; kkk<4 ; kkk++ ) { streamlog_out(DEBUG3)  << mom[kkk] << " " ;} streamlog_out(DEBUG3)  << std::endl;
+          streamlog_out(DEBUG3)  << "i clu-mom: " ; for (int kkk=0 ; kkk<4 ; kkk++ ) { streamlog_out(DEBUG3)  << mom[kkk] << " " ;} streamlog_out(DEBUG3)  << std::endl;
+          streamlog_out(DEBUG3)  << "i pfo-mom: " ; for (int kkk=0 ; kkk<4 ; kkk++ ) { streamlog_out(DEBUG3)  << mompfo[kkk] << " " ;} streamlog_out(DEBUG3)  << std::endl;
           part->setMomentum(mom);
           FloatVec PositionError = clu->getPositionError();
           double covmat[4][4];
@@ -405,7 +413,7 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           streamlog_out(DEBUG2) << " input: eigen vec 1 (c)        " << evc[0*3+0] << " "  << evc[1*3+0] << " "  << evc[1*3+0] << std::endl; 
           streamlog_out(DEBUG2) << " input: eigen vec 2 (c)        " << evc[0*3+1] << " "  << evc[1*3+1] << " "  << evc[1*3+1] << std::endl; 
           streamlog_out(DEBUG2) << " input: eigen vec 3 (c)        " << evc[0*3+2] << " "  << evc[1*3+2] << " "  << evc[1*3+2] << std::endl; 
-          streamlog_out(DEBUG2) << " input: np, sum, sum_sq, sum_4 " << np << " " << sum_wgt << " " << sum_wgtsqr << " " << sum_wgt4 <<  std::endl; 
+          streamlog_out(DEBUG2) << " input: E, np, sum, sum_sq, sum_4 " << clu->getEnergy() << " " << np << " " << sum_wgt << " " << sum_wgtsqr << " " << sum_wgt4 <<  std::endl; 
 
 
          // check reading back: get values now stored in clu
@@ -417,15 +425,16 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           shape_keys = clucol->getParameters().getStringVals( std::string("ClusterShapeParameters"),shape_keys);
           FloatVec wgts_sumv = clu->getShape() ; 
           int npnt = 0 ;
+          double wgt_sum= 0.0;
           double wgt_sq_sum= 0.0;
           double wgt_4_sum= 0.0;
           for ( unsigned kkk=0 ; kkk < shape_keys.size() ; kkk++ ) {
 	    if ( shape_keys[kkk] == "npoints" )   {  npnt = int(wgts_sumv[kkk])  ; }
+	    if ( shape_keys[kkk] == "sum_wgt" )   {  wgt_sum = wgts_sumv[kkk]  ; }
 	    if ( shape_keys[kkk] == "sum_wgt^2" ) {  wgt_sq_sum = wgts_sumv[kkk]  ; }
             if ( shape_keys[kkk] == "sum_wgt^4" ) {  wgt_4_sum = wgts_sumv[kkk]  ; }
           }
  
-          double wgt_sum = clu->getEnergy();
           double seen_covmat[3][3];
           int nnn = 0;
           for ( int kkk=0 ; kkk < 3 ; kkk++ ) {
@@ -482,7 +491,7 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           streamlog_out(DEBUG2) << " read back: eigen vec 1 (c)        " << evc_readback[0][0] << " "  << evc_readback[1][0] << " "  << evc_readback[1][0] << std::endl; 
           streamlog_out(DEBUG2) << " read back: eigen vec 2 (c)        " << evc_readback[0][1] << " "  << evc_readback[1][1] << " "  << evc_readback[1][1] << std::endl; 
           streamlog_out(DEBUG2) << " read back: eigen vec 3 (c)        " << evc_readback[0][2] << " "  << evc_readback[1][2] << " "  << evc_readback[1][2] << std::endl; 
-          streamlog_out(DEBUG2) << " read back: np, sum, sum_sq, sum_4 " << np_readback << " " << sum_wgt_readback << " " << sum_wgtsqr_readback << " " << sum_wgt4_readback <<  std::endl; 
+          streamlog_out(DEBUG2) << " read back: E, np, sum, sum_sq, sum_4 " << clu->getEnergy() << " " << np_readback << " " << sum_wgt_readback << " " << sum_wgtsqr_readback << " " << sum_wgt4_readback <<  std::endl; 
 }
 
 void AddClusterProperties::check( LCEvent * evt ) { 

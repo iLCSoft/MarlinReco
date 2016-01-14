@@ -401,8 +401,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   _tpcHitMap.clear();
   _tpcRowHits.clear();
   
-  // fg: make sure we have one message in the log file with run and event number for the DBD production ....
-  streamlog_out(MESSAGE) << "  =========  processing event " 
+  streamlog_out(DEBUG8) << "  =========  processing event " 
                          << std::setw(9) << evt->getEventNumber() << " run " 
                          << std::setw(9) << evt->getRunNumber() 
                          << "  ========= " << endl;

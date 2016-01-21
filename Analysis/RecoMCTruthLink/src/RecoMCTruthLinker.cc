@@ -644,8 +644,12 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       for( int j=0, jN= col->getNumberOfElements() ; j<jN ; ++j ) {
        
         SimCalorimeterHit* simHit = (SimCalorimeterHit*) col->getElementAt( j ) ; 
-
-
+        LCObjectVec caloHits  = _navMergedCaloHitRel->getRelatedFromObjects(simHit);
+        if (   caloHits.size() == 0 ) { continue ;}
+	streamlog_out( DEBUG1 ) << " ncalo hits : " << caloHits.size() << std::endl;
+        if (   caloHits.size() != 1 ) { streamlog_out( DEBUG1 ) << " not just one ? " << std::endl; }
+        CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
+        double calib_factor = caloHit->getEnergy()/simHit->getEnergy();
         streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
         for(int k=0;k<simHit->getNMCContributions() ;k++){
           MCParticle* mcp = simHit->getParticleCont( k ) ;
@@ -679,7 +683,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             }
             continue;
 	  }
-          double e  = simHit->getEnergyCont( k ) ;
+          double e  = simHit->getEnergyCont( k ) * calib_factor ;
           streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
           if ( remap_as_you_go.find(mcp) != remap_as_you_go.end() ) {
             mcp=remap_as_you_go.find(mcp)->second;
@@ -833,6 +837,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
           }  // genstat if - then - else
           
           simHitMapEnergy[ mcp ] += e ;
+          chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
         } // mc-contributon-to-simHit loop
       }
     }
@@ -886,7 +891,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     double ecalohitsum_unknown=0.;	  
     int no_sim_hit = 0;
     for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
-        hitIt != cluHits.end() ; ++hitIt ) { 
+       hitIt != cluHits.end() ; ++hitIt ) { 
       
       
       CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
@@ -902,12 +907,13 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         
         SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( *objIt ) ; // ... and a sim hit ....
         
+        double calib_factor = hit->getEnergy()/simHit->getEnergy();
         streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
         nsimhit++;
         for(int j=0;j<simHit->getNMCContributions() ;j++){
           
           MCParticle* mcp = simHit->getParticleCont( j ) ;
-          double e  = simHit->getEnergyCont( j ) ;
+          double e  = simHit->getEnergyCont( j ) * calib_factor;
           streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e << " mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
           if ( mcp == 0 ) {
             streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << std::endl;
@@ -918,7 +924,6 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
           mcpEnergy[ mcp ] +=  e ;// count the hit-energy caused by this true particle
           eTot += e ;             // total energy
           ehit+= e;
-          chitTruthRelNav.addRelation(  hit , mcp , float(e) ) ;
         } // mc-contributon-to-simHit loop
       } // simHit loop 
 
@@ -1015,7 +1020,8 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             // save (it's mother is in _pdgSet) 
             // -> also a bona fide creator.
             theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
-          } else { // else: add to the  moreMCPs-list, further treated below
+          } else { // else: if the mother is a BS, add to the  moreMCPs-list, further treated below,
+                   //  otherwise keep as a bona fide creator.
             streamlog_out( DEBUG2 ) << " case 1 for "<< it->first << 
             "(morefound=" << morefound << ")" << 
             " mother: " << mother <<
@@ -1023,7 +1029,11 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             " dint " << mother->isDecayedInTracker() <<
             " bs "  << mother->isBackscatter() << 
             " pdg " <<mother->getPDG() <<std::endl;
-            moreMCPs.push_back(it->first);  moreMCPes.push_back(it->second); morefound++;
+            if (  mother->isBackscatter() == 1 ) {
+              moreMCPs.push_back(it->first);  moreMCPes.push_back(it->second); morefound++;
+            } else {
+              theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
+            }
           }
         } else { // not genstat 1, no mother ?! Also add to the  moreMCPs-list.
           streamlog_out( WARNING ) << " case 2 for "<< it->first << 
@@ -1108,27 +1118,41 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         " "<<mother->getEndpoint()[2]<<std::endl;
         
         
-        // find out if this ancestor actually directly gives rise to hits in this cluster. 
+        // find out if this ancestor is a back-scatterer actually directly giving rise to hits in this cluster. 
         // If so, we attribute the hits of  moreMCPs[iii] to that true particle instead.
         
         
         for (int kkk=0 ; kkk<ifound ; kkk++){
           MCParticle* tmcp = theMCPs[kkk];
           if ( tmcp == mother ) {
-            streamlog_out( DEBUG3 ) << "        found " << moreMCPs[iii] << 
-            "(iii= "<<iii <<")" << kkk << 
-            " to be related to "<<mother <<
-            " add e : " <<  moreMCPes[iii] << std::endl;
-            MCPes[kkk]+= moreMCPes[iii]; 
             // find hits related to moreMCPs[iii]
+            streamlog_out( DEBUG3 ) << "        found " << moreMCPs[iii] << 
+              "(iii= "<<iii <<")" << kkk << 
+              " to be related to "<<mother <<
+              " add e : " <<  moreMCPes[iii] << std::endl;
             LCObjectVec hitvec = chitTruthRelNav.getRelatedFromObjects(moreMCPs[iii]);
             FloatVec evec=chitTruthRelNav.getRelatedFromWeights(moreMCPs[iii]);
-            for ( unsigned kkk=0 ; kkk<hitvec.size() ; kkk++ ) {
-                 CalorimeterHit* hit  = dynamic_cast<CalorimeterHit*>(hitvec[kkk]);
-                 chitTruthRelNav.removeRelation(  hit ,moreMCPs[iii] );  
-                 chitTruthRelNav.addRelation(  hit , mother , evec[kkk] ) ;
+	    int one_mod_done = 0;
+            for ( unsigned lll=0 ; lll<hitvec.size() ; lll++ ) {
+                 CalorimeterHit* hit  = dynamic_cast<CalorimeterHit*>(hitvec[lll]);
+                 for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
+                            hitIt != cluHits.end() ; ++hitIt ) { 
+                   if (  *hitIt == hit ) { // ... a calo seen hit ...
+                     chitTruthRelNav.removeRelation(  hit ,moreMCPs[iii] );  
+                     chitTruthRelNav.addRelation(  hit , mother , evec[lll] ) ;
+                     one_mod_done = 1;
+                     break ; 
+                   }
+                 }
+             
             }
-            goto endwhile;
+	    if ( one_mod_done == 1 ) {
+              MCPes[kkk]+= moreMCPes[iii]; 
+              goto endwhile;
+            } else {
+              streamlog_out( DEBUG3 ) << "        However, no hits related to the current cluster found ??" << std::endl;
+            } 
+            
           }
         }   
         if (  mother->getParents().size() != 0 ) { 
@@ -1239,7 +1263,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         continue ;
       }
       
-      
+     
       double prod  = mcpP.unit().dot(  recP.unit() ) ;
       
       if ( prod > maxProd ) {
@@ -1249,7 +1273,8 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     }
     if ( maxProd > 0. ) {
       
-      streamlog_out( DEBUG8 ) << "  neutral cluster particle recovered"  
+      streamlog_out( DEBUG8 ) 
+      << "  neutral cluster particle recovered"  
       << clu->getEnergy()
       << " maxProd: " << maxProd 
       << " px: " << closestMCP->getMomentum()[0]
@@ -1257,7 +1282,21 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       << " pz: " << closestMCP->getMomentum()[2]
       << std::endl ;
       
-      clusterTruthRelNav.addRelation(   clu , closestMCP ,  maxProd ) ;
+      clusterTruthRelNav.addRelation(   clu , closestMCP ,  1.0 ) ;
+      truthClusterRelNav.addRelation(   closestMCP ,  clu , 1.0 ) ;
+      // Could try to also add relation calohit <-> MCPart from this
+      // fixup. However, this makes more confusion that clarification,
+      // so, for now at least, leave it out
+      // const CalorimeterHitVec& cluHits = clu->getCalorimeterHits() ;
+      //
+      // for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
+      //        hitIt != cluHits.end() ; ++hitIt ) { 
+      //
+      //  CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
+      //  streamlog_out( DEBUG5 )
+      //  <<"recuperated   hit = "<< hit << " e " << hit->getEnergy()<< std::endl;
+      // chitTruthRelNav.addRelation(  hit , closestMCP , hit->getEnergy() ) ;
+      // }
     }
     
     

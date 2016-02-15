@@ -5,6 +5,103 @@
 ===============================
 
  --------
+| v01-14 |
+ --------
+
+M. Berggren
+   - improved RecoMCTruthLinker
+     Changed weight in hit<->mcparticle relation to the CaloHit energy (instead of the
+     SimHit one). Also means the sim-hits not digitised (ie. without related CaloHit)
+     are ignored. This also feeds through to the weights in the Cluster<->MCparticle
+     relation, which should now be more correct: correct calibration factors applied
+     for each hit.
+     When doing the final relinking in problematic cases, explicitly check *only* back-scatters.
+     Added MCP->cluster link for the case with the fixup of the missing truth-link for
+     the LCAL in the DBD samples. Before only cluster->MCP was filled in this case.
+   - Correted the true-particle to calorimeter-hit link for the case that
+     the original true particle has been squeezed out by the cluster-linker,
+     typically because it was created before the calorimeter, but after the
+     last sensitive layer in the tracker.
+
+
+  - AddClusterProperties:
+     Use the PFO energy (not the cluster) when assign the PFO 4-momentum.
+     Also add the sum of weights (=hit energy) to the cluster shape parameters.
+     (In the DBD production, this is the same as the cluster energy, but it
+     is not guaranteed to be the case).
+   - Better/safer use of collection-parameters for indexing in sub-detector energy and shape-parameter arrays.
+   - Different/simpler(?) calculation of Cov(4mom) in PFO.
+
+F.Gaede 
+ - changed log level for "processing event" from MESSAGE to DEBUG8
+   in TPCDigiProcessor.cc
+   -> use Statusmonitor instead
+
+
+
+G.Wilson
+   - added GammaGammaCandidateTruthFilter
+    New processor to select those GammaGammaCandidates (fitted pairs of Pandora PFO photons) based 
+    on MC information indicating actual parentage from a true pi0, eta or eta' meson decaying to gamma gamma.
+    Output collections are called TrueGammaGammaPi0s etc.
+    Cuts are made on the parent meson being prompt (production vertex distance < 10 cm), and the amount of the PFO 
+    energy coming from the MC photon following similar criteria developed in ILDPerformance/pi0.
+    This aspect will need some further investigation/tuning.
+
+
+J.List
+ - improve TrueJet:
+ - First version that runs also over Higgs samples. No crash/obvious problem in several 1000s of events, 
+   but more sophisticated checks pending. When running with full RecoMCTruthLink, estimate of of seen of true 
+   energy needs fix, both on standard Whizard and Higgs samples
+
+
+ M. Kurata
+    - change overall structure for particle ID in LikelihoodPIDProcessor
+    - change dEdx error estimation
+
+ 
+M.Berggren:
+
+    Added AddClusterProperties processor, a processor that adds cluster
+    position and direction (w/uncertainties) to clusters, energy error 
+    (if not already set) to clusters and 4-mom (w/ covariance)
+    to neutral PFOs. Depends on a new MarlinUtil class (WeightedPoints3D),
+    so for now, the processor is out-commented in CMakeLists.txt, to
+    avoid problems if MarlinUtil isnot up-to-date !
+
+
+G.Wilson 
+  - update GammaGammaCandidateFinder
+    - compute and fill ReconstructedParticle covariance matrix
+  - Add GammaGammaSolutionFinder and DistilledPFOCreator processors
+  - Add some steering options - and fit quality checks
+  - Add 1st implementation of graph based solution finding in GammaGammaSolutionFinder - depends on BOOST
+
+T.Calancha
+  - The correlations of the energy (e) with x,y,z,e were stored in the wrong position of the matrix
+    in FourMomentumCovMat. Thx to Ali Ebrahimi.
+
+D.Jeans 
+  -  electronics dynamic range applied before unfolding of PPD saturation
+    in ILDCaloDigi.cc /  ScintillatorPpdDigi.cc
+
+H.Sert
+  - a separate algorithm was created for low P mu-pi ID in LikelihoodPIDProcessor.cc
+
+ J.Tian
+ - leave skipping or not an event without isolep to user in IsolatedLeptonTaggingProcessor.cc
+
+T.Suehara
+  -  bugfix on track charge in TrackToRecoParticleConverter
+
+ J.List
+  - added dummy error functions to ClusterShapesMR for MarlinPandora development, to be filled with life once proper calculations 
+    are available
+  - made SimpleFCalDigi use MarlinUtil:caloTypeFromString(_caloType)
+
+
+ --------
 | v01-13 |
  --------
 

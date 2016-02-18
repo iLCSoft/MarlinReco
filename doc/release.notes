@@ -9,6 +9,14 @@
  --------
 
 M. Berggren
+   - Much ameliorated linking for clusters, taking back-scattering and
+     decays in flight into account in a more correct way when finding
+     what MCP to connect to a sim-hit.
+     Work-around for the inverted meaning of the vertexIsNotEndpointOfParent
+     method in Mokka. Set processor parameter  InvertedNonDestructiveInteractionLogic
+     to activate the work-around (default is false)
+     More consistent debugging. All levels from 0 to 9 used.
+
    - improved RecoMCTruthLinker
      Changed weight in hit<->mcparticle relation to the CaloHit energy (instead of the
      SimHit one). Also means the sim-hits not digitised (ie. without related CaloHit)

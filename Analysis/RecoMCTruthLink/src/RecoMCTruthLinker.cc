@@ -15,6 +15,9 @@
 #include <EVENT/LCRelation.h>
 #include <UTIL/LCRelationNavigator.h>
 
+#include "UTIL/LCTOOLS.h"
+#include <cstdio>
+
 #include "gearimpl/Vector3D.h"
 
 #include <math.h>
@@ -268,7 +271,14 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
 			      _bremsstrahlungEnergyCut,
 			      float( 1. )  
 			      ) ;
-  
+
+   registerProcessorParameter( "InvertedNonDestructiveInteractionLogic" ,
+                              "Work-around Mokka bug in vertex-is-not-endpoint-of-parent flag (logic inverted)"  ,
+                              _invertedNonDestructiveInteractionLogic,
+                              bool(false)
+                            ) ;
+
+    
   
 }
 
@@ -411,7 +421,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     
     makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
     evt->addCollection(   skimVec , _mcParticlesSkimmedName ) ;
-    if( streamlog::out.write<streamlog::DEBUG6>() ){ linkPrinter (  skimVec , particleCol, ptrlcol,  trplcol ); }
+    if( streamlog::out.write<streamlog::DEBUG5>() ){ linkPrinter (  skimVec , particleCol, ptrlcol,  trplcol ); }
   }
 
   //If either collection has not been added to the event, we have to delete it now!
@@ -460,6 +470,8 @@ void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LC
   
   int ifoundch =0;
   
+  streamlog_out( DEBUG6 ) << " *** Sorting out Track<->MCParticle using simHit<->MCParticle." << std::endl;
+
   for(int i=0;i<nTrack;++i){
     
     Track* trk = dynamic_cast<Track*> ( trackCol->getElementAt(i) ) ;
@@ -590,7 +602,7 @@ void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LC
       truthTrackRelNav.addRelation(   theMCPs[iii] , trk , inv_weight ) ;
 
       
-      streamlog_out( DEBUG4 ) << " track " << trk->id() << " has " << MCPhits[iii]  << " hits of "
+      streamlog_out( DEBUG4 ) << "    track " << trk->id() << " has " << MCPhits[iii]  << " hits of "
       << nSimHit << " SimHits ("
       << nHit <<    " TrackerHits) "
       << " weight = " << weight << " , "
@@ -608,8 +620,9 @@ void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LC
     ifoundch=ifound;
   } 
   //  seen-true relation complete. add the collection
-  
-  streamlog_out( DEBUG4 ) << " track linking complete, create collection " << std::endl;
+
+  streamlog_out( DEBUG6 ) << " *** Sorting out Track<->MCParticle : DONE " << std::endl;
+  streamlog_out( DEBUG6 ) << " *** track linking complete, create collection " << std::endl;
   
   *trtlcol = truthTrackRelNav.createLCCollection() ;
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
@@ -637,64 +650,113 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
   Remap_as_you_go remap_as_you_go ;  // map from true tracks linked to hits to 
                                      // those that really should have been linked
   MCPMapDouble simHitMapEnergy ;  //  counts total simhits for every MCParticle
+
+
+  streamlog_out( DEBUG6 ) << " *** Sorting out simHit<->MCParticle connections, and find corresponding calo hits " << std::endl;
+
+  // This step is needed for cluster (contrary to the tracks above), because the first few branchings in the
+  // shower is kept in the MCParticle collection. We therefor need to back-track to the particle actually
+  // entering the calorimeter. The originator of a hit sometimes IS a generator particle, in which case
+  // there is no problem. Otherwise, the criteria to keep a particle as a hit originator is:
+  //  The particle is an ancestor of the one initial linked to the hit.
+  //      AND
+  //  [
+  //   The particle is a generator particle
+  //        OR
+  //   The particle starts in the tracker, ends in calorimeter. That it starts in the tracker
+  //    is determined by the fact that it's mother ends there. However, note the posibility of 
+  //    "non-destuctive interactions", where a particles mother does *not* end at the point where
+  //    the particle is created !
+  //        OR
+  //   The particle, or one of it's ancestors is a back-scatterer. This case is further treated in the
+  //    loop over clusters, to catch the rather common case that a back-scattered particle re-enters the
+  //    calorimeter close to it's start-start point (think 15 MeV charged particle!) and the hits it
+  //    produces is in the same cluster as that of the initiator of the shower the backscatter come from.
+  //    (This can't be detected in this first loop, since we don't know about clusters here) 
+  //   ]
+  //   A map is set up, so obviously the first check is wether the MCP of the hit has already been
+  //   treated when looking at some previous hit, in which case one just thake that association.
+
+
   for( unsigned i=0,iN=_simCaloHitCollectionNames.size() ; i<iN ; ++i){
     const LCCollection* col = 0 ;
     try{ col = evt->getCollection( _simCaloHitCollectionNames[i] ) ; } catch(DataNotAvailableException&) {}
     if( col ) {
+
+     streamlog_out( DEBUG6 ) << std::endl;
+     streamlog_out( DEBUG6 ) << " ================= " << std::endl;
+     streamlog_out( DEBUG6 ) << " Treating sim-hits in " <<  _simCaloHitCollectionNames[i] << ". It has " 
+			      <<  col->getNumberOfElements() << " hits " << std::endl;
+
+
       for( int j=0, jN= col->getNumberOfElements() ; j<jN ; ++j ) {
        
         SimCalorimeterHit* simHit = (SimCalorimeterHit*) col->getElementAt( j ) ; 
         LCObjectVec caloHits  = _navMergedCaloHitRel->getRelatedFromObjects(simHit);
         if (   caloHits.size() == 0 ) { continue ;}
-	streamlog_out( DEBUG1 ) << " ncalo hits : " << caloHits.size() << std::endl;
-        if (   caloHits.size() != 1 ) { streamlog_out( DEBUG1 ) << " not just one ? " << std::endl; }
+        if (   caloHits.size() != 1 ) { streamlog_out( WARNING ) << " Sim hit with nore than one calo hit ? " << std::endl; }
         CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
         double calib_factor = caloHit->getEnergy()/simHit->getEnergy();
-        streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
+
+
+	streamlog_out( DEBUG4 ) << std::endl;
+	streamlog_out( DEBUG4 ) << "  ================= " << std::endl;
+	streamlog_out( DEBUG4 ) << "    Treating hit " << j << " sim hit id " << simHit->id() << " calo hit id " 
+                                << caloHit->id() << " nb contributions " << simHit->getNMCContributions() << std::endl;
+	streamlog_out( DEBUG3 ) << "      ncalo hits : " << caloHits.size() << " calib factor " << calib_factor 
+                                << " position " << simHit->getPosition()[0] << " " << 
+                                                               simHit->getPosition()[1] << " " << 
+                                                               simHit->getPosition()[2] << " " << std::endl;
+
         for(int k=0;k<simHit->getNMCContributions() ;k++){
           MCParticle* mcp = simHit->getParticleCont( k ) ;
-//	  if ( i == 11 ) { 
-//            streamlog_out( DEBUG7 ) << simHit->getNMCContributions() << " " << j << " " << " " << k << " " << mcp << std::endl;
-//            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getPosition()[0] << " " << 
-//                                                               simHit->getPosition()[1] << " " << 
-//                                                               simHit->getPosition()[2] << " " << std::endl;
-//            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getCellID0() << " " << 
-//	      simHit->getCellID1() << std::endl;
-//            if ( mcp != 0 ) {
-//               streamlog_out( DEBUG7 ) <<"     mcp p : " << mcp->getMomentum()[0] << " " << 
-//                                                               mcp->getMomentum()[1] << " " << 
-//	        mcp->getMomentum()[2] << " " << std::endl;
-//            }
-//          }
+
+	  streamlog_out( DEBUG2 ) << " a calo hit to treat " << std::endl;
+
           if ( mcp == 0 ) {
-	    streamlog_out( DEBUG7 ) <<" col nb "  << i <<  " nhits " << jN << " hit " << j << " contr " << k << std::endl;
-	    streamlog_out( DEBUG7 ) <<" Sim hit with no mcp. N contrib is "  <<
+
+
+	    streamlog_out( DEBUG6 ) <<" collection nb "  << i <<  " nhits " << jN << " hit " << j << " contr " << k << std::endl;
+	    streamlog_out( DEBUG6 ) <<" Sim hit with no mcp. N contrib is "  <<
                   simHit->getNMCContributions() <<std::endl;
-            streamlog_out( DEBUG7 ) <<"     Hit Position: " << simHit->getPosition()[0] << " " << 
+            streamlog_out( DEBUG6 ) <<"     Hit Position: " << simHit->getPosition()[0] << " " << 
                                                                simHit->getPosition()[1] << " " << 
                                                                simHit->getPosition()[2] << " " << std::endl;
             if ( simHit->getNMCContributions() > 0 ) {
               for (int l=0;l<simHit->getNMCContributions() ;l++){
-                streamlog_out( DEBUG7 ) <<" Contrib " << l << " : " <<std::endl;
-                streamlog_out( DEBUG7 ) <<"     Energy: " << simHit->getEnergyCont(l) <<std::endl;
-                streamlog_out( DEBUG7 ) <<"     PDG:    " << simHit->getPDGCont(l) <<std::endl;
-                streamlog_out( DEBUG7 ) <<"     MCPart: " << simHit->getParticleCont(l) <<std::endl;
+                streamlog_out( DEBUG6 ) <<" Contrib " << l << " : " <<std::endl;
+                streamlog_out( DEBUG6 ) <<"     Energy: " << simHit->getEnergyCont(l) <<std::endl;
+                streamlog_out( DEBUG6 ) <<"     PDG:    " << simHit->getPDGCont(l) <<std::endl;
+                streamlog_out( DEBUG6 ) <<"     MCPart: " << simHit->getParticleCont(l) <<std::endl;
               }
             }
+
+
+
             continue;
 	  }
+
           double e  = simHit->getEnergyCont( k ) * calib_factor ;
-          streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e <<std::endl;
+
+          streamlog_out( DEBUG3 ) <<"      initial true contributor "<< k << " id " << mcp->id() 
+                                  <<" (with E = " << mcp->getEnergy() << " and pdg " << mcp->getPDG() << " ) e hit: " << e <<std::endl;
+
           if ( remap_as_you_go.find(mcp) != remap_as_you_go.end() ) {
+            // very first condition: I already know what to do from some earlier hit created by mcp.
             mcp=remap_as_you_go.find(mcp)->second;
+            streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to " << mcp->id() << 
+                        " because it's origin mcp has already been treated : originator case 0 " <<std::endl;
           } else {
             MCParticle* mother = 0;
             MCParticle* this_Kid = mcp ;     // ... and a true particle !
             
             //Particle gun particles dont have parents, but are "created in the simulation" and have genStat 0
             if ( mcp-> getGeneratorStatus() == 0 && ( mcp->getParents().empty() == false ) ) { 
+
               // not from generator, find which true particle this
               // hit should really be attributed to, by tracking back the history.
+              // (the other case, ie. if the if above is false is "case 1")
               
               // Two cases to treat:
               //   For some reason, the hit is not attributed to the
@@ -702,7 +764,9 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
               //   Just track back to the incomming particle, which might (usually)
               //   be a gen-stat 1 particle from the main vertex. It can also
               //   be from a decay or interaction in the tracking made by
-              //   Geant (genstat=0, mother isDecayedInTracker), or a
+              //   Geant : genstat=0, mother isDecayedInTracker, (or 
+              //   the production vertex is in the track, but the mother
+              //   continues on - ticky case, see comment futher down), or a
               //   decyed particle from the generator (genstat 2) that
               //   hits the calo before decaying (lambdas, K^0_S)
               
@@ -716,114 +780,300 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
               //   back-scatter actually ends in the calorimeter is
               //   treated as the first case.
               
+
               
-              streamlog_out( DEBUG3 ) << " simHit " <<simHit->id()<<","<< j << 
+              streamlog_out( DEBUG2 ) << "        simHit " <<simHit->id()<<","<< j << 
               " not created by generator particle. backtracking ..." 
               << std::endl;
-              streamlog_out( DEBUG2 ) <<"       "<<mcp<<" gs "<<mcp->getGeneratorStatus()<<
+              streamlog_out( DEBUG2 ) <<"          "<<mcp->id()<<" gs "<<mcp->getGeneratorStatus()<<
               " dint "<<mcp->isDecayedInTracker()<<
               " bs "<<mcp->isBackscatter()<<
+              " ndi "<<mcp->vertexIsNotEndpointOfParent()<<
               " npar "<<mcp->getParents().size()<<
               " pdg "<<mcp->getPDG()<<
               " "<< mcp->getVertex()[0]<<
               " "<<mcp->getVertex()[1]<<
-              " "<<mcp->getVertex()[2]<<std::endl;
-              
+              " "<<mcp->getVertex()[2]<<
+               " "<< mcp->getEndpoint()[0]<<
+              " "<<mcp->getEndpoint()[1]<<
+              " "<<mcp->getEndpoint()[2]<<std::endl;
+             
+
+
               mother= dynamic_cast<MCParticle*>(mcp->getParents()[0]); 
-              
-              bool NoChange=true;
-              while ( this_Kid->isDecayedInTracker()  && 
-                     mother->getGeneratorStatus() == 0){ // backtrack until the particle is 
-                                                         // in a calorimeter. 
-                NoChange=true;//If nothing happens in the loop, we are going to break, to make sure we are not looping endlessly
-                              // case back-scatter
-                
-                streamlog_out( DEBUG2 ) <<"  back-scatter o mother "<<mother<<
-                " gs "<<mother->getGeneratorStatus()<<
-                " dint "<<mother->isDecayedInTracker()<<
-                " bs "<<mother->isBackscatter()<<
-                " npar "<<mother->getParents().size()<<
-                " pdg "<<mother->getPDG()<<std::endl;
-                streamlog_out( DEBUG2 ) <<"  back-scatter o this_Kid "<<this_Kid<<
-                " gs "<<this_Kid->getGeneratorStatus()<<
-                " dint "<<this_Kid->isDecayedInTracker()<<
-                " bs "<<this_Kid->isBackscatter()<<
-                " npar "<<this_Kid->getParents().size()<<
-                " pdg "<<this_Kid->getPDG()<<std::endl;
-                
-                while ( mother!= 0 &&   mother->getParents().size()>0 && 
-                       !mother->isBackscatter() && 
-                       mother->getGeneratorStatus() == 0 ) { 
-                  // back-track until the parent is not a back-scatter .
-                  // generator paricles are never back-scatterers, so
-                  // once genstat != 0, we know there will be no
-                  // back-scatterers furher down the tree.
-                  this_Kid=mother ;
-                  mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
-                  NoChange=false;
-                  
-                  streamlog_out( DEBUG2 ) <<"  back-scatter i mother "<<mother<<
-                  " gs "<<mother->getGeneratorStatus()<<
-                  " dint "<<mother->isDecayedInTracker()<<
-                  " bs "<<mother->isBackscatter()<<
-                  " npar "<<mother->getParents().size()<<
-                  " pdg "<<mother->getPDG()<<std::endl;
-                  
-                }
-                if ( mother->isBackscatter()) {
-                  this_Kid=mother ;
-                  mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
-                  NoChange=false;
-                }
-                //If mother genStatus==0 and it is not backscattering and there are no parents (because mother 
-                //is coming from particle gun), we may never get out of this loop
-                if(NoChange) break;
-              }
-              streamlog_out( DEBUG2 ) <<"  mother "<<mother<<
-              " gs "<<mother->getGeneratorStatus()<<
-              " dint "<<mother->isDecayedInTracker()<<
-              " bs "<<mother->isBackscatter()<<
-              " npar "<<mother->getParents().size()<<
-              " pdg "<<mother->getPDG()<<std::endl;
-              
-              while ( mother!= 0 &&   mother->getParents().size()>0 && 
+
+
+              if ( !this_Kid->isBackscatter() &&  mother!= 0 &&
+                     mother->getParents().size()>0 && 
                      mother->getGeneratorStatus() ==0 &&
                      !mother->isDecayedInTracker() ) { 
+              
+	        streamlog_out( DEBUG2 ) << "        goes into originator loop " << std::endl;
+              }
+	      while ( !this_Kid->isBackscatter() && mother!= 0 &&   mother->getParents().size()>0 && 
+                       mother->getGeneratorStatus() ==0 &&
+                       !mother->isDecayedInTracker() ) { 
                 // back-track as long as there is a non-generator 
                 // mother, or the mother decayed in the tracker 
                 // (=> the kid is the particle entering the calorimeter.)
                 
                 // case shower-particle
+ 	        streamlog_out( DEBUG1 ) <<"          in originator loop " << std::endl;
+
+		if ( this_Kid->vertexIsNotEndpointOfParent() != _invertedNonDestructiveInteractionLogic) {
+		  MCParticle* oma=dynamic_cast<MCParticle*>(mother->getParents()[0]);
+                  if ( oma->isDecayedInTracker() ) {
+                    streamlog_out( DEBUG1 ) <<"          break out : gandmother "<<oma->id()<<
+                                              " gs "<<oma->getGeneratorStatus()<<
+                                              " dint "<<oma->isDecayedInTracker()<<
+                                              " bs "<<oma->isBackscatter()<<
+                                              " ndi "<<oma->vertexIsNotEndpointOfParent()<<
+                                              " npar "<<oma->getParents().size()<<
+                                              " pdg "<<oma->getPDG()<<std::endl;
+                    break ;
+                  }
+		} 
                 this_Kid=mother ;
                 mother= dynamic_cast<MCParticle*>(mother->getParents()[0]); // (assume only one...)
                 
-                streamlog_out( DEBUG2 ) <<"  shower-part mother "<<mother<<
+                streamlog_out( DEBUG1 ) <<"          shower-part mother "<<mother->id()<<
                 " gs "<<mother->getGeneratorStatus()<<
                 " dint "<<mother->isDecayedInTracker()<<
                 " bs "<<mother->isBackscatter()<<
+                " ndi "<<mother->vertexIsNotEndpointOfParent()<<
                 " npar "<<mother->getParents().size()<<
                 " pdg "<<mother->getPDG()<<std::endl;
+
                 
                 
               }
-              if ( mother->isDecayedInTracker() ) {
+
+              // Further treatment (basically determining if it this_Kid or mother that enetered the
+              // calorimeter) based on why we left the while-loop 
+
+              // here one of the while conditions is false, ie. at least one of
+              // " kid is back-scatter", "no mother" , "mother has no parents", "mother is from 
+              // generator", or "mother did decay in tracker" must be true. We know that this_Kid 
+              // fulfills all the while-conditions except the first: obvious if at least one iteration of
+              // the loop was done, since it was the mother in the previous iteration, 
+              // but also true even if the loop wasn't transversed, due to the conditions
+              // to at all enter this block of code (explicitly must be simulator particle with
+              // mother, implicitly must have ended in the calo, since it did make calo hits.)
+	      if (this_Kid->isBackscatter() ) {
+                // case 2: Kid is back-scatterer. It has thus started in a calo, and entered
+                //  from there into the tracking volume, and did cause hits after leaving the tracker
+                //  volume again ->  this_Kid started before the calo, and is the one
+                remap_as_you_go[mcp]=this_Kid;
+                mcp=this_Kid; 
+                streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to kid " << mcp->id() << 
+                        " because it's origin is a back-scatter : originator case 2 " <<std::endl;
+                streamlog_out( DEBUG2 ) <<"          "<<this_Kid->id()<<
+                " gs "<<this_Kid->getGeneratorStatus()<<
+                " dint "<<this_Kid->isDecayedInTracker()<<
+                " bs "<<this_Kid->isBackscatter()<<
+                " npar "<<this_Kid->getParents().size()<<
+                " pdg "<<this_Kid->getPDG()<<std::endl;
+               
+
+              } else if ( mother->isDecayedInTracker() ) { // the clear-cut case:
                 remap_as_you_go[mcp]=this_Kid;
                 mcp=this_Kid; // this_Kid started before the calo, and is the one 
                               // the hit should be attributed to
                 
-                streamlog_out( DEBUG3 ) << "   attributed to " << mcp << 
-                " because it's origin is in tracker :" <<std::endl;
+
+                streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to kid " << mcp->id() << 
+                        " because it's origin is in tracker : originator case 3 " <<std::endl;
                 
-              } else {
-                remap_as_you_go[mcp]=mother;
-                mcp=mother;   // mother started at ip, and reached the calo, and is the one 
-                              // the hit should be attributed to.
+
+              } else { // the other three cases, ie. one or sveral of "no mother", "no grand-mother", 
+                       //  "generator particle" + that we know that "mother decayed in calo"
+                if ( mother == 0 ) { // ... which of course implies no grand-mother, and no gen stat 
+                                     // of the mother as well -> should not be possible !
+
+                  streamlog_out( WARNING ) << "  MCparticle " << this_Kid->id() << 
+                   " is a simulation particle, created in the calorimeter by nothing . "<< std::endl;
+
+
+                  remap_as_you_go[mcp]=this_Kid;
+                  mcp=this_Kid; // can't do better than that.
+
+                } else { // here we know: "mother exists, but decayed in calo". In addition, two posibilities: 
+                         // mother is generator particle, or there was no grand-parents. One or both 
+                         // must be true here. Here it gets complicated, because what we want to know is
+                         // whether this_Kid started in the tracker or not. Unluckily, we don't know that 
+                         // directly, we only know where the mother ended. IF ithe mother ended in the tracker, 
+                         // there is no problem, and has already been treated, but if it ended in the calo, it is 
+                         // still possible that this_Kid came from a "non-destructive interaction" with the tracke-detector
+                         // material. This we now try to figure out.
+
+		  if (   this_Kid->vertexIsNotEndpointOfParent() == _invertedNonDestructiveInteractionLogic ) {
+		      // This bizare condition is due to a bug in LCIO (at least for the DBD samples. this_Kid->vertexIsNotEndpointOfParent()
+                      // should be true in the "non-destructive interaction", but it isn't: actually it is "false", but is "true" for the
+                      // for particles that *do* originate at the end-vertex of their parent. This is a bug in Mokka.
+                      // Hence the above ensures that there was NO "non-destructive interaction", and it is clear this_Kid was created at the end-point
+                      // of the mother. The mother is either a generator particle (to be saved), or the "Eve" of the decay-chain (or both).
+                      // So mother is the one to save and assign the hits to:
+                    remap_as_you_go[mcp]=mother;
+                    mcp=mother;   // mother started at ip, and reached the calo, and is the one 
+                                  // the hit should be attributed to.
+
+                    streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to mother " << mcp->id() << 
+                        " because it is a generator particle or started in tracker : originator case 4 " <<std::endl;
+
+                  } else { // here we DO have a "non-destructive interaction". Unluckily, we cant directly know if this took place in the
+                           // tracker (in which case we should keep this_Kid as the mcp to save and assign hits to), or not.
+                           // We will play a few clean tricks to find the cases where it either certain that the 
+                           // "non-destructive interation" was in the tracker, or that it was in the calo. This reduces 
+                           // the number of uncertain cases to play dirty tricks with.
+
+                           // Clean tricks to play: look at the sisters of this_Kid: with some luck one of them is a promptly decaying 
+                           // particle, eg. a pi0.
+                           // This sister will be flagged as decayed in calo/tracker, and from that we know for certain that the 
+                           // "non-destructive interaction" was in the calo/tracker. 
+                           // It can also be that one of the sisters is flagged as a back-scatter, which only happens in the calo. 
+                           // If the particles grand-mother is decayed in calo, and the mother isn't from a "non-destructive interaction",
+                           // the "non-destructive interaction" was in the calo.
+
+                           // Finally, we can check the distance of the end-point of the mother (sure to be in the calo) to 
+                           // the vertex of this_Kid. If this is small, this_Kid *probably* started in the calo.
+                    
+
+                    int starts_in_tracker = 0 ;
+                    unsigned lll=0 ;
+                    int has_pi0 = 0 ;
+                    int oma_in_calo = 0;
+                    double rdist =0.;
+		    int has_bs = 0;
+
+		    for ( unsigned kkk=0 ; kkk < mother->getDaughters().size() ; kkk++ ) {
+                      MCParticle* sister = dynamic_cast<MCParticle*>(mother->getDaughters()[kkk]);
+                      if ( sister == this_Kid ) continue;
+ 		      if (  abs(sister->getVertex()[0]-this_Kid->getVertex()[0]) > 0.1 ||
+                            abs(sister->getVertex()[1]-this_Kid->getVertex()[1]) > 0.1 ||
+                            abs(sister->getVertex()[2]-this_Kid->getVertex()[2]) > 0.1 ) continue;  // must check that it is the same vertex:
+                                                                                                    // several "non-destructive interactions" can
+                                                                                                    // take place (think delta-rays !)
+ 		      if ( sister->isBackscatter()) {
+                        has_bs = 1 ; 
+                        lll=kkk;
+                        break ;
+		      } else if ( sister->isDecayedInTracker() ) {
+                        starts_in_tracker = 1 ;
+                        lll=kkk;
+                        break ;
+                      }
+                      // any pi0:s at all ? (it doesn't matter that we break at the two cases above, 
+                      // because if we do, it doesn't matter if there are
+                      // pi0 sisters or not !)
+                      if ( sister->getPDG() == 111 ) {
+                         has_pi0 = 1 ;
+                      }
+                    }
+                    // if not already clear-cut, calculate distance vertext to mother end-point
+                    if ( starts_in_tracker != 1 && has_bs != 1 && has_pi0 != 1 && oma_in_calo != 1 ) {
+                      rdist=sqrt(pow(mother->getEndpoint()[0]-this_Kid->getVertex()[0],2)+
+                                   pow(mother->getEndpoint()[1]-this_Kid->getVertex()[1],2)+
+                                   pow(mother->getEndpoint()[2]-this_Kid->getVertex()[2],2));
+                      if ( mother->getParents().size() != 0 ) {
+		        MCParticle* oma=dynamic_cast<MCParticle*>(mother->getParents()[0]);
+                        if ( oma->isDecayedInCalorimeter() ) {
+                          oma_in_calo = 1 ;
+			  streamlog_out( DEBUG1 ) << "          grandmother in calo " << std::endl;
+                        }
+                      }
+                    }
+                    streamlog_out( DEBUG1 ) << "          " <<  starts_in_tracker << " " << has_pi0 << " " <<  has_bs << " " << oma_in_calo << std::endl;
+		    //                    }
+                    if ( starts_in_tracker == 1 ) { // this_Kid is a clear-cut hit-originator
+
+                      remap_as_you_go[mcp]=this_Kid;
+                      mcp=this_Kid; // this_Kid started before the calo, and is the one 
+                                    // the hit should be attributed to
                 
-                streamlog_out( DEBUG3 ) << "   attributed to " << mcp << 
-                " because it is a generator particle : "<< std::endl;
+                      streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to kid " << mcp->id() << 
+                        " because it's origin could be deduced to be in tracker : originator case 5 " <<std::endl;
+
+		      streamlog_out( DEBUG2 ) << "        Details of case 5: "
+                                             << this_Kid->getVertex()[0] << " " 
+					     << this_Kid->getVertex()[1] << " " << this_Kid->getVertex()[2] << " " 
+                                             << mother->getEndpoint()[0] << " " 
+					     << mother->getEndpoint()[1] << " " << mother->getEndpoint()[2] << " " 
+                                             << mother->getGeneratorStatus() <<  " " 
+                                             << this_Kid->vertexIsNotEndpointOfParent() << std::endl;
+                      streamlog_out( DEBUG1 ) << " starts in tracker " <<  std::endl;
+
+		    } else if ( has_pi0 != 0 || has_bs != 0 || oma_in_calo != 0 ) { // clear-cut case of this_Kid starting in the calo. 
+                                                                // We do know that the mother 
+                                                                // is a generator particle and/or the "Eve" of the cascade, 
+                                                                // so we should attribute hits to the
+                                                                // mother and save it.
+
+                      remap_as_you_go[mcp]=mother;
+                      mcp=mother;   // mother started at ip, and reached the calo, and is the one 
+                                    // the hit should be attributed to.
+
+                      streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to mother " << mcp->id() << 
+                                 " because it's origin could be deduced to be in tracker : originator case 6 " <<std::endl;
+ 		      streamlog_out( DEBUG2 ) << "        Case 6 details: kid starts in calo " << " " 
+					      << this_Kid->getVertex()[1] << " " << this_Kid->getVertex()[2] << " " << rdist <<  " " 
+					      << has_pi0  << " " << has_bs << " " <<  oma_in_calo << std::endl;
+
+
+		    } else { // un-clear case: no pi0 nor back-scatteres among the sisters to help to decide.
+                             // Use distance this_Kid-startpoint to mother-endpoint. We know that the latter is
+                             // in the calo, so if this is small, guess that the start point of this_Kid is
+                             // also in the calo. Calos are dense, so typically in the case the "non-destructive interaction"
+                             // is in the calo, one would guess  that the distance is small, ie. large distance ->
+                             // unlikely that it was in the calo.
+
+		      if ( rdist > 200. ) { // guess "non-destructive interaction" not in calo -> this_Kid is originator 
+                       
+                        remap_as_you_go[mcp]=this_Kid;
+                        mcp=this_Kid; // this_Kid started before the calo, and is the one 
+                                    // the hit should be attributed to
+                        streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to kid " << mcp->id() << 
+                                 " because it's origin is guessed to be in tracker : originator case 7 " <<std::endl;
+ 		        streamlog_out( DEBUG2 ) << "        Case 7 details: guess kid starts in tracker " << " " 
+						  << this_Kid->getVertex()[1] << " " << this_Kid->getVertex()[2] << " " << rdist <<  " " 
+                                                  << has_pi0  << " " << std::endl;
+
+                      } else { // guess in calo -> mother is originator
+                        remap_as_you_go[mcp]=mother;
+                        mcp=mother;   // mother started at ip, and reached the calo, and is the one 
+                                    // the hit should be attributed to.
+                        streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to mother " << mcp->id() << 
+                                 " because it's origin is guessed in tracker : originator case 8 " <<std::endl;
+		        streamlog_out( DEBUG2 ) << "        Case 8 details:  guess kid starts in calo " << " " 
+						  << this_Kid->getVertex()[1] << " " << this_Kid->getVertex()[2] << " " << rdist <<  " " 
+                                                  << has_pi0  << " " << std::endl;
+                        }
+
+                    }
+                  }          
+                }
               }
               
-              streamlog_out( DEBUG3 ) <<"       gs "<<mcp->getGeneratorStatus()<<
+            } else {
+              // first case: the hit generating mcp itself already fulfills the firest
+              // criterium, ie. it is a generator particle
+              streamlog_out( DEBUG3 ) << "     Hit " << simHit->id() << " / " 
+                                << caloHit->id() << " attributed to " << mcp->id() << 
+                        " because it's origin is a generator particle : originator case 1 " <<std::endl;
+
+              remap_as_you_go[mcp]=mcp;
+	    } // genstat if - then - else
+          }
+
+          streamlog_out( DEBUG4 ) <<"    Final assignment for contribution " << k << " to " << simHit->id() << " / " 
+				  << caloHit->id() << " : " << mcp->id() << std::endl;
+          streamlog_out( DEBUG4 ) <<"      gs "<<mcp->getGeneratorStatus()<<
               " dint "<<mcp->isDecayedInTracker()<<
               " bs "<<mcp->isBackscatter()<<
               " npar "<<mcp->getParents().size()<<
@@ -831,22 +1081,28 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
               " "<<mcp->getEndpoint()[0]<<
               " "<<mcp->getEndpoint()[1]<<
               " "<<mcp->getEndpoint()[2]<<std::endl;
-            } else {
-              remap_as_you_go[mcp]=mcp;
-	    }
-          }  // genstat if - then - else
-          
+ 
+          // decided which mcp this sim-hit should be associated to :
+	  //	already_known:          
+
           simHitMapEnergy[ mcp ] += e ;
           chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
+
         } // mc-contributon-to-simHit loop
       }
     }
-  }    
-  
+  } // sim-calo-hits loop   
+
+  streamlog_out( DEBUG6 ) << " *** Sorting out simHit<->MCParticle connections : DONE " << std::endl;
+  streamlog_out( DEBUG6 ) << " *** Sorting out Cluster<->MCParticle using simHit<->MCParticle, re-assigning the latter in some rare cases." << std::endl;
+
   
   // loop over reconstructed particles
   int nCluster = clusterCol->getNumberOfElements() ;
-  streamlog_out( DEBUG4 ) <<" Number of Clusters "<< nCluster <<std::endl;
+
+  streamlog_out( DEBUG6 ) << std::endl;
+  streamlog_out( DEBUG6 ) << " ================= " << std::endl;
+  streamlog_out( DEBUG6 ) <<" Treating clusters. There are "<< nCluster <<" of them " << std::endl;
   
   std::vector<Cluster*> missingMC ;
   missingMC.reserve( nCluster ) ;
@@ -865,17 +1121,10 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     double eTot = 0 ;
     Cluster* clu = dynamic_cast<Cluster*> ( clusterCol->getElementAt(i) ) ;
 
-//    FloatVec pe = clu->getSubdetectorEnergies();
-//    if (pe[3] != 0.0 || pe[5] !=0.0 ) {
-//      if ( fabs(clu->getPosition()[2]) > 2300. || pe[5] !=0.0 ){
-//	continue ;
-//      }
-//    }
-//
     
     
     
-    // We need to find all seen hits this clutser is made of, wich sim hits each 
+    // We need to find all seen hits this clutser is made of, which sim hits each 
     // of the seen hits came from, and finally which true particles actually created 
     // each sim hit. Contrary to the sim tracker hits above, a sim-calo hit can be
     // made by several true particles. They also have a signal size (energy) value.
@@ -884,9 +1133,13 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     
     
     
-    streamlog_out( DEBUG4 ) <<"Cluster clu = "<< clu << " (i = " << i << " )" << std::endl;
     
     const CalorimeterHitVec& cluHits = clu->getCalorimeterHits() ;
+
+    streamlog_out( DEBUG5 ) << std::endl;
+    streamlog_out( DEBUG5 ) << "  ================= " << std::endl;
+    streamlog_out( DEBUG5 ) <<"Cluster clu = "<< clu->id() << " (i = " << i << " ) with " << cluHits.size() << " hits " << std::endl;
+
     double ecalohitsum=0.;        
     double ecalohitsum_unknown=0.;	  
     int no_sim_hit = 0;
@@ -895,11 +1148,15 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       
       
       CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
-      streamlog_out( DEBUG1 ) <<"   hit = "<< hit << " e " << hit->getEnergy()<< std::endl;
       ecalohitsum+= hit->getEnergy();       
       
       
       const LCObjectVec& simHits  = *(this->getCaloHits(hit)) ;
+
+      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( DEBUG4 ) <<"     Treating hit = "<< hit->id() << " e " << hit->getEnergy()<< " nb sim hits : " <<
+	simHits.size() << std::endl;
+
       double ehit = 0.0; 
       int nsimhit = 0;        
       for( LCObjectVec::const_iterator objIt = simHits.begin() ;
@@ -908,16 +1165,19 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( *objIt ) ; // ... and a sim hit ....
         
         double calib_factor = hit->getEnergy()/simHit->getEnergy();
-        streamlog_out( DEBUG1 ) <<"      simhit = "<< simHit << std::endl;
+        streamlog_out( DEBUG3 ) <<"     simhit = "<< simHit->id() << " has " << simHit->getNMCContributions() 
+                                << " contributors " << std::endl;
         nsimhit++;
         for(int j=0;j<simHit->getNMCContributions() ;j++){
           
           MCParticle* mcp = simHit->getParticleCont( j ) ;
           double e  = simHit->getEnergyCont( j ) * calib_factor;
-          streamlog_out( DEBUG1 ) <<"         true contributor = "<< mcp << " e: " << e << " mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
+          streamlog_out( DEBUG3 ) <<"     true contributor = "<< mcp->id() << " e: " << e 
+                                  <<" mapped to " <<remap_as_you_go.find(mcp)->second->id() << std::endl;
           if ( mcp == 0 ) {
-            streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << std::endl;
-            streamlog_out( DEBUG7 ) <<"         true contributor = "<< mcp << " e: " << e <<" mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
+            streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << " has no creator " <<std::endl;
+            // streamlog_out( DEBUG7 ) <<"         true contributor = "<< mcp << " e: " << e 
+            //    <<" mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
             continue ; 
           }
           mcp=remap_as_you_go.find(mcp)->second;
@@ -927,21 +1187,25 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         } // mc-contributon-to-simHit loop
       } // simHit loop 
 
-      streamlog_out( DEBUG2 )<< "   summed contributed e: " << ehit << " ratio : " << ehit/hit->getEnergy()
+      streamlog_out( DEBUG4 )<< "     summed contributed e: " << ehit << " ratio : " << ehit/hit->getEnergy()
                              << " nsimhit " << nsimhit <<std::endl;
       if ( nsimhit == 0 ) {
         
-        streamlog_out( DEBUG7 ) << " Warning: no simhits for calohit " << hit << 
+        streamlog_out( DEBUG5 ) << " Warning: no simhits for calohit " << hit << 
              ". Will have to guess true particle ... " << std::endl;
         no_sim_hit = 1;
         ecalohitsum_unknown+= hit->getEnergy();	    
-	streamlog_out( DEBUG7 )<< " sim-less calohit E and position " << hit->getEnergy() << " "
+	streamlog_out( DEBUG5 )<< " sim-less calohit E and position " << hit->getEnergy() << " "
              << hit->getPosition()[0] << " " <<  hit->getPosition()[1] << " " <<  hit->getPosition()[2] << " " << std::endl;	    
-	streamlog_out( DEBUG7 )<<  " sim-less calohit clust E and position " << clu->getEnergy() 
+	streamlog_out( DEBUG5 )<<  " sim-less calohit clust E and position " << clu->getEnergy() 
              << " "<< clu->getPosition()[0] << " " <<  clu->getPosition()[1] << " " <<  clu->getPosition()[2] << " " << std::endl;	    
       }
     } // hit loop
-    streamlog_out( DEBUG3 ) << " Sum of calohit E: " <<  ecalohitsum << " cluster E " 
+    if ( no_sim_hit == 1 ) {
+      streamlog_out( DEBUG6 ) << "   Warning, there are  sim-less calohits in cluster " << clu->id() << std::endl;
+    } 
+    streamlog_out( DEBUG5 ) << std::endl;
+    streamlog_out( DEBUG5 ) << "    Sum of calohit E: " <<  ecalohitsum << " cluster E " 
                             << clu->getEnergy() << " Sum of Simcalohit E: " << eTot 
                             << "  no_sim_hit: " <<  no_sim_hit << ". Energy from unknow source : " 
                             << ecalohitsum_unknown << std::endl;
@@ -952,7 +1216,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       missingMC.push_back( clu  ) ;
       
       streamlog_out( DEBUG8 ) << " no calorimeter hits found for " 
-      << " cluster particle: e:"  << clu->getEnergy()  
+			      << " cluster " << clu->id() << " e:"  << clu->getEnergy()  
       //   << " charge: " << rec->getCharge() 
       //   << " px: " << rec->getMomentum()[0]
       //   << " py: " << rec->getMomentum()[1]
@@ -1022,9 +1286,9 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             theMCPs.push_back(it->first);  MCPes.push_back(it->second); ifound++;
           } else { // else: if the mother is a BS, add to the  moreMCPs-list, further treated below,
                    //  otherwise keep as a bona fide creator.
-            streamlog_out( DEBUG2 ) << " case 1 for "<< it->first << 
+            streamlog_out( DEBUG2 ) << " case 1 for "<< it->first->id() << 
             "(morefound=" << morefound << ")" << 
-            " mother: " << mother <<
+	      " mother: " << mother->id() <<
             " gs "  <<mother->getGeneratorStatus()<< 
             " dint " << mother->isDecayedInTracker() <<
             " bs "  << mother->isBackscatter() << 
@@ -1036,7 +1300,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             }
           }
         } else { // not genstat 1, no mother ?! Also add to the  moreMCPs-list.
-          streamlog_out( WARNING ) << " case 2 for "<< it->first << 
+          streamlog_out( DEBUG6 ) << " case 2 for "<< it->first->id() << 
           "(morefound=" << morefound << ")" << std::endl;
           moreMCPs.push_back(it->first);  moreMCPes.push_back(it->second); morefound++;
         }          
@@ -1058,12 +1322,12 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       for (int iii=0 ; iii<morefound ; iii++ ) {
         streamlog_out( DEBUG2 ) << " iii, moreMCPes[iii], moreMCPs[iii], gs " << iii <<
         " "<< moreMCPes[iii] <<
-        " "<< moreMCPs[iii]<<
+	  " "<< moreMCPs[iii]->id()<<
         " "<<moreMCPs[iii]->getGeneratorStatus() << std::endl;
       }
       for (int iii=0 ; iii<ifound ; iii++ ) {
         streamlog_out( DEBUG2 ) << " iii, MCPes[iii], theMCPs[iii] " << iii <<
-        " "<< MCPes[iii] <<" "<< theMCPs[iii] << std::endl;
+	  " "<< MCPes[iii] <<" "<< theMCPs[iii]->id() << std::endl;
       }
       streamlog_out( DEBUG3 )<< "   morefond: " << morefound <<std::endl;
     }
@@ -1082,7 +1346,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     for (int iii=0 ; iii<morefound ; iii++ ) {
       if (  moreMCPs[iii]->getParents().size() != 0 ) { 
         mother= dynamic_cast<MCParticle*>(moreMCPs[iii]->getParents()[0]); 
-        streamlog_out( DEBUG2 ) << "   iii: " << iii << " mother: " << mother  <<std::endl; 
+        streamlog_out( DEBUG2 ) << "   iii: " << iii << " mother: " << mother->id()  <<std::endl; 
       } else { 
         mother = 0 ; 
       }
@@ -1104,7 +1368,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       while ( mother!= 0 &&  mother->getGeneratorStatus() !=2 ) { // back-track to the 
                                                                   // beginning of the chain
         
-        streamlog_out( DEBUG2 ) << "       mother "<< mother << 
+        streamlog_out( DEBUG2 ) << "       mother "<< mother->id() << 
         " gs " << mother->getGeneratorStatus() << 
         " dint " << mother->isDecayedInTracker()<< " " <<
         " bs "   << mother->isBackscatter()<<
@@ -1128,7 +1392,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             // find hits related to moreMCPs[iii]
             streamlog_out( DEBUG3 ) << "        found " << moreMCPs[iii] << 
               "(iii= "<<iii <<")" << kkk << 
-              " to be related to "<<mother <<
+              " to be related to "<<mother->id() <<
               " add e : " <<  moreMCPes[iii] << std::endl;
             LCObjectVec hitvec = chitTruthRelNav.getRelatedFromObjects(moreMCPs[iii]);
             FloatVec evec=chitTruthRelNav.getRelatedFromWeights(moreMCPs[iii]);
@@ -1167,30 +1431,27 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         // to moreMCPs[iii], so we add it to the
         // list of true particles to be saved.
         
-        streamlog_out( DEBUG3 ) << "        No relation found for "<< moreMCPs[iii] << 
+        streamlog_out( DEBUG3 ) << "        No relation found for "<< moreMCPs[iii]->id() << 
         ". Keep it as separate originator "<< std::endl;
         theMCPs.push_back(moreMCPs[iii]);  MCPes.push_back(moreMCPes[iii]); ifound++;
       }
       
     }
-    streamlog_out( DEBUG4 ) << " ifound cluster " << ifound <<  std::endl;
+    streamlog_out( DEBUG5 ) << " cluster " << clu->id() << " , E = " << clu->getEnergy() << " , ifound = " << ifound <<  std::endl;
     
     // finally calculate the weight of each true partic to the seen 
     // (= energy_from_this_true/ total ), and add the weighted reltion.
     
     float totwgt =0.0;
     for (int iii=0 ; iii<ifound ; iii++ ) {
-//      int  iweight = int((MCPes[iii]*1000./ eTot)+0.5) ;
-//      float  weight = float(iweight); // weight is in per million, with 4 digits
 
-//      float  weight = MCPes[iii]/eTot;
       float  weight = (MCPes[iii]/eTot)*(clu->getEnergy()-ecalohitsum_unknown)/clu->getEnergy();
       mcpEnergyTot[ theMCPs[iii] ] +=   weight*clu->getEnergy();
       
       totwgt+= weight;
       if( theMCPs[iii] == 0 ) {
         
-        streamlog_out( ERROR ) << " cluster has " << MCPes[iii] << " GeV of " << eTot 
+        streamlog_out( ERROR ) << " cluster " <<clu->id() << " has " << MCPes[iii] << " GeV of " << eTot 
         << " GeV [ " << weight << " ] true energy " 
         << " but no MCParticle " << std::endl ;
         
@@ -1198,16 +1459,15 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         
       }
       
-      streamlog_out( DEBUG3 ) << " cluster has " <<  MCPes[iii] << " of " << eTot 
+      streamlog_out( DEBUG5 ) << " cluster " <<clu->id() << " has " <<  MCPes[iii] << " of " << eTot 
       << "  [ " << weight << " ] " 
-      << " of MCParticle with pdg : " << theMCPs[iii]->getPDG() 
+      << " of MCParticle " << theMCPs[iii]->id() << " with pdg : " << theMCPs[iii]->getPDG() 
       << " and genstat : " << theMCPs[iii]->getGeneratorStatus() 
-      << " id: " << theMCPs[iii]
       << std::endl ;
       
       //Particle gun particles dont have parents but have genStat 0      
       if (  theMCPs[iii]->getGeneratorStatus() == 0 &&  ( theMCPs[iii]->getParents().empty() == false) ) {
-        streamlog_out( DEBUG3 ) << " mother id " << theMCPs[iii]->getParents()[0] 
+        streamlog_out( DEBUG5 ) << " mother id " << theMCPs[iii]->getParents()[0]->id() 
         << " and genstat " 
         << theMCPs[iii]->getParents()[0]->getGeneratorStatus() << std::endl ;
         
@@ -1227,6 +1487,8 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     ifoundclu=ifound;
   } // cluster loop
   
+  streamlog_out( DEBUG6 ) << " *** Sorting out Cluster<->MCParticle : DONE" << std::endl;
+  streamlog_out( DEBUG6 ) << " *** Guessing Cluster<->MCParticle in cases where MCParticle<->simHit is broken (LCAL/DBD)" << std::endl;
   
   // recover missing MCParticles for neutrals, typically LCal. Not fixed in DBD ... :
   // attach the MCParticle with smallest angle to cluster
@@ -1255,10 +1517,10 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
       if ( fabs( mcp->getCharge() ) > 0.01 ) {
         continue ;
       }
-      
+
       gear::Vector3D mcpP( mcp->getMomentum()[0] , mcp->getMomentum()[1] ,
                           mcp->getMomentum()[2] ) ;
-      
+
       if ( fabs( recTheta - mcpP.theta() ) > 0.3 ) {// fixme : proc param...
         continue ;
       }
@@ -1273,7 +1535,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     }
     if ( maxProd > 0. ) {
       
-      streamlog_out( DEBUG8 ) 
+      streamlog_out( DEBUG5 ) 
       << "  neutral cluster particle recovered"  
       << clu->getEnergy()
       << " maxProd: " << maxProd 
@@ -1304,7 +1566,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
 
   //  seen-true relation complete. add the collection
   
-  streamlog_out( DEBUG4 ) << " cluster linking complete, create collection " << std::endl;
+  streamlog_out( DEBUG6 ) << " *** Cluster linking complete, create collection " << std::endl;
   *trclcol = truthClusterRelNav.createLCCollection() ;
   *ctrlcol = clusterTruthRelNav.createLCCollection() ;
   *chittrlcol = chitTruthRelNav.createLCCollection() ;
@@ -1342,7 +1604,8 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
     int ntrk =  part->getTracks().size();
     ClusterVec clusters=part->getClusters();
     int nclu =  part->getClusters().size();
-    streamlog_out( DEBUG3 ) << " Treating particle " << part << " with index " << i 
+    streamlog_out( DEBUG3 ) << "      ======== " << std::endl;
+    streamlog_out( DEBUG3 ) << "      Treating particle " << part->id() << " with index " << i 
     << " it has " << ntrk << " tracks, and " << nclu << " clusters " <<std::endl;  
     
     int nhit[100] ;
@@ -1355,9 +1618,9 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
           nhit[j]+= tracks[j]->getSubdetectorHitNumbers()[kkk];
           nhitT+= tracks[j]->getSubdetectorHitNumbers()[kkk];
         }
-        streamlog_out( DEBUG2 )  << " Track " << j <<" has " << nhit[j] << " hits " << std::endl; 
+        streamlog_out( DEBUG2 )  << "         Track " <<  tracks[j]->id() << " with index " << j <<" has " << nhit[j] << " hits " << std::endl; 
       }
-      streamlog_out( DEBUG2 )  << " Total : " << nhitT << " hits " << std::endl; 
+      streamlog_out( DEBUG2 )  << "         Total : " << nhitT << " hits " << std::endl; 
     } else {
       nhit[0]=1 ; nhitT=1;
     }
@@ -1367,7 +1630,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
         mcvec = trackTruthRelNav.getRelatedToObjects( tracks[j]);
         www = trackTruthRelNav.getRelatedToWeights( tracks[j]);
         int ntp= mcvec.size();
-        streamlog_out( DEBUG3 ) << "    Track " <<  tracks[j] << " with index " << j 
+        streamlog_out( DEBUG3 ) << "      Track " <<  tracks[j]->id() << " with index " << j 
         << " has " << ntp << " true particles " << std::endl;  
         if ( ntp > 0 ) {
           if ( mcvec[0] != 0 ) {
@@ -1379,7 +1642,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
               }
               mcmap[dynamic_cast<MCParticle*>(mcvec[kkk])] += 
               int(www[kkk]*1000.*(float(nhit[j])/float(nhitT))+0.5);
-              streamlog_out( DEBUG2 ) << "    Individual track weight to " <<mcvec[kkk]<< " is " 
+              streamlog_out( DEBUG2 ) << "        Individual track weight to " <<mcvec[kkk]<< " is " 
               <<  www[kkk] << ", scaled one is "
               <<  www[kkk]*(float(nhit[j])/float(nhitT))
               << " ( loop -index : " << kkk << ")"<< std::endl; 
@@ -1396,9 +1659,9 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
         for (int j=0 ; j < nclu ; j++ ) {
           eclu[j] = clusters[j]->getEnergy();
           ecluT+=clusters[j]->getEnergy();
-          streamlog_out( DEBUG2 )  << " Cluster " << j <<" has energy " << eclu[j] << std::endl; 
+          streamlog_out( DEBUG2 )  << "        Cluster "  <<  clusters[j]->id() << " with index " << j <<" has energy " << eclu[j] << std::endl; 
         }
-        streamlog_out( DEBUG2 )  << " Total : " << ecluT << std::endl; 
+        streamlog_out( DEBUG2 )  << "       Total : " << ecluT << std::endl; 
       } else {
         eclu[0]=1 ; ecluT=1;
       }
@@ -1407,7 +1670,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
           mcvec =  clusterTruthRelNav.getRelatedToObjects(clusters[j]);
           www = clusterTruthRelNav.getRelatedToWeights(clusters[j]);
           int ntp= mcvec.size();
-          streamlog_out( DEBUG3 ) << "    Cluster " <<  clusters[j] << " with index " << j
+          streamlog_out( DEBUG3 ) << "    Cluster " <<  clusters[j]->id() << " with index " << j
           << " has " << ntp << " true particles " << std::endl;  
           if ( ntp > 0 ) {
             if ( mcvec[0] != 0 ) {
@@ -1418,7 +1681,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
                 }
                 mcmap[dynamic_cast<MCParticle*>(mcvec[kkk])] += 
                 int(www[kkk]*1000.*(eclu[j]/ecluT)+0.5)*10000;
-                streamlog_out( DEBUG2 ) << "    Individual cluster Weight to " <<mcvec[kkk]<< " is " 
+                streamlog_out( DEBUG2 ) << "        Individual cluster Weight to " <<mcvec[kkk]<< " is " 
                 <<  www[kkk] << ", scaled one is "
                 <<  www[kkk]*(eclu[j]/ecluT)
                 << " ( loop -index : " << kkk << ")"<< std::endl; 
@@ -1433,7 +1696,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
            mcit !=  mcmap.end() ; mcit++ ) { 
         // loop all MCparticles releted to the particle 
         // get the true particle
-        streamlog_out( DEBUG5 ) << " particle " << part->id() <<" has weight "<<mcit->second
+        streamlog_out( DEBUG4 ) << "     particle " << part->id() <<" has weight "<<mcit->second
         << " (Track: " << int(mcit->second)%10000 
         << " , Cluster: " << int(mcit->second)/10000 << " ) " 
         << " of MCParticle with pdg : " << mcit->first->getPDG() 
@@ -1448,7 +1711,7 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
         //AS: FixMe: There is still something going wrong with particles from the particle gun.
         //Although there are perfect PFOs no link with the MCParticle is established.
         particleTruthRelNav.addRelation(   part ,  mcmax ,  maxwgt ) ;
-        streamlog_out( DEBUG3 ) << " particle " << part->id() << " has weight "<<maxwgt
+        streamlog_out( DEBUG3 ) << "      particle " << part->id() << " has weight "<<maxwgt
         << " of MCParticle with pdg : " << mcmax->getPDG() 
         << " and genstat : " <<  mcmax->getGeneratorStatus() 
 				<< " id: " << mcmax->id() 
@@ -1504,13 +1767,13 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
       }
       float wgt=int(c_wgt*1000)*10000 + int(t_wgt*1000) ;
       truthParticleRelNav.addRelation(   mcp, msp  , wgt ) ;
-      streamlog_out( DEBUG5 ) << " True Particle " << mcp->id() << " ( pdg " << mcp->getPDG()  
+      streamlog_out( DEBUG4 ) << "    True Particle " << mcp->id() << " ( pdg " << mcp->getPDG()  
 			      << " ) has weight " << c_wgt <<" / " << t_wgt << "( " << int(wgt) << " ) to particle "  
 			      << msp->id() << "  with " << cluvec_p.size() << " clusters, and " 
                      << trkvec_p.size() << " tracks " <<  std::endl; 
     }
   }
-  streamlog_out( DEBUG5 ) << " particle linking complete, create collection " << std::endl;
+  streamlog_out( DEBUG6 ) << " particle linking complete, create collection " << std::endl;
   *ptrlcol = particleTruthRelNav.createLCCollection() ;
   *trplcol = truthParticleRelNav.createLCCollection() ;
 }
@@ -2054,7 +2317,7 @@ const LCObjectVec* RecoMCTruthLinker::getCaloHits( CalorimeterHit* calohit, cons
   }
   else {
     
-    streamlog_out( DEBUG7 ) << "getCaloHits :  CalorimeterHit : " << calohit << " has no sim hits related. CellID0 = " << 
+    streamlog_out( DEBUG5 ) << "getCaloHits :  CalorimeterHit : " << calohit << " has no sim hits related. CellID0 = " << 
        calohit->getCellID0() << " pos = " << calohit->getPosition()[0] << " " << calohit->getPosition()[1] << " " << 
        calohit->getPosition()[2] << std::endl ;
   }
@@ -2093,9 +2356,9 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
     mcvec = particleTruthRelNav.getRelatedToObjects( part);
     www = particleTruthRelNav.getRelatedToWeights( part);
     int ntp= mcvec.size();
-    streamlog_out( DEBUG6 ) << "    Particle " <<  part->id() << " (q: " <<  int(part->getCharge()) << 
+    streamlog_out( DEBUG5 ) << "    Particle " <<  part->id() << " (q: " <<  int(part->getCharge()) << 
       " ) has " << ntp << " true particles. E= "<< part->getEnergy() << " " << clu_e ;
-    streamlog_out( DEBUG3 )<< std::endl;  
+    streamlog_out( DEBUG3 )<< "       Index, id, PDG and energy of contributors: " << std::endl;  
     if ( ntp > 0 ) {
       if ( mcvec[0] != 0 ) {
         double total_trk_weight = 0.0;
@@ -2108,7 +2371,7 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
           total_trk_weight+=(int(www[kkk])%10000)/1000.0;
           total_clu_weight+=(int(www[kkk])/10000)/1000.0;
           MCParticle* mcp = dynamic_cast< MCParticle*>( mcvec[kkk]);
-          streamlog_out( DEBUG3 ) << kkk << " " << mcp->id()  << " " << mcp->getPDG()  << " " << mcp->getEnergy()  << std::endl ;
+          streamlog_out( DEBUG3 ) <<"       "<< kkk << " " << mcp->id()  << " " << mcp->getPDG()  << " " << mcp->getEnergy()  << std::endl ;
           if ( part->getCharge() != 0 ) {
             if ( mcp->getCharge() != 0 && (int(www[kkk])%10000)/1000.0 > 0.6 ) {
               true_charged_E=mcp->getEnergy();
@@ -2133,11 +2396,12 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
 	  }
         }
         if ( part->getCharge() != 0 ) {
-	  streamlog_out( DEBUG6 ) << " " << true_charged_E << " " << total_ecalo_in_this_true << " " << total_ecalo_neutral_in_charged << " " << 
-          total_trk_weight << " " << total_clu_weight  << std::endl ;
+	  streamlog_out( DEBUG5 ) << "     True E_ch " << true_charged_E << " total E_calo from true " << total_ecalo_in_this_true 
+                                  << " E_calo from neutral " << total_ecalo_neutral_in_charged << " track weight " << 
+          total_trk_weight << " cluster weight " << total_clu_weight  << std::endl ;
         } else {
-	  streamlog_out( DEBUG6 ) << " " <<  total_e_from_neutrals << " " << 
-          total_trk_weight << " " << total_clu_weight  << std::endl ;
+	  streamlog_out( DEBUG5 ) << "     True E_neutral " <<  total_e_from_neutrals << " track weight " << 
+          total_trk_weight << " cluster weight " << total_clu_weight  << std::endl ;
         }
       }
     }
@@ -2153,10 +2417,10 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
     www =  truthParticleRelNav.getRelatedToWeights( mcpart);
     int nsp= partvec.size();
     if ( nsp > 0 ) {
-      streamlog_out( DEBUG6 ) << "    TrueParticle " <<  mcpart->id() << " (q: " <<  int(mcpart->getCharge()) << 
+      streamlog_out( DEBUG5 ) << "    TrueParticle " <<  mcpart->id() << " (q: " <<  int(mcpart->getCharge()) << 
         " ) has " << nsp << " seen particles. E= "<<mcpart->getEnergy() << " pt= " <<
 	sqrt(mcpart->getMomentum()[0]* mcpart->getMomentum()[0]+ mcpart->getMomentum()[1]* mcpart->getMomentum()[1]);
-       streamlog_out( DEBUG3  )<< std::endl;  
+      streamlog_out( DEBUG3  )<< "       index, id, and enregy of reco particle: " << std::endl;  
       if ( partvec[0] != 0 ) {
         double total_trk_weight = 0.0;
         double total_clu_weight = 0.0;
@@ -2164,9 +2428,9 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
           total_trk_weight+=(int(www[kkk])%10000)/1000.0;
           total_clu_weight+=(int(www[kkk])/10000)/1000.0;
            ReconstructedParticle* recopart = dynamic_cast< ReconstructedParticle*>(partvec[kkk]);
-          streamlog_out( DEBUG3 ) << kkk << " " << recopart->id()  << " " << recopart->getEnergy()    << std::endl ; 
+	   streamlog_out( DEBUG3 )<<"       "<< kkk << " " << recopart->id()  << " " << recopart->getEnergy()    << std::endl ; 
         }
-        streamlog_out( DEBUG6 ) << " " << total_trk_weight << " " << total_clu_weight << std::endl ;
+        streamlog_out( DEBUG5 ) << "    Total track weight " << total_trk_weight << " , Total cluster weight " << total_clu_weight << std::endl ;
       }
     }
   } 

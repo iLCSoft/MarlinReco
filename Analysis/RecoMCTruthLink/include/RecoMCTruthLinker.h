@@ -199,6 +199,7 @@ protected:
   float _eCutMeV ;
   bool   _saveBremsstrahlungPhotons;
   float _bremsstrahlungEnergyCut;
+  bool	_invertedNonDestructiveInteractionLogic;
   
   bool _using_particle_gun;
   

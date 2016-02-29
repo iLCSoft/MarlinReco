@@ -13,29 +13,31 @@ class LikelihoodPID{
 public:
   LikelihoodPID(){};
   LikelihoodPID(std::string fname, double *pars);
+  LikelihoodPID(double *pars);
   ~LikelihoodPID();
    
   //bool Class_electron(int trkid, jetdata data);
   //bool Class_muon(int trkid, jetdata data);
   int Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
-   double *GetPosterior();
-   double *GetLikelihood();
-   double getCorrEnergy(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
-   double getCorrEnergy(TLorentzVector pp, int parttype);
+  double *GetPosterior();
+  double *GetLikelihood();
+  double getCorrEnergy(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
+  double getCorrEnergy(TLorentzVector pp, int parttype);
 
   //for leptonIDlikelihood
-   double get_dEdxDist(int parttype);
+  double get_dEdxDist(int parttype);
 
   //for each kind of PID flg
   void setBasicFlg(bool flg) {_basicFlg = flg;}
   void setdEdxFlg(bool flg) {_dEdxFlg = flg;}
   void setShowerShapesFlg(bool flg) {_showerShapesFlg = flg;}
 
+  double get_dEdxChi2(int parttype, TVector3 p, float hit,  double dEdx);
+  double get_dEdxFactor(int parttype, TVector3 p, float hit,  double dEdx);
+
 private:
-   double get_dEdxChi2(int parttype, TVector3 p, float hit,  double dEdx);
-   double get_dEdxFactor(int parttype, TVector3 p, float hit,  double dEdx);
-   double get_Norm( double dedx, float hit,  double trkcos);
-   double BetheBloch( double x,  double mass,  double *pars);
+  double get_Norm( double dedx, float hit,  double trkcos);
+  double BetheBloch( double x,  double mass,  double *pars);
 
   int Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
   int Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);

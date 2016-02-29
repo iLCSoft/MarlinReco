@@ -1,0 +1,50 @@
+<marlin>
+
+<execute>
+        <processor name="MyCreatePDFProcessor" />
+</execute>
+
+<global>
+	<parameter name="LCIOInputFiles">
+	  gun_electron_0-250GeV.dst.0001.slcio
+	</parameter>
+	<parameter name="MaxRecordNumber" value="0" />  
+	<parameter name="SkipNEvents" value="0" />  
+	<parameter name="SupressCheck" value="false" />  
+	<parameter name="GearXMLFile"> GearOutput.xml </parameter>  
+	<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">MESSAGE</parameter> 
+</global>
+
+<processor name="MyCreatePDFProcessor" type="CreatePDFProcessor">
+ 	<parameter name="OutputPDFFilename" type="string" value="pdf_standard_v01.root" />
+	<parameter name="RecoParticleCollection" type="string" value="PandoraPFOs" />
+	<parameter name="MCTruthLinkCollection" type="string" value="RecoMCTruthLink" />
+
+	<!--dE/dx parameters for each particle-->
+	<parameter name="dEdxParameter_electron" type="std::vector< std::float >">
+	  -2.40638e-03 7.10337e-01 2.87718e-01 -1.71591e+00 0.0
+	</parameter>
+	<parameter name="dEdxParameter_muon" type="std::vector< std::float >">
+	  8.11408e-02 9.92207e-01 7.58509e+05 -1.70167e-01 4.63670e-04
+	</parameter>
+	<parameter name="dEdxParameter_pion" type="std::vector< std::float >">
+	  8.10756e-02 -1.45051e+06 -3.09843e+04 2.84056e-01 3.38131e-04
+	</parameter>
+	<parameter name="dEdxParameter_kaon" type="std::vector< std::float >">
+	  7.96117e-02 4.13335e+03 1.13577e+06 1.80555e-01 -3.15083e-04
+	</parameter>
+	<parameter name="dEdxParameter_proton" type="std::vector< std::float >">
+	  7.78772e-02 4.49300e+04 9.13778e+04 1.50088e-01 -6.64184e-04
+	</parameter>
+	
+	<!--dE/dx normalization-->
+	<parameter name="dEdxNormalization" type="float">
+	  1.350e-7
+	</parameter>
+	
+	<!--dE/dx error factor-->
+	<parameter name="dEdxErrorFactor" type="float">
+	  7.55
+	</parameter>
+</processor>
+</marlin>

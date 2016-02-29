@@ -33,6 +33,34 @@ std::string itos(int i)
   return s.str();
 }
 
+LikelihoodPID::LikelihoodPID(double *pars){
+  //set parameters for bethebloch
+  //electron                                                                                                                   
+  for(int i=0;i<5;i++) par[0][i]=pars[i];
+  //muon                                                                                                                   
+  for(int i=0;i<5;i++) par[1][i]=pars[i+5];
+  //pion                                                                                                                   
+  for(int i=0;i<5;i++) par[2][i]=pars[i+10];
+  //kaon                                                                                                                   
+  for(int i=0;i<5;i++) par[3][i]=pars[i+15];
+  //proton                                                                                                                   
+  for(int i=0;i<5;i++) par[4][i]=pars[i+20];
+                                                
+  //choose method
+  _usebayes=(int)pars[25];
+  _dEdxnorm=(float)pars[26];
+  _dEdxerrfact=pars[27];
+
+  //set mass
+  emass=0.000510998;
+  mmass=0.105658;
+  pimass=0.139570;
+  kmass=0.493677;
+  pmass=0.938272;
+
+  return;
+}
+
 LikelihoodPID::LikelihoodPID(string fname, double *pars){
   //set parameters for bethebloch
   //electron                                                                                                                   

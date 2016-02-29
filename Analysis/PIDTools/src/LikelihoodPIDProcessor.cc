@@ -121,7 +121,7 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   registerProcessorParameter( "dEdxErrorFactor" ,
   			      "dEdx Error factor",
   			      _dEdxErrorFactor,
-  			      float(5.70));
+  			      float(7.55));
 
   registerProcessorParameter( "UseBayesian" ,
   			      "PID is based on Bayesian or Likeihood",

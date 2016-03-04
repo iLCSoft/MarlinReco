@@ -158,7 +158,14 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
       //normalize histograms
       weight=pdf[i][j]->Integral(0,pdf[i][j]->GetNbinsX()+1,"");
       pdf[i][j]->Scale(1.0/weight);
+      _weights[i][j]=weight;  //for hadron likelihood calculation
     }
+  }
+
+  //normalize weights
+  for(int j=0;j<14;j++){
+    double denom = _weights[2][j]+_weights[3][j]+_weights[4][j];
+    for(int i=2;i<5;i++) _weights[i][j] = _weights[i][j]/denom;
   }
 
   //set threshold
@@ -223,6 +230,8 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     _likelihood[i]=0.0;
     if(_basicFlg==false && _dEdxFlg==true && _showerShapesFlg==false) prior[i]=0.2;
   }
+  _likelihood[5]=0.0;  //hadron type
+  
   tmpid=Class_electron(pp, trk, cluvec);
   if(tmpid==0) return tmpid;
 
@@ -231,6 +240,8 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     _likelihood[i]=0.0;
     if(_basicFlg==false && _dEdxFlg==true && _showerShapesFlg==false) prior[i]=0.2;
   }
+  _likelihood[5]=0.0;  //hadron type
+
   tmpid=Class_muon(pp, trk, cluvec);
   if(tmpid==1) return tmpid;
 
@@ -239,6 +250,8 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     _likelihood[i]=0.0;
     if(_basicFlg==false && _dEdxFlg==true && _showerShapesFlg==false) prior[i]=0.2;
   }
+  _likelihood[5]=0.0;  //hadron type
+
   tmpid=Class_hadron(pp, trk, cluvec);
   return tmpid;
 }
@@ -483,13 +496,14 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
       ///20150708 change it from posterior probability to likelihood
       posterior[i]=TMath::Log(okval[i])+TMath::Log(priorprob[i])-TMath::Log(total);
       _likelihood[i]+=TMath::Log(okval[i]);
-
     }
+    //hadron type likelihood
+    _likelihood[5] += TMath::Log(_weights[2][valtype]*okval[2] + _weights[3][valtype]*okval[3] + _weights[4][valtype]*okval[4]);
     
     //bayesian updating
     for(int i=0;i<5;i++) prior[i]=TMath::Exp(posterior[i]);
   }
-  
+
   //cal. risk
   //first. get penalty
   for(int i=0;i<5;i++){   //particle type
@@ -544,7 +558,9 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   _posterior[2]=TMath::Exp(posterior[2]);
   _posterior[3]=TMath::Exp(posterior[3]);
   _posterior[4]=TMath::Exp(posterior[4]);
-
+  //hadron type
+  _posterior[5]=_posterior[2]+_posterior[3]+_posterior[4];
+  
   return okflg;
 }
 
@@ -657,6 +673,8 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
       posterior[i]=TMath::Log(okval[i])+TMath::Log(priorprob[i])-TMath::Log(total); 
       _likelihood[i]+=TMath::Log(okval[i]);
     }
+    //hadron type likelihood
+    _likelihood[5] += TMath::Log(_weights[2][valtype]*okval[2] + _weights[3][valtype]*okval[3] + _weights[4][valtype]*okval[4]);
     
     //bayesian updating
     for(int i=0;i<5;i++) prior[i]=TMath::Exp(posterior[i]);
@@ -715,6 +733,8 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   _posterior[2]=TMath::Exp(posterior[2]);
   _posterior[3]=TMath::Exp(posterior[3]);
   _posterior[4]=TMath::Exp(posterior[4]);
+  //hadron type
+  _posterior[5]=_posterior[2]+_posterior[3]+_posterior[4];
 
   return okflg;  
 }
@@ -816,6 +836,8 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
       posterior[i]=TMath::Log(okval[i])+TMath::Log(priorprob[i])-TMath::Log(total[i]);
       _likelihood[i]+=TMath::Log(okval[i]);
     }
+    //hadron type likelihood
+    _likelihood[5] += TMath::Log(_weights[2][valtype]*okval[2] + _weights[3][valtype]*okval[3] + _weights[4][valtype]*okval[4]);
     
     //bayesian updating
     for(int i=0;i<5;i++) prior[i]=TMath::Exp(posterior[i]);
@@ -885,6 +907,8 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   _posterior[2]=TMath::Exp(posterior[2]);
   _posterior[3]=TMath::Exp(posterior[3]);
   _posterior[4]=TMath::Exp(posterior[4]);
+  //hadron type
+  _posterior[5]=_posterior[2]+_posterior[3]+_posterior[4];
 
   return okflg;  
 }

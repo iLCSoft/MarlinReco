@@ -161,12 +161,14 @@ void LikelihoodPIDProcessor::init() {
   _particleNames.push_back("pionLikelihood");
   _particleNames.push_back("kaonLikelihood");
   _particleNames.push_back("protonLikelihood");
+  _particleNames.push_back("hadronLikelihood");
   _particleNames.push_back("MVAOutput_mupiSeparation");
   _particleNames.push_back("electronProbability");
   _particleNames.push_back("muonProbability");
   _particleNames.push_back("pionProbability");
   _particleNames.push_back("kaonProbability");
   _particleNames.push_back("protonProbability");
+  _particleNames.push_back("hadronProbability");
   _particleNames.push_back("electron_dEdxdistance");
   _particleNames.push_back("muon_dEdxdistance");
   _particleNames.push_back("pion_dEdxdistance");
@@ -179,12 +181,14 @@ void LikelihoodPIDProcessor::init() {
   _dEdxNames.push_back("pionLikelihood");
   _dEdxNames.push_back("kaonLikelihood");
   _dEdxNames.push_back("protonLikelihood");
+  _dEdxNames.push_back("hadronLikelihood");
   _dEdxNames.push_back("MVAOutput_mupiSeparation");
   _dEdxNames.push_back("electronProbability");
   _dEdxNames.push_back("muonProbability");
   _dEdxNames.push_back("pionProbability");
   _dEdxNames.push_back("kaonProbability");
   _dEdxNames.push_back("protonProbability");
+  _dEdxNames.push_back("hadronProbability");
   _dEdxNames.push_back("electron_dEdxdistance");
   _dEdxNames.push_back("muon_dEdxdistance");
   _dEdxNames.push_back("pion_dEdxdistance");
@@ -263,7 +267,6 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
       MVAoutput = _mupiPID->getMVAOutput();   
     }
     
-
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID2, MVAoutput);
 
@@ -283,7 +286,6 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
       MVAoutput = _mupiPID->getMVAOutput();   
     }
     
-
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID3, MVAoutput);
 
@@ -376,9 +378,9 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
   Double_t *posterior = _myPID->GetPosterior();
   Double_t *likelihood = _myPID->GetLikelihood();
   std::vector<float> likelihoodProb;
-  for(int j=0;j<5;j++) likelihoodProb.push_back(likelihood[j]);
+  for(int j=0;j<6;j++) likelihoodProb.push_back(likelihood[j]);
   likelihoodProb.push_back(MVAoutput);
-  for(int j=0;j<5;j++) likelihoodProb.push_back(posterior[j]);
+  for(int j=0;j<6;j++) likelihoodProb.push_back(posterior[j]);
 
   //std::cout << "check likelihood: " << parttype << " " << algoID << " "
   //	    << likelihoodProb[0] << " " << likelihoodProb[1] << " " << likelihoodProb[2] << " " << likelihoodProb[3] << " " << likelihoodProb[4] << std::endl;

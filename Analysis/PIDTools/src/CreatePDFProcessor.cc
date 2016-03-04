@@ -427,7 +427,7 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
       
       if(part == fp){
 	MCParticle* partmc = (MCParticle*) plc->getTo();
-	int mcpdg = partmc->getPDG();
+	int mcpdg = fabs(partmc->getPDG());
 	if(mcpdg!=11 && mcpdg!=13 && mcpdg!=211 && mcpdg!=321 && mcpdg!=2212) continue;
 	pdfid = pid[mcpdg];
 	if(pdfid==1 && mucal==0.0) pdfid=5;

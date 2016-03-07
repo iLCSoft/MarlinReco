@@ -10,7 +10,7 @@ SET( ENV{CXXFLAGS} "-Wno-long-long $ENV{CXXFLAGS}" )
 # require proper c and c++
 # -pedantic cannot be set globally because it cannot be removed for certain
 # source files only: grep pedantic src/CMakeLists.txt
-SET( ENV{CXXFLAGS} "-Wall -ansi $ENV{CXXFLAGS}" ) # FIXME -pedantic
+#SET( ENV{CXXFLAGS} "-Wall -ansi $ENV{CXXFLAGS}" ) # FIXME -pedantic
 SET( ENV{CFLAGS} "-w -ansi -pedantic $ENV{CFLAGS}" ) # -w suppress all warning messages
 
 

@@ -26,6 +26,7 @@
 using namespace lcio ;
 using namespace marlin ;
 
+namespace {
 int min(int a,int b) {
   int result;
   if (a<b) {
@@ -135,7 +136,7 @@ float FastTripletCheck(TrackerHitExtended * hitIn,
     
   
 }
-
+}
 SiliconTracking aSiliconTracking ;
 
 SiliconTracking::SiliconTracking() : Processor("SiliconTracking") {
@@ -1017,12 +1018,12 @@ void SiliconTracking::ProcessOneSector(int iPhi, int iTheta) {
 	    iThetaUpInner = iTheta_Up;
 	  }
 	  else {
-	    int difP = abs(ipMiddle-iPhi);
-	    int difT = abs(itMiddle-iTheta);
-	    int minP = min(ipMiddle,iPhi);
-	    int minT = min(itMiddle,iTheta);
-	    int maxP = max(ipMiddle,iPhi);
-	    int maxT = max(itMiddle,iTheta);
+	    int difP = ::abs(ipMiddle-iPhi);
+	    int difT = ::abs(itMiddle-iTheta);
+	    int minP = ::min(ipMiddle,iPhi);
+	    int minT = ::min(itMiddle,iTheta);
+	    int maxP = ::max(ipMiddle,iPhi);
+	    int maxT = ::max(itMiddle,iTheta);
 	    if (difP==1 && difT==1) {
 	      iPhiLowInner = minP;
 	      iPhiUpInner = maxP;
@@ -2604,3 +2605,4 @@ void SiliconTracking::FinalRefit() {
 
 
 }
+

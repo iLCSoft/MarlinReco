@@ -3,7 +3,11 @@
 #include <cassert>
 #include <iostream>
 
+#include "DD4hep/LCDD.h"
+#include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/DetType.h"
+#include "DD4hep/DetectorSelector.h"
+#include "DDRec/DetectorData.h"
 
 using std::cout;
 using std::endl;
@@ -14,7 +18,33 @@ RealisticCaloRecoSilicon::RealisticCaloRecoSilicon() : RealisticCaloReco::Proces
   _description = "Performs fist reconstruction of silicon ECAL hits";
 }
 
-DD4hep::DDRec::LayeredCalorimeterData * getExtension(unsigned int includeFlag, unsigned int excludeFlag=0);
+DD4hep::DDRec::LayeredCalorimeterData * getExtension(unsigned int includeFlag, unsigned int excludeFlag=0) {
+
+
+  DD4hep::DDRec::LayeredCalorimeterData * theExtension = 0;
+
+  DD4hep::Geometry::LCDD & lcdd = DD4hep::Geometry::LCDD::getInstance();
+  const std::vector< DD4hep::Geometry::DetElement>& theDetectors = DD4hep::Geometry::DetectorSelector(lcdd).detectors(  includeFlag, excludeFlag ) ;
+
+
+  streamlog_out( DEBUG2 ) << " getExtension :  includeFlag: " << DD4hep::DetType( includeFlag ) << " excludeFlag: " << DD4hep::DetType( excludeFlag )
+              << "  found : " << theDetectors.size() << "  - first det: " << theDetectors.at(0).name() << std::endl ;
+
+  if( theDetectors.size()  != 1 ){
+
+    std::stringstream es ;
+    es << " getExtension: selection is not unique (or empty)  includeFlag: " << DD4hep::DetType( includeFlag ) << " excludeFlag: " << DD4hep::DetType( excludeFlag )
+       << " --- found detectors : " ;
+    for( unsigned i=0, N= theDetectors.size(); i<N ; ++i ){
+      es << theDetectors.at(i).name() << ", " ;
+    }
+    throw std::runtime_error( es.str() ) ;
+  }
+
+  theExtension = theDetectors.at(0).extension<DD4hep::DDRec::LayeredCalorimeterData>();
+
+  return theExtension;
+}
 
 void RealisticCaloRecoSilicon::init() {
   RealisticCaloReco::init();

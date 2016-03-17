@@ -14,6 +14,9 @@ effects such as miscalibration, dead cells, pe statistics are applied at this st
 the conversion of these hits to the EM energy scale.
 This includes unfolding of SiPM response, and correction for the calorimeter sampling ratio.
 
+** note that the calibration factors given here are for converting from the MIP scale to the total deposited energy scale.
+** this is different to LDC/ILDCaloDigi, where the conversion was from the energy deposited in the active material to total deposited energy.
+
 
 One instance of each processor should be used for each collection of hits (or set of collections with identical properties).
 

@@ -3,14 +3,18 @@
 #include <marlin/Global.h>
 
 #include <EVENT/LCCollection.h>
-#include <IMPL/LCCollectionVec.h>
 
+#include <IMPL/LCCollectionVec.h>
 #include <IMPL/CalorimeterHitImpl.h>
 #include <IMPL/LCRelationImpl.h>
+
+#include <UTIL/LCRelationNavigator.h> 
 
 #include "CalorimeterHitType.h"
 
 #include <EVENT/LCParameters.h>
+#include <EVENT/SimCalorimeterHit.h>
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -32,6 +36,13 @@ RealisticCaloReco::RealisticCaloReco() : Processor("RealisticCaloReco") {
 			    _inputHitCollections,
 			    inputHitCollections);
 
+  std::vector < std::string > inputRelCollections;
+  registerInputCollections( LCIO::LCRELATION,
+			    "inputRelationCollections",
+			    "input relation collection names (digi<->sim), one per inputHitCollection",
+			    _inputRelCollections,
+			    inputRelCollections);
+
   // output collection names
   std::vector < std::string > outputHitCollections;
   registerProcessorParameter( "outputHitCollections",
@@ -40,7 +51,7 @@ RealisticCaloReco::RealisticCaloReco() : Processor("RealisticCaloReco") {
 			      outputHitCollections);
 
   std::vector < std::string > outputRelCollections;
-  registerProcessorParameter( "outputRelCollections",
+  registerProcessorParameter( "outputRelationCollections",
 			      "output hit collection names",
 			      _outputRelCollections,
 			      outputRelCollections);
@@ -57,58 +68,17 @@ RealisticCaloReco::RealisticCaloReco() : Processor("RealisticCaloReco") {
                              _calibrCoeff,
                              calibrCoeff);
 
-  registerProcessorParameter("gap_correction" ,
-                             "account for gaps" ,
-                             _gapCorrection,
-                             (int)0);
-
   registerProcessorParameter("CellIDLayerString" ,
                              "name of the part of the cellID that holds the layer" , 
                              _cellIDLayerString , 
                              std::string("K-1")
                              );
 
-  registerProcessorParameter("CellIDModuleString" ,
-                             "name of the part of the cellID that holds the module" , 
-                             _cellIDModuleString , 
-                             std::string("M")
-                             );
-
-  registerProcessorParameter("CellIDStaveString" ,
-                             "name of the part of the cellID that holds the stave" , 
-                             _cellIDStaveString , 
-                             std::string("S-1")
-                             );
-
-  registerProcessorParameter("CellIDWaferString" ,
-                             "name of the part of the cellID that holds the wafer" , 
-                             _cellIDWaferString , 
-                             std::string("wafer")
-                             );
-
-  registerProcessorParameter("CellIDTowerString" ,
-                             "name of the part of the cellID that holds the tower" , 
-                             _cellIDTowerString , 
-                             std::string("tower")
-                             );
-
-  registerProcessorParameter("CellIDIndexIString" ,
-                             "name of the part of the cellID that holds the index I" , 
-                             _cellIDIndexIString , 
-                             std::string("I")
-                             );
-
-  registerProcessorParameter("CellIDIndexJString" ,
-                             "name of the part of the cellID that holds the index J" , 
-                             _cellIDIndexJString , 
-                             std::string("J")
-                             );
 
 }
 
 void RealisticCaloReco::init() {
   printParameters();
-  _countWarnings=0;
   _idDecoder=NULL;
 
   // if no output collection names specified, set some default based on the input collection names
@@ -122,6 +92,9 @@ void RealisticCaloReco::init() {
       _outputRelCollections.push_back( _inputHitCollections[i] + "DigiRelation" );
     }
   }
+
+  // should be one input relation collection per input hit collection
+  assert( _inputRelCollections.size() == _inputHitCollections.size() );
 
   // check that number of input and output collections names are the same
   assert ( _outputHitCollections.size() == _inputHitCollections.size() );
@@ -138,35 +111,25 @@ void RealisticCaloReco::processRunHeader( LCRunHeader* run) {
 
 void RealisticCaloReco::processEvent( LCEvent * evt ) {
 
-  // create the output relation collection -> don't really need this, since each calohit has a link to rawcalohit
-  //  LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
-
   _flag.setBit(LCIO::CHBIT_LONG);
   _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
-
-  resetGaps();
 
   // * Reading Collections of digitised calorimeter Hits *
 
   for (unsigned int i(0); i < _inputHitCollections.size(); ++i) {
     std::string colName =  _inputHitCollections[i] ;
-    streamlog_out ( DEBUG ) << "looking for collection: " << colName << endl;
+    std::string relName =  _inputRelCollections[i] ;
+    streamlog_out ( DEBUG ) << "looking for hit, relation collection: " << colName << " " << relName << endl;
+
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
 
+      LCCollection * inrelcol = evt->getCollection( relName.c_str() ) ;
+      LCRelationNavigator navi(inrelcol);
+
       if ( _idDecoder ) delete _idDecoder;
       _idDecoder = new CellIDDecoder<CalorimeterHit> ( col );
-
-
-      _cht_layout = layoutFromString(colName);
-      _cht_caloid = caloIDFromString(colName);
-      _cht_calotype = caloTypeFromString(colName);
-
-      if ( _cht_layout==CHT::any     ) streamlog_out ( WARNING ) << "could not determine CHT::layout for " << colName << std::endl;
-      if ( _cht_caloid==CHT::unknown ) streamlog_out ( WARNING ) << "could not determine CHT::caloID for " << colName << std::endl;
-
-      getGeometryInformation();
 
       // create new collection
       LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
@@ -174,14 +137,6 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 
       // relation between digitised and reconstructed hits
       LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
-
-      // if making gap corrections clear the vectors holding pointers to calhits
-      if(_gapCorrection>0){
-	for(int is=0;is<MAX_STAVES;is++)
-          for(int im=0;im<MAX_MODULES;im++)
-	    for(int il=0;il<MAX_LAYERS;il++)
-	      _calHitsByStaveModuleLayer[is][im][il].clear();
-      }
 
       int numElements = col->getNumberOfElements();
       streamlog_out ( DEBUG ) << colName << " number of elements = " << numElements << endl;
@@ -193,7 +148,6 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 	int cellid1 = hit->getCellID1();
 
 	CalorimeterHitImpl * calhit = new CalorimeterHitImpl(); // make new hit
-
 
 	float energy = reconstructEnergy( hit ); // overloaded method, technology dependent
 
@@ -207,20 +161,18 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 
 	newcol->addElement( calhit );
 
-	if (_gapCorrection>0) prepareForGaps(calhit);
+	// get the simcalohit corresponding to this digitised hit
+	if ( navi.getRelatedFromObjects( hit ) .size() > 0 ) {
+	  SimCalorimeterHit* simhit = (SimCalorimeterHit*) navi.getRelatedFromObjects(hit)[0]; // assume the first one (should be only one)
+	  // make a relation, add to collection - now keep relations between sim and reco hits
+	  relcol->addElement( new LCRelationImpl(simhit,calhit,1.0) );
+	} else {
+	  streamlog_out ( WARNING ) << "could not find relation to sim calo hit!" << endl;
+	}
 
-	// output hit relations to input hits
-	relcol->addElement( new LCRelationImpl(hit,calhit,1.0) );
-
-      }
-
-      // if requested apply gap correction
-      if(_gapCorrection>0) {
-	fillGaps();
       }
 
       // add collection to event
-
       newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
       
       evt->addCollection(newcol,_outputHitCollections[i].c_str());

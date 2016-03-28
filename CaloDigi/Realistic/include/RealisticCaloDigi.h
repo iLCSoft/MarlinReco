@@ -82,7 +82,6 @@ class RealisticCaloDigi : virtual public Processor {
 
   LCFlagImpl _flag;
 
-  int   _countWarnings;
   float _event_correl_miscalib;
 
   std::map < std::pair <int, int> , float > _cell_miscalibs;

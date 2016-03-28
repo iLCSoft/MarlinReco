@@ -153,8 +153,6 @@ void RealisticCaloDigi::init() {
   assert ( _outputCollections.size()    == _inputCollections.size() );
   assert ( _outputRelCollections.size() == _inputCollections.size() );
 
-  _countWarnings=0;
-
   // unit in which threshold is specified
   if (_threshold_unit.compare("MIP") == 0){
     _threshold_iunit=MIP;
@@ -170,6 +168,9 @@ void RealisticCaloDigi::init() {
   // convert the threshold to the approriate units (i.e. MIP for silicon, NPE for scint)
   _threshold_value = convertEnergy( _threshold_value, _threshold_iunit );
 
+  _flag.setBit(LCIO::CHBIT_LONG);
+  _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
+
   return;
 }
 
@@ -180,10 +181,6 @@ void RealisticCaloDigi::processRunHeader( LCRunHeader* run) {
 void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 
   // create the output collections
-
-  // copy the flags from the input collection
-  _flag.setBit(LCIO::CHBIT_LONG);
-  _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
 
   // decide on this event's correlated miscalibration
   if ( _misCalib_correl>0 ) _event_correl_miscalib = CLHEP::RandGauss::shoot( 1.0, _misCalib_correl );

@@ -87,7 +87,7 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
   pmass=0.938272;
 
   //get pdf plots
-  string ffstr1 = fname;   //"pdf/pdf_ParticleID_ok.root";
+  string ffstr1 = fname;
   fpdf=new TFile(ffstr1.c_str());
 
   string hname,hname2;
@@ -188,12 +188,12 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
   fact[1][3]=1.0;
   fact[1][4]=1.0;
   fact[2][0]=1.0;
-  fact[2][1]=1.0;
+  fact[2][1]=1.0e+2;
   fact[2][2]=1.0/1.02239;
   fact[2][3]=1.0/1.00616;
   fact[2][4]=1.0/0.965142;
   fact[3][0]=1.0;
-  fact[3][1]=1.0;
+  fact[3][1]=2.0;
   fact[3][2]=1.0/1.01857;
   fact[3][3]=1.0/1.00038;
   fact[3][4]=1.0/0.986345;
@@ -611,7 +611,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   double okval[5]={0.0,0.0,0.0,0.0,0.0};
   double total=0.0;     //[5]={0.0,0.0,0.0,0.0,0.0};
   double priorprob[5]={0.0,0.0,0.0,0.0,0.0};
-  for(int j=0;j<9;j++){   //variables
+  for(int j=0;j<8;j++){   //variables
 
     if(var[0]>0.0){
       //avoid pion misID when energy deposit to mucal is zero
@@ -652,7 +652,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
     //for dEdx flg
     if(!_dEdxFlg && j>6) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=6 || j==8 || j==10)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=7 || j==8 || j==10)) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=7 && j<=11 && var[j]<=-50.0) continue;
@@ -688,6 +688,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
       if(i==j) penalty[i][j]=1.0e-50; 
     }
   }
+  penalty[1][2] = 9.0;   //TMath::Min(1.0, 9.0*pp.P(); Todo: momentum depepndence  
 
   for(int i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
@@ -844,6 +845,13 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   }
     
   //cal. risk
+  //normalize
+  for(int i=0;i<5;i++){ 
+    for(int j=0;j<5;j++){
+      penalty[i][j]=1.0; 
+      if(i==j) penalty[i][j]=1.0e-50;
+    }
+  }
   //first. get penalty
   for(int i=2;i<5;i++){   //particle type
     for(int j=2;j<5;j++){
@@ -856,6 +864,8 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
       
     }
   }
+  penalty[4][3] = 10.0*(1.0-TMath::Exp(-0.334*pp.P()));  
+  penalty[3][2] = 1.0*TMath::Exp(0.0169*pp.P());  
 
   for(int i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
@@ -894,6 +904,7 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
     for(int i=0;i<5;i++){
       if(fabs(tmppp-risk[i])<1.0e-6) okflg=i;
     }
+    if(okflg<2) okflg=2;
     if(posterior[okflg]<=TMath::Log(0.21)) okflg=TMath::Max(2,okflg);  //do not go to leptons
 
     //check penalty -1 means undefined

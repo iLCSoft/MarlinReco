@@ -124,20 +124,20 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   			      float(7.55));
 
   registerProcessorParameter( "UseBayesian" ,
-  			      "PID is based on Bayesian or Likeihood",
+  			      "PID is based on Bayesian or Likelihood",
   			      _UseBayes,
-  			      int(0) );
+  			      int(1) );
 
   registerProcessorParameter( "UseLowMomentumMuPiSeparation" ,
   			      "MVA mu/pi separation should be used or not",
   			      _UseMVA,
-  			      bool(false) );
+  			      bool(true) );
 
 }  
   
 void LikelihoodPIDProcessor::init() { 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
-  
+
   //dEdx parameters
   double pars[28];
   for(int i=0;i<5;i++) pars[i]=_dEdxParamsElectron[i];
@@ -198,7 +198,7 @@ void LikelihoodPIDProcessor::init() {
   _myPID = new LikelihoodPID(_PDFName, pars); 
 
   //mupi separation class
-    _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);
+  _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);
 
   printParameters();
   
@@ -311,15 +311,17 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
 
     //Low momentum Muon identification  (Algorithm 5)
     // (from 0.2 GeV until 2 GeV)   
-    MVAoutput = -100.0;
-    parttype = -1;   
-    if(pp.P()<2.5){
-      parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
-      MVAoutput = _mupiPID->getMVAOutput();   
+    if(_UseMVA){
+      MVAoutput = -100.0;
+      parttype = -1;   
+      if(pp.P()<2.5){
+	parttype=_mupiPID->MuPiSeparation(pp, trk, clu);
+	MVAoutput = _mupiPID->getMVAOutput();   
+      }
+      //create PIDHandler
+      createParticleIDClass(parttype, part, pidh, algoID5, MVAoutput);
     }
-    //create PIDHandler
-    createParticleIDClass(parttype, part, pidh, algoID5, MVAoutput);
- 
+
  //////////////////////////////////////////////////////////////////////////////////
  
 
@@ -386,7 +388,7 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
   //	    << likelihoodProb[0] << " " << likelihoodProb[1] << " " << likelihoodProb[2] << " " << likelihoodProb[3] << " " << likelihoodProb[4] << std::endl;
   
   //for dEdx PID
-  //if(pidh.getAlgorithmName(algoID)=="dEdxPID"){
+  if(pidh.getAlgorithmName(algoID)=="dEdxPID" || pidh.getAlgorithmName(algoID)=="LikelihoodPID"){
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(0));  //electron hypothesis
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(1));  //muon hypothesis
     likelihoodProb.push_back((float)_myPID->get_dEdxDist(2));  //pion hypothesis
@@ -395,7 +397,13 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
 
     //std::cout << "check dedx: " << parttype << " " << algoID << " "
     //	      << likelihoodProb[11] << " " << likelihoodProb[12] << " " << likelihoodProb[13] << " " << likelihoodProb[14] << " " << likelihoodProb[15] << std::endl;
-    //}
+  }else{
+    likelihoodProb.push_back((float)0.0);  //electron hypothesis
+    likelihoodProb.push_back((float)0.0);  //muon hypothesis
+    likelihoodProb.push_back((float)0.0);  //pion hypothesis
+    likelihoodProb.push_back((float)0.0);  //kaon hypothesis
+    likelihoodProb.push_back((float)0.0);  //proton hypothesis
+  }
 
   //std::cout << "check posterior: " << posterior[0] << " " 
   //	    << posterior[1] << " "
@@ -404,7 +412,15 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
   //	    << posterior[4] << " " << std::endl;
   
   //set pid results
-  pidh.setParticleID(part, 0, _pdgTable[parttype], (float)likelihood[parttype], algoID, likelihoodProb);
-  
+  //set each hadron type
+  if(pidh.getAlgorithmName(algoID)=="dEdxPID" || pidh.getAlgorithmName(algoID)=="LikelihoodPID")
+    pidh.setParticleID(part, 0, _pdgTable[parttype], (float)likelihood[parttype], algoID, likelihoodProb);
+  else{  //ignore each hadron type
+    int tmppart=parttype;
+    parttype = std::min(2,parttype);
+    if(parttype==2) tmppart=5;
+    pidh.setParticleID(part, 0, _pdgTable[parttype], (float)likelihood[tmppart], algoID, likelihoodProb);
+  }
+
   return;
 }

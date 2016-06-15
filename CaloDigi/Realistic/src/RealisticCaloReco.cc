@@ -188,14 +188,11 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 float RealisticCaloReco::getLayerCalib( int ilayer ) {
   float calib_coeff = 0;
   // retrieve calibration constants
+  // Fixed the following logic (DJeans, June 2016)
+  int min(0),max(0);
   for (unsigned int k(0); k < _calLayers.size(); ++k) {
-    int min,max;
-    if (k == 0){
-      min = 0;
-    }else{
-      min = _calLayers[k-1];
-    }
-    max = _calLayers[k];
+    if ( k > 0 ) min+=_calLayers[k-1];
+    max+=_calLayers[k];
     if (ilayer >= min && ilayer < max) {
       calib_coeff = _calibrCoeff[k];
       break;

@@ -16,6 +16,7 @@
 
 
 #include <algorithm>
+#include <math.h>
 
 #include "EVENT/LCIO.h"
 #include "EVENT/LCCollection.h"
@@ -276,6 +277,11 @@ namespace marlin
       energy=_jetsWorkArray.Momentum[4*ijets+3];
       Jets->setMomentum(momentum);
       Jets->setEnergy(energy);
+      // JL June 20, 2016: add jet mass!
+      double mass = energy*energy - momentum[0]*momentum[0] - momentum[1]*momentum[1] - momentum[2]*momentum[2];
+      mass = (mass > 0) ? sqrt(mass) : 0;
+      Jets->setMass(mass);
+      // end JL
       for( int iobj=0;iobj<_partonsWorkArray.NumberOfPartons;iobj++){
         if(_partonsWorkArray.PointerParticleToJets[iobj]==(ijets+1)){
           ReconstructedParticle* enflow = 

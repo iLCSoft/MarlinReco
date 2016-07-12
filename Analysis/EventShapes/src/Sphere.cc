@@ -93,9 +93,20 @@ void Sphere::processEvent( LCEvent * evt ) {
   ReconstructedParticle* p;
   
   
-  // fill histogram from LCIO data :
+  try{ col = evt -> getCollection( _colName ) ; }
+  catch(EVENT::DataNotAvailableException){
+    streamlog_out(DEBUG)  << "Cannot find PFO Collection in event/run  " << evt->getEventNumber() <<" / "<< evt->getRunNumber() <<std::endl;
+   streamlog_out(DEBUG) << "Skipping this event!" << std::endl;
+    throw marlin::SkipEventException(this);
+  }
+  
+  if (col->getNumberOfElements() == 0){
+    streamlog_out(DEBUG) << "PFO Collection is empty in event/run  " << evt->getEventNumber() <<" / "<< evt->getRunNumber() <<std::endl;
+    return;
+  }
 
-  LCCollection* col = evt->getCollection( _colName ) ;
+
+
      for(int i=0;i<3;i++)
        {
     for (int j=0;j<3;j++)       

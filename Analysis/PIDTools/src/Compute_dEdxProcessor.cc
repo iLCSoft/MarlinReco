@@ -203,8 +203,12 @@ float Compute_dEdxProcessor::getNormalization(double dedx, float hit, double trk
   //cal. hit dep.
   double f1=1.0+std::exp(-hit/1.468);
   //cal. polar angle dep.
-  double c=1.0/sqrt(1.0-trkcos*trkcos);
-  double f2=1.0/(1.0-0.08887*std::log(c)); 
+  // double c=1.0/sqrt(1.0-trkcos*trkcos);
+  // double f2=1.0/(1.0-0.08887*std::log(c)); 
+  //cal. polar angle dep.   20160702
+  double c = std::acos(trkcos);
+  if(c>3.141592/2.0) c= 3.141592-c;
+  double f2 = 1.0/std::pow(c, 0.0703);
   
-  return dedx*f1*f2;
+  return dedx/(f1*f2);
 }

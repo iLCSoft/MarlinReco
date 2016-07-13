@@ -126,20 +126,61 @@ LikelihoodPIDProcessor::LikelihoodPIDProcessor()
   registerProcessorParameter( "UseBayesian" ,
   			      "PID is based on Bayesian or Likelihood",
   			      _UseBayes,
-  			      int(1) );
+  			      int(2) );
+
+  std::vector< float > costmat;
+  costmat.push_back(0.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+
+  costmat.push_back(1.0);
+  costmat.push_back(0.0);
+  costmat.push_back(9.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(0.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(30.0);
+  costmat.push_back(0.0);
+  costmat.push_back(1.0);
+
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(1.0);
+  costmat.push_back(10.0);
+  costmat.push_back(0.0);
+
+  registerProcessorParameter( "CostMatrix" ,
+  			      "cost matrix for risk based bayesian classifier",
+  			      _cost,
+  			      costmat);
+
 
   registerProcessorParameter( "UseLowMomentumMuPiSeparation" ,
   			      "MVA mu/pi separation should be used or not",
   			      _UseMVA,
   			      bool(true) );
 
+  registerProcessorParameter( "dEdxAngleCorrection" ,
+  			      "Angle Correction of dEdx value",
+  			      _UseCorr,
+  			      int(0) );
 }  
   
 void LikelihoodPIDProcessor::init() { 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
 
   //dEdx parameters
-  double pars[28];
+  double pars[29];
   for(int i=0;i<5;i++) pars[i]=_dEdxParamsElectron[i];
   for(int i=0;i<5;i++) pars[i+5]=_dEdxParamsMuon[i];
   for(int i=0;i<5;i++) pars[i+10]=_dEdxParamsPion[i];
@@ -148,6 +189,7 @@ void LikelihoodPIDProcessor::init() {
   pars[25] =(double) _UseBayes;
   pars[26] =(double) _dEdxNormalization;
   pars[27] =(double) _dEdxErrorFactor;
+  pars[28] =(double) _UseCorr;
 
   _pdgTable.push_back(11);
   _pdgTable.push_back(13);
@@ -195,7 +237,7 @@ void LikelihoodPIDProcessor::init() {
   _dEdxNames.push_back("kaon_dEdxdistance");
   _dEdxNames.push_back("proton_dEdxdistance");
 
-  _myPID = new LikelihoodPID(_PDFName, pars); 
+  _myPID = new LikelihoodPID(_PDFName, pars, _cost); 
 
   //mupi separation class
   _mupiPID = new LowMomentumMuPiSeparationPID_BDTG(_weightFileName);

@@ -50,6 +50,7 @@ LikelihoodPID::LikelihoodPID(double *pars){
   _usebayes=(int)pars[25];
   _dEdxnorm=(float)pars[26];
   _dEdxerrfact=pars[27];
+  _usecorr=(int)pars[28];
 
   //set mass
   emass=0.000510998;
@@ -61,7 +62,7 @@ LikelihoodPID::LikelihoodPID(double *pars){
   return;
 }
 
-LikelihoodPID::LikelihoodPID(string fname, double *pars){
+LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost){
   //set parameters for bethebloch
   //electron                                                                                                                   
   for(int i=0;i<5;i++) par[0][i]=pars[i];
@@ -87,7 +88,7 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
   pmass=0.938272;
 
   //get pdf plots
-  string ffstr1 = fname;
+  string ffstr1 = fname;  //"./pdf_standard_HighStat_v01.root";
   fpdf=new TFile(ffstr1.c_str());
 
   string hname,hname2;
@@ -170,38 +171,28 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars){
 
   //set threshold
   //this is original
-  threshold[0]=TMath::Exp(-0.55);
-  threshold[1]=TMath::Exp(-0.7);
+  threshold[0]=0.0;  //TMath::Exp(-0.55);
+  threshold[1]=0.0;  //TMath::Exp(-0.7);
   threshold[2]=0.0; 
-  threshold[3]=TMath::Exp(-0.6); 
-  threshold[4]=TMath::Exp(-0.6);
+  threshold[3]=0.0;  //TMath::Exp(-0.6); 
+  threshold[4]=0.0;  //TMath::Exp(-0.6);
   
-  //set factor
-  fact[0][0]=1.0;
-  fact[0][1]=1.0;
-  fact[0][2]=1.0;
-  fact[0][3]=1.0;
-  fact[0][4]=1.0;
-  fact[1][0]=1.0;
-  fact[1][1]=1.0;
-  fact[1][2]=1.0;
-  fact[1][3]=1.0;
-  fact[1][4]=1.0;
-  fact[2][0]=1.0;
-  fact[2][1]=1.0e+2;
-  fact[2][2]=1.0/1.02239;
-  fact[2][3]=1.0/1.00616;
-  fact[2][4]=1.0/0.965142;
-  fact[3][0]=1.0;
-  fact[3][1]=2.0;
-  fact[3][2]=1.0/1.01857;
-  fact[3][3]=1.0/1.00038;
-  fact[3][4]=1.0/0.986345;
-  fact[4][0]=1.0;
-  fact[4][1]=1.0;
-  fact[4][2]=1.0/1.09023;
-  fact[4][3]=1.0/1.00211;
-  fact[4][4]=1.0/1.00129;
+  //set cost
+  if(_usebayes==1){
+    for(int i=0;i<5;i++){
+      for(int j=0;j<5;j++){
+	if(i==j) penalty[i][j]=1.0e-50;
+	else penalty[i][j]=1.0;
+      }
+    }
+  }else if(_usebayes==2){
+    for(int i=0;i<5;i++){ 
+      for(int j=0;j<5;j++){
+	penalty[i][j]=cost[i*5+j];
+      }
+    }
+  }
+
   return;
 }
 
@@ -382,7 +373,19 @@ double LikelihoodPID::get_Norm(double dedx, float hit, double trkcos){
   //cal. polar angle dep.
   //double c=1.0/sqrt(1.0-trkcos*trkcos);
   double f2=1.0;   //1.0/(1.0-0.08887*TMath::Log(c));    //already corrected
-  
+
+  //For dEdx angle correction
+  if(_usecorr==1){
+    //make pdep
+    double ss = 1.0/sqrt(1.0-trkcos*trkcos);
+    f1=f1*(1.0-0.08887*std::log(ss)); 
+    //*(8.11120e-01+5.99762e-02*ss+1.11261e-01*ss*ss);
+    
+    double theta = std::cos(trkcos);
+    if(theta>3.141592/2.0) theta = 3.141592-theta;
+    f1 = f1*TMath::Power(theta,0.0703);
+  }
+
   return dedx*f1*f2/_dEdxnorm;
 }
 
@@ -447,7 +450,6 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     //avoid very low momentum tracks (no energy deposit in the cal.)
     if(var[0]==0.0 && j<=5) continue;
 
-    //cout << "value: " << j << " " << var[j] << endl;
     //first, get likelihood
     for(int i=0;i<5;i++){   //particle type
       if(j==0) valtype=0;
@@ -476,11 +478,11 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     //for dEdx flg
     if(!_dEdxFlg && j>=6) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=5 || j==6 || j==10)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=5 || j==6)) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=6 && var[j]<=-50.0) continue;
-    //if(j>=6 && var[j]!=var[j]) continue;
+    if(j>=6 && var[j]!=var[j]) continue;
     
     //cal. prior probability
     for(int i=0;i<5;i++)   //particle type
@@ -502,16 +504,17 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     
     //bayesian updating
     for(int i=0;i<5;i++) prior[i]=TMath::Exp(posterior[i]);
+
   }
 
   //cal. risk
   //first. get penalty
-  for(int i=0;i<5;i++){   //particle type
-    for(int j=0;j<5;j++){
-      penalty[i][j]=1.0;  
-      if(i==j) penalty[i][j]=1.0e-50;
-    }
-  }
+  // for(int i=0;i<5;i++){   //particle type
+  //   for(int j=0;j<5;j++){
+  //     penalty[i][j]=1.0;  
+  //     if(i==j) penalty[i][j]=1.0e-50;
+  //   }
+  // }
 
   for(int i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
@@ -615,12 +618,12 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
 
     if(var[0]>0.0){
       //avoid pion misID when energy deposit to mucal is zero
-      if(var[2]==0.0 && (j==2 || j==7 || j>=9)) continue;
+      if(var[2]==0.0 && j==2) continue;   //(j==2 || j==7 || j>=9)) continue;
       //don't use when ep>0.0
-      else if(var[2]>0.0 && j>=9) continue;
+      //else if(var[2]>0.0 && j>=9) continue;
     }else{
       //avoid very low momentum tracks (no energy deposit in the cal.)
-      if(j<=6 || j==7 || j>=9) continue;
+      if(j<=6) continue;
     }
 
     //first, get likelihood
@@ -652,11 +655,11 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
     //for dEdx flg
     if(!_dEdxFlg && j>6) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=7 || j==8 || j==10)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=7)) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=7 && j<=11 && var[j]<=-50.0) continue;
-    //if(j>=7 && j<=11 && var[j]!=var[j]) continue;
+    if(j>=7 && j<=11 && var[j]!=var[j]) continue;
     
     //cal. prior probability
     for(int i=0;i<5;i++)   //particle type
@@ -682,13 +685,13 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
 
   //cal. risk
   //first. get penalty
-  for(int i=0;i<5;i++){   //particle type
-    for(int j=0;j<5;j++){
-      penalty[i][j]=1.0; 
-      if(i==j) penalty[i][j]=1.0e-50; 
-    }
-  }
-  penalty[1][2] = 9.0;   //TMath::Min(1.0, 9.0*pp.P(); Todo: momentum depepndence  
+  // for(int i=0;i<5;i++){   //particle type
+  //   for(int j=0;j<5;j++){
+  //     penalty[i][j]=1.0; 
+  //     if(i==j) penalty[i][j]=1.0e-50; 
+  //   }
+  // }
+  // penalty[1][2] = 9.0;   //TMath::Min(1.0, 9.0*pp.P(); Todo: momentum depepndence  
 
   for(int i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
@@ -785,7 +788,7 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   double okval[5]={0.0,0.0,0.0,0.0,0.0};
   double total[5]={0.0,0.0,0.0,0.0,0.0};
   double priorprob[5]={0.0,0.0,0.0,0.0,0.0};
-  for(int j=0;j<8;j++){   //variables
+  for(int j=0;j<6;j++){   //variables
     //avoid very low momentum tracks (no energy deposit in the cal.)
     if(var[0]==0.0 && j<=4) continue;
 
@@ -802,8 +805,9 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
       if(j==8) valtype=10;
       if(j==9) valtype=11;
       
-      if(j<5) okval[i]=getValue(i,valtype,var[j]);   //likelihood
-      else if(j>=5)
+      if(j<5){
+	okval[i]=getValue(i,valtype,var[j]);   //likelihood
+      }else if(j>=5)
 	okval[i]=TMath::Exp(var[5+i]);   //just use dE/dx likelihood 
     }
 
@@ -814,11 +818,11 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
     //for dEdx flg
     if(!_dEdxFlg && j>=5) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=4 || j==7 || j==8 || j==9)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=5)) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=5 && var[j]<=-50.0) continue;
-    //if(j>=5 && var[j]!=var[j]) continue;
+    if(j>=5 && var[5]!=var[5]) continue;
     
     //cal. prior probability
     for(int i=0;i<5;i++)   //particle type
@@ -846,31 +850,54 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
     
   //cal. risk
   //normalize
-  for(int i=0;i<5;i++){ 
-    for(int j=0;j<5;j++){
-      penalty[i][j]=1.0; 
-      if(i==j) penalty[i][j]=1.0e-50;
-    }
-  }
+  // for(int i=0;i<5;i++){ 
+  //   for(int j=0;j<5;j++){
+  //     penalty[i][j]=1.0; 
+  //     if(i==j) penalty[i][j]=1.0e-50;
+  //   }
+  // }
   //first. get penalty
-  for(int i=2;i<5;i++){   //particle type
-    for(int j=2;j<5;j++){
-      penalty[i][j]=getPenalty(i,j,pp.P());
-    }
-    double tmppenalty=penalty[i][i];
-    for(int j=2;j<5;j++){
-      penalty[i][j]=(fabs(penalty[i][j]-tmppenalty)+tmppenalty)/tmppenalty;
-      penalty[i][j]=penalty[i][j]-1.0;
+  // for(int i=2;i<5;i++){   //particle type
+  //   for(int j=2;j<5;j++){
+  //     penalty[i][j]=getPenalty(i,j,pp.P());
+  //   }
+  //   double tmppenalty=penalty[i][i];
+  //   for(int j=2;j<5;j++){
+  //     penalty[i][j]=(fabs(penalty[i][j]-tmppenalty)+tmppenalty)/tmppenalty;
+  //     penalty[i][j]=penalty[i][j]-1.0;
       
+  //   }
+  // }
+
+  //weight of the cost
+  //reserve default value
+  double res43=penalty[4][3];
+  double res32=penalty[3][2];
+  if(_usebayes==2){
+    if(pp.P()>1.0){
+      penalty[4][3] = max(1.0, penalty[4][3]*(1.0-TMath::Exp(-0.772*pp.P())));  //10.0
+      //penalty[3][2] = max(1.0, penalty[3][2]*TMath::Exp(0.0268*pp.P()));  //30.0
+    }else{
+      penalty[4][3] = 1.0;
+      penalty[3][2] = 1.0;
     }
+
+    if(fabs(pp.CosTheta())<1.0){
+      penalty[4][3] = max(1.0, penalty[4][3]*(0.439*pp.CosTheta()*pp.CosTheta()-0.940*fabs(pp.CosTheta())+0.495));
+      penalty[3][2] = max(1.0, penalty[3][2]*TMath::Exp(-1.46*fabs(pp.CosTheta())));  //30.0
+    }
+
   }
-  penalty[4][3] = 10.0*(1.0-TMath::Exp(-0.334*pp.P()));  
-  penalty[3][2] = 1.0*TMath::Exp(0.0169*pp.P());  
+  
+  //penalty[4][2] = 5.0;
 
   for(int i=0;i<5;i++){   //particle type
     risk[i]=penalty[i][0]*TMath::Exp(posterior[0])+penalty[i][1]*TMath::Exp(posterior[1])
       +penalty[i][2]*TMath::Exp(posterior[2])+penalty[i][3]*TMath::Exp(posterior[3])+penalty[i][4]*TMath::Exp(posterior[4]);
   }
+
+  penalty[4][3]=res43;
+  penalty[3][2]=res32;
 
   //check the rule
   int okflg=-1;

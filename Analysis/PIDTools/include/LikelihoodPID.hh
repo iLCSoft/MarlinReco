@@ -12,7 +12,7 @@
 class LikelihoodPID{
 public:
   LikelihoodPID(){};
-  LikelihoodPID(std::string fname, double *pars);
+  LikelihoodPID(std::string fname, double *pars, std::vector<float> cost);
   LikelihoodPID(double *pars);
   ~LikelihoodPID();
    
@@ -78,7 +78,7 @@ private:
   EVENT::FloatVec shapes;
 
   bool _basicFlg, _dEdxFlg, _showerShapesFlg;
-  int _usebayes;
+  int _usebayes, _usecorr;
   float _dEdxnorm, _dEdxerrfact;
 };
 

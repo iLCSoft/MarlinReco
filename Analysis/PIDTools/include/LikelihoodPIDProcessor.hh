@@ -42,11 +42,12 @@ private:
   std::vector<float> _dEdxParamsPion;
   std::vector<float> _dEdxParamsKaon;
   std::vector<float> _dEdxParamsProton;
+  std::vector<float> _cost;
 
   LowMomentumMuPiSeparationPID_BDTG *_mupiPID;
 
   bool _basicFlg, _dEdxFlg, _showerShapesFlg;
-  int _UseBayes;
+  int _UseBayes,_UseCorr;
   bool _UseMVA;
   float _dEdxNormalization, _dEdxErrorFactor;
 };

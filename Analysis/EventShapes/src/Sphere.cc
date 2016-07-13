@@ -5,6 +5,7 @@
 #include "tnt_math_utils.h"
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
+#include "marlin/Exceptions.h"
 #include <AIDA/IHistogramFactory.h>
 #include <AIDA/ICloud1D.h>
 //#include <AIDA/IHistogram1D.h>
@@ -91,13 +92,13 @@ void Sphere::processEvent( LCEvent * evt ) {
   double dvojka=2.0;
 
   ReconstructedParticle* p;
-  
+  LCCollection* col ; 
   
   try{ col = evt -> getCollection( _colName ) ; }
   catch(EVENT::DataNotAvailableException){
     streamlog_out(DEBUG)  << "Cannot find PFO Collection in event/run  " << evt->getEventNumber() <<" / "<< evt->getRunNumber() <<std::endl;
    streamlog_out(DEBUG) << "Skipping this event!" << std::endl;
-    throw marlin::SkipEventException(this);
+   throw marlin::SkipEventException(this);
   }
   
   if (col->getNumberOfElements() == 0){

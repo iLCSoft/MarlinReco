@@ -5,6 +5,32 @@
 ===============================
 
  --------
+| v01-15 |
+ --------
+
+M. Kurata
+   - Include dEdx angular correction, which is a feedback from Sviatoslav
+   - add PDF creation processor and steering file
+   - add hadron type likelihood and probability
+   - PIDTools: Adding PIDVariables and PIDParticles to trunk
+
+F. Gaede
+   - introduced anonymous namespace to compile w/ -pedantic
+   -  made compatible with c++11
+   - removed -ansi -pedantic -Wno-long-long
+   - build sub-package Relaistic only if DD4hep is found
+   - added implementation of getExtension() - copied from DDMarlinPandora
+  
+D. Jeans
+   - introduction of RealisticCaloDigi/Reco processors: refactorisation and cleaning up of ILDCaloDigi
+   - gap corrections split off into BruteForceEcalGapFiller processor; change to setup of reco hit relations
+   - fixed logic in determination of calibration by layer
+
+M. Chera
+   - fixed bug such that the processor now skips events with empty PFO collections without crashing
+   
+
+ --------
 | v01-14 |
  --------
 

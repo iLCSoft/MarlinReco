@@ -248,9 +248,16 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
 
   tmpid=Class_hadron(pp, trk, cluvec);
 
-  if(_posterior[0]!=_posterior[0]){  //cannot estimate likelihood and probability
+  //avoid strange value
+  //cannot estimate likelihood and probability
+  if(_posterior[0]!=_posterior[0]){
     for(int i=0;i<6;i++){
-      _likelihood[i] = 0.0;
+      _likelihood[i] = 999.0;
+      _posterior[i] = 0.0;
+    }
+  }else if(_likelihood[0]==0.0 &&_likelihood[1]==0.0 &&_likelihood[2]==0.0 && _likelihood[3]==0.0 && _likelihood[4]==0.0){
+    for(int i=0;i<6;i++){
+      _likelihood[i] = 999.0;
       _posterior[i] = 0.0;
     }
   }

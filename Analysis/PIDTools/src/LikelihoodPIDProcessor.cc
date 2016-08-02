@@ -415,7 +415,7 @@ void LikelihoodPIDProcessor::check( LCEvent * evt ) {
 
 void LikelihoodPIDProcessor::end() { 
   delete _myPID;
-  delete _mupiPID;
+  delete _mupiPID; 
 }
 
 void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput){
@@ -428,11 +428,11 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
     likelihoodProb.push_back(MVAoutput);
     for(int j=0;j<6;j++) likelihoodProb.push_back(posterior[j]);
   }else{
-    for(int j=0;j<6;j++) likelihoodProb.push_back(0.0);
+    for(int j=0;j<6;j++) likelihoodProb.push_back(999.0);
     likelihoodProb.push_back(MVAoutput);
     for(int j=0;j<6;j++) likelihoodProb.push_back(0.0);
     for(int j=0;j<6;j++){
-      likelihood[j]=0.0;
+      likelihood[j]=999.0;
       posterior[j]=0.0;
     }
   }

@@ -13,6 +13,7 @@ M. Kurata
    - add PDF creation processor and steering file
    - add hadron type likelihood and probability
    - PIDTools: Adding PIDVariables and PIDParticles to trunk
+   - assign 999 to likelihood when cannot perform PID
 
 F. Gaede
    - introduced anonymous namespace to compile w/ -pedantic

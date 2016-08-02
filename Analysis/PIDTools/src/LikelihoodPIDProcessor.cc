@@ -346,6 +346,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
       if(_mupiPID->isValid()) parttype = tmpparttype;
       MVAoutput = _mupiPID->getMVAOutput();   
     }
+
     //create PIDHandler
     createParticleIDClass(parttype, part, pidh, algoID4, MVAoutput);
 
@@ -422,12 +423,19 @@ void LikelihoodPIDProcessor::createParticleIDClass(int parttype, ReconstructedPa
   Double_t *posterior = _myPID->GetPosterior();
   Double_t *likelihood = _myPID->GetLikelihood();
   std::vector<float> likelihoodProb;
-  for(int j=0;j<6;j++) likelihoodProb.push_back(likelihood[j]);
-  likelihoodProb.push_back(MVAoutput);
-  for(int j=0;j<6;j++) likelihoodProb.push_back(posterior[j]);
-
-  //std::cout << "check likelihood: " << parttype << " " << algoID << " "
-  //	    << likelihoodProb[0] << " " << likelihoodProb[1] << " " << likelihoodProb[2] << " " << likelihoodProb[3] << " " << likelihoodProb[4] << std::endl;
+  if(pidh.getAlgorithmName(algoID)!="LowMomMuID"){
+    for(int j=0;j<6;j++) likelihoodProb.push_back(likelihood[j]);
+    likelihoodProb.push_back(MVAoutput);
+    for(int j=0;j<6;j++) likelihoodProb.push_back(posterior[j]);
+  }else{
+    for(int j=0;j<6;j++) likelihoodProb.push_back(0.0);
+    likelihoodProb.push_back(MVAoutput);
+    for(int j=0;j<6;j++) likelihoodProb.push_back(0.0);
+    for(int j=0;j<6;j++){
+      likelihood[j]=0.0;
+      posterior[j]=0.0;
+    }
+  }
   
   //for dEdx PID
   if(pidh.getAlgorithmName(algoID)=="dEdxPID" || pidh.getAlgorithmName(algoID)=="LikelihoodPID"){

@@ -211,7 +211,10 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   for(int i=0;i<5;i++){
     prior[i]=0.2;
     _posterior[i]=prior[i];
+    _likelihood[i]=0.0;
   }
+  _posterior[5]=prior[2]+prior[3]+prior[4];
+  _likelihood[5]=0.0;
 
   //get dedx distance
   for(int i=0;i<5;i++) _dEdxDist[i]=get_dEdxChi2(i, pp.Vect(), trk->getdEdxError(),trk->getdEdx());
@@ -244,6 +247,14 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   _likelihood[5]=0.0;  //hadron type
 
   tmpid=Class_hadron(pp, trk, cluvec);
+
+  if(_posterior[0]!=_posterior[0]){  //cannot estimate likelihood and probability
+    for(int i=0;i<6;i++){
+      _likelihood[i] = 0.0;
+      _posterior[i] = 0.0;
+    }
+  }
+
   return tmpid;
 }
 
@@ -317,6 +328,7 @@ double LikelihoodPID::get_dEdxChi2(int parttype, TVector3 p, float hit, double d
   //get chi2!!
   double chi2=TMath::Power((dEdx_Norm-ExpdEdx)/dEdx_Error,2.0);
   if(dEdx_Norm-ExpdEdx<0.0) chi2=-chi2;    //get signed chi2
+
   return chi2;
 }
 
@@ -354,6 +366,7 @@ double LikelihoodPID::get_dEdxFactor(int parttype, TVector3 p, float hit, double
 
   //get likelihood factor
   double factor=-0.5*TMath::Log(2.0*TMath::Pi()*dEdx_Error*dEdx_Error);
+
   return factor;
 }
 
@@ -468,9 +481,10 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
 	okval[i]=getValue(i,valtype,var[j]);   //likelihood
 	if(mucal==0.0 && i==1) okval[i]=getValue(5,valtype,var[j]);   //likelihood
       }else if(j>=6)
-	okval[i]=TMath::Exp(var[6+i]);   //just use dE/dx likelihood 
+	okval[i]=std::max(std::exp(var[6+i]), 1.0e-300);   //just use dE/dx likelihood 
+	//okval[i]=std::exp(var[6+i]);   //just use dE/dx likelihood 
+      
     }
-    
     //for basic variables flg
     if(!_basicFlg && j<2) continue;
     //for cluster shape flg
@@ -645,7 +659,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
 	okval[i]=getValue(i,valtype,var[j]);   //likelihood
 	if(var[2]==0.0 && i==1) okval[i]=getValue(5,valtype,var[j]);   //likelihood 
       }else if(j>=7)
-	okval[i]=TMath::Exp(var[7+i]);   //just use dE/dx likelihood 
+	okval[i]=std::max(std::exp(var[7+i]), 1.0e-300);   //just use dE/dx likelihood 
     }
 
     //for basic variables flg
@@ -808,7 +822,7 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
       if(j<5){
 	okval[i]=getValue(i,valtype,var[j]);   //likelihood
       }else if(j>=5)
-	okval[i]=TMath::Exp(var[5+i]);   //just use dE/dx likelihood 
+	okval[i]=std::max(std::exp(var[5+i]), 1.0e-300);   //just use dE/dx likelihood 
     }
 
     //for basic variables flg
@@ -1003,13 +1017,14 @@ const double LikelihoodPID::getValue(int type, int valtype, double value){
     }*/
 
   
-  double val=1.0e-30;
+  double val=1.0e-100;
   int bin=0;
 
   bin=pdf[type][valtype]->GetXaxis()->FindBin(value);
 
   //get probability
   val=pdf[type][valtype]->GetBinContent(bin);
+  if(val==0.0) val= 1.0e-100;
 
   return val;
 }

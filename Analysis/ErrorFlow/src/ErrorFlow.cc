@@ -112,6 +112,11 @@ ErrorFlow::ErrorFlow() : Processor("ErrorFlow") {
 		  p_semiLepSigmaCorrFactor,
 		  (double) 0.57 );
 
+	registerProcessorParameter( "SotreInTree" ,
+		  "Enable/disable storing computed qunatities in a ROOT tree",
+		  p_storeTree,
+		  (bool) false );
+
 } /* -----  end of function ErrorFlow::ErrorFlow  ----- */
 
 
@@ -129,26 +134,28 @@ void ErrorFlow::init() {
     // usually a good idea to
     printParameters() ;
 
-	// Create a ROOT file
-	 tree = new TTree("ErrorFlow", "Number of photons, charged and neutral hadrons in a jet");
-	 // PFO count branches
-	 tree->Branch( "numPhotons" , &numPhotons, "numPhotons/I");
-	 tree->Branch( "numChargedPFOs" , &numChargedPFOs, "numChargedPFOs/I");
-	 tree->Branch( "numNeutralPFOs" , &numNeutralPFOs, "numNeutralPFOs/I");
-	 tree->Branch( "numPFOsTotal" , &nPFOs, "numPFOsTotal/I");
-	 // Energy branches
-	 tree->Branch( "ePhotons" , &ePhotons, "ePhotons/D");
-	 tree->Branch( "eChargedPFOs" , &eChargedPFOs, "eChargedPFOs/D");
-	 tree->Branch( "eNeutralPFOs" , &eNeutralPFOs, "eNeutralPFOs/D");
-	 tree->Branch( "ePFOsTotal" , &eJetTotal, "eJetTotal/D");
-	 // Jet energy resolution branches
-	 tree->Branch( "absDetResSquared" , &absDetResSquared, "absDetResSquared/D");
-	 tree->Branch( "relConfCharged" , &relConfCharged, "relConfCharged/D");
-	 tree->Branch( "relConfPhotons" , &relConfPhotons, "relConfPhotons/D");
-	 tree->Branch( "relConfNeutral" , &relConfNeutral, "relConfNeutral/D");
-	 tree->Branch( "relConfSquared" , &relConfSquared, "relConfSquared/D");
-	 tree->Branch( "absConfSquared" , &absConfSquared, "absConfSquared/D");
-	 tree->Branch( "absSemiLepResSquared" , &absSemiLepResSquared, "absSemiLepResSquared/D");
+	// Create a ROOT file if enabled in the steering file
+	if ( p_storeTree ) {
+	   tree = new TTree("ErrorFlow", "Number of photons, charged and neutral hadrons in a jet");
+	   // PFO count branches
+	   tree->Branch( "numPhotons" , &numPhotons, "numPhotons/I");
+	   tree->Branch( "numChargedPFOs" , &numChargedPFOs, "numChargedPFOs/I");
+	   tree->Branch( "numNeutralPFOs" , &numNeutralPFOs, "numNeutralPFOs/I");
+	   tree->Branch( "numPFOsTotal" , &nPFOs, "numPFOsTotal/I");
+	   // Energy branches
+	   tree->Branch( "ePhotons" , &ePhotons, "ePhotons/D");
+	   tree->Branch( "eChargedPFOs" , &eChargedPFOs, "eChargedPFOs/D");
+	   tree->Branch( "eNeutralPFOs" , &eNeutralPFOs, "eNeutralPFOs/D");
+	   tree->Branch( "ePFOsTotal" , &eJetTotal, "eJetTotal/D");
+	   // Jet energy resolution branches
+	   tree->Branch( "absDetResSquared" , &absDetResSquared, "absDetResSquared/D");
+	   tree->Branch( "relConfCharged" , &relConfCharged, "relConfCharged/D");
+	   tree->Branch( "relConfPhotons" , &relConfPhotons, "relConfPhotons/D");
+	   tree->Branch( "relConfNeutral" , &relConfNeutral, "relConfNeutral/D");
+	   tree->Branch( "relConfSquared" , &relConfSquared, "relConfSquared/D");
+	   tree->Branch( "absConfSquared" , &absConfSquared, "absConfSquared/D");
+	   tree->Branch( "absSemiLepResSquared" , &absSemiLepResSquared, "absSemiLepResSquared/D");
+	} // end if p_storeTree
 
     p_nRun = 0 ;
     p_nEvt = 0 ;
@@ -296,8 +303,10 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 			+ absConfSquared * p_scaleConf * p_scaleConf 
 			+ ( p_semiLepCorrection ? absSemiLepResSquared : 0.0 );
 
-		 // Fill the ROOT tree
-		 tree->Fill();
+		 // Fill the ROOT tree if enabled in the steering file
+		 if ( p_storeTree ) {
+			tree->Fill();
+		 } // end if p_storeTree
 
 		 // Update the convariance matrix of the jet object
 		 jetPtr->setCovMatrix( jetCovMatrix );

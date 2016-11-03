@@ -116,6 +116,9 @@ class ErrorFlow : public Processor
 	  double p_aHCAL;                      /* Stochastic term coefficient in HCAL resolution */
 	  double p_cHCAL;                      /* Constant term coefficient in HCAL resolution */
 
+	  // Confusion scale factor
+	  bool p_storeTree;                        /* Enable/disable storing in a ROOT tree */
+
 	  // Counters for PFOs
       int numChargedPFOs;                       /* Number of charged PFOs in a jet */
 	  int numPhotons;                           /* Number of photons in a jet */

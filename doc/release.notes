@@ -3,6 +3,16 @@
  release notes for MarlinReco
 
 ===============================
+ --------
+| v01-16 |
+ --------
+
+A.Ebrahimi
+  - add package ErrorFlow
+    - the ErrorFlow processor computes jet-specific energy uncertainty
+      by summing up the uncertainty of individual particles clustered
+      in a jet object.
+
 
  --------
 | v01-15 |

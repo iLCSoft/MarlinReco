@@ -630,7 +630,7 @@ namespace TTbarAnalysis
 				  << " teta: " << eta
 				  << " offset: " << offset
 				  << '\n';
-			if (offset > 0.01 && abs(eta) < 4 && p > 0.6) 
+                        if (offset > 0.01 && std::fabs(eta) < 4 && p > 0.6)
 			{
 				filtered.push_back(daughter);
 			}

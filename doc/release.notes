@@ -4,6 +4,32 @@
 
 ===============================
  --------
+| v01-17 |
+ --------
+
+S. Lukic
+  - Adding SiPID package to MarlinReco. 
+    For the moment it contains the processor which calculates dE/dx for 
+    a silicon tracker and writes it to the lcio file.
+    Primarily intended for CLICdet but generally applicable. 
+    DD4hep is used to access geometry.
+    CMakeLists.txt in MarlinReco was adjusted. The package is added only
+    if DD4hep and MarlinTrk are found.
+
+M.Petric
+  - fix in TruthVertexFinder
+ 
+D. Jeans
+  - copy calodigi documentation into Realistic package (+ a few changes to help latex compile)
+
+S. Lu
+  - comment out 'ADD_MARLINRECO_PKG( ./Clustering/BCalReco)' for solving
+    '*** Break *** segmentation violation' at the end of Marlin run.
+    ToDo: To ckeck which ilcsoft package use the same resource (maybe root resource). 
+
+
+
+ --------
 | v01-16 |
  --------
 

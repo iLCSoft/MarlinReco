@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+  <execute>
+
+    <!-- ========== setup  ========== -->
+    <processor name="MyAIDAProcessor"/>
+
+    <!-- ========== track dE/dx  ========== -->
+    <processor name="MyAnalyseSidEdxProcessor"/>
+
+  </execute>
+
+
+  <global>
+    <parameter name="LCIOInputFiles">
+      reco.mu.slcio  </parameter>
+    <!-- Limit the number of processed records (run+evt): -->
+    <parameter name="MaxRecordNumber" value="0" />
+    <parameter name="SkipNEvents" value="0" />
+    <parameter name="SupressCheck" value="false" />  
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE  </parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+
+
+
+  <!-- == Track dE/dx analysis parameters == -->
+  <processor name="MyAnalyseSidEdxProcessor" type="AnalyseSidEdxProcessor">
+    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks </parameter>
+    <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation">TrackMCTruthLink </parameter>
+    <parameter name="RootFilename" type="string">ana.mu.dEdx.root </parameter>
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
+  </processor>
+
+
+
+
+  <processor name="MyAIDAProcessor" type="AIDAProcessor">
+    <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+    <!-- compression of output file 0: false >0: true (default) -->
+    <parameter name="Compress" type="int" value="1"/>
+    <!-- filename without extension-->
+    <parameter name="FileName" type="string" value="histograms"/>
+    <!-- type of output file xml (default) or root ( only OpenScientist)-->
+    <parameter name="FileType" type="string" value="root "/>
+  </processor>
+
+
+</marlin>

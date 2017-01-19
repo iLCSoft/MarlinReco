@@ -260,7 +260,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       }
       if (thickness < 0.00001) {
         streamlog_out(ERROR) << "GetThickness returned zero!\n";
-        exit(0);;
+        exit(0);
       }
 
 

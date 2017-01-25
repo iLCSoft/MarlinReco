@@ -265,6 +265,7 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD& lcdd
         }
       }
 
+
       streamlog_out(MESSAGE) << "\n";
       knownDetectors.push_back(new PetalResolver(tf, layering, _collectionNames[i], sensThickCheatVals.at(i)));
     }
@@ -274,7 +275,12 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD& lcdd
           " and will not be added!\n";
     }
 
-  }
+    if(sensThickCheatVals.at(i) > 0.) {
+      streamlog_out(MESSAGE) << " ... Replacing this detector sensitive thicknesses with value "
+          << sensThickCheatVals.at(i)/dd4hep::mm << " mm.\n";
+    }
+
+  } // Loop over detector elements (i)
 
 }
 
@@ -297,7 +303,7 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 }
 
 
-double LayerFinder::SensitiveThickness(TrackerHitPlane* thit) {
+double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
   streamlog_out(DEBUG) << "CollectionFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
 
@@ -310,10 +316,12 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit) {
 
       if( thit == (*cit)->GetHit(i) ) {
 
-        streamlog_out(DEBUG) << " ... Found matching hit " << (*cit)->GetHit(i)->getCellID0() << ".\n";
+        streamlog_out(DEBUG) << " ... Found matching hit " << (*cit)->GetHit(i)->getCellID0()
+                                 << " with energy " << (*cit)->GetHit(i)->getEDep()
+                                 << " in collection " << (*cit)->GetCollectionName() << ".\n";
 
         int nLayer = (*cit)->Decode(thit);
-        int tf = (*cit)->GetDetTypeFlag();
+        tf = (*cit)->GetDetTypeFlag();
         int nLayers = (*cit)->GetNumberOfLayers();
 
         streamlog_out(DEBUG) << " ... Layer number is " << nLayer << ".\n";
@@ -325,13 +333,13 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit) {
 
 
         if (tf & DD4hep::DetType::BARREL) {
-          double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer) / dd4hep::mm;
-          streamlog_out(DEBUG) << " ... Thickness is " << t << " mm.\n";
+          double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer);
+          streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
         }
         if (tf & DD4hep::DetType::ENDCAP) {
-          double t = dynamic_cast<PetalResolver*>(*cit)->SensitiveThickness(nLayer) / dd4hep::mm;
-          streamlog_out(DEBUG) << " ... Thickness is " << t << " mm.\n";
+          double t = dynamic_cast<PetalResolver*>(*cit)->SensitiveThickness(nLayer);
+          streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
         }
         streamlog_out(WARNING) << " ... Detector type flag not found!!!\n";

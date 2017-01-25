@@ -94,6 +94,7 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("xHit", &xHit);
   tree->Branch("yHit", &yHit);
   tree->Branch("eHit", &eHit);
+  tree->Branch("typeHit", &typeHit);
 
   lastRunHeaderProcessed = -1;
 
@@ -144,20 +145,20 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
 
   tracks->getFlag();
 
-  /***       Reset variables ***/
-  pMC.clear();
-  thetaMC.clear();
-  eDep.clear();
-  dEdx.clear();
-  nTrkHits.clear();
-  nTrkRelatedParticles.clear();
-  zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear();
-  d0.clear();
-
   nTracks = tracks->getNumberOfElements()  ;
 
   for (int i = 0; i < nTracks; i++)
   {
+    /***       Reset variables ***/
+    pMC.clear();
+    thetaMC.clear();
+    eDep.clear();
+    dEdx.clear();
+    nTrkHits.clear();
+    nTrkRelatedParticles.clear();
+    zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear(); typeHit.clear();
+    d0.clear();
+
     TrackImpl * track = dynamic_cast<TrackImpl*>( tracks->getElementAt(i) );
 
     /*** Find the associated MC particle ***/
@@ -208,6 +209,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
 
       zHit.push_back(hitpos.z()); xHit.push_back(hitpos.x()); yHit.push_back(hitpos.y());
       eHit.push_back(trackhits[ihit]->getEDep());
+      typeHit.push_back(double(trackhits[ihit]->getType()));
 
       /****************/
       pMC.push_back(float(p3.Mag()));

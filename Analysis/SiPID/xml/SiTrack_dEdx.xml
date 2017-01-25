@@ -54,6 +54,7 @@
   <processor name="InitDD4hep" type="InitializeDD4hep">
     <!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
     <!--Name of the DD4hep compact xml file to load-->
+    <!--Even if ddsim performed with CLIC_o2_v05_TrkOnly.xml, full detector needed here for MyTruthTrackFinder.-->
     <parameter name="DD4hepXMLFile" type="string"> ../xml/CLIC_o2_v05/CLIC_o2_v05.xml </parameter>
   </processor>
 
@@ -180,7 +181,7 @@
 
   <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
     <!--   standard output: full reconstruction keep all collections -->
-    <parameter name="LCIOOutputFile" type="string"> reco.mu.slcio </parameter>
+    <parameter name="LCIOOutputFile" type="string"> reco.mu.storeCos.slcio </parameter>
     <parameter name="FullSubsetCollections" type="StringVec"> EfficientMCParticles InefficientMCParticles </parameter>
     <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
     <parameter name="Verbosity" type="string">WARNING </parameter>
@@ -243,7 +244,7 @@
     <!-- compression of output file 0: false >0: true (default) -->
     <parameter name="Compress" type="int" value="1"/>
     <!-- filename without extension-->
-    <parameter name="FileName" type="string" value="histograms"/>
+    <parameter name="FileName" type="string" value="histograms.SC"/>
     <!-- type of output file xml (default) or root ( only OpenScientist)-->
     <parameter name="FileType" type="string" value="root "/>
   </processor>
@@ -675,8 +676,17 @@
     <parameter name="CheatSensorThicknesses" type="bool"> false </parameter>
     <!-- Values for sensor thickness to use when cheating. 
          Finer selection of which thicknesses to cheat is possible by setting
-         negative values for thicknesses that should not be cheated -->
-    <parameter name="SensorThicknessCheatValues" type="FloatVec"> -1 -1 -1 -1 -1 0.005 </parameter>
+         negative values for thicknesses that should not be cheated 
+         Here we are cheating the thicknesses of the tracker barrel regions 
+         because they are defined per "layer" with 2 sensors. -->
+    <parameter name="SensorThicknessCheatValues" type="FloatVec"> 0.015 -1 0.015 -1 -1 -1 </parameter>
+    <!-- Integer bitmask that specifies which tracker detector elements to use. 
+         To obtain the integer value of the mask, add up 2^i for each tracker 
+         element that you want to use, where i is the order of the tracker 
+         element in LCDD.
+         Default: use all elements.
+          -->
+    <!--parameter name="ElementMask" type="int"> 15 </parameter-->
     
   </processor>
 

@@ -150,7 +150,10 @@ public:
    */
   int ReadCollections(EVENT::LCEvent *);
 
-  double SensitiveThickness(TrackerHitPlane*);
+  /* Returns the sensitive thickness of the layer where the hit was recorded
+   * Also returns the detector type flag in the second argument
+   */
+  double SensitiveThickness(TrackerHitPlane*, int &detTypeFlag);
 
   EVENT::LCCollection* GetCollection(EVENT::LCObject*);
   CellIDDecoder<TrackerHitPlane>* GetDecoder(EVENT::LCObject*);

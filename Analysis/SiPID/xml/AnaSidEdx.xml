@@ -29,7 +29,7 @@
   <processor name="MyAnalyseSidEdxProcessor" type="AnalyseSidEdxProcessor">
     <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks </parameter>
     <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation">TrackMCTruthLink </parameter>
-    <parameter name="RootFilename" type="string">ana.mu.dEdx.root </parameter>
+    <parameter name="RootFilename" type="string">ana.mu.root </parameter>
     <parameter name="Verbosity" type="string">MESSAGE </parameter>
   </processor>
 

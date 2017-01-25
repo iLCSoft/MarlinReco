@@ -72,7 +72,7 @@ class AnalyseSidEdxProcessor : public Processor {
   FloatVec eDep, dEdx;
   FloatVec d0; // Impact factor of the associated particle
   FloatVec nTrkHits, nTrkRelatedParticles;
-  FloatVec zHit, xHit, yHit, eHit;
+  FloatVec zHit, xHit, yHit, eHit, typeHit;
   int nTracks;
 
   int lastRunHeaderProcessed;

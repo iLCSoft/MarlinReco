@@ -7,6 +7,7 @@
 #include <EVENT/LCRelation.h>
 #include <UTIL/LCRelationNavigator.h>
 #include <IMPL/TrackStateImpl.h>
+#include <IMPL/TrackerHitImpl.h>
 
 // ----- include for verbosity dependent logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -251,7 +252,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       if (norm < FLT_MIN) continue;
       double cosAngle = fabs(trackDir.dot(surfaceNormal)) / norm ;
 
-      double thickness = collFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]));
+      int detTypeFlag = 0;
+      double thickness = collFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
       if (thickness < 0.) {
         streamlog_out(DEBUG) << "Could not find hit collection corresponding to hit CellID " << cellid
                              << ", hit ID " << trackhits.at(ihit)->id() << " .\n";
@@ -263,11 +265,15 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
         exit(0);
       }
 
-
       traversedThickness += thickness / cosAngle;
       eDepHit += trackhits[ihit]->getEDep();
       dEdxSum += trackhits[ihit]->getEDep() / (thickness / cosAngle);
-      // FIXME: At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
+      // At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
+
+      // I am not sure whether the following is the intended use of the hit "type".
+      // The hit "type" is being overwritten here, but it was apparently not used before.
+      ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
+
       iRegHits++;
     }
     if(iRegHits == 0) continue;

@@ -34,8 +34,9 @@ AnalyseSidEdxProcessor aAnalyseSidEdxProcessor ;
 
 
 AnalyseSidEdxProcessor::AnalyseSidEdxProcessor() : Processor("AnalyseSidEdxProcessor"),
-    m_trackColName(""), m_linkColName(""),
-    m_rootFileName(""), rootfile(NULL), tree(NULL),
+    m_rootFileName(""), m_trackColName(""), m_linkColName(""),
+    m_trkHitCollNames(),
+    rootfile(NULL), tree(NULL),
     nTracks(0), lastRunHeaderProcessed(-1)
     {
 
@@ -45,6 +46,11 @@ AnalyseSidEdxProcessor::AnalyseSidEdxProcessor() : Processor("AnalyseSidEdxProce
 
 
   // register steering parameters: name, description, class-variable, default value
+
+  registerProcessorParameter("RootFilename" ,
+                             "Name of output root file",
+                             m_rootFileName ,
+                             std::string("SiTracker_dEdx.root") ) ;
 
   registerInputCollection( LCIO::TRACK,
       "TrackCollectionName" ,
@@ -60,12 +66,18 @@ AnalyseSidEdxProcessor::AnalyseSidEdxProcessor() : Processor("AnalyseSidEdxProce
       std::string("TrackMCTruthLink")
   );
 
+  StringVec defaultTrkHitCollections;
+  defaultTrkHitCollections.push_back(std::string("ITrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("ITrackerEndcapHits"));
+  defaultTrkHitCollections.push_back(std::string("OTrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("OTrackerEndcapHits"));
+  defaultTrkHitCollections.push_back(std::string("VXDTrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("VXDEndcapTrackerHits"));
 
-  registerProcessorParameter("RootFilename" ,
-                             "Name of output root file",
-                             m_rootFileName ,
-                             std::string("SiTracker_dEdx.root") ) ;
-
+  registerProcessorParameter("TrkHitCollections" ,
+                             "Tracker hit collections that will be analysed",
+                             m_trkHitCollNames ,
+                             defaultTrkHitCollections ) ;
 
 }
 
@@ -85,8 +97,9 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("nTracks", &nTracks, "nTracks/I");
   tree->Branch("pMC", &pMC);
   tree->Branch("thetaMC", &thetaMC);
-  tree->Branch("Edep", &eDep);
-  tree->Branch("dEdx", &dEdx);
+  tree->Branch("eTrack", &eTrack);
+  tree->Branch("dEdxTrack", &dEdxTrack);
+  tree->Branch("eEvt", &eEvt);
   tree->Branch("d0", &d0);
   tree->Branch("nTrkHits", &nTrkHits);
   tree->Branch("nTrkRelatedParticles", &nTrkRelatedParticles);
@@ -95,6 +108,11 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("yHit", &yHit);
   tree->Branch("eHit", &eHit);
   tree->Branch("typeHit", &typeHit);
+  tree->Branch("zTrackHit", &zTrackHit);
+  tree->Branch("xTrackHit", &xTrackHit);
+  tree->Branch("yTrackHit", &yTrackHit);
+  tree->Branch("eTrackHit", &eTrackHit);
+  tree->Branch("typeTrackHit", &typeTrackHit);
 
   lastRunHeaderProcessed = -1;
 
@@ -119,8 +137,44 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
   }
 
 
+  /******************************************/
+  /***  Collections of all tracker hits   ***/
+  /******************************************/
+
+  zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear(); typeHit.clear();
+  double eThisEvt = 0.;
+
+  for(unsigned icoll=0; icoll<m_trkHitCollNames.size(); icoll++) {
+
+    LCCollection* hits = NULL;
+    try {
+      hits = evt->getCollection(m_trkHitCollNames.at(icoll));
+    }
+    catch(EVENT::DataNotAvailableException &dataex) {
+      streamlog_out(DEBUG) << "Collection " << m_trkHitCollNames.at(icoll) << " not found in event #" << evt->getEventNumber() << ".\n";
+      hits = NULL;
+      continue;
+    }
+
+    int nHits = hits->getNumberOfElements();
+    for(int ihit=0; ihit<nHits; ihit++) {
+      TrackerHit *hit = dynamic_cast<TrackerHit*>(hits->getElementAt(ihit));
+      TVector3 hitpos(hit->getPosition());
+
+      xHit.push_back(hitpos.X());
+      yHit.push_back(hitpos.Y());
+      zHit.push_back(hitpos.Z());
+      eHit.push_back(hit->getEDep());
+      typeHit.push_back(hit->getType());
+      eThisEvt += hit->getEDep();
+    } // Loop over hits in collection
+
+  } // Loop over hit collections
+
+
+
   /************************************/
-  /***       Get collections        ***/
+  /***    Get track collections     ***/
   /************************************/
 
   LCCollection* tracks = NULL;
@@ -143,21 +197,18 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     return;
   }
 
-  tracks->getFlag();
-
   nTracks = tracks->getNumberOfElements()  ;
+
+  /***  Reset variables ***/
+  pMC.clear(); thetaMC.clear();
+  eTrack.clear(); dEdxTrack.clear(); eEvt.clear();
+  nTrkHits.clear();
+  nTrkRelatedParticles.clear();
+  zTrackHit.clear(); xTrackHit.clear(); yTrackHit.clear(); eTrackHit.clear(); typeTrackHit.clear();
+  d0.clear();
 
   for (int i = 0; i < nTracks; i++)
   {
-    /***       Reset variables ***/
-    pMC.clear();
-    thetaMC.clear();
-    eDep.clear();
-    dEdx.clear();
-    nTrkHits.clear();
-    nTrkRelatedParticles.clear();
-    zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear(); typeHit.clear();
-    d0.clear();
 
     TrackImpl * track = dynamic_cast<TrackImpl*>( tracks->getElementAt(i) );
 
@@ -193,9 +244,10 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     d0.push_back(d_0);
 
     dEdx.push_back(track->getdEdx());
+      nTrkHits.push_back(trackhits.size());
 */
 
-    /*** Individual hits ***/
+    /*** Individual hits belonging to this track ***/
 
     EVENT::TrackerHitVec trackhits = track->getTrackerHits();
 //    nTrkHits.push_back(trackhits.size());
@@ -207,24 +259,33 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       // Hit position
       TVector3 hitpos(trackhits[ihit]->getPosition());
 
-      zHit.push_back(hitpos.z()); xHit.push_back(hitpos.x()); yHit.push_back(hitpos.y());
-      eHit.push_back(trackhits[ihit]->getEDep());
-      typeHit.push_back(double(trackhits[ihit]->getType()));
+      zTrackHit.push_back(hitpos.z()); xTrackHit.push_back(hitpos.x()); yTrackHit.push_back(hitpos.y());
+      eTrackHit.push_back(trackhits[ihit]->getEDep());
+      typeTrackHit.push_back(double(trackhits[ihit]->getType()));
 
       /****************/
+      // Repeatedly store track-related variables with each hit
+      // for easier analysis in ROOT
       pMC.push_back(float(p3.Mag()));
       thetaMC.push_back(float(p3.Theta()));
       d0.push_back(d_0);
 
-      dEdx.push_back(track->getdEdx());
       nTrkHits.push_back(trackhits.size());
       /**********************/
 
       eDepHit += trackhits[ihit]->getEDep();
     }
 
-    eDep.push_back(eDepHit);
+    dEdxTrack.push_back(track->getdEdx());
+    eTrack.push_back(eDepHit);
+    // Repeatedly store total energy in event for easier analysis in ROOT
+    eEvt.push_back(eThisEvt);
   }
+
+
+
+
+
 
   tree->Fill();
 

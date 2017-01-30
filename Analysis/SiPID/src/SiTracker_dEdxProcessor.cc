@@ -57,12 +57,12 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
 
 
   StringVec defaultTrkHitCollections;
-  defaultTrkHitCollections.push_back(std::string("VertexBarrelCollection"));
-  defaultTrkHitCollections.push_back(std::string("VertexEndcapCollection"));
-  defaultTrkHitCollections.push_back(std::string("InnerTrackerBarrelCollection"));
-  defaultTrkHitCollections.push_back(std::string("InnerTrackerEndcapCollection"));
-  defaultTrkHitCollections.push_back(std::string("OuterTrackerBarrelCollection"));
-  defaultTrkHitCollections.push_back(std::string("OuterTrackerEndcapCollection"));
+  defaultTrkHitCollections.push_back(std::string("ITrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("ITrackerEndcapHits"));
+  defaultTrkHitCollections.push_back(std::string("OTrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("OTrackerEndcapHits"));
+  defaultTrkHitCollections.push_back(std::string("VXDTrackerHits"));
+  defaultTrkHitCollections.push_back(std::string("VXDEndcapTrackerHits"));
 
   registerProcessorParameter("TrkHitCollections" ,
                              "Tracker hit collections that will be analysed",

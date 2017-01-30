@@ -60,18 +60,20 @@ class AnalyseSidEdxProcessor : public Processor {
  protected:
 
   /*** Steerable parameters ***/
+  std::string m_rootFileName;
   std::string m_trackColName;
   std::string m_linkColName;
-  std::string m_rootFileName;
+  StringVec m_trkHitCollNames;
 
   TFile* rootfile;
   TTree* tree;
 
   /** ROOT output **/
   FloatVec pMC, thetaMC;
-  FloatVec eDep, dEdx;
+  FloatVec eTrack, dEdxTrack, eEvt;
   FloatVec d0; // Impact factor of the associated particle
   FloatVec nTrkHits, nTrkRelatedParticles;
+  FloatVec zTrackHit, xTrackHit, yTrackHit, eTrackHit, typeTrackHit;
   FloatVec zHit, xHit, yHit, eHit, typeHit;
   int nTracks;
 

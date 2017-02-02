@@ -101,6 +101,7 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("dEdxTrack", &dEdxTrack);
   tree->Branch("eEvt", &eEvt);
   tree->Branch("d0", &d0);
+  tree->Branch("m", &m);
   tree->Branch("nTrkHits", &nTrkHits);
   tree->Branch("nTrkRelatedParticles", &nTrkRelatedParticles);
   tree->Branch("zHit", &zHit);
@@ -205,7 +206,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
   nTrkHits.clear();
   nTrkRelatedParticles.clear();
   zTrackHit.clear(); xTrackHit.clear(); yTrackHit.clear(); eTrackHit.clear(); typeTrackHit.clear();
-  d0.clear();
+  d0.clear(); m.clear();
 
   for (int i = 0; i < nTracks; i++)
   {
@@ -227,30 +228,31 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     nTrkRelatedParticles.push_back(mcpWeights.size());
 
     double maxw = 0.;
-    double d_0;
+    double d_0, mass;
+    d_0 = -1.;
+    mass = -1.;
     MCParticleImpl *mcp = NULL;
     for (unsigned int iw = 0; iw < mcpWeights.size(); iw++)
     {
       if (mcpWeights[iw] > maxw) {
         mcp = dynamic_cast<MCParticleImpl*>(mcParticles[iw]);
         maxw = mcpWeights[iw];
-        d_0 = *mcp->getVertex();
+        d_0 = (TVector3(mcp->getVertex())).Mag();
+        mass = mcp->getMass();
       }
     }
     TVector3 p3(mcp->getMomentum());
 
-/*    pMC.push_back(float(p3.Mag()));
+    pMC.push_back(float(p3.Mag()));
     thetaMC.push_back(float(p3.Theta()));
-    d0.push_back(d_0);
-
-    dEdx.push_back(track->getdEdx());
-      nTrkHits.push_back(trackhits.size());
-*/
+    d0.push_back(d_0);/**/
+    m.push_back(mass);/**/
+    dEdxTrack.push_back(track->getdEdx());
 
     /*** Individual hits belonging to this track ***/
 
     EVENT::TrackerHitVec trackhits = track->getTrackerHits();
-//    nTrkHits.push_back(trackhits.size());
+    nTrkHits.push_back(trackhits.size());
 
     float eDepHit = 0.;
 
@@ -263,12 +265,13 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       eTrackHit.push_back(trackhits[ihit]->getEDep());
       typeTrackHit.push_back(double(trackhits[ihit]->getType()));
 
-      /****************/
+      /****************
       // Repeatedly store track-related variables with each hit
       // for easier analysis in ROOT
       pMC.push_back(float(p3.Mag()));
       thetaMC.push_back(float(p3.Theta()));
       d0.push_back(d_0);
+      m.push_back(mass);
 
       nTrkHits.push_back(trackhits.size());
       /**********************/
@@ -276,7 +279,6 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       eDepHit += trackhits[ihit]->getEDep();
     }
 
-    dEdxTrack.push_back(track->getdEdx());
     eTrack.push_back(eDepHit);
     // Repeatedly store total energy in event for easier analysis in ROOT
     eEvt.push_back(eThisEvt);

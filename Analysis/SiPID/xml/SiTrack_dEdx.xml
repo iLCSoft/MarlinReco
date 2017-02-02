@@ -43,7 +43,7 @@
     <parameter name="LCIOInputFiles">
       gun.mu.slcio  </parameter>
     <!-- Limit the number of processed records (run+evt): -->
-    <parameter name="MaxRecordNumber" value="1000" />
+    <parameter name="MaxRecordNumber" value="0" />
     <parameter name="SkipNEvents" value="0" />
     <parameter name="SupressCheck" value="false" />  
     <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
@@ -76,6 +76,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">VXDTrackerHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">WARNING </parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
   <processor name="VXDEndcapDigitiser" type="DDPlanarDigiProcessor">
@@ -95,6 +96,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">VXDEndcapTrackerHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">WARNING </parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
 
@@ -116,6 +118,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">ITrackerHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">MESSAGE</parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
 
@@ -138,6 +141,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">ITrackerEndcapHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">WARNING </parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
   <processor name="OuterPlanarDigiProcessor" type="DDPlanarDigiProcessor">
@@ -157,6 +161,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">OTrackerHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">WARNING </parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
   <processor name="OuterEndcapPlanarDigiProcessor" type="DDPlanarDigiProcessor">
@@ -176,6 +181,7 @@
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">OTrackerEndcapHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <parameter name="Verbosity" type="string">WARNING </parameter>
+    <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
 

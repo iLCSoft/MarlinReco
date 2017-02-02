@@ -71,7 +71,7 @@ class AnalyseSidEdxProcessor : public Processor {
   /** ROOT output **/
   FloatVec pMC, thetaMC;
   FloatVec eTrack, dEdxTrack, eEvt;
-  FloatVec d0; // Impact factor of the associated particle
+  FloatVec d0, m; // Impact factor and mass of the associated particle
   FloatVec nTrkHits, nTrkRelatedParticles;
   FloatVec zTrackHit, xTrackHit, yTrackHit, eTrackHit, typeTrackHit;
   FloatVec zHit, xHit, yHit, eHit, typeHit;

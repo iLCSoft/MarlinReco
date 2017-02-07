@@ -101,7 +101,7 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("dEdxTrack", &dEdxTrack);
   tree->Branch("dEdxError", &dEdxError);
   tree->Branch("eEvt", &eEvt);
-  tree->Branch("d0", &d0);
+  tree->Branch("vxMag", &vxMag);
   tree->Branch("m", &m);
   tree->Branch("nTrkHits", &nTrkHits);
   tree->Branch("nTrkRelatedParticles", &nTrkRelatedParticles);
@@ -207,7 +207,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
   nTrkHits.clear();
   nTrkRelatedParticles.clear();
   zTrackHit.clear(); xTrackHit.clear(); yTrackHit.clear(); eTrackHit.clear(); typeTrackHit.clear();
-  d0.clear(); m.clear();
+  vxMag.clear(); m.clear();
 
   for (int i = 0; i < nTracks; i++)
   {
@@ -229,8 +229,8 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     nTrkRelatedParticles.push_back(mcpWeights.size());
 
     double maxw = 0.;
-    double d_0, mass;
-    d_0 = -1.;
+    double _vxMag, mass;
+    _vxMag = -1.;
     mass = -1.;
     MCParticleImpl *mcp = NULL;
     for (unsigned int iw = 0; iw < mcpWeights.size(); iw++)
@@ -238,7 +238,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       if (mcpWeights[iw] > maxw) {
         mcp = dynamic_cast<MCParticleImpl*>(mcParticles[iw]);
         maxw = mcpWeights[iw];
-        d_0 = (TVector3(mcp->getVertex())).Mag();
+        _vxMag = (TVector3(mcp->getVertex())).Mag();
         mass = mcp->getMass();
       }
     }
@@ -246,7 +246,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
 
     pMC.push_back(float(p3.Mag()));
     thetaMC.push_back(float(p3.Theta()));
-    d0.push_back(d_0);/**/
+    vxMag.push_back(_vxMag);/**/
     m.push_back(mass);/**/
     dEdxTrack.push_back(track->getdEdx());
     dEdxError.push_back(track->getdEdxError());

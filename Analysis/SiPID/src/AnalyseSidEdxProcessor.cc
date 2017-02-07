@@ -99,6 +99,7 @@ void AnalyseSidEdxProcessor::init() {
   tree->Branch("thetaMC", &thetaMC);
   tree->Branch("eTrack", &eTrack);
   tree->Branch("dEdxTrack", &dEdxTrack);
+  tree->Branch("dEdxError", &dEdxError);
   tree->Branch("eEvt", &eEvt);
   tree->Branch("d0", &d0);
   tree->Branch("m", &m);
@@ -202,7 +203,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
 
   /***  Reset variables ***/
   pMC.clear(); thetaMC.clear();
-  eTrack.clear(); dEdxTrack.clear(); eEvt.clear();
+  eTrack.clear(); dEdxTrack.clear(); dEdxError.clear(); eEvt.clear();
   nTrkHits.clear();
   nTrkRelatedParticles.clear();
   zTrackHit.clear(); xTrackHit.clear(); yTrackHit.clear(); eTrackHit.clear(); typeTrackHit.clear();
@@ -248,6 +249,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     d0.push_back(d_0);/**/
     m.push_back(mass);/**/
     dEdxTrack.push_back(track->getdEdx());
+    dEdxError.push_back(track->getdEdxError());
 
     /*** Individual hits belonging to this track ***/
 

@@ -214,6 +214,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
     float eDepHit = 0.;
     float traversedThickness = 0.;
+    float mu2dEdx = 0.;
     float dEdxSum = 0.;
     unsigned iRegHits = 0;
 
@@ -255,19 +256,22 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       int detTypeFlag = 0;
       double thickness = collFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
       if (thickness < 0.) {
-        streamlog_out(DEBUG) << "Could not find hit collection corresponding to hit CellID " << cellid
+        streamlog_out(ERROR) << "Could not find hit collection corresponding to hit CellID " << cellid
                              << ", hit ID " << trackhits.at(ihit)->id() << " .\n";
-        streamlog_out(DEBUG) << "Event #" << evt->getEventNumber() << ".\n";
-        continue;
+        streamlog_out(ERROR) << "Event #" << evt->getEventNumber() << ".\n";
+        exit(0);
       }
       if (thickness < 0.00001) {
         streamlog_out(ERROR) << "GetThickness returned zero!\n";
         exit(0);
       }
 
-      traversedThickness += thickness / cosAngle;
+      double effThickness = thickness / cosAngle;
+      traversedThickness += effThickness;
       eDepHit += trackhits[ihit]->getEDep();
-      dEdxSum += trackhits[ihit]->getEDep() / (thickness / cosAngle);
+      mu2dEdx += pow(trackhits[ihit]->getEDep(), 2) / effThickness;
+
+      dEdxSum += trackhits[ihit]->getEDep() / (thickness / cosAngle); // Not really used.
       // At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
 
       // I am not sure whether the following is the intended use of the hit "type".
@@ -281,6 +285,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     double track_dEdx = eDepHit/traversedThickness;
 //    double track_dEdx = dEdxSum/iRegHits; // Unweighted average dE/dx
     track->setdEdx(track_dEdx);
+    mu2dEdx /= traversedThickness;
+    track->setdEdxError(sqrt((mu2dEdx - pow(track_dEdx, 2))/trackhits.size()));
   }
 
 }

@@ -79,6 +79,7 @@ class SiTracker_dEdxProcessor : public Processor {
   static double truncFractionUp;
   static double truncFractionLo;
   static double dEdxMean(dEdxVec, double &dEdxError);
+  static double dEdxMedian(dEdxVec, double &dEdxError);
   static double dEdxTruncMean(dEdxVec, double &dEdxError);
   static double dEdxHarmonic(dEdxVec, double &dEdxError);
   static double dEdxHarmonic2(dEdxVec, double &dEdxError);
@@ -105,9 +106,7 @@ class SiTracker_dEdxProcessor : public Processor {
   // Cheat values for sensitive thicknesses. Default = -1. (no cheating)
   FloatVec m_sensThicknessCheatVals;
 
-  /* Method of calculation of dEdx
-   * Available methods: mean, truncMean, harmonic-2
-   */
+  // Choice of estimator for dEdx
   std::string m_dEdxEstimator;
 
   /*** Detector-related objects ***/

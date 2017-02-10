@@ -100,7 +100,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
                              sensThicknessCheatVals ) ;
 
   /* Type of estimator for dEdx
-   * Available estimators: mean, truncMean, harmonic, harmonic-2, weighted-harmonic, weighted-harmonic-2,
+   * Available estimators: mean, median, truncMean, harmonic, harmonic-2, weighted-harmonic, weighted-harmonic-2
    */
   registerProcessorParameter("dEdxEstimator" ,
                              "Type of estimator for dEdx.",
@@ -120,6 +120,9 @@ void SiTracker_dEdxProcessor::init() {
 
   if(m_dEdxEstimator.compare("mean") == 0) {
     dEdxEval = &SiTracker_dEdxProcessor::dEdxMean;
+  }
+  else if(m_dEdxEstimator.compare("median") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxMedian;
   }
   else if (m_dEdxEstimator.compare("truncMean") == 0) {
     dEdxEval = &SiTracker_dEdxProcessor::dEdxTruncMean;
@@ -368,6 +371,39 @@ double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
   double track_dEdx = eDepSum / thickness;
   dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/n);
   return track_dEdx;
+}
+
+
+// Median
+double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
+  double median=0.;
+  if (n%2 ==1) {
+    median = hitVec.at(n/2).Get_dEdx();
+  }
+  else {
+    median = (hitVec.at(n/2-1).Get_dEdx() + hitVec.at(n/2).Get_dEdx()) / 2;
+  }
+
+  double eDepSum = 0.;
+  double thickness = 0.;
+  double mu2dEdx = 0.;
+  for (unsigned i=0; i<n; i++) {
+    eDepSum += hitVec.at(i).Get_dE();
+    thickness =+ hitVec.at(i).Get_dx();
+    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
+  }
+
+  double mean = eDepSum / thickness;
+  // Temporarily using sigma/sqrt(n) for the error of the median
+  // TODO: Implement a more accurate estimate of the error of the median
+  // using a correction factor tbd from toy MC with Landau distribution
+  dEdxError = sqrt((mu2dEdx - pow(mean, 2))/n);
+  return median;
 }
 
 

@@ -31,6 +31,11 @@
 #include <climits>
 
 
+dEdxPoint::dEdxPoint(const double _dE, const double _dx) :
+    dE(_dE), dx(_dx), dEdx(_dE/_dx) {}
+
+dEdxPoint::dEdxPoint(const dEdxPoint& orig) :
+    dE(orig.Get_dE()), dx(orig.Get_dx()), dEdx(orig.Get_dE()/orig.Get_dx()) {}
 
 SiTracker_dEdxProcessor aSiTracker_dEdxProcessor ;
 
@@ -94,6 +99,14 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
                              m_sensThicknessCheatVals ,
                              sensThicknessCheatVals ) ;
 
+  /* Type of estimator for dEdx
+   * Available estimators: mean, truncMean, harmonic, harmonic-2, weighted-harmonic, weighted-harmonic-2,
+   */
+  registerProcessorParameter("dEdxEstimator" ,
+                             "Type of estimator for dEdx.",
+                             m_dEdxEstimator ,
+                             std::string("mean") ) ;
+
 }
 
 
@@ -104,6 +117,29 @@ void SiTracker_dEdxProcessor::init() {
 
   // usually a good idea to
   printParameters() ;
+
+  if(m_dEdxEstimator.compare("mean") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxMean;
+  }
+  else if (m_dEdxEstimator.compare("truncMean") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxTruncMean;
+  }
+  else if (m_dEdxEstimator.compare("harmonic") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxHarmonic;
+  }
+  else if (m_dEdxEstimator.compare("harmonic-2") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxHarmonic2;
+  }
+  else if (m_dEdxEstimator.compare("weighted-harmonic") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxWgtHarmonic;
+  }
+  else if (m_dEdxEstimator.compare("weighted-harmonic-2") == 0) {
+    dEdxEval = &SiTracker_dEdxProcessor::dEdxWgtHarmonic2;
+  }
+  else {
+    streamlog_out(ERROR) << "Unknown dE/dx evaluation method " << m_dEdxEstimator << ". Exiting.\n";
+    exit(0);
+  }
 
   Geometry::LCDD& lcdd = Geometry::LCDD::getInstance();
 
@@ -137,6 +173,7 @@ void SiTracker_dEdxProcessor::init() {
   trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       false) ;
   trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  true) ;
   trkSystem->init() ;
+
 
   gROOT->ProcessLine("#include <vector>");
 
@@ -212,11 +249,9 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
     marlin_trk->initialise( trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
 
-    float eDepHit = 0.;
-    float traversedThickness = 0.;
-    float mu2dEdx = 0.;
-    float dEdxSum = 0.;
     unsigned iRegHits = 0;
+
+    dEdxVec dEdxHitVec;
 
     for(unsigned int ihit = 0; ihit < trackhits.size(); ihit++) {
 
@@ -267,26 +302,22 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       }
 
       double effThickness = thickness / cosAngle;
-      traversedThickness += effThickness;
-      eDepHit += trackhits[ihit]->getEDep();
-      mu2dEdx += pow(trackhits[ihit]->getEDep(), 2) / effThickness;
 
-      dEdxSum += trackhits[ihit]->getEDep() / (thickness / cosAngle); // Not really used.
+      dEdxHitVec.push_back( dEdxPoint(trackhits[ihit]->getEDep(), effThickness) );
       // At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
 
       // I am not sure whether the following is the intended use of the hit "type".
-      // The hit "type" is being overwritten here, but it was apparently not used before.
+      // The hit type value is being overwritten here, but it was apparently not used before.
       ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
 
       iRegHits++;
     }
     if(iRegHits == 0) continue;
 
-    double track_dEdx = eDepHit/traversedThickness;
-//    double track_dEdx = dEdxSum/iRegHits; // Unweighted average dE/dx
-    track->setdEdx(track_dEdx);
-    mu2dEdx /= traversedThickness;
-    track->setdEdxError(sqrt((mu2dEdx - pow(track_dEdx, 2))/trackhits.size()));
+    double dEdx, dEdxError;
+    dEdx = dEdxEval(dEdxHitVec, dEdxError);
+    track->setdEdx(dEdx);
+    track->setdEdxError(dEdxError);
   }
 
 }
@@ -305,5 +336,179 @@ void SiTracker_dEdxProcessor::end(){
   //   std::cout << "SiTracker_dEdxProcessor::end()  " << name()
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;
+}
+
+
+
+/*************************************************************
+ *
+ *   Evaluation methods for dE/dx
+ *
+ ************************************************************/
+
+double SiTracker_dEdxProcessor::truncFractionUp = 0.3;
+double SiTracker_dEdxProcessor::truncFractionLo = 0.1;
+
+// Weighted mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  double eDepSum = 0.;
+  double thickness = 0.;
+  double mu2dEdx = 0.;
+  for (unsigned i=0; i<n; i++) {
+    eDepSum += hitVec.at(i).Get_dE();
+    thickness =+ hitVec.at(i).Get_dx();
+    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
+  }
+
+  double track_dEdx = eDepSum / thickness;
+  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/n);
+  return track_dEdx;
+}
+
+
+// Weighted truncated mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
+  const unsigned iStart = unsigned(n*truncFractionLo + 0.5);
+  const unsigned iEnd = unsigned(n*(1-truncFractionUp) + 0.5);
+
+  double eDepSum = 0.;
+  double thickness = 0.;
+  double mu2dEdx = 0.;
+  for (unsigned i=iStart; i<iEnd; i++) {
+    eDepSum += hitVec.at(i).Get_dE();
+    thickness =+ hitVec.at(i).Get_dx();
+    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
+  }
+
+  double track_dEdx = eDepSum / thickness;
+  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/(iEnd-iStart));
+  return track_dEdx;
+}
+
+
+// Simple harmonic mean
+double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  // Calculation of the first and the second moment of
+  // 1 / (dE/dx)
+  double mu1sum = 0.;
+  double mu2sum = 0.;
+  for (unsigned i=0; i<n; i++) {
+    double inverse = 1/hitVec.at(i).Get_dEdx();
+    mu1sum += inverse;
+    mu2sum += pow( inverse, 2 );
+  }
+
+  double mu2 = mu2sum / n;
+  double mu1 = mu1sum / n;
+  double sigma = sqrt( mu2 - pow(mu1, 2) );
+
+  double dEdx = 1 / mu1;
+  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+
+  return dEdx;
+}
+
+
+// Simple harmonic-squared mean
+double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  // Calculation of the first and the second moment of
+  // 1 / (dE/dx)^2
+  double mu1sum = 0.;
+  double mu2sum = 0.;
+  for (unsigned i=0; i<n; i++) {
+    double sqinverse = pow(hitVec.at(i).Get_dEdx(), -2);
+    mu1sum += sqinverse;
+    mu2sum += pow( sqinverse, 2 );
+  }
+
+  double mu2 = mu2sum / n;
+  double mu1 = mu1sum / n;
+  double sigma = sqrt( mu2 - pow(mu1, 2) );
+
+  double dEdx = 1 / sqrt(mu1);
+  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+
+  return dEdx;
+}
+
+
+// Weighted harmonic mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  // Calculation of the first and the second moment of
+  // 1 / (dE/dx)
+  double mu1sum = 0.;
+  double mu2sum = 0.;
+  double wgtsum = 0.;
+  for (unsigned i=0; i<n; i++) {
+    double inverse = 1/hitVec.at(i).Get_dEdx();
+    double wgt = hitVec.at(i).Get_dx();
+    mu1sum += wgt*inverse;
+    mu2sum += wgt*pow( inverse, 2 );
+    wgtsum += wgt;
+  }
+
+  double mu2 = mu2sum / wgtsum;
+  double mu1 = mu1sum / wgtsum;
+  double sigma = sqrt( mu2 - pow(mu1, 2) );
+
+  double dEdx = 1 / mu1;
+  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+
+  return dEdx;
+}
+
+
+// Weighted harmonic-squared mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxWgtHarmonic2(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) return 0;
+
+  // Calculation of the first and the second moment of
+  // 1 / (dE/dx)^2
+  double mu1sum = 0.;
+  double mu2sum = 0.;
+  double wgtsum = 0.;
+  for (unsigned i=0; i<n; i++) {
+    double sqinverse = pow(hitVec.at(i).Get_dEdx(), -2);
+    double wgt = hitVec.at(i).Get_dx();
+    mu1sum += wgt*sqinverse;
+    mu2sum += wgt*pow( sqinverse, 2 );
+    wgtsum += wgt;
+  }
+
+  double mu2 = mu2sum / wgtsum;
+  double mu1 = mu1sum / wgtsum;
+  double sigma = sqrt( mu2 - pow(mu1, 2) );
+
+  double dEdx = 1 / sqrt(mu1);
+  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+
+  return dEdx;
 }
 

@@ -29,6 +29,23 @@ using namespace DD4hep;
  * December 2016
  */
 
+
+struct dEdxPoint{
+public:
+  dEdxPoint(const double _dE, const double _dx);
+  dEdxPoint(const dEdxPoint&);
+
+  double Get_dE() const { return dE; }
+  double Get_dx() const { return dx; }
+  double Get_dEdx() const { return dEdx; }
+
+private:
+  double dE;
+  double dx;
+  double dEdx;
+} ;
+
+
 class SiTracker_dEdxProcessor : public Processor {
   
  public:
@@ -56,6 +73,20 @@ class SiTracker_dEdxProcessor : public Processor {
    */
   virtual void end() ;
   
+  // Evaluation methods for dE/dx
+  typedef std::vector<dEdxPoint> dEdxVec;
+  static bool dEdxOrder(dEdxPoint p1, dEdxPoint p2) { return p1.Get_dEdx() < p2.Get_dEdx() ; }
+  static double truncFractionUp;
+  static double truncFractionLo;
+  static double dEdxMean(dEdxVec, double &dEdxError);
+  static double dEdxTruncMean(dEdxVec, double &dEdxError);
+  static double dEdxHarmonic(dEdxVec, double &dEdxError);
+  static double dEdxHarmonic2(dEdxVec, double &dEdxError);
+  static double dEdxWgtHarmonic(dEdxVec, double &dEdxError);
+  static double dEdxWgtHarmonic2(dEdxVec, double &dEdxError);
+
+  double (*dEdxEval)(dEdxVec, double &dEdxError);
+
  protected:
 
   /*** Steerable parameters ***/
@@ -74,6 +105,12 @@ class SiTracker_dEdxProcessor : public Processor {
   // Cheat values for sensitive thicknesses. Default = -1. (no cheating)
   FloatVec m_sensThicknessCheatVals;
 
+  /* Method of calculation of dEdx
+   * Available methods: mean, truncMean, harmonic-2
+   */
+  std::string m_dEdxEstimator;
+
+  /*** Detector-related objects ***/
   const DDRec::SurfaceMap *surfMap;
   MarlinTrk::IMarlinTrkSystem *trkSystem;
 

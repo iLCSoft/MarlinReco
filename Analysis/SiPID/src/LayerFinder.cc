@@ -312,6 +312,7 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
     streamlog_out(DEBUG) << " ... Looking in collection " << (*cit)->GetCollectionName() ;
     streamlog_out(DEBUG) << " of type "
                          << (*cit)->GetCollectionType() << " with " << (*cit)->GetNumberOfHits() << " hits.\n";
+
     for(int i=0; i<(*cit)->GetNumberOfHits(); i++) {
 
       if( thit == (*cit)->GetHit(i) ) {
@@ -344,6 +345,8 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
         }
         streamlog_out(WARNING) << " ... Detector type flag not found!!!\n";
 
+        // We found it so we can stop searching
+        break;
       }
     }
   }

@@ -3,11 +3,6 @@
 #include <cassert>
 #include <iostream>
 
-#include "DD4hep/LCDD.h"
-#include "DD4hep/DD4hepUnits.h"
-#include "DD4hep/DetType.h"
-#include "DD4hep/DetectorSelector.h"
-#include "DDRec/DetectorData.h"
 
 using std::cout;
 using std::endl;

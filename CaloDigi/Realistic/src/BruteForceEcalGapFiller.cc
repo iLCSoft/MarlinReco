@@ -45,19 +45,19 @@ BruteForceEcalGapFiller::BruteForceEcalGapFiller( )  : Processor( "BruteForceEca
   registerProcessorParameter("CellIDLayerString" ,
                              "name of the part of the cellID that holds the layer" ,
                              _cellIDLayerString ,
-                             std::string("K-1")
+                             std::string("layer")
                              );
 
   registerProcessorParameter("CellIDModuleString" ,
                              "name of the part of the cellID that holds the module" ,
                              _cellIDModuleString ,
-                             std::string("M")
+                             std::string("module")
                              );
 
   registerProcessorParameter("CellIDStaveString" ,
                              "name of the part of the cellID that holds the stave" ,
                              _cellIDStaveString ,
-                             std::string("S-1")
+                             std::string("stave")
                              );
 
   registerProcessorParameter("expectedInterModuleDistance",
@@ -117,7 +117,9 @@ void BruteForceEcalGapFiller::processEvent( LCEvent * evt ) {
       // now make the gap hits
 
       // create new collection: hits
+      std::string encodingString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
+      newcol->parameters().setValue(LCIO::CellIDEncoding,encodingString);
       newcol->setFlag(_flag.getFlag());
 
       addIntraModuleGapHits(newcol); // gaps within a module

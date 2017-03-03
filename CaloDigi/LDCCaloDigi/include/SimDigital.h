@@ -40,6 +40,9 @@ namespace AIDA {
 using namespace lcio ;
 using namespace marlin ;
 
+
+//TK   added TH_TOWER to root tuples  Nov 2016
+//
 // Gerald Grenier :
 // start removing the ECAL part whih has no use for SDHCAL
 // this can be fully activated when there is an ECAL digitizer 
@@ -92,6 +95,7 @@ class SimDigitalGeomCellId
   int K() {return _trueLayer;}
   int stave() {return _stave;}
   int module() {return _module;}
+  int tower() {return _tower;}
 
  private:
   enum HCAL_GEOM {VIDEAU,TESLA};
@@ -99,6 +103,7 @@ class SimDigitalGeomCellId
   int _trueLayer;
   int _stave;
   int _module;
+  int _tower;
   int _Iy;
   int _Jz;
   const float* _hitPosition; 
@@ -111,7 +116,7 @@ class SimDigitalGeomCellId
   LCVector3D _Iaxis;
   LCVector3D _Jaxis;
   static AIDA::ITuple* _tupleHit;
-  enum {TH_DETECTOR,TH_CHTLAYOUT,TH_MODULE,TH_STAVE,TH_LAYER,TH_I,TH_J,
+  enum {TH_DETECTOR,TH_CHTLAYOUT,TH_MODULE,TH_TOWER,TH_STAVE,TH_LAYER,TH_I,TH_J,
 	TH_X,TH_Y,TH_Z,
 	TH_NORMALX,TH_NORMALY,TH_NORMALZ,
 	TH_IX,TH_IY,TH_IZ,
@@ -312,6 +317,8 @@ class SimDigital : public Processor {
   float _barrelPixelSizeZ[MAX_LAYERS];
   float _endcapPixelSizeX[MAX_LAYERS];
   float _endcapPixelSizeY[MAX_LAYERS];
+  float _ringPixelSizeX[MAX_LAYERS];
+  float _ringPixelSizeY[MAX_LAYERS];
   float _barrelStaveDir[MAX_STAVES][2];
 #endif 
   //std::vector<int> _hcalLayers;

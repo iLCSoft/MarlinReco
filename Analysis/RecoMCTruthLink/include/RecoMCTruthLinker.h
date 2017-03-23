@@ -8,7 +8,7 @@
 #include "lcio.h"
 #include "EVENT/TrackerHit.h"
 //#include <UTIL/BitField64.h>
-#include <UTIL/ILDConf.h>
+#include "UTIL/LCTrackerConf.h"
 
 
 #include <set>
@@ -156,7 +156,7 @@ protected:
   const LCObjectVec* getCaloHits( CalorimeterHit* calohit, const FloatVec* weights = NULL);
   
   UTIL::BitField64* _encoder;
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::ILDCellID0::subdet]; }
+  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
 
 
   /**  input collection names */

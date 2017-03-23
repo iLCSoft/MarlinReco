@@ -36,7 +36,7 @@
 #include <IMPL/TrackerPulseImpl.h>
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/CellIDEncoder.h>
-#include <UTIL/ILDConf.h>
+#include "UTIL/LCTrackerConf.h"
 
 // Include Marlin
 #include <streamlog/streamlog.h>
@@ -617,7 +617,7 @@ void SiStripDigi::processEvent(LCEvent * event)
 		
 		// CODIFICATION --->FIXME: METHOD IN GEAR (Centralizing...)
 		CellIDEncoder<TrackerPulseImpl> cellEnc(
-				ILDCellID0::encoder_string+",stripType:2,stripID:11",
+				LCTrackerCellID::encoding_string()+",stripType:2,stripID:11",
 				colOfTrkPulses);
 
 		// TrackerPulses

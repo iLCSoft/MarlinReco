@@ -26,6 +26,7 @@
 #include <IMPL/TrackerHitPlaneImpl.h>
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/CellIDEncoder.h>
+#include "UTIL/LCTrackerConf.h"
 #include <UTIL/ILDConf.h>
 
 
@@ -1707,7 +1708,7 @@ void SiStripClus::calcHits(ClsVec & clsVec, IMPL::LCCollectionVec * colOfTrkHits
 	
 	// CODIFICATION --->FIXME: METHOD IN GEAR (Centralizing...)
 	CellIDEncoder<TrackerHitPlaneImpl> cellEnc(
-			ILDCellID0::encoder_string+",stripFront:11,stripRear:11",
+			LCTrackerCellID::encoding_string()+",stripFront:11,stripRear:11",
 			colOfTrkHits);
 	
 	// Go through all clusters

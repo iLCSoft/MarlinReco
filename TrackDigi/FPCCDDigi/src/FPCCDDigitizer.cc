@@ -15,6 +15,7 @@
 #include <IMPL/TrackerHitPlaneImpl.h>
 #include <EVENT/MCParticle.h>
 #include <UTIL/CellIDEncoder.h>
+#include "UTIL/LCTrackerConf.h"
 #include <UTIL/ILDConf.h>
 #include "UTIL/LCTOOLS.h"
 
@@ -293,9 +294,9 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
 
   if(_ladder_Number_encoded_in_cellID) {
     streamlog_out( DEBUG3 ) << "Get Layer Number using StandardILD Encoding from ILDConf.h : cellId = " << cellId << std::endl;
-    UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
+    UTIL::BitField64 encoder( lcio::LCTrackerCellID::encoding_string() ) ;
     encoder.setValue(cellId) ;
-    layer    = encoder[lcio::ILDCellID0::layer] ; ladderID = encoder[lcio::ILDCellID0::module] ;
+    layer    = encoder[lcio::LCTrackerCellID::layer()] ; ladderID = encoder[lcio::LCTrackerCellID::module()] ;
     streamlog_out( DEBUG3 ) << "layer Number = " << layer << std::endl; streamlog_out( DEBUG3 ) << "ladder Number = " << ladderID << std::endl;
   }
   else{ layer = cellId  - 1 ; }
@@ -707,9 +708,9 @@ std::vector<std::pair<const gear::Vector3D*, int> > FPCCDDigitizer::getIntersect
 // =====================================================================
 std::map< pair<int, int>*, double> FPCCDDigitizer::getLocalPixel(SimTrackerHitImpl* simthit, vector<std::pair<const gear::Vector3D*,int> > edgeofpixel){
   std::map<pair< int, int>*, double> pixel_local;
-  UTIL::BitField64 encoder( lcio::ILDCellID0::encoder_string ) ;
+  UTIL::BitField64 encoder( lcio::LCTrackerCellID::encoding_string() ) ;
   encoder.setValue(simthit->getCellID0()) ;
-  int f_layer    = encoder[lcio::ILDCellID0::layer] ;
+  int f_layer    = encoder[lcio::LCTrackerCellID::layer()] ;
   double dEdx = 0.0;
   if(_EL_almostOFF == false){
      dEdx = simthit->getEDep()*1e+9; // Energy deposit of 50um thickness ladder. [eV]
@@ -864,12 +865,12 @@ void FPCCDDigitizer::makeNewSimTHit(SimTrackerHitImpl* simthit, gear::Vector3D* 
                    (float)(newmom->x()*_geodata[layer].sinphi[ladder] + newmom->z()*_geodata[layer].cosphi[ladder]),
                    (float)newmom->y()};
 
-  CellIDEncoder<SimTrackerHitImpl> cellid_encoder( lcio::ILDCellID0::encoder_string , col) ;
-  cellid_encoder[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::VXD ;
-  cellid_encoder[ lcio::ILDCellID0::side   ] = 0 ;
-  cellid_encoder[ lcio::ILDCellID0::layer  ] = layer ;
-  cellid_encoder[ lcio::ILDCellID0::module ] = ladder ;
-  cellid_encoder[ lcio::ILDCellID0::sensor ] = 0 ;
+  CellIDEncoder<SimTrackerHitImpl> cellid_encoder( lcio::LCTrackerCellID::encoding_string() , col) ;
+  cellid_encoder[ lcio::LCTrackerCellID::subdet() ] = lcio::ILDDetID::VXD ;
+  cellid_encoder[ lcio::LCTrackerCellID::side()   ] = 0 ;
+  cellid_encoder[ lcio::LCTrackerCellID::layer()  ] = layer ;
+  cellid_encoder[ lcio::LCTrackerCellID::module() ] = ladder ;
+  cellid_encoder[ lcio::LCTrackerCellID::sensor() ] = 0 ;
   cellid_encoder.setCellID( simthit );
   simthit->setEDep( newdEdx );
   simthit->setPathLength( (float)newPathLength );

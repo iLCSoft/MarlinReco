@@ -31,7 +31,8 @@
 #include <gear/PadRowLayout2D.h>
 #include <gear/BField.h>
 //
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
+#include <UTIL/ILDConf.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -443,7 +444,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
   lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
   _relCol->setFlag( lcFlag.getFlag()  ) ;
 
-  _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( lcio::ILDCellID0::encoder_string , _trkhitVec ) ;
+  _cellid_encoder =  new CellIDEncoder<TrackerHitImpl>( lcio::LCTrackerCellID::encoding_string() , _trkhitVec ) ;
   
   // first deal with the pad-row based hits from Mokka 
   LCCollection* STHcol = 0 ;
@@ -1124,16 +1125,16 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
 //  
 //  if( pos[2] < 0.0 ) side = 1 ;
   
-  (*_cellid_encoder)[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::TPC ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::layer  ] = seed_hit->getRowIndex() ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::module ] = 0 ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::subdet() ] = lcio::ILDDetID::TPC ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::layer()  ] = seed_hit->getRowIndex() ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::module() ] = 0 ;
   
   
   //fg: optionally encode the side (should become the default eventually)
   if( ! _dontEncodeSide )
-    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
+    (*_cellid_encoder)[ lcio::LCTrackerCellID::side()   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
   else
-    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
+    (*_cellid_encoder)[ lcio::LCTrackerCellID::side()   ] = lcio::ILDDetID::barrel ;
 
   _cellid_encoder->setCellID( trkHit ) ;
   
@@ -1293,15 +1294,15 @@ void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge)
   int padIndex = padLayout.getNearestPad(mergedPoint->perp(),mergedPoint->phi());  
   int row = padLayout.getRowNumber(padIndex);  
   
-  (*_cellid_encoder)[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::TPC ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::layer  ] = row ;
-  (*_cellid_encoder)[ lcio::ILDCellID0::module ] = 0 ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::subdet() ] = lcio::ILDDetID::TPC ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::layer()  ] = row ;
+  (*_cellid_encoder)[ lcio::LCTrackerCellID::module() ] = 0 ;
 
   //fg: optionally encode the side (should become the default eventually)
   if( ! _dontEncodeSide )
-    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
+    (*_cellid_encoder)[ lcio::LCTrackerCellID::side()   ] = ( pos[2] < 0 ?  -1 : 1 ) ;
   else
-    (*_cellid_encoder)[ lcio::ILDCellID0::side   ] = lcio::ILDDetID::barrel ;
+    (*_cellid_encoder)[ lcio::LCTrackerCellID::side()   ] = lcio::ILDDetID::barrel ;
 
   _cellid_encoder->setCellID( trkHit ) ;
   

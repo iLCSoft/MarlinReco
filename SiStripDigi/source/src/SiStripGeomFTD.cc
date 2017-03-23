@@ -26,6 +26,7 @@
 #include <streamlog/streamlog.h>
 
 // Include Encoder stuff
+#include "UTIL/LCTrackerConf.h"
 #include <UTIL/ILDConf.h>
 
 
@@ -216,7 +217,7 @@ void SiStripGeomFTD::updateCanonicalCellID(const int & cellID, const int & strip
 //! Returns the input cellID0 where the field sensor is put to 0
 int SiStripGeomFTD::cellID0withSensor0(const int & cellID0) const
 {
-	UTIL::BitField64 cellDec(ILDCellID0::encoder_string);
+	UTIL::BitField64 cellDec(LCTrackerCellID::encoding_string());
 	cellDec.setValue((lcio::long64)cellID0);
 
 	cellDec["sensor"] = 0;
@@ -265,7 +266,7 @@ std::pair<StripType,int> SiStripGeomFTD::decodeStripID(const UTIL::BitField64 & 
 // Argument codified as string
 std::map<std::string,int> SiStripGeomFTD::decodeCellID(const int & cellID) const
 {
-	UTIL::BitField64 cellDec(ILDCellID0::encoder_string);
+	UTIL::BitField64 cellDec(LCTrackerCellID::encoding_string());
 	cellDec.setValue((lcio::long64)cellID);
 
 	return decodeCellID(cellDec);
@@ -285,12 +286,12 @@ std::map<std::string,int> SiStripGeomFTD::decodeCellID(const UTIL::BitField64 & 
 
 	// Checking we are using the canonical codification
 	//FIXME:: los strings son diferentes!! pensar como solucionar
-	/*if(cellDec.fielDescription() != ILDCellID0::encoder_string)
+	/*if(cellDec.fielDescription() != LCTrackerCellID::encoding_string())
 	{
 		streamlog_out(ERROR) << "SiStripGeomFTD::decodeCellID0 "
 			<< " - the codification used is not the canonical.\n "
 			<< " Canonical codification string: " << cellDec.fieldDescription() 
-			<< " " << ILDCellID0::encoder_string  
+			<< " " << LCTrackerCellID::encoding_string()  
 			<< std::endl;
 		exit(-1);
 	}*/

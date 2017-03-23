@@ -20,6 +20,7 @@ set 0.
 #include "UTIL/LCTOOLS.h"
 
 #include <ILDCellIDEncoding.h>
+#include "UTIL/LCTrackerConf.h"
 #include <UTIL/ILDConf.h>
 
 #include <gsl/gsl_randist.h>
@@ -668,16 +669,16 @@ void FPCCDClustering::modifyEvent( LCEvent * evt )
 
 
           const int cellId_sim = simthit_p->getCellID0();
-          UTIL::BitField64 encoder_sim( lcio::ILDCellID0::encoder_string ) ; 
+          UTIL::BitField64 encoder_sim( lcio::LCTrackerCellID::encoding_string() ) ; 
           encoder_sim.setValue(cellId_sim) ;
-          _simthits.layer[ri]    = encoder_sim[lcio::ILDCellID0::layer] ;
-          _simthits.ladder[ri] = encoder_sim[lcio::ILDCellID0::module] ;
+          _simthits.layer[ri]    = encoder_sim[lcio::LCTrackerCellID::layer()] ;
+          _simthits.ladder[ri] = encoder_sim[lcio::LCTrackerCellID::module()] ;
 
           const int cellId_trk = trkhit_p->getCellID0();
-          UTIL::BitField64 encoder_trk( lcio::ILDCellID0::encoder_string ) ; 
+          UTIL::BitField64 encoder_trk( lcio::LCTrackerCellID::encoding_string() ) ; 
           encoder_trk.setValue(cellId_trk) ;
-          _trkhits.layer[ri]    = encoder_trk[lcio::ILDCellID0::layer] ;
-          _trkhits.ladder[ri] = encoder_trk[lcio::ILDCellID0::module] ;
+          _trkhits.layer[ri]    = encoder_trk[lcio::LCTrackerCellID::layer()] ;
+          _trkhits.ladder[ri] = encoder_trk[lcio::LCTrackerCellID::module()] ;
 
           double lpos[3];//xi,eta,zeta
           double gpos[3];
@@ -925,7 +926,7 @@ void FPCCDClustering::makeTrackerHit(LCCollection* STHcol, int layer, int ladder
 
 
 
-  CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( lcio::ILDCellID0::encoder_string , trkHitVec ) ;
+  CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( lcio::LCTrackerCellID::encoding_string() , trkHitVec ) ;
   for(unsigned int ic=0;ic<clusterVec.size();ic++) {
     FPCCDCluster_t *cluster=clusterVec[ic];
 
@@ -1054,11 +1055,11 @@ void FPCCDClustering::makeTrackerHit(LCCollection* STHcol, int layer, int ladder
 
             trkHit->setType( 100 + layer);
 
-            cellid_encoder[ lcio::ILDCellID0::subdet ] = lcio::ILDDetID::VXD ;
-            cellid_encoder[ lcio::ILDCellID0::side   ] = 0 ;
-            cellid_encoder[ lcio::ILDCellID0::layer  ] = layer ;
-            cellid_encoder[ lcio::ILDCellID0::module ] = ladder ;
-            cellid_encoder[ lcio::ILDCellID0::sensor ] = 0 ;      
+            cellid_encoder[ lcio::LCTrackerCellID::subdet() ] = lcio::ILDDetID::VXD ;
+            cellid_encoder[ lcio::LCTrackerCellID::side()   ] = 0 ;
+            cellid_encoder[ lcio::LCTrackerCellID::layer()  ] = layer ;
+            cellid_encoder[ lcio::LCTrackerCellID::module() ] = ladder ;
+            cellid_encoder[ lcio::LCTrackerCellID::sensor() ] = 0 ;      
 
             cellid_encoder.setCellID( trkHit );
 

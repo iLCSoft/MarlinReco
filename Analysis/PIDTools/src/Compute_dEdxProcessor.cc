@@ -19,7 +19,7 @@
 #include <IMPL/TrackImpl.h>
 
 #include <UTIL/BitField64.h>
-#include <UTIL/ILDConf.h>
+#include "UTIL/LCTrackerConf.h"
 
 #include "Compute_dEdxProcessor.hh"
 

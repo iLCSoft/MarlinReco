@@ -1,11 +1,4 @@
-================================
-
- release notes for MarlinReco
-
-===============================
- --------
-| v01-17 |
- --------
+# v01-17
 
 S. Lukic
   - Adding SiPID package to MarlinReco. 
@@ -29,9 +22,7 @@ S. Lu
 
 
 
- --------
-| v01-16 |
- --------
+# v01-16
 
 A.Ebrahimi
   - add package ErrorFlow
@@ -40,9 +31,7 @@ A.Ebrahimi
       in a jet object.
 
 
- --------
-| v01-15 |
- --------
+# v01-15
 
 M. Kurata
    - Include dEdx angular correction, which is a feedback from Sviatoslav
@@ -67,9 +56,7 @@ M. Chera
    - fixed bug such that the processor now skips events with empty PFO collections without crashing
    
 
- --------
-| v01-14 |
- --------
+# v01-14
 
 M. Berggren
    - Much ameliorated linking for clusters, taking back-scattering and
@@ -172,9 +159,7 @@ T.Suehara
   - made SimpleFCalDigi use MarlinUtil:caloTypeFromString(_caloType)
 
 
- --------
-| v01-13 |
- --------
+# v01-13
 
   F.Gaede
    - renamed SimpleLHCalDigi to SimpleFCalDigi
@@ -210,9 +195,7 @@ T.Suehara
 
 
 
- --------
-| v01-12 |
- --------
+# v01-12
 
   J.Tian
    - added new Analysis/IsolatedLeptonTagging
@@ -244,9 +227,7 @@ T.Suehara
 
 
 
- --------
-| v01-11 |
- -------- 
+# v01-11
 
      LDCCaloDigi/ILDCaloDigi: D.Jeans & O. Hartbrich
      - improved realism of silicon and sintillator/PPD calorimeter hit digitisation
@@ -281,17 +262,13 @@ T.Suehara
       Cluster shower profile extraction, and Likelihood Particle Identification
 
  
- --------
-| v01-10 |
- -------- 
+# v01-10
     - no release notes, use 
        svn -v log 
       to see changes ... 
 
 
- --------
-| v01-09 |
- -------- 
+# v01-09
 
      - improved SDHCAL digitizer (G.Grenier):
         charge simulation : simplifies Polya function. 
@@ -299,18 +276,14 @@ T.Suehara
 	and add new dispatching using sum of Erf functions (recommended option)
 
 
- --------
-| v01-08 |
- -------- 
+# v01-08
 
  - John Marshall:
 			Update fillECALGaps function, so that it remains identical to that implemented in NewLDCCaloDigi processor (i.e. copy the NewLDCCaloDigi updates from 9th Jan 2013).
 			Apply HCAL "other" calibration constant to both ring and plug calorimeter hit types.
 
 
- --------
-| v01-07 |
- --------
+# v01-07
    
   - Manqi Ruan: added new clas G2D:
      Include G2CD, a general digitizer for gaseous hadron calorimeter. It takes 1mm simulated Hcal hits as input,
@@ -324,9 +297,7 @@ T.Suehara
     for the Scintillator Strip Ecal reconstruction
 
 
- --------
-| v01-06 |
- --------
+# v01-06
    - updated IsolatedLeptonfinder (T.Tanabe)
      - LAL Lepton Finder included in IsolatedLeptonFinderProcessor
 
@@ -340,9 +311,7 @@ T.Suehara
   - fixed memory leak in BCalReco - fix provided by D.Jeans 
       - (loop variable in BCalReconstruction::Free3DArray )
 
- --------
-| v01-05 |
- --------
+# v01-05
 
    - BCalReco (A.Rosca)
      - in BCalReco.h reduce memory use: #define MAXNENTR 80000	      
@@ -356,9 +325,7 @@ T.Suehara
      - removed local copy of TDR background map, updated README and bcal_ild_05_v05.xml
      - some minor clean-up of print statements, comments etc
 
- -----------
-| v01-04-02 |
- -----------
+# v01-04-02
 
     - BCalTagEfficiency:
         - threw out interpolation between BeamCal cells, introduced optional write-out of background map
@@ -381,9 +348,7 @@ T.Suehara
         - t.mori enable to difine pixel size for each layer.
 
 
- -----------
-| v01-04-01 |
- -----------
+# v01-04-01
      - fixed TPCDigiProcessor :
         - added bfield correction factor to point resolution
           ( 4.0 / bField )
@@ -403,9 +368,7 @@ T.Suehara
          map format added
 
 
- --------
-| v01-04 |
- --------
+# v01-04
 
    - SiliconTracker, SiliconTrack_CLIC, TruthTracker: Corrected use of getPointOnCircle from HelixClass (MarlinUtil) 
      documentaion wrong said that a float[3] is required, when in fact a float[6] is needed. 
@@ -419,9 +382,7 @@ T.Suehara
      			Corrected float instead of integer value for cluster position
 
 
- --------
-| v01-03 |
- --------
+# v01-03
 
    - added option to enable/disable output of root file containing histograms to BCalReco.cc
      (T.Tanabe)
@@ -436,9 +397,7 @@ T.Suehara
     - removed/fixed several compiler/linker warnings
 
 
- --------
-| v01-02 |
- --------
+# v01-02
 
     - new package Analysis/IsolatedLeptonFinderProcessor
       (R. Yonamine, KEK, T. Tanabe, U.Tokiyo)
@@ -447,9 +406,7 @@ T.Suehara
     - made compatible w/ clang++ compiler
 
 
- -----------
-| v01-01-01 |
- -----------
+# v01-01-01
 
     - bug fixes in Analysis/RecoMCTruthLink/src/RecoMCTruthLinker.cc:
 
@@ -459,9 +416,7 @@ T.Suehara
 	  Internally a single temporary collection of LCRelations is created.
 
 
- --------
-| v01-01 |
- --------
+# v01-01
       
       - RecoMCTruthLinker
         -  added mcTruthTrackLink: inverse relation from MCParticles to Tracks
@@ -499,9 +454,7 @@ T.Suehara
        - BCalReconstruction
        	  Improved calibration (A.Rosca)
 
- -----------
-| v01-00-01 |
- -----------
+# v01-00-01
 
 
 	- FPCCDDigi 
@@ -513,9 +466,7 @@ T.Suehara
 	  - Added reconstructed particle collection and check histograms.
 	  - New parameter for bg map file: BackgroundFilename
 
- --------
-| v01-00 |
- --------
+# v01-00
 
 	- General
 	  - New release for preparation for the DBD.
@@ -539,9 +490,7 @@ T.Suehara
 	  		    Removed SimHits from RawHits and Used Relations. The deprecated feature to store them in the 
 			    rawhits can be enabled by setting UseRawHitsToStoreSimhitPointer true. 
 
- --------
-| v00-30 |
- --------
+# v00-30
 
 	- General
 	  - Enabled build without cernlib/fortran (option MARLINRECO_FORTRAN=off) - e.g. for macos-64bit
@@ -585,9 +534,7 @@ T.Suehara
 	      In this case tolerance has been set to a tenth of a micron
 
 
- --------
-| v00-20 |
- --------
+# v00-20
 
         - Tracking
           - MarlinTrackFit
@@ -624,9 +571,7 @@ T.Suehara
            - Use push_back instead of directly assigning entries to the vector, in case we run out of reserved space.
            - Output cluster truth linked collections for Clusters and Hits can only be created if there are clusters/hits.
 
- --------
-| v00-19 |
- --------
+# v00-19
 
  	  - added new sub package FPCCDDigi (Daisuke Kamai)
 
@@ -678,9 +623,7 @@ T.Suehara
             - fixed cmake issues          
 
 
- --------
-| v00-18 |
- --------
+# v00-18
       - added new package Tracking/KinkFinder  (M.Thomson, J.Marshall)
 
       - moved sub-package BCalTagEfficiency from MarlinAna to ./Analysis
@@ -711,24 +654,18 @@ T.Suehara
         (last hit compared with itself)
 
 
- -----------
-| v00-17-02 |
- -----------
+# v00-17-02
      - made compatible with MacOS
      bug fixes: 
      - incorrect library version numbers
       
 
 
- --------
-| v00-17 |
- --------
+# v00-17
         removed dangerous revision of impact parameters 
         d0 and z0 in MarlinTrackFit.cc
 
- --------
-| v00-16 |
- --------
+# v00-16
 
      *	MarlinKinfit (boehmej, beckmann & K. Fujii)
 
@@ -790,24 +727,18 @@ T.Suehara
 
       -> see Changelog for details 
 
- --------
-| v00-15 |
- --------
+# v00-15
      * PFOID (A.Raspereza) 
        - Updated version of PFOID processor. Energy dependent scheme of 
          particle identification is implemented.
        - bug fix in Histogram.cc (array out of bounds)
        -  New pdf files for energy dependent particle ID procedure
 
- --------
-| v00-14 |
- --------
+# v00-14
    * modified calorimeter digitizers to encode CalorimeterHit types
      with CalorimeterHitType class from MarlinUtil ( need v00-13 or higher )
 
- --------
-| v00-13 |
- --------
+# v00-13
   * TrackDigi (F.Gaede)
     - ETDDigiProcessor/VTXDigiProcessor: 
       added active(SET)Layers parameter to mimic stereo layer readout by ignoring some layers
@@ -830,9 +761,7 @@ T.Suehara
     - BrahmsTracking: fixed of bounds checking, buffer sizes
 
 
- -----------
-| v00-12-01 |
- -----------
+# v00-12-01
      - bug fix release:
 
       BrahmsTracking (S.Aplin)
@@ -842,9 +771,7 @@ T.Suehara
 
        FullLDCTracking corrected the GEAR definition for the disk z positions
 
- -----------
-| v00-12-00 |
- -----------
+# v00-12-00
 
    * improved PFOID  (S.Aplin, A.Rasperezza) 
     - fixed to compile w/ gcc4.x 
@@ -868,9 +795,7 @@ T.Suehara
    * added LIBRARY_DIRS
 
                                     
- -----------
-| v00-11-00 |
- -----------
+# v00-11-00
 
      * FullLDCTracking: (A.Raspereza)
         added cut on #Silicon hits if no TPC hits present - default: >=4
@@ -879,9 +804,7 @@ T.Suehara
        particle id package
        -> experimental - does not compile and is not built into library
 
- -----------
-| v00-10-04 |
- -----------
+# v00-10-04
       
       * RecoMCTruthLinker (F.Gaede)
 	  added paramater daughtersECutMeV for supressing low energy deltas od decays in flight
@@ -894,9 +817,7 @@ T.Suehara
 
         -> see Changelog for details 
 
- -----------
-| v00-10-03 |
- -----------
+# v00-10-03
 
 	* bug fix SiliconTracking/LEPTrackingProcessor (S. Aplin)
           subdetectorHitNumbers  for ETD and SET hits
@@ -904,32 +825,24 @@ T.Suehara
         * improved V0Finder (A.Raspereza)
           added cut on the mass of the candidate vertices
 
- -----------
-| v00-10-01 |
- -----------
+# v00-10-01
 
     * Tracking/FullLDCTracking/src/FullLDCTracking.cc: Si and TPC
       tracks are allowed to be merged if fit error = 0 ( proposed by
       Mark ).
 
- --------
-| v00-10 |
- --------
+# v00-10
 
     * new package Tracking/V0Finder  (A.Raspereza)
       processor to perform identification of neutral vertices,
       originating from photon conversions and decays of K0S and
       Lambda0
 
- ----------
-| v00-09-01 |
- ----------
+# v00-09-01
       fixed bug in RecoMCTruthLinker
 	  and recover missing MCParticle link for Lcal clusters
 
- --------
-| v00-09 |
- --------
+# v00-09
 
     * RecoMCTruthLink:   (M.Beckmann, F.Gaede)
       - new processor MCTruthJetEnergy: adds colleciton parameter 'MCTruthJetEnergies'
@@ -942,9 +855,7 @@ T.Suehara
       - changed default binning for the emoval of hits ala CurlKiller
       - bug fix for iteration of CurlKiller
 
- --------
-| v00-08 |
- --------
+# v00-08
      
     * TrackDigi: 
        - new processor VTXNoiseHits.cc   (F.Gaede)
@@ -969,9 +880,7 @@ T.Suehara
 
        -> see Changelog for details
  
- --------
-| v00-07 |
- --------
+# v00-07
 
      * improved FullLDCTracking (A.Raspereza)
        include SET and ETD in pattern recognition and fit
@@ -988,9 +897,7 @@ T.Suehara
 
        -> see Changelog for details
 
- --------
-| v00-06 |
- --------
+# v00-06
 	 
     * improved LEPTracking and TPCDigi(S.Aplin)
 	- reduced printout and moved cout to debug streamlog_out
@@ -1013,9 +920,7 @@ T.Suehara
 
        -> see Changelog for details
 
- -----------
-| v00-05-03 |
- -----------
+# v00-05-03
 
        bug fix release 
 
@@ -1028,9 +933,7 @@ T.Suehara
      	    detector
 
 
- -----------
-| v00-05-02 |
- -----------
+# v00-05-02
   
        bug fix release 
 
@@ -1052,9 +955,7 @@ T.Suehara
           - added more example fitters
           - bug fixes
 
- -----------
-| v00-05-01 |
- -----------
+# v00-05-01
        bug fix release
 
         - MarlinKinfit improved and new example (J.List) 
@@ -1069,9 +970,7 @@ T.Suehara
 
         - ...
 
- --------
-| v00-05 |
- --------
+# v00-05
        - new processor YThresh, calculates the yThresh variable(B. Hooberman)
          * in Analysis/EventShapes
          * see README and doxygen documentation
@@ -1123,9 +1022,7 @@ T.Suehara
 
     -> see ChangeLog for details 
 
- --------
-| v00-04 |
- --------
+# v00-04
    - cmake is now default build tool:  (J.Engels)
         # edit BuildSetup.cmake as needed
         mkdir build ; cd build
@@ -1157,9 +1054,7 @@ T.Suehara
 
     -> see ChangeLog for details 
 
- --------
-| v00-03 |
- --------
+# v00-03
   - improved Full Tracking  (A.Raspereza)
 
   - initial version of TrackBasedPFA (O.Wendt)

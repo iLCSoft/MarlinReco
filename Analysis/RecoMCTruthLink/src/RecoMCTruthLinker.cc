@@ -60,8 +60,6 @@ RecoMCTruthLinker::RecoMCTruthLinker() : Processor("RecoMCTruthLinker") {
   pdgVecDef.push_back( 111 ) ;  // pi0
   pdgVecDef.push_back( 310 ) ;  // K0s
   
-  _encoder = new UTIL::BitField64(lcio::LCTrackerCellID::encoding_string());
-  
  
    //  >>>>> reconstructed or simulated thingis 
  

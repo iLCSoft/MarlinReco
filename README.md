@@ -1,5 +1,6 @@
 # MarlinReco
 [![Build Status](https://travis-ci.org/iLCSoft/MarlinReco.svg?branch=master)](https://travis-ci.org/iLCSoft/MarlinReco)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/12363/badge.svg)](https://scan.coverity.com/projects/ilcsoft-marlinreco)
 
 Assembly of various Marlin processor for reconstruction.
 

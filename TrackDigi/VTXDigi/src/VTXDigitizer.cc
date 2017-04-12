@@ -841,7 +841,7 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
               SimTrackerHitImpl * hit = new SimTrackerHitImpl();
               double pos[3] = {xCurrent, yCurrent, _layerHalfThickness[_currentLayer]};
               hit->setPosition( pos );
-              hit->setCellID( cellID );
+              hit->setCellID0( cellID );
               hit->setEDep( totCharge );
               vectorOfHits.push_back( hit );
             }

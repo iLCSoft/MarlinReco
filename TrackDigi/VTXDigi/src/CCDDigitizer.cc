@@ -967,7 +967,7 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
               // double pos[3] = {xCurrent, yCurrent, 0};
               // hit->setPosition( pos );
 
-              hit->setCellID( currentcellid );
+              hit->setCellID0( currentcellid );
               hit->setEDep( charge );
               vectorOfHits.push_back( hit );
             }

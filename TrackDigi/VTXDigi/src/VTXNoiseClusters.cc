@@ -290,7 +290,7 @@ void VTXNoiseClusters::modifyEvent( LCEvent * evt ) {
         hit->setEDep( 0. ) ; // FIXME: which dedx should be used for noise hits 
 
         //FIXME: encode a proper cellID
-        hit->setCellID(  i + 1  ) ; // fg: here we'd like to have ladder id as well ....
+        hit->setCellID0(  i + 1  ) ; // fg: here we'd like to have ladder id as well ....
 
 
         // now we need to add some cluster parameters  to the hit :

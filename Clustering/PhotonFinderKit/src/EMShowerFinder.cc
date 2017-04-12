@@ -140,7 +140,7 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
   try {
     
     LCCollection* colt = evt->getCollection(_colNameECAL.c_str()) ;
-    CellIDDecoder<CalorimeterHit>CDECAL =CellIDDecoder<CalorimeterHit>(colt);
+    CellIDDecoder<CalorimeterHit> CDECAL(colt);
 
     LCCollectionVec* clscol = new LCCollectionVec(LCIO::CLUSTER);
 

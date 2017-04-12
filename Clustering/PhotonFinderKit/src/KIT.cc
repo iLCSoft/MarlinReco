@@ -95,7 +95,7 @@ void KIT::processEvent( LCEvent * evt ) {
  
   try{   
         LCCollection* colt = evt->getCollection(_Ecal_col.c_str()) ;
-	CellIDDecoder<CalorimeterHit>CDECAL =CellIDDecoder<CalorimeterHit>(colt);
+	CellIDDecoder<CalorimeterHit> CDECAL(colt);
 	LCCollectionVec * clscol = new LCCollectionVec(LCIO::CLUSTER);
       if( colt!=0)
 	{

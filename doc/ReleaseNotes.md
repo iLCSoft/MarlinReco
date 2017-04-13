@@ -1,3 +1,16 @@
+# v01-18
+
+* 2017-03-30 Andre Sailer ([PR#4](https://github.com/iLCSoft/MarlinReco/pull/4))
+  - RecoMCTruthLinker: move encoder initialisation from constructor to function body to avoid accessing encoding_string too early
+
+* 2017-03-24 Emilia Leogrande ([PR#2](https://github.com/iLCSoft/MarlinReco/pull/2))
+  - Replace ILDCellID0 to LCTrackerCellID
+
+* 2017-04-12 Shaojun Lu ([PR#5](https://github.com/iLCSoft/MarlinReco/pull/5))
+  - update to latest changes in LCIO
+         - removed deprecated SimTrackerHit::setCellID
+         - don't use assignment for CellIDDecoder
+
 # v01-17
 
 S. Lukic

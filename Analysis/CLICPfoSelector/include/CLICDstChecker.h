@@ -56,7 +56,9 @@ class CLICDstChecker : public Processor {
  public:
   
   virtual Processor*  newProcessor() { return new CLICDstChecker ; }  
-  CLICDstChecker() ;  
+  CLICDstChecker() ;
+  CLICDstChecker(const CLICDstChecker&) = delete;
+  CLICDstChecker& operator=(const CLICDstChecker&) = delete;
   virtual void init() ;
   virtual void processRunHeader( LCRunHeader* run ) ;
   virtual void processEvent( LCEvent * evt ) ; 
@@ -67,23 +69,21 @@ class CLICDstChecker : public Processor {
 
   void CleanUp(); 
 
-  int m_nRun ;
-  int m_nEvt ;
+  int m_nRun=-1;
+  int m_nEvt=-1;
 
-  int   m_debug;
-  LCEvent * m_evt;
-
-  std::string m_inputPfoCollection;                           ///< Input PFO collection name
-  std::string m_inputPfoToMcRelationCollection;
-  std::string m_inputMcParticleCollection;
-  int         m_monitoring;                                   ///< Whether to display monitoring information
-  int         m_showBackground;                               ///< Whether to display background information
+  int   m_debug=0;
+  std::string m_inputPfoCollection{};                           ///< Input PFO collection name
+  std::string m_inputPfoToMcRelationCollection{};
+  std::string m_inputMcParticleCollection{};
+  int         m_monitoring=0;                                   ///< Whether to display monitoring information
+  int         m_showBackground=0;                               ///< Whether to display background information
 
  private:
-  std::vector<ReconstructedParticle*> m_pfoVector;
-  std::set<MCParticle*> m_mcSet;
+  std::vector<ReconstructedParticle*> m_pfoVector{};
+  std::set<MCParticle*> m_mcSet{};
   static bool PfoSortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs); 
-  LCRelationNavigator* m_pfoToMcNavigator;
+  LCRelationNavigator* m_pfoToMcNavigator=NULL;
 
 } ;
 

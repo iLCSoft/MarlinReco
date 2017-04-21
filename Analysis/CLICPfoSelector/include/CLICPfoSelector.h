@@ -71,66 +71,64 @@ class CLICPfoSelector : public Processor {
 
   void CleanUp(); 
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun=-1;
+  int _nEvt=-1;
 
-  float PI, PIOVER2, TWOPI;
-  float _bField;
-  int   m_debug;
-  LCEvent * _evt;
+  float _bField=0.0;
+  int   m_debug=-1;
 
-  std::string     m_inputPfoCollection;                           ///< Input PFO collection name
-  std::string     m_selectedPfoCollection;                        ///< Output PFO collection name
-  int             m_monitoring;                                   ///< Whether to display monitoring information
-  int             m_displaySelectedPfos;                          ///< Whether to display monitoring information concerning selected pfos
-  int             m_displayRejectedPfos;                          ///< Whether to display monitoring information concerning rejected pfos
-  float           m_monitoringPfoEnergyToDisplay;                 ///< Minimum pfo energy in order to display monitoring information 
-  int             m_correctHitTimesForTimeOfFlight;               ///< Correct hit times for straight line time of flight  
-  int             m_checkProtonCorrection;                        ///< Check proton hypothesis
-  int             m_checkKaonCorrection;                          ///< Check charged hypothesis
-  int             m_keepKShorts;                                  ///< Keep kshorts
-  int             m_useNeutronTiming;                             ///< Attempt to make a (dubious) neutron timing correction
-  float           m_minimumEnergyForNeutronTiming;                ///< Minimum energy for attempted neutron timing correction
+  std::string     m_inputPfoCollection{};                 ///< Input PFO collection name
+  std::string     m_selectedPfoCollection{};              ///< Output PFO collection name
+  int             m_monitoring=0;                         ///< Whether to display monitoring information
+  int             m_displaySelectedPfos=0;                ///< Whether to display monitoring information concerning selected pfos
+  int             m_displayRejectedPfos=0;                ///< Whether to display monitoring information concerning rejected pfos
+  float           m_monitoringPfoEnergyToDisplay=1.0;     ///< Minimum pfo energy in order to display monitoring information
+  int             m_correctHitTimesForTimeOfFlight=0;     ///< Correct hit times for straight line time of flight
+  int             m_checkProtonCorrection=0;              ///< Check proton hypothesis
+  int             m_checkKaonCorrection=0;                ///< Check charged hypothesis
+  int             m_keepKShorts=1;                        ///< Keep kshorts
+  int             m_useNeutronTiming=0;                   ///< Attempt to make a (dubious) neutron timing correction
+  float           m_minimumEnergyForNeutronTiming=1.0;    ///< Minimum energy for attempted neutron timing correction
 
-  float           m_farForwardCosTheta;                           ///< Value of cos theta identifying the detector forward region
-  float           m_ptCutForTightTiming;                          ///< The pt value below which tight timing cuts are used
+  float           m_farForwardCosTheta=0.975;             ///< Value of cos theta identifying the detector forward region
+  float           m_ptCutForTightTiming=0.75;             ///< The pt value below which tight timing cuts are used
   
-  float           m_photonPtCut;                                  ///< The basic pt cut for a photon pfo
-  float           m_photonPtCutForLooseTiming;                    ///< The photon pt value below which tight timing cuts are used
-  float           m_photonLooseTimingCut;                         ///< The photon loose high timing cut
-  float           m_photonTightTimingCut;                         ///< The photon tight high timing cut
+  float           m_photonPtCut=0.0;                      ///< The basic pt cut for a photon pfo
+  float           m_photonPtCutForLooseTiming=4.0;        ///< The photon pt value below which tight timing cuts are used
+  float           m_photonLooseTimingCut=2.0;             ///< The photon loose high timing cut
+  float           m_photonTightTimingCut=1.0;             ///< The photon tight high timing cut
   
-  float           m_chargedPfoPtCut;                              ///< The basic pt cut for a charged hadron pfo
-  float           m_chargedPfoPtCutForLooseTiming;                ///< The charged hadron pt value below which tight timing cuts are used
-  float           m_chargedPfoLooseTimingCut;                     ///< The charged hadron loose high timing cut
-  float           m_chargedPfoTightTimingCut;                     ///< The charged hadron tight high timing cut
-  float           m_chargedPfoNegativeLooseTimingCut;             ///< The charged hadron loose low timing cut
-  float           m_chargedPfoNegativeTightTimingCut;             ///< The charged hadron tight low timing cut
+  float           m_chargedPfoPtCut=0.0;                  ///< The basic pt cut for a charged hadron pfo
+  float           m_chargedPfoPtCutForLooseTiming=4.0;    ///< The charged hadron pt value below which tight timing cuts are used
+  float           m_chargedPfoLooseTimingCut=3.0;         ///< The charged hadron loose high timing cut
+  float           m_chargedPfoTightTimingCut=1.5;         ///< The charged hadron tight high timing cut
+  float           m_chargedPfoNegativeLooseTimingCut=-1.0;///< The charged hadron loose low timing cut
+  float           m_chargedPfoNegativeTightTimingCut=-0.5;///< The charged hadron tight low timing cut
   
-  float           m_neutralHadronPtCut;                           ///< The basic pt cut for a neutral hadron pfo
-  float           m_neutralHadronPtCutForLooseTiming;             ///< The neutral hadron pt value below which tight timing cuts are used
-  float           m_neutralHadronLooseTimingCut;                  ///< The neutral hadron loose high timing cut
-  float           m_neutralHadronTightTimingCut;                  ///< The neutral hadron tight high timing cut
-  float           m_neutralFarForwardLooseTimingCut;              ///< The neutral hadron loose high timing cut for the forward region
-  float           m_neutralFarForwardTightTimingCut;              ///< The neutral hadron tight high timing cut for the forward region
-  float           m_photonFarForwardLooseTimingCut;               ///< The photon loose high timing cut for the forward region
-  float           m_photonFarForwardTightTimingCut;               ///< The photon tight high timing cut for the forward region
+  float           m_neutralHadronPtCut=0.0;               ///< The basic pt cut for a neutral hadron pfo
+  float           m_neutralHadronPtCutForLooseTiming=8.0; ///< The neutral hadron pt value below which tight timing cuts are used
+  float           m_neutralHadronLooseTimingCut=2.5;      ///< The neutral hadron loose high timing cut
+  float           m_neutralHadronTightTimingCut=1.5;      ///< The neutral hadron tight high timing cut
+  float           m_neutralFarForwardLooseTimingCut=2.0;  ///< The neutral hadron loose high timing cut for the forward region
+  float           m_neutralFarForwardTightTimingCut=1.0;  ///< The neutral hadron tight high timing cut for the forward region
+  float           m_photonFarForwardLooseTimingCut=2.0;   ///< The photon loose high timing cut for the forward region
+  float           m_photonFarForwardTightTimingCut=1.0;   ///< The photon tight high timing cut for the forward region
 
-  float           m_hCalBarrelLooseTimingCut;                     ///< The loose timing cut for hits predominantly in hcal barrel
-  float           m_hCalBarrelTightTimingCut;                     ///< The tight timing cut for hits predominantly in hcal barrel
-  float           m_hCalEndCapTimingFactor;                       ///< Factor by which high timing cut is multiplied for hcal barrel hits
-  float           m_neutralHadronBarrelPtCutForLooseTiming;       ///< pt above which loose timing cuts are applied to neutral hadrons in barrel
+  float           m_hCalBarrelLooseTimingCut=20.0;        ///< The loose timing cut for hits predominantly in hcal barrel
+  float           m_hCalBarrelTightTimingCut=10.0;        ///< The tight timing cut for hits predominantly in hcal barrel
+  float           m_hCalEndCapTimingFactor=1.0;           ///< Factor by which high timing cut is multiplied for hcal barrel hits
+  float           m_neutralHadronBarrelPtCutForLooseTiming=3.5;///< pt above which loose timing cuts are applied to neutral hadrons in barrel
   
-  int             m_minECalHitsForTiming;                         ///< Minimum ecal hits in order to use ecal timing info
-  int             m_minHCalEndCapHitsForTiming;                   ///< Minimum hcal endcap hits in order to use hcal endcap timing info
+  int             m_minECalHitsForTiming=5;               ///< Minimum ecal hits in order to use ecal timing info
+  int             m_minHCalEndCapHitsForTiming=5;         ///< Minimum hcal endcap hits in order to use hcal endcap timing info
   
-  int             m_useClusterLessPfos;                           ///< Whether to accept any cluster-less pfos
-  float           m_minMomentumForClusterLessPfos;                ///< Minimum momentum for a cluster-less pfo
-  float           m_maxMomentumForClusterLessPfos;                ///< Minimum momentum for a cluster-less pfo
-  float           m_minPtForClusterLessPfos;                      ///< Minimum pT for a cluster-less pfo  
-  float           m_clusterLessPfoTrackTimeCut;                   ///< Maximum arrival time at Ecal for cluster-less pfo
-  float           m_forwardCosThetaForHighEnergyNeutralHadrons;   ///< Forward region of HCAL where timing cuts will be applied to all neutral hadrons
-  float           m_forwardHighEnergyNeutralHadronsEnergy;        ///< Energy cut for specific HCAL timing requirements cuts for neutral hadrons
+  int             m_useClusterLessPfos=1;                 ///< Whether to accept any cluster-less pfos
+  float           m_minMomentumForClusterLessPfos=0.5;    ///< Minimum momentum for a cluster-less pfo
+  float           m_maxMomentumForClusterLessPfos=2.0;    ///< Minimum momentum for a cluster-less pfo
+  float           m_minPtForClusterLessPfos=0.5;          ///< Minimum pT for a cluster-less pfo
+  float           m_clusterLessPfoTrackTimeCut=10.0;      ///< Maximum arrival time at Ecal for cluster-less pfo
+  float           m_forwardCosThetaForHighEnergyNeutralHadrons=0.95;   ///< Forward region of HCAL where timing cuts will be applied to all neutral hadrons
+  float           m_forwardHighEnergyNeutralHadronsEnergy=10.0;        ///< Energy cut for specific HCAL timing requirements cuts for neutral hadrons
 
  private:
   typedef std::vector<ReconstructedParticle*> PfoList;

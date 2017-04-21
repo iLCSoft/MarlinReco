@@ -290,13 +290,10 @@ void CLICPfoSelector::init() {
   printParameters();  
   _nRun = -1 ;
   _nEvt = 0 ;
-  PI = acos(-1.);
-  PIOVER2 = 0.5*PI;
-  TWOPI = 2*PI;
 
 }
 
-void CLICPfoSelector::processRunHeader( LCRunHeader* run) { 
+void CLICPfoSelector::processRunHeader( LCRunHeader* ) {
 
   _nRun++ ;
   _nEvt = 0;
@@ -306,8 +303,6 @@ void CLICPfoSelector::processRunHeader( LCRunHeader* run) {
 } 
 
 void CLICPfoSelector::processEvent( LCEvent * evt ) { 
-
-  _evt = evt;
 
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
 
@@ -352,21 +347,21 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 //      const bool isCompound = pPfo->isCompound(); 
       float momentum[3];
       for(unsigned int i=0;i<3;i++)momentum[i] = pPfo->getMomentum()[i];
-      const float pT = sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]);
-      const float  p = sqrt(pT*pT+momentum[2]*momentum[2]);
-      const float cosTheta = fabs(momentum[2])/p; 
+      const float pT_pfo = sqrt(momentum[0]*momentum[0]+momentum[1]*momentum[1]);
+      const float p_pfo  = sqrt(pT_pfo*pT_pfo+momentum[2]*momentum[2]);
+      const float cosTheta = fabs(momentum[2])/p_pfo;
       const float energy  = pPfo->getEnergy();
       eTotalInput+=energy;
-      float covMatrix[10];
-      for(unsigned int i=0;i<10;i++)covMatrix[i] = pPfo->getCovMatrix()[i];
+      // float covMatrix[10];
+      // for(unsigned int i=0;i<10;i++)covMatrix[i] = pPfo->getCovMatrix()[i];
 //      const float mass = pPfo->getMass();
 //      const float charge = pPfo->getCharge();
-      float referencePoint[3];
-      for(unsigned int i=0;i<3;i++)referencePoint[i] = pPfo->getReferencePoint()[i];
-      const ParticleIDVec particleIDs = pPfo->getParticleIDs();
+      // float referencePoint[3];
+      // for(unsigned int i=0;i<3;i++)referencePoint[i] = pPfo->getReferencePoint()[i];
+      //const ParticleIDVec particleIDs = pPfo->getParticleIDs();
 //      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
 //      const float goodnessOfPID = pPfo->getGoodnessOfPID();
-      const ReconstructedParticleVec particles = pPfo->getParticles();
+      //const ReconstructedParticleVec particles = pPfo->getParticles();
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       //const Vertex startVertex(pPfo->getStartVertex());
@@ -467,7 +462,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	timingCutHigh = m_neutralFarForwardLooseTimingCut;
       
       // Neutral hadron cuts
-      if (pT <= m_ptCutForTightTiming)
+      if (pT_pfo <= m_ptCutForTightTiming)
         {
 	  timingCutHigh = m_neutralHadronTightTimingCut;
 	  hCalBarrelTimingCut = m_hCalBarrelTightTimingCut;
@@ -484,7 +479,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  if (cosTheta > m_farForwardCosTheta)
 	    timingCutHigh = m_photonFarForwardLooseTimingCut;
 
-	  if (pT <= m_ptCutForTightTiming){
+	  if (pT_pfo <= m_ptCutForTightTiming){
 	    timingCutHigh = m_photonTightTimingCut;
 	    if (cosTheta > m_farForwardCosTheta)
 	      timingCutHigh = m_photonFarForwardTightTimingCut;
@@ -498,7 +493,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  ptCutForLooseTiming = m_chargedPfoPtCutForLooseTiming;
 	  timingCutLow = m_chargedPfoNegativeLooseTimingCut;
 	  timingCutHigh = m_chargedPfoLooseTimingCut;
-	  if (pT <= m_ptCutForTightTiming)
+	  if (pT_pfo <= m_ptCutForTightTiming)
             {
 	      timingCutLow = m_chargedPfoNegativeTightTimingCut;
 	      timingCutHigh = m_chargedPfoTightTimingCut;
@@ -507,7 +502,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
  
    
       // Reject low pt pfos (default is to set ptcut to zero)
-      if (pT < ptCut)
+      if (pT_pfo < ptCut)
         {
 	  passPfoSelection = false;
 	}
@@ -524,7 +519,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
 
       // Only apply cuts to low pt pfos and very forward neutral hadrons
-      bool applyTimingCuts = ( (pT < ptCutForLooseTiming) || ( (cosTheta > m_forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) ) );
+      bool applyTimingCuts = ( (pT_pfo < ptCutForLooseTiming) || ( (cosTheta > m_forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) ) );
       bool useHcalTimingOnly = ( (cosTheta > m_forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) && (energy > m_forwardHighEnergyNeutralHadronsEnergy));
     
 
@@ -556,7 +551,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 		if ((clusterTime >= timingCutLow) && (clusterTime < hCalBarrelTimingCut))
 		  selectPfo = true;
 		
-		if (tracks.empty() && (pT > m_neutralHadronBarrelPtCutForLooseTiming))
+		if (tracks.empty() && (pT_pfo > m_neutralHadronBarrelPtCutForLooseTiming))
 		  selectPfo = true;
 	      }
 
@@ -585,7 +580,9 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	else
 	  {
 	    // No clusters form part of this pfo - no additional timing information
-	    if (p > m_minMomentumForClusterLessPfos && p < m_maxMomentumForClusterLessPfos && pT > m_minPtForClusterLessPfos)
+	    if (p_pfo > m_minMomentumForClusterLessPfos &&
+                p_pfo < m_maxMomentumForClusterLessPfos &&
+                pT_pfo > m_minPtForClusterLessPfos)
 	      selectPfo = m_useClusterLessPfos;
 	  }	 
 
@@ -598,9 +595,9 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	if( (passPfoSelection && m_displaySelectedPfos) || (!passPfoSelection && m_displayRejectedPfos)){
 	  if(passPfoSelection)std::cout << " Selected PFO : ";
 	  if(!passPfoSelection)std::cout << " Rejected PFO : ";
-	  if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT,cosTheta,tracks.size(),trackTime);
-	  if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT,cosTheta,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
-	  if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+	  if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT_pfo,cosTheta,tracks.size(),trackTime);
+	  if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT_pfo,cosTheta,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+	  if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
 	}
       }      
       if(passPfoSelection){
@@ -674,7 +671,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
   
   // First project to endcap
   float minTime(std::numeric_limits<float>::max());
-  bool isProjectedToEndCap(true);
+  //bool isProjectedToEndCap(true);
   
   float bestECalProjection[3];
   minTime =  helix.getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestECalProjection);
@@ -697,7 +694,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
       if ((time < minTime))
 	{
 	    minTime = time;
-	    isProjectedToEndCap = false;
+	    //isProjectedToEndCap = false;
 	    bestECalProjection[0] = barrelProjection[0];
 	    bestECalProjection[1] = barrelProjection[1];
 	    bestECalProjection[2] = barrelProjection[2];
@@ -826,7 +823,7 @@ void CLICPfoSelector::CleanUp(){
  
 }
 
-void CLICPfoSelector::check(LCEvent * evt) { }
+void CLICPfoSelector::check(LCEvent * ) { }
 
 void CLICPfoSelector::end() {
 

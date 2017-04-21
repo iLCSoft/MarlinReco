@@ -89,7 +89,7 @@ void CLICDstChecker::init() {
  
 }
 
-void CLICDstChecker::processRunHeader( LCRunHeader* run) { 
+void CLICDstChecker::processRunHeader( LCRunHeader* ) {
 
   m_nRun++ ;
   m_nEvt = 0;
@@ -277,7 +277,7 @@ void CLICDstChecker::CleanUp(){
  
 }
 
-void CLICDstChecker::check(LCEvent * evt) { }
+void CLICDstChecker::check(LCEvent * ) { }
 
 void CLICDstChecker::end() {
 

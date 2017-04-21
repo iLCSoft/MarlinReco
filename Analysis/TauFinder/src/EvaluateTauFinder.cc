@@ -71,12 +71,6 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
 			   _colNameMC ,
 			   std::string("MCParticlesSkimmed") ) ;
   
-  registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-			   "RECOCollectionName" , 
-			   "Name of the ReconstructedParticle collection"  ,
-			   _colNameRECO ,
-			   std::string("PandoraPFOs") ) ;
-  
   registerInputCollection( LCIO::LCRELATION,
 			   "RECOMCTRUTHCollectionName" , 
 			   "Name of the MC Truth PFA collection"  ,
@@ -104,7 +98,6 @@ EvaluateTauFinder::EvaluateTauFinder() : Processor("EvaluateTauFinder")
 
 void EvaluateTauFinder::init() 
 { 
-  std::cout << "INIT CALLED" << std::endl;
   streamlog_out(DEBUG) << "   init called  " 
 		       << std::endl ;
   
@@ -133,10 +126,9 @@ void EvaluateTauFinder::init()
   topofaketuple =new TNtuple("topofake","topofake","EvID:nfake:WpD1:WpD2:WmD1:WmD2");
   leptons=new TNtuple("Leptons","Leptons","EvID:PDG");
 
-  std::cout << "INIT IS DONE" << std::endl;
 }
 
-void EvaluateTauFinder::processRunHeader( LCRunHeader* run) 
+void EvaluateTauFinder::processRunHeader( LCRunHeader* )
 { 
   _nRun++ ;
 } 
@@ -146,18 +138,12 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   // this gets called for every event 
   // usually the working horse ...
   
-  LCCollection *colMC, *colRECO, *colMCTruth, *colTau;
+  LCCollection *colMC, *colMCTruth, *colTau;
   LCCollection *colTauRecLink;
   try {
     colMC = evt->getCollection( _colNameMC ) ;
   } catch (Exception e) {
     colMC = 0;
-  }
-  
-  try {
-    colRECO = evt->getCollection( _colNameRECO ) ;
-  } catch (Exception e) {
-    colRECO = 0;
   }
   
   try {
@@ -203,7 +189,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       ntau_rec=nT;
       int LD=0;
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
+	streamlog_out(DEBUG) << "EVENT "<<_nEvt<<" with "<<nT<<" taus"<<endl;
       HelixClass *helix = new HelixClass();
       HelixClass *mc_helix = new HelixClass();
       for(int k=0; k < nT; k++) 
@@ -255,7 +241,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 // 	  helix->Initialize_VP(ver,mom,charge,_bField);
 	  //double D0=fabs(helix->getD0());
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<" "<<tauvec.size()<<endl;
+	    streamlog_out(DEBUG) <<tau->getEnergy()<<" "<<phi<<" "<<theta<<" "<<D0<<" "<<tauvec.size()<<endl;
 	  
 	  TAU rtau;
 	  rtau.E=tau->getEnergy();
@@ -404,7 +390,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
     {
       int nMCP = colMC->getNumberOfElements();
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"MCTRUTH: "<<endl;
+	streamlog_out(DEBUG) <<"MCTRUTH: "<<endl;
       HelixClass * helix = new HelixClass();
       for(int k=0; k < nMCP; k++) 
 	{
@@ -439,7 +425,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      mctau.D0=D0;
 	      mctauvec.push_back(mctau);
 	      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-		cout<<Evis<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
+		streamlog_out(DEBUG) <<Evis<<" "<<phi<<" "<<theta<<" "<<D0<<endl;
 	      
 	      //find out which mc taus do not have a link to the rec
 	      if(relationNavigatorPFOMC && relationNavigatorTau )
@@ -457,7 +443,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 			}
 		      mcmisstuple->Fill(_nEvt,Evis,pt,theta,D0,d1,d2);
 		      if(_nEvt<coutUpToEv || _nEvt==coutEv)
-			cout<<"Missed: "<<Evis<<" "<<D0<<" "<<d1<<" "<<d2<<endl;
+			streamlog_out(DEBUG) <<"Missed: "<<Evis<<" "<<D0<<" "<<d1<<" "<<d2<<endl;
 		    }
 		}
 	    }//tau
@@ -503,10 +489,6 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
     }
   
   
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"--------------------------------------------------------------------------------------------"<<endl;
-  
-  
   _nEvt ++ ;
   //cleanup
   delete relationNavigatorTau;
@@ -529,7 +511,7 @@ void EvaluateTauFinder::LoopDaughters(MCParticle *particle,double &Evis,double &
 		     || fabs(daughter->getPDG())==1000022))
 		{
 		  //		  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-		  //cout<<"D vis "<<d<<" "<<daughter->getPDG()<<" "<<daughter->getEnergy()<<endl;
+		  //streamlog_out(DEBUG) <<"D vis "<<d<<" "<<daughter->getPDG()<<" "<<daughter->getEnergy()<<endl;
 		  Evis+=daughter->getEnergy();
 		  const double *mc_pvec=daughter->getMomentum();
 		  ptvis+=sqrt(mc_pvec[0]*mc_pvec[0]+mc_pvec[1]*mc_pvec[1]);
@@ -574,7 +556,7 @@ void EvaluateTauFinder::LoopDaughtersRelation(MCParticle *particle,LCRelationNav
 }
 
 
-void EvaluateTauFinder::check( LCEvent * evt ) { 
+void EvaluateTauFinder::check( LCEvent* ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -583,8 +565,8 @@ void EvaluateTauFinder::end(){
   
 
   
-  std::cout << "EvaluateTauFinder::end()  " << name() 
-	    << " processed " << _nEvt << " events in " << _nRun << " runs "<<std::endl;
+  streamlog_out(DEBUG) << "EvaluateTauFinder::end()  " << name()
+                       << " processed " << _nEvt << " events in " << _nRun << " runs "<<std::endl;
   
 
 //   evtuple->Write();

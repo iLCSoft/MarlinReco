@@ -32,7 +32,9 @@ class EvaluateTauFinder : public Processor {
   
   
   EvaluateTauFinder() ;
-  
+  EvaluateTauFinder(const EvaluateTauFinder&) = delete;
+  EvaluateTauFinder& operator=(const EvaluateTauFinder&) = delete;
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -61,30 +63,30 @@ class EvaluateTauFinder : public Processor {
 
   /** Input collection name.
    */
-  std::string _colNameMC, _colNameRECO,_colNameTrack;
-  std::string _colNameMCTruth,  _incol,_colNamePFORecLink;
-  std::string _colNameMCRecLink,_colNameTracksRecLink, _colNameTauRecLink;
-  std::string _OutputFile_Signal;
-  int _nRun ;
-  int _nEvt ;
+  std::string _colNameMC{}, _colNameTrack{};
+  std::string _colNameMCTruth{},  _incol{}, _colNamePFORecLink{};
+  std::string _colNameMCRecLink{},_colNameTracksRecLink{}, _colNameTauRecLink{};
+  std::string _OutputFile_Signal{};
+  int _nRun=-1;
+  int _nEvt=-1;
   
-  double _ntot_rec;
-  double _ntot_mc;
-  double _ntau_correct;
-  double _dEsum;
-  double _dEsumsq;
-  int _ndE;
+  double _ntot_rec=0.0;
+  double _ntot_mc=0.0;
+  double _ntau_correct=0.0;
+  double _dEsum=0.0;
+  double _dEsumsq=0.0;
+  int _ndE=0.0;
 
-  float _bField;
-  TFile *rootfile;
-  TNtuple *leptons;
-  TNtuple *tautuple;
-  TNtuple *mcmisstuple;
-  TNtuple *taumatchtuple;
-  TNtuple *tauexacttuple;
-  TNtuple *evtuple;
-  TNtuple *faketuple;
-  TNtuple *topofaketuple;
+  float _bField=0.0;
+  TFile *rootfile=NULL;
+  TNtuple *leptons=NULL;
+  TNtuple *tautuple=NULL;
+  TNtuple *mcmisstuple=NULL;
+  TNtuple *taumatchtuple=NULL;
+  TNtuple *tauexacttuple=NULL;
+  TNtuple *evtuple=NULL;
+  TNtuple *faketuple=NULL;
+  TNtuple *topofaketuple=NULL;
 } ;
 
 #endif

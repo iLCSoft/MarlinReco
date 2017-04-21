@@ -33,9 +33,6 @@ using namespace std;
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#define coutEv -1
-#define coutUpToEv 0
-
 using namespace lcio ;
 using namespace marlin ;
 using namespace UTIL;
@@ -109,7 +106,6 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
 
 void PrepareRECParticles::init() 
 { 
-  std::cout << "INIT CALLED" << std::endl;
   streamlog_out(DEBUG) << "   init called  " 
 		       << std::endl ;
   
@@ -119,10 +115,9 @@ void PrepareRECParticles::init()
   _nRun = 0 ;
   _nEvt = 0 ;
    
-  std::cout << "INIT IS DONE" << std::endl;
 }
 
-void PrepareRECParticles::processRunHeader( LCRunHeader* run) 
+void PrepareRECParticles::processRunHeader( LCRunHeader* )
 { 
   _nRun++ ;
 } 
@@ -144,12 +139,6 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
   } catch (Exception e) {
     colTrack = 0;
   }
-  
- 
-  
-  _nEvt = evt->getEventNumber();  
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"EVENT "<<_nEvt<<endl;
   
   LCCollectionVec *reccol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   LCCollectionVec *trackcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
@@ -243,17 +232,14 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
   evt->addCollection(mc_relationcol,_colNameMCTruth);
   evt->addCollection(trackcol,_outcolTracks);
   evt->addCollection(track_relationcol,_colNameTrackTruth);
-   
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"--------------------------------------------------------------------------------------------"<<endl;
-   
-  _nEvt ++ ;
-  
+
+  _nEvt++;
+
 }
 
 
 
-void PrepareRECParticles::check( LCEvent * evt ) { 
+void PrepareRECParticles::check( LCEvent* ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -261,9 +247,9 @@ void PrepareRECParticles::check( LCEvent * evt ) {
 void PrepareRECParticles::end(){ 
   
   
-  std::cout << "PrepareRECParticles::end()  " << name() 
-	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-	    << std::endl ;
+  streamlog_out( DEBUG ) << "PrepareRECParticles::end()  " << name()
+                         << " processed " << _nEvt << " events in " << _nRun << " runs "
+                         << std::endl ;
   
   //Close File here
   

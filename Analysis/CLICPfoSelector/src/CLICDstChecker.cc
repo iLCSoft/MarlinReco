@@ -93,22 +93,18 @@ void CLICDstChecker::processRunHeader( LCRunHeader* ) {
 
   m_nRun++ ;
   m_nEvt = 0;
-  std::cout << std::endl;
-  std::cout << "CLICDstChecker ---> new run : run number = " << m_nRun << std::endl;
+  streamlog_out( MESSAGE ) << std::endl;
+  streamlog_out( MESSAGE ) << "CLICDstChecker ---> new run : run number = " << m_nRun << std::endl;
 
 } 
 
 void CLICDstChecker::processEvent( LCEvent * evt ) { 
 
-  std::cout << " New Event " << std::endl;
-
-  m_evt = evt;
-
   if (m_debug>=1) {
-      std::cout << std::endl;
-      std::cout << "CLICDstChecker -> run = " << m_nRun 
+      streamlog_out( MESSAGE ) << std::endl;
+      streamlog_out( MESSAGE ) << "CLICDstChecker -> run = " << m_nRun
 		<< "  event = " << m_nEvt << std::endl;
-      std::cout << std::endl;
+      streamlog_out( MESSAGE ) << std::endl;
   }
 
   std::vector<ReconstructedParticle*>physicsPfos;
@@ -123,7 +119,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
     std::sort(m_pfoVector.begin(),m_pfoVector.end(),CLICDstChecker::PfoSortFunction);
   }
   catch( DataNotAvailableException &e ) {
-    std::cout << m_inputPfoCollection.c_str() << " collection is unavailable" << std::endl;
+    streamlog_out( MESSAGE ) << m_inputPfoCollection.c_str() << " collection is unavailable" << std::endl;
   };
 
 
@@ -142,11 +138,11 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
       const float cosThetaMc = fabs(pz)/p;
       float thetaMc = 0.;
       if(cosThetaMc<1.0)thetaMc = acos(cosThetaMc)*radiansToDegrees;  
-	if((pMc->getParents()).size()==0)std::cout << " Primary MC particle : " << pMc->getPDG() << " E = " << pMc->getEnergy() << " cosT = " << cosThetaMc << " theta = " << thetaMc << std::endl;
+	if((pMc->getParents()).size()==0)streamlog_out( MESSAGE ) << " Primary MC particle : " << pMc->getPDG() << " E = " << pMc->getEnergy() << " cosT = " << cosThetaMc << " theta = " << thetaMc << std::endl;
     }
   }
   catch( DataNotAvailableException &e ) {
-    std::cout << m_inputMcParticleCollection.c_str() << " collection is unavailable" << std::endl;
+    streamlog_out( MESSAGE ) << m_inputMcParticleCollection.c_str() << " collection is unavailable" << std::endl;
   };
  
 
@@ -156,7 +152,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
     m_pfoToMcNavigator = new LCRelationNavigator( evt->getCollection(m_inputPfoToMcRelationCollection.c_str()) );
   }
   catch( DataNotAvailableException &e ) {
-    std::cout << m_inputPfoToMcRelationCollection.c_str() << " collection is unavailable" << std::endl;
+    streamlog_out( MESSAGE ) << m_inputPfoToMcRelationCollection.c_str() << " collection is unavailable" << std::endl;
   }
   
 
@@ -188,11 +184,11 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
     for (unsigned int iPfo=0; iPfo<nPfos; ++iPfo) {
       if(iPfo==0){
 	if (m_monitoring==1&&ipass==0){
-	  std::cout << " *********************** Physics    Pfos ************************" << std::endl;
-	  std::cout << "   pfo   E       pT   cost  nt nc  mc   Emc " << std::endl;
+	  streamlog_out( MESSAGE ) << " *********************** Physics    Pfos ************************" << std::endl;
+	  streamlog_out( MESSAGE ) << "   pfo   E       pT   cost  nt nc  mc   Emc " << std::endl;
 	}else{
-	  if (m_monitoring==1&&m_showBackground==1&&ipass==1)std::cout << " ********************** Background Pfos ************************" << std::endl;
-	  std::cout << "   pfo   E       pT   cost  nt nc " << std::endl;
+	  if (m_monitoring==1&&m_showBackground==1&&ipass==1)streamlog_out( MESSAGE ) << " ********************** Background Pfos ************************" << std::endl;
+	  streamlog_out( MESSAGE ) << "   pfo   E       pT   cost  nt nc " << std::endl;
 	}
       }
 
@@ -245,20 +241,20 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 
 
       if (m_monitoring && (ipass==0 || (ipass ==1 && m_showBackground))) {
-	std::cout << std::fixed;
-	std::cout << std::setprecision(precision);
+	streamlog_out( MESSAGE ) << std::fixed;
+	streamlog_out( MESSAGE ) << std::setprecision(precision);
 	if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT,cosTheta,tracks.size(),0);
 	if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT,cosTheta,0,clusters.size());
 	if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT,cosTheta,tracks.size(),clusters.size());
 	if(pMc!=NULL)FORMATTED_OUTPUT_MC(pMc->getPDG(),pMc->getEnergy());
-	std::cout << std::endl;			       
+	streamlog_out( MESSAGE ) << std::endl;
       }
     }
   }
   
   if (m_monitoring){
-    std::cout << " ESignal = " << eSignal << "( " << eMc << " )" << std::endl;
-    std::cout << " EBack   = " << eBackground  << std::endl;
+    streamlog_out( MESSAGE ) << " ESignal = " << eSignal << "( " << eMc << " )" << std::endl;
+    streamlog_out( MESSAGE ) << " EBack   = " << eBackground  << std::endl;
   }
    
 

@@ -16,14 +16,11 @@ using namespace std;
 #include <IMPL/LCCollectionVec.h>
 #include <EVENT/LCRelation.h>
 #include <IMPL/LCRelationImpl.h>
-#include <EVENT/MCParticle.h>
 #include <EVENT/ReconstructedParticle.h>
 #include <IMPL/ReconstructedParticleImpl.h>
 #include "UTIL/LCRelationNavigator.h"
 #include <EVENT/Vertex.h>
 
-#include <gear/GEAR.h>
-#include <gear/BField.h>
 #include <marlin/Global.h>
 
 #include "HelixClass.h"
@@ -126,9 +123,7 @@ TauFinder::TauFinder() : Processor("TauFinder")
 
 void TauFinder::init() 
 { 
-  std::cout << "INIT CALLED" << std::endl;
-  streamlog_out(DEBUG) << "   init called  " 
-		       << std::endl ;
+  streamlog_out(DEBUG) << " init called  " << std::endl ;
   
   // usually a good idea to
   printParameters() ;
@@ -140,16 +135,14 @@ void TauFinder::init()
 
   _nRun = 0 ;
   _nEvt = 0 ;
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
   _fail_minv=0;
   _fail_minv_neg=0;
   _fail_Qtr=0;
   _fail_isoE=0;
   _mergeTries=0;
-  std::cout << "INIT IS DONE "<<std::endl;
 }
 
-void TauFinder::processRunHeader( LCRunHeader* run) 
+void TauFinder::processRunHeader( LCRunHeader* )
 { 
   _nRun++ ;
 } 
@@ -174,8 +167,6 @@ void TauFinder::processEvent( LCEvent * evt )
   relationcol->parameters().setValue(std::string("ToType"),LCIO::RECONSTRUCTEDPARTICLE);
  
   _nEvt = evt->getEventNumber();  
-  if(_nEvt<coutUpToEv || _nEvt==coutEv || _nEvt%10000==0 )
-    cout<<"------EVENT "<<_nEvt<<"---"<<endl;
   
   LCCollectionVec * reccol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   LCCollectionVec * restcol = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
@@ -216,8 +207,6 @@ void TauFinder::processEvent( LCEvent * evt )
   bool finding_done=false;
   while(Qvector.size() && !finding_done)
     finding_done= FindTau(Qvector,Nvector,tauvec);
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"------------------------"<<endl;
 
   //combine associated particles to tau
   std::vector<std::vector<ReconstructedParticle*> >::iterator iterT=tauvec.begin();
@@ -282,7 +271,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	    {
 	      double phi=180./TMath::Pi()*atan(mom[1]/mom[0]);
 	      double theta=180./TMath::Pi()*atan(pt_tau/fabs(mom[2])); 
-	      cout<<"Tau candidate failed: minv="<<mass_inv<<"   pt="<<pt_tau<<" "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
+	      streamlog_out(DEBUG) <<"Tau candidate failed: minv="<<mass_inv<<"   pt="<<pt_tau<<" "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
 	    }
 	  continue;
 	}
@@ -301,7 +290,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	{
 	  double phi=180./TMath::Pi()*atan(mom[1]/mom[0]);
 	  double theta=180./TMath::Pi()*atan(pt_tau/fabs(mom[2])); 
-	  cout<<"Tau candidate "<<p<<": "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
+	  streamlog_out(DEBUG)<<"Tau candidate "<<p<<": "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
 	}
       QTvec.push_back(chargedtracks);
       NTvec.push_back(neutraltracks);
@@ -346,9 +335,9 @@ void TauFinder::processEvent( LCEvent * evt )
 
 		  if(_nEvt<coutUpToEv || _nEvt==coutEv)
 		    {
-		      cout<<" Tau Merging: "<<endl;
-		      cout<<t<<" "<<E<<" "<<phi<<" "<<theta<<endl;
-		      cout<<t2<<" "<<taun->getEnergy()<<" "<<angle<<" -> "<<En<<" "<<QTvec[t]+QTvec[t2]<<endl;
+		      streamlog_out(DEBUG)<<" Tau Merging: "<<endl;
+		      streamlog_out(DEBUG)<<t<<" "<<E<<" "<<phi<<" "<<theta<<endl;
+		      streamlog_out(DEBUG)<<t2<<" "<<taun->getEnergy()<<" "<<angle<<" -> "<<En<<" "<<QTvec[t]+QTvec[t2]<<endl;
 		    }
 		  
 		  //check for invariant mass and number of tracks
@@ -430,7 +419,8 @@ void TauFinder::processEvent( LCEvent * evt )
 	{
 	  _fail_Qtr++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": too many particles: "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
+	    streamlog_out(DEBUG) <<"Tau "<<tau->getEnergy()
+                                 <<": too many particles: "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
 	   //put those particles into rest group
 	  for(unsigned int tp=0;tp<(*iter)->getParticles().size();tp++)
 	    restcol->addElement((*iter)->getParticles()[tp]);
@@ -459,7 +449,8 @@ void TauFinder::processEvent( LCEvent * evt )
 	{
 	  _fail_isoE++;
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    cout<<"Tau "<<tau->getEnergy()<<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
+	    streamlog_out(DEBUG) <<"Tau "<<tau->getEnergy()
+                                 <<": Isolation Energy: "<<E_iso<<" in "<<nparticles<<" particles"<<endl;
 	  //put those particles into rest group
 	  for(unsigned int tp=0;tp<(*iter)->getParticles().size();tp++)
 	    restcol->addElement((*iter)->getParticles()[tp]);
@@ -471,8 +462,8 @@ void TauFinder::processEvent( LCEvent * evt )
       else
 	{
 	  reccol->addElement(tau);  
+	    streamlog_out(DEBUG) << "Tau "<<tau->getEnergy()<<" "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
 	  if(QTvec[t+erasecount]>4)
-	    cout<<"Tau "<<tau->getEnergy()<<" "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
 	  iter++;
 	}
     }
@@ -487,11 +478,6 @@ void TauFinder::processEvent( LCEvent * evt )
   evt->addCollection(restcol,_outcolRest);
   evt->addCollection(relationcol,_colNameTauRecLink);
   
- 
-      
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"--------------------------------------------------------------------------------------------"<<endl;
-  
   _nEvt ++ ;
   
 }
@@ -503,7 +489,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   if(Qvec.size()==0)
     {
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"No charged particle in event!"<<endl;
+	streamlog_out(DEBUG) << "No charged particle in event!"<<endl;
       return true;
     }
   double OpAngleMax=0;
@@ -530,23 +516,26 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   if(!tauseed)
     {
       if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	cout<<"no further tau seed!"<<endl;
+	streamlog_out(DEBUG) << "no further tau seed!"<<endl;
       return true;
     }
   
   double  Etau=tauseed->getEnergy();
  
   tau.push_back(tauseed);
-  
-  const double *pvec=tauseed->getMomentum();
-  double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
-  double p=sqrt(pt*pt+pvec[2]*pvec[2]);
-  double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
-  double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2])); 
+
+  // just for printing out info
+  {
+    const double *pvec=tauseed->getMomentum();
+    double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
+    double p=sqrt(pt*pt+pvec[2]*pvec[2]);
+    double phi=180./TMath::Pi()*atan(pvec[1]/pvec[0]);
+    double theta=180./TMath::Pi()*atan(pt/fabs(pvec[2]));
  
-  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-    cout<<"seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<endl;
- 
+    if(_nEvt<coutUpToEv || _nEvt==coutEv)
+      streamlog_out(DEBUG) << "seeding: "<<tauseed->getType()<<"\t"<<tauseed->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<endl;
+  }
+
   Qvec.erase(iterS);
   double pvec_tau[3]={0,0,0};
   pvec_tau[0]=tauseed->getMomentum()[0];
@@ -574,7 +563,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	    OpAngleMax=angle;
 	  tau.push_back(Qvec[s]);
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+	    streamlog_out(DEBUG) << "Adding Q: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
 	  Etau+=Qvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -607,7 +596,12 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
 	    OpAngleMax=angle;
 	  tau.push_back(Nvec[s]);
 	  if(_nEvt<coutUpToEv || _nEvt==coutEv)
-	    std::cout<<"Adding N: "<<track->getType()<<"\t"<<track->getEnergy()<<"\t"<<p<<"\t"<<theta<<"\t"<<phi<<std::endl;
+            streamlog_out(DEBUG) << "Adding N: "<<track->getType()
+                                 <<"\t"<<track->getEnergy()
+                                 <<"\t"<<p
+                                 <<"\t"<<theta
+                                 <<"\t"<<phi<<std::endl;
+
 	  Etau+=Nvec[s]->getEnergy();
 	  //combine to new momentum
 	  for(int i=0;i<3;i++){
@@ -623,7 +617,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   return false;
 }
 
-void TauFinder::check( LCEvent * evt ) { 
+void TauFinder::check( LCEvent* ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -631,15 +625,15 @@ void TauFinder::check( LCEvent * evt ) {
 void TauFinder::end(){ 
   failtuple->Fill(_fail_minv,_fail_Qtr,_fail_isoE,_mergeTries,_fail_minv_neg);
 
-  std::cout << "TauFinder::end()  " << name() 
-	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-	    << std::endl ;
-  std::cout << "Reasons for Failure:   " <<std::endl;
-  std::cout << "High invariant mass:     " << _fail_minv<< std::endl ;
-  std::cout << "Negative invariant mass: " << _fail_minv_neg<< std::endl ;
-  std::cout << "No or to many tracks:  " << _fail_Qtr<< std::endl ;
-  std::cout << "No isolation        :  " << _fail_isoE<< std::endl ;
-  std::cout << "Tried to merge      :  " << _mergeTries<< std::endl ;
+  streamlog_out( MESSAGE ) << "TauFinder::end()  " << name()
+                           << " processed " << _nEvt << " events in " << _nRun << " runs "
+                           << std::endl;
+  streamlog_out( MESSAGE ) << "Reasons for Failure:   " <<std::endl;
+  streamlog_out( MESSAGE ) << "High invariant mass:     " << _fail_minv<< std::endl;
+  streamlog_out( MESSAGE ) << "Negative invariant mass: " << _fail_minv_neg<< std::endl;
+  streamlog_out( MESSAGE ) << "No or to many tracks:  " << _fail_Qtr<< std::endl;
+  streamlog_out( MESSAGE ) << "No isolation        :  " << _fail_isoE<< std::endl;
+  streamlog_out( MESSAGE ) << "Tried to merge      :  " << _mergeTries<< std::endl;
 
   rootfile->Write();
   delete rootfile;

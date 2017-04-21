@@ -31,7 +31,9 @@ class TauFinder : public Processor {
   
   
   TauFinder() ;
-  
+  TauFinder(const TauFinder&) = delete;
+  TauFinder& operator=(const TauFinder&) = delete;
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -58,22 +60,21 @@ class TauFinder : public Processor {
 
   /** Input collection name.
    */
-  std::string _colNameMC, _colNameRECO, _incol;
-  std::string _colNameMCTruth, _colNameTauRecLink;
-  std::string _outcol, _outcolRest;
-  std::string _OutputFile_Signal;
-  int _nRun ;
-  int _nEvt ;
+  std::string _colNameMC{}, _colNameRECO{}, _incol{};
+  std::string _colNameMCTruth{}, _colNameTauRecLink{};
+  std::string _outcol{}, _outcolRest{};
+  std::string _OutputFile_Signal{};
+  int _nRun=-1;
+  int _nEvt=-1;
 
-  float _bField;
-  float _ptcut,_ptseed,_cosTcut;
-  float _coneAngle,_isoAngle,_isoE;
-  float _D0seedmin, _D0seedmax,_minv;
+  float _ptcut=0.0,_ptseed=0.0,_cosTcut=0.0;
+  float _coneAngle=0.0,_isoAngle=0.0,_isoE=0.0;
+  float _D0seedmin=0.0, _D0seedmax=0.0,_minv=0.0;
 
-  int _fail_minv,_fail_minv_neg,_fail_Qtr,_fail_isoE,_mergeTries;
+  int _fail_minv=0.0,_fail_minv_neg=0.0,_fail_Qtr=0.0,_fail_isoE=0.0,_mergeTries=0.0;
   
-  TFile *rootfile;
-  TNtuple *failtuple;  
+  TFile *rootfile=NULL;
+  TNtuple *failtuple=NULL;
   
   bool FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<ReconstructedParticle*> &Nvec,
 	       std::vector<std::vector<ReconstructedParticle*> > &tauvec);

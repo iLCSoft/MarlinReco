@@ -33,7 +33,9 @@ class PrepareRECParticles : public Processor {
   
   
   PrepareRECParticles() ;
-  
+  PrepareRECParticles(const PrepareRECParticles&) = delete;
+  PrepareRECParticles& operator=(const PrepareRECParticles&) = delete;
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -60,12 +62,12 @@ class PrepareRECParticles : public Processor {
 
   /** Input collection name.
    */
-  std::string _colNameMC,_colNameTrack;
-  std::string _colNameMCTruth, _colNameTrackTruth;
-  std::string _outcolMC, _outcolTracks ;
-  double _bField;
-  int _nRun ;
-  int _nEvt ;
+  std::string _colNameMC{}, _colNameTrack{};
+  std::string _colNameMCTruth{}, _colNameTrackTruth{};
+  std::string _outcolMC{}, _outcolTracks{};
+  double _bField=0.0;
+  int _nRun=-1;
+  int _nEvt=-1;
 
   
 } ;

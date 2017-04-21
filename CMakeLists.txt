@@ -137,6 +137,8 @@ ADD_MARLINRECO_PKG( ./Analysis/TrueJet_Parser )
 ADD_MARLINRECO_PKG( ./Analysis/TruthVertexFinder )
 ADD_MARLINRECO_PKG( ./Analysis/TrackToRecoParticle )
 ADD_MARLINRECO_PKG( ./Analysis/ZFinder )
+ADD_MARLINRECO_PKG( ./Analysis/CLICPfoSelector )
+
 ADD_MARLINRECO_PKG( ./Calibration/AbsCalibration )
 ADD_MARLINRECO_PKG( ./CaloDigi/LDCCaloDigi )
 #ADD_MARLINRECO_PKG( ./Clustering/BCalReco) 

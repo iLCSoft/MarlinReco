@@ -1,7 +1,11 @@
 The Taufinder folder contains two processors for Tau finding, the
 _TaJetClustering_ and the _TauFinder_ processors
 
-See this README for TaJetClustering, see doc/TauFinder for descriptions of the TauFinder processor
+See this README for TaJetClustering, see MarlinReco/doc/TauFinder for descriptions of the _TauFinder_ processor.
+
+
+The processor _PrepareRECParticles_ processor can be used to create REC particles directly from MCParticles for testing tau reconstruction on MCTruth.
+The processor _EvaluateTauFinder_ can be used to check the performance of the _TauFinder_ processor.
 
 
 # TaJetClustering: processor for Tau finder

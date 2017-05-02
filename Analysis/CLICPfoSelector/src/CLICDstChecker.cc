@@ -241,13 +241,21 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
 
 
       if (m_monitoring && (ipass==0 || (ipass ==1 && m_showBackground))) {
-	streamlog_out( MESSAGE ) << std::fixed;
-	streamlog_out( MESSAGE ) << std::setprecision(precision);
-	if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT,cosTheta,tracks.size(),0);
-	if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT,cosTheta,0,clusters.size());
-	if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT,cosTheta,tracks.size(),clusters.size());
-	if(pMc!=NULL)FORMATTED_OUTPUT_MC(pMc->getPDG(),pMc->getEnergy());
-	streamlog_out( MESSAGE ) << std::endl;
+        std::stringstream output;
+        output << std::fixed;
+        output << std::setprecision(precision);
+        if(clusters.size()==0)
+          FORMATTED_OUTPUT_TRACK(output, type,energy,pT,cosTheta,tracks.size(),0);
+        if(tracks.size()==0)
+          FORMATTED_OUTPUT_CLUSTER(output, type,energy,pT,cosTheta,0,clusters.size());
+
+        if(tracks.size()>0&&clusters.size()>0)
+          FORMATTED_OUTPUT_TRACK_CLUSTER(output, type,energy,pT,cosTheta,tracks.size(),clusters.size());
+        if(pMc!=NULL)
+          FORMATTED_OUTPUT_MC(output, pMc->getPDG(),pMc->getEnergy());
+
+        streamlog_out( MESSAGE ) << output.str();
+        streamlog_out( MESSAGE ) << std::endl;
       }
     }
   }

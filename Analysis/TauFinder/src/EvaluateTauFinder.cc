@@ -194,7 +194,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       HelixClass *mc_helix = new HelixClass();
       for(int k=0; k < nT; k++) 
 	{
-	  ReconstructedParticle *tau = dynamic_cast <ReconstructedParticle*>( colTau->getElementAt( k ) );
+	  ReconstructedParticle *tau = static_cast<ReconstructedParticle*>( colTau->getElementAt( k ) );
 	  const double *pvec=tau->getMomentum();
 	  double pt=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]);
 	  double p=sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2]);
@@ -227,7 +227,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	  
 // 	  for (int icomp=0; icomp<3; ++icomp) {
 // 	    mom[icomp]=(float)tau->getMomentum()[icomp];
-// 	    VertexImpl *vtx=dynamic_cast<VertexImpl*>(tau->getStartVertex());
+// 	    VertexImpl *vtx=static_cast<VertexImpl*>(tau->getStartVertex());
 // 	    if(vtx)
 // 	      {
 // 		const float *vpos=vtx->getPosition();
@@ -268,13 +268,13 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 	      EVENT::LCObjectVec relobjFROM = relationNavigatorTau->getRelatedToObjects(tau);
 	      for(unsigned int o=0;o<relobjFROM.size();o++)
 		{
-		  ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
+		  ReconstructedParticle *rec=static_cast<ReconstructedParticle*>(relobjFROM[o]);
 		  if(relationNavigatorPFOMC)
 		    {
 		      EVENT::LCObjectVec relobjMC = relationNavigatorPFOMC->getRelatedToObjects(rec);
 		      for(unsigned int m=0;m<relobjMC.size();m++)
 			{
-			  MCParticle *mc=dynamic_cast <MCParticle*>(relobjMC[m]);
+			  MCParticle *mc=static_cast<MCParticle*>(relobjMC[m]);
 			  //check whether particles parent is really a tau:
 			  MCParticle *dummy=mc;
 			  MCParticle *parent=mc;
@@ -339,13 +339,13 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
 		  int d1=0,d2=0,pdg=0;
 		  for(unsigned int o=0;o<relobjFROM.size();o++)
 		    {
-		      ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
+		      ReconstructedParticle *rec=static_cast<ReconstructedParticle*>(relobjFROM[o]);
 		      if(relationNavigatorPFOMC)
 			{
 			  EVENT::LCObjectVec relobj = relationNavigatorPFOMC->getRelatedToObjects(rec);
 			  for(unsigned int m=0;m<relobj.size();m++)
 			    {
-			      MCParticle *mc=dynamic_cast <MCParticle*>(relobj[m]);
+			      MCParticle *mc=static_cast<MCParticle*>(relobj[m]);
 			      //need to catch broken relations in DST file for background particles
 			      if(mc==0)
 				continue;
@@ -394,7 +394,7 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
       HelixClass * helix = new HelixClass();
       for(int k=0; k < nMCP; k++) 
 	{
-	  MCParticle *particle = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
+	  MCParticle *particle = static_cast<MCParticle*>(colMC->getElementAt(k) );
 
 	  if(particle->getGeneratorStatus()==2 && fabs(particle->getPDG())==15 && particle->getDaughters().size()>1 )
 	    {
@@ -541,7 +541,7 @@ void EvaluateTauFinder::LoopDaughtersRelation(MCParticle *particle,LCRelationNav
 	      for(unsigned int o=0;o<relobjTO.size();o++)
 		{
 		  //relation to the reconstructed tau
-		  ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjTO[o]);
+		  ReconstructedParticle *rec=static_cast<ReconstructedParticle*>(relobjTO[o]);
 		  EVENT::LCObjectVec relobj = relationNavigatorTau->getRelatedFromObjects(rec);
 		  if(relobj.size())
 		    relToTau=true;

@@ -115,7 +115,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
   try {
     LCCollection * col = evt->getCollection(m_inputPfoCollection.c_str());
     const int nelem = col->getNumberOfElements(); 
-    for (int iPfo=0; iPfo<nelem; ++iPfo)m_pfoVector.push_back(dynamic_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
+    for (int iPfo=0; iPfo<nelem; ++iPfo)m_pfoVector.push_back(static_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
     std::sort(m_pfoVector.begin(),m_pfoVector.end(),CLICDstChecker::PfoSortFunction);
   }
   catch( DataNotAvailableException &e ) {
@@ -128,7 +128,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
     LCCollection * col = evt->getCollection(m_inputMcParticleCollection.c_str());
     int nelem = col->getNumberOfElements(); 
     for (int iMc=0; iMc<nelem; ++iMc){
-      MCParticle * pMc = dynamic_cast<MCParticle*>(col->getElementAt(iMc));
+      MCParticle * pMc = static_cast<MCParticle*>(col->getElementAt(iMc));
       // insert all existing mc pointers into set *** MUST CHECK THIS BEFORE USING RELATION ***
       m_mcSet.insert(pMc);
       const float px(pMc->getMomentum()[0]);
@@ -161,7 +161,7 @@ void CLICDstChecker::processEvent( LCEvent * evt ) {
     LCObjectVec objectVec = m_pfoToMcNavigator->getRelatedToObjects(pPfo);
     if (objectVec.size() > 0) {
       for(unsigned int imc = 0; imc < objectVec.size(); imc++){
-	MCParticle * pMC = dynamic_cast<MCParticle*>(objectVec[imc]);
+	MCParticle * pMC = static_cast<MCParticle*>(objectVec[imc]);
 	// since only saving skimmed set of MC particles, check pMC points to an existing object 
 	if(m_mcSet.count(pMC)!=0){
 	  physicsPfos.push_back(pPfo);

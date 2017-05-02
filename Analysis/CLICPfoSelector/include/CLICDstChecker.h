@@ -82,7 +82,6 @@ class CLICDstChecker : public Processor {
  private:
   std::vector<ReconstructedParticle*> m_pfoVector{};
   std::set<MCParticle*> m_mcSet{};
-  static bool PfoSortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs); 
   LCRelationNavigator* m_pfoToMcNavigator=NULL;
 
 } ;

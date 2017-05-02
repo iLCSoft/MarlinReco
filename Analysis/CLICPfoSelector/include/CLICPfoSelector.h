@@ -1,6 +1,7 @@
 #ifndef CLICPFOSELECTOR_H
 #define CLICPFOSELECTOR 1
 
+#include "PfoUtilities.h"
 #include "marlin/Processor.h"
 #include <EVENT/ReconstructedParticle.h>
 #include "lcio.h"
@@ -107,10 +108,6 @@ class CLICPfoSelector : public Processor {
   float           m_clusterLessPfoTrackTimeCut=10.0;      ///< Maximum arrival time at Ecal for cluster-less pfo
   float           m_forwardCosThetaForHighEnergyNeutralHadrons=0.95;   ///< Forward region of HCAL where timing cuts will be applied to all neutral hadrons
   float           m_forwardHighEnergyNeutralHadronsEnergy=10.0;        ///< Energy cut for specific HCAL timing requirements cuts for neutral hadrons
-
- private:
-  typedef std::vector<ReconstructedParticle*> PfoList;
-  static bool PfoSortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs); 
 
 } ;
 

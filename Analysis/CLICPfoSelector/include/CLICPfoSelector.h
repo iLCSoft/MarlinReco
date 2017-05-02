@@ -11,8 +11,8 @@
 #include <set>
 #include <algorithm>
 
-#define FORMATTED_OUTPUT_TRACK_CLUSTER(N1, E1,E2,E3,N2,E4,N3,E5,E6,E7)	                        \
-    std::cout  <<                                                                               \
+#define FORMATTED_OUTPUT_TRACK_CLUSTER(out, N1, E1,E2,E3,N2,E4,N3,E5,E6,E7) \
+    out <<                                                                                      \
     std::right << std::setw(widthInt)      <<    N1        <<                                   \
     std::right << std::setw(widthFloat)    <<    E1        <<                                   \
     std::right << std::setw(widthFloat)    <<    E2        <<                                   \
@@ -23,28 +23,6 @@
     std::right << std::setw(widthFloat)    <<    E5        <<                                   \
     std::right << std::setw(widthFloat)    <<    E6        <<                                   \
     std::right << std::setw(widthFloat)    <<    E7  << std::endl
-
-#define FORMATTED_OUTPUT_CLUSTER(N1, E1,E2,E3,N3,E5,E6,E7)	                                \
-    std::cout  <<                                                                               \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
-    std::right << std::setw(widthInt)      <<    " - "     <<                                   \
-    std::right << std::setw(widthFloat)    <<    " - "     <<                                   \
-    std::right << std::setw(widthInt  )    <<    N3        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E5        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E6        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E7        << std::endl
-
-#define FORMATTED_OUTPUT_TRACK(N1, E1,E2,E3,N2,E4)                             			\
-    std::cout  <<                                                                               \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
-    std::right << std::setw(widthInt)      <<    N2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E4        << std::endl
 
 using namespace lcio ;
 using namespace marlin ;

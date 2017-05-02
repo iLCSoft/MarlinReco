@@ -297,8 +297,8 @@ void CLICPfoSelector::processRunHeader( LCRunHeader* ) {
 
   _nRun++ ;
   _nEvt = 0;
-  std::cout << std::endl;
-  std::cout << "CLICPfoSelector ---> new run : run number = " << _nRun << std::endl;
+  streamlog_out( MESSAGE ) << std::endl;
+  streamlog_out( MESSAGE ) << "CLICPfoSelector ---> new run : run number = " << _nRun << std::endl;
 
 } 
 
@@ -306,12 +306,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
   _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
 
-  if (m_debug>=1) {
-      std::cout << std::endl;
-      std::cout << "CLICPfoSelector -> run = " << _nRun 
-		<< "  event = " << _nEvt << std::endl;
-      std::cout << std::endl;
-  }
+  streamlog_out( DEBUG ) << "CLICPfoSelector -> run = " << _nRun << "  event = " << _nEvt << std::endl;
 
   LCCollectionVec * colPFO = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
   colPFO->setSubset(true);
@@ -330,9 +325,9 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     std::sort(pfos.begin(),pfos.end(),CLICPfoSelector::PfoSortFunction);
 
     if (m_monitoring) {
-      std::cout << std::endl;
-      std::cout << "Number of Input Pfos = " << nelem << std::endl;
-      std::cout << " Type    E   Pt  cosTheta  Tracks time  Clusters time " << std::endl;
+      streamlog_out( MESSAGE ) << std::endl;
+      streamlog_out( MESSAGE ) << "Number of Input Pfos = " << nelem << std::endl;
+      streamlog_out( MESSAGE ) << "    Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << std::endl;
     }
 //    int nDropped(0);
 
@@ -559,7 +554,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
 	    // keep KShorts
 	    if(m_keepKShorts && type == 310){
-	      if(!selectPfo && m_monitoring && m_displayRejectedPfos)std::cout <<   " Recovered KS     : " << energy << std::endl;
+	      if(!selectPfo && m_monitoring && m_displayRejectedPfos)streamlog_out( MESSAGE ) <<   " Recovered KS     : " << energy << std::endl;
 	      selectPfo = true;
 	    }
 	    // check kaon and proton hypotheses
@@ -567,12 +562,12 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	    {
 	        if(m_checkProtonCorrection && (clusterTimeEcal-tproton >= timingCutLow) && (clusterTimeEcal-tproton<= timingCutHigh))
                 {
-		    if(!selectPfo && m_monitoring  && m_displayRejectedPfos)std::cout << " Recovered proton : " << energy << std::endl;
+		    if(!selectPfo && m_monitoring  && m_displayRejectedPfos)streamlog_out( MESSAGE ) << " Recovered proton : " << energy << std::endl;
 		    selectPfo = true;
 		}
 		if(m_checkKaonCorrection &&   (clusterTimeEcal-tkaon >= timingCutLow) && (clusterTimeEcal-tkaon<= timingCutHigh))
                 {
-		    if(!selectPfo && m_monitoring && m_displayRejectedPfos)std::cout << " Recovered kaon   : " << energy << std::endl;
+		    if(!selectPfo && m_monitoring && m_displayRejectedPfos)streamlog_out( MESSAGE ) << " Recovered kaon   : " << energy << std::endl;
 		    selectPfo = true;
 		}
 	    }
@@ -590,32 +585,40 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       }
       
       if (m_monitoring && (energy > pfoEnergyToDisplay)) {
-	std::cout << std::fixed;
-	std::cout << std::setprecision(precision);
-	if( (passPfoSelection && m_displaySelectedPfos) || (!passPfoSelection && m_displayRejectedPfos)){
-	  if(passPfoSelection)std::cout << " Selected PFO : ";
-	  if(!passPfoSelection)std::cout << " Rejected PFO : ";
-	  if(clusters.size()==0)FORMATTED_OUTPUT_TRACK(type,energy,pT_pfo,cosTheta,tracks.size(),trackTime);
-	  if(tracks.size()==0)FORMATTED_OUTPUT_CLUSTER(type,energy,pT_pfo,cosTheta,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
-	  if(tracks.size()>0&&clusters.size()>0)FORMATTED_OUTPUT_TRACK_CLUSTER(type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
-	}
+        if( (passPfoSelection && m_displaySelectedPfos) || (!passPfoSelection && m_displayRejectedPfos)) {
+          std::stringstream output;
+          output << std::fixed;
+          output << std::setprecision(precision);
+          if(passPfoSelection) {
+            output << " Selected PFO : ";
+          } else {
+            output << " Rejected PFO : ";
+          }
+          if(clusters.size()==0)
+            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,"-","-","-","-");
+          if(tracks.size()==0)
+            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+          if(tracks.size()>0&&clusters.size()>0)
+            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+          streamlog_out( MESSAGE ) << output.str();
+        }
       }      
       if(passPfoSelection){
 	eTotalOutput+=energy;
 	colPFO->addElement(pPfo);
       }else{
-	//std::cout << " dropped E = " << energy << std::endl;
+	//streamlog_out( MESSAGE ) << " dropped E = " << energy << std::endl;
       }
       
     }
     
     if(m_monitoring){
-      std::cout << " Total PFO energy in  = " << eTotalInput << " GeV " << std::endl;
-      std::cout << " Total PFO energy out = " << eTotalOutput << " GeV " << std::endl;
+      streamlog_out( MESSAGE ) << " Total PFO energy in  = " << eTotalInput << " GeV " << std::endl;
+      streamlog_out( MESSAGE ) << " Total PFO energy out = " << eTotalOutput << " GeV " << std::endl;
     }
   }
   catch( DataNotAvailableException &e ) {
-    std::cout << m_inputPfoCollection.c_str() << " collection is unavailable" << std::endl;
+    streamlog_out( MESSAGE ) << m_inputPfoCollection.c_str() << " collection is unavailable" << std::endl;
   };
   
   
@@ -763,7 +766,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
     
     int iMedian = static_cast<int>(hits.size()/2.);
     float medianTime = hittimes[iMedian];
-    //std::cout << " Median time : " << medianTime << std::endl;
+    //streamlog_out( MESSAGE ) << " Median time : " << medianTime << std::endl;
 
     for(unsigned int ihit=0;ihit<hits.size();++ihit)deltaTimes.push_back( fabs(hittimes[ihit]-medianTime)); 
     std::sort(deltaTimes.begin(),deltaTimes.end());
@@ -777,9 +780,9 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
       ihit90 = 0;
     }
   
-    //std::cout << " hits " << hits.size() << " hit 90 = " << ihit90 << std::endl; 
+    //streamlog_out( MESSAGE ) << " hits " << hits.size() << " hit 90 = " << ihit90 << std::endl;
     float deltaMedian = deltaTimes[ihit90]+0.1;
-    //std::cout << " deltaCut : " << deltaMedian << std::endl; 
+    //streamlog_out( MESSAGE ) << " deltaCut : " << deltaMedian << std::endl;
 
     for(unsigned int ihit=0;ihit<hits.size();++ihit){
       CalorimeterHit *hit = hits[ihit];
@@ -790,7 +793,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 	sumEnergy += hit->getEnergy();
 	sumTimeEnergy += hit->getEnergy()*hitTime;
 	nCaloHitsUsed++;
-	//std::cout << " Using : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
+	//streamlog_out( MESSAGE ) << " Using : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
 	CHT ch = hit->getType();
 	if(ch.is(CHT::ecal)){
 	  nEcal++;
@@ -805,7 +808,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 	  }
 	}
       }else{
-	//std::cout << " notus : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
+	//streamlog_out( MESSAGE ) << " notus : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
       }
     }
     
@@ -813,7 +816,7 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
     if (sumEnergyEcal > 0.f)meanTimeEcal = sumTimeEnergyEcal/sumEnergyEcal;
     if (sumEnergyHcalEndcap > 0.f)meanTimeHcalEndcap = sumTimeEnergyHcalEndcap/sumEnergyHcalEndcap;
 
-    //std::cout << sumEnergy << " " << sumEnergyEcal << " " << nEcal << std::endl;
+    //streamlog_out( MESSAGE ) << sumEnergy << " " << sumEnergyEcal << " " << nEcal << std::endl;
 
     return;
 }

@@ -57,11 +57,6 @@ CLICPfoSelector::CLICPfoSelector() : Processor("CLICPfoSelector") {
 			   m_selectedPfoCollection,
 			   std::string("SelectedPandoraPFANewPFOs"));
 
-  registerProcessorParameter("Debug",
-			     "Activate debugging?",
-			     m_debug,
-			     int(0));
-
   registerProcessorParameter("Monitoring",
 			     "Monitoring",
 			     m_monitoring,

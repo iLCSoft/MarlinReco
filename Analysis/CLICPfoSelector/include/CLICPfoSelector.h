@@ -54,7 +54,6 @@ class CLICPfoSelector : public Processor {
   int _nEvt=-1;
 
   float _bField=0.0;
-  int   m_debug=-1;
 
   std::string     m_inputPfoCollection{};                 ///< Input PFO collection name
   std::string     m_selectedPfoCollection{};              ///< Output PFO collection name

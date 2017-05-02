@@ -183,7 +183,7 @@ void TauFinder::processEvent( LCEvent * evt )
   
       for (int i = 0; i < nRCP; i++) 
 	{
-	  ReconstructedParticle *particle = dynamic_cast <ReconstructedParticle*>( colRECO->getElementAt( i ) );
+	  ReconstructedParticle *particle = static_cast<ReconstructedParticle*>( colRECO->getElementAt( i ) );
 	  double pt=sqrt(particle->getMomentum()[0]*particle->getMomentum()[0]
 			 +particle->getMomentum()[1]*particle->getMomentum()[1]);
 	  double Cos_T  = fabs(particle->getMomentum()[2]) / sqrt(pow(particle->getMomentum()[0],2)+pow(particle->getMomentum()[1],2) + pow(particle->getMomentum()[2],2));
@@ -306,7 +306,7 @@ void TauFinder::processEvent( LCEvent * evt )
       int erasecount=0;
       for ( unsigned int t=0; t<tauRecvec.size() ; t++ )
 	{
-	  ReconstructedParticleImpl *tau=dynamic_cast<ReconstructedParticleImpl*>(tauRecvec[t]);
+	  ReconstructedParticleImpl *tau=static_cast<ReconstructedParticleImpl*>(tauRecvec[t]);
 	  const double *mom=tau->getMomentum();
 	  double pt_tau=sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
 	  double phi=180./TMath::Pi()*atan(mom[1]/mom[0]);
@@ -316,7 +316,7 @@ void TauFinder::processEvent( LCEvent * evt )
 	  for ( unsigned int t2=t+1; t2<tauRecvec.size() ; t2++ )
 	    {
 	      iterC=tauRecvec.begin()+t2;
-	      ReconstructedParticleImpl *taun=dynamic_cast<ReconstructedParticleImpl*>(tauRecvec[t2]);
+	      ReconstructedParticleImpl *taun=static_cast<ReconstructedParticleImpl*>(tauRecvec[t2]);
 	      
 	      const double *momn=taun->getMomentum();
 	      angle=acos((mom[0]*momn[0]+mom[1]*momn[1]+mom[2]*momn[2])/
@@ -390,7 +390,7 @@ void TauFinder::processEvent( LCEvent * evt )
 		      EVENT::LCObjectVec relobjFROM = relationNavigator->getRelatedToObjects(taun);
 		      for(unsigned int o=0;o<relobjFROM.size();o++)
 			{
-			  ReconstructedParticle *rec=dynamic_cast <ReconstructedParticle*>(relobjFROM[o]);
+			  ReconstructedParticle *rec=static_cast<ReconstructedParticle*>(relobjFROM[o]);
 			  LCRelationImpl *rel = new LCRelationImpl(tau,rec);
 			  relationcol->addElement( rel );
 			}
@@ -410,7 +410,7 @@ void TauFinder::processEvent( LCEvent * evt )
   int erasecount=0;
   for ( unsigned int t=0; t<tauRecvec.size() ; t++ )
     {
-      ReconstructedParticleImpl *tau=dynamic_cast<ReconstructedParticleImpl*>(tauRecvec[t]);
+      ReconstructedParticleImpl *tau=static_cast<ReconstructedParticleImpl*>(tauRecvec[t]);
       double E_iso=0;
       int nparticles=0;
       const double *pvec_tau=tau->getMomentum();
@@ -433,7 +433,7 @@ void TauFinder::processEvent( LCEvent * evt )
       //isolation
       for ( unsigned int s=0; s<Avector.size() ; s++ )
 	{
-	  ReconstructedParticle *track=dynamic_cast<ReconstructedParticle*>(Avector[s]);
+	  ReconstructedParticle *track=static_cast<ReconstructedParticle*>(Avector[s]);
 	  const double *pvec=track->getMomentum();
 	  double angle=acos((pvec[0]*pvec_tau[0]+pvec[1]*pvec_tau[1]+pvec[2]*pvec_tau[2])/
 			    (sqrt(pvec[0]*pvec[0]+pvec[1]*pvec[1]+pvec[2]*pvec[2])*
@@ -498,7 +498,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   std::vector<ReconstructedParticle*>::iterator iterS=Qvec.begin();
   for ( unsigned int s=0; s<Qvec.size() ; s++ )
     {
-      tauseed=dynamic_cast<ReconstructedParticle*>(Qvec[s]);
+      tauseed=static_cast<ReconstructedParticle*>(Qvec[s]);
       float mom[3];
       for (int icomp=0; icomp<3; ++icomp) 
 	mom[icomp]=(float)tauseed->getMomentum()[icomp];
@@ -546,7 +546,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
   std::vector<ReconstructedParticle*>::iterator iterQ=Qvec.begin();
   for (unsigned int s=0; s<Qvec.size() ; s++ )
     {
-      ReconstructedParticle *track=dynamic_cast<ReconstructedParticle*>(Qvec[s]);
+      ReconstructedParticle *track=static_cast<ReconstructedParticle*>(Qvec[s]);
 
       const double *pvec=track->getMomentum();
       double angle=acos((pvec[0]*pvec_tau[0]+pvec[1]*pvec_tau[1]+pvec[2]*pvec_tau[2])/

@@ -157,7 +157,7 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
       int nMCP = colMC->getNumberOfElements();
       for(int k=0; k < nMCP; k++) 
 	{
-	  MCParticle *mc = dynamic_cast<MCParticle*> (colMC->getElementAt(k) );
+	  MCParticle *mc = static_cast<MCParticle*>(colMC->getElementAt(k));
 	  if(mc->getGeneratorStatus()==1)//only stable ones
 	    {
 	      //filter out the neutrinos and other invisibles
@@ -206,7 +206,7 @@ void PrepareRECParticles::processEvent( LCEvent * evt )
       int nt=colTrack->getNumberOfElements();
       for(int n=0;n<nt;n++)
 	{
-	  Track *tr=dynamic_cast <Track*>(colTrack->getElementAt(n));
+	  Track *tr=static_cast<Track*>(colTrack->getElementAt(n));
 	  ReconstructedParticleImpl *trec = new ReconstructedParticleImpl();
 	  //momentum of track assuming B along z
 	  double pt=fabs(_bField/tr->getOmega())*3e-4;

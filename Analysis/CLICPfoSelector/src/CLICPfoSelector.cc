@@ -316,7 +316,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     int nelem = col->getNumberOfElements();
     PfoUtil::PfoList pfos;
 
-    for (int iPfo=0; iPfo<nelem; ++iPfo)pfos.push_back(dynamic_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
+    for (int iPfo=0; iPfo<nelem; ++iPfo)pfos.push_back(static_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
     std::sort(pfos.begin(),pfos.end(),PfoUtil::PfoSortFunction);
 
     if (m_monitoring) {

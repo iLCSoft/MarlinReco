@@ -494,7 +494,7 @@ bool TauFinder::FindTau(std::vector<ReconstructedParticle*> &Qvec,std::vector<Re
     }
   double OpAngleMax=0;
   //find a good tauseed, check impact parameter 
-  ReconstructedParticle *tauseed;
+  ReconstructedParticle *tauseed=NULL;
   std::vector<ReconstructedParticle*>::iterator iterS=Qvec.begin();
   for ( unsigned int s=0; s<Qvec.size() ; s++ )
     {

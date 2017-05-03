@@ -1,34 +1,18 @@
 #include "CLICPfoSelector.h"
-#include <iostream>
-#include <EVENT/LCObject.h>
+
 #include <EVENT/LCCollection.h>
 #include <EVENT/TrackerHit.h>
 #include <EVENT/Track.h>
 #include <EVENT/SimTrackerHit.h>
 #include <EVENT/MCParticle.h>
-#include <IMPL/TrackImpl.h>
-#include <IMPL/ReconstructedParticleImpl.h>
+
 #include <IMPL/LCCollectionVec.h>
-#include <IMPL/LCRelationImpl.h>
-#include <IMPL/LCFlagImpl.h>
-#include <iostream>
-#include <math.h>
-#include <map>
-#include <marlin/Global.h>
+
+#include <marlinutil/GeometryUtil.h>
 #include <CalorimeterHitType.h>
-#include "ClusterShapes.h"
-#include <gear/GEAR.h>
-#include <gear/TPCParameters.h>
-#include <gear/CalorimeterParameters.h>
-#include <gear/PadRowLayout2D.h>
-#include <gear/VXDParameters.h>
-#include <gear/GearParameters.h>
-#include <gear/VXDLayerLayout.h>
-#include <gear/BField.h>
-#include <UTIL/LCTOOLS.h>
-#include <UTIL/LCRelationNavigator.h>
 
 #include <limits>
+#include <cmath>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -286,20 +270,20 @@ void CLICPfoSelector::init() {
   _nRun = -1 ;
   _nEvt = 0 ;
 
+  _bField = MarlinUtil::getBzAtOrigin();
+
 }
 
 void CLICPfoSelector::processRunHeader( LCRunHeader* ) {
 
   _nRun++ ;
   _nEvt = 0;
-  streamlog_out( MESSAGE ) << std::endl;
-  streamlog_out( MESSAGE ) << "CLICPfoSelector ---> new run : run number = " << _nRun << std::endl;
+  streamlog_out( DEBUG ) << std::endl;
+  streamlog_out( DEBUG ) << "CLICPfoSelector ---> new run : run number = " << _nRun << std::endl;
 
 } 
 
 void CLICPfoSelector::processEvent( LCEvent * evt ) { 
-
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
 
   streamlog_out( DEBUG ) << "CLICPfoSelector -> run = " << _nRun << "  event = " << _nEvt << std::endl;
 
@@ -631,83 +615,23 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
 float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 
+  const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
+  const float* locationAtECal = pTrackState->getReferencePoint();
 
-  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
-  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
-  // determine pseudo-geometry of detector (determined by ECAL barrel)
-  // symmetry 0 =cylinder, 1=prorotype, >1 = polygon
-  const int symmetry = pEcalBarrel.getSymmetryOrder();
-  const float zOfEndCap = (float)pEcalEndcap.getExtent()[2];
-  const float phi0 = (float)pEcalBarrel.getPhi0();
-  const float rBarrel = (float)pEcalBarrel.getExtent()[0];
-
-  
   HelixClass helix;
   helix.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), _bField);
-  
-  const EVENT::TrackerHitVec &trackerHitvec(pTrack->getTrackerHits());
-  float zMin(std::numeric_limits<float>::max()), zMax(-std::numeric_limits<float>::max());
-  
-  for (int iz = 0, nTrackHits = trackerHitvec.size(); iz < nTrackHits - 1; ++iz)
-    {
-      const float hitZ(trackerHitvec[iz]->getPosition()[2]);
 
-      if (hitZ > zMax)
-	zMax = hitZ;
-      
-      if (hitZ < zMin)
-	zMin = hitZ;
-    }
+  tof = sqrt( locationAtECal[0]*locationAtECal[0]+
+              locationAtECal[1]*locationAtECal[1]+
+              locationAtECal[2]*locationAtECal[2])/300;
   
-  const int signPz(fabs(zMin) < fabs(zMax) ? 1 : -1);
+  float distance[3] = {0.0, 0.0, 0.0};
+  float minTime = helix.getDistanceToPoint(locationAtECal, distance);
   
-  float referencePoint[3];
-  referencePoint[0] = helix.getReferencePoint()[0];
-  referencePoint[1] = helix.getReferencePoint()[1];
-  referencePoint[2] = helix.getReferencePoint()[2];
-
-  
-  // First project to endcap
-  float minTime(std::numeric_limits<float>::max());
-  //bool isProjectedToEndCap(true);
-  
-  float bestECalProjection[3];
-  minTime =  helix.getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestECalProjection);
-
-  // Then project to barrel surface(s)
-  static const float pi(acos(-1.));
-  float barrelProjection[3];
-  
-  // n-sided Polygon
-  float twopi_n = 2. * pi / (static_cast<float>(symmetry));
-  
-  for (int i = 0; i < symmetry; ++i)
-    {
-      float time(std::numeric_limits<float>::max());
-      const float phi(twopi_n * static_cast<float>(i) + phi0);
-      
-      time = helix.getPointInXY(rBarrel * cos(phi), rBarrel * sin(phi),
-			   cos(phi + 0.5 * pi), sin(phi + 0.5 * pi), referencePoint, barrelProjection);
-      
-      if ((time < minTime))
-	{
-	    minTime = time;
-	    //isProjectedToEndCap = false;
-	    bestECalProjection[0] = barrelProjection[0];
-	    bestECalProjection[1] = barrelProjection[1];
-	    bestECalProjection[2] = barrelProjection[2];
-
-	}
-    }
-  
-  tof    = sqrt( bestECalProjection[0]*bestECalProjection[0]+
-		 bestECalProjection[1]*bestECalProjection[1]+
-		 bestECalProjection[2]*bestECalProjection[2])/300;
-  
-  float px = helix.getMomentum()[0];
-  float py = helix.getMomentum()[1];
-  float pz = helix.getMomentum()[2];
-  float E = sqrt(px*px+py*py+pz*pz+0.139*0.139);
+  const float px = helix.getMomentum()[0];
+  const float py = helix.getMomentum()[1];
+  const float pz = helix.getMomentum()[2];
+  const float E = sqrt(px*px+py*py+pz*pz+0.139*0.139);
   minTime = minTime/300*E-tof;
 
   return minTime;
@@ -718,11 +642,6 @@ float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
 {
 
     // Calculate cluster times
-
-//    const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
-    // determine pseudo-geometry of detector (determined by ECAL barrel)
-    // symmetry 0 =cylinder, 1=prorotype, >1 = polygon
-//    const float zOfEndCap = (float)pEcalEndcap.getExtent()[2];
 
     float sumTimeEnergy(0.f);
     float sumEnergy(0.f);

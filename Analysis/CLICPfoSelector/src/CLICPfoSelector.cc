@@ -326,16 +326,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       const float cosTheta = fabs(momentum[2])/p_pfo;
       const float energy  = pPfo->getEnergy();
       eTotalInput+=energy;
-      // float covMatrix[10];
-      // for(unsigned int i=0;i<10;i++)covMatrix[i] = pPfo->getCovMatrix()[i];
-//      const float mass = pPfo->getMass();
-//      const float charge = pPfo->getCharge();
-      // float referencePoint[3];
-      // for(unsigned int i=0;i<3;i++)referencePoint[i] = pPfo->getReferencePoint()[i];
-      //const ParticleIDVec particleIDs = pPfo->getParticleIDs();
-//      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
-//      const float goodnessOfPID = pPfo->getGoodnessOfPID();
-      //const ReconstructedParticleVec particles = pPfo->getParticles();
+
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       //const Vertex startVertex(pPfo->getStartVertex());
@@ -352,15 +343,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
       for(unsigned int i = 0; i< tracks.size(); i++){
 	const Track *track = tracks[i];
-	const TrackerHitVec hitVec = track->getTrackerHits();
-	const int nHits = int(hitVec.size());
-	//	const int nHitsVTX = track->getSubdetectorHitNumbers()[6];
-	//const int nHitsFTD = track->getSubdetectorHitNumbers()[7];
-	//const int nHitsSIT = track->getSubdetectorHitNumbers()[8];
-	//const int nHitsTPC = track->getSubdetectorHitNumbers()[9];
-	//const int nHitsSET = track->getSubdetectorHitNumbers()[10];
-	//const int nHitsETD = track->getSubdetectorHitNumbers()[11];
-	float r2Min = std::numeric_limits<float>::max(); 
 	const float d0    = track->getD0();
 	const float z0    = track->getZ0();
 	const float omega = track->getOmega();
@@ -372,18 +354,10 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	const float px = helix.getMomentum()[0];
 	const float py = helix.getMomentum()[1];
 	const float pz = helix.getMomentum()[2];
-	const float pT = sqrt(px*px+py*py);
-	const float p  = sqrt(pT*pT+pz*pz);
+	const float p  = sqrt(px*px+py*py+pz*pz);
 	float tof;
 	const float time = this->TimeAtEcal(track,tof);
-	for (int iH=0;iH<nHits;++iH) {
-	  const TrackerHit * hit = hitVec[iH];
-	  const float hitX = float(hit->getPosition()[0]);
-	  const float hitY = float(hit->getPosition()[1]);
-	  const float hitR2 = hitX*hitX+hitY*hitY;
-	  if (hitR2<r2Min)r2Min = hitR2;
-	}
-	if(fabs(time)<trackTime){
+	if( fabs(time) < trackTime ){
 	  trackTime = time;
 	  const float cproton = sqrt((p*p+0.94*0.94)/(p*p+0.14*0.14));
 	  const float ckaon = sqrt((p*p+0.49*0.49)/(p*p+0.14*0.14));

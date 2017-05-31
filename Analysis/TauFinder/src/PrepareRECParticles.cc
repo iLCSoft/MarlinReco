@@ -25,8 +25,8 @@ using namespace std;
 #include "IMPL/LCFlagImpl.h" 
 #include "UTIL/LCRelationNavigator.h"
 
-#include <gear/GEAR.h>
-#include <gear/BField.h>
+#include "DD4hep/LCDD.h"
+#include "DD4hep/DD4hepUnits.h"
 #include <marlin/Global.h>
 #include "HelixClass.h"
 
@@ -111,7 +111,11 @@ void PrepareRECParticles::init()
   
   // usually a good idea to
   printParameters() ;
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+  DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
+  const double position[3]={0,0,0}; // position to calculate magnetic field at (the origin in this case)
+  double magneticFieldVector[3]={0,0,0}; // initialise object to hold magnetic field
+  lcdd.field().magneticField(position,magneticFieldVector); // get the magnetic field vector from DD4hep
+  _bField = magneticFieldVector[2]/dd4hep::tesla; // z component at (0,0,0)
   _nRun = 0 ;
   _nEvt = 0 ;
    

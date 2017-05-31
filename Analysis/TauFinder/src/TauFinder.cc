@@ -462,8 +462,7 @@ void TauFinder::processEvent( LCEvent * evt )
       else
 	{
 	  reccol->addElement(tau);  
-	    streamlog_out(DEBUG) << "Tau "<<tau->getEnergy()<<" "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;
-	  if(QTvec[t+erasecount]>4)
+	  streamlog_out(DEBUG) << "Tau "<<tau->getEnergy()<<" "<<QTvec[t+erasecount]<<" "<<NTvec[t+erasecount]<<endl;	  
 	  iter++;
 	}
     }

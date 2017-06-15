@@ -16,7 +16,7 @@ SET( ENV{CFLAGS} "-w -ansi -pedantic $ENV{CFLAGS}" ) # -w suppress all warning m
 
 ####################################################################################################
 
-OPTION( MARLINRECO_FORTRAN "Set to ON to build MarlinReco fortran sources" ON )
+OPTION( MARLINRECO_FORTRAN "Set to ON to build MarlinReco fortran sources" OFF )
 
 # project name
 IF( MARLINRECO_FORTRAN )

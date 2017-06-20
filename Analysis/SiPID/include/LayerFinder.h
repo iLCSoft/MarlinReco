@@ -17,8 +17,6 @@
 #include <DD4hep/Detector.h>
 #include "DDRec/DetectorData.h"
 
-using namespace DD4hep;
-
 typedef std::map<EVENT::LCCollection*, CellIDDecoder<TrackerHitPlane>*> CollectionMap;
 
 /* Utility class to connect the dots:
@@ -84,20 +82,20 @@ class PetalResolver : public LayerResolver{
 public:
   PetalResolver(const PetalResolver &lt);
   PetalResolver(const int _detTypeFlag,
-            DDRec::ZDiskPetalsData *,
-            const std::string _collectionName,
-            double _sensThickCheatVal=-1.);
+                dd4hep::rec::ZDiskPetalsData *,
+                const std::string _collectionName,
+                double _sensThickCheatVal=-1.);
 
   ~PetalResolver() {};
 
   int GetNumberOfLayers() const { return layering->layers.size(); }
 
   const PetalResolver& operator=(const PetalResolver&);
-  const DDRec::ZDiskPetalsData *GetLayering() const {return layering;};
+  const dd4hep::rec::ZDiskPetalsData *GetLayering() const {return layering;};
 
 protected:
   double SensitiveThicknessRead(int nLayer) const ;
-  const DDRec::ZDiskPetalsData *layering;
+  const dd4hep::rec::ZDiskPetalsData *layering;
 
   PetalResolver();
 
@@ -108,21 +106,21 @@ class PlaneResolver : public LayerResolver{
 public:
   PlaneResolver(const PlaneResolver &lt);
   PlaneResolver(const int _detTypeFlag,
-            DDRec::ZPlanarData *,
-            const std::string _collectionName,
-            double _sensThickCheatVal=-1.);
+                dd4hep::rec::ZPlanarData *,
+                const std::string _collectionName,
+                double _sensThickCheatVal=-1.);
 
   ~PlaneResolver() {};
 
   int GetNumberOfLayers() const { return layering->layers.size(); }
 
   const PlaneResolver& operator=(const PlaneResolver&);
-  const DDRec::ZPlanarData *GetLayering() const {return layering;};
+  const dd4hep::rec::ZPlanarData *GetLayering() const {return layering;};
 
 
 protected:
   double SensitiveThicknessRead(int nLayer) const ;
-  const DDRec::ZPlanarData *layering;
+  const dd4hep::rec::ZPlanarData *layering;
 
   PlaneResolver();
 
@@ -141,7 +139,7 @@ class LayerFinder {
 public:
   // Constructor with the vector of collection names that the finder
   // will use when looking for the collection.
-  LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD&, FloatVec sensThickCheatVals, int elementMask);
+  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals, int elementMask);
 
 
   /* Reads the decoders of whichever collections are found in the event

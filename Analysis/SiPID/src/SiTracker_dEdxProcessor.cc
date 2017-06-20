@@ -12,7 +12,7 @@
 // ----- include for verbosity dependent logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#include <DD4hep/LCDD.h>
+#include <DD4hep/Detector.h>
 #include "DD4hep/DD4hepUnits.h"
 #include "DDRec/DDGear.h"
 #include "DDRec/DetectorData.h"
@@ -144,9 +144,9 @@ void SiTracker_dEdxProcessor::init() {
     exit(0);
   }
 
-  Geometry::LCDD& lcdd = Geometry::LCDD::getInstance();
+  dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
 
-  DDRec::SurfaceManager& surfMan = *lcdd.extension< DDRec::SurfaceManager >() ;
+  DDRec::SurfaceManager& surfMan = *theDetector.extension< DDRec::SurfaceManager >() ;
   surfMap = surfMan.map( "tracker" ) ;
 
   if(!m_cheatSensorThicknesses) {
@@ -157,12 +157,12 @@ void SiTracker_dEdxProcessor::init() {
     }
   }
 
-  collFinder = new LayerFinder(m_trkHitCollNames, lcdd, m_sensThicknessCheatVals, m_elementMask);
+  collFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals, m_elementMask);
  // exit(0);
 
   const double pos[3]={0,0,0};
   double bFieldVec[3]={0,0,0};
-  lcdd.field().magneticField(pos,bFieldVec); // get the magnetic field vector from DD4hep
+  theDetector.field().magneticField(pos,bFieldVec); // get the magnetic field vector from DD4hep
   _bField = bFieldVec[2]/dd4hep::tesla; // z component at (0,0,0)
 
   //trksystem for marlin track

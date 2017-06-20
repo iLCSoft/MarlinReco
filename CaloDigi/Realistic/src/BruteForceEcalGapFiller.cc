@@ -19,7 +19,7 @@ using std::endl;
 
 #include "DD4hep/DetectorSelector.h"
 #include "DD4hep/DetType.h"
-#include "DD4hep/LCDD.h"
+#include "DD4hep/Detector.h"
 
 BruteForceEcalGapFiller aBruteForceEcalGapFiller;
 
@@ -161,28 +161,28 @@ void BruteForceEcalGapFiller::getGeometryData(const int ihitType) {
     unsigned int excludeFlag(0);
 
     if      ( calHitType.is( CHT::barrel ) ) {
-      includeFlag = ( DD4hep::DetType::CALORIMETER | DD4hep::DetType::ELECTROMAGNETIC | DD4hep::DetType::BARREL);
-      excludeFlag = ( DD4hep::DetType::AUXILIARY | DD4hep::DetType::FORWARD );
+      includeFlag = ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::BARREL);
+      excludeFlag = ( dd4hep::DetType::AUXILIARY | dd4hep::DetType::FORWARD );
     } else if ( calHitType.is( CHT::endcap ) ) {
-      includeFlag = ( DD4hep::DetType::CALORIMETER | DD4hep::DetType::ELECTROMAGNETIC | DD4hep::DetType::ENDCAP);
-      excludeFlag = ( DD4hep::DetType::AUXILIARY | DD4hep::DetType::FORWARD );
+      includeFlag = ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::ENDCAP);
+      excludeFlag = ( dd4hep::DetType::AUXILIARY | dd4hep::DetType::FORWARD );
     }
 
-    DD4hep::Geometry::LCDD & lcdd = DD4hep::Geometry::LCDD::getInstance();
-    const std::vector< DD4hep::Geometry::DetElement>& theDetectors = DD4hep::Geometry::DetectorSelector(lcdd).detectors(  includeFlag, excludeFlag ) ;
-    streamlog_out( DEBUG2 ) << " getExtension :  includeFlag: " << DD4hep::DetType( includeFlag ) << " excludeFlag: " << DD4hep::DetType( excludeFlag )
+    dd4hep::Detector & lcdd = dd4hep::Detector::getInstance();
+    const std::vector< dd4hep::DetElement>& theDetectors = dd4hep::DetectorSelector(lcdd).detectors(  includeFlag, excludeFlag ) ;
+    streamlog_out( DEBUG2 ) << " getExtension :  includeFlag: " << dd4hep::DetType( includeFlag ) << " excludeFlag: " << dd4hep::DetType( excludeFlag )
 			    << "  found : " << theDetectors.size() << "  - first det: " << theDetectors.at(0).name() << std::endl ;
 
     if( theDetectors.size()  != 1 ){
       std::stringstream es ;
-      streamlog_out (ERROR) << " getExtension: selection is not unique (or empty)  includeFlag: " << DD4hep::DetType( includeFlag ) << " excludeFlag: " << DD4hep::DetType( excludeFlag )
+      streamlog_out (ERROR) << " getExtension: selection is not unique (or empty)  includeFlag: " << dd4hep::DetType( includeFlag ) << " excludeFlag: " << dd4hep::DetType( excludeFlag )
 			    << " --- found detectors : " ;
       for( unsigned i=0, N= theDetectors.size(); i<N ; ++i ){
 	streamlog_out (ERROR) << theDetectors.at(i).name() << ", " ;
       }
       assert(0);
     }
-    _caloGeomData = theDetectors.at(0).extension<DD4hep::DDRec::LayeredCalorimeterData>();
+    _caloGeomData = theDetectors.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
 
     if ( ! _caloGeomData ) {
       streamlog_out ( WARNING ) << "could not get calorimeter geometry information!" << endl;

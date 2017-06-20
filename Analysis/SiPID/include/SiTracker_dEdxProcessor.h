@@ -4,7 +4,6 @@
 #include <string>
 
 #include "marlin/Processor.h"
-//#include <MarlinTrk/IMarlinTrkSystem.h>
 #include "MarlinTrk/Factory.h"
 
 #include "lcio.h"
@@ -17,7 +16,7 @@
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace DD4hep;
+
 
 
 /**  SiTracker_dEdxProcessor for marlin.
@@ -110,7 +109,7 @@ class SiTracker_dEdxProcessor : public Processor {
   std::string m_dEdxEstimator;
 
   /*** Detector-related objects ***/
-  const DDRec::SurfaceMap *surfMap;
+  const dd4hep::rec::SurfaceMap *surfMap;
   MarlinTrk::IMarlinTrkSystem *trkSystem;
 
   double _bField;

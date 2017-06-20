@@ -17,8 +17,7 @@
 #include "DDRec/DDGear.h"
 #include "DDRec/DetectorData.h"
 #include <DD4hep/DetType.h>
-#include <DDSurfaces/Vector3D.h>
-//#include "DDRec/SurfaceHelper.h"
+#include <DDRec/Vector3D.h>
 
 #include "marlin/Global.h"
 #include <MarlinTrk/IMarlinTrack.h>
@@ -146,7 +145,7 @@ void SiTracker_dEdxProcessor::init() {
 
   dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
 
-  DDRec::SurfaceManager& surfMan = *theDetector.extension< DDRec::SurfaceManager >() ;
+  dd4hep::rec::SurfaceManager& surfMan = *theDetector.extension< dd4hep::rec::SurfaceManager >() ;
   surfMap = surfMan.map( "tracker" ) ;
 
   if(!m_cheatSensorThicknesses) {
@@ -259,14 +258,14 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     for(unsigned int ihit = 0; ihit < trackhits.size(); ihit++) {
 
       // Tangent to the track at hit position
-      DDSurfaces::Vector3D hitpos(trackhits[ihit]->getPosition());
+      dd4hep::rec::Vector3D hitpos(trackhits[ihit]->getPosition());
 
       IMPL::TrackStateImpl ts;
       double chi2 = 0.;
       int ndf = 0;
       marlin_trk->propagate(hitpos, ts, chi2, ndf);
 
-      DDSurfaces::Vector3D rp(ts.getReferencePoint());
+      dd4hep::rec::Vector3D rp(ts.getReferencePoint());
 
       float tanLambda = ts.getTanLambda();
       float sinTheta = 1. / sqrt(1.+pow(tanLambda,2));
@@ -274,17 +273,17 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       float trackDirX = cos(phi)*sinTheta;
       float trackDirY = sin(phi)*sinTheta;
       float trackDirZ = tanLambda*sinTheta;
-      DDSurfaces::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
+      dd4hep::rec::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
 
       // Normal to the surface of hit
       unsigned long cellid = trackhits[ihit]->getCellID0();
-      DDRec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
+      dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
       if (surface == surfMap->end()) {
         streamlog_out(ERROR) << "Cannot find the surface corresponding to track hit ID " << cellid
              << " in event " << evt->getEventNumber() << "!\n";
         exit(0);
       }
-      DDSurfaces::Vector3D surfaceNormal = surface->second->normal();
+      dd4hep::rec::Vector3D surfaceNormal = surface->second->normal();
       streamlog_out(DEBUG) << "Found surface corresponding to track hit ID " << cellid << ".\n";
 
       double norm = sqrt(trackDir.dot(trackDir)*surfaceNormal.dot(surfaceNormal));

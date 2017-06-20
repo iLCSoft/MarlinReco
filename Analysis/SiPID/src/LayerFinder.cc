@@ -5,7 +5,7 @@
  *      Author: slukic
  */
 
-#include <DD4hep/LCDD.h>
+#include <DD4hep/Detector.h>
 #include <DD4hep/DetType.h>
 #include <LayerFinder.h>
 #include "DD4hep/DD4hepUnits.h"
@@ -116,7 +116,7 @@ PetalResolver::PetalResolver(const PetalResolver &lt) :
 }
 
 PetalResolver::PetalResolver(const int _detTypeFlag,
-          DDRec::ZDiskPetalsData *_layering,
+          dd4hep::rec::ZDiskPetalsData *_layering,
           const std::string _collectionName,
           double _sensThickCheatVal) :
   LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
@@ -158,9 +158,9 @@ PlaneResolver::PlaneResolver(const PlaneResolver &lt) :
 }
 
 PlaneResolver::PlaneResolver(const int _detTypeFlag,
-          DDRec::ZPlanarData *_layering,
-          const std::string _collectionName,
-          double _sensThickCheatVal) :
+                             dd4hep::rec::ZPlanarData *_layering,
+                             const std::string _collectionName,
+                             double _sensThickCheatVal):
   LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
   layering(_layering)
 {
@@ -196,12 +196,12 @@ knownDetectors()
  * Implementation of class LayerFinder
  * ************************************** */
 
-LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD& lcdd,
+LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& theDetector,
                           FloatVec sensThickCheatVals, int elementMask) :
   knownDetectors()
 {
 
-  const std::vector< Geometry::DetElement > &detElements = lcdd.detectors("tracker", true);
+  const std::vector< dd4hep::DetElement > &detElements = theDetector.detectors("tracker", true);
 
   if(_collectionNames.size() != detElements.size()) {
     streamlog_out(WARNING) << "There are " <<  detElements.size() << " tracker detector elements in "
@@ -225,9 +225,9 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD& lcdd
     int tf = detElements.at(i).typeFlag();
     detElements.at(i).name();
 
-    if (tf & DD4hep::DetType::BARREL) {
+    if (tf & dd4hep::DetType::BARREL) {
 
-      DDRec::ZPlanarData *layering = detElements.at(i).extension<DD4hep::DDRec::ZPlanarData>() ;
+      dd4hep::rec::ZPlanarData *layering = detElements.at(i).extension<dd4hep::rec::ZPlanarData>() ;
       streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
 
       for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
@@ -247,9 +247,9 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, Geometry::LCDD& lcdd
       knownDetectors.push_back(new PlaneResolver(tf, layering, _collectionNames[i], sensThickCheatVals.at(i)));
 
     }
-    else if (tf & DD4hep::DetType::ENDCAP) {
+    else if (tf & dd4hep::DetType::ENDCAP) {
 
-      DDRec::ZDiskPetalsData *layering = detElements.at(i).extension<DD4hep::DDRec::ZDiskPetalsData>() ;
+      dd4hep::rec::ZDiskPetalsData *layering = detElements.at(i).extension<dd4hep::rec::ZDiskPetalsData>() ;
       streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
 
       for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
@@ -333,12 +333,12 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
         }
 
 
-        if (tf & DD4hep::DetType::BARREL) {
+        if (tf & dd4hep::DetType::BARREL) {
           double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer);
           streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
         }
-        if (tf & DD4hep::DetType::ENDCAP) {
+        if (tf & dd4hep::DetType::ENDCAP) {
           double t = dynamic_cast<PetalResolver*>(*cit)->SensitiveThickness(nLayer);
           streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
@@ -359,8 +359,8 @@ void LayerFinder::ReportKnownDetectors() {
   streamlog_out(DEBUG) << "CollectionFinder knows the following detectors:\n";
   for(std::vector<LayerResolver*>::iterator dit=knownDetectors.begin(); dit!=knownDetectors.end(); dit++) {
     std::string dettype;
-    if      ((*dit)->GetDetTypeFlag() & DD4hep::DetType::BARREL) dettype = "BARREL";
-    else if ((*dit)->GetDetTypeFlag() & DD4hep::DetType::ENDCAP) dettype = "ENDCAP";
+    if      ((*dit)->GetDetTypeFlag() & dd4hep::DetType::BARREL) dettype = "BARREL";
+    else if ((*dit)->GetDetTypeFlag() & dd4hep::DetType::ENDCAP) dettype = "ENDCAP";
     streamlog_out(DEBUG) << "Detector of type " << dettype;
     streamlog_out(DEBUG) << " associated with collection name " << (*dit)->GetCollectionName() << "\n";
     streamlog_out(DEBUG) << "Currently looking at collection of type " << (*dit)->GetCollectionType();

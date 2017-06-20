@@ -51,7 +51,7 @@ class BruteForceEcalGapFiller : public Processor {
 
   float _interModuleDist;
 
-  DD4hep::DDRec::LayeredCalorimeterData* _caloGeomData;
+  dd4hep::rec::LayeredCalorimeterData* _caloGeomData;
 
   void getGeometryData(const int ihitType);
 

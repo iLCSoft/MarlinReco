@@ -88,11 +88,13 @@ V0Finder::V0Finder() : Processor("V0Finder") {
 			     "Minimum radius in xy plane for photon candidate",
 			     _rxyCutGamma,
 			     float(10.0));
+
   registerProcessorParameter("RxyCutK0S",
 			     "Minimum radius in xy plane for K0S candidate",
 			     _rxyCutK0S,
 			     float(30.0));
-  registerProcessorParameter("RxyCutGamma",
+
+  registerProcessorParameter("RxyCutLambda",
 			     "Minimum radius in xy plane for Lambda0 candidate",
 			     _rxyCutLambda,
 			     float(50.0));

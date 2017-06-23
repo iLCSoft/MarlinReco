@@ -176,10 +176,10 @@ protected:
   StringVec  _colNamesTrackerHitRelations ;
   StringVec   _caloHitRelationNames;
   
-  LCCollection* _mergedTrackerHitRelCol ;
-  LCRelationNavigator* _navMergedTrackerHitRel;
-   LCCollection* _mergedCaloHitRelCol ;
-  LCRelationNavigator* _navMergedCaloHitRel;
+  LCCollectionVec* _mergedTrackerHitRelCol=nullptr;
+  LCRelationNavigator* _navMergedTrackerHitRel=nullptr;
+  LCCollectionVec* _mergedCaloHitRelCol=nullptr;
+  LCRelationNavigator* _navMergedCaloHitRel=nullptr;
  
   bool _use_tracker_hit_relations;
   

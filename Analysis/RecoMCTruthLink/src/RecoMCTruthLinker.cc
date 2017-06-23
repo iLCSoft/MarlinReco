@@ -430,6 +430,13 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
   if(!_OutputTruthTrackRelation) { delete trtlcol; }
   if(!_OutputCalohitRelation) { delete chittrlcol; }
   if(!_OutputTruthRecoRelation ) { delete trplcol ; }
+
+  //cleanup relationNavigators and transient collections
+  delete _navMergedTrackerHitRel; _navMergedTrackerHitRel = nullptr;
+  delete _navMergedCaloHitRel; _navMergedCaloHitRel = nullptr;
+  delete _mergedCaloHitRelCol; _mergedCaloHitRelCol = nullptr;
+  delete _mergedTrackerHitRelCol; _mergedTrackerHitRelCol = nullptr;
+
   
 }
 void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LCCollection* trackCol,  
@@ -624,10 +631,7 @@ void RecoMCTruthLinker::trackLinker(   LCEvent * evt, LCCollection* mcpCol ,  LC
   
   *trtlcol = truthTrackRelNav.createLCCollection() ;
   *ttrlcol = trackTruthRelNav.createLCCollection() ;
-  
-  delete _navMergedTrackerHitRel ; _navMergedTrackerHitRel = 0;
-  delete _navMergedCaloHitRel ; _navMergedCaloHitRel = 0;
-  
+
 }
 
 
@@ -2173,9 +2177,9 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
       // copy collection flags and collection parameters from first collections
       
       _mergedTrackerHitRelCol = new LCCollectionVec( col->getTypeName() )  ;
-
       
       _mergedTrackerHitRelCol->setFlag( col->getFlag() ) ;
+      _mergedTrackerHitRelCol->setSubset( true );
  
       StringVec stringKeys ;
       col->getParameters().getStringKeys( stringKeys ) ;
@@ -2260,9 +2264,8 @@ void RecoMCTruthLinker::mergeCaloHitRelations(LCEvent * evt){
       // copy collection flags and collection parameters from first collections
       
       _mergedCaloHitRelCol = new LCCollectionVec( col->getTypeName() )  ;
-
-      
       _mergedCaloHitRelCol->setFlag( col->getFlag() ) ;
+      _mergedCaloHitRelCol->setSubset( true );
  
       StringVec stringKeys ;
       col->getParameters().getStringKeys( stringKeys ) ;

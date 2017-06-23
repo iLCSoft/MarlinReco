@@ -146,7 +146,7 @@ void SiTracker_dEdxProcessor::init() {
 
   dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
 
-  DDRec::SurfaceManager& surfMan = *theDetector.extension< DDRec::SurfaceManager >() ;
+  dd4hep::rec::SurfaceManager& surfMan = *theDetector.extension< dd4hep::rec::SurfaceManager >() ;
   surfMap = surfMan.map( "tracker" ) ;
 
   if(!m_cheatSensorThicknesses) {
@@ -278,7 +278,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
       // Normal to the surface of hit
       unsigned long cellid = trackhits[ihit]->getCellID0();
-      DDRec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
+      dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
       if (surface == surfMap->end()) {
         streamlog_out(ERROR) << "Cannot find the surface corresponding to track hit ID " << cellid
              << " in event " << evt->getEventNumber() << "!\n";

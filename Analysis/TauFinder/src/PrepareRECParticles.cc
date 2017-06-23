@@ -81,7 +81,7 @@ PrepareRECParticles::PrepareRECParticles() : Processor("PrepareRECParticles")
                             std::string("MCParticles_tau"));
   
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-                            "RecCollection",
+                            "RecCollection_Tracks",
                             "Collection of Rec Particles for TauFinder",
                             _outcolTracks ,
                             std::string("Tracks_tau"));

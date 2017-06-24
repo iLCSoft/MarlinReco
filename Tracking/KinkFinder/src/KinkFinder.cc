@@ -10,12 +10,11 @@
 #include "IMPL/ReconstructedParticleImpl.h"
 #include "IMPL/VertexImpl.h"
 #include <math.h>
-#include <gear/GEAR.h>
-#include <gear/BField.h>
-#include <gear/TPCParameters.h>
-#include <gear/VXDParameters.h>
-#include <gear/PadRowLayout2D.h>
-#include <gear/VXDLayerLayout.h>
+
+#include <DD4hep/Detector.h>
+#include <DD4hep/DD4hepUnits.h>
+#include <DDRec/DetectorData.h>
+
 #include "HelixClass.h"
 
 using namespace lcio ;
@@ -186,53 +185,37 @@ void KinkFinder::init() {
   // Print algorithm parameters
   printParameters() ;
 
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
-  const gear::TPCParameters& pTPC = Global::GEAR->getTPCParameters();
-  const gear::PadRowLayout2D& pTPCpads = pTPC.getPadLayout();
-  std::vector<double>tpcExtent = pTPCpads.getPlaneExtent();
-  _tpcInnerR = tpcExtent[0]; 
-  _tpcOuterR = tpcExtent[1];
-  _tpcZmax   = pTPC.getMaxDriftLength();
-  _tpcMaxRow = pTPCpads.getNRows();
 
-  const gear::VXDParameters& pVXDDetMain = Global::GEAR->getVXDParameters();
-  const gear::VXDLayerLayout& pVXDLayerLayout = pVXDDetMain.getVXDLayerLayout();
-  _nLayersVTX = pVXDLayerLayout.getNLayers();
+  dd4hep::Detector& theDet = dd4hep::Detector::getInstance();
+
+  double bfieldV[3] ;
+  theDet.field().magneticField( { 0., 0., 0. }  , bfieldV  ) ;
+  _bField = bfieldV[2]/dd4hep::tesla ;
+  
+  dd4hep::DetElement tpcDE = theDet.detector("TPC") ;
+  const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>() ;
+
+  _tpcInnerR = tpc->rMinReadout; 
+  _tpcOuterR = tpc->rMaxReadout;
+  _tpcZmax   = tpc->driftLength;
+  _tpcMaxRow = tpc->maxRow;
+
+
+  dd4hep::DetElement vtxDE = theDet.detector("VXD");
+  dd4hep::rec::ZPlanarData* vtx = vtxDE.extension<dd4hep::rec::ZPlanarData>();
+  _nLayersVTX=vtx->layers.size(); 
+
   for(int iL=0;iL<_nLayersVTX;iL++){
-    _rVTX.push_back(pVXDLayerLayout.getLadderDistance(iL));
-  }
-  
-
-    //-- SIT Parameters--
-  const gear::ZPlanarParameters* pSITDetMain = 0;
-  const gear::ZPlanarLayerLayout* pSITLayerLayout = 0;
-  
-  try{
-    pSITDetMain = &Global::GEAR->getSITParameters();
-    pSITLayerLayout = &(pSITDetMain->getZPlanarLayerLayout());
-    _nLayersSIT = pSITLayerLayout->getNLayers();
-    for(int iL=0;iL<_nLayersSIT;iL++){
-      _rSIT.push_back(float( pSITLayerLayout->getSensitiveDistance( iL )  ) );
-    }
-  }
-  catch( gear::UnknownParameterException& e){
+    _rVTX.push_back( vtx->layers[iL].distanceSensitive );
   }
 
-  //old SIT using cylinders   
-  try{
-    
-    const gear::GearParameters& pSITDet = Global::GEAR->getGearParameters("SIT");
-    _nLayersSIT = int(pSITDet.getDoubleVals("SITLayerRadius").size());
+  dd4hep::DetElement sitDE = theDet.detector("SIT");
+  dd4hep::rec::ZPlanarData* sit = sitDE.extension<dd4hep::rec::ZPlanarData>();
+  _nLayersSIT=sit->layers.size(); 
 
-    for(int iL=0;iL<_nLayersSIT;iL++){
-      _rSIT.push_back(pSITDet.getDoubleVals("SITLayerRadius")[iL]);
-    }
+  for(int iL=0;iL<_nLayersSIT;iL++){
+    _rSIT.push_back( sit->layers[iL].distanceSensitive );
   }
-  catch( gear::UnknownParameterException& e){
-  }
-  
-
-
 
 
   _nRun = -1;

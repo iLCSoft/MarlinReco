@@ -9,14 +9,15 @@
 
 #include <marlin/Global.h>
 #include <marlin/Processor.h>
-#include <gear/GEAR.h>
-#include <gear/TPCParameters.h>
-#include <lcio.h>
 
+#include <lcio.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/Track.h>
 #include <EVENT/TrackerHit.h>
 #include <IMPL/TrackImpl.h>
+
+#include <DD4hep/Detector.h>
+#include <DDRec/DetectorData.h>
 
 #include <UTIL/BitField64.h>
 #include "UTIL/LCTrackerConf.h"
@@ -49,9 +50,11 @@ void Compute_dEdxProcessor::init() {
   //_mydEdx = new ComputeddEdx(); 
   
   //get TPC inner radius
-  const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  const EVENT::DoubleVec& TPC_ext = gearTPC.getPlaneExtent();
-  _TPC_inner = TPC_ext[0];
+  dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
+  dd4hep::DetElement tpcDE = lcdd.detector("TPC") ;
+  const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>() ;
+  _TPC_inner = tpc->rMinReadout ;
+
   
   printParameters();
   

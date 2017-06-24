@@ -21,7 +21,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 const float mMuon      = 0.106;    // GeV
-const float cTauMuon   = 657000;   // mm
+//const float cTauMuon   = 657000;   // mm
 const float mPion      = 0.140;    // GeV
 const float cTauPion   = 7800;     // mm
 const float mKaon      = 0.494;    // GeV
@@ -29,7 +29,7 @@ const float cTauKaon   = 3714;     // mm
 const float mSigma     = 1.189;    // GeV
 const float cTauSigma  = 24.0;     // mm
 const float mLambda    = 1.115;    // GeV
-const float cTauLambda = 78.0;     // mm
+//const float cTauLambda = 78.0;     // mm
 const float mHyperon   = 1.314;    // GeV
 const float cTauHyperon= 87.0;     // mm
 const float mNeutron   = 0.940;    // GeV
@@ -224,7 +224,7 @@ void KinkFinder::init() {
 }
 
 
-void KinkFinder::processRunHeader( LCRunHeader* run) { 
+void KinkFinder::processRunHeader( LCRunHeader* ) { 
 
   _nRun++ ;
   _nEvt = 0;
@@ -277,13 +277,13 @@ void KinkFinder::processEvent( LCEvent * evt ) {
   std::vector<float>charge;
   std::vector<int>hits;
   std::vector<MCParticle*>mcParticle;
-  HelixClass* helixEnd[tracks.size()];
-  HelixClass* helixStart[tracks.size()];
+  std::vector<HelixClass*> helixEnd(  tracks.size() );
+  std::vector<HelixClass*> helixStart(tracks.size() );
   std::vector< std::vector<twoTrackIntersection_t> > kinkDaughters ( tracks.size() ) ;
   std::vector< std::vector<twoTrackIntersection_t> > prongDaughters( tracks.size() ) ;
   std::vector< std::vector<twoTrackIntersection_t> > splitDaughters( tracks.size() ) ;
-  float zAtEnd[tracks.size()];
-  float zAtStart[tracks.size()];
+  std::vector< float> zAtEnd(  tracks.size() );
+  std::vector< float> zAtStart(tracks.size() );
 
   for(unsigned int  itrack=0;itrack< tracks.size();++itrack){
     TrackerHitVec hitvec = tracks[itrack]->getTrackerHits();
@@ -610,19 +610,19 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      float zstep = (ze-zs)/10.;
 	      if(zstep<1)zstep=1;
 	      
-	      for(float z = zs; z < ze; z+= zstep){
-		helixEnd[ip]->getPointInZ(z, refsp, seedp);
-		helixStart[id]->getPointInZ(z, refsd, seedd);
-		float dx = seedp[0]-seedd[0];
-		float dy = seedp[1]-seedd[1];
-		float dz = seedp[2]-seedd[2];
-		float newdr = sqrt(dx*dx+dy*dy+dz*dz);
+	      for(float zf = zs; zf < ze; zf+= zstep){
+		helixEnd[ip]->getPointInZ(zf, refsp, seedp);
+		helixStart[id]->getPointInZ(zf, refsd, seedd);
+ 		float dxf = seedp[0]-seedd[0];
+		float dyf = seedp[1]-seedd[1];
+		float dzf = seedp[2]-seedd[2];
+		float newdr = sqrt(dxf*dxf+dyf*dyf+dzf*dzf);
 		if(newdr<dr){
 		  dr=newdr;
 		  xkink = (seedp[0]+seedd[0])/2;
 		  ykink = (seedp[1]+seedd[1])/2;
 		  rkink = sqrt(xkink*xkink+ykink*ykink);
-		  zkink = z;
+		  zkink = zf;
 		  if(rkink<rOuter[i])rkink=rOuter[i];
 		  if(rkink>rInner[j])rkink=rInner[j];
 		}
@@ -775,15 +775,15 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		      for(int ih =0;ih<nhitsi;++ih){
 			float x = (float)hitveci[ih]->getPosition()[0];
 			float y = (float)hitveci[ih]->getPosition()[1];
-			float z = (float)hitveci[ih]->getPosition()[2];
-			if(fabs(z)<zmini)zmini=fabs(z);
-			if(fabs(z)>zmaxi)zmaxi=fabs(z);
+			float zz = (float)hitveci[ih]->getPosition()[2];
+			if(fabs(zz)<zmini)zmini=fabs(zz);
+			if(fabs(zz)>zmaxi)zmaxi=fabs(zz);
 			float r2 = x*x+y*y;
 			float  r = sqrt(r2);
 			if(r>_tpcInnerR)ntpci++;
 			hitxyz[0]=x;
 			hitxyz[1]=y;
-			hitxyz[2]=z;
+			hitxyz[2]=zz;
 			helixj->getDistanceToPoint(hitxyz, dist);
 			if(dist[2]>maxdisti)maxdisti=dist[2];
 			if(dist[2]<25.)nclosei++;
@@ -791,15 +791,15 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		      for(int ih =0;ih<nhitsj;++ih){
 			float x = (float)hitvecj[ih]->getPosition()[0];
 			float y = (float)hitvecj[ih]->getPosition()[1];
-			float z = (float)hitvecj[ih]->getPosition()[2];
-			if(fabs(z)<zminj)zminj=fabs(z);
-			if(fabs(z)>zmaxj)zmaxj=fabs(z);
+			float zz = (float)hitvecj[ih]->getPosition()[2];
+			if(fabs(zz)<zminj)zminj=fabs(zz);
+			if(fabs(zz)>zmaxj)zmaxj=fabs(zz);
 			float r2 = x*x+y*y;
 			float  r = sqrt(r2);
 			if(r>_tpcInnerR)ntpcj++;
 			hitxyz[0]=x;
 			hitxyz[1]=y;
-			hitxyz[2]=z;
+			hitxyz[2]=zz;
 			helixi->getDistanceToPoint(hitxyz, dist);
 			if(dist[2]>maxdistj)maxdistj=dist[2];
 			if(dist[2]<25.)nclosej++;
@@ -957,16 +957,16 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	ReconstructedParticleImpl * part = new ReconstructedParticleImpl();
 	VertexImpl * vtx = new VertexImpl();
 	float vertex[3];
-	float momentum[3];
+	float mom[3];
 	int code = 211;
 	for (int iC=0;iC<3;++iC) {
 	  vertex[iC]   = splitDaughters[i][0].vtx[iC];
-	  momentum[iC] = splitDaughters[i][0].p[iC];
+	  mom[iC] = splitDaughters[i][0].p[iC];
 	}
 	float distance = splitDaughters[i][0].distance;	
 	vtx->setPosition( vertex );
 	vtx->addParameter( distance );
-	part->setMomentum( momentum );
+	part->setMomentum( mom );
 	part->setType( code );
 	
 	if(_debugPrinting>0){
@@ -976,9 +976,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		    << vertex[1] << ","
 		    << vertex[2] << ")" << std::endl;
 	  std::cout << "   Momentum = ("
-		    << momentum[0] << ","
-		    << momentum[1] << ","
-		    << momentum[2] << ")" << std::endl;
+		    << mom[0] << ","
+		    << mom[1] << ","
+		    << mom[2] << ")" << std::endl;
 	}
 	float mass = splitDaughters[i][0].mass;
 	part->setMass( mass );	
@@ -1001,16 +1001,16 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  ReconstructedParticleImpl * part = new ReconstructedParticleImpl();
 	  VertexImpl * vtx = new VertexImpl();
 	  float vertex[3];
-	  float momentum[3];
+	  float mom[3];
 	  int code = kinkDaughters[i][0].pdgCode;
 	  for (int iC=0;iC<3;++iC) {
 	    vertex[iC]   = kinkDaughters[i][0].vtx[iC];
-	    momentum[iC] = kinkDaughters[i][0].p[iC];
+	    mom[iC] = kinkDaughters[i][0].p[iC];
 	  }
 	  float distance = kinkDaughters[i][0].distance;	
 	  vtx->setPosition( vertex );
 	  vtx->addParameter( distance );
-	  part->setMomentum( momentum );
+	  part->setMomentum( mom );
 	  part->setType( code );
 	  if(_debugPrinting>0){
 	    std::cout << "   Code = " << code << "  Distance = " << distance << std::endl;
@@ -1019,9 +1019,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		      << vertex[1] << ","
 		      << vertex[2] << ")" << std::endl;
 	    std::cout << "   Momentum = ("
-		      << momentum[0] << ","
-		      << momentum[1] << ","
-		      << momentum[2] << ")" << std::endl;
+		      << mom[0] << ","
+		      << mom[1] << ","
+		      << mom[2] << ")" << std::endl;
 	  }
 	  float mass = kinkDaughters[i][0].mass;
 	  part->setMass( mass );	
@@ -1043,16 +1043,16 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  ReconstructedParticleImpl * part = new ReconstructedParticleImpl();
 	  VertexImpl * vtx = new VertexImpl();
 	  float vertex[3];
-	  float momentum[3];
+	  float mom[3];
 	  int code = 211;
 	  for (int iC=0;iC<3;++iC) {
 	    vertex[iC]   = prongDaughters[i][0].vtx[iC];
-	    momentum[iC] = prongDaughters[i][0].p[iC];
+	    mom[iC] = prongDaughters[i][0].p[iC];
 	  }
 	  float distance = prongDaughters[i][0].distance;	
 	  vtx->setPosition( vertex );
 	  vtx->addParameter( distance );
-	  part->setMomentum( momentum );
+	  part->setMomentum( mom );
 	  part->setType( code );
 	  if(_debugPrinting>0){
 	    std::cout << "   Code = " << code << "  Distance = " << distance << std::endl;
@@ -1061,9 +1061,9 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 		      << vertex[1] << ","
 		      << vertex[2] << ")" << std::endl;
 	    std::cout << "   Momentum = ("
-		      << momentum[0] << ","
-		      << momentum[1] << ","
-		      << momentum[2] << ")" << std::endl;
+		      << mom[0] << ","
+		      << mom[1] << ","
+		      << mom[2] << ")" << std::endl;
 	  }
 	  float mass = prongDaughters[i][0].mass;
 	  part->setMass( mass );	
@@ -1110,7 +1110,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 }
 
 
-void KinkFinder::check( LCEvent * evt ) { }
+void KinkFinder::check( LCEvent * ) { }
   
 void KinkFinder::end(){ } 
 

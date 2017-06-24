@@ -7,9 +7,11 @@
 #include "IMPL/VertexImpl.h"
 #include "UTIL/Operators.h"
 #include <math.h>
-#include <gear/GEAR.h>
-#include <gear/BField.h>
-#include <gearimpl/Vector3D.h>
+
+#include <DD4hep/Detector.h>
+#include <DD4hep/DD4hepUnits.h>
+#include <DDRec/Vector3D.h>
+
 
 #include "HelixClass.h"
 
@@ -111,16 +113,19 @@ void V0Finder::init() {
   MASSK0S     = 0.497648;
   MASSGamma   = 0;
 
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
+  dd4hep::Detector& theDet = dd4hep::Detector::getInstance();
+  double bfieldV[3] ;
+  theDet.field().magneticField( { 0., 0., 0. }  , bfieldV  ) ;
+  _bField = bfieldV[2]/dd4hep::tesla ;
+
   _nRun = -1;
   _nEvt = 0;
 
 }
 
 
-void V0Finder::processRunHeader( LCRunHeader* run) { 
+void V0Finder::processRunHeader( LCRunHeader* ) { 
 
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
   _nRun++ ;
   _nEvt = 0;
 
@@ -128,7 +133,6 @@ void V0Finder::processRunHeader( LCRunHeader* run) {
 
 void V0Finder::processEvent( LCEvent * evt ) { 
 
-  _bField = Global::GEAR->getBField().at( gear::Vector3D( 0., 0., 0.) ).z() ;
 
   try {
   
@@ -197,20 +201,6 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  
 	  float radV0 = sqrt(vertex[0]*vertex[0]+vertex[1]*vertex[1]);
 	  
-// 	  int nRV = int(_rVertCut.size())-1;	  
-// 	  float dCut = _dVertCut[0];
-// 	  for (int iRV=0;iRV<nRV;++iRV) {
-// 	    if (radV0>=_rVertCut[iRV]&&radV0<_rVertCut[iRV+1]) {
-// 	      dCut =  _dVertCut[iRV];
-// 	      break;
-// 	    }
-// 	  }
-
-	  // streamlog_out( DEBUG4 ) << " **** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
-	  // 		      << " t1 " << lcshort( firstTrack ) << "\n"  
-	  // 		      << " t2 " << lcshort( secondTrack )  << std::endl ;
-
-
 
 	  // check to ensure there are no hits on tracks at radii significantly smaller than reconstructed vertex
 	  // TO DO: should be done more precisely using helices
@@ -221,7 +211,7 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	  //	  if (distV0 < _dVertCut && radV0 > _rVertCut ) { // cut on vertex radius and track misdistance
 	  if (radV0 > _rVertCut  ) { 
 
-	    streamlog_out( DEBUG4 ) << " ***************** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
+	    streamlog_out( DEBUG4 ) << " ***************** found vertex for tracks : " << dd4hep::rec::Vector3D( (const float*) vertex ) 
 				    << " t1 " << lcshort( firstTrack ) << "\n"  
 				    << " t2 " << lcshort( secondTrack )  
 				    << " distV0 " << distV0 
@@ -229,10 +219,6 @@ void V0Finder::processEvent( LCEvent * evt ) {
 
 	    if( distV0 < _dVertCut ) { // cut on vertex radius and track misdistance
 	    
-
-	    // streamlog_out( DEBUG4 ) << " **** found vertex for tracks : " << gear::Vector3D( (const float*) vertex ) 
-	    // 			    << " t1 " << lcshort( firstTrack ) << "\n"  
-	    // 			    << " t2 " << lcshort( secondTrack )  << std::endl ;
 
 	    streamlog_out( DEBUG ) << "  ***** testing various hypotheses " << std::endl ;
 
@@ -442,7 +428,7 @@ void V0Finder::processEvent( LCEvent * evt ) {
 }
 
 
-void V0Finder::check( LCEvent * evt ) { }
+void V0Finder::check( LCEvent * ) { }
   
 void V0Finder::end(){ } 
 

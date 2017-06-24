@@ -60,7 +60,7 @@ void Compute_dEdxProcessor::init() {
   
 }
 
-void Compute_dEdxProcessor::processRunHeader( LCRunHeader* run) { 
+void Compute_dEdxProcessor::processRunHeader( LCRunHeader* ) { 
 } 
 
 void Compute_dEdxProcessor::processEvent( LCEvent * evt ) { 
@@ -101,7 +101,7 @@ void Compute_dEdxProcessor::processEvent( LCEvent * evt ) {
   }
 }
 
-void Compute_dEdxProcessor::check( LCEvent * evt ) { 
+void Compute_dEdxProcessor::check( LCEvent * ) { 
 }
 
 void Compute_dEdxProcessor::end() { 

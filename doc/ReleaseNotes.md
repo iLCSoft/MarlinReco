@@ -1,3 +1,54 @@
+# v01-19
+
+* 2017-05-09 Andre Sailer ([PR#8](https://github.com/iLCSoft/MarlinReco/pull/8))
+  - CLICPfoSelector: remove dependency on GEAR File; simplify calculation of TimeAtECal by using trackState at Calorimeter
+  - CLICPfoSelector: fix coverity defect
+  - TauFinder: fix coverity defects; use streamlog instead of cout
+
+* 2017-06-23 Andre Sailer ([PR#13](https://github.com/iLCSoft/MarlinReco/pull/13))
+  - TauFinder:: PrepareRecParticles: change second parameter with same name RecCollection --> RecCollection_Tracks
+  - V0Finder: Change second parameter to its correct Name RxyCutGamma --> RxyCutLambda
+
+* 2017-06-20 Andre Sailer ([PR#11](https://github.com/iLCSoft/MarlinReco/pull/11))
+  - Adapt to changes in namespaces and LCDD -->  Detector
+
+* 2017-06-20 Shaojun Lu ([PR#10](https://github.com/iLCSoft/MarlinReco/pull/10))
+  - Set default from 'ON' to 'OFF' to build MarlinReco fortran sources.
+  - It could be switch on in the release-ilcsoft.cfg if you want.
+  - https://github.com/iLCSoft/iLCInstall/blob/master/releases/HEAD/release-ilcsoft.cfg#L116
+
+* 2017-06-26 Andre Sailer ([PR#15](https://github.com/iLCSoft/MarlinReco/pull/15))
+  - RecoMCTruthLinker: clean collections that are only created for linking. Move cleanup to end of process event instead of trackLinker so things are also cleaned up if there are no tracks. Fixes memory leaks
+
+* 2017-06-26 Frank Gaede ([PR#14](https://github.com/iLCSoft/MarlinReco/pull/14))
+  -  replace Gear with DDRec and fix warnings in
+          - Compute_dEdxProcessor
+          - V0Finder
+          - KinkFinder
+  - remove obsolete sub-packages:
+         - BrahmsTracking
+         - FullLDCTracking
+         - SiliconTracking
+         - TrackCheater
+         - TrackbasedPflow
+         - Wolf
+         - BCalReco
+         - ETDDigi
+         - FTDDigi
+
+* 2017-06-01 Matthias ([PR#9](https://github.com/iLCSoft/MarlinReco/pull/9))
+  - read magnetic field from dd4hep in taufinder particle preparator
+  - remove leftover condition for former printout of the taufinder, which prevents the desired increment of the iterator, and thus deletes wrong taucandidates when filling the reconstructed tau's
+
+* 2017-04-22 Andre Sailer ([PR#7](https://github.com/iLCSoft/MarlinReco/pull/7))
+  - Re-enable compilation of CLICPfoSelector, CLICDstChecker
+  - Fix Warnings in  CLICPfoSelector, CLICDstChecker
+
+* 2017-04-22 Andre Sailer ([PR#6](https://github.com/iLCSoft/MarlinReco/pull/6))
+  - Added additional TauFinder processor from Astrid Munnich, see doc/TauFinder/TauFinderLCDNote.pdf for description and performance
+  
+  - Ignore Warnings from external headers in MarlinReco
+
 # v01-18
 
 * 2017-03-30 Andre Sailer ([PR#4](https://github.com/iLCSoft/MarlinReco/pull/4))

@@ -1,3 +1,8 @@
+# v01-19-01
+
+* 2017-07-04 Daniel Jeans ([PR#16](https://github.com/iLCSoft/MarlinReco/pull/16))
+  - update resolution formula in TPC digitisation (from Dimitra Tsionou)
+
 # v01-19
 
 * 2017-05-09 Andre Sailer ([PR#8](https://github.com/iLCSoft/MarlinReco/pull/8))

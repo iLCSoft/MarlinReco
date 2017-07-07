@@ -38,7 +38,11 @@
 #include <TMath.h>
 #include "TTree.h"
 #include "TH1F.h"
+#include "TRandom.h"
 
+#include <DDSegmentation/BitField64.h>
+#include <DDRec/CellIDPositionConverter.h>
+#include <DD4hep/DetectorSelector.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -48,17 +52,24 @@ using namespace std;
 //#define SDHCAL_MARLINUTIL_BUGFIX 1
 //#define SDHCAL_MOKKA_BUGFIX 1
 
+std::string SimDigitalGeomCellId::_encodingStrings[ENCODINGTYPES][ENCODINGSTRINGLENGTH] = 
+{ 
+	// The encoding string for lcgeo: barrel and endcap ring of hcal ( change "y" to "z" for hcal endcap )
+	{ "layer", "stave", "module", "tower", "x", "y" },
+
+    // The encoding string for Mokka
+	{ "K-1", "S-1", "M", "", "I", "J" }
+};
+
+std::string SimDigitalGeomCellId::_hcalOption;
+
+
 SimDigital aSimDigital ;
 
 
 SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _chargeSplitterFunction(), _chargeSplitterErfFunction(),_theChosenSplitter(NULL), _effMap(NULL) {
    _description = "the transfer Between Energy and Induced Charge for SDHCAL" ;
  
-#ifdef SIMDIGITAL_WITHECAL
-   registerECALparameters(); 
-#endif 
-  
-   
    ///////////////////////////////////////////////////////////
    std::vector<std::string> hcalCollections;
    // CaloHitCollections.push_back(std::string("Dummy"));
@@ -206,6 +217,26 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			      _chargeSplitterOption,
 			      std::string("Erf") );
 
+  registerProcessorParameter( "ChargeSplitterRandomSeed",
+			      "The seed of the srand in the multiplicityChargeSplitterFunction",
+			      _chargeSplitterRandomSeed,
+			      int(1) );
+
+  registerProcessorParameter( "PolyaRandomSeed",
+			      "The seed of the polya function",
+			      _polyaRandomSeed,
+			      int(1) );
+
+  registerProcessorParameter( "CellIDEncodingStringType",
+			      "The type of the encoding, LCGEO or MOKKA",
+			      _encodingType,
+			      std::string("LCGEO"));
+
+  registerProcessorParameter( "HCALOption",
+			      "The HCAL mechanical options, TESLA or VIDEAU, which is effective when gear is absent",
+			      _hcalOption,
+			      std::string("VIDEAU"));
+
   _doThresholds=true;
   registerOptionalParameter("doThresholds",
 			    "Replace analog hit energy by value given in CalibrHCAL according to thresholds given in HCALThreshold",
@@ -259,6 +290,10 @@ Double_t Polya(double* x, double* params)
 } 
   
 void SimDigital::init(){
+  std::cout << "SimDigital: init" << std::endl;
+
+  SimDigitalGeomCellId::setEncodingType(_encodingType);
+  SimDigitalGeomCellId::setHcalOption(_hcalOption);
 
   //a=1.05,b=-2.1,c=1.05,d=-1.05;//for 1 neighbor pad fired
   //previousLayer=1 ,previousmodule=1, previousstave=1,previousIy=1,previousJz=1;
@@ -293,10 +328,6 @@ void SimDigital::init(){
     streamlog_out( MESSAGE ) << "_constEffMapValue = " << _constEffMapValue << std::endl;
   else if (_effMapOption=="PrototypeMap") 
     streamlog_out( MESSAGE ) << "_effMapFileName = " << _effMapFileName << std::endl;
-
-#ifdef SIMDIGITAL_WITHECAL
-  setECALgeometry();
-#endif 
 
   //assure SDHCAL _thresholdHcal are in increasing order
   std::sort(_thresholdHcal.begin(),_thresholdHcal.end());
@@ -334,13 +365,14 @@ void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
     try{
       std::string colName =  _hcalCollections[i] ;    
-  //    cout<< "colName[i] = "<< colName <<" "<< i << endl;
-      CHT::Layout layout1 = layoutFromString( colName ); 
+      cout<< "colName[i] = "<< colName <<" "<< i << endl;
+      //CHT::Layout layout1 = layoutFromString( colName ); 
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
-      CHT::Layout layout2 = layoutFromString( colName ); 
+      //CHT::Layout layout2 = layoutFromString( colName ); 
       _counters["NSim"]+=col->getNumberOfElements();
       CHT::Layout layout = layoutFromString( colName ); 
       LCCollectionVec *hcalcol = processHCALCollection(col,layout,flag);
+	  std::cout << " ------ " << hcalcol << std::endl;
 //      cout<< " CHT::any,barrel,encap, ring " << CHT::any<<" "<<CHT::barrel<<" "<<CHT::endcap<<" "<< CHT::ring<< endl;
       _counters["NReco"]+=hcalcol->getNumberOfElements();
       evt->addCollection(hcalcol,_outputHcalCollections[i].c_str());
@@ -413,8 +445,6 @@ multiplicityChargeSplitterFunction::~multiplicityChargeSplitterFunction()
 
 void multiplicityChargeSplitterFunction::init()
 {
-  srand(time(NULL));
-
   if (_f2) delete _f2;
   _f2=new TF2("chadis",_function_description.c_str(),-_range,+_range,-_range,+_range);
   for (unsigned int i=0; i<_functionParameters.size(); i++)
@@ -585,30 +615,55 @@ void SimDigitalGeomCellId::bookTuples(const marlin::Processor* proc)
 SimDigitalGeomCellId::SimDigitalGeomCellId(LCCollection *inputCol, LCCollectionVec *outputCol) 
   : _hitPosition(NULL),
     _decoder(inputCol), _encoder(inputCol->getParameters().getStringVal(LCIO::CellIDEncoding),outputCol),
-    _layerLayout( & Global::GEAR->getHcalBarrelParameters().getLayerLayout() ),
-    _normal_I_J_setter(new SimDigitalGeomRPCFrame_VIDEAU_BARREL(*this)),
+    _layerLayout(NULL), caloData(NULL),
+    _normal_I_J_setter(NULL),
     _currentHCALCollectionCaloLayout(CHT::any),
-    _normal(),_Iaxis(),_Jaxis()
+    _normal(),_Iaxis(),_Jaxis(),
+	_useGear(false),
+	_isInEndcap(false)
 {
-  _trueLayer=_stave=_module=_Iy=_Jz=-999;
-  outputCol->parameters().setValue(LCIO::CellIDEncoding,inputCol->getParameters().getStringVal(LCIO::CellIDEncoding));
-  _geom=VIDEAU;
-  try
-    { 
-      Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order"); //it is TESLA geometry if it is OK
-    }
-  catch (gear::Exception &)
+    _trueLayer=_stave=_module=_Iy=_Jz=-999;
+    outputCol->parameters().setValue(LCIO::CellIDEncoding,inputCol->getParameters().getStringVal(LCIO::CellIDEncoding));
+
+	_cellIDEncodingString = inputCol->getParameters().getStringVal(LCIO::CellIDEncoding);
+
+	if(_cellIDEncodingString.find("z:") != std::string::npos ) _isInEndcap = true;
+
+	std::cout << "_isInEndcap: " << _isInEndcap << std::endl;
+
+	std::string gearFile = Global::parameters->getStringVal("GearXMLFile") ;
+	if(gearFile.size() > 0) _useGear = true;
+
+    if(_useGear) 
     {
-      _geom=TESLA;
+        _geom=VIDEAU;
+
+        try
+        { 
+			std::cout << "we will use gear!" << std::endl;
+            cout << "gear: " << Global::GEAR << endl;
+            Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order"); //it is VIDEAU geometry if it is OK
+        }
+        catch (gear::Exception &)
+        {
+            _geom=TESLA;
+        }
+
     }
+    else
+    {
+		std::cout << "we will use lcgeo!" << std::endl;
+        if(_hcalOption == std::string("TESLA"))  _geom = TESLA;
+        if(_hcalOption == std::string("VIDEAU")) _geom = VIDEAU;
+    }
+
     streamlog_out( MESSAGE )<< "!!!!!!(Videau=0, TESLA=1) Geometry is _geom= : "<<_geom << std::endl;
-      
 }
 
 
 SimDigitalGeomCellId::~SimDigitalGeomCellId()
 {
-  delete _normal_I_J_setter;
+	if(_normal_I_J_setter != NULL) delete _normal_I_J_setter;
 }
 
 void SimDigitalGeomRPCFrame_TESLA_BARREL::setRPCFrame()
@@ -620,6 +675,7 @@ void SimDigitalGeomRPCFrame_TESLA_BARREL::setRPCFrame()
   normal().rotateZ(angle);
   Iaxis().rotateZ(angle);
 }
+
 void SimDigitalGeomRPCFrame_VIDEAU_BARREL::setRPCFrame()
 {
   normal().set(0,1,0);
@@ -685,12 +741,27 @@ void SimDigitalGeomRPCFrame_VIDEAU_ENDCAP::setRPCFrame()
 
 std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 {
-  _trueLayer = _decoder( hit )["layer"] -1      ; // - 1;
-  _stave     = _decoder( hit )["stave"]    ;    //  +1
-  _module    = _decoder( hit )["module"];
-  _tower     = _decoder( hit )["tower"];
-  _Iy        = _decoder( hit )["x"];
-  _Jz        = _decoder( hit )["y"];
+  if(_isInEndcap) 
+  {
+     _encodingStrings[_encodingType][5] = "z";
+  }
+  else
+  {
+     _encodingStrings[_encodingType][5] = "y";
+  }
+
+  _trueLayer = _decoder( hit )[_encodingStrings[_encodingType][0]] - 1; // -1;
+  _stave     = _decoder( hit )[_encodingStrings[_encodingType][1]];     // +1
+  _module    = _decoder( hit )[_encodingStrings[_encodingType][2]];
+
+  if(_encodingStrings[_encodingType][3].size() != 0)
+  _tower     = _decoder( hit )[_encodingStrings[_encodingType][3]];
+
+  _Iy        = _decoder( hit )[_encodingStrings[_encodingType][4]];
+  _Jz        = _decoder( hit )[_encodingStrings[_encodingType][5]];
+
+
+
 //
 // _slice     = _decoder( hit )["slice"];
   _hitPosition = hit->getPosition();
@@ -699,7 +770,95 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 //<<" Iy " << _Iy <<"  Jz "<<_Jz<<" hitPosition "<<_hitPosition<<std::endl
 //<<" _hitPosition[0] "<<_hitPosition[0]<<" _hitPosition[1] "<<_hitPosition[1]<<" _hitPosition[2] "<<_hitPosition[2]<<std::endl;
 
-  _normal_I_J_setter->setRPCFrame();
+  if(_useGear)
+  {
+	  _normal_I_J_setter->setRPCFrame();
+  }
+  else
+  { 
+	  // this part is for lcgeo
+
+	  dd4hep::Detector & ild = dd4hep::Detector::getInstance();
+ 	  dd4hep::rec::CellIDPositionConverter idposConv( ild )  ;
+
+
+ 	  dd4hep::BitField64 idDecoder( _cellIDEncodingString ) ;
+ 	  
+ 	  dd4hep::long64 id0 = hit->getCellID0() ;
+ 	  dd4hep::long64 id1 = hit->getCellID1() ;
+ 	  
+ 	  idDecoder.setValue( id0 , id1 ) ;
+ 	  
+ 	  dd4hep::long64 id = idDecoder.getValue() ;
+ 	  dd4hep::Position pos_0 = idposConv.position( id ) ;   
+
+ 	  const float* hitPos = hit->getPosition();
+
+#if 1 
+ 	  std::cout << "hit pos: " << hitPos[0] << " " << hitPos[1] << " " << hitPos[2] << std::endl;
+ 	  std::cout << "cell pos: " << pos_0.X() << " " << pos_0.Y() << " " << pos_0.Z() << std::endl;
+
+ 	  std::cout << "layer: "    << idDecoder[_encodingStrings[_encodingType][0]] 
+ 	            << ", stave: "  << idDecoder[_encodingStrings[_encodingType][1]] 
+ 	    		<< ", module: " << idDecoder[_encodingStrings[_encodingType][2]]
+ 	            << ", tower: "  << idDecoder[_encodingStrings[_encodingType][3]] 
+ 	    		<< ", x: "      << idDecoder[_encodingStrings[_encodingType][4]]
+ 	    		<< ", y: "      << idDecoder[_encodingStrings[_encodingType][5]] << std::endl;
+#endif
+
+ 	  double const epsilon = 1.e-3;
+
+ 	  ///// for direction x
+ 	  dd4hep::Position pos_i_plus_1;
+ 	  dd4hep::Position dir_i;
+
+ 	  std::string xEncoding = _encodingStrings[_encodingType][4];
+ 	  std::string yEncoding = _encodingStrings[_encodingType][5];
+
+ 	  idDecoder[ xEncoding ]   =  idDecoder[ xEncoding ]  + 1 ;
+ 	  pos_i_plus_1 = idposConv.position(   idDecoder.getValue()   ) ;
+
+ 	  dir_i =  pos_i_plus_1  - pos_0  ; 
+
+ 	  if(dir_i.R() < epsilon)
+ 	  { 
+ 	      idDecoder[ xEncoding ]   =  idDecoder[ xEncoding ] - 2 ;
+ 	      pos_i_plus_1 = idposConv.position(   idDecoder.getValue()   ) ;
+ 	      dir_i =  - ( pos_i_plus_1  - pos_0 )  ; 
+ 	  }
+
+ 	  // reset
+ 	  idDecoder.setValue( id0 , id1 ) ;	
+
+ 	  ////// for direction y
+ 	  dd4hep::Position pos_j_plus_1;
+ 	  dd4hep::Position dir_j;
+ 	  
+ 	  idDecoder[ yEncoding ]   =  idDecoder[ yEncoding ]  + 1 ;
+ 	  pos_j_plus_1 = idposConv.position(   idDecoder.getValue()   ) ;
+ 	  
+ 	  dir_j =  pos_j_plus_1  - pos_0  ; 
+
+ 	  if(dir_j.R() < epsilon)
+ 	  { 
+ 	      idDecoder[ yEncoding ]   =  idDecoder[ yEncoding ] - 2 ;
+ 	      pos_j_plus_1 = idposConv.position(   idDecoder.getValue()   ) ;
+ 	      dir_j =  - ( pos_j_plus_1  - pos_0 )  ; 
+ 	  }
+ 	  
+ 	  dd4hep::Position dir_layer = dir_i.Cross( dir_j ) ;
+
+ 	  dir_layer = - dir_layer.Unit();
+
+ 	  std::cout << "layer dir: " << dir_layer.X() << " " << dir_layer.Y() << " " << dir_layer.Z() << std::endl;
+
+	  dir_i = dir_i.Unit();
+	  dir_j = dir_j.Unit();
+
+      _normal.set(dir_layer.X(), dir_layer.Y(), dir_layer.Z());
+      _Iaxis.set(dir_i.X(), dir_i.Y(), dir_i.Z());
+      _Jaxis.set(dir_j.X(), dir_j.Y(), dir_j.Z());
+  }
 
   std::vector<StepAndCharge> stepsInIJZcoord;
   LCVector3D hitpos;
@@ -787,16 +946,20 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 
 void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delta_J)
 {
-  _encoder["module"]=_module;
-  _encoder["tower"]=_tower;
-  _encoder["stave"]=_stave;
+  _encoder[_encodingStrings[_encodingType][2]]=_module;
+
+  if(_encodingStrings[_encodingType][3].size() != 0)
+  _encoder[_encodingStrings[_encodingType][3]]=_tower;
+
+  _encoder[_encodingStrings[_encodingType][1]]=_stave;
+
   int RealIy=_Iy+delta_I;
 //  streamlog_out( MESSAGE ) << "RealIy, _Iy, delta_I" << std::endl
 //       <<RealIy <<" "<<_Iy <<" " <<delta_I<<std::endl;
 //  if (RealIy<0||RealIy>330)RealIy=0; //FIXME the 330 value should depend on the cellSize and on the Layer
 //  if (RealIy<0)RealIy=RealIy+176; //FIXME the 330 value should depend on the cellSize and on the Layer
   if (abs(RealIy)>330)RealIy=0; //FIXME the 330 value should depend on the cellSize and on the Layer
-  _encoder["x"]=RealIy;
+  _encoder[_encodingStrings[_encodingType][4]]=RealIy;
   int RealJz=_Jz+delta_J;
 //  streamlog_out( MESSAGE ) << "RealIy, _Iy, delta_I" <<RealIy<<" "<<_Iy<<" "<<delta_I<< std::endl;
 //  streamlog_out( MESSAGE ) << "RealJz, _Jz, delta_J" <<RealJz<<" "<<_Jz<<" "<<delta_J<< std::endl;
@@ -807,9 +970,18 @@ void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delt
 //  if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( MESSAGE ) << "RealIy, RealJz" << std::endl;
   if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( MESSAGE ) << "RealIy, RealJz" << std::endl
                                       <<RealIy <<"   "<<RealJz <<std::endl;
-  _encoder["layer"]=_trueLayer   ;
+  _encoder[_encodingStrings[_encodingType][0]]=_trueLayer   ;
 // Depending on the segmentation type:   Barrel,EndcapRing - CartesianGridXY;  EndCaps- CartesianGridXZ !!!
-  _encoder["y"]=RealJz;
+
+  if(!_isInEndcap)
+  {
+	  _encoder[_encodingStrings[_encodingType][5]]=RealJz;
+  }
+  else
+  {
+	  _encoder["z"]=RealJz;
+  }
+
 //  _encoder["z"]=RealJz;
   _encoder.setCellID( hit );
   hit->setType( CHT( CHT::had, CHT::hcal , _currentHCALCollectionCaloLayout,  _trueLayer ) );
@@ -838,32 +1010,120 @@ void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delt
 
 void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
 {
-  delete _normal_I_J_setter;
+  if(_normal_I_J_setter != NULL) delete _normal_I_J_setter;
+
   _currentHCALCollectionCaloLayout=layout;
-  if (_currentHCALCollectionCaloLayout == CHT::endcap) 
-    {
-      _layerLayout= & Global::GEAR->getHcalEndcapParameters().getLayerLayout();
-      if (_geom==TESLA)
-	_normal_I_J_setter= new SimDigitalGeomRPCFrame_TESLA_ENDCAP(*this);
-      else
-	_normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_ENDCAP(*this);
-    } 
-  else if (_currentHCALCollectionCaloLayout == CHT::ring) 
-    {
-      _layerLayout= & Global::GEAR->getHcalRingParameters().getLayerLayout();
-      _normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_ENDCAP(*this);
-    }  
-  else 
-    {
-      _layerLayout= & Global::GEAR->getHcalBarrelParameters().getLayerLayout();
-      if (_geom==TESLA)
-	_normal_I_J_setter= new SimDigitalGeomRPCFrame_TESLA_BARREL(*this);
-      else
-	_normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_BARREL(*this);
-    }
+
+  if(_useGear)
+  {
+	  if (_currentHCALCollectionCaloLayout == CHT::endcap) 
+  	  {
+		  _layerLayout= & Global::GEAR->getHcalEndcapParameters().getLayerLayout();
+
+  	      if (_geom==TESLA)
+			  _normal_I_J_setter= new SimDigitalGeomRPCFrame_TESLA_ENDCAP(*this);
+  	      else
+			  _normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_ENDCAP(*this);
+  	  } 
+	  else if (_currentHCALCollectionCaloLayout == CHT::ring) 
+  	  {
+		  _layerLayout= & Global::GEAR->getHcalRingParameters().getLayerLayout();
+		  
+		  // no TESLA ring ?
+		  _normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_ENDCAP(*this);
+  	  }  
+  	  else 
+  	  {
+		  _layerLayout= & Global::GEAR->getHcalBarrelParameters().getLayerLayout();
+
+  	      if (_geom==TESLA)
+			  _normal_I_J_setter= new SimDigitalGeomRPCFrame_TESLA_BARREL(*this);
+  	      else
+			  _normal_I_J_setter= new SimDigitalGeomRPCFrame_VIDEAU_BARREL(*this);
+  	  }
+  }
+  else
+  {
+	  dd4hep::Detector & ild = dd4hep::Detector::getInstance();
+
+	  if(_currentHCALCollectionCaloLayout == CHT::barrel) 
+	  { 
+		  const std::vector< dd4hep::DetElement>& det = dd4hep::DetectorSelector(ild).detectors(
+ 	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::BARREL),
+ 	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
+
+	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+		  cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+	  }
+
+	  if(_currentHCALCollectionCaloLayout == CHT::ring) 
+	  { 
+		  const std::vector< dd4hep::DetElement>& det = dd4hep::DetectorSelector(ild).detectors(
+ 	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::AUXILIARY),
+ 	    	    dd4hep::DetType::FORWARD) ;
+
+	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+
+		  cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+	  }
+
+	  if(_currentHCALCollectionCaloLayout == CHT::endcap) 
+	  { 
+		  const std::vector< dd4hep::DetElement>& det = dd4hep::DetectorSelector(ild).detectors(
+ 	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::ENDCAP),
+ 	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
+
+	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+		  cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+	  }
+  }
 }
 
-float SimDigitalGeomCellId::getCellSize() {return _layerLayout->getCellSize0(_trueLayer); }
+int SimDigitalGeomCellId::_encodingType = 0;
+
+const string EncodingType[ENCODINGTYPES] = {"LCGEO", "MOKKA"};
+
+void SimDigitalGeomCellId::setEncodingType(std::string type)
+{
+	for(int iType = 0; iType < ENCODINGTYPES; ++iType)
+	{
+		if(type == EncodingType[iType]) 
+		{
+			_encodingType = iType;
+			break;
+		}
+	}
+
+	std::cout << "the encoding type: " << _encodingType << std::endl;
+}
+
+void SimDigitalGeomCellId::setHcalOption(std::string hcalOption)
+{
+	_hcalOption = hcalOption;
+}
+
+float SimDigitalGeomCellId::getCellSize() 
+{
+	float cellSize = 0.;
+
+    //cout << "get cell size start -----------------------" << endl;
+
+	if(_useGear && _layerLayout) 
+	{
+		cellSize = _layerLayout->getCellSize0(_trueLayer);
+	}
+	else if( caloData )
+	{
+		const std::vector<dd4hep::rec::LayeredCalorimeterStruct::Layer>& hcalBarrelLayers = caloData->layers;
+		const double CM2MM = 10.;
+
+		cellSize = hcalBarrelLayers[_trueLayer].cellSize0 * CM2MM;
+	}
+
+    cout << "cellSize: " << cellSize << endl;
+
+	return cellSize; 
+}
 
 
 void SimDigital::remove_adjacent_step(std::vector<StepAndCharge>& vec)
@@ -1084,6 +1344,9 @@ LCCollectionVec * SimDigital::processHCALCollection(LCCollection * col, CHT::Lay
 void SimDigital::processEvent( LCEvent * evt ) {
 
   if( isFirstEvent() ) {
+    srand(_chargeSplitterRandomSeed);
+    gRandom->SetSeed(_polyaRandomSeed);
+
     SimDigitalGeomCellId::bookTuples(this);
   }
 
@@ -1103,9 +1366,7 @@ void SimDigital::processEvent( LCEvent * evt ) {
   LCFlagImpl flag;
   flag.setBit(LCIO::CHBIT_LONG);
   flag.setBit(LCIO::RCHBIT_ENERGY_ERROR);    //open the energy error flag to store the MC Truth (for easy comparison == not a eligent way!!)
-#ifdef SIMDIGITAL_WITHECAL
-  processECAL(evt,flag);
-#endif 
+
   processHCAL(evt,flag);
 
  
@@ -1126,410 +1387,3 @@ void SimDigital::check( LCEvent * evt ) { }
 void SimDigital::end(){
  
 }
-
-#ifdef SIMDIGITAL_WITHECAL
-
-
-//ECAL specific code, stolen from NewLDCCaloDigi at some time in the past
-
-void SimDigital::fillECALGaps( ) { 
-  const float slop = 0.25; // (mm)
-
-  // Loop over hits in the Barrel
-  // For each layer calculated differences in hit positions
-  // Look for gaps based on expected separation of adjacent hits
-  // loop over330staves and layers
-
-  for (int is=0; is < MAX_STAVES; ++is) {
-    for (int il=0; il < MAX_LAYERS; ++il) {
-      if(_calHitsByStaveLayer[is][il].size()>1){
-	// compare all pairs of hits just once (j>i)
-
-	for (unsigned int i=0;i<_calHitsByStaveLayer[is][il].size()-1;++i){
-	  CalorimeterHitImpl* hiti = _calHitsByStaveLayer[is][il][i]; 
-	  int modulei = _calHitsByStaveLayerModule[is][il][i];
-	  float xi = hiti->getPosition()[0];
-	  float yi = hiti->getPosition()[1];
-	  float zi = hiti->getPosition()[2];
-
-	  for (unsigned int j=i+1;j<_calHitsByStaveLayer[is][il].size();++j){
-	    CalorimeterHitImpl* hitj = _calHitsByStaveLayer[is][il][j]; 
-	    int modulej = _calHitsByStaveLayerModule[is][il][j];
-	    float xj = hitj->getPosition()[0];
-	    float yj = hitj->getPosition()[1];
-	    float zj = hitj->getPosition()[2];
-	    float dz = fabs(zi-zj);
-	    // *** BARREL CORRECTION ***
-	    if( fabs(zi)<_zOfEcalEndcap && fabs(zj)<_zOfEcalEndcap){
-	      // account for stave directions using normals
-	      // calculate difference in hit postions in z and along stave
-	      float dx = xi-xj;
-	      float dy = yi-yj;
-	      float dt = fabs(dx*_barrelStaveDir[is][0] + dy*_barrelStaveDir[is][1]);
-	      // flags for evidence for gaps
-	      bool zgap = false;   // in z direction
-	      bool tgap = false;   // along stave 
-	      bool ztgap = false;  // in both z and along stave 
-	      bool mgap = false;   // gaps between ECAL modules
-	      
-	      // criteria gaps in the z and t direction
-	      float zminm = 1.0*_barrelPixelSizeZ[il]-slop;
-	      float zmin = 1.0*_barrelPixelSizeZ[il]+slop;
-	      float zmax = 2.0*_barrelPixelSizeZ[il]-slop;
-	      float tminm = 1.0*_barrelPixelSizeT[il]-slop;
-	      float tmin = 1.0*_barrelPixelSizeT[il]+slop;
-	      float tmax = 2.0*_barrelPixelSizeT[il]-slop;
-	      
-	      // criteria for gaps
-	      // WOULD BE BETTER TO USE GEAR TO CHECK GAPS ARE OF EXPECTED SIZE
-	      if( dz > zmin  && dz < zmax && dt < tminm )zgap = true;
-	      if( dz < zminm && dt > tmin && dt < tmax )tgap = true;
-	      if( dz > zmin && dz < zmax && dt > tmin && dt < tmax )ztgap=true;
-
-	      if(modulei!=modulej){
-		if( dz > zmin && dz < 3.0*_barrelPixelSizeZ[il]-slop && dt < tmin)mgap = true;
-	      }
- 
-
-
-
-	      // found a gap now apply a correction based on area of gap/area of pixel
-	      if(zgap||tgap||ztgap||mgap){
-		float ecor = 1.;
-		float f = _ecalGapCorrectionFactor; // fudge
-		if(mgap)f = _ecalModuleGapCorrectionFactor;
-		if(zgap||mgap)ecor = 1.+f*(dz - _barrelPixelSizeZ[il])/2./_barrelPixelSizeZ[il];
-		if(tgap)ecor = 1.+f*(dt - _barrelPixelSizeT[il])/2./_barrelPixelSizeT[il];
-		if(ztgap)ecor= 1.+f*(dt - _barrelPixelSizeT[il])*(dz - _barrelPixelSizeZ[il])/4./_barrelPixelSizeT[il]/_barrelPixelSizeZ[il];     
-		float ei = hiti->getEnergy()*ecor;
-		float ej = hitj->getEnergy()*ecor;
-		hiti->setEnergy(ei);
-		hitj->setEnergy(ej);
-	      }
-	      
-	      // *** ENDCAP CORRECTION ***
-	    }else if(fabs(zi)>_zOfEcalEndcap && fabs(zj)>_zOfEcalEndcap&&dz<100){
-	      float dx = fabs(xi-xj);
-	      float dy = fabs(yi-yj);
-	      bool xgap = false;
-	      bool ygap = false;
-	      bool xygap = false;
-	      // criteria gaps in the z and t direction
-	      float xmin = 1.0*_endcapPixelSizeX[il]+slop;
-	      float xminm = 1.0*_endcapPixelSizeX[il]-slop;
-	      float xmax = 2.0*_endcapPixelSizeX[il]-slop;
-	      float ymin = 1.0*_endcapPixelSizeY[il]+slop;
-	      float yminm = 1.0*_endcapPixelSizeY[il]-slop;
-	      float ymax = 2.0*_endcapPixelSizeY[il]-slop;
-	      // look for gaps
-	      if(dx > xmin && dx < xmax && dy < yminm )xgap = true;
-	      if(dx < xminm && dy > ymin && dy < ymax )ygap = true;
-	      if(dx > xmin && dx < xmax && dy > ymin && dy < ymax )xygap=true;
-	    
-	      if(xgap||ygap||xygap){
-		// found a gap make correction
-		float ecor = 1.;
-		float f = _ecalGapCorrectionFactor; // fudge
-		if(xgap)ecor = 1.+f*(dx - _endcapPixelSizeX[il])/2./_endcapPixelSizeX[il];
-		if(ygap)ecor = 1.+f*(dy - _endcapPixelSizeY[il])/2./_endcapPixelSizeY[il];
-		if(xygap)ecor= 1.+f*(dx - _endcapPixelSizeX[il])*(dy - _endcapPixelSizeY[il])/4./_endcapPixelSizeX[il]/_endcapPixelSizeY[il];     
-		hiti->setEnergy( hiti->getEnergy()*ecor );
-		hitj->setEnergy( hitj->getEnergy()*ecor );
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-
-  return;
-
-
-  
-}
-
-
-
-void SimDigital::registerECALparameters()
-{
-  // the realtion should be with ECAL
-
-  std::vector<std::string> ecalCollections;
-  ecalCollections.push_back(std::string("EcalBarrelCollection"));
-  ecalCollections.push_back(std::string("EcalEndcapCollection"));
-//  ecalCollections.push_back(std::string("EcalRingCollection"));
-  ecalCollections.push_back(std::string("EcalBarrelPreShowerCollection"));
-  ecalCollections.push_back(std::string("EcalEndcapPreShowerCollection"));
-//  ecalCollections.push_back(std::string("EcalRingPreShowerCollection"));
-  registerInputCollections( LCIO::SIMCALORIMETERHIT, 
-			    "ECALCollections" , 
-			    "ECAL Collection Names" ,
-			    _ecalCollections ,
-			    ecalCollections);
-  
-  /////////ECAL OUTPUT
-  
-  _outputEcalCollections.push_back(std::string("ECALBarrel"));
-  _outputEcalCollections.push_back(std::string("ECALEndcap"));
-  _outputEcalCollections.push_back(std::string("ECALOther"));
-  _outputEcalCollections.push_back(std::string("ECALBarrelPreShower"));
-  _outputEcalCollections.push_back(std::string("ECALEndcapPreShower"));
-  _outputEcalCollections.push_back(std::string("ECALOtherPreShower"));
-
-  ///////////////////////////////////////////////////////////
-  //////////////////ECAL//////////////////
-  registerOutputCollection( LCIO::CALORIMETERHIT, 
-			    "ECALOutputCollection0" , 
-			    "ECAL Collection of real Hits" , 
-			    _outputEcalCollections[0], 
-			    std::string("ECALBarrel") ); 
-  
-
-  registerOutputCollection( LCIO::CALORIMETERHIT, 
-			    "ECALOutputCollection1" , 
-			    "ECAL Collection of real Hits" , 
-			    _outputEcalCollections[1], 
-			    std::string("ECALEndcap") ); 
-  
-  registerOutputCollection( LCIO::CALORIMETERHIT, 
-			    "ECALOutputCollection2" , 
-			    "ECAL Collection of real Hits" , 
-			    _outputEcalCollections[2], 
-			    std::string("ECALOther") ) ; 
-
-  registerOutputCollection( LCIO::CALORIMETERHIT,
-                            "ECALOutputCollection3" ,
-                            "ECAL Collection of real Hits" ,
-                            _outputEcalCollections[3],
-                            std::string("ECALBarrelPreShower") );
-
-
-  registerOutputCollection( LCIO::CALORIMETERHIT,
-                            "ECALOutputCollection4" ,
-                            "ECAL Collection of real Hits" ,
-			    _outputEcalCollections[4],
-                            std::string("ECALEndcapPreShower") );
-
-  registerOutputCollection( LCIO::CALORIMETERHIT,
-                            "ECALOutputCollection5" ,
-                            "ECAL Collection of real Hits" ,
-                            _outputEcalCollections[5],
-                            std::string("ECALOtherPreShower") ) ;
-  
-  registerProcessorParameter("ECALThreshold" , 
-			     "Threshold for ECAL Hits in GeV" ,
-			     _thresholdEcal,
-			     (float)5.0e-5);
-
-  std::vector<int> ecalLayers;
-  ecalLayers.push_back(20);
-  ecalLayers.push_back(100);
-
-
-  registerProcessorParameter("ECALLayers" , 
-			     "Index of ECal Layers" ,
-			     _ecalLayers,
-			     ecalLayers);
-
-  std::vector<float> calibrEcal;
-  calibrEcal.push_back(40.91);
-  calibrEcal.push_back(81.81);
-
-
-  registerProcessorParameter("CalibrECAL" , 
-			     "Calibration coefficients for ECAL" ,
-			     _calibrCoeffEcal,
-			     calibrEcal);
-
-  registerProcessorParameter("IfDigitalEcal" ,
-			     "Digital Ecal" , 
-			     _digitalEcal , 
-			     0);
-
-  registerProcessorParameter("ECALGapCorrection" , 
-			     "Correct for ECAL gaps" ,
-			     _ecalGapCorrection,
-			     (int)1);
-
-  registerProcessorParameter("ECAlEndcapCorrectionFactor" , 
-			     "Energy correction for endcap" ,
-			     _ecalEndcapCorrectionFactor,
-			     (float)1.025);
-
-  registerProcessorParameter("ECALGapCorrectionFactor" , 
-			     "Factor applied to gap correction" ,
-			     _ecalGapCorrectionFactor,
-			     (float)1.0);
-
-  registerProcessorParameter("ECALModuleGapCorrectionFactor" , 
-			     "Factor applied to module gap correction" ,
-			     _ecalModuleGapCorrectionFactor,
-			     (float)0.5);
-
-
-}
-
-void SimDigital::setECALgeometry()
-{
-  const float pi = acos(-1.0);
-  const float twopi = 2.0*pi;
-
-  // Calorimeter geometry from GEAR
-  const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
-  const gear::CalorimeterParameters& pEcalEndcap = Global::GEAR->getEcalEndcapParameters();
-//????
-//  const gear::CalorimeterParameters& pEcalRing = Global::GEAR->getEcalRingParameters();
-  //  const gear::CalorimeterParameters& pHcalBarrel = Global::GEAR->getHcalBarrelParameters();
-  //  const gear::CalorimeterParameters& pHcalEndcap = Global::GEAR->getHcalEndcapParameters();
-  const gear::LayerLayout& ecalBarrelLayout = pEcalBarrel.getLayerLayout();
-  const gear::LayerLayout& ecalEndcapLayout = pEcalEndcap.getLayerLayout();
-//????
-//  const gear::LayerLayout& ecalRingLayout = pEcalRing.getLayerLayout();
-  // const gear::LayerLayout& hcalBarrelLayout = pHcalBarrel.getLayerLayout();
-  // const gear::LayerLayout& hcalEndcapLayout = pHcalEndcap.getLayerLayout();
-
-
-  // determine geometry of ECAL
-  int symmetry = pEcalBarrel.getSymmetryOrder();
-  _zOfEcalEndcap = (float)pEcalEndcap.getExtent()[2];
-
-  // Determine ECAL polygon angles
-  // Store radial vectors perpendicular to stave layers in _ecalBarrelStaveDir 
-  // ASSUMES Mokka Stave numbering 0 = top, then numbering increases anti-clockwise
-  if(symmetry>1){
-    float nFoldSymmetry = static_cast<float>(symmetry);
-    float phi0 = pEcalBarrel.getPhi0();
-    for(int i=0;i<symmetry;++i){
-      float phi  = phi0 + i*twopi/nFoldSymmetry;
-      _barrelStaveDir[i][0] = cos(phi);
-      _barrelStaveDir[i][1] = sin(phi);
-
-      //	cout<<i<<"\t"<<symmetry<<endl;
-    }
-  }  
-
-
-  for(int i=0;i<ecalBarrelLayout.getNLayers();++i){
-    _barrelPixelSizeT[i] = ecalBarrelLayout.getCellSize0(i);
-    _barrelPixelSizeZ[i] = ecalBarrelLayout.getCellSize1(i);
-  }
-
-  for(int i=0;i<ecalEndcapLayout.getNLayers();++i){
-    _endcapPixelSizeX[i] = ecalEndcapLayout.getCellSize0(i);
-    _endcapPixelSizeY[i] = ecalEndcapLayout.getCellSize1(i);
-  }
-// ??????
-//  for(int i=0;i<ecalRingLayout.getNLayers();++i){
-//    _ringPixelSizeX[i] = ecalRingLayout.getCellSize0(i);
-//    _ringPixelSizeY[i] = ecalRingLayout.getCellSize1(i);
-//  }
-
-}
-
-void SimDigital::processECAL(LCEvent* evt,LCFlagImpl& flag)
-{
-  // 
-  // * Reading Collections of ECAL Simulated Hits * 
-  // 
-  for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
-
-    std::string colName =  _ecalCollections[i] ;
-
-    //fg: need to establish the subdetetcor part here 
-    //    use collection name as cellID does not seem to have that information
-    CHT::Layout caloLayout = layoutFromString( colName ) ;
-
-    try{
-      LCCollection * col = evt->getCollection( _ecalCollections[i].c_str() ) ;
-      string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
-
-      CellIDDecoder<SimCalorimeterHit> idDecoder( col );
-
-      // create new collection
-      LCCollectionVec *ecalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
-      ecalcol->setFlag(flag.getFlag());
-
-      // if making gap corrections clear the vectors holding pointers to calhits
-      if(_ecalGapCorrection!=0){
-	for(int is=0;is<MAX_STAVES;is++){
-	  for(int il=0;il<MAX_LAYERS;il++){	
-	    _calHitsByStaveLayer[is][il].clear();
-	    _calHitsByStaveLayerModule[is][il].clear();
-	  }
-	}
-      }
-
-      int numElements = col->getNumberOfElements();
-      for (int j(0); j < numElements; ++j) {
-	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
-	float energy = hit->getEnergy();
-	// apply threshold cut
-	if (energy > _thresholdEcal) {
-	  CalorimeterHitImpl * calhit = new CalorimeterHitImpl();
-	  int cellid = hit->getCellID0();
-	  int cellid1 = hit->getCellID1();
-	  float calibr_coeff(1.);
-	  int layer = idDecoder(hit)["layer"];
-	  int stave = idDecoder(hit)["stave"];
-	  int module= idDecoder(hit)["module"];
-//	  int layer = idDecoder(hit)["K-1"];
-//	  int stave = idDecoder(hit)["S-1"];
-//	  int module= idDecoder(hit)["M"];
-	  // save hits by module/stave/layer if required later
-	  if(_ecalGapCorrection!=0){
-	    _calHitsByStaveLayer[stave][layer].push_back(calhit);
-	    _calHitsByStaveLayerModule[stave][layer].push_back(module);
-	  }
-
-	  // retrieve calibration constants
-	  for (unsigned int k(0); k < _ecalLayers.size(); ++k) {
-	    int min,max;
-	    if (k == 0){ 
-	      min = 0;		      
-	    }else{ 
-	      min = _ecalLayers[k-1];
-	    } 
-	    max = _ecalLayers[k];
-	    if (layer >= min && layer < max) {
-	      calibr_coeff = _calibrCoeffEcal[k];
-	      break;
-	    }
-	  } 
-	  // apply calibration
-	  if (_digitalEcal) {
-	    calhit->setEnergy(calibr_coeff); 
-	  }
-	  else {
-	    // if in endcap apply additional factor to calibration to account for
-	    // the difference in response due to the orientation of B wrt absorber
-	    if(fabs(hit->getPosition()[2])>=_zOfEcalEndcap)energy=energy*_ecalEndcapCorrectionFactor;
-	    calhit->setEnergy(calibr_coeff*energy);
-	  }
-	  // set other ECAL quanties
-	  calhit->setPosition(hit->getPosition());
-
-	  calhit->setType( CHT( CHT::em, CHT::ecal, caloLayout ,  layer ) );
-
-	  calhit->setRawHit(hit);
-	  calhit->setCellID0(cellid);
-	  calhit->setCellID1(cellid1);
-	  ecalcol->addElement(calhit);
-	  // make relation between hit and sim hit
-	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
-	  _relcol->addElement( rel );
-	}
-      }
-      // if requested apply gap corrections in ECAL ? 
-      if(_ecalGapCorrection!=0)this->fillECALGaps();
-      // add ECAL collection to event
-      ecalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
-      evt->addCollection(ecalcol,_outputEcalCollections[i].c_str());      
-    }
-    catch(DataNotAvailableException &e){ 
-    }
-  
-  }
-}
-
-#endif 

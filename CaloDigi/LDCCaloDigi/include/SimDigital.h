@@ -29,6 +29,16 @@
 #include "CalorimeterHitType.h" //in MarlinUtil
 #include "marlinutil/LCGeometryTypes.h"
 
+#include "DD4hep/Factories.h"
+#include "DD4hep/DD4hepUnits.h"
+#include "DDRec/DetectorData.h"
+#include "DD4hep/DetType.h"
+#include "DDRec/DetectorData.h"
+#include "DDRec/DDGear.h"
+#include "DDRec/MaterialManager.h"
+#include "DDRec/API/Calorimeter.h"
+#include "DDRec/DetectorSurfaces.h"
+
 class TH1F;
 class TF1;
 class TTree;
@@ -47,12 +57,6 @@ using namespace marlin ;
 // start removing the ECAL part whih has no use for SDHCAL
 // this can be fully activated when there is an ECAL digitizer 
 // that don't do HCAL digitization
-#define SIMDIGITAL_WITHECAL
-
-#ifdef SIMDIGITAL_WITHECAL
-const int MAX_LAYERS = 200;
-const int MAX_STAVES =  16;
-#endif 
 
 /** Digitization for the SDHcal - based on NewLDCCaloDigi. 
  *
@@ -75,6 +79,9 @@ struct StepAndCharge
 
 
 //helper class to manage cellId and local geometry
+const int ENCODINGTYPES        = 2;
+const int ENCODINGSTRINGLENGTH = 6;
+
 class SimDigitalGeomCellId 
 {
  public:
@@ -85,6 +92,8 @@ class SimDigitalGeomCellId
   std::vector<StepAndCharge> decode(SimCalorimeterHit *hit);
   void encode(CalorimeterHitImpl *hit,int delta_I, int delta_J);
   void setLayerLayout( CHT::Layout layout);
+  static void setEncodingType(std::string type);
+  static void setHcalOption(std::string hcalOption);
   float getCellSize();
   const LCVector3D& normalToRPCPlane() {return _normal;}
   const LCVector3D& Iaxis() {return _Iaxis;}
@@ -106,10 +115,15 @@ class SimDigitalGeomCellId
   int _tower;
   int _Iy;
   int _Jz;
+  static int _encodingType;
+  static std::string _hcalOption;
   const float* _hitPosition; 
   CellIDDecoder<SimCalorimeterHit> _decoder;
   CellIDEncoder<CalorimeterHitImpl> _encoder;
   const gear::LayerLayout* _layerLayout;
+  dd4hep::rec::LayeredCalorimeterData* caloData;
+  dd4hep::DetElement theDetector;
+
   SimDigitalGeomRPCFrame* _normal_I_J_setter;
   CHT::Layout _currentHCALCollectionCaloLayout;
   LCVector3D _normal;
@@ -126,6 +140,14 @@ class SimDigitalGeomCellId
 	TS_HITX,TS_HITY,TS_HITZ,
 	TS_STEPX,TS_STEPY,TS_STEPZ,
 	TS_DELTAI,TS_DELTAJ,TS_DELTALAYER};
+
+  static std::string _encodingStrings[ENCODINGTYPES][ENCODINGSTRINGLENGTH];
+
+  std::string _cellIDEncodingString;
+
+  bool _useGear;
+  bool _isInEndcap;
+
   friend class SimDigitalGeomRPCFrame;
 };
 
@@ -290,37 +312,7 @@ class SimDigital : public Processor {
    */
   virtual void end() ;
 
-#ifdef SIMDIGITAL_WITHECAL
-  virtual void fillECALGaps() ;
-#endif 
- 
  private:
-#ifdef SIMDIGITAL_WITHECAL
-  std::vector<std::string> _ecalCollections;
-  std::string _outputEcalCollection0;
-  std::string _outputEcalCollection1;
-  std::string _outputEcalCollection2;
-  std::vector<std::string> _outputEcalCollections;
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<int> _ecalLayers;
-  int _digitalEcal;
-  float _thresholdEcal;
-  int _ecalGapCorrection;
-  float _ecalGapCorrectionFactor;
-  float _ecalModuleGapCorrectionFactor;
-  float _ecalEndcapCorrectionFactor;
-  std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
-  std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];
-
-  float _zOfEcalEndcap;
-  float _barrelPixelSizeT[MAX_LAYERS];
-  float _barrelPixelSizeZ[MAX_LAYERS];
-  float _endcapPixelSizeX[MAX_LAYERS];
-  float _endcapPixelSizeY[MAX_LAYERS];
-  float _ringPixelSizeX[MAX_LAYERS];
-  float _ringPixelSizeY[MAX_LAYERS];
-  float _barrelStaveDir[MAX_STAVES][2];
-#endif 
   //std::vector<int> _hcalLayers;
   //std::vector<std::string> _calorimeterHitCollections;
   std::vector<std::string> _hcalCollections;
@@ -332,13 +324,11 @@ class SimDigital : public Processor {
   bool _printSimDigital;
   TF1 * _QPolya;
   double _polyaAverageCharge, _polyaFunctionWidthParameter;
-  
   LCCollectionVec* _relcol;
-#ifdef SIMDIGITAL_WITHECAL
-  void registerECALparameters();
-  void setECALgeometry();
-  void processECAL(LCEvent* evt, LCFlagImpl& flag);
-#endif 
+
+  int _chargeSplitterRandomSeed;
+  int _polyaRandomSeed;
+
   void processHCAL(LCEvent* evt, LCFlagImpl& flag);
 
   static bool sortStepWithCharge(StepAndCharge s1, StepAndCharge s2){return s1.charge>s2.charge;}
@@ -393,7 +383,13 @@ class SimDigital : public Processor {
   {
   public:
   randomGreater(float val) : _value(val) {}
-    bool operator()(StepAndCharge& v) { return double(rand())/RAND_MAX>_value;}
+    bool operator()(StepAndCharge& v) 
+	{ 
+		int rnd = rand();
+		//std::cout << "random num: " << rnd << std::endl;
+
+		return double(rnd)/RAND_MAX>_value;
+	}
   private:
     float _value;
   };
@@ -406,6 +402,8 @@ class SimDigital : public Processor {
   void removeHitsBelowThreshold(std::map<int,hitMemory>& myHitMap, float threshold);
   void applyThresholds(std::map<int,hitMemory>& myHitMap);
 
+  std::string _encodingType;
+  std::string _hcalOption;
 };
   
 #endif

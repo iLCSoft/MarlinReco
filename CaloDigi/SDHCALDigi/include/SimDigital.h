@@ -115,6 +115,7 @@ class SimDigitalGeomCellId
   int _tower;
   int _Iy;
   int _Jz;
+  dd4hep::long64 _cellIDvalue;
   static int _encodingType;
   static std::string _hcalOption;
   const float* _hitPosition; 
@@ -146,10 +147,10 @@ class SimDigitalGeomCellId
   std::string _cellIDEncodingString;
 
   bool _useGear;
-  bool _isInEndcap;
 
   friend class SimDigitalGeomRPCFrame;
 };
+
 
 
 //hierarchy of classes to determine the RPC reference frame 
@@ -342,6 +343,9 @@ class SimDigital : public Processor {
     float maxEnergydueToHit;
     int rawHit;
   };
+
+  typedef std::map<dd4hep::long64, hitMemory> cellIDHitMap;
+
   float depositedEnergyInRPC;
   multiplicityChargeSplitterUniform _chargeSplitterUniform;
   multiplicityChargeSplitterFunction _chargeSplitterFunction;
@@ -387,7 +391,6 @@ class SimDigital : public Processor {
 	{ 
 		int rnd = rand();
 		//std::cout << "random num: " << rnd << std::endl;
-
 		return double(rnd)/RAND_MAX>_value;
 	}
   private:
@@ -398,9 +401,9 @@ class SimDigital : public Processor {
   void fillTupleStep(std::vector<StepAndCharge>& vec,int level);
 
   LCCollectionVec * processHCALCollection(LCCollection * col ,CHT::Layout layout, LCFlagImpl& flag);
-  void createPotentialOutputHits(std::map<int,hitMemory>& myHitMap, LCCollection *col, SimDigitalGeomCellId& aGeomCellId);
-  void removeHitsBelowThreshold(std::map<int,hitMemory>& myHitMap, float threshold);
-  void applyThresholds(std::map<int,hitMemory>& myHitMap);
+  void createPotentialOutputHits(cellIDHitMap& myHitMap, LCCollection *col, SimDigitalGeomCellId& aGeomCellId);
+  void removeHitsBelowThreshold(cellIDHitMap& myHitMap, float threshold);
+  void applyThresholds(cellIDHitMap& myHitMap);
 
   std::string _encodingType;
   std::string _hcalOption;

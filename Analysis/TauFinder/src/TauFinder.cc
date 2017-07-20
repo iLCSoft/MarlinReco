@@ -236,8 +236,6 @@ void TauFinder::processEvent( LCEvent * evt )
 	    chargedtracks++;
 	  else
 	    neutraltracks++;
-	  LCRelationImpl *rel = new LCRelationImpl(taurec,tau[tp]);
-	  relationcol->addElement( rel );
 	  taurec->addParticle(tau[tp]);
 	}
       
@@ -273,10 +271,16 @@ void TauFinder::processEvent( LCEvent * evt )
 	      double theta=180./TMath::Pi()*atan(pt_tau/fabs(mom[2])); 
 	      streamlog_out(DEBUG) <<"Tau candidate failed: minv="<<mass_inv<<"   pt="<<pt_tau<<" "<<E<<" Q trks:"<<chargedtracks<<" N trks:"<<neutraltracks<<" "<<phi<<" "<<theta<<endl;
 	    }
+	  delete taurec;
 	  continue;
 	}
       else
 	++iterT;
+
+      for(unsigned int tp=0;tp<tau.size();tp++) {
+	LCRelationImpl *rel = new LCRelationImpl(taurec,tau[tp]);
+	relationcol->addElement( rel );
+      }
       
       int pdg=15;
       if(charge<0)

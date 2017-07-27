@@ -290,7 +290,7 @@ Double_t Polya(double* x, double* params)
 } 
   
 void SimDigital::init(){
-  //std::cout << "SimDigital: init" << std::endl;
+  //streamlog_out( DEBUG ) << "SimDigital: init" << std::endl;
 
   SimDigitalGeomCellId::setEncodingType(_encodingType);
   SimDigitalGeomCellId::setHcalOption(_hcalOption);
@@ -323,14 +323,14 @@ void SimDigital::init(){
   else if (_effMapOption=="PrototypeMap") _effMap=new effMapProtoByAsic(_effMapFileName);
   else throw ParseException( _effMapOption + std::string(" option for efficiency correction is not available") );
 
-  streamlog_out( MESSAGE ) << "_effMapOption = " << _effMapOption << std::endl;
+  streamlog_out( DEBUG ) << "_effMapOption = " << _effMapOption << std::endl;
   if (_effMapOption=="Constant")   
   {
-    streamlog_out( MESSAGE ) << "_constEffMapValue = " << _constEffMapValue << std::endl;
+    streamlog_out( DEBUG ) << "_constEffMapValue = " << _constEffMapValue << std::endl;
   }
   else if (_effMapOption=="PrototypeMap") 
   {
-    streamlog_out( MESSAGE ) << "_effMapFileName = " << _effMapFileName << std::endl;
+    streamlog_out( DEBUG ) << "_effMapFileName = " << _effMapFileName << std::endl;
   }
 
   //assure SDHCAL _thresholdHcal are in increasing order
@@ -365,19 +365,19 @@ void SimDigital::processRunHeader( LCRunHeader* ) {}
 void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
 {
   depositedEnergyInRPC=0.;
-//  cout<< "_hcalCollections.size() = "<< _hcalCollections.size() << endl;
+  streamlog_out( DEBUG )<< "hcalCollections size = "<< _hcalCollections.size() << endl;
   for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
     try{
       std::string colName =  _hcalCollections[i] ;    
-      //cout<< "colName[i] = "<< colName <<" "<< i << endl;
+      //streamlog_out( DEBUG )<< "colName[i] = "<< colName <<" "<< i << endl;
       //CHT::Layout layout1 = layoutFromString( colName ); 
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       //CHT::Layout layout2 = layoutFromString( colName ); 
       _counters["NSim"]+=col->getNumberOfElements();
       CHT::Layout layout = layoutFromString( colName ); 
       LCCollectionVec *hcalcol = processHCALCollection(col,layout,flag);
-	  //std::cout << " ------ " << hcalcol << std::endl;
-//      cout<< " CHT::any,barrel,encap, ring " << CHT::any<<" "<<CHT::barrel<<" "<<CHT::endcap<<" "<< CHT::ring<< endl;
+	  //streamlog_out( DEBUG ) << " ------ " << hcalcol << std::endl;
+      //streamlog_out( DEBUG )<< " CHT::any,barrel,encap, ring " << CHT::any<<" "<<CHT::barrel<<" "<<CHT::endcap<<" "<< CHT::ring<< endl;
       _counters["NReco"]+=hcalcol->getNumberOfElements();
       evt->addCollection(hcalcol,_outputHcalCollections[i].c_str());
     }
@@ -563,7 +563,7 @@ void multiplicityChargeSplitterErfFunction:: addCharge(float charge, float pos_I
 	  }
 	  _chargeMap[I_J_Coordinates(I,J)]+=charge*integralResult/_normalisation ;
 	  if(_chargeMap[I_J_Coordinates(I,J)]<0) 
-	    streamlog_out( MESSAGE ) << "!!!!!!!!!!Negative Charge!!!!!!!!!!" << std::endl
+	    streamlog_out( DEBUG ) << "!!!!!!!!!!Negative Charge!!!!!!!!!!" << std::endl
 				     << " X " << pos_J << " " << distJ << " " << distJJ << std::endl
 				     << " Y " << pos_I << " " << distI << " " << distII << std::endl;
 	  chargeTotCheck+=_chargeMap[I_J_Coordinates(I,J)];
@@ -651,13 +651,14 @@ SimDigitalGeomCellId::SimDigitalGeomCellId(LCCollection *inputCol, LCCollectionV
         {
             _geom=TESLA;
         }
-		//std::cout << "we will use gear!" << std::endl;
-        //cout << "gear: " << Global::GEAR << endl;
-        //streamlog_out( MESSAGE )<< "!!!!!!(Videau=0, TESLA=1) Geometry is _geom= : "<<_geom << std::endl;
+
+		streamlog_out( DEBUG ) << "we will use gear!" << std::endl;
+        streamlog_out( DEBUG ) << "gear: " << Global::GEAR << endl;
+        streamlog_out( DEBUG )<< "!!!!!!(Videau=0, TESLA=1) Geometry is _geom= : "<<_geom << std::endl;
     }
     else
     {
-		//std::cout << "we will use lcgeo!" << std::endl;
+		streamlog_out( DEBUG ) << "we will use lcgeo!" << std::endl;
     }
 }
 
@@ -716,7 +717,7 @@ void SimDigitalGeomRPCFrame_VIDEAU_ENDCAP::setRPCFrame()
 {
   if (module()==6)
     {
-//      cout<< "!!!!!!!!!! VIDEAU_ENDCAP : module=6 "<< std::endl;
+      //streamlog_out( DEBUG )<< "!!!!!!!!!! VIDEAU_ENDCAP : module=6 "<< std::endl;
       normal().set(0,0,1);
       Iaxis().set(1,0,0);
       Jaxis().set(0,1,0);
@@ -725,7 +726,7 @@ void SimDigitalGeomRPCFrame_VIDEAU_ENDCAP::setRPCFrame()
     }
   else if (module()==0)
     {
-//      cout<< "!!!!!!!!!! VIDEAU_ENDCAP : module 0"<< std::endl;
+      //streamlog_out( DEBUG )<< "!!!!!!!!!! VIDEAU_ENDCAP : module 0"<< std::endl;
       normal().set(0,0,-1);
       Iaxis().set(-1,0,0);
       Jaxis().set(0,1,0);
@@ -754,15 +755,12 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
   _Iy        = _decoder( hit )[_encodingStrings[_encodingType][4]];
   _Jz        = _decoder( hit )[_encodingStrings[_encodingType][5]];
 
-
-
-//
-// _slice     = _decoder( hit )["slice"];
+  // _slice     = _decoder( hit )["slice"];
   _hitPosition = hit->getPosition();
-  if(abs(_Iy)<1 && abs(_Iy)!=0.0) streamlog_out(MESSAGE) << "_Iy, _Jz:"<<_Iy <<" "<<_Jz<< std::endl;
-//if(_module==0||_module==6) streamlog_out(MESSAGE)<<"tower "<<_tower<<" layer "<<_trueLayer<<" stave "<<_stave<<" module "<<_module<<std::endl;
-//<<" Iy " << _Iy <<"  Jz "<<_Jz<<" hitPosition "<<_hitPosition<<std::endl
-//<<" _hitPosition[0] "<<_hitPosition[0]<<" _hitPosition[1] "<<_hitPosition[1]<<" _hitPosition[2] "<<_hitPosition[2]<<std::endl;
+  if(abs(_Iy)<1 && abs(_Iy)!=0.0) streamlog_out(DEBUG) << "_Iy, _Jz:"<<_Iy <<" "<<_Jz<< std::endl;
+  //if(_module==0||_module==6) streamlog_out( DEBUG )<<"tower "<<_tower<<" layer "<<_trueLayer<<" stave "<<_stave<<" module "<<_module<<std::endl;
+  //<<" Iy " << _Iy <<"  Jz "<<_Jz<<" hitPosition "<<_hitPosition<<std::endl
+  //<<" _hitPosition[0] "<<_hitPosition[0]<<" _hitPosition[1] "<<_hitPosition[1]<<" _hitPosition[2] "<<_hitPosition[2]<<std::endl;
 
   if(_useGear)
   {
@@ -789,10 +787,10 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 #if 0 
  	  const float* hitPos = hit->getPosition();
 
- 	  std::cout << "hit pos: " << hitPos[0] << " " << hitPos[1] << " " << hitPos[2] << std::endl;
- 	  std::cout << "cell pos: " << pos_0.X() << " " << pos_0.Y() << " " << pos_0.Z() << std::endl;
+ 	  streamlog_out( DEBUG ) << "hit pos: " << hitPos[0] << " " << hitPos[1] << " " << hitPos[2] << std::endl;
+ 	  streamlog_out( DEBUG ) << "cell pos: " << pos_0.X() << " " << pos_0.Y() << " " << pos_0.Z() << std::endl;
 
- 	  std::cout << "layer: "    << idDecoder[_encodingStrings[_encodingType][0]] 
+ 	  streamlog_out( DEBUG ) << "layer: "    << idDecoder[_encodingStrings[_encodingType][0]] 
  	            << ", stave: "  << idDecoder[_encodingStrings[_encodingType][1]] 
  	    		<< ", module: " << idDecoder[_encodingStrings[_encodingType][2]]
  	            << ", tower: "  << idDecoder[_encodingStrings[_encodingType][3]] 
@@ -844,7 +842,7 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 
  	  dir_layer = - dir_layer.Unit();
 
- 	  //std::cout << "layer dir: " << dir_layer.X() << " " << dir_layer.Y() << " " << dir_layer.Z() << std::endl;
+ 	  //streamlog_out( DEBUG ) << "layer dir: " << dir_layer.X() << " " << dir_layer.Y() << " " << dir_layer.Z() << std::endl;
 
 	  dir_i = dir_i.Unit();
 	  dir_j = dir_j.Unit();
@@ -949,21 +947,21 @@ void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delt
   //_encoder[_encodingStrings[_encodingType][1]]=_stave;
 
   int RealIy=_Iy+delta_I;
-//  streamlog_out( MESSAGE ) << "RealIy, _Iy, delta_I" << std::endl
+//  streamlog_out( DEBUG ) << "RealIy, _Iy, delta_I" << std::endl
 //       <<RealIy <<" "<<_Iy <<" " <<delta_I<<std::endl;
 //  if (RealIy<0||RealIy>330)RealIy=0; //FIXME the 330 value should depend on the cellSize and on the Layer
 //  if (RealIy<0)RealIy=RealIy+176; //FIXME the 330 value should depend on the cellSize and on the Layer
   if (abs(RealIy)>330)RealIy=0; //FIXME the 330 value should depend on the cellSize and on the Layer
   _encoder[_encodingStrings[_encodingType][4]]=RealIy;
   int RealJz=_Jz+delta_J;
-//  streamlog_out( MESSAGE ) << "RealIy, _Iy, delta_I" <<RealIy<<" "<<_Iy<<" "<<delta_I<< std::endl;
-//  streamlog_out( MESSAGE ) << "RealJz, _Jz, delta_J" <<RealJz<<" "<<_Jz<<" "<<delta_J<< std::endl;
+//  streamlog_out( DEBUG ) << "RealIy, _Iy, delta_I" <<RealIy<<" "<<_Iy<<" "<<delta_I<< std::endl;
+//  streamlog_out( DEBUG ) << "RealJz, _Jz, delta_J" <<RealJz<<" "<<_Jz<<" "<<delta_J<< std::endl;
 //       <<RealJz <<" "<<_Jz <<" " <<delta_J<<std::endl;
 //  if(RealJz<0||RealJz>235)RealJz=0; //FIXME the 330 value should depend on the cellSize and on the Layer
 //  if (RealJz<0)RealJz=RealJz+47; //FIXME the 330 value should depend on the cellSize and on the Layer
   if (abs(RealJz)>330)RealJz=0; //FIXME the 330 value should depend on the cellSize and on the Layer
-//  if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( MESSAGE ) << "RealIy, RealJz" << std::endl;
-  if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( MESSAGE ) << "RealIy, RealJz" << std::endl
+//  if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( DEBUG ) << "RealIy, RealJz" << std::endl;
+  if (abs(RealIy)>330||abs(RealJz)>330)streamlog_out( DEBUG ) << "RealIy, RealJz" << std::endl
                                       <<RealIy <<"   "<<RealJz <<std::endl;
   //_encoder[_encodingStrings[_encodingType][0]]=_trueLayer   ;
 // Depending on the segmentation type:   Barrel,EndcapRing - CartesianGridXY;  EndCaps- CartesianGridXZ !!!
@@ -972,10 +970,10 @@ void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delt
 
 //  _encoder["z"]=RealJz;
   _encoder.setCellID( hit );
-  //std::cout << "CellID0: " << hit->getCellID0() << ", CellID1: " << hit->getCellID1() << " --> " << _encoder.valueString() << std::endl;
+  //streamlog_out( DEBUG ) << "CellID0: " << hit->getCellID0() << ", CellID1: " << hit->getCellID1() << " --> " << _encoder.valueString() << std::endl;
   hit->setType( CHT( CHT::had, CHT::hcal , _currentHCALCollectionCaloLayout,  _trueLayer ) );
-//  streamlog_out( MESSAGE )   <<"getCellSize() "<<getCellSize()<<" layer " <<_trueLayer<< std::endl;
-// streamlog_out( MESSAGE ) << "!!!!!!!!!! before  posB set TK!!!!!!!!!!" << std::endl
+//  streamlog_out( DEBUG )   <<"getCellSize() "<<getCellSize()<<" layer " <<_trueLayer<< std::endl;
+// streamlog_out( DEBUG ) << "!!!!!!!!!! before  posB set TK!!!!!!!!!!" << std::endl
 //       <<"delta_I " <<delta_I<< "_Iaxis.z() " <<_Iaxis.z()<<" delta_J "<<delta_J<<" _Jaxis.z() "<<_Jaxis.z()<<std::endl
 //       <<"_Iaxis.x() "<<_Iaxis.x()<<" _Iaxis.y() "<<_Iaxis.y()<< " _Iaxis.z() "<<_Iaxis.z()<<std::endl
 //       <<"_Jaxis.x() "<<_Jaxis.x()<<" _Jaxis.y() "<<_Jaxis.y()<< " _Jaxis.z() "<< _Jaxis.z()<<std::endl;
@@ -985,12 +983,12 @@ void SimDigitalGeomCellId::encode(CalorimeterHitImpl *hit, int delta_I, int delt
   posB[1]=_hitPosition[1]+getCellSize()*(delta_I*_Iaxis.y()+delta_J*_Jaxis.y());
   posB[2]=_hitPosition[2]+getCellSize()*(delta_I*_Iaxis.z()+delta_J*_Jaxis.z());
   hit->setPosition(posB);
-//  cout<<"_hitPosition[0]= " <<_hitPosition[0]<<" RealIy= "<< RealIy <<" RealJz= " << RealJz<<endl; 
-//  cout<<"posB[0]= " <<posB[0]<<" posB[1]= "<< posB[1]  <<" posB[2]= " << posB[2]<<endl; 
- // streamlog_out( MESSAGE ) << "!!! 1.2*(delta_I*_Iaxis.x()+delta_J*_Jaxis.x())!!!" << 1.2*(delta_I*_Iaxis.x()+delta_J*_Jaxis.x())<< std::endl;
-//  streamlog_out( MESSAGE ) << "!!! getCellSize()*(delta_I*_Iaxis.y()+delta_J*_Jaxis.y())!!!" << getCellSize()*(delta_I*_Iaxis.y()+delta_J*_Jaxis.y())<< std::endl;
-//  streamlog_out( MESSAGE ) << "!!! getCellSize()*(delta_I*_Iaxis.z()+delta_J*_Jaxis.z())!!!" << getCellSize()*(delta_I*_Iaxis.z()+delta_J*_Jaxis.z())<< std::endl;
-//  streamlog_out( MESSAGE ) << "!!!!!!!!!! after posB set TK!!!!!!!!!!" << std::endl
+//  streamlog_out( DEBUG )<<"_hitPosition[0]= " <<_hitPosition[0]<<" RealIy= "<< RealIy <<" RealJz= " << RealJz<<endl; 
+//  streamlog_out( DEBUG )<<"posB[0]= " <<posB[0]<<" posB[1]= "<< posB[1]  <<" posB[2]= " << posB[2]<<endl; 
+ // streamlog_out( DEBUG ) << "!!! 1.2*(delta_I*_Iaxis.x()+delta_J*_Jaxis.x())!!!" << 1.2*(delta_I*_Iaxis.x()+delta_J*_Jaxis.x())<< std::endl;
+//  streamlog_out( DEBUG ) << "!!! getCellSize()*(delta_I*_Iaxis.y()+delta_J*_Jaxis.y())!!!" << getCellSize()*(delta_I*_Iaxis.y()+delta_J*_Jaxis.y())<< std::endl;
+//  streamlog_out( DEBUG ) << "!!! getCellSize()*(delta_I*_Iaxis.z()+delta_J*_Jaxis.z())!!!" << getCellSize()*(delta_I*_Iaxis.z()+delta_J*_Jaxis.z())<< std::endl;
+//  streamlog_out( DEBUG ) << "!!!!!!!!!! after posB set TK!!!!!!!!!!" << std::endl
 //         		   << "  hit-posB[0] " << _hitPosition[0]-posB[0] << " hit-posB[1] " << _hitPosition[1]-posB[1] << "hit-posB[2] " << _hitPosition[2]-posB[2] << std::endl;
 //          		   << " _hitPosition[0] " << _hitPosition[0] << "  _hitPosition[1] " << _hitPosition[1] << " _hitPosition[2] " << _hitPosition[2] << std::endl
 }
@@ -1042,7 +1040,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
  	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
 
 	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
-		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+		  //streamlog_out( DEBUG ) << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
 
 	  if(_currentHCALCollectionCaloLayout == CHT::ring) 
@@ -1053,7 +1051,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
 
 	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
 
-		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+		  //streamlog_out( DEBUG ) << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
 
 	  if(_currentHCALCollectionCaloLayout == CHT::endcap) 
@@ -1063,7 +1061,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
  	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
 
 	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
-		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
+		  //streamlog_out( DEBUG ) << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
   }
 }
@@ -1084,7 +1082,7 @@ void SimDigitalGeomCellId::setEncodingType(std::string type)
 		}
 	}
 
-	//std::cout << "the encoding type: " << _encodingType << std::endl;
+	//streamlog_out( MESSAGE ) << "the encoding type: " << _encodingType << std::endl;
 }
 
 void SimDigitalGeomCellId::setHcalOption(std::string hcalOption)
@@ -1108,7 +1106,7 @@ float SimDigitalGeomCellId::getCellSize()
 		cellSize = hcalBarrelLayers[_trueLayer].cellSize0 * CM2MM;
 	}
 
-    //cout << "cellSize: " << cellSize << endl;
+    //streamlog_out( MESSAGE ) << "cellSize: " << cellSize << endl;
 
 	return cellSize; 
 }
@@ -1192,7 +1190,7 @@ void SimDigital::createPotentialOutputHits(cellIDHitMap& myHitMap, LCCollection 
 
       for (std::vector<StepAndCharge>::iterator itstep=steps.begin(); itstep != steps.end(); itstep++){
 	itstep->charge=_QPolya->GetRandom();
-	//std::cout << "itstep->charge: " << itstep->charge << std::endl;
+	//streamlog_out( DEBUG ) << "itstep->charge: " << itstep->charge << std::endl;
 	if(itstep->charge<0.4)streamlog_out(DEBUG) <<" "<<itstep->charge<<std::endl;  
 	streamlog_out( DEBUG ) << "step at : " << itstep->step
 			       << "\t with a charge of : " << itstep->charge
@@ -1303,7 +1301,7 @@ LCCollectionVec * SimDigital::processHCALCollection(LCCollection * col, CHT::Lay
   hcalcol->setFlag(flag.getFlag());
   cellIDHitMap myHitMap;
 
-//  cout<<"LCCollectionVec * SimDigital::processHCALCollection: layout= "<< layout<< endl;
+//  streamlog_out( DEBUG )<<"LCCollectionVec * SimDigital::processHCALCollection: layout= "<< layout<< endl;
   
   SimDigitalGeomCellId g(col,hcalcol);
   g.setLayerLayout(layout);

@@ -122,7 +122,7 @@ class SimDigitalGeomCellId
   CellIDDecoder<SimCalorimeterHit> _decoder;
   CellIDEncoder<CalorimeterHitImpl> _encoder;
   const gear::LayerLayout* _layerLayout;
-  dd4hep::rec::LayeredCalorimeterData* caloData;
+  dd4hep::rec::LayeredCalorimeterData* _caloData;
   dd4hep::DetElement theDetector;
 
   SimDigitalGeomRPCFrame* _normal_I_J_setter;

@@ -54,7 +54,7 @@ using namespace std;
 
 std::string SimDigitalGeomCellId::_encodingStrings[ENCODINGTYPES][ENCODINGSTRINGLENGTH] = 
 { 
-	// The encoding string for lcgeo: barrel and endcap ring of hcal ( change "y" to "z" for hcal endcap )
+	// The encoding string for lcgeo: barrel and endcap ring of hcal
 	{ "layer", "stave", "module", "tower", "x", "y" },
 
     // The encoding string for Mokka
@@ -233,7 +233,7 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			      std::string("LCGEO"));
 
   registerProcessorParameter( "HCALOption",
-			      "The HCAL mechanical options, TESLA or VIDEAU, which is effective when gear is absent",
+			      "The HCAL mechanical options, TESLA or VIDEAU",
 			      _hcalOption,
 			      std::string("VIDEAU"));
 
@@ -615,7 +615,7 @@ void SimDigitalGeomCellId::bookTuples(const marlin::Processor* proc)
 SimDigitalGeomCellId::SimDigitalGeomCellId(LCCollection *inputCol, LCCollectionVec *outputCol) 
   : _hitPosition(NULL),
     _decoder(inputCol), _encoder(inputCol->getParameters().getStringVal(LCIO::CellIDEncoding),outputCol),
-    _layerLayout(NULL), caloData(NULL),
+    _layerLayout(NULL), _caloData(NULL),
     _normal_I_J_setter(NULL),
     _currentHCALCollectionCaloLayout(CHT::any),
     _normal(),_Iaxis(),_Jaxis(),
@@ -627,32 +627,34 @@ SimDigitalGeomCellId::SimDigitalGeomCellId(LCCollection *inputCol, LCCollectionV
 	_cellIDEncodingString = inputCol->getParameters().getStringVal(LCIO::CellIDEncoding);
 
 	std::string gearFile = Global::parameters->getStringVal("GearXMLFile") ;
-	if(gearFile.size() > 0) _useGear = true;
+
+	if( (_encodingType == 1) && (gearFile.size() > 0) ) 
+	{
+		_useGear = true;
+	}
 
     if(_useGear) 
     {
         _geom=VIDEAU;
 
+		// maybe we can also set the geometry by the hcal option parameter
+		
         try
         { 
-			//std::cout << "we will use gear!" << std::endl;
-            //cout << "gear: " << Global::GEAR << endl;
             Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order"); //it is VIDEAU geometry if it is OK
         }
         catch (gear::Exception &)
         {
             _geom=TESLA;
         }
-
+		//std::cout << "we will use gear!" << std::endl;
+        //cout << "gear: " << Global::GEAR << endl;
+        //streamlog_out( MESSAGE )<< "!!!!!!(Videau=0, TESLA=1) Geometry is _geom= : "<<_geom << std::endl;
     }
     else
     {
 		//std::cout << "we will use lcgeo!" << std::endl;
-        if(_hcalOption == std::string("TESLA"))  _geom = TESLA;
-        if(_hcalOption == std::string("VIDEAU")) _geom = VIDEAU;
     }
-
-    //streamlog_out( MESSAGE )<< "!!!!!!(Videau=0, TESLA=1) Geometry is _geom= : "<<_geom << std::endl;
 }
 
 
@@ -1035,7 +1037,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
  	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::BARREL),
  	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
 
-	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
 		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
 
@@ -1045,7 +1047,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
  	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::AUXILIARY),
  	    	    dd4hep::DetType::FORWARD) ;
 
-	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
 
 		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
@@ -1056,7 +1058,7 @@ void SimDigitalGeomCellId::setLayerLayout(CHT::Layout layout)
  	            (dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::ENDCAP),
  	    	    (dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD) ) ;
 
-	      caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
+	      _caloData = det.at(0).extension<dd4hep::rec::LayeredCalorimeterData>();
 		  //cout << "det size: " << det.size() << ", type: " << det.at(0).type() << endl;
 	  }
   }
@@ -1068,6 +1070,7 @@ const string EncodingType[ENCODINGTYPES] = {"LCGEO", "MOKKA"};
 
 void SimDigitalGeomCellId::setEncodingType(std::string type)
 {
+	// encoding type: 0 - lcgeo, 1 - mokka
 	for(int iType = 0; iType < ENCODINGTYPES; ++iType)
 	{
 		if(type == EncodingType[iType]) 
@@ -1089,15 +1092,13 @@ float SimDigitalGeomCellId::getCellSize()
 {
 	float cellSize = 0.;
 
-    //cout << "get cell size start -----------------------" << endl;
-
-	if(_useGear && _layerLayout) 
+	if(_useGear && (_layerLayout != NULL)) 
 	{
 		cellSize = _layerLayout->getCellSize0(_trueLayer);
 	}
-	else if( caloData )
+	else if(_caloData != NULL)
 	{
-		const std::vector<dd4hep::rec::LayeredCalorimeterStruct::Layer>& hcalBarrelLayers = caloData->layers;
+		const std::vector<dd4hep::rec::LayeredCalorimeterStruct::Layer>& hcalBarrelLayers = _caloData->layers;
 		const double CM2MM = 10.;
 
 		cellSize = hcalBarrelLayers[_trueLayer].cellSize0 * CM2MM;

@@ -263,13 +263,16 @@ class effMapBase
 {
  public:
   virtual float getEfficiency(int I, int J, int K, int stave, int module)=0;
+
+  virtual ~effMapBase() {};
 };
 
 class effMapConstant : public effMapBase
 {
  public:
  effMapConstant(float val=1.0) : value(val) {}
-  virtual float getEfficiency(int I, int J, int K, int stave, int module) { return value;}
+  //virtual float getEfficiency(int I, int J, int K, int stave, int module) { return value;}
+  virtual float getEfficiency(int , int , int , int , int ) { return value;}
  private:
   float value;
 };
@@ -279,7 +282,8 @@ class effMapProtoByAsic : public effMapBase
 {
  public:
   effMapProtoByAsic(std::string fileName);
-  virtual float getEfficiency(int I, int J, int K, int stave, int module) 
+  //virtual float getEfficiency(int I, int J, int K, int stave, int module) 
+  virtual float getEfficiency(int I, int J, int K, int , int ) 
   {
     std::map<int,float>::iterator it=_effMap.find( (I-1)/8+((J-1)/8)*12+K*1000 );
     return (it != _effMap.end() ? it->second : 1.0);
@@ -387,10 +391,9 @@ class SimDigital : public Processor {
   {
   public:
   randomGreater(float val) : _value(val) {}
-    bool operator()(StepAndCharge& v) 
+    bool operator()(StepAndCharge& ) 
 	{ 
 		int rnd = rand();
-		//std::cout << "random num: " << rnd << std::endl;
 		return double(rnd)/RAND_MAX>_value;
 	}
   private:

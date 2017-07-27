@@ -680,10 +680,10 @@ void SimDigitalGeomRPCFrame_TESLA_BARREL::setRPCFrame()
 
 void SimDigitalGeomRPCFrame_VIDEAU_BARREL::setRPCFrame()
 {
-  normal().set(0,1,0);
-  Iaxis().set(1,0,0);
+  normal().set(-1,0,0);
+  Iaxis().set(0,1,0);
   Jaxis().set(0,0,1);
-  double angle=(stave())*(45)*CLHEP::degree;
+  double angle=(stave()-1)*(45)*CLHEP::degree;
   normal().rotateZ(angle);
   Iaxis().rotateZ(angle);
 }

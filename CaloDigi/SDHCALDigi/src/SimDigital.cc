@@ -325,9 +325,13 @@ void SimDigital::init(){
 
   streamlog_out( MESSAGE ) << "_effMapOption = " << _effMapOption << std::endl;
   if (_effMapOption=="Constant")   
+  {
     streamlog_out( MESSAGE ) << "_constEffMapValue = " << _constEffMapValue << std::endl;
+  }
   else if (_effMapOption=="PrototypeMap") 
+  {
     streamlog_out( MESSAGE ) << "_effMapFileName = " << _effMapFileName << std::endl;
+  }
 
   //assure SDHCAL _thresholdHcal are in increasing order
   std::sort(_thresholdHcal.begin(),_thresholdHcal.end());
@@ -355,7 +359,7 @@ void SimDigital::init(){
 }
  
 
-void SimDigital::processRunHeader( LCRunHeader* run) {}
+void SimDigital::processRunHeader( LCRunHeader* ) {}
 
 
 void SimDigital::processHCAL(LCEvent* evt, LCFlagImpl& flag)
@@ -755,7 +759,7 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
 //
 // _slice     = _decoder( hit )["slice"];
   _hitPosition = hit->getPosition();
-  if(abs(_Iy)<1 && abs(_Iy!=0.0)) streamlog_out(MESSAGE) << "_Iy, _Jz:"<<_Iy <<" "<<_Jz<< std::endl;
+  if(abs(_Iy)<1 && abs(_Iy)!=0.0) streamlog_out(MESSAGE) << "_Iy, _Jz:"<<_Iy <<" "<<_Jz<< std::endl;
 //if(_module==0||_module==6) streamlog_out(MESSAGE)<<"tower "<<_tower<<" layer "<<_trueLayer<<" stave "<<_stave<<" module "<<_module<<std::endl;
 //<<" Iy " << _Iy <<"  Jz "<<_Jz<<" hitPosition "<<_hitPosition<<std::endl
 //<<" _hitPosition[0] "<<_hitPosition[0]<<" _hitPosition[1] "<<_hitPosition[1]<<" _hitPosition[2] "<<_hitPosition[2]<<std::endl;
@@ -782,9 +786,9 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
  	  dd4hep::long64 id = idDecoder.getValue() ;
  	  dd4hep::Position pos_0 = idposConv.position( id ) ;   
 
+#if 0 
  	  const float* hitPos = hit->getPosition();
 
-#if 0 
  	  std::cout << "hit pos: " << hitPos[0] << " " << hitPos[1] << " " << hitPos[2] << std::endl;
  	  std::cout << "cell pos: " << pos_0.X() << " " << pos_0.Y() << " " << pos_0.Z() << std::endl;
 
@@ -1370,7 +1374,7 @@ void SimDigital::processEvent( LCEvent * evt ) {
   streamlog_out(MESSAGE) << "have processed " << _counters["|ALL"] << " events" << std::endl;
 }
 
-void SimDigital::check( LCEvent * evt ) { }
+void SimDigital::check( LCEvent * ) { }
 
 void SimDigital::end(){
  

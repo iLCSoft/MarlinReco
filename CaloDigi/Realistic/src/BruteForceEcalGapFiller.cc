@@ -268,10 +268,14 @@ void BruteForceEcalGapFiller::addIntraModuleGapHits( LCCollectionVec* newcol ) {
 		  position[k] = 0.5*(theseHits[ih]->getPosition()[k] + theseHits[jh]->getPosition()[k]);
 		float extraEnergy = enFrac*(theseHits[ih]->getEnergy() + theseHits[jh]->getEnergy())/2.;
 		float mintime = std::min( theseHits[ih]->getTime(), theseHits[jh]->getTime() );
+		CHT::CaloType cht_type = CHT::em;
+		CHT::CaloID   cht_id   = CHT::ecal;
+		CHT::Layout   cht_lay  = (_currentLayout == ECALBARREL) ? CHT::barrel : (_currentLayout == ECALENDCAP) ? CHT::endcap : CHT::any;
 		CalorimeterHitImpl* newGapHit = new CalorimeterHitImpl();
 		newGapHit->setEnergy( extraEnergy );
 		newGapHit->setPosition( position );
 		newGapHit->setTime( mintime );
+		newGapHit->setType( CHT( cht_type , cht_id , cht_lay , il) );
 		newcol->addElement( newGapHit );
 	      } // if gap
 	    } // jh
@@ -362,10 +366,14 @@ void BruteForceEcalGapFiller::addInterModuleGapHits( LCCollectionVec* newcol ) {
 		  position[k] = 0.5*(theseHits[ih]->getPosition()[k] + nextHits[jh]->getPosition()[k]);
 		float extraEnergy = enFrac*(theseHits[ih]->getEnergy() + nextHits[jh]->getEnergy())/2.;
 		float mintime = std::min( theseHits[ih]->getTime(), nextHits[jh]->getTime() );
+		CHT::CaloType cht_type = CHT::em;
+		CHT::CaloID   cht_id   = CHT::ecal;
+		CHT::Layout   cht_lay  = (_currentLayout == ECALBARREL) ? CHT::barrel : (_currentLayout == ECALENDCAP) ? CHT::endcap : CHT::any;
 		CalorimeterHitImpl* newGapHit = new CalorimeterHitImpl();
 		newGapHit->setEnergy( extraEnergy );
 		newGapHit->setPosition( position );
 		newGapHit->setTime( mintime );
+		newGapHit->setType( CHT( cht_type , cht_id , cht_lay , il) );
 		newcol->addElement( newGapHit );
 	      } // if gap
 	    } // jh
@@ -374,9 +382,9 @@ void BruteForceEcalGapFiller::addInterModuleGapHits( LCCollectionVec* newcol ) {
       } // im
     } // is
   } // ilayer
-  
-  streamlog_out ( DEBUG1 ) << " done addInterModuleGapHits " << newcol->getNumberOfElements() << endl;
 
+  streamlog_out ( DEBUG1 ) << " done addInterModuleGapHits " << newcol->getNumberOfElements() << endl;
+  
   return;
 }
 

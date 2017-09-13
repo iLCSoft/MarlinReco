@@ -1,3 +1,5 @@
+# YThres
+
 The YThresh module calculates the yThresh variable, which is the crossover value of the yCut jet finding
 variable from NMin to NMin+1 jets found using durhamycut.  For example, if NMin=2 the yThresh variable is
 the value of yCut above which durhamycut returns 2 jets, below which it returns 3 jets. The value of
@@ -6,8 +8,9 @@ ie y23 for NMin=2. SatoruJetFinder must be installed for this package to run.
 
 For questions/comments please email Ben Hooberman at benhooberman@berkeley.edu
 
---Processor Parameters--
+## Processor Parameters
 
+```
 string RecoParticleCollection: Name of the input ReconstructedParticle collection.
 int NMin: Min number of jets. For example, NMin=2 will give y23, the crossover value from 2 to 3 jets.
 int PrintOutput: toggle text output stating event number and value of yThresh.
@@ -15,12 +18,14 @@ int NIterations: the number of times the durhamycut algorithm is performed. The 
 int NMinParticles: minimum number of particles for yThresh calculation. This should usually remain at 3.
 int YStart: the starting value of yCut for the yThresh calculation.  This value should be significantly
 	larger than typical values of yThresh.
+```
 
---XML--
+## XML
 
 The following should be inserted into your xml file and called after the ReconstructedParticle collection is made.
 
- <processor name="MyYThresh" type="YThresh">
+```
+<processor name="MyYThresh" type="YThresh">
   <!--Name of the ReconstructedParticle collection-->
   <parameter name="RecoParticleCollection" type="string">  RecoParticles  </parameter>
   <!--Min number of jets. ie. NMin=2 will return y23-->
@@ -32,3 +37,4 @@ The following should be inserted into your xml file and called after the Reconst
   <!--Starting value of yCut.  Should be larger than typical yThresh values-->
   <parameter name="YStart" type="float"> 0.1  </parameter>
 </processor>
+```

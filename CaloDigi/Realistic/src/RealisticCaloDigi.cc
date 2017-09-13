@@ -28,6 +28,8 @@ RealisticCaloDigi::RealisticCaloDigi( ) : Processor( "RealisticCaloDigi" ) {
 
   // input collections of simcalohits
   std::vector<std::string> inputCollections;
+  inputCollections.push_back("SimCalorimeterHits");
+  
   registerInputCollections( LCIO::SIMCALORIMETERHIT,
                             "inputHitCollections" ,
                             "input simcalhit Collection Names" ,

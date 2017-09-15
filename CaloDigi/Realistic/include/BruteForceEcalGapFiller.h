@@ -43,6 +43,13 @@ class BruteForceEcalGapFiller : public Processor {
   std::string _cellIDModuleString;
   std::string _cellIDStaveString;
 
+
+  float _interModuleNonlinearFactor;
+  float _intraModuleNonlinearFactor;
+
+  float _interModuleFactor;
+  float _intraModuleFactor;
+
   LCFlagImpl _flag;
 
   enum {ECALENDCAP, ECALBARREL};

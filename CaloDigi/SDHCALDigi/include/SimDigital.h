@@ -95,6 +95,7 @@ class SimDigitalGeomCellId
   static void setEncodingType(std::string type);
   static void setHcalOption(std::string hcalOption);
   float getCellSize();
+  void setCellSize(float cellSize);
   const LCVector3D& normalToRPCPlane() {return _normal;}
   const LCVector3D& Iaxis() {return _Iaxis;}
   const LCVector3D& Jaxis() {return _Jaxis;}
@@ -118,6 +119,7 @@ class SimDigitalGeomCellId
   dd4hep::long64 _cellIDvalue;
   static int _encodingType;
   static std::string _hcalOption;
+  float _geomCellSize;
   const float* _hitPosition; 
   CellIDDecoder<SimCalorimeterHit> _decoder;
   CellIDEncoder<CalorimeterHitImpl> _encoder;
@@ -364,6 +366,7 @@ class SimDigital : public Processor {
   float _absZstepFilter;
   bool _keepAtLeastOneStep;
   float _minXYdistanceBetweenStep;
+  float _hcalCellSize;
   AIDA::ITuple* _debugTupleStepFilter;
   AIDA::ITuple* _tupleStepFilter;
   AIDA::ITuple* _tupleCollection;

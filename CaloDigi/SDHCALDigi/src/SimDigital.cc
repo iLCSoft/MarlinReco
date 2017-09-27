@@ -264,6 +264,11 @@ SimDigital::SimDigital () : Processor("SimDigital"), _chargeSplitterUniform(), _
 			      _minXYdistanceBetweenStep,
 			      (float) 0.5 );
 
+  registerProcessorParameter( "HCALCellSize",
+			      "Cell size (mm) of HCAL, if it is equal or less than zero then the value is taken from dd4hep",
+			      _hcalCellSize,
+			      (float) 0. );
+
   registerProcessorParameter( "KeepAtLeastOneStep",
 			      "if true, ensure that each hit will keep at least one step for digitisation independatly of filtering conditions (StepCellCenterMaxDistanceLayerDirection)",
 			      _keepAtLeastOneStep,
@@ -1106,6 +1111,7 @@ void SimDigitalGeomCellId::setHcalOption(std::string hcalOption)
 
 float SimDigitalGeomCellId::getCellSize() 
 {
+	const double CM2MM = 10.;
 	float cellSize = 0.;
 
 	if(_useGear && (_layerLayout != NULL)) 
@@ -1114,13 +1120,15 @@ float SimDigitalGeomCellId::getCellSize()
 	}
 	else if(_caloData != NULL)
 	{
-		const std::vector<dd4hep::rec::LayeredCalorimeterStruct::Layer>& hcalBarrelLayers = _caloData->layers;
-		const double CM2MM = 10.;
-
-		//cellSize = hcalBarrelLayers[_trueLayer].cellSize0 * CM2MM;
-		// hard coded cell size for SDHCAL
-		cellSize = 10.;
-        //std::cout << "--- cellSiZe: " << cellSize << std::endl;
+	    if(_geomCellSize>0.)  
+		{
+			cellSize = _geomCellSize;
+		}
+		else
+		{
+			const std::vector<dd4hep::rec::LayeredCalorimeterStruct::Layer>& hcalBarrelLayers = _caloData->layers;
+			cellSize = hcalBarrelLayers[_trueLayer].cellSize0 * CM2MM;
+		}
 	}
 
     //streamlog_out( MESSAGE ) << "cellSize: " << cellSize << endl;
@@ -1128,6 +1136,10 @@ float SimDigitalGeomCellId::getCellSize()
 	return cellSize; 
 }
 
+void SimDigitalGeomCellId::setCellSize(float cellSize)
+{
+	_geomCellSize = cellSize;
+}
 
 void SimDigital::remove_adjacent_step(std::vector<StepAndCharge>& vec)
 {
@@ -1322,6 +1334,7 @@ LCCollectionVec * SimDigital::processHCALCollection(LCCollection * col, CHT::Lay
   
   SimDigitalGeomCellId g(col,hcalcol);
   g.setLayerLayout(layout);
+  g.setCellSize(_hcalCellSize);
   createPotentialOutputHits(myHitMap,col, g );
   removeHitsBelowThreshold(myHitMap,_thresholdHcal[0]);
   if (_doThresholds) applyThresholds(myHitMap); 

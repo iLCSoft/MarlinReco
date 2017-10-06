@@ -36,7 +36,6 @@
 #include "DDRec/DetectorData.h"
 #include "DDRec/DDGear.h"
 #include "DDRec/MaterialManager.h"
-#include "DDRec/API/Calorimeter.h"
 #include "DDRec/DetectorSurfaces.h"
 
 class TH1F;

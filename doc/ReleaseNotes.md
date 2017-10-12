@@ -1,3 +1,37 @@
+# v01-20
+
+* 2017-07-20 Andre Sailer ([PR#17](https://github.com/iLCSoft/MarlinReco/pull/17))
+  - TauFinder: fix memory leak (few kB/event)
+
+* 2017-09-13 Frank Gaede ([PR#22](https://github.com/iLCSoft/MarlinReco/pull/22))
+  - add a default value for parameter inputHitCollections in RealisticCaloDigi.cc
+  - create package EventShapes_Fortran, Fixes #20 
+         - moved YThres from EventShapes to EventShapes_Fortran
+  - build EventShapes for C++ now
+
+* 2017-09-27 libo929 ([PR#24](https://github.com/iLCSoft/MarlinReco/pull/24))
+  - improve SDHCALDigi/src/SimDigital.cc
+       - Fixed the exception of unknown name y
+        - add optional parameter HCALCellSize to overwrite the one from dd4hep
+
+* 2017-07-29 libo929 ([PR#18](https://github.com/iLCSoft/MarlinReco/pull/18))
+  - Updated the SimDigital processor to make it compatible with lcgeo simulation
+  - Removed the digitization for ECAL 
+  - Fixed the warnings
+
+* 2017-08-14 Ete Remi ([PR#19](https://github.com/iLCSoft/MarlinReco/pull/19))
+  - BruteForceEcalGapFiller : Add missing information on calo hit type
+
+* 2017-09-15 Daniel Jeans ([PR#23](https://github.com/iLCSoft/MarlinReco/pull/23))
+  - modify algorithm to fill ECAL gaps in BruteForceEcalGapFiller:
+        - overall linear suppression gap hit energies [as was done in DBD]
+        - additional logarithmic suppression to reduce large energy gap hits
+        - separate parameters for (a) gaps between modules, and (b) gaps within modules
+        - default values of new parameters seem reasonable for ILD_l4_v02 model
+
+* 2017-10-06 Andre Sailer ([PR#25](https://github.com/iLCSoft/MarlinReco/pull/25))
+  - Drop unused and no longer existing header includes AidaSoft/DD4hep#241
+
 # v01-19-01
 
 * 2017-07-04 Daniel Jeans ([PR#16](https://github.com/iLCSoft/MarlinReco/pull/16))

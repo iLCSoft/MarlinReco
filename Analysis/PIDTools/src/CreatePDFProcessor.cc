@@ -448,10 +448,10 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
     
       //get shower profiles
       FloatVec shapes=cluvec[0]->getShape();      
-      pidvariable[pdfid][5]->Fill(shapes[0]);
-      pidvariable[pdfid][6]->Fill(shapes[5]);
-      pidvariable[pdfid][7]->Fill(fabs(shapes[3])/shapes[6]);
-      pidvariable[pdfid][8]->Fill(fabs(shapes[15])/7.00);
+      pidvariable[pdfid][5]->Fill(shapes[0+4]);
+      pidvariable[pdfid][6]->Fill(shapes[5+4]);
+      pidvariable[pdfid][7]->Fill(fabs(shapes[3+4])/shapes[6+4]);
+      pidvariable[pdfid][8]->Fill(fabs(shapes[15+4])/7.00);
     }
 
     //get dedx info

@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include <random>
 #include <marlin/Processor.h>
 #include <EVENT/LCCollection.h>
 
@@ -23,12 +24,20 @@ private:
   //ComputeddEdx *_mydEdx;
   float *CalculateEnergyLoss(TrackerHitVec& hitVec, Track* trk);  
   float getNormalization(double dedx, float hit, double trkcos);
+  float getSmearing(float dEdx);
 
   float _TPC_inner;
   std::string _description;
   std::string _LDCTrackCollection;
   float _energyLossErrorTPC;
   LCCollection* _LDCCol;
+
+  //for smearing
+  std::random_device seed_gen;
+  std::default_random_engine *engine;
+  std::uniform_real_distribution<> dist;
+  bool _isSmearing;
+  float _smearingFactor;
   
 };
 

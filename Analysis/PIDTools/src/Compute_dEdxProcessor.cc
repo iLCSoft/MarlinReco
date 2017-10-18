@@ -37,6 +37,16 @@ Compute_dEdxProcessor::Compute_dEdxProcessor()
 			      _energyLossErrorTPC,
 			      float(0.054));
   
+  registerProcessorParameter( "isSmearing",
+			      "Flag for dEdx Smearing",
+			      _isSmearing,
+			      bool(0));
+
+  registerProcessorParameter( "smearingFactor",
+			      "Smearing factor for dEdx smearing",
+			      _smearingFactor,
+			      float(0.035));
+  
   registerInputCollection(LCIO::TRACK,
 			  "LDCTrackCollection",
 			  "LDC track collection name",
@@ -188,6 +198,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
 
   double trkcos=sqrt(trk->getTanLambda()*trk->getTanLambda()/(1.0+trk->getTanLambda()*trk->getTanLambda()));
   float normdedx=getNormalization(dedx, (float) nTruncate, trkcos);
+  if(_isSmearing) normdedx += getSmearing(normdedx);   //additional smearing 20170901
 
   float *ret=new float[2];
   ret[0]=normdedx;
@@ -208,10 +219,24 @@ float Compute_dEdxProcessor::getNormalization(double dedx, float hit, double trk
   //cal. polar angle dep.
   // double c=1.0/sqrt(1.0-trkcos*trkcos);
   // double f2=1.0/(1.0-0.08887*std::log(c)); 
+
   //cal. polar angle dep.   20160702
-  double c = std::acos(trkcos);
-  if(c>3.141592/2.0) c= 3.141592-c;
-  double f2 = 1.0/std::pow(c, 0.0703);
+  //double c = std::acos(trkcos);
+  //if(c>3.141592/2.0) c= 3.141592-c;
+  //double f2 = 1.0/std::pow(c, 0.0703);
+
+  //change polar angle dep. 20170901
+  double f2 = 0.635762 / (0.635762 -0.0573237 * trkcos * trkcos);
+  
   
   return dedx/(f1*f2);
+}
+
+//create smearing factor
+float Compute_dEdxProcessor::getSmearing(float dEdx){
+  double z=sqrt( -2.0*std::log(dist(*engine)) ) * std::sin( 2.0*3.141592*dist(*engine) );
+
+  //std::cout << dist(*engine) << " " << z << std::endl;
+
+  return 0.0 + dEdx * _smearingFactor * z;
 }

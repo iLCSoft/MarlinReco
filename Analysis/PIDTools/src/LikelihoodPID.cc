@@ -440,10 +440,10 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
   if(shapes.size()!=0){
-    var[2]=shapes[0];
-    var[3]=shapes[5];
-    var[4]=fabs(shapes[3])/(shapes[6]);
-    var[5]=shapes[15]/(2.0*3.50);
+    var[2]=shapes[0+4];
+    var[3]=shapes[5+4];
+    var[4]=fabs(shapes[3+4])/(shapes[6+4]);
+    var[5]=shapes[15+4]/(2.0*3.50);
 
   }else var[2]=-1.0;
 
@@ -610,10 +610,10 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
   var[2]=mucal;
   if(shapes.size()!=0){
-    var[3]=shapes[0];
-    var[4]=shapes[5];
-    var[5]=fabs(shapes[3])/(shapes[6]);
-    var[6]=shapes[15]/(2.0*3.50);
+    var[3]=shapes[0+4];
+    var[4]=shapes[5+4];
+    var[5]=fabs(shapes[3+4])/(shapes[6+4]);
+    var[6]=shapes[15+4]/(2.0*3.50);
   }else var[3]=-1.0;
   
   var[7]=get_dEdxChi2(0,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //chi2
@@ -785,9 +785,9 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0)var[1]=ecal/(ecal+hcal);
   if(shapes.size()!=0){
-    var[2]=shapes[0];
-    var[3]=fabs(shapes[3])/(shapes[6]);
-    var[4]=shapes[15]/(2.0*3.50);
+    var[2]=shapes[0+4];
+    var[3]=fabs(shapes[3+4])/(shapes[6+4]);
+    var[4]=shapes[15+4]/(2.0*3.50);
   }else var[2]=-1.0;
  
   var[5]=get_dEdxChi2(0,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //chi2

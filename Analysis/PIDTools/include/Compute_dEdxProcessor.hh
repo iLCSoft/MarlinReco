@@ -26,19 +26,18 @@ private:
   float getNormalization(double dedx, float hit, double trkcos);
   float getSmearing(float dEdx);
 
-  float _TPC_inner;
-  std::string _description;
-  std::string _LDCTrackCollection;
-  float _energyLossErrorTPC;
-  LCCollection* _LDCCol;
+  float _TPC_inner = 0.0;
+  std::string _description = "";
+  std::string _LDCTrackCollection = "";
+  float _energyLossErrorTPC = 0.0;
+  LCCollection* _LDCCol = NULL;
 
-  //for smearing
-  std::random_device seed_gen;
-  std::default_random_engine *engine;
-  std::uniform_real_distribution<> dist;
-  bool _isSmearing;
-  float _smearingFactor;
-  
+  //for smearing                                                                                                              
+  std::random_device seed_gen{};
+  std::default_random_engine *engine = NULL;
+  std::uniform_real_distribution<> dist{};
+  bool _isSmearing = 0;
+  float _smearingFactor = 0.0;
 };
 
 #endif

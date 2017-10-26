@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include <vector>
 #include <random>
 #include <marlin/Processor.h>
 #include <EVENT/LCCollection.h>
@@ -31,7 +32,8 @@ private:
   std::string _LDCTrackCollection = "";
   float _energyLossErrorTPC = 0.0;
   LCCollection* _LDCCol = NULL;
-
+  float _ncorrpar = 0.0;
+  std::vector<float> _acorrpar = {};
   //for smearing                                                                                                              
   std::random_device seed_gen{};
   std::default_random_engine *engine = NULL;

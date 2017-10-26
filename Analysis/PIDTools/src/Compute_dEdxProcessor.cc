@@ -1,4 +1,3 @@
-#include <vector>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -46,6 +45,19 @@ Compute_dEdxProcessor::Compute_dEdxProcessor()
 			      "Smearing factor for dEdx smearing",
 			      _smearingFactor,
 			      float(0.035));
+
+  std::vector<float> apar;
+  apar.push_back(0.635762);
+  apar.push_back(-0.0573237);
+  registerProcessorParameter( "AngularCorrectionParameters",
+			      "parameters for angular correction",
+			      _acorrpar,
+			      apar);
+
+  registerProcessorParameter( "NumberofHitsCorrectionParameters",
+			      "parameters for number of hits correction",
+			      _ncorrpar,
+			      float(1.468));
   
   registerInputCollection(LCIO::TRACK,
 			  "LDCTrackCollection",
@@ -215,7 +227,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
 //correct polar angle dependence and number of hits dependence
 float Compute_dEdxProcessor::getNormalization(double dedx, float hit, double trkcos){
   //cal. hit dep.
-  double f1=1.0+std::exp(-hit/1.468);
+  double f1=1.0+std::exp(-hit/_ncorrpar);
   //cal. polar angle dep.
   // double c=1.0/sqrt(1.0-trkcos*trkcos);
   // double f2=1.0/(1.0-0.08887*std::log(c)); 
@@ -226,9 +238,8 @@ float Compute_dEdxProcessor::getNormalization(double dedx, float hit, double trk
   //double f2 = 1.0/std::pow(c, 0.0703);
 
   //change polar angle dep. 20170901
-  double f2 = 0.635762 / (0.635762 -0.0573237 * trkcos * trkcos);
-  
-  
+  double f2 = _acorrpar[0] / (_acorrpar[0] + _acorrpar[1] * trkcos * trkcos);
+   
   return dedx/(f1*f2);
 }
 

@@ -1,3 +1,10 @@
+# v01-21
+
+* 2017-10-26 KURATA Masakazu ([PR#26](https://github.com/ilcsoft/MarlinReco/pull/26))
+  - improved PIDTools
+        - added additional smearing functon for dE/dx resolution.
+        - and corrected the strange behavior for PID. That is most of the muons are identified as pions.
+
 # v01-20
 
 * 2017-07-20 Andre Sailer ([PR#17](https://github.com/iLCSoft/MarlinReco/pull/17))

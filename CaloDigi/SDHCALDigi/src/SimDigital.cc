@@ -793,12 +793,12 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
  	  dd4hep::rec::CellIDPositionConverter idposConv( ild )  ;
 
 
- 	  dd4hep::BitField64 idDecoder( _cellIDEncodingString ) ;
+ 	  lcio::BitField64 idDecoder( _cellIDEncodingString ) ;
  	  
- 	  dd4hep::long64 id0 = hit->getCellID0() ;
- 	  dd4hep::long64 id1 = hit->getCellID1() ;
+ 	  lcio::long64 id0 = hit->getCellID0() ;
+ 	  lcio::long64 id1 = hit->getCellID1() ;
  	  
- 	  idDecoder.setValue( id0 , id1 ) ;
+ 	  idDecoder.setValue( id0 | id1 << 32 ) ;
  	  
  	  dd4hep::long64 id = idDecoder.getValue() ;
  	  dd4hep::Position pos_0 = idposConv.position( id ) ;   
@@ -839,7 +839,7 @@ std::vector<StepAndCharge> SimDigitalGeomCellId::decode(SimCalorimeterHit *hit)
  	  }
 
  	  // reset
- 	  idDecoder.setValue( id0 , id1 ) ;	
+ 	  idDecoder.setValue( id0 | id1 << 32 ) ;	
 
  	  ////// for direction y
  	  dd4hep::Position pos_j_plus_1;

@@ -1,3 +1,10 @@
+# v01-21-01
+
+* 2017-11-10 Ete Remi ([PR#28](https://github.com/iLCSoft/MarlinReco/pull/28))
+  - Missing memory allocation and delete for random engine
+  - Added delete specification for copy constructor and assignment operator to avoid warning on compilation
+  - Missing delete for two arrays causing memory leaks
+
 # v01-21
 
 * 2017-10-26 KURATA Masakazu ([PR#26](https://github.com/ilcsoft/MarlinReco/pull/26))

@@ -77,6 +77,7 @@ void Compute_dEdxProcessor::init() {
   const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>() ;
   _TPC_inner = tpc->rMinReadout ;
 
+  engine = new std::default_random_engine();
   
   printParameters();
   
@@ -120,6 +121,8 @@ void Compute_dEdxProcessor::processEvent( LCEvent * evt ) {
     //fill values
     trkCand->setdEdx(dedx);
     trkCand->setdEdxError(unum);
+    
+    delete [] dummy;
   }
 }
 
@@ -128,6 +131,7 @@ void Compute_dEdxProcessor::check( LCEvent * ) {
 
 void Compute_dEdxProcessor::end() { 
   //delete _mydEdx;
+  delete engine;
 }
  
 float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* trk){
@@ -203,6 +207,8 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
       //biH=iH;
     }
   }
+  
+  delete [] depe;
 
   //cal. truncated mean
   dedx = dedx/(float)(nTruncate);

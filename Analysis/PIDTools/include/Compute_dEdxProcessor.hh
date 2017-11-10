@@ -22,6 +22,8 @@ public:
   virtual void end();
  
 private:
+  Compute_dEdxProcessor(const Compute_dEdxProcessor&) = delete;
+  Compute_dEdxProcessor& operator=(const Compute_dEdxProcessor&) = delete;
   //ComputeddEdx *_mydEdx;
   float *CalculateEnergyLoss(TrackerHitVec& hitVec, Track* trk);  
   float getNormalization(double dedx, float hit, double trkcos);

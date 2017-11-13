@@ -3,8 +3,13 @@
 #include <vector>
 
 #include <marlin/Global.h>
-#include <gear/GEAR.h>
-#include <gear/CalorimeterParameters.h>
+#include <GeometryUtil.h>
+
+#include <DD4hep/DD4hepUnits.h>
+#include <DD4hep/DetType.h>
+#include <DD4hep/DetectorSelector.h>
+#include <DD4hep/Detector.h>
+#include <DDRec/DetectorData.h>
 
 #include "EVENT/ReconstructedParticle.h"
 #include "IMPL/ClusterImpl.h"
@@ -160,14 +165,16 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
       Rm[1]=_Rm2;
 
       //get barrel detector surfce
-      const gear::CalorimeterParameters& eCalDet = marlin::Global::GEAR->getEcalBarrelParameters(); 
-      const EVENT::DoubleVec& ecal_ext = eCalDet.getExtent();
-      float ecalrad=(float)ecal_ext[0];    //1.847415655e+03;   //in mm 
+      //Get ECal Barrel extension by type, ignore plugs and rings
+      const dd4hep::rec::LayeredCalorimeterData * eCalBarrelExtension= MarlinUtil::getLayeredCalorimeterData( ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::BARREL),
+													      ( dd4hep::DetType::AUXILIARY  |  dd4hep::DetType::FORWARD ) );
+      float ecalrad = eCalBarrelExtension->extent[0]/dd4hep::mm;
 
       //get endcap detector surfce
-      const gear::CalorimeterParameters& pCalDet = marlin::Global::GEAR->getEcalEndcapParameters(); 
-      const EVENT::DoubleVec& pcal_ext = pCalDet.getExtent();
-      float plugz=(float)pcal_ext[2];    //2.450000000e+03;   //in mm 
+      //Get ECal Endcap extension by type, ignore plugs and rings
+      const dd4hep::rec::LayeredCalorimeterData * eCalEndcapExtension= MarlinUtil::getLayeredCalorimeterData( ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::ENDCAP),
+													      ( dd4hep::DetType::AUXILIARY |  dd4hep::DetType::FORWARD  ) );
+      float plugz = eCalEndcapExtension->extent[2]/dd4hep::mm;
       
       //looking for the hit which corresponds to the nearest hit from IP in the direction of the center of gravity
       int index_xStart=0;

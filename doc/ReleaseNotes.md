@@ -1,3 +1,15 @@
+# v01-22
+
+* 2017-11-15 Ete Remi ([PR#30](https://github.com/ilcsoft/MarlinReco/pull/30))
+  - New SDHCAL digitizer version from Lyon group (ggarillot)
+    - step linking and 'Angular Correction' 
+    - two processors, one for applying the threshold, one for the threshold energy factors
+
+* 2017-11-15 Shaojun Lu ([PR#29](https://github.com/ilcsoft/MarlinReco/pull/29))
+  - replace gear with DD4hep in FourMomentumCovMat and PIDTools
+        - use DD4hep for accessing BField and LayeredCalorimeterData extension to replace Gear.
+         - with this the ILD standard reconstruction does no longer need a  gear file
+
 # v01-21-01
 
 * 2017-11-10 Ete Remi ([PR#28](https://github.com/iLCSoft/MarlinReco/pull/28))

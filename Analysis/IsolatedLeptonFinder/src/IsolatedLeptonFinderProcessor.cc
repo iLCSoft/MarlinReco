@@ -257,21 +257,18 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 	}
 
 
-void IsolatedLeptonFinderProcessor::init() { 
+void IsolatedLeptonFinderProcessor::init() {
 	streamlog_out(DEBUG) << "   init called  " << std::endl ;
 	printParameters() ;
 }
 
-void IsolatedLeptonFinderProcessor::processRunHeader( LCRunHeader* run) { 
-} 
-
-void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) { 
+void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 	_rpJetMap.clear();
 
 	_pfoCol = evt->getCollection( _inputPFOsCollection ) ;
 
-	// Output PFOs removed isolated leptons 
+	// Output PFOs removed isolated leptons
 	LCCollectionVec* otPFOsRemovedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
 	otPFOsRemovedIsoLepCol->setSubset(true) ;
 
@@ -297,14 +294,14 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	for (int i = 0; i < npfo; i++ ) {
 		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
-		if ( IsIsolatedLepton( pfo ) ) 
+		if ( IsIsolatedLepton( pfo ) )
 			otIsoLepCol->addElement( pfo );
-		else 
+		else
 			otPFOsRemovedIsoLepCol->addElement( pfo );
 	}
 
-	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-		<< "   in run:  " << evt->getRunNumber() 
+	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber()
+		<< "   in run:  " << evt->getRunNumber()
 		<< std::endl ;
 
 	// Add PFOs to new collection
@@ -312,10 +309,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
 }
 
-void IsolatedLeptonFinderProcessor::check( LCEvent * evt ) { 
-}
-
-void IsolatedLeptonFinderProcessor::end() { 
+void IsolatedLeptonFinderProcessor::end() {
 }
 
 bool IsolatedLeptonFinderProcessor::IsCharged( ReconstructedParticle* pfo ) {
@@ -477,12 +471,12 @@ float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo )
 		ReconstructedParticle* pfo_i = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
 		// don't add itself to the cone energy
-		if ( pfo == pfo_i ) continue; 
+		if ( pfo == pfo_i ) continue;
 
 		TVector3 P_i( pfo_i->getMomentum() );
 		float cosTheta = P.Dot( P_i )/(P.Mag()*P_i.Mag());
 		if ( cosTheta >= _cosConeAngle )
-			coneE += pfo_i->getEnergy(); 
+			coneE += pfo_i->getEnergy();
 	}
 
 	return coneE;

@@ -47,6 +47,18 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_outputIsoLepCollection,
 				std::string("Isolep") );
 
+		registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+				"OutputCollectionWithoutDressedIsolatedLepton",
+				"Copy of input collection but without the dressed isolated leptons",
+				_outputPFOsRemovedDressedIsoLepCollection,
+				std::string("PandoraPFOsWithoutDressedIsoLep") );
+
+		registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+				"OutputCollectionDressedIsolatedLeptons",
+				"Output collection of dressed isolated leptons",
+				_outputDressedIsoLepCollection,
+				std::string("DressedIsolep") );
+
 		registerProcessorParameter( "CosConeAngle",
 				"Cosine of the half-angle of the cone used in isolation criteria",
 				_cosConeAngle,

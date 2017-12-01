@@ -75,8 +75,14 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** Output collection of isolated leptons */
 		std::string _outputIsoLepCollection;
 
-		LCCollection* _pfoCol;
-		float _cosConeAngle;
+		/** Output collection (all input with dressed isolated leptons removed) */
+		std::string _outputPFOsRemovedDressedIsoLepCollection;
+
+		/** Output collection of dressed isolated leptons */
+		std::string _outputDressedIsoLepCollection;
+
+		LCCollection* _pfoCol=nullptr;
+		float _cosConeAngle = 0;
 
 		/** If set to true, uses PID cuts */
 		bool _usePID;

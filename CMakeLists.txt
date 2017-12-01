@@ -48,7 +48,7 @@ FIND_PACKAGE( MarlinUtil 1.4 REQUIRED )
 FIND_PACKAGE( MarlinKinfit 0.0 REQUIRED )
 FIND_PACKAGE( MarlinTrk )
 FIND_PACKAGE( GSL REQUIRED )
-FIND_PACKAGE( ROOT 5.27 REQUIRED COMPONENTS MathMore TMVA)  
+FIND_PACKAGE( ROOT 5.27 REQUIRED COMPONENTS MathMore TMVA)
 FIND_PACKAGE( DD4hep COMPONENTS DDRec DDSegmentation)
 
 OPTION( MARLINRECO_AIDA "Set to ON to build MarlinReco with AIDA" ON )
@@ -80,7 +80,7 @@ IF( MARLINRECO_FORTRAN )
 
     FIND_PACKAGE( FORTRAN_LIBRARY REQUIRED )
     LINK_LIBRARIES( ${FORTRAN_LIBRARY} )
-    GET_FILENAME_COMPONENT( FORTRAN_LIBRARY_FULL_PATH ${FORTRAN_LIBRARY} REALPATH ) 
+    GET_FILENAME_COMPONENT( FORTRAN_LIBRARY_FULL_PATH ${FORTRAN_LIBRARY} REALPATH )
     INSTALL( PROGRAMS ${FORTRAN_LIBRARY_FULL_PATH} DESTINATION lib ) # PROGRAMS is like FILES but sets executable permissions
 
 
@@ -204,3 +204,12 @@ INSTALL_SHARED_LIBRARY( MarlinReco DESTINATION lib )
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
 
+
+### Load cpp format and check tools #######################################
+
+# Set the source files to clang-format (FIXME: determine this better)
+FILE(GLOB_RECURSE
+     CHECK_CXX_SOURCE_FILES
+        Analysis/IsolatedLeptonFinder/src/*.cc Analysis/IsolatedLeptonFinder/include/*.h
+     )
+INCLUDE("cmake/clang-cpp-checks.cmake")

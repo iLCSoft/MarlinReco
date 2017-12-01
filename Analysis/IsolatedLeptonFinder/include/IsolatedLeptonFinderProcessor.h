@@ -19,6 +19,7 @@
 
 #include <EVENT/ReconstructedParticle.h>
 #include <EVENT/MCParticle.h>
+#include "IMPL/ReconstructedParticleImpl.h"
 #include <UTIL/LCRelationNavigator.h>
 
 using namespace lcio ;
@@ -44,11 +45,11 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		bool IsGoodLepton( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if pfo is an isolated lepton */
-		bool IsIsolatedLepton( ReconstructedParticle* pfo ) ;
+		bool IsIsolatedLepton( ReconstructedParticle* pfo , bool omitDressed) ;
 
 		/** Returns true if isolated, as defined by the cone energy */
-		bool IsIsolatedRectangular( ReconstructedParticle* pfo ) ;
-		bool IsIsolatedPolynomial( ReconstructedParticle* pfo ) ;
+		bool IsIsolatedRectangular( ReconstructedParticle* pfo , bool omitDressed) ;
+		bool IsIsolatedPolynomial( ReconstructedParticle* pfo , bool omitDressed) ;
 		bool IsIsolatedJet( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if charged */
@@ -63,8 +64,11 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** Returns true if it passes impact parameter significance cuts */
 		bool PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) ;
 
+		/** Adds photons around lepton to four vector */
+		void dressWithPhotons( ReconstructedParticleImpl* pfo ) ;
+
 		/** Calculates the cone energy */
-		float getConeEnergy( ReconstructedParticle* pfo ) ;
+		float getConeEnergy( ReconstructedParticle* pfo, bool omitDressed) ;
 
 		/** [0]:Ecal energy, [1]:Hcal energy */
 		void getCalEnergy( ReconstructedParticle* pfo , float* cale) ;
@@ -142,6 +146,8 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** If set to true, uses lepton dressing */
 		bool _useLeptonDressing = false;
 		float _dressCosConeAngle = 0;
+		std::vector<int> _dressedPFOs {};
+
 } ;
 
 #endif

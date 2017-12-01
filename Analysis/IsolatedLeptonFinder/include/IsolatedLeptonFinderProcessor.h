@@ -31,11 +31,11 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		virtual Processor*  newProcessor() { return new IsolatedLeptonFinderProcessor ; }
 
 		IsolatedLeptonFinderProcessor() ;
+		IsolatedLeptonFinderProcessor(const IsolatedLeptonFinderProcessor &);
+		IsolatedLeptonFinderProcessor & operator = (const IsolatedLeptonFinderProcessor &);
 
 		virtual void init() ;
-		virtual void processRunHeader( LCRunHeader* run ) ;
-		virtual void processEvent( LCEvent * evt ) ; 
-		virtual void check( LCEvent * evt ) ; 
+		virtual void processEvent( LCEvent * evt ) ;
 		virtual void end() ;
 
 	protected:
@@ -55,10 +55,10 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		bool IsLepton( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if it passes impact parameter cuts */
-		bool PassesImpactParameterCuts( ReconstructedParticle* pfo ) ; 
+		bool PassesImpactParameterCuts( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if it passes impact parameter significance cuts */
-		bool PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) ; 
+		bool PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) ;
 
 		/** Calculates the cone energy */
 		float getConeEnergy( ReconstructedParticle* pfo ) ;
@@ -67,73 +67,73 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		void getCalEnergy( ReconstructedParticle* pfo , float* cale) ;
 
 		/** Input collection */
-		std::string _inputPFOsCollection;
+		std::string _inputPFOsCollection{};
 
 		/** Output collection (all input with isolated leptons removed) */
-		std::string _outputPFOsRemovedIsoLepCollection;
+		std::string _outputPFOsRemovedIsoLepCollection{};
 
 		/** Output collection of isolated leptons */
-		std::string _outputIsoLepCollection;
+		std::string _outputIsoLepCollection{};
 
 		/** Output collection (all input with dressed isolated leptons removed) */
-		std::string _outputPFOsRemovedDressedIsoLepCollection;
+		std::string _outputPFOsRemovedDressedIsoLepCollection{};
 
 		/** Output collection of dressed isolated leptons */
-		std::string _outputDressedIsoLepCollection;
+		std::string _outputDressedIsoLepCollection{};
 
 		LCCollection* _pfoCol=nullptr;
 		float _cosConeAngle = 0;
 
 		/** If set to true, uses PID cuts */
-		bool _usePID;
-		float _electronMinEnergyDepositByMomentum;
-		float _electronMaxEnergyDepositByMomentum;
-		float _electronMinEcalToHcalFraction;
-		float _electronMaxEcalToHcalFraction;
-		float _muonMinEnergyDepositByMomentum;
-		float _muonMaxEnergyDepositByMomentum;
-		float _muonMinEcalToHcalFraction;
-		float _muonMaxEcalToHcalFraction;
+		bool _usePID = false;
+		float _electronMinEnergyDepositByMomentum = 0;
+		float _electronMaxEnergyDepositByMomentum = 0;
+		float _electronMinEcalToHcalFraction = 0;
+		float _electronMaxEcalToHcalFraction = 0;
+		float _muonMinEnergyDepositByMomentum = 0;
+		float _muonMaxEnergyDepositByMomentum = 0;
+		float _muonMinEcalToHcalFraction = 0;
+		float _muonMaxEcalToHcalFraction = 0;
 
 		/** If set to true, uses impact parameter cuts */
-		bool _useImpactParameter;
-		float _minD0;
-		float _maxD0;
-		float _minZ0;
-		float _maxZ0;
-		float _minR0;
-		float _maxR0;
+		bool _useImpactParameter = false;
+		float _minD0 = 0;
+		float _maxD0 = 0;
+		float _minZ0 = 0;
+		float _maxZ0 = 0;
+		float _minR0 = 0;
+		float _maxR0 = 0;
 
 		/** If set to true, uses impact parameter significance cuts */
-		bool _useImpactParameterSignificance;
-		float _minD0Sig;
-		float _maxD0Sig;
-		float _minZ0Sig;
-		float _maxZ0Sig;
-		float _minR0Sig;
-		float _maxR0Sig;
+		bool _useImpactParameterSignificance = false;
+		float _minD0Sig = 0;
+		float _maxD0Sig = 0;
+		float _minZ0Sig = 0;
+		float _maxZ0Sig = 0;
+		float _minR0Sig = 0;
+		float _maxR0Sig = 0;
 
 		/** If set to true, uses rectangular cuts for isolation */
-		bool _useRectangularIsolation;
-		float _isoMinTrackEnergy;
-		float _isoMaxTrackEnergy;
-		float _isoMinConeEnergy;
-		float _isoMaxConeEnergy;
+		bool _useRectangularIsolation = false;
+		float _isoMinTrackEnergy = 0;
+		float _isoMaxTrackEnergy = 0;
+		float _isoMinConeEnergy = 0;
+		float _isoMaxConeEnergy = 0;
 
 		/** If set to true, uses polynomial cuts for isolation */
-		bool _usePolynomialIsolation;
-		float _isoPolynomialA;
-		float _isoPolynomialB;
-		float _isoPolynomialC;
+		bool _usePolynomialIsolation = false;
+		float _isoPolynomialA = 0;
+		float _isoPolynomialB = 0;
+		float _isoPolynomialC = 0;
 
 		/** If set to true, uses jet-based isolation (LAL algorithm) */
-		bool _useJetIsolation;
-		std::string _jetCollectionName;
-		std::map<ReconstructedParticle*,ReconstructedParticle*> _rpJetMap;
-		float _jetIsoVetoMinXt;
-		float _jetIsoVetoMaxXt;
-		float _jetIsoVetoMinZ;
-		float _jetIsoVetoMaxZ;
+		bool _useJetIsolation = false;
+		std::string _jetCollectionName {};
+		std::map<ReconstructedParticle*,ReconstructedParticle*> _rpJetMap {};
+		float _jetIsoVetoMinXt = 0;
+		float _jetIsoVetoMaxXt = 0;
+		float _jetIsoVetoMinZ = 0;
+		float _jetIsoVetoMaxZ = 0;
 } ;
 
 #endif

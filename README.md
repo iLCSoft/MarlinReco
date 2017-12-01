@@ -9,6 +9,15 @@ MarlinReco is distributed under the [GPLv3 License](http://www.gnu.org/licenses/
 [![License](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 
+## Compilation
+```shell
+cd MarlinReco
+mkdir build && cd $_
+cmake .. # use the appropriate compiler flags
+[make format]  # apply Cpp format guidelines in place (optional)
+make install
+```
+
 ## License and Copyright
 Copyright (C), MarlinReco Authors
 

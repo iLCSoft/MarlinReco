@@ -254,6 +254,16 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				"Maximum Z in jet-based isolation",
 				_jetIsoVetoMaxZ,
 				float(0.6));
+
+		registerProcessorParameter( "UseLeptonDressing",
+				"Use lepton dressing",
+				_useLeptonDressing,
+				bool(true));
+
+		registerProcessorParameter( "DressCosConeAngle",
+				"Cosine of the half-angle of the cone used in lepton dressing procedure",
+				_dressCosConeAngle,
+				float(0.95));
 	}
 
 
@@ -294,7 +304,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	for (int i = 0; i < npfo; i++ ) {
 		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
-		if ( IsIsolatedLepton( pfo ) )
+		if ( IsGoodLepton( pfo ) && IsIsolatedLepton( pfo ) )
 			otIsoLepCol->addElement( pfo );
 		else
 			otPFOsRemovedIsoLepCol->addElement( pfo );
@@ -345,7 +355,8 @@ bool IsolatedLeptonFinderProcessor::IsLepton( ReconstructedParticle* pfo ) {
 	return false;
 }
 
-bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsGoodLepton( ReconstructedParticle* pfo ) {
+
 	if ( !IsCharged(pfo) )
 		return false;
 
@@ -357,6 +368,11 @@ bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo
 
 	if ( _useImpactParameterSignificance && !PassesImpactParameterSignificanceCuts(pfo) )
 		return false ;
+
+	return true;
+}
+
+bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo ) {
 
 	if ( _useRectangularIsolation && !IsIsolatedRectangular(pfo) )
 		return false;

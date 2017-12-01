@@ -40,6 +40,9 @@ class IsolatedLeptonFinderProcessor : public Processor {
 
 	protected:
 
+		/** Returns true if pfo is a lepton */
+		bool IsGoodLepton( ReconstructedParticle* pfo ) ;
+
 		/** Returns true if pfo is an isolated lepton */
 		bool IsIsolatedLepton( ReconstructedParticle* pfo ) ;
 
@@ -134,6 +137,11 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		float _jetIsoVetoMaxXt = 0;
 		float _jetIsoVetoMinZ = 0;
 		float _jetIsoVetoMaxZ = 0;
+
+
+		/** If set to true, uses lepton dressing */
+		bool _useLeptonDressing = false;
+		float _dressCosConeAngle = 0;
 } ;
 
 #endif

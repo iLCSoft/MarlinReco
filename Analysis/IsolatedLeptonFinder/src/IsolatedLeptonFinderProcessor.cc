@@ -274,6 +274,10 @@ void IsolatedLeptonFinderProcessor::init() {
 
 void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
+	streamlog_out(MESSAGE) <<std::endl;
+	streamlog_out(MESSAGE) << "processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
+
+	_dressedPFOs.clear();
 	_rpJetMap.clear();
 
 	_pfoCol = evt->getCollection( _inputPFOsCollection ) ;
@@ -285,6 +289,14 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	// Output PFOs of isolated leptons
 	LCCollectionVec* otIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
 	otIsoLepCol->setSubset(true);
+
+	// Output PFOs removed dressed isolated leptons
+	LCCollectionVec* otPFOsRemovedDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
+	otPFOsRemovedDressedIsoLepCol->setSubset(true) ;
+
+	// Output PFOs of dressed isolated leptons
+	LCCollectionVec* otDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
+	otDressedIsoLepCol->setSubset(true);
 
 	// Prepare jet/recoparticle map for jet-based isolation
 	if (_useJetIsolation) {
@@ -299,26 +311,134 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		}
 	}
 
-	// PFO loop
+
+	// Undressed leptons
+	std::vector<int> goodLeptonIndices;
 	int npfo = _pfoCol->getNumberOfElements();
 	for (int i = 0; i < npfo; i++ ) {
 		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
-		if ( IsGoodLepton( pfo ) && IsIsolatedLepton( pfo ) )
+		if ( !IsGoodLepton( pfo )){
+			otPFOsRemovedIsoLepCol->addElement( pfo );
+			continue;
+		}
+
+		if  ( IsIsolatedLepton( pfo, false ) )
 			otIsoLepCol->addElement( pfo );
 		else
 			otPFOsRemovedIsoLepCol->addElement( pfo );
+
+		// remember lepton indices for dressing
+		goodLeptonIndices.push_back(i);
 	}
+
+
+	// Dressed leptons
+	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
+	{
+		// copy this in an ugly fashion to be modofiable - a versatile copy constructor would be much better!
+		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
+		ReconstructedParticleImpl* pfo = new ReconstructedParticleImpl();
+		pfo->setMomentum(pfo_tmp->getMomentum());
+		pfo->setEnergy(pfo_tmp->getEnergy());
+		pfo->setType(pfo_tmp->getType());
+		pfo->setCovMatrix(pfo_tmp->getCovMatrix());
+		pfo->setMass(pfo_tmp->getMass());
+		pfo->setCharge(pfo_tmp->getCharge());
+		pfo->setParticleIDUsed(pfo_tmp->getParticleIDUsed());
+		pfo->setGoodnessOfPID(pfo_tmp->getGoodnessOfPID());
+		pfo->setStartVertex(pfo_tmp->getStartVertex());
+
+		// test how close they are to the other leptons
+		for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
+		{
+			ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
+			TVector3 P_this( pfo->getMomentum() );
+			TVector3 P_other( pfo_other->getMomentum() );
+			float cosTheta = P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag());
+			streamlog_out(MESSAGE) << "Lep "<<i<<" - "<<j<<": "<<cosTheta<<std::endl;
+		}
+
+
+		dressWithPhotons(pfo);
+  		// printf("dressedMomentum: %.2f -> %.2f, %.2f -> %.2f ,%.2f -> %.2f ,%.2f -> %.2f\n", pfo_tmp->getMomentum()[0], pfo->getMomentum()[0], pfo_tmp->getMomentum()[1], pfo->getMomentum()[1], pfo_tmp->getMomentum()[2], pfo->getMomentum()[2], pfo->getEnergy(), pfo_tmp->getEnergy());
+
+		if  ( IsIsolatedLepton( pfo, true ) ){
+			streamlog_out(MESSAGE) << "Isolation: SUCCESS"<<std::endl;
+			otDressedIsoLepCol->addElement( pfo );
+		}
+		else{
+			streamlog_out(MESSAGE) << "Isolation: FAIL"<<std::endl;
+			otPFOsRemovedDressedIsoLepCol->addElement( pfo );
+		}
+	}
+
+	// PFO loop for filling remaining PFOs
+	for (int i = 0; i < npfo; i++ ) {
+
+		// don't add leptons again
+		if (std::find(goodLeptonIndices.begin(), goodLeptonIndices.end(), i) != goodLeptonIndices.end()){
+			continue;
+		}
+
+		// don't add dressed photons
+		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
+			continue;
+		}
+
+		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		otPFOsRemovedDressedIsoLepCol->addElement( pfo );
+	}
+
 
 	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber()
 		<< "   in run:  " << evt->getRunNumber()
 		<< std::endl ;
 
-	// Add PFOs to new collection
+
+	streamlog_out(MESSAGE) << "npfo:                     " <<npfo<<std::endl;
+	streamlog_out(MESSAGE) << "nLepton:                  " <<goodLeptonIndices.size()<<std::endl;
+	streamlog_out(MESSAGE) << "nDressed:                 " <<_dressedPFOs.size()<<std::endl;
+	streamlog_out(MESSAGE) << "Sizes removed collection: " <<otPFOsRemovedIsoLepCol->getNumberOfElements()<<" and "<<otPFOsRemovedDressedIsoLepCol->getNumberOfElements()<<std::endl;
+	streamlog_out(MESSAGE) << "Sizes lepton collection:  " <<otIsoLepCol->getNumberOfElements()<<" and "<<otDressedIsoLepCol->getNumberOfElements()<<std::endl;
+
+
+	// Add PFOs to new collections
 	evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
 	evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
+	evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedDressedIsoLepCollection.c_str() );
+	evt->addCollection( otDressedIsoLepCol, _outputDressedIsoLepCollection.c_str() );
 }
+void IsolatedLeptonFinderProcessor::dressWithPhotons( ReconstructedParticleImpl* pfo ) {
+	TVector3 P_lep( pfo->getMomentum() );
+	int npfo = _pfoCol->getNumberOfElements();
+	for ( int i = 0; i < npfo; i++ ) {
+		ReconstructedParticle* pfo_phot = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
+		// only add photons
+		if (pfo_phot->getType() != 22) continue;
+
+		// don't add itself to itself
+		if ( pfo_phot == pfo ) continue;
+
+		TVector3 P_phot( pfo_phot->getMomentum() );
+		float cosTheta = P_lep.Dot( P_phot )/(P_lep.Mag()*P_phot.Mag());
+		if ( cosTheta >= _dressCosConeAngle ){
+			if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
+				streamlog_out(MESSAGE) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
+				// printf(" -- this lep: %.2f, %.2f ,%.2f ,%.2f\n", pfo->getMomentum()[0], pfo->getMomentum()[1], pfo->getMomentum()[2], pfo->getEnergy());
+				continue;
+			}
+			_dressedPFOs.push_back(i);
+			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_phot->getMomentum()[0],
+								  		 pfo->getMomentum()[1] + pfo_phot->getMomentum()[1],
+								  		 pfo->getMomentum()[2] + pfo_phot->getMomentum()[2]};
+			double dressedE = pfo->getEnergy() + pfo_phot->getEnergy();
+			pfo->setMomentum(dressedMomentum);
+			pfo->setEnergy(dressedE);
+		}
+	}
+}
 void IsolatedLeptonFinderProcessor::end() {
 }
 
@@ -372,12 +492,12 @@ bool IsolatedLeptonFinderProcessor::IsGoodLepton( ReconstructedParticle* pfo ) {
 	return true;
 }
 
-bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo, bool omitDressed ) {
 
-	if ( _useRectangularIsolation && !IsIsolatedRectangular(pfo) )
+	if ( _useRectangularIsolation && !IsIsolatedRectangular(pfo, omitDressed) )
 		return false;
 
-	if ( _usePolynomialIsolation && !IsIsolatedPolynomial(pfo) )
+	if ( _usePolynomialIsolation && !IsIsolatedPolynomial(pfo, omitDressed) )
 		return false;
 
 	if ( _useJetIsolation && !IsIsolatedJet(pfo) )
@@ -386,9 +506,9 @@ bool IsolatedLeptonFinderProcessor::IsIsolatedLepton( ReconstructedParticle* pfo
 	return true;
 }
 
-bool IsolatedLeptonFinderProcessor::IsIsolatedRectangular( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsIsolatedRectangular( ReconstructedParticle* pfo, bool omitDressed ) {
 	float E     = pfo->getEnergy() ;
-	float coneE = getConeEnergy( pfo );
+	float coneE = getConeEnergy( pfo, omitDressed );
 
 	if (E < _isoMinTrackEnergy) return false;
 	if (E > _isoMaxTrackEnergy) return false;
@@ -398,9 +518,9 @@ bool IsolatedLeptonFinderProcessor::IsIsolatedRectangular( ReconstructedParticle
 	return true;
 }
 
-bool IsolatedLeptonFinderProcessor::IsIsolatedPolynomial( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsIsolatedPolynomial( ReconstructedParticle* pfo, bool omitDressed ) {
 	float E     = pfo->getEnergy() ;
-	float coneE = getConeEnergy( pfo );
+	float coneE = getConeEnergy( pfo, omitDressed );
 
 	if ( coneE*coneE <= _isoPolynomialA*E*E + _isoPolynomialB*E + _isoPolynomialC )
 		return true ;
@@ -478,7 +598,7 @@ bool IsolatedLeptonFinderProcessor::PassesImpactParameterSignificanceCuts( Recon
 	return true;
 }
 
-float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo ) {
+float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo, bool omitDressed ) {
 	float coneE = 0;
 
 	TVector3 P( pfo->getMomentum() );
@@ -488,6 +608,11 @@ float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo )
 
 		// don't add itself to the cone energy
 		if ( pfo == pfo_i ) continue;
+
+		// don't add dressed photons to the cone energy
+		if (omitDressed && std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
+			continue;
+		}
 
 		TVector3 P_i( pfo_i->getMomentum() );
 		float cosTheta = P.Dot( P_i )/(P.Mag()*P_i.Mag());

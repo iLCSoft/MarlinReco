@@ -260,10 +260,15 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_useLeptonDressing,
 				bool(true));
 
-		registerProcessorParameter( "DressCosConeAngle",
-				"Cosine of the half-angle of the cone used in lepton dressing procedure",
-				_dressCosConeAngle,
-				float(0.95));
+		registerProcessorParameter( "DressPhotonCosConeAngle",
+				"Cosine of the half-angle of the cone used for lepton dressing with photons",
+				_dressPhotonCosConeAngle,
+				float(0.999848));
+
+		registerProcessorParameter( "MergeLeptonCosConeAngle",
+				"Cosine of the half-angle of the cone used for lepton merging",
+				_mergeLeptonCosConeAngle,
+				float(0.999048));
 	}
 
 
@@ -323,17 +328,31 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 			continue;
 		}
 
-		if  ( IsIsolatedLepton( pfo, false ) )
+		if  ( IsIsolatedLepton( pfo, false ) ){
+			streamlog_out(DEBUG) << "ISOLATION undressed "<<pfo->getType()<<": SUCCESS !" << std::endl;
 			otIsoLepCol->addElement( pfo );
-		else
+		}
+		else{
+			streamlog_out(DEBUG) << "ISOLATION undressed "<<pfo->getType()<<": FAILED" << std::endl;
 			otPFOsRemovedIsoLepCol->addElement( pfo );
+		}
 
 		// remember lepton indices for dressing
-		goodLeptonIndices.push_back(i);
+		// goodLeptonIndices.push_back(i);
+		if (fabs(pfo->getType()) == 11 || fabs(pfo->getType()) == 13) goodLeptonIndices.push_back(i);
 	}
 
 
 	// Dressed leptons
+	// order by energy
+	for (unsigned int i = 1; i < goodLeptonIndices.size(); ++i)
+	{
+		if (isMoreEnergetic(i, i-1)) {
+			std::swap(goodLeptonIndices.at(i), goodLeptonIndices.at(i-1));
+			i = 1;
+		}
+	}
+	// dress them
 	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
 	{
 		// copy this in an ugly fashion to be modofiable - a versatile copy constructor would be much better!
@@ -350,25 +369,31 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		pfo->setStartVertex(pfo_tmp->getStartVertex());
 
 		// test how close they are to the other leptons
-		for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
-		{
-			ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
-			TVector3 P_this( pfo->getMomentum() );
-			TVector3 P_other( pfo_other->getMomentum() );
-			float cosTheta = P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag());
-			streamlog_out(MESSAGE) << "Lep "<<i<<" - "<<j<<": "<<cosTheta<<std::endl;
+
+		streamlog_out(DEBUG) << "Processing lep "<<i<<" with type "<< pfo->getType()<<" with E = "<<pfo->getEnergy()<<std::endl;
+		// for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
+		// {
+		// 	ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
+		// 	TVector3 P_this( pfo->getMomentum() );
+		// 	TVector3 P_other( pfo_other->getMomentum() );
+		// 	float cosTheta = P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag());
+		// 	streamlog_out(DEBUG) << "Lep "<<i<<"("<<goodLeptonIndices.at(i)<<") - "<<j<<"("<<goodLeptonIndices.at(j)<<"): "<<cosTheta<<std::endl;
+		// }
+
+		// don't reprocess merged leptons
+		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
+			continue;
 		}
 
-
-		dressWithPhotons(pfo);
+		dressLepton(pfo, goodLeptonIndices.at(i));
   		// printf("dressedMomentum: %.2f -> %.2f, %.2f -> %.2f ,%.2f -> %.2f ,%.2f -> %.2f\n", pfo_tmp->getMomentum()[0], pfo->getMomentum()[0], pfo_tmp->getMomentum()[1], pfo->getMomentum()[1], pfo_tmp->getMomentum()[2], pfo->getMomentum()[2], pfo->getEnergy(), pfo_tmp->getEnergy());
 
 		if  ( IsIsolatedLepton( pfo, true ) ){
-			streamlog_out(MESSAGE) << "Isolation: SUCCESS"<<std::endl;
+			streamlog_out(DEBUG) << "ISOLATION dressed "<<pfo->getType()<<": SUCCESS !" << std::endl;
 			otDressedIsoLepCol->addElement( pfo );
 		}
 		else{
-			streamlog_out(MESSAGE) << "Isolation: FAIL"<<std::endl;
+			streamlog_out(DEBUG) << "ISOLATION dressed "<<pfo->getType()<<": FAILED" << std::endl;
 			otPFOsRemovedDressedIsoLepCol->addElement( pfo );
 		}
 	}
@@ -381,7 +406,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 			continue;
 		}
 
-		// don't add dressed photons
+		// don't add dressed PFOs
 		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
 			continue;
 		}
@@ -396,11 +421,36 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		<< std::endl ;
 
 
-	streamlog_out(MESSAGE) << "npfo:                     " <<npfo<<std::endl;
-	streamlog_out(MESSAGE) << "nLepton:                  " <<goodLeptonIndices.size()<<std::endl;
-	streamlog_out(MESSAGE) << "nDressed:                 " <<_dressedPFOs.size()<<std::endl;
-	streamlog_out(MESSAGE) << "Sizes removed collection: " <<otPFOsRemovedIsoLepCol->getNumberOfElements()<<" and "<<otPFOsRemovedDressedIsoLepCol->getNumberOfElements()<<std::endl;
-	streamlog_out(MESSAGE) << "Sizes lepton collection:  " <<otIsoLepCol->getNumberOfElements()<<" and "<<otDressedIsoLepCol->getNumberOfElements()<<std::endl;
+	// calculate total energy
+	double etot_iso(0);
+	for (int i = 0; i < otPFOsRemovedIsoLepCol->getNumberOfElements(); ++i)
+	{
+		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otPFOsRemovedIsoLepCol->getElementAt(i) );
+		etot_iso += pfo->getEnergy();
+	}
+	for (int i = 0; i < otIsoLepCol->getNumberOfElements(); ++i)
+	{
+		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otIsoLepCol->getElementAt(i) );
+		etot_iso += pfo->getEnergy();
+	}
+	double etot_dressediso(0);
+	for (int i = 0; i < otPFOsRemovedDressedIsoLepCol->getNumberOfElements(); ++i)
+	{
+		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otPFOsRemovedDressedIsoLepCol->getElementAt(i) );
+		etot_dressediso += pfo->getEnergy();
+	}
+	for (int i = 0; i < otDressedIsoLepCol->getNumberOfElements(); ++i)
+	{
+		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otDressedIsoLepCol->getElementAt(i) );
+		etot_dressediso += pfo->getEnergy();
+	}
+
+	streamlog_out(DEBUG) << "npfo:                     " <<npfo<<std::endl;
+	streamlog_out(DEBUG) << "nLepton:                  " <<goodLeptonIndices.size()<<std::endl;
+	streamlog_out(DEBUG) << "nDressed:                 " <<_dressedPFOs.size()<<std::endl;
+	streamlog_out(DEBUG) << "Energy:                   " <<etot_iso<<" and "<<etot_dressediso<<std::endl;
+	streamlog_out(DEBUG) << "Sizes removed collection: " <<otPFOsRemovedIsoLepCol->getNumberOfElements()<<" and "<<otPFOsRemovedDressedIsoLepCol->getNumberOfElements()<<std::endl;
+	streamlog_out(DEBUG) << "Sizes lepton collection:  " <<otIsoLepCol->getNumberOfElements()<<" and "<<otDressedIsoLepCol->getNumberOfElements()<<std::endl;
 
 
 	// Add PFOs to new collections
@@ -409,31 +459,38 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedDressedIsoLepCollection.c_str() );
 	evt->addCollection( otDressedIsoLepCol, _outputDressedIsoLepCollection.c_str() );
 }
-void IsolatedLeptonFinderProcessor::dressWithPhotons( ReconstructedParticleImpl* pfo ) {
+void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) {
 	TVector3 P_lep( pfo->getMomentum() );
 	int npfo = _pfoCol->getNumberOfElements();
 	for ( int i = 0; i < npfo; i++ ) {
-		ReconstructedParticle* pfo_phot = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_dress = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
-		// only add photons
-		if (pfo_phot->getType() != 22) continue;
+		// only add photons and electrons
+		bool isPhoton = (pfo_dress->getType() == 22);
+		bool isElectron = (fabs(pfo_dress->getType()) == 11);
+		if (!isPhoton && !isElectron) continue;
 
 		// don't add itself to itself
-		if ( pfo_phot == pfo ) continue;
+		if ( i == PFO_idx ) continue;
 
-		TVector3 P_phot( pfo_phot->getMomentum() );
-		float cosTheta = P_lep.Dot( P_phot )/(P_lep.Mag()*P_phot.Mag());
-		if ( cosTheta >= _dressCosConeAngle ){
+		TVector3 Pdress( pfo_dress->getMomentum() );
+		float cosTheta = P_lep.Dot( Pdress )/(P_lep.Mag()*Pdress.Mag());
+
+		if ( (isPhoton && cosTheta >= _dressPhotonCosConeAngle) ||
+			 (isElectron && cosTheta >= _mergeLeptonCosConeAngle) ){
 			if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
-				streamlog_out(MESSAGE) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
+				if (pfo_dress->getType() == 22) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
+				if (fabs(pfo_dress->getType()) == 11) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
 				// printf(" -- this lep: %.2f, %.2f ,%.2f ,%.2f\n", pfo->getMomentum()[0], pfo->getMomentum()[1], pfo->getMomentum()[2], pfo->getEnergy());
 				continue;
 			}
+			if (pfo_dress->getType() == 22) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with cosTheta "<<cosTheta<<std::endl;
+			if (fabs(pfo_dress->getType()) == 11) streamlog_out(DEBUG) << "MESSAGE: dressing lepton "<<i<<" with cosTheta "<<cosTheta<<std::endl;
 			_dressedPFOs.push_back(i);
-			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_phot->getMomentum()[0],
-								  		 pfo->getMomentum()[1] + pfo_phot->getMomentum()[1],
-								  		 pfo->getMomentum()[2] + pfo_phot->getMomentum()[2]};
-			double dressedE = pfo->getEnergy() + pfo_phot->getEnergy();
+			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_dress->getMomentum()[0],
+								  		 pfo->getMomentum()[1] + pfo_dress->getMomentum()[1],
+								  		 pfo->getMomentum()[2] + pfo_dress->getMomentum()[2]};
+			double dressedE = pfo->getEnergy() + pfo_dress->getEnergy();
 			pfo->setMomentum(dressedMomentum);
 			pfo->setEnergy(dressedE);
 		}
@@ -609,7 +666,7 @@ float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo, 
 		// don't add itself to the cone energy
 		if ( pfo == pfo_i ) continue;
 
-		// don't add dressed photons to the cone energy
+		// don't add dressed PFOs to the cone energy
 		if (omitDressed && std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
 			continue;
 		}

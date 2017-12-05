@@ -11,6 +11,7 @@
 #ifndef IsolatedLeptonFinderProcessor_h
 #define IsolatedLeptonFinderProcessor_h 1
 
+#include <algorithm>
 #include <string>
 #include <map>
 
@@ -64,8 +65,15 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** Returns true if it passes impact parameter significance cuts */
 		bool PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) ;
 
+		/** Helper function to order PFOS by energy */
+		bool isMoreEnergetic (int i, int j) {
+			ReconstructedParticle* pfo_i = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+			ReconstructedParticle* pfo_j = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(j) );
+			return (pfo_i->getEnergy()>pfo_j->getEnergy());
+		}
+
 		/** Adds photons around lepton to four vector */
-		void dressWithPhotons( ReconstructedParticleImpl* pfo ) ;
+		void dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) ;
 
 		/** Calculates the cone energy */
 		float getConeEnergy( ReconstructedParticle* pfo, bool omitDressed) ;
@@ -145,7 +153,8 @@ class IsolatedLeptonFinderProcessor : public Processor {
 
 		/** If set to true, uses lepton dressing */
 		bool _useLeptonDressing = false;
-		float _dressCosConeAngle = 0;
+		float _dressPhotonCosConeAngle = 0;
+		float _mergeLeptonCosConeAngle = 0;
 		std::vector<int> _dressedPFOs {};
 
 } ;

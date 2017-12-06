@@ -504,7 +504,7 @@ bool IsolatedLeptonFinderProcessor::IsCharged( ReconstructedParticle* pfo ) {
 	return true;
 }
 
-bool IsolatedLeptonFinderProcessor::IsLepton( ReconstructedParticle* pfo ) {
+bool IsolatedLeptonFinderProcessor::IsElectron( ReconstructedParticle* pfo ) {
 
 	float CalE[2];
 	getCalEnergy( pfo , CalE );
@@ -515,20 +515,37 @@ bool IsolatedLeptonFinderProcessor::IsLepton( ReconstructedParticle* pfo ) {
 	double calSum = ecale+hcale;
 	double ecalFrac = calSum>0 ? ecale / calSum : 0;
 
-	// electron
 	if ( calByP >= _electronMinEnergyDepositByMomentum
 			&& calByP <= _electronMaxEnergyDepositByMomentum
 			&& ecalFrac >= _electronMinEcalToHcalFraction
 			&& ecalFrac <= _electronMaxEcalToHcalFraction )
 		return true;
 
-	// muon
+	return false;
+}
+bool IsolatedLeptonFinderProcessor::IsMuon( ReconstructedParticle* pfo ) {
+
+	float CalE[2];
+	getCalEnergy( pfo , CalE );
+	double ecale  = CalE[0];
+	double hcale  = CalE[1];
+	double p      = TVector3( pfo->getMomentum() ).Mag();
+	double calByP = p>0 ? (ecale + hcale)/p : 0;
+	double calSum = ecale+hcale;
+	double ecalFrac = calSum>0 ? ecale / calSum : 0;
+
 	if ( calByP >= _muonMinEnergyDepositByMomentum
 			&& calByP <= _muonMaxEnergyDepositByMomentum
 			&& ecalFrac >= _muonMinEcalToHcalFraction
 			&& ecalFrac <= _muonMaxEcalToHcalFraction )
 		return true;
 
+	return false;
+}
+bool IsolatedLeptonFinderProcessor::IsLepton( ReconstructedParticle* pfo ) {
+
+	if (IsElectron(pfo) || IsMuon(pfo))
+		return true;
 	return false;
 }
 

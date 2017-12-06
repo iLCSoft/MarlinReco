@@ -56,8 +56,14 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** Returns true if charged */
 		bool IsCharged( ReconstructedParticle* pfo ) ;
 
-		/** Returns true if it passes lepton ID cuts */
+		/** Returns true if it passes muon or electron ID cuts */
 		bool IsLepton( ReconstructedParticle* pfo ) ;
+
+		/** Returns true if it passes electron ID cuts */
+		bool IsElectron( ReconstructedParticle* pfo ) ;
+
+		/** Returns true if it passes muon ID cuts */
+		bool IsMuon( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if it passes impact parameter cuts */
 		bool PassesImpactParameterCuts( ReconstructedParticle* pfo ) ;

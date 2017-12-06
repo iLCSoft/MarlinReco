@@ -269,6 +269,11 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				"Cosine of the half-angle of the cone used for lepton merging",
 				_mergeLeptonCosConeAngle,
 				float(0.999048));
+
+		registerProcessorParameter( "UsePandoraIDs",
+				"Use Pandora particle IDs for algorithm",
+				_usePandoraIDs,
+				bool(false));
 	}
 
 
@@ -338,8 +343,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		}
 
 		// remember lepton indices for dressing
-		// goodLeptonIndices.push_back(i);
-		if (fabs(pfo->getType()) == 11 || fabs(pfo->getType()) == 13) goodLeptonIndices.push_back(i);
+		goodLeptonIndices.push_back(i);
 	}
 
 
@@ -467,7 +471,7 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 
 		// only add photons and electrons
 		bool isPhoton = IsPhoton(pfo_dress);
-		bool isElectron = (fabs(pfo_dress->getType()) == 11);
+		bool isElectron = IsElectron(pfo_dress);
 		if (!isPhoton && !isElectron) continue;
 
 		// don't add itself to itself
@@ -479,13 +483,13 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 		if ( (isPhoton && cosTheta >= _dressPhotonCosConeAngle) ||
 			 (isElectron && cosTheta >= _mergeLeptonCosConeAngle) ){
 			if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
-				if (pfo_dress->getType() == 22) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
-				if (fabs(pfo_dress->getType()) == 11) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with cosTheta "<<cosTheta<<" already close to another lepton!"<<std::endl;
+				if (isPhoton) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
+				if (isElectron) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
 				// printf(" -- this lep: %.2f, %.2f ,%.2f ,%.2f\n", pfo->getMomentum()[0], pfo->getMomentum()[1], pfo->getMomentum()[2], pfo->getEnergy());
 				continue;
 			}
-			if (pfo_dress->getType() == 22) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with cosTheta "<<cosTheta<<std::endl;
-			if (fabs(pfo_dress->getType()) == 11) streamlog_out(DEBUG) << "MESSAGE: dressing lepton "<<i<<" with cosTheta "<<cosTheta<<std::endl;
+			if (isPhoton) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<std::endl;
+			if (isElectron) streamlog_out(DEBUG) << "MESSAGE: dressing lepton "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<std::endl;
 			_dressedPFOs.push_back(i);
 			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_dress->getMomentum()[0],
 								  		 pfo->getMomentum()[1] + pfo_dress->getMomentum()[1],
@@ -510,6 +514,8 @@ bool IsolatedLeptonFinderProcessor::IsPhoton( ReconstructedParticle* pfo ) {
 }
 bool IsolatedLeptonFinderProcessor::IsElectron( ReconstructedParticle* pfo ) {
 
+	if (_usePandoraIDs) return (abs(pfo->getType()) == 11);
+
 	float CalE[2];
 	getCalEnergy( pfo , CalE );
 	double ecale  = CalE[0];
@@ -528,6 +534,8 @@ bool IsolatedLeptonFinderProcessor::IsElectron( ReconstructedParticle* pfo ) {
 	return false;
 }
 bool IsolatedLeptonFinderProcessor::IsMuon( ReconstructedParticle* pfo ) {
+
+	if (_usePandoraIDs) return (abs(pfo->getType()) == 13);
 
 	float CalE[2];
 	getCalEnergy( pfo , CalE );

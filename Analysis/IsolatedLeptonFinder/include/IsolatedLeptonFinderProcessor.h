@@ -166,6 +166,8 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		float _mergeLeptonCosConeAngle = 0;
 		std::vector<int> _dressedPFOs {};
 
+		/** If set to true, uses Pandora particle IDs */
+		bool _usePandoraIDs = false;
 } ;
 
 #endif

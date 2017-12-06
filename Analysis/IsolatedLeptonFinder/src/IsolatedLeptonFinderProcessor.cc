@@ -255,10 +255,10 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_jetIsoVetoMaxZ,
 				float(0.6));
 
-		registerProcessorParameter( "UseLeptonDressing",
-				"Use lepton dressing",
-				_useLeptonDressing,
-				bool(true));
+		registerProcessorParameter( "WhichLeptons",
+				"Use DRESSED, UNDRESSED or BOTH lepton algorithms",
+				_whichLeptons,
+				std::string("UNDRESSED"));
 
 		registerProcessorParameter( "DressPhotonCosConeAngle",
 				"Cosine of the half-angle of the cone used for lepton dressing with photons",
@@ -458,10 +458,18 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 
 	// Add PFOs to new collections
-	evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
-	evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
-	evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedDressedIsoLepCollection.c_str() );
-	evt->addCollection( otDressedIsoLepCol, _outputDressedIsoLepCollection.c_str() );
+	if (_whichLeptons == "BOTH"){
+		evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
+		evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedDressedIsoLepCollection.c_str() );
+		evt->addCollection( otDressedIsoLepCol, _outputDressedIsoLepCollection.c_str() );
+	}else if (_whichLeptons == "DRESSED"){
+		evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otDressedIsoLepCol, _outputIsoLepCollection.c_str() );
+	}else if (_whichLeptons == "UNDRESSED"){
+		evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
+	}
 }
 void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) {
 	TVector3 P_lep( pfo->getMomentum() );

@@ -466,7 +466,7 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 		ReconstructedParticle* pfo_dress = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
 		// only add photons and electrons
-		bool isPhoton = (pfo_dress->getType() == 22);
+		bool isPhoton = IsPhoton(pfo_dress);
 		bool isElectron = (fabs(pfo_dress->getType()) == 11);
 		if (!isPhoton && !isElectron) continue;
 
@@ -504,6 +504,10 @@ bool IsolatedLeptonFinderProcessor::IsCharged( ReconstructedParticle* pfo ) {
 	return true;
 }
 
+bool IsolatedLeptonFinderProcessor::IsPhoton( ReconstructedParticle* pfo ) {
+	if ( pfo->getType() == 22 ) return true;
+	return false;
+}
 bool IsolatedLeptonFinderProcessor::IsElectron( ReconstructedParticle* pfo ) {
 
 	float CalE[2];

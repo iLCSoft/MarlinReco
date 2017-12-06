@@ -65,6 +65,9 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** Returns true if it passes muon ID cuts */
 		bool IsMuon( ReconstructedParticle* pfo ) ;
 
+		/** Returns true if it passes photon ID cuts */
+		bool IsPhoton( ReconstructedParticle* pfo ) ;
+
 		/** Returns true if it passes impact parameter cuts */
 		bool PassesImpactParameterCuts( ReconstructedParticle* pfo ) ;
 

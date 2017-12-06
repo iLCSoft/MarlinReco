@@ -161,9 +161,9 @@ class IsolatedLeptonFinderProcessor : public Processor {
 
 
 		/** If set to true, uses lepton dressing */
-		float _dressPhotonCosConeAngle = 0;
-		float _mergeLeptonCosConeAngle = 0;
 		std::string _whichLeptons = "UNDRESSED";
+		float _dressPhotonConeAngle = 0;
+		float _mergeLeptonConeAngle = 0;
 		std::vector<int> _dressedPFOs {};
 
 		/** If set to true, uses Pandora particle IDs */

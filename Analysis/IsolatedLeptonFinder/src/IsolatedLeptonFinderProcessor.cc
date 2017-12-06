@@ -260,15 +260,15 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_whichLeptons,
 				std::string("UNDRESSED"));
 
-		registerProcessorParameter( "DressPhotonCosConeAngle",
-				"Cosine of the half-angle of the cone used for lepton dressing with photons",
-				_dressPhotonCosConeAngle,
-				float(0.999848));
+		registerProcessorParameter( "DressPhotonConeAngle",
+				"Half-angle (in degrees) of the cone used for lepton dressing with photons",
+				_dressPhotonConeAngle,
+				float(1));
 
-		registerProcessorParameter( "MergeLeptonCosConeAngle",
-				"Cosine of the half-angle of the cone used for lepton merging",
-				_mergeLeptonCosConeAngle,
-				float(0.999048));
+		registerProcessorParameter( "MergeLeptonConeAngle",
+				"Half-angle (in degrees) of the cone used for lepton merging",
+				_mergeLeptonConeAngle,
+				float(2));
 
 		registerProcessorParameter( "UsePandoraIDs",
 				"Use Pandora particle IDs for algorithm",
@@ -486,18 +486,18 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 		if ( i == PFO_idx ) continue;
 
 		TVector3 Pdress( pfo_dress->getMomentum() );
-		float cosTheta = P_lep.Dot( Pdress )/(P_lep.Mag()*Pdress.Mag());
+		float theta = TMath::ACos(P_lep.Dot( Pdress )/(P_lep.Mag()*Pdress.Mag())) * 360 / (2 * TMath::Pi());
 
-		if ( (isPhoton && cosTheta >= _dressPhotonCosConeAngle) ||
-			 (isElectron && cosTheta >= _mergeLeptonCosConeAngle) ){
+		if ( (isPhoton && theta <= _dressPhotonConeAngle) ||
+			 (isElectron && theta <= _mergeLeptonConeAngle) ){
 			if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
-				if (isPhoton) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
-				if (isElectron) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
+				if (isPhoton) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
+				if (isElectron) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
 				// printf(" -- this lep: %.2f, %.2f ,%.2f ,%.2f\n", pfo->getMomentum()[0], pfo->getMomentum()[1], pfo->getMomentum()[2], pfo->getEnergy());
 				continue;
 			}
-			if (isPhoton) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<std::endl;
-			if (isElectron) streamlog_out(DEBUG) << "MESSAGE: dressing lepton "<<i<<" with cosTheta "<<cosTheta <<" and type "<<pfo->getType()<<std::endl;
+			if (isPhoton) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;
+			if (isElectron) streamlog_out(DEBUG) << "MESSAGE: merging lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;
 			_dressedPFOs.push_back(i);
 			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_dress->getMomentum()[0],
 								  		 pfo->getMomentum()[1] + pfo_dress->getMomentum()[1],

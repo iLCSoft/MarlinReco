@@ -260,6 +260,11 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_whichLeptons,
 				std::string("UNDRESSED"));
 
+		registerProcessorParameter( "MergeCloseElectrons",
+				"Merge close-by electrons into higher energy lepton",
+				_mergeCloseElectrons,
+				bool(false));
+
 		registerProcessorParameter( "DressPhotonConeAngle",
 				"Half-angle (in degrees) of the cone used for lepton dressing with photons",
 				_dressPhotonConeAngle,
@@ -341,7 +346,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		}
 
 		// remember lepton indices for dressing
-		goodLeptonIndices.push_back(i);
+		if (IsLepton( pfo )) goodLeptonIndices.push_back(i);
 	}
 
 
@@ -360,21 +365,21 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
-		// test how close they are to the other leptons
-
-		streamlog_out(DEBUG) << "Processing lep "<<i<<" with type "<< pfo->getType()<<" with E = "<<pfo->getEnergy()<<std::endl;
-		// for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
-		// {
-		// 	ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
-		// 	TVector3 P_this( pfo->getMomentum() );
-		// 	TVector3 P_other( pfo_other->getMomentum() );
-		// 	float cosTheta = P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag());
-		// 	streamlog_out(DEBUG) << "Lep "<<i<<"("<<goodLeptonIndices.at(i)<<") - "<<j<<"("<<goodLeptonIndices.at(j)<<"): "<<cosTheta<<std::endl;
-		// }
 
 		// don't reprocess merged leptons
 		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
 			continue;
+		}
+
+		// test how close they are to the other leptons
+		streamlog_out(DEBUG) << "Processing lep "<<i<<" with type "<< pfo->getType()<<" with E = "<<pfo->getEnergy()<<" isPhoton "<<IsPhoton(pfo)<< " isElectron "<<IsElectron(pfo)<<std::endl;
+		for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
+		{
+			ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
+			TVector3 P_this( pfo->getMomentum() );
+			TVector3 P_other( pfo_other->getMomentum() );
+			float theta = TMath::ACos(P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag())) * 360 / (2 * TMath::Pi());
+			streamlog_out(DEBUG) << "Lep "<<i<<"("<<goodLeptonIndices.at(i)<<") - "<<j<<"("<<goodLeptonIndices.at(j)<<"): "<<theta<<"°"<<std::endl;
 		}
 
 		dressLepton(pfo, goodLeptonIndices.at(i));
@@ -466,8 +471,10 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 
 		// only add photons and electrons
 		bool isPhoton = IsPhoton(pfo_dress);
-		bool isElectron = IsElectron(pfo_dress);
+		bool isElectron = !isPhoton && IsElectron(pfo_dress);  // avoid electrons identified as photons to enter as both
 		if (!isPhoton && !isElectron) continue;
+
+		if (!_mergeCloseElectrons && isElectron) continue;
 
 		// don't add itself to itself
 		if ( i == PFO_idx ) continue;
@@ -478,13 +485,13 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 		if ( (isPhoton && theta <= _dressPhotonConeAngle) ||
 			 (isElectron && theta <= _mergeLeptonConeAngle) ){
 			if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
-				if (isPhoton) streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
-				if (isElectron) streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;
+				if (isPhoton) {streamlog_out(DEBUG) << "WARNING: photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;}
+				else if (isElectron) {streamlog_out(DEBUG) << "WARNING: lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<" already close to another lepton!"<<std::endl;}
 				// printf(" -- this lep: %.2f, %.2f ,%.2f ,%.2f\n", pfo->getMomentum()[0], pfo->getMomentum()[1], pfo->getMomentum()[2], pfo->getEnergy());
 				continue;
 			}
-			if (isPhoton) streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;
-			if (isElectron) streamlog_out(DEBUG) << "MESSAGE: merging lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;
+			if (isPhoton) {streamlog_out(DEBUG) << "MESSAGE: dressing photon "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;}
+			else if (isElectron) {streamlog_out(DEBUG) << "MESSAGE: merging lepton "<<i<<" with theta "<<theta <<" and type "<<pfo->getType()<<std::endl;}
 			_dressedPFOs.push_back(i);
 			double dressedMomentum[3] = {pfo->getMomentum()[0] + pfo_dress->getMomentum()[0],
 								  		 pfo->getMomentum()[1] + pfo_dress->getMomentum()[1],

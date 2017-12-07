@@ -165,6 +165,7 @@ class IsolatedLeptonFinderProcessor : public Processor {
 
 		/** If set to true, uses lepton dressing */
 		std::string _whichLeptons = "UNDRESSED";
+		bool _mergeCloseElectrons = false;
 		float _dressPhotonConeAngle = 0;
 		float _mergeLeptonConeAngle = 0;
 		std::vector<int> _dressedPFOs {};

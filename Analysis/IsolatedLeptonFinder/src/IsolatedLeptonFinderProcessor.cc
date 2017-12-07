@@ -302,11 +302,9 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 	// Output PFOs removed dressed isolated leptons
 	LCCollectionVec* otPFOsRemovedDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
-	otPFOsRemovedDressedIsoLepCol->setSubset(true) ;
 
 	// Output PFOs of dressed isolated leptons
 	LCCollectionVec* otDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
-	otDressedIsoLepCol->setSubset(true);
 
 	// Prepare jet/recoparticle map for jet-based isolation
 	if (_useJetIsolation) {
@@ -359,18 +357,8 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	// dress them
 	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
 	{
-		// copy this in an ugly fashion to be modofiable - a versatile copy constructor would be much better!
 		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
-		ReconstructedParticleImpl* pfo = new ReconstructedParticleImpl();
-		pfo->setMomentum(pfo_tmp->getMomentum());
-		pfo->setEnergy(pfo_tmp->getEnergy());
-		pfo->setType(pfo_tmp->getType());
-		pfo->setCovMatrix(pfo_tmp->getCovMatrix());
-		pfo->setMass(pfo_tmp->getMass());
-		pfo->setCharge(pfo_tmp->getCharge());
-		pfo->setParticleIDUsed(pfo_tmp->getParticleIDUsed());
-		pfo->setGoodnessOfPID(pfo_tmp->getGoodnessOfPID());
-		pfo->setStartVertex(pfo_tmp->getStartVertex());
+		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
 		// test how close they are to the other leptons
 
@@ -415,14 +403,13 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 			continue;
 		}
 
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 		otPFOsRemovedDressedIsoLepCol->addElement( pfo );
 	}
 
 
-	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber()
-		<< "   in run:  " << evt->getRunNumber()
-		<< std::endl ;
+	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
 	// calculate total energy
@@ -510,7 +497,20 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 }
 void IsolatedLeptonFinderProcessor::end() {
 }
-
+ReconstructedParticleImpl* IsolatedLeptonFinderProcessor::CopyReconstructedParticle ( ReconstructedParticle* pfo_orig ) {
+	// copy this in an ugly fashion to be modifiable - a versatile copy constructor would be much better!
+	ReconstructedParticleImpl* pfo = new ReconstructedParticleImpl();
+	pfo->setMomentum(pfo_orig->getMomentum());
+	pfo->setEnergy(pfo_orig->getEnergy());
+	pfo->setType(pfo_orig->getType());
+	pfo->setCovMatrix(pfo_orig->getCovMatrix());
+	pfo->setMass(pfo_orig->getMass());
+	pfo->setCharge(pfo_orig->getCharge());
+	pfo->setParticleIDUsed(pfo_orig->getParticleIDUsed());
+	pfo->setGoodnessOfPID(pfo_orig->getGoodnessOfPID());
+	pfo->setStartVertex(pfo_orig->getStartVertex());
+	return pfo;
+}
 bool IsolatedLeptonFinderProcessor::IsCharged( ReconstructedParticle* pfo ) {
 	if ( pfo->getCharge() == 0 ) return false;
 	return true;

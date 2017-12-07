@@ -90,6 +90,9 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		/** [0]:Ecal energy, [1]:Hcal energy */
 		void getCalEnergy( ReconstructedParticle* pfo , float* cale) ;
 
+		/** Replace missing copy constructor by hand */
+		ReconstructedParticleImpl* CopyReconstructedParticle ( ReconstructedParticle* pfo ) ;
+
 		/** Input collection */
 		std::string _inputPFOsCollection{};
 

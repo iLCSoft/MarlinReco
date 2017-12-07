@@ -48,7 +48,7 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				std::string("Isolep") );
 
 		registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-				"OutputCollectionWithoutDressedIsolatedLepton",
+				"OutputCollectionWithoutDressedIsolatedLeptons",
 				"Copy of input collection but without the dressed isolated leptons",
 				_outputPFOsRemovedDressedIsoLepCollection,
 				std::string("PandoraPFOsWithoutDressedIsoLep") );

@@ -230,12 +230,13 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   }
 
   collFinder->ReportKnownDetectors();
-
+  streamlog_out(DEBUG5) << "Done reporting detectors.\n";
 
   int nTracks = tracks->getNumberOfElements()  ;
 
   for (int i = 0; i < nTracks; i++)
   {
+    streamlog_out(DEBUG5) << "Processing track #" << i << ".\n";
     TrackImpl * track = dynamic_cast<TrackImpl*>( tracks->getElementAt(i) );
 
     /*** Analyse hits and get dE/dx from each ***/
@@ -243,15 +244,16 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     EVENT::TrackerHitVec trackhits = track->getTrackerHits();
 
     MarlinTrk::IMarlinTrack* marlin_trk = trkSystem->createTrack();
-
     for( EVENT::TrackerHitVec::iterator it = trackhits.begin() ; it != trackhits.end() ; ++it ){
       marlin_trk->addHit(*it);
     }//end loop on hits
+
+    streamlog_out(DEBUG5) << "Created marlin_trk.\n";
     TrackStateImpl trackState( *(track->getTrackState(TrackState::AtFirstHit)) );
+    streamlog_out(DEBUG5) << "Got track state." << std::endl;
 
     marlin_trk->initialise( trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
-
-    unsigned iRegHits = 0;
+    streamlog_out(DEBUG5) << "Initialized marlin_trk.\n";
 
     dEdxVec dEdxHitVec;
 
@@ -276,6 +278,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       dd4hep::rec::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
 
       // Normal to the surface of hit
+      streamlog_out(DEBUG5) << "Looking for the Normal to the surface of hit.\n";
       unsigned long cellid = trackhits[ihit]->getCellID0();
       dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
       if (surface == surfMap->end()) {
@@ -284,7 +287,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
         exit(0);
       }
       dd4hep::rec::Vector3D surfaceNormal = surface->second->normal();
-      streamlog_out(DEBUG) << "Found surface corresponding to track hit ID " << cellid << ".\n";
+      streamlog_out(DEBUG5) << "Found surface corresponding to track hit ID " << cellid << ".\n";
 
       double norm = sqrt(trackDir.dot(trackDir)*surfaceNormal.dot(surfaceNormal));
       if (norm < FLT_MIN) continue;
@@ -310,14 +313,18 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
       // I am not sure whether the following is the intended use of the hit "type".
       // The hit type value is being overwritten here, but it was apparently not used before.
-      ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
+      // Todo: Why was I doing this at all?
+      /*try {
+        ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
+      }
+      catch (std::exception &) {}*/
 
-      iRegHits++;
     }
-    if(iRegHits == 0) continue;
+    if(dEdxHitVec.size() == 0) continue;
 
     double dEdx, dEdxError;
     dEdx = dEdxEval(dEdxHitVec, dEdxError);
+    // This is read-only if track is read from existing lcio file!
     track->setdEdx(dEdx);
     track->setdEdxError(dEdxError);
   }

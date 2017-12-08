@@ -216,18 +216,37 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
     streamlog_out(MESSAGE) << "Detector element #" << i << " of type " << detElements.at(i).type();
     streamlog_out(MESSAGE) << ", named " << detElements.at(i).name() << "\n";
     streamlog_out(MESSAGE) << " ... expects collection name " << _collectionNames[i] << "\n";
+    streamlog_out(MESSAGE) << " ... has type flags " << detElements.at(i).typeFlag() << "\n";
 
     if(! (elementMask & 1 << i) ) {
       streamlog_out(MESSAGE) << "Turned OFF in the element mask (see ElementMask parameter).\n";
       continue;
     }
 
-    int tf = detElements.at(i).typeFlag();
-    detElements.at(i).name();
+    int tf = 0;
+
+    void *layering_tmp = NULL;
+
+    try {
+      streamlog_out(DEBUG) << "Trying ZPlanarData.\n";
+      layering_tmp = detElements.at(i).extension<dd4hep::rec::ZPlanarData>() ;
+      tf = dd4hep::DetType::BARREL;
+    }
+    catch ( std::exception &e) {
+      streamlog_out(DEBUG) << "Caught exception " << e.what() << std::endl;
+      try {
+            streamlog_out(DEBUG) << "Trying ZDiskPetalsData.\n";
+            layering_tmp = detElements.at(i).extension<dd4hep::rec::ZDiskPetalsData>() ;
+            tf = dd4hep::DetType::ENDCAP;
+          }
+      catch ( std::exception &e1) {
+        streamlog_out(DEBUG) << "Caught exception " << e1.what() << std::endl;
+      }
+    }
 
     if (tf & dd4hep::DetType::BARREL) {
 
-      dd4hep::rec::ZPlanarData *layering = detElements.at(i).extension<dd4hep::rec::ZPlanarData>() ;
+      dd4hep::rec::ZPlanarData *layering = static_cast<dd4hep::rec::ZPlanarData*>(layering_tmp);
       streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
 
       for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
@@ -249,7 +268,7 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
     }
     else if (tf & dd4hep::DetType::ENDCAP) {
 
-      dd4hep::rec::ZDiskPetalsData *layering = detElements.at(i).extension<dd4hep::rec::ZDiskPetalsData>() ;
+      dd4hep::rec::ZDiskPetalsData *layering = static_cast<dd4hep::rec::ZDiskPetalsData*>(layering_tmp);
       streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
 
       for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
@@ -265,14 +284,16 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
         }
       }
 
-
       streamlog_out(MESSAGE) << "\n";
       knownDetectors.push_back(new PetalResolver(tf, layering, _collectionNames[i], sensThickCheatVals.at(i)));
     }
     else {
       streamlog_out(WARNING) << "Detector element #" << i << " of type " << detElements.at(i).type();
-      streamlog_out(WARNING) << ", named " << detElements.at(i).name() << " has an unknown type (barrel/endcap)"
-          " and will not be added!\n";
+      streamlog_out(WARNING) << ", named " << detElements.at(i).name() << " has neither an extension"
+          " of type ZPlanarData nor of type ZDiskPetalsData and will not be added!\n";
+      streamlog_out(WARNING) << "dd4hep::DetType::BARREL = " << dd4hep::DetType::BARREL << "\n";
+      streamlog_out(WARNING) << "dd4hep::DetType::ENDCAP = " << dd4hep::DetType::ENDCAP << "\n";
+      streamlog_out(WARNING) << "Our type = " << tf << "\n";
     }
 
     if(sensThickCheatVals.at(i) > 0.) {
@@ -290,7 +311,7 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 
   int nFound=0;
 
-  streamlog_out(DEBUG) << "CollectionFinder::ReadCollections. Event #" << evt->getEventNumber()
+  streamlog_out(DEBUG5) << "CollectionFinder::ReadCollections. Event #" << evt->getEventNumber()
       << ". Number of collections to look for: " << knownDetectors.size() << "\n";
 
   for(std::vector<LayerResolver*>::iterator collit=knownDetectors.begin(); collit!=knownDetectors.end(); collit++) {
@@ -305,19 +326,19 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 
 double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
-  streamlog_out(DEBUG) << "CollectionFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
+  streamlog_out(DEBUG5) << "CollectionFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
 
   for(std::vector<LayerResolver*>::iterator cit=knownDetectors.begin(); cit!=knownDetectors.end(); cit++) {
 
-    streamlog_out(DEBUG) << " ... Looking in collection " << (*cit)->GetCollectionName() ;
-    streamlog_out(DEBUG) << " of type "
+    streamlog_out(DEBUG5) << " ... Looking in collection " << (*cit)->GetCollectionName() ;
+    streamlog_out(DEBUG5) << " of type "
                          << (*cit)->GetCollectionType() << " with " << (*cit)->GetNumberOfHits() << " hits.\n";
 
     for(int i=0; i<(*cit)->GetNumberOfHits(); i++) {
 
       if( thit == (*cit)->GetHit(i) ) {
 
-        streamlog_out(DEBUG) << " ... Found matching hit " << (*cit)->GetHit(i)->getCellID0()
+        streamlog_out(DEBUG5) << " ... Found matching hit " << (*cit)->GetHit(i)->getCellID0()
                                  << " with energy " << (*cit)->GetHit(i)->getEDep()
                                  << " in collection " << (*cit)->GetCollectionName() << ".\n";
 
@@ -325,8 +346,8 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
         tf = (*cit)->GetDetTypeFlag();
         int nLayers = (*cit)->GetNumberOfLayers();
 
-        streamlog_out(DEBUG) << " ... Layer number is " << nLayer << ".\n";
-        streamlog_out(DEBUG) << " ... Number of layers is " << nLayers << ".\n";
+        streamlog_out(DEBUG5) << " ... Layer number is " << nLayer << ".\n";
+        streamlog_out(DEBUG5) << " ... Number of layers is " << nLayers << ".\n";
         if(nLayer >= nLayers) {
           streamlog_out(ERROR) << "CollectionFinder::SensitiveThickness() -- Layer number out of range!\n";
           return 1.;
@@ -335,12 +356,12 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
         if (tf & dd4hep::DetType::BARREL) {
           double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer);
-          streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
+          streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
         }
         if (tf & dd4hep::DetType::ENDCAP) {
           double t = dynamic_cast<PetalResolver*>(*cit)->SensitiveThickness(nLayer);
-          streamlog_out(DEBUG) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
+          streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
         }
         streamlog_out(WARNING) << " ... Detector type flag not found!!!\n";
@@ -356,15 +377,16 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
 void LayerFinder::ReportKnownDetectors() {
 
-  streamlog_out(DEBUG) << "CollectionFinder knows the following detectors:\n";
+
+  streamlog_out(DEBUG5) << "LayerFinder knows the following detectors:\n";
   for(std::vector<LayerResolver*>::iterator dit=knownDetectors.begin(); dit!=knownDetectors.end(); dit++) {
     std::string dettype;
     if      ((*dit)->GetDetTypeFlag() & dd4hep::DetType::BARREL) dettype = "BARREL";
     else if ((*dit)->GetDetTypeFlag() & dd4hep::DetType::ENDCAP) dettype = "ENDCAP";
-    streamlog_out(DEBUG) << "Detector of type " << dettype;
-    streamlog_out(DEBUG) << " associated with collection name " << (*dit)->GetCollectionName() << "\n";
-    streamlog_out(DEBUG) << "Currently looking at collection of type " << (*dit)->GetCollectionType();
-    streamlog_out(DEBUG) << " with encoding " << (*dit)->GetCollectionEncoding() << "\n";
+    streamlog_out(DEBUG5) << "Detector of type " << dettype;
+    streamlog_out(DEBUG5) << " associated with collection name " << (*dit)->GetCollectionName() << "\n";
+    streamlog_out(DEBUG5) << "Currently looking at collection of type " << (*dit)->GetCollectionType();
+    streamlog_out(DEBUG5) << " with encoding " << (*dit)->GetCollectionEncoding() << "\n";
   }
 }
 

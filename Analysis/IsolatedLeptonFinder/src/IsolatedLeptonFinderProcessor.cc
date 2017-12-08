@@ -349,16 +349,9 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		if (IsLepton( pfo )) goodLeptonIndices.push_back(i);
 	}
 
-
 	// Dressed leptons
 	// order by energy
-	for (unsigned int i = 1; i < goodLeptonIndices.size(); ++i)
-	{
-		if (isMoreEnergetic(i, i-1)) {
-			std::swap(goodLeptonIndices.at(i), goodLeptonIndices.at(i-1));
-			i = 1;
-		}
-	}
+	std::sort(goodLeptonIndices.begin(), goodLeptonIndices.end(), [this](const int i, const int j) {return isMoreEnergetic(i, j);});
 	// dress them
 	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
 	{

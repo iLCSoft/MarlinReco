@@ -33,8 +33,9 @@ class IsolatedLeptonFinderProcessor : public Processor {
 		virtual Processor*  newProcessor() { return new IsolatedLeptonFinderProcessor ; }
 
 		IsolatedLeptonFinderProcessor() ;
-		IsolatedLeptonFinderProcessor(const IsolatedLeptonFinderProcessor &);
-		IsolatedLeptonFinderProcessor & operator = (const IsolatedLeptonFinderProcessor &);
+
+		IsolatedLeptonFinderProcessor(const IsolatedLeptonFinderProcessor &) = delete;
+		IsolatedLeptonFinderProcessor & operator = (const IsolatedLeptonFinderProcessor &) = delete;
 
 		virtual void init() ;
 		virtual void processEvent( LCEvent * evt ) ;

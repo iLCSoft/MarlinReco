@@ -9,11 +9,11 @@ typedef std::vector<Histogram*> HistVec;
 
 class Category{            // Container for Histograms
 private:
-  std::string catName ;    // name of the category, e.g. electrons, muons, pions
-  int nHists ;             // number of histograms
+  std::string catName{};    // name of the category, e.g. electrons, muons, pions
+  int nHists{};             // number of histograms
 
 public:
-  HistVec hists ;          // histograms (public to be access from outside)
+  HistVec hists{};          // histograms (public to be access from outside)
 
   // constructor: creates arrays
   Category(std::string Name, int NoOfHist);

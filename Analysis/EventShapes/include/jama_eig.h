@@ -18,13 +18,13 @@ class Eigenvalue
  private:
 
    /** Row and column dimension (square matrix).  */
-    int n;
-   int issymmetric; /* boolean*/
-   float d[3];
-   float e[3];
-   float V[3][3];
-   float H[3][3];
-   float ort[3];
+   int n{};
+   int issymmetric{}; /* boolean*/
+   float d[3]{};
+   float e[3]{};
+   float V[3][3]{};
+   float H[3][3]{};
+   float ort[3]{};
    
    void tred2() {
 
@@ -360,7 +360,7 @@ class Eigenvalue
 
    // Complex scalar division.
 
-   float cdivr, cdivi;
+   float cdivr{}, cdivi{};
    void cdiv(float xr, float xi, float yr, float yi) {
       float r,d;
       if (abs(yr) > abs(yi)) {

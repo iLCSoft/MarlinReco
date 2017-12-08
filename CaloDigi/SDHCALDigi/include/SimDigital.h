@@ -119,7 +119,7 @@ class SimDigital : public Processor
 
 				std::unique_ptr<CalorimeterHitImpl> ahit = nullptr ;
 
-				std::set<int> relatedHits {} ;
+				std::set<int> relatedHits{};
 				float maxEnergydueToHit = -1 ;
 				int rawHit = -1 ;
 
@@ -138,17 +138,17 @@ class SimDigital : public Processor
 		void removeHitsBelowThreshold(cellIDHitMap& myHitMap , float threshold) ;
 		void applyThresholds(cellIDHitMap& myHitMap) ;
 
-		std::vector<std::string> _inputCollections {} ;
+		std::vector<std::string> _inputCollections{};
 
-		std::vector<std::string> _outputCollections {} ;
-		std::vector<std::string> _outputRelCollections {} ;
+		std::vector<std::string> _outputCollections{};
+		std::vector<std::string> _outputRelCollections{};
 
-		std::map<std::string, int> _counters {} ;
-		std::vector<float> _thresholdHcal {} ;
+		std::map<std::string, int> _counters{};
+		std::vector<float> _thresholdHcal{};
 
-		std::vector<double> _hitCharge = {} ;
+		std::vector<double> _hitCharge = {};
 
-		std::map<dd4hep::long64 , std::vector<LCGenericObject*>> geneMap = {} ;
+		std::map<dd4hep::long64 , std::vector<LCGenericObject*>> geneMap = {};
 
 		float _cellSize = 0 ;
 		float _gasGapWidth = 1.2f ;

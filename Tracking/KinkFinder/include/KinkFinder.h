@@ -129,48 +129,48 @@ class KinkFinder : public Processor {
   float kinkMass(HelixClass* parent, HelixClass* daughter, float daughterMass, float neutralMass);
 
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
   
-  std::string _trackColName;
+  std::string _trackColName{};
 
-  std::string _kinkVertexColName;
-  std::string _prongVertexColName;
-  std::string _splitVertexColName;
+  std::string _kinkVertexColName{};
+  std::string _prongVertexColName{};
+  std::string _splitVertexColName{};
 
-  std::string _kinkRecoPartColName;
-  std::string _prongRecoPartColName;
-  std::string _splitRecoPartColName;
+  std::string _kinkRecoPartColName{};
+  std::string _prongRecoPartColName{};
+  std::string _splitRecoPartColName{};
   
-  float _rKinkCut;
-  int   _minTrackHits;
-  int   _maxDeltaTpcLayers;
-  int   _debugPrinting;
-  float _kaonDecayMassCut;
-  float _pionDecayMassCut;
-  float _sigmaDecayMassCut;
-  float _hyperonDecayMassCut;
-  float _sigmaTimeCut;
-  float _hyperonTimeCut;
-  float _tightDrCutTPC;
-  float _veryTightDrCutTPC;
-  float _drCutTPC;
-  float _drCutSIT;
-  float _looseDrCutSIT;
-  float _maxSplitTrackFracDeltaP;
-  float _maxSplitTrackDeltaP;
-  float _minELambda;
+  float _rKinkCut{};
+  int   _minTrackHits{};
+  int   _maxDeltaTpcLayers{};
+  int   _debugPrinting{};
+  float _kaonDecayMassCut{};
+  float _pionDecayMassCut{};
+  float _sigmaDecayMassCut{};
+  float _hyperonDecayMassCut{};
+  float _sigmaTimeCut{};
+  float _hyperonTimeCut{};
+  float _tightDrCutTPC{};
+  float _veryTightDrCutTPC{};
+  float _drCutTPC{};
+  float _drCutSIT{};
+  float _looseDrCutSIT{};
+  float _maxSplitTrackFracDeltaP{};
+  float _maxSplitTrackDeltaP{};
+  float _minELambda{};
 
 
-  float _bField;
-  float _tpcInnerR;
-  float _tpcOuterR;
-  float _tpcZmax;
-  int   _tpcMaxRow;
-  int   _nLayersSIT;
-  int   _nLayersVTX;
-  std::vector<float> _rSIT;
-  std::vector<float> _rVTX;
+  float _bField{};
+  float _tpcInnerR{};
+  float _tpcOuterR{};
+  float _tpcZmax{};
+  int   _tpcMaxRow{};
+  int   _nLayersSIT{};
+  int   _nLayersVTX{};
+  std::vector<float> _rSIT{};
+  std::vector<float> _rVTX{};
 
 
 } ;

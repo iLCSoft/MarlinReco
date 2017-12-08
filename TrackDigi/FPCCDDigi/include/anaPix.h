@@ -62,36 +62,36 @@ class anaPix : public marlin::Processor {
 
  protected:
 
-  std::string _colNameVTX ;
+  std::string _colNameVTX{};
  
-  int _nRun ;
-  int _nEvt ;
-  int _debug;
-  FloatVec _pixelSizeVec;
-  float _pixelSize;
-  float _pointResoRPhi;
-  float _pointResoZ;
-  std::string _rootFileName;
+  int _nRun{};
+  int _nEvt{};
+  int _debug{};
+  FloatVec _pixelSizeVec{};
+  float _pixelSize{};
+  float _pointResoRPhi{};
+  float _pointResoZ{};
+  std::string _rootFileName{};
   
-  TFile* outroot;
-  TTree* hTreePix;
-  TTree* hTreeLocalPix;
+  TFile* outroot{};
+  TTree* hTreePix{};
+  TTree* hTreeLocalPix{};
   
-  int _nLayer;  // Number of layers
-  int _maxLadder; // max number of ladders
+  int _nLayer{};  // Number of layers
+  int _maxLadder{}; // max number of ladders
   struct GeoData_t {
-    int nladder;
-    double rmin;  // distance of inner surface of sensitive region from IP
-    double dphi;  // azimuthal angle step of each ladder
-    double phi0;  // aximuthal angle offset
-    std::vector<double> cosphi;  // cos[phi_ladder], cos_phi of each ladder
-    std::vector<double> sinphi;  // sin[phi_ladder], sin_phi of each ladder
-    double sthick;  // sensitive region thickness
-    double sximin;  // minimum xi of sensitive region.
-    double sximax;  // maximum xi of sensitive region
-    double hlength; // ladder's half length in z
+    int nladder{};
+    double rmin{};  // distance of inner surface of sensitive region from IP
+    double dphi{};  // azimuthal angle step of each ladder
+    double phi0{};  // aximuthal angle offset
+    std::vector<double> cosphi{};  // cos[phi_ladder], cos_phi of each ladder
+    std::vector<double> sinphi{};  // sin[phi_ladder], sin_phi of each ladder
+    double sthick{};  // sensitive region thickness
+    double sximin{};  // minimum xi of sensitive region.
+    double sximax{};  // maximum xi of sensitive region
+    double hlength{}; // ladder's half length in z
   };
-  std::vector<GeoData_t> _geodata;
+  std::vector<GeoData_t> _geodata{};
 
 } ;
 

@@ -67,15 +67,15 @@ class VTXNoiseHits : public Processor {
 
  protected:
 
-  std::string _colNameVTX ;
-  FloatVec _densities ;
-  float _pointResoRPhiVTX ;
-  float _pointResoZVTX ;
+  std::string _colNameVTX{};
+  FloatVec _densities{};
+  float _pointResoRPhiVTX{};
+  float _pointResoZVTX{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  gsl_rng * r ;
+  gsl_rng * r{};
 
 
 } ;

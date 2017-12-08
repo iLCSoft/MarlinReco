@@ -64,8 +64,8 @@ using namespace marlin ;
  */
 
 struct MyHit {
-  CalorimeterHitImpl * hit;
-  std::vector<SimCalorimeterHit*> simHits;
+  CalorimeterHitImpl * hit{};
+  std::vector<SimCalorimeterHit*> simHits{};
 };
 
 
@@ -105,53 +105,53 @@ class MokkaCaloDigi : public Processor {
 
  protected:
 
-  std::vector<std::string>  _ecalCollections  ;
-  std::vector<std::string>  _hcalCollections  ;
-  std::string _newCollNameHCAL;
-  std::string _newCollNameECAL;
-  std::string _relationCollName;
-  int _nRun ;
-  int _nEvt ;
+  std::vector<std::string>  _ecalCollections{};
+  std::vector<std::string>  _hcalCollections{};
+  std::string _newCollNameHCAL{};
+  std::string _newCollNameECAL{};
+  std::string _relationCollName{};
+  int _nRun{};
+  int _nEvt{};
 
-  float _thresholdEcal;
-  float _thresholdHcal;
+  float _thresholdEcal{};
+  float _thresholdHcal{};
 
-  int _digitalEcal;
-  int _digitalHcal;
+  int _digitalEcal{};
+  int _digitalHcal{};
 
-  std::vector<int> _ecalLayers;
-  std::vector<int> _hcalLayers;
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<float> _calibrCoeffHcal;
-  float * _endBarrelChamberLength;
-  float * _barrelLateralWidth;
-  float * _barrelOffsetMaxX;
-  float * _endBarrelOffsetMaxZ;
-  float _regularBarrelOffsetMaxZ;
-  float _lateralPlateThickness;
-  float _modulesGap;
-  float _innerHcalRadius;
-  int _numberOfHcalLayers;
-  int _nStaves;
-  int _nModules;
-  int _cellScaleX;
-  int _cellScaleZ;
-  float _newCellSizeX;
-  float _newCellSizeZ;
-  float _hcalLayerThickness;
-  float _hcalAbsorberThickness;
-  float _hcalSensitiveThickness;
-  float _virtualCellSizeX;
-  float _virtualCellSizeZ;
-  float _regularBarrelModuleLength;
-  float _regularBarrelChamberLength;
-  float _deltaPhi;
-  std::vector< std::vector<MyHit*> > _calorimeterHitVec;
-  LCCollectionVec * _relationCollection;
-  int _startIEndcap;
-  int _startJEndcap;
-  float _startXEndcap;
-  float _startZEndcap;
+  std::vector<int> _ecalLayers{};
+  std::vector<int> _hcalLayers{};
+  std::vector<float> _calibrCoeffEcal{};
+  std::vector<float> _calibrCoeffHcal{};
+  float * _endBarrelChamberLength{};
+  float * _barrelLateralWidth{};
+  float * _barrelOffsetMaxX{};
+  float * _endBarrelOffsetMaxZ{};
+  float _regularBarrelOffsetMaxZ{};
+  float _lateralPlateThickness{};
+  float _modulesGap{};
+  float _innerHcalRadius{};
+  int _numberOfHcalLayers{};
+  int _nStaves{};
+  int _nModules{};
+  int _cellScaleX{};
+  int _cellScaleZ{};
+  float _newCellSizeX{};
+  float _newCellSizeZ{};
+  float _hcalLayerThickness{};
+  float _hcalAbsorberThickness{};
+  float _hcalSensitiveThickness{};
+  float _virtualCellSizeX{};
+  float _virtualCellSizeZ{};
+  float _regularBarrelModuleLength{};
+  float _regularBarrelChamberLength{};
+  float _deltaPhi{};
+  std::vector< std::vector<MyHit*> > _calorimeterHitVec{};
+  LCCollectionVec * _relationCollection{};
+  int _startIEndcap{};
+  int _startJEndcap{};
+  float _startXEndcap{};
+  float _startZEndcap{};
 
 
 

@@ -69,19 +69,19 @@ class MCTruthJetEnergy : public Processor {
 
   /** Input collection name.
    */
-  StringVec _jetcolNames ; 
-  std::string  _relName ;
+  StringVec _jetcolNames{}; 
+  std::string  _relName{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
 //   float jetenergy, mcjetenergy;
 //   int   njetparticles;
   
 #ifdef MARLIN_USE_AIDA
-  std::vector< AIDA::IHistogram1D* >  _jetEnergyHists ;    
-  std::vector< AIDA::IHistogram1D* >  _jetEnergyResHists ;    
-  AIDA::IHistogram2D* _jetEnergyTruthReco ;
+  std::vector< AIDA::IHistogram1D* >  _jetEnergyHists{};    
+  std::vector< AIDA::IHistogram1D* >  _jetEnergyResHists{};    
+  AIDA::IHistogram2D* _jetEnergyTruthReco{};
 #endif
 
 } ;

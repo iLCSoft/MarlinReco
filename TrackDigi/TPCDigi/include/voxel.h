@@ -47,15 +47,15 @@ class Voxel_tpc{
 
 
  private:
-  int _row_index; 
-  int _phi_index;
-  int _z_index;
-  vector <Voxel_tpc *> _adjacent_voxels;
-  CLHEP::Hep3Vector _coord;
-  double _edep;
-  double _rPhiRes;
-  double _zRes;
-  bool _isMerged;
-  bool _isClusterHit;
+  int _row_index{}; 
+  int _phi_index{};
+  int _z_index{};
+  vector <Voxel_tpc *> _adjacent_voxels{};
+  CLHEP::Hep3Vector _coord{};
+  double _edep{};
+  double _rPhiRes{};
+  double _zRes{};
+  bool _isMerged{};
+  bool _isClusterHit{};
 };
 #endif

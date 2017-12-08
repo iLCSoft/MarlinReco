@@ -63,22 +63,22 @@ class GammaGammaCandidateTruthFilter : public Processor {
 
  protected:
 
-  int nEvt ;
+  int nEvt{};
 
 //  float _bField ;
 
  private:
 
 
-  std::string _trueToReco ;
-  std::string _recoToTrue ;
-  std::string _mcParticleCollectionName ;
-  std::string _gammaGammaParticleCollectionName ;
-  std::string _ggResonanceName;
+  std::string _trueToReco{};
+  std::string _recoToTrue{};
+  std::string _mcParticleCollectionName{};
+  std::string _gammaGammaParticleCollectionName{};
+  std::string _ggResonanceName{};
 
-  std::vector<ReconstructedParticle*>_pfovec;
-  int   _printing;
-  std::string _outputParticleCollectionName;
+  std::vector<ReconstructedParticle*>_pfovec{};
+  int   _printing{};
+  std::string _outputParticleCollectionName{};
   
 } ;
 

@@ -14,10 +14,10 @@
 
 using namespace lcio ;
 
-struct MCPpyjet : LCIntExtension<MCPpyjet> {} ;
-struct JetIndex : LCIntExtension<JetIndex> {} ;
-struct IcnIndex : LCIntExtension<IcnIndex> {} ;
-struct FcnIndex : LCIntExtension<FcnIndex> {} ;
+struct MCPpyjet : LCIntExtension<MCPpyjet> {};
+struct JetIndex : LCIntExtension<JetIndex> {};
+struct IcnIndex : LCIntExtension<IcnIndex> {};
+struct FcnIndex : LCIntExtension<FcnIndex> {};
 LCRelationNavigator* reltrue_tj =0;
 
 class TrueJet_Parser {
@@ -100,39 +100,39 @@ class TrueJet_Parser {
   const MCParticleVec& elementons_initial_cn(int ifcn) ;
 
 
-    LCRelationNavigator* relfcn ;
-    LCRelationNavigator* relicn ;
-    LCRelationNavigator* relfp ;
-    LCRelationNavigator* relip ;
-    LCRelationNavigator* reltjreco ;
-    LCRelationNavigator* reltjmcp ;
-    LCRelationNavigator* reltrue_tj ;
-    LCCollection* tjcol ;
-    LCCollection* fcncol ;
-    LCCollection* icncol ;
-    ReconstructedParticleVec* jets;
-    ReconstructedParticleVec* finalcns;
-    ReconstructedParticleVec* initialcns;
+    LCRelationNavigator* relfcn{};
+    LCRelationNavigator* relicn{};
+    LCRelationNavigator* relfp{};
+    LCRelationNavigator* relip{};
+    LCRelationNavigator* reltjreco{};
+    LCRelationNavigator* reltjmcp{};
+    LCRelationNavigator* reltrue_tj{};
+    LCCollection* tjcol{};
+    LCCollection* fcncol{};
+    LCCollection* icncol{};
+    ReconstructedParticleVec* jets{};
+    ReconstructedParticleVec* finalcns{};
+    ReconstructedParticleVec* initialcns{};
 
  protected:
  /**  input collection names */
-  std::string _trueJetCollectionName ;
-  std::string _finalColourNeutralCollectionName;
-  std::string _initialColourNeutralCollectionName;
-  std::string _trueJetPFOLink ;
-  std::string _trueJetMCParticleLink ;
-  std::string _finalElementonLink ;
-  std::string _initialElementonLink ;
-  std::string _finalColourNeutralLink ;
-  std::string _initialColourNeutralLink;
-  std::string _recoMCTruthLink;
-  int _COUNT_FSR;
+  std::string _trueJetCollectionName{};
+  std::string _finalColourNeutralCollectionName{};
+  std::string _initialColourNeutralCollectionName{};
+  std::string _trueJetPFOLink{};
+  std::string _trueJetMCParticleLink{};
+  std::string _finalElementonLink{};
+  std::string _initialElementonLink{};
+  std::string _finalColourNeutralLink{};
+  std::string _initialColourNeutralLink{};
+  std::string _recoMCTruthLink{};
+  int _COUNT_FSR{};
 private:
-  LCEvent* evt ;
-  double p4[4];
-  double p3[3]; 
-  IntVec* intvec;
-  MCParticleVec* mcpartvec;
+  LCEvent* evt{};
+  double p4[4]{};
+  double p3[3]{}; 
+  IntVec* intvec{};
+  MCParticleVec* mcpartvec{};
 } ;
 #endif
 

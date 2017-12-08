@@ -111,54 +111,54 @@ class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
   void EnergyDigitizer(FPCCDPixelHit* aHit);
 protected:
 
-  std::string _colNameSTH ;
-  std::string _colNameVTX ;
-  std::string _outColNameVTX ;
-  std::string _outRelColNameVTX ;
+  std::string _colNameSTH{};
+  std::string _colNameVTX{};
+  std::string _outColNameVTX{};
+  std::string _outRelColNameVTX{};
   
-  int _nRun ;
-  int _nEvt ;
-  int _debug;
+  int _nRun{};
+  int _nEvt{};
+  int _debug{};
 
-  bool _new_tracking_system ;
-  bool _remove_pixelhits_collection;
-  bool _makeRelation; // 2012_12_20 added to escape BG hit linking error.
-  int _energyDigitization;
-  int _randomNoise;
-  float _pixelSize;
-  FloatVec _pixelSizeVec;
-  float _pixelheight;
-  float _pointResoRPhi;
-  float _pointResoZ;
+  bool _new_tracking_system{};
+  bool _remove_pixelhits_collection{};
+  bool _makeRelation{}; // 2012_12_20 added to escape BG hit linking error.
+  int _energyDigitization{};
+  int _randomNoise{};
+  float _pixelSize{};
+  FloatVec _pixelSizeVec{};
+  float _pixelheight{};
+  float _pointResoRPhi{};
+  float _pointResoZ{};
 
-  double _electronsPerKeV;
-  double _threshold;
-  double _electronNoiseRate;
-  int _electronsPerStep;
-  int _nbitsForEdep;
+  double _electronsPerKeV{};
+  double _threshold{};
+  double _electronNoiseRate{};
+  int _electronsPerStep{};
+  int _nbitsForEdep{};
 
-  int _ranSeed;
-  gsl_rng* _rng;
+  int _ranSeed{};
+  gsl_rng* _rng{};
   
-  int _nLayer;  // Number of layers
-  int _maxLadder; // max number of ladders
+  int _nLayer{};  // Number of layers
+  int _maxLadder{}; // max number of ladders
   
   struct GeoData_t {
-    int nladder;
-    double rmin;  // distance of inner surface of sensitive region from IP
-    double dphi;  // azimuthal angle step of each ladder
-    double phi0;  // aximuthal angle offset
-    std::vector<double> cosphi;  // cos[phi_ladder], cos_phi of each ladder
-    std::vector<double> sinphi;  // sin[phi_ladder], sin_phi of each ladder
-    std::vector<double> ladder_incline;
-    double sthick;  // sensitive region thickness
-    double sximin;  // minimum xi of sensitive region.
-    double sximax;  // maximum xi of sensitive region
-    double hlength; // ladder's half length in z
-    int num_xi_pixel;      // Number of xi pixel in this ladder
-    int num_zeta_pixel;    // Number of zeta pixel in this ladder
+    int nladder{};
+    double rmin{};  // distance of inner surface of sensitive region from IP
+    double dphi{};  // azimuthal angle step of each ladder
+    double phi0{};  // aximuthal angle offset
+    std::vector<double> cosphi{};  // cos[phi_ladder], cos_phi of each ladder
+    std::vector<double> sinphi{};  // sin[phi_ladder], sin_phi of each ladder
+    std::vector<double> ladder_incline{};
+    double sthick{};  // sensitive region thickness
+    double sximin{};  // minimum xi of sensitive region.
+    double sximax{};  // maximum xi of sensitive region
+    double hlength{}; // ladder's half length in z
+    int num_xi_pixel{};      // Number of xi pixel in this ladder
+    int num_zeta_pixel{};    // Number of zeta pixel in this ladder
   };
-  std::vector<GeoData_t> _geodata;
+  std::vector<GeoData_t> _geodata{};
 
 //  FPCCDCluster_t _cluster;  // Contains one ladder of clusters
 
@@ -180,13 +180,13 @@ _tree->Branch("nlinks",&_link.nlink,"nlinks/I");
 335   _tree->Branch("trkhits_CWidth_Z",_trkhits.CWidth_Z,"trkhits_CWidth_Z[nlinks]/D");
 */
   
-  TTree* _tree;
-  TFile* _rootf;
+  TTree* _tree{};
+  TFile* _rootf{};
   #define MAX_LINK 5000
       struct {
         unsigned int nlink; 
         float weight[MAX_LINK];
-      } _link;
+      } _link{};
 
       struct {
         double x[MAX_LINK];
@@ -234,7 +234,7 @@ _tree->Branch("nlinks",&_link.nlink,"nlinks/I");
         double area_phi[MAX_LINK];
         int layer[MAX_LINK]; 
         int ladder[MAX_LINK]; 
-      } _simthits;
+      } _simthits{};
 
       struct {
         double x[MAX_LINK];
@@ -259,41 +259,41 @@ _tree->Branch("nlinks",&_link.nlink,"nlinks/I");
         double xi[MAX_LINK];
         double zeta[MAX_LINK];
         float edep[MAX_LINK];
-      } _trkhits;
+      } _trkhits{};
   
       struct {
         double RPhi[MAX_LINK];
         double Z[MAX_LINK];
-      } _diff;
+      } _diff{};
 
-  std::string _rootFileName;
-  std::string _treeName;
+  std::string _rootFileName{};
+  std::string _treeName{};
 
-  bool _positionReso_ReadingFile_ON;
-  std::string _positionReso_ReadingFile;
+  bool _positionReso_ReadingFile_ON{};
+  std::string _positionReso_ReadingFile{};
   typedef std::map<short int,float> ResoMap; 
-  ResoMap _resolutionMapRPhi;
-  ResoMap _resolutionMapZ;
-  std::ifstream _fin;
+  ResoMap _resolutionMapRPhi{};
+  ResoMap _resolutionMapZ{};
+  std::ifstream _fin{};
   void calcTrackParameterOfMCP(MCParticle* pmcp, double* par);
 
   struct firstCut{
-     bool isActive;
-     IntVec RPhiWidth;
-     IntVec ZWidth;
-     IntVec nPix;
-  }_firstCut;
+     bool isActive{};
+     IntVec RPhiWidth{};
+     IntVec ZWidth{};
+     IntVec nPix{};
+  }_firstCut{};
 
   struct Mori2ndCut{
-     bool isActive;
-     FloatVec zpar;
-  }_m2Cut;
+     bool isActive{};
+     FloatVec zpar{};
+  }_m2Cut{};
 
   struct Kamai2ndCut{
-     bool isActive;
-     FloatVec bpar;
-     IntVec minZWidth;
-  }_k2Cut;
+     bool isActive{};
+     FloatVec bpar{};
+     IntVec minZWidth{};
+  }_k2Cut{};
 
 
 

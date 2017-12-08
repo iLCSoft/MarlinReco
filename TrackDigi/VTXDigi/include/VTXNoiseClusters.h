@@ -82,25 +82,25 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
 
  protected:
 
-  std::string _colNameVTX ;
-  FloatVec _densities ;
-  StringVec _rootNames ;  
+  std::string _colNameVTX{};
+  FloatVec _densities{};
+  StringVec _rootNames{};
 //   float _pointResoRPhiVTX ;
 //   float _pointResoZVTX ;
-  int   _ranSeed  ;
+  int   _ranSeed{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  gsl_rng* _rng ;
-  VXDGeometry* _vxdGeo ;
+  gsl_rng* _rng{};
+  VXDGeometry* _vxdGeo{};
 
-  std::vector<TH2F*> _hist ;
-  TFile* _hfile ;
+  std::vector<TH2F*> _hist{};
+  TFile* _hfile{};
 
 #ifdef MARLIN_USE_AIDA
-   Hist1DVec _hist1DVec ;
-   Hist2DVec _hist2DVec ;
+   Hist1DVec _hist1DVec{};
+   Hist2DVec _hist2DVec{};
 #endif
 
 } ;

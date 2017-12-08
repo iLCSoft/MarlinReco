@@ -5,9 +5,9 @@
 
 class VObject{
 private:
-  int vn ;                     // variable number
-  std::string *varNames ;      // array of variable name
-  double *varValues ;          // array of values of variables
+  int vn{};                     // variable number
+  std::string *varNames{};      // array of variable name
+  double *varValues{};          // array of values of variables
 
 public:
   VObject(int NoOfVars) ;      // constructor : creates arrays, takes number of variables

@@ -15,7 +15,7 @@ class SimDigitalToEnergy : public RealisticCaloReco
 		virtual void init();
 		virtual float reconstructEnergy(const CalorimeterHit* hit) ;
 
-		std::vector<float> _energyCoefficients {} ;
+		std::vector<float> _energyCoefficients{};
 } ;
 
 #endif //SimDigitalToEnergy_h

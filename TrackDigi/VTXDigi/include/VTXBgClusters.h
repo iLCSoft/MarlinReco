@@ -80,27 +80,27 @@ class VTXBgClusters : public Processor {
   
  protected:
 
-  std::string _colNameVTX ;
+  std::string _colNameVTX{};
 //   std::string _outColNameVTX ;
 
-  int _nRun ;
-  int _nEvt ;
-  int _debug;
-  int _mod;
-  int _removeDRays;
+  int _nRun{};
+  int _nEvt{};
+  int _debug{};
+  int _mod{};
+  int _removeDRays{};
 //   float _pointResoRPhi,_pointResoRPhi_VTX;
 //   float _pointResoZ,_pointResoZ_VTX;
-  float _momCut;
-  float _epi; //epitaxial thickness in unit of 50 um (standard thickness)
-  float _pitch[6]; //pitch in um
-  float _it[6]; //integration time in ns
+  float _momCut{};
+  float _epi{}; //epitaxial thickness in unit of 50 um (standard thickness)
+  float _pitch[6]{}; //pitch in um
+  float _it[6]{}; //integration time in ns
 
   //  gsl_rng * r ;
-  VXDGeometry* _vxdGeo ;
+  VXDGeometry* _vxdGeo{};
 
 #ifdef MARLIN_USE_AIDA
-   Hist1DVec _hist1DVec ;
-   Hist2DVec _hist2DVec ;
+   Hist1DVec _hist1DVec{};
+   Hist2DVec _hist2DVec{};
 #endif
 
 } ;

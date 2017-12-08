@@ -45,47 +45,47 @@ class RealisticCaloDigi : virtual public Processor {
 
   // general parameters
 
-  std::vector<std::string> _inputCollections;
-  std::vector<std::string> _outputCollections;
-  std::vector<std::string> _outputRelCollections;
+  std::vector<std::string> _inputCollections{};
+  std::vector<std::string> _outputCollections{};
+  std::vector<std::string> _outputRelCollections{};
 
 
   // parameters for digitization effects
 
 
-  float _threshold_value;         // hit energy threshold
-  std::string _threshold_unit;    // hit energy threshold unit
+  float _threshold_value{};         // hit energy threshold
+  std::string _threshold_unit{};    // hit energy threshold unit
 
-  int   _time_apply;              // apply timing cuts?
-  int   _time_correctForPropagation; // correct times for propagation?
-  float _time_windowMin;          // defn of timing window
-  float _time_windowMax;
+  int   _time_apply{};              // apply timing cuts?
+  int   _time_correctForPropagation{}; // correct times for propagation?
+  float _time_windowMin{};          // defn of timing window
+  float _time_windowMax{};
 
-  float _calib_mip;               // MIP calibration factor (most probable energy deposit by MIP in active material of one layer)
+  float _calib_mip{};               // MIP calibration factor (most probable energy deposit by MIP in active material of one layer)
 
-  float _misCalib_uncorrel;       // general miscalibration (uncorrelated between channels)
-  bool  _misCalib_uncorrel_keep;  // if true, use the same cell miscalibs over events (requires more memory)
+  float _misCalib_uncorrel{};       // general miscalibration (uncorrelated between channels)
+  bool  _misCalib_uncorrel_keep{};  // if true, use the same cell miscalibs over events (requires more memory)
 
-  float _misCalib_correl;         // general miscalibration (100% uncorrelated between channels)
+  float _misCalib_correl{};         // general miscalibration (100% uncorrelated between channels)
 
-  float _deadCell_fraction;       // fraction of random dead channels
-  bool  _deadCell_keep;           // keep same cells dead between events? (requires more memory)
+  float _deadCell_fraction{};       // fraction of random dead channels
+  bool  _deadCell_keep{};           // keep same cells dead between events? (requires more memory)
 
-  float _elec_noiseMip;           // electronics noise (as fraction of MIP)
-  float _elec_rangeMip;           // electronics dynamic range (in terms of MIPs)
+  float _elec_noiseMip{};           // electronics noise (as fraction of MIP)
+  float _elec_rangeMip{};           // electronics dynamic range (in terms of MIPs)
 
-  std::string _cellIDLayerString;
+  std::string _cellIDLayerString{};
   
   // internal variables
 
-  int _threshold_iunit;
+  int _threshold_iunit{};
 
-  LCFlagImpl _flag;
+  LCFlagImpl _flag{};
 
-  float _event_correl_miscalib;
+  float _event_correl_miscalib{};
 
-  std::map < std::pair <int, int> , float > _cell_miscalibs;
-  std::map < std::pair <int, int> , bool  > _cell_dead;
+  std::map < std::pair <int, int> , float > _cell_miscalibs{};
+  std::map < std::pair <int, int> , bool  > _cell_dead{};
 
 } ;
 

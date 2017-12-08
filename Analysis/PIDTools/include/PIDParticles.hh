@@ -107,8 +107,8 @@ public:
   void ResetLogL() { _logL=0.; }
 
 private:
-  double _posterior, _logL;
-  double _threshold;
+  double _posterior{}, _logL{};
+  double _threshold{};
 };
 
 
@@ -155,12 +155,12 @@ public:
   bool PassesCut() const { return _mva > _mvaCut; } ;
 
 private:
-  float _mva, _q, _sigAbove;
-  float _mvaCut;
-  TMVA::Reader* _reader;
-  TH1F *_histoQ;
-  TH1F *_histoSig;
-  TH1F *_histoBkg;
+  float _mva{}, _q{}, _sigAbove{};
+  float _mvaCut{};
+  TMVA::Reader* _reader{};
+  TH1F *_histoQ{};
+  TH1F *_histoSig{};
+  TH1F *_histoBkg{};
 };
 
 

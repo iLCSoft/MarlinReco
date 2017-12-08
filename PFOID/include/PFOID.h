@@ -108,45 +108,45 @@ class PFOID : public Processor {
 
  protected:
 
-  int _nRun ;
-  int _nEvt ;
-  int _debug;
+  int _nRun{};
+  int _nEvt{};
+  int _debug{};
 
-  std::string _recoCol ;    // reconstructed particle Collection
+  std::string _recoCol{};    // reconstructed particle Collection
   //  std::string _newrecoCol ;
   //  std::string _filename ;   // Name of file containing the pdfs (charged)
   //  std::string _filename1 ;  // Name of file containing the pdfs (neautral)
-  float _bField;
-  int noClusterParticle;
+  float _bField{};
+  int noClusterParticle{};
 
   struct info_t{
-    double px, py, pz;   // momentum
-    double Eecal, Ehcal; // subdetector energies
-    double ex;           // excentricity
-    double dmean;        // mean distance of hits to helix
-    double Edmean;        // energy weighted mean distance of hits to helix
-    double Necal, Nhcal;    // numbers of hits in subdetectors
-    double L1,L2,L3;        // deepest Layers of HCal with hits
-    double EtoN_ecal, EtoN_hcal, EecalToEtot; // ratios
-    bool withTrack;   // flag whether it is with track
-    double EL1,EL2,EL3;        // first Layers of ECal with hits
+    double px{}, py{}, pz{};   // momentum
+    double Eecal{}, Ehcal{}; // subdetector energies
+    double ex{};           // excentricity
+    double dmean{};        // mean distance of hits to helix
+    double Edmean{};        // energy weighted mean distance of hits to helix
+    double Necal{}, Nhcal{};    // numbers of hits in subdetectors
+    double L1{},L2{},L3{};        // deepest Layers of HCal with hits
+    double EtoN_ecal{}, EtoN_hcal{}, EecalToEtot{}; // ratios
+    bool withTrack{};   // flag whether it is with track
+    double EL1{},EL2{},EL3{};        // first Layers of ECal with hits
   };
-  info_t info;
+  info_t info{};
 
   void init_info();
   void fill_info(int i, ReconstructedParticle *rp);
 
-  std::vector<std::string> _filesCharged; // Names of files, containing pdfs (charged) 
-  std::vector<std::string> _filesNeutral; // Names of files, containing pdfs (neutral)
+  std::vector<std::string> _filesCharged{}; // Names of files, containing pdfs (charged)
+  std::vector<std::string> _filesNeutral{}; // Names of files, containing pdfs (neutral)
 
-  std::vector<PDF*> _pdfCharged; // set of PDFs for various energy bins (charged)
-  std::vector<PDF*> _pdfNeutral; // set of PDFs for various energy bins (neutral)
+  std::vector<PDF*> _pdfCharged{}; // set of PDFs for various energy bins (charged)
+  std::vector<PDF*> _pdfNeutral{}; // set of PDFs for various energy bins (neutral)
 
-  std::vector<float> _energyBoundaries; // energy boundaries defining binning in energy for PDFs
+  std::vector<float> _energyBoundaries{}; // energy boundaries defining binning in energy for PDFs
 
-  int _nEnergyBins;
+  int _nEnergyBins{};
 
-  PDF *pdf, *npdf;
+  PDF *pdf{}, *npdf{};
 
 };
 

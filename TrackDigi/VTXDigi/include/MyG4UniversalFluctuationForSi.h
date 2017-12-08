@@ -81,32 +81,32 @@ private:
   //const G4ParticleDefinition* particle;
   //const G4Material* lastMaterial;
 
-  double particleMass;
-  double chargeSquare;
+  double particleMass{};
+  double chargeSquare{};
 
   // data members to speed up the fluctuation calculation
-  double ipotFluct;
-  double electronDensity;
+  double ipotFluct{};
+  double electronDensity{};
   //  G4double zeff;
   
-  double f1Fluct;
-  double f2Fluct;
-  double e1Fluct;
-  double e2Fluct;
-  double rateFluct;
-  double e1LogFluct;
-  double e2LogFluct;
-  double ipotLogFluct;
-  double e0;
+  double f1Fluct{};
+  double f2Fluct{};
+  double e1Fluct{};
+  double e2Fluct{};
+  double rateFluct{};
+  double e1LogFluct{};
+  double e2LogFluct{};
+  double ipotLogFluct{};
+  double e0{};
 
-  double minNumberInteractionsBohr;
-  double theBohrBeta2;
-  double minLoss;
-  double problim;
-  double sumalim;
-  double alim;
-  int    nmaxCont1;
-  int    nmaxCont2;
+  double minNumberInteractionsBohr{};
+  double theBohrBeta2{};
+  double minLoss{};
+  double problim{};
+  double sumalim{};
+  double alim{};
+  int    nmaxCont1{};
+  int    nmaxCont2{};
 
 };
 

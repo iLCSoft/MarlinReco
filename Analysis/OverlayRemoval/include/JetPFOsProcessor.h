@@ -42,11 +42,11 @@ class JetPFOsProcessor : public marlin::Processor {
 
   /** Input collection name.
    */
-  std::string _colJet ;
+  std::string _colJet{};
 
   /** Output collection name.
    */
-  std::string _colPFOsFromJet ;
+  std::string _colPFOsFromJet{};
 
 } ;
 

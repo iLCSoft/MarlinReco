@@ -18,18 +18,18 @@ using namespace lcio ;
 using namespace marlin ;
 
 struct IonisationPoint {
-  double x;
-  double y;
-  double z;
-  double eloss;
+  double x{};
+  double y{};
+  double z{};
+  double eloss{};
 };
 
 struct SignalPoint {
-  double x;
-  double y;
-  double sigmaX;
-  double sigmaY;
-  double charge;
+  double x{};
+  double y{};
+  double sigmaX{};
+  double sigmaY{};
+  double charge{};
 
 };
 
@@ -156,27 +156,27 @@ class VTXDigitizer : public Processor {
 
   /** Input collection name.
    */
-  std::string _colName ;
-  std::string _outputCollectionName;
-  std::string _colVTXRelation ;
+  std::string _colName{};
+  std::string _outputCollectionName{};
+  std::string _colVTXRelation{};
 
   /** Run number
    */
-  int _nRun ;
+  int _nRun{};
   
   /** Event number
    */
-  int _nEvt ;
+  int _nEvt{};
   /** tangent of Lorentz angle
    */
-  double _tanLorentzAngle;
+  double _tanLorentzAngle{};
   /** cut in MeV on delta electrons
    * used in simulation of charge for each ionisation point
    */
-  double _cutOnDeltaRays;
+  double _cutOnDeltaRays{};
   /** Diffusion coefficient in mm for nominla layer thickness
    */
-  double _diffusionCoefficient; 
+  double _diffusionCoefficient{}; 
   /** layer thickness
    */
  //  double _layerThickness;
@@ -185,57 +185,57 @@ class VTXDigitizer : public Processor {
 //   double _layerHalfThickness;
 
 
-  int _numberOfLayers;
-  double _pixelSizeX;
-  double _pixelSizeY;
-  double _electronsPerKeV;
-  double _segmentDepth;
-  double _currentTotalCharge;
+  int _numberOfLayers{};
+  double _pixelSizeX{};
+  double _pixelSizeY{};
+  double _electronsPerKeV{};
+  double _segmentDepth{};
+  double _currentTotalCharge{};
 
-  std::vector<int> _laddersInLayer;
-  std::vector<float> _layerRadius;
-  std::vector<float> _layerThickness;
-  std::vector<float> _layerHalfThickness;
-  std::vector<float> _layerLadderLength;
-  std::vector<float> _layerLadderHalfWidth;
-  std::vector<float> _layerPhiOffset;
-  std::vector<float> _layerActiveSiOffset;
-  std::vector<float> _layerHalfPhi;
-  std::vector<float> _layerLadderGap;
-  std::vector<float> _bkgdHitsInLayer;
-  std::vector<float> _layerLadderWidth;
+  std::vector<int> _laddersInLayer{};
+  std::vector<float> _layerRadius{};
+  std::vector<float> _layerThickness{};
+  std::vector<float> _layerHalfThickness{};
+  std::vector<float> _layerLadderLength{};
+  std::vector<float> _layerLadderHalfWidth{};
+  std::vector<float> _layerPhiOffset{};
+  std::vector<float> _layerActiveSiOffset{};
+  std::vector<float> _layerHalfPhi{};
+  std::vector<float> _layerLadderGap{};
+  std::vector<float> _bkgdHitsInLayer{};
+  std::vector<float> _layerLadderWidth{};
 
-  int _currentLayer;
-  int _currentModule;
-  int _generateBackground;
-  double _currentParticleMomentum;
-  double _currentParticleEnergy;
-  double _currentParticleMass;
-  double _currentPhi;
-  double _widthOfCluster;
+  int _currentLayer{};
+  int _currentModule{};
+  int _generateBackground{};
+  double _currentParticleMomentum{};
+  double _currentParticleEnergy{};
+  double _currentParticleMass{};
+  double _currentPhi{};
+  double _widthOfCluster{};
 
-  double PI,TWOPI,PI2;
-  double SCALING;
+  double PI{},TWOPI{},PI2{};
+  double SCALING{};
 
-  int _produceFullPattern;
-  int _numberOfSegments;
-  int _debug;
-  int _PoissonSmearing;
-  int _electronicEffects;
-  int _useMCPMomentum;
-  int _removeDrays;
+  int _produceFullPattern{};
+  int _numberOfSegments{};
+  int _debug{};
+  int _PoissonSmearing{};
+  int _electronicEffects{};
+  int _useMCPMomentum{};
+  int _removeDrays{};
 
-  double _threshold;
-  double _currentLocalPosition[3];
-  double _currentEntryPoint[3];
-  double _currentExitPoint[3];
-  double _electronicNoise;
-  double _segmentLength;
+  double _threshold{};
+  double _currentLocalPosition[3]{};
+  double _currentEntryPoint[3]{};
+  double _currentExitPoint[3]{};
+  double _electronicNoise{};
+  double _segmentLength{};
 
-  IonisationPointVec _ionisationPoints;
-  SignalPointVec _signalPoints;
+  IonisationPointVec _ionisationPoints{};
+  SignalPointVec _signalPoints{};
 
-  MyG4UniversalFluctuationForSi * _fluctuate;
+  MyG4UniversalFluctuationForSi * _fluctuate{};
 
   /** 
    * Finds coordinates 
@@ -263,33 +263,33 @@ class VTXDigitizer : public Processor {
                           double & xCell, double & yCell);
   void generateBackground(LCCollectionVec * col);
 
-  double _xLayerReco,_yLayerReco,_zLayerReco;
-  double _xLayerSim,_yLayerSim,_zLayerSim;
-  int _iLayer;
+  double _xLayerReco{},_yLayerReco{},_zLayerReco{};
+  double _xLayerSim{},_yLayerSim{},_zLayerSim{};
+  int _iLayer{};
 
-  int _nCoveredX,_nCoveredY,_nCells;
+  int _nCoveredX{},_nCoveredY{},_nCells{};
 
-  int _totEntries;
-  double _totMomentum;
-  double _momX,_momY,_momZ;
-  double _eDep;
+  int _totEntries{};
+  double _totMomentum{};
+  double _momX{},_momY{},_momZ{};
+  double _eDep{};
 
-  double _amplX[20];
-  double _amplY[20];
-  double _amplC[100];
-  double _ampl;
-  double _amplMax;
-  double _eSum;
-  double _energyLoss;
-  double _clusterWidthX,_clusterWidthY;
-  double _ampl33,_ampl55,_ampl77;
-  int _ncell33,_ncell55,_ncell77;
-  int _storeNtuple;
-  double _xLocalRecoCOG,_yLocalRecoCOG;
-  double _xLocalRecoEdge,_yLocalRecoEdge;
-  double _xLocalSim,_yLocalSim;
+  double _amplX[20]{};
+  double _amplY[20]{};
+  double _amplC[100]{};
+  double _ampl{};
+  double _amplMax{};
+  double _eSum{};
+  double _energyLoss{};
+  double _clusterWidthX{},_clusterWidthY{};
+  double _ampl33{},_ampl55{},_ampl77{};
+  int _ncell33{},_ncell55{},_ncell77{};
+  int _storeNtuple{};
+  double _xLocalRecoCOG{},_yLocalRecoCOG{};
+  double _xLocalRecoEdge{},_yLocalRecoEdge{};
+  double _xLocalSim{},_yLocalSim{};
 
-  std::vector <SimTrackerHitImplVec> _hitsInLayer;
+  std::vector <SimTrackerHitImplVec> _hitsInLayer{};
 
   
 

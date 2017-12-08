@@ -68,11 +68,11 @@ class AddClusterProperties : public Processor {
   /** Input collection name.
    */
 
-  std::string _clusterCollectionName;
-  std::string _PFOName ;
+  std::string _clusterCollectionName{};
+  std::string _PFOName{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 } ;
 
 #endif

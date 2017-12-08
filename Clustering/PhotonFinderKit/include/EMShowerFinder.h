@@ -32,11 +32,11 @@ using namespace marlin ;
 
 typedef struct {
 
-  CalorimeterHit* ECALHit;
-  std::vector<PROTSEED2*> relatedCores;
-  std::vector<double> probabilitiesForThisECALHit;
-  std::vector<double> distancesToCoresForThisECALHit;
-  std::vector<double> estimatedEnergyPerCore;
+  CalorimeterHit* ECALHit{};
+  std::vector<PROTSEED2*> relatedCores{};
+  std::vector<double> probabilitiesForThisECALHit{};
+  std::vector<double> distancesToCoresForThisECALHit{};
+  std::vector<double> estimatedEnergyPerCore{};
 
 } ECALHitWithAttributes;
 
@@ -76,25 +76,25 @@ class EMShowerFinder : public Processor {
   
  protected:
 
-  std::string _colNameECAL;
-  std::string _collectionNameOfEMShowerCandidates;
-  std::string _ToClean;
-  int _CleanCut;
-  int _N;
-  vector<float> _miipstep;
-  int _MinHit0;
-  int _MinHitSplit;
-  double _Rcut;
-  double _Distcut; 
-  double _Coscut;
-  double _energyDeviationCut;
-  double _probabilityDensityCut;
+  std::string _colNameECAL{};
+  std::string _collectionNameOfEMShowerCandidates{};
+  std::string _ToClean{};
+  int _CleanCut{};
+  int _N{};
+  vector<float> _miipstep{};
+  int _MinHit0{};
+  int _MinHitSplit{};
+  double _Rcut{};
+  double _Distcut{}; 
+  double _Coscut{};
+  double _energyDeviationCut{};
+  double _probabilityDensityCut{};
 
-  int _debugLevel;  
-  int _drawOnCED;
+  int _debugLevel{};  
+  int _drawOnCED{};
 
-  int _nRun;
-  int _nEvt;
+  int _nRun{};
+  int _nEvt{};
 
 } ;
 

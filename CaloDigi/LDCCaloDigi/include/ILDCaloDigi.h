@@ -117,137 +117,137 @@ class ILDCaloDigi : public Processor {
   int getStripOrientationFromColName( std::string colName );
 
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
   
-  LCFlagImpl _flag;
+  LCFlagImpl _flag{};
 
-  std::vector<std::string> _ecalCollections;
-  std::vector<std::string> _hcalCollections;
-  std::vector<std::string> _outputEcalCollections;
-  std::vector<std::string> _outputHcalCollections;
+  std::vector<std::string> _ecalCollections{};
+  std::vector<std::string> _hcalCollections{};
+  std::vector<std::string> _outputEcalCollections{};
+  std::vector<std::string> _outputHcalCollections{};
 
-  std::string _outputRelCollection;
+  std::string _outputRelCollection{};
 
-  float _thresholdEcal;
-  std::string _unitThresholdEcal;
-  std::vector<float> _thresholdHcal;
-  std::string _unitThresholdHcal;
+  float _thresholdEcal{};
+  std::string _unitThresholdEcal{};
+  std::vector<float> _thresholdHcal{};
+  std::string _unitThresholdHcal{};
 
-  int _digitalEcal;
-  int _mapsEcalCorrection;
-  int _digitalHcal;
+  int _digitalEcal{};
+  int _mapsEcalCorrection{};
+  int _digitalHcal{};
 
-  bool _ECAL_stripHits;
+  bool _ECAL_stripHits{};
 
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<float> _calibrCoeffHcalBarrel;
-  std::vector<float> _calibrCoeffHcalEndCap;
-  std::vector<float> _calibrCoeffHcalOther;
+  std::vector<float> _calibrCoeffEcal{};
+  std::vector<float> _calibrCoeffHcalBarrel{};
+  std::vector<float> _calibrCoeffHcalEndCap{};
+  std::vector<float> _calibrCoeffHcalOther{};
 
-  std::vector<int> _ecalLayers;
-  std::vector<int> _hcalLayers;
+  std::vector<int> _ecalLayers{};
+  std::vector<int> _hcalLayers{};
 
-  int _ecalGapCorrection;
-  float _ecalGapCorrectionFactor;
-  float _ecalModuleGapCorrectionFactor;
-  float _ecalEndcapCorrectionFactor;
-  float _hcalEndcapCorrectionFactor;
-  int   _hcalGapCorrection;
-  float _hcalModuleGapCorrectionFactor;
+  int _ecalGapCorrection{};
+  float _ecalGapCorrectionFactor{};
+  float _ecalModuleGapCorrectionFactor{};
+  float _ecalEndcapCorrectionFactor{};
+  float _hcalEndcapCorrectionFactor{};
+  int   _hcalGapCorrection{};
+  float _hcalModuleGapCorrectionFactor{};
 
   std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
   std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];
 
-  float _zOfEcalEndcap;
-  float _barrelPixelSizeT[MAX_LAYERS];
-  float _barrelPixelSizeZ[MAX_LAYERS];
-  float _endcapPixelSizeX[MAX_LAYERS];
-  float _endcapPixelSizeY[MAX_LAYERS];
-  float _barrelStaveDir[MAX_STAVES][2];
+  float _zOfEcalEndcap{};
+  float _barrelPixelSizeT[MAX_LAYERS]{};
+  float _barrelPixelSizeZ[MAX_LAYERS]{};
+  float _endcapPixelSizeX[MAX_LAYERS]{};
+  float _endcapPixelSizeY[MAX_LAYERS]{};
+  float _barrelStaveDir[MAX_STAVES][2]{};
   
-  int   _histograms;
+  int   _histograms{};
 
   // timing
-  int   _useEcalTiming;
-  int   _ecalCorrectTimesForPropagation;
-  float _ecalTimeWindowMin;
-  float _ecalBarrelTimeWindowMax;
-  float _ecalEndcapTimeWindowMax;
-  float _ecalDeltaTimeHitResolution;
-  float _ecalTimeResolution;
-  bool  _ecalSimpleTimingCut;
+  int   _useEcalTiming{};
+  int   _ecalCorrectTimesForPropagation{};
+  float _ecalTimeWindowMin{};
+  float _ecalBarrelTimeWindowMax{};
+  float _ecalEndcapTimeWindowMax{};
+  float _ecalDeltaTimeHitResolution{};
+  float _ecalTimeResolution{};
+  bool  _ecalSimpleTimingCut{};
 
-  int   _useHcalTiming;
-  int   _hcalCorrectTimesForPropagation;
-  float _hcalTimeWindowMin;
-  float _hcalBarrelTimeWindowMax;
-  float _hcalEndcapTimeWindowMax;
-  float _hcalDeltaTimeHitResolution;
-  float _hcalTimeResolution;
-  bool  _hcalSimpleTimingCut;
+  int   _useHcalTiming{};
+  int   _hcalCorrectTimesForPropagation{};
+  float _hcalTimeWindowMin{};
+  float _hcalBarrelTimeWindowMax{};
+  float _hcalEndcapTimeWindowMax{};
+  float _hcalDeltaTimeHitResolution{};
+  float _hcalTimeResolution{};
+  bool  _hcalSimpleTimingCut{};
   
-  ScintillatorPpdDigi* _scEcalDigi;
-  ScintillatorPpdDigi* _scHcalDigi;
+  ScintillatorPpdDigi* _scEcalDigi{};
+  ScintillatorPpdDigi* _scHcalDigi{};
 
 
   // parameters for extra ECAL digitization effects
-  float _calibEcalMip;                // MIP calibration factor
-  int   _applyEcalDigi;               // which realistic calib to apply
-  float _ecal_PPD_pe_per_mip;         // # photoelectrons/MIP for MPPC
-  int   _ecal_PPD_n_pixels;           // # pixels in MPPC
-  float _ehEnergy;                    // energy to create e-h pair in silicon
-  float _ecal_misCalibNpix;           // miscalibration of # MPPC pixels
+  float _calibEcalMip{};                // MIP calibration factor
+  int   _applyEcalDigi{};               // which realistic calib to apply
+  float _ecal_PPD_pe_per_mip{};         // # photoelectrons/MIP for MPPC
+  int   _ecal_PPD_n_pixels{};           // # pixels in MPPC
+  float _ehEnergy{};                    // energy to create e-h pair in silicon
+  float _ecal_misCalibNpix{};           // miscalibration of # MPPC pixels
 
-  float _misCalibEcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
-  bool  _misCalibEcal_uncorrel_keep;  // if true, use the same ECAL cell miscalibs in each event (requires more memory)
-  float _misCalibEcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels)
+  float _misCalibEcal_uncorrel{};       // general ECAL miscalibration (uncorrelated between channels)
+  bool  _misCalibEcal_uncorrel_keep{};  // if true, use the same ECAL cell miscalibs in each event (requires more memory)
+  float _misCalibEcal_correl{};         // general ECAL miscalibration (100% uncorrelated between channels)
 
-  float _deadCellFractionEcal;        // fraction of random dead channels
-  bool  _deadCellEcal_keep;           // keep same cells dead between events?
+  float _deadCellFractionEcal{};        // fraction of random dead channels
+  bool  _deadCellEcal_keep{};           // keep same cells dead between events?
 
-  float _strip_abs_length;            // absorption length along strip for non-uniformity modeling
-  float _ecal_pixSpread;              // relative spread of MPPC pixel signal
-  float _ecal_elec_noise;             // electronics noise (as fraction of MIP)
-  float _ecalMaxDynMip;               // electronics dynamic range (in terms of MIPs)
-  int _ecalStrip_default_nVirt;       // # virtual cells used in Mokka simulation of strips (if available, this is taken from gear file)
-  std::string _ecal_deafult_layer_config; // ECAL layer configuration (if available, this is taken from gear file)
+  float _strip_abs_length{};            // absorption length along strip for non-uniformity modeling
+  float _ecal_pixSpread{};              // relative spread of MPPC pixel signal
+  float _ecal_elec_noise{};             // electronics noise (as fraction of MIP)
+  float _ecalMaxDynMip{};               // electronics dynamic range (in terms of MIPs)
+  int _ecalStrip_default_nVirt{};       // # virtual cells used in Mokka simulation of strips (if available, this is taken from gear file)
+  std::string _ecal_deafult_layer_config{}; // ECAL layer configuration (if available, this is taken from gear file)
 
   // parameters for extra AHCAL digitization effects
-  float _calibHcalMip;                // MIP calibration factor
-  int   _applyHcalDigi;               // which realistic calib to apply
-  float _hcal_PPD_pe_per_mip;         // # photoelectrons/MIP for MPPC
-  int   _hcal_PPD_n_pixels;           // # pixels in MPPC
-  float _hcal_misCalibNpix;           // miscalibration of # MPPC pixels
+  float _calibHcalMip{};                // MIP calibration factor
+  int   _applyHcalDigi{};               // which realistic calib to apply
+  float _hcal_PPD_pe_per_mip{};         // # photoelectrons/MIP for MPPC
+  int   _hcal_PPD_n_pixels{};           // # pixels in MPPC
+  float _hcal_misCalibNpix{};           // miscalibration of # MPPC pixels
 
-  float _misCalibHcal_uncorrel;       // general ECAL miscalibration (uncorrelated between channels)
-  bool  _misCalibHcal_uncorrel_keep;  // if true, use the same AHCAL cell miscalibs in each event (requires more memory)
-  float _misCalibHcal_correl;         // general ECAL miscalibration (100% uncorrelated between channels) 
+  float _misCalibHcal_uncorrel{};       // general ECAL miscalibration (uncorrelated between channels)
+  bool  _misCalibHcal_uncorrel_keep{};  // if true, use the same AHCAL cell miscalibs in each event (requires more memory)
+  float _misCalibHcal_correl{};         // general ECAL miscalibration (100% uncorrelated between channels) 
 
-  float _deadCellFractionHcal;        // fraction of random dead channels
-  bool  _deadCellHcal_keep;           // keep same cells dead between events?
-  float _hcal_pixSpread;              // relative spread of MPPC pixel signal
-  float _hcal_elec_noise;             // electronics noise (as fraction of MIP)
-  float _hcalMaxDynMip;               // electronics dynamic range (in terms of MIPs)
+  float _deadCellFractionHcal{};        // fraction of random dead channels
+  bool  _deadCellHcal_keep{};           // keep same cells dead between events?
+  float _hcal_pixSpread{};              // relative spread of MPPC pixel signal
+  float _hcal_elec_noise{};             // electronics noise (as fraction of MIP)
+  float _hcalMaxDynMip{};               // electronics dynamic range (in terms of MIPs)
 
 
 
   // internal variables
-  std::vector < std::pair <int, int> > _layerTypes;
-  int   _strip_virt_cells;
-  int _countWarnings;
-  std::string _ecalLayout;
+  std::vector < std::pair <int, int> > _layerTypes{};
+  int   _strip_virt_cells{};
+  int _countWarnings{};
+  std::string _ecalLayout{};
 
-  float _event_correl_miscalib_ecal;
-  float _event_correl_miscalib_hcal;
+  float _event_correl_miscalib_ecal{};
+  float _event_correl_miscalib_hcal{};
   
-  CLHEP::MTwistEngine *_randomEngineDeadCellEcal;
-  CLHEP::MTwistEngine *_randomEngineDeadCellHcal;
+  CLHEP::MTwistEngine *_randomEngineDeadCellEcal{};
+  CLHEP::MTwistEngine *_randomEngineDeadCellHcal{};
 
-  std::map < std::pair <int, int> , float > _ECAL_cell_miscalibs;
-  std::map < std::pair <int, int> , bool > _ECAL_cell_dead;
-  std::map < std::pair <int, int> , float > _HCAL_cell_miscalibs;
-  std::map < std::pair <int, int> , bool > _HCAL_cell_dead;
+  std::map < std::pair <int, int> , float > _ECAL_cell_miscalibs{};
+  std::map < std::pair <int, int> , bool > _ECAL_cell_dead{};
+  std::map < std::pair <int, int> , float > _HCAL_cell_miscalibs{};
+  std::map < std::pair <int, int> , bool > _HCAL_cell_dead{};
 
   enum {
     SQUARE,
@@ -257,46 +257,46 @@ class ILDCaloDigi : public Processor {
     SCECAL
   };
 
-  std::string _cellIDLayerString ;
-  std::string _cellIDModuleString ;
-  std::string _cellIDStaveString ;
-  std::string _cellIDIndexIString ;
-  std::string _cellIDIndexJString ;
+  std::string _cellIDLayerString{};
+  std::string _cellIDModuleString{};
+  std::string _cellIDStaveString{};
+  std::string _cellIDIndexIString{};
+  std::string _cellIDIndexJString{};
     
-  TH1F* fEcal;
-  TH1F* fHcal;
-  TH1F* fEcalC;
-  TH1F* fHcalC;
-  TH1F* fEcalC1;
-  TH1F* fHcalC1;
-  TH1F* fEcalC2;
-  TH1F* fHcalC2;
-  TH2F* fHcalCvsE; 
-  TH2F* fHcalLayer1;
-  TH2F* fHcalLayer11;
-  TH2F* fHcalLayer21;
-  TH2F* fHcalLayer31;
-  TH2F* fHcalLayer41;
-  TH2F* fHcalLayer51;
-  TH2F* fHcalLayer61;
-  TH2F* fHcalLayer71;
-  TH1F* fHcalRLayer1;
-  TH1F* fHcalRLayer11;
-  TH1F* fHcalRLayer21;
-  TH1F* fHcalRLayer31;
-  TH1F* fHcalRLayer41;
-  TH1F* fHcalRLayer51;
-  TH1F* fHcalRLayer61;
-  TH1F* fHcalRLayer71;
-  TH1F* fHcalRLayerNorm;
+  TH1F* fEcal{};
+  TH1F* fHcal{};
+  TH1F* fEcalC{};
+  TH1F* fHcalC{};
+  TH1F* fEcalC1{};
+  TH1F* fHcalC1{};
+  TH1F* fEcalC2{};
+  TH1F* fHcalC2{};
+  TH2F* fHcalCvsE{}; 
+  TH2F* fHcalLayer1{};
+  TH2F* fHcalLayer11{};
+  TH2F* fHcalLayer21{};
+  TH2F* fHcalLayer31{};
+  TH2F* fHcalLayer41{};
+  TH2F* fHcalLayer51{};
+  TH2F* fHcalLayer61{};
+  TH2F* fHcalLayer71{};
+  TH1F* fHcalRLayer1{};
+  TH1F* fHcalRLayer11{};
+  TH1F* fHcalRLayer21{};
+  TH1F* fHcalRLayer31{};
+  TH1F* fHcalRLayer41{};
+  TH1F* fHcalRLayer51{};
+  TH1F* fHcalRLayer61{};
+  TH1F* fHcalRLayer71{};
+  TH1F* fHcalRLayerNorm{};
 
-  TH1F* fEcalRLayerNorm;
-  TH2F* fEcalLayer1;
-  TH2F* fEcalLayer11;
-  TH2F* fEcalLayer21;
-  TH1F* fEcalRLayer1;
-  TH1F* fEcalRLayer11;
-  TH1F* fEcalRLayer21;
+  TH1F* fEcalRLayerNorm{};
+  TH2F* fEcalLayer1{};
+  TH2F* fEcalLayer11{};
+  TH2F* fEcalLayer21{};
+  TH1F* fEcalRLayer1{};
+  TH1F* fEcalRLayer11{};
+  TH1F* fEcalRLayer21{};
 
 } ;
 

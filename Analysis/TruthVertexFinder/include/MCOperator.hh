@@ -55,10 +55,10 @@ namespace TTbarAnalysis
 		//
 		//	Data
 		//
-			EVENT::LCCollection * myCollection;
-			EVENT::LCCollection * myRelCollection;
-			double myPrimaryVertex[3];
-			float myAngleCut;
+			EVENT::LCCollection * myCollection{};
+			EVENT::LCCollection * myRelCollection{};
+			double myPrimaryVertex[3]{};
+			float myAngleCut{};
 		//	int myCurrentParentPDG;
 		//
 		//	Private methods

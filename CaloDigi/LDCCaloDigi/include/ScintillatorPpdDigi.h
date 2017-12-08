@@ -35,13 +35,13 @@ class ScintillatorPpdDigi {
 
  private:
 
-  float _pe_per_mip;
-  float _calib_mip;
-  float _npix;
-  float _misCalibNpix;
-  float _pixSpread;
-  float _elecNoise;
-  float _elecMaxDynRange_MIP;
+  float _pe_per_mip{};
+  float _calib_mip{};
+  float _npix{};
+  float _misCalibNpix{};
+  float _pixSpread{};
+  float _elecNoise{};
+  float _elecMaxDynRange_MIP{};
 
 };
 

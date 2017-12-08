@@ -6,19 +6,19 @@
 
 class Histogram{
 private:
-  std::string histName ;     // name of the histogram
-  int dim ;                  // dimension of the histogram = number of contained variables
-  std::string *varNames ;    // array of names of the contained variables [dim] Order!!
-  double *start ;            // array with start values of variables      [dim] Order!!
-  double *width ;            // array with bin width of variables         [dim] Order!!
-  int *bins ;                // array with number of bins per variable    [dim] Order!!
-  int totNoOfBins ;          // total number of bins = bins[0]*...bins[dim-1]
+  std::string histName{};     // name of the histogram
+  int dim{};                  // dimension of the histogram = number of contained variables
+  std::string *varNames{};    // array of names of the contained variables [dim] Order!!
+  double *start{};            // array with start values of variables      [dim] Order!!
+  double *width{};            // array with bin width of variables         [dim] Order!!
+  int *bins{};                // array with number of bins per variable    [dim] Order!!
+  int totNoOfBins{};          // total number of bins = bins[0]*...bins[dim-1]
 
-  double *content ;          // array with histogram content [totNoOfBins]
+  double *content{};          // array with histogram content [totNoOfBins]
 
-  double density[3] ;        // [0] = maximum d., [1] = minimum d., [2] = average d. of histogram
-  double norm ;              // norm of the histogramm (number of entries)
-  double vol ;               // volume of one bin  // vol*norm = correct norm
+  double density[3]{};        // [0] = maximum d., [1] = minimum d., [2] = average d. of histogram
+  double norm{};              // norm of the histogramm (number of entries)
+  double vol{};               // volume of one bin  // vol*norm = correct norm
 
 public:
   Histogram(std::string HistName, int Dimension);          // creates arrays

@@ -11,8 +11,8 @@
 
 /** Helper struct for VXD ladder geometry */
 struct VXDLadder{
-  double phi ;   // phi of ladder - rotation araound z-axis 
-  gear::Vector3D trans ; // translation after rotation
+  double phi{};   // phi of ladder - rotation araound z-axis
+  gear::Vector3D trans{}; // translation after rotation
 //   CLHEP::Hep2Vector p0 ;  // 'left' end of ladder in r-phi
 //   CLHEP::Hep2Vector p1 ;  // 'right' end of ladder in r-phi
 //   CLHEP::Hep2Vector u  ;  // unit vector along ladder in r-phi
@@ -21,14 +21,14 @@ typedef std::vector< std::vector< VXDLadder > > VXDLadders ;
 
 /** Helper struct for VXD layer geometry */
 struct VXDLayer{
-  double rMin ;
-  double rMax ;
-  double length ;
-  double width ;
-  double thickness ;
-  double gap  ;
-  double ladderArea ;
-  int nLadders ;
+  double rMin{};
+  double rMax{};
+  double length{};
+  double width{};
+  double thickness{};
+  double gap{};
+  double ladderArea{};
+  int nLadders{};
 };
 
 typedef std::vector< VXDLayer >  VXDLayers ;
@@ -86,9 +86,9 @@ protected:
   void init() ;
   VXDGeometry(){}
 
-  gear::GearMgr* _gearMgr ;
-  VXDLadders _vxdLadders ;
-  VXDLayers  _vxdLayers ;
+  gear::GearMgr* _gearMgr{};
+  VXDLadders _vxdLadders{};
+  VXDLayers  _vxdLayers{};
 
 } ;
 

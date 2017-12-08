@@ -45,22 +45,22 @@ class SimpleMuonDigi : public Processor {
   
  protected:
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  IntVec _layersToKeepBarrelVec, _layersToKeepEndcapVec;
-  std::vector<bool>  _useLayersBarrelVec, _useLayersEndcapVec;
+  IntVec _layersToKeepBarrelVec{}, _layersToKeepEndcapVec{};
+  std::vector<bool>  _useLayersBarrelVec{}, _useLayersEndcapVec{};
 
-  std::vector<std::string> _muonCollections;
+  std::vector<std::string> _muonCollections{};
 
-  std::string _outputMuonCollection;
-  std::string _outputRelCollection;
+  std::string _outputMuonCollection{};
+  std::string _outputRelCollection{};
 
-  std::string _cellIDLayerString ;
+  std::string _cellIDLayerString{};
 
-  float _thresholdMuon;
-  float _calibrCoeffMuon;
-  float _maxHitEnergyMuon;
+  float _thresholdMuon{};
+  float _calibrCoeffMuon{};
+  float _maxHitEnergyMuon{};
 
 
 } ;

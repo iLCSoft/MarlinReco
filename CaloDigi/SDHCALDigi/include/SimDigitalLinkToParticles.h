@@ -18,9 +18,9 @@ class SimDigitalLinkToParticles : public marlin::Processor
 
 		LCCollectionVec* processCollection(LCCollection* inputCol , LCCollection* inputRelCol) ;
 
-		std::vector<std::string> _inputCollections {} ; // input CalorimeterHit collection
-		std::vector<std::string> _inputRelCollections {} ; // input CalorimeterHit to SimCalorimeterHit relation collection
-		std::vector<std::string> _outputRelCollections {} ; // output CalorimeterHit to MCParticle relation collection
+		std::vector<std::string> _inputCollections{}; // input CalorimeterHit collection
+		std::vector<std::string> _inputRelCollections{}; // input CalorimeterHit to SimCalorimeterHit relation collection
+		std::vector<std::string> _outputRelCollections{}; // output CalorimeterHit to MCParticle relation collection
 } ;
 
 #endif //SimDigitalLinkToParticles_h

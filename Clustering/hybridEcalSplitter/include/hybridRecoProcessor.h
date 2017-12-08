@@ -71,52 +71,52 @@ class hybridRecoProcessor : public Processor {
   /** Input collection name.
    */
 
-  std::vector <std::string> _ecalCollectionsCells;
-  std::vector <std::string> _ecalCollectionsTranStrips;
-  std::vector <std::string> _ecalCollectionsLongStrips;
+  std::vector <std::string> _ecalCollectionsCells{};
+  std::vector <std::string> _ecalCollectionsTranStrips{};
+  std::vector <std::string> _ecalCollectionsLongStrips{};
 
   std::pair < TVector3, TVector3 > getStripEnds(CalorimeterHit* hit, int orientation, bool barrel);
   TVector3 stripIntersect(CalorimeterHit* hit0, TVector3 axis0, CalorimeterHit* hit1, TVector3 axis1);
   std::vector <CalorimeterHit*> getVirtualHits(LCEvent* evt, CalorimeterHit* hit, int orientation, bool barrel );
 
-  CellIDDecoder<CalorimeterHit>* _decoder; 
-  CellIDDecoder<CalorimeterHit>* _decoder2; 
+  CellIDDecoder<CalorimeterHit>* _decoder{}; 
+  CellIDDecoder<CalorimeterHit>* _decoder2{}; 
 
-  bool  _makePlots;
-  float _stripLength;
-  float _stripWidth;
-  float _stripAspectRatio;
-  float _cellSize;
-  int   _symmetry;
-  int   _nVirtual;
-  int _ecalStrip_default_nVirt;
+  bool  _makePlots{};
+  float _stripLength{};
+  float _stripWidth{};
+  float _stripAspectRatio{};
+  float _cellSize{};
+  int   _symmetry{};
+  int   _nVirtual{};
+  int _ecalStrip_default_nVirt{};
 
-  bool _saveIntersections;
-  IMPL::LCCollectionVec* intersectionHits;
-  IMPL::LCCollectionVec* stripEndsTransCol;
-  IMPL::LCCollectionVec* stripEndsLongCol;
+  bool _saveIntersections{};
+  IMPL::LCCollectionVec* intersectionHits{};
+  IMPL::LCCollectionVec* stripEndsTransCol{};
+  IMPL::LCCollectionVec* stripEndsLongCol{};
 
-  TFile* _fout;
-  TH2F* h_phiModuleCheck;
-  TH2F* h_phiThetaMC;
+  TFile* _fout{};
+  TH2F* h_phiModuleCheck{};
+  TH2F* h_phiThetaMC{};
 
-  TH1F* h_stripDist_intercept;
-  TH1F* h_stripDist_nointercept;
+  TH1F* h_stripDist_intercept{};
+  TH1F* h_stripDist_nointercept{};
 
-  TH2F* h_stavemodule[2];
-  TH1F* h_layer[2];
+  TH2F* h_stavemodule[2]{};
+  TH1F* h_layer[2]{};
 
-  TH2F* h_staveX[2];
-  TH2F* h_staveY[2];
-  TH2F* h_staveZ[2];
+  TH2F* h_staveX[2]{};
+  TH2F* h_staveY[2]{};
+  TH2F* h_staveZ[2]{};
 
-  TH2F* h_moduleX[2];
-  TH2F* h_moduleY[2];
-  TH2F* h_moduleZ[2];
+  TH2F* h_moduleX[2]{};
+  TH2F* h_moduleY[2]{};
+  TH2F* h_moduleZ[2]{};
 
 
-  TH2F* h_cth_phi[2][10][10];
-  TH2F* h_XY[2][10][10];
+  TH2F* h_cth_phi[2][10][10]{};
+  TH2F* h_XY[2][10][10]{};
 
   enum {TRANSVERSE, LONGITUDINAL};
 

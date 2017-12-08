@@ -38,8 +38,8 @@ namespace marlin {
 
   protected:
 
-    int _nRun ;
-    int _nEvt ;
+    int _nRun{};
+    int _nEvt{};
 
     enum {
       ECAL1=0,
@@ -47,9 +47,9 @@ namespace marlin {
       HCAL
     };
 
-    vector<int> _nlayer;
-    vector<float> _coeff;
-    vector<float> _cuts;
+    vector<int> _nlayer{};
+    vector<float> _coeff{};
+    vector<float> _cuts{};
   } ;
 } //namespace marlin
 #endif

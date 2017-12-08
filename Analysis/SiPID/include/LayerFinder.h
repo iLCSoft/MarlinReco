@@ -160,7 +160,7 @@ public:
   void ReportKnownDetectors();
 
 protected:
-  std::vector<LayerResolver*> knownDetectors;
+  std::vector<LayerResolver*> knownDetectors{};
 
   // Default constructor. Not very useful.
   LayerFinder();

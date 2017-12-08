@@ -89,56 +89,56 @@ class NewLDCCaloDigi : public Processor {
   
  protected:
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
   
-  std::vector<std::string> _ecalCollections;
-  std::vector<std::string> _hcalCollections;
+  std::vector<std::string> _ecalCollections{};
+  std::vector<std::string> _hcalCollections{};
 
 
-  std::string _outputEcalCollection0;
-  std::string _outputEcalCollection1;
-  std::string _outputEcalCollection2;
-  std::string _outputHcalCollection0;
-  std::string _outputHcalCollection1;
-  std::string _outputHcalCollection2;
-  std::vector<std::string> _outputEcalCollections;
-  std::vector<std::string> _outputHcalCollections;
-  std::string _outputRelCollection;
+  std::string _outputEcalCollection0{};
+  std::string _outputEcalCollection1{};
+  std::string _outputEcalCollection2{};
+  std::string _outputHcalCollection0{};
+  std::string _outputHcalCollection1{};
+  std::string _outputHcalCollection2{};
+  std::vector<std::string> _outputEcalCollections{};
+  std::vector<std::string> _outputHcalCollections{};
+  std::string _outputRelCollection{};
 
-  float _thresholdEcal;
-  std::vector<float> _thresholdHcal;
+  float _thresholdEcal{};
+  std::vector<float> _thresholdHcal{};
 
-  int _digitalEcal;
-  int _digitalHcal;
+  int _digitalEcal{};
+  int _digitalHcal{};
 
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<float> _calibrCoeffHcal;
+  std::vector<float> _calibrCoeffEcal{};
+  std::vector<float> _calibrCoeffHcal{};
 
-  std::vector<int> _ecalLayers;
-  std::vector<int> _hcalLayers;
+  std::vector<int> _ecalLayers{};
+  std::vector<int> _hcalLayers{};
 
-  int _ecalGapCorrection;
-  float _ecalGapCorrectionFactor;
-  float _ecalModuleGapCorrectionFactor;
-  float _ecalEndcapCorrectionFactor;
-  float _hcalEndcapCorrectionFactor;
+  int _ecalGapCorrection{};
+  float _ecalGapCorrectionFactor{};
+  float _ecalModuleGapCorrectionFactor{};
+  float _ecalEndcapCorrectionFactor{};
+  float _hcalEndcapCorrectionFactor{};
 
 
-  std::string _cellIDLayerString ;
-  std::string _cellIDModuleString ;
-  std::string _cellIDStaveString ;
+  std::string _cellIDLayerString{};
+  std::string _cellIDModuleString{};
+  std::string _cellIDStaveString{};
 
 
   std::vector<CalorimeterHitImpl*> _calHitsByStaveLayer[MAX_STAVES][MAX_LAYERS];
   std::vector<int> _calHitsByStaveLayerModule[MAX_STAVES][MAX_LAYERS];
 
-  float _zOfEcalEndcap;
-  float _barrelPixelSizeT[MAX_LAYERS];
-  float _barrelPixelSizeZ[MAX_LAYERS];
-  float _endcapPixelSizeX[MAX_LAYERS];
-  float _endcapPixelSizeY[MAX_LAYERS];
-  float _barrelStaveDir[MAX_STAVES][2];
+  float _zOfEcalEndcap{};
+  float _barrelPixelSizeT[MAX_LAYERS]{};
+  float _barrelPixelSizeZ[MAX_LAYERS]{};
+  float _endcapPixelSizeX[MAX_LAYERS]{};
+  float _endcapPixelSizeY[MAX_LAYERS]{};
+  float _barrelStaveDir[MAX_STAVES][2]{};
 
 
 } ;

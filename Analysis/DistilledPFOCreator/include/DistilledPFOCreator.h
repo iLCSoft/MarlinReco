@@ -43,13 +43,13 @@ class DistilledPFOCreator : public marlin::Processor {
 
 private:
 
-  std::vector<ReconstructedParticle*>_pfovec;
-  std::vector<ReconstructedParticle*>_ggpfovec;
-  std::vector<ReconstructedParticle*>_mypfovec;     // Not clear this is neeeded - but may be convenient to energy sort prior to finalization
-  int   _printing;
-  std::string _inputParticleCollectionName1;
-  std::string _inputParticleCollectionName2;
-  std::string _outputParticleCollectionName;
+  std::vector<ReconstructedParticle*>_pfovec{};
+  std::vector<ReconstructedParticle*>_ggpfovec{};
+  std::vector<ReconstructedParticle*>_mypfovec{};     // Not clear this is neeeded - but may be convenient to energy sort prior to finalization
+  int   _printing{};
+  std::string _inputParticleCollectionName1{};
+  std::string _inputParticleCollectionName2{};
+  std::string _outputParticleCollectionName{};
   static bool PfoEnergySortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs);
 
 protected:

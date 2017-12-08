@@ -77,24 +77,24 @@ class KIT : public Processor {
   
  protected:
  
-  int  _options ;
-  int _nRun ;
-  int _nEvt ;
+  int  _options{};
+  int _nRun{};
+  int _nEvt{};
 
-  std::string _Ecal_col;
-  std::string _CoreCollection;
+  std::string _Ecal_col{};
+  std::string _CoreCollection{};
 
-  string _ToClean;
-  int _CleanCut;
+  string _ToClean{};
+  int _CleanCut{};
 
-  int _N;
-  vector<float> _miipstep;
+  int _N{};
+  vector<float> _miipstep{};
 
-  int _MinHit0;
-  int _MinHitSplit;
-  double _Rcut;
-  double _Distcut; 
-  double _Coscut;
+  int _MinHit0{};
+  int _MinHitSplit{};
+  double _Rcut{};
+  double _Distcut{}; 
+  double _Coscut{};
 } ;
 
 #endif

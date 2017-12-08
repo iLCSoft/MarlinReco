@@ -28,7 +28,7 @@ namespace TTbarAnalysis
 		//
 		//	Data
 		//
-			std::vector< EVENT::MCParticle * > myMCParticles;
+			std::vector< EVENT::MCParticle * > myMCParticles{};
 		//
 		//	Private methods
 		//

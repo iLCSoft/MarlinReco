@@ -49,9 +49,9 @@ protected:
   /** Input and output collection name.
    */
 
-  std::string  _inputCollectionName ;
-  std::string _outputCollectionName ;
-  float _minimumMomentum;
+  std::string  _inputCollectionName{};
+  std::string _outputCollectionName{};
+  float _minimumMomentum{};
 
 } ;
 

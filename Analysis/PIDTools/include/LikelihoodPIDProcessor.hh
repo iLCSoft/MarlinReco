@@ -26,30 +26,30 @@ public:
 private:
   void createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput);
   
-  LikelihoodPID *_myPID;
-  std::string _description;
-  std::string _inputPFOsCollection;
-  std::string _PDFName;
-  std::vector<std::string> _weightFileName;
-  EVENT::FloatVec _energyBoundary;
-  LCCollection* _pfoCol;
-  std::vector<int> _pdgTable;
-  std::vector<std::string> _particleNames;
-  std::vector<std::string> _dEdxNames;
+  LikelihoodPID *_myPID{};
+  std::string _description{};
+  std::string _inputPFOsCollection{};
+  std::string _PDFName{};
+  std::vector<std::string> _weightFileName{};
+  EVENT::FloatVec _energyBoundary{};
+  LCCollection* _pfoCol{};
+  std::vector<int> _pdgTable{};
+  std::vector<std::string> _particleNames{};
+  std::vector<std::string> _dEdxNames{};
 
-  std::vector<float> _dEdxParamsElectron;
-  std::vector<float> _dEdxParamsMuon;
-  std::vector<float> _dEdxParamsPion;
-  std::vector<float> _dEdxParamsKaon;
-  std::vector<float> _dEdxParamsProton;
-  std::vector<float> _cost;
+  std::vector<float> _dEdxParamsElectron{};
+  std::vector<float> _dEdxParamsMuon{};
+  std::vector<float> _dEdxParamsPion{};
+  std::vector<float> _dEdxParamsKaon{};
+  std::vector<float> _dEdxParamsProton{};
+  std::vector<float> _cost{};
 
-  LowMomentumMuPiSeparationPID_BDTG *_mupiPID;
+  LowMomentumMuPiSeparationPID_BDTG *_mupiPID{};
 
-  bool _basicFlg, _dEdxFlg, _showerShapesFlg;
-  int _UseBayes,_UseCorr;
-  bool _UseMVA;
-  float _dEdxNormalization, _dEdxErrorFactor;
+  bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
+  int _UseBayes{},_UseCorr{};
+  bool _UseMVA{};
+  float _dEdxNormalization{}, _dEdxErrorFactor{};
 };
 
 #endif 

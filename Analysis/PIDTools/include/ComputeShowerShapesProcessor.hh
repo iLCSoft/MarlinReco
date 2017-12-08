@@ -20,12 +20,12 @@ public:
   virtual void end();
  
 private:
-  ClusterShapes *pClusterShapes;
-  std::string _PfoCollection;
-  std::string _ClusterCollection;
-  float _X01,_X02;
-  float _Rm1,_Rm2;
-  LCCollection* _PFOCol;
+  ClusterShapes *pClusterShapes{};
+  std::string _PfoCollection{};
+  std::string _ClusterCollection{};
+  float _X01{},_X02{};
+  float _Rm1{},_Rm2{};
+  LCCollection* _PFOCol{};
 };
 
 #endif

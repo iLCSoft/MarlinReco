@@ -85,38 +85,38 @@ class SiTracker_dEdxProcessor : public Processor {
   static double dEdxWgtHarmonic(dEdxVec, double &dEdxError);
   static double dEdxWgtHarmonic2(dEdxVec, double &dEdxError);
 
-  double (*dEdxEval)(dEdxVec, double &dEdxError);
+  double (*dEdxEval)(dEdxVec, double &dEdxError){};
 
  protected:
 
   /*** Steerable parameters ***/
   // Input collection names
-  std::string m_trackColName;
+  std::string m_trackColName{};
   /* Tracker hit collection names.
    * Must be in the same order as tracker detector elements in LCDD.
    * (Check the order of tracker hit collections in the input LCIO file.)
    */
-  StringVec m_trkHitCollNames;
+  StringVec m_trkHitCollNames{};
   // Bit mask which tracker detector elements to use (respecting the order in LCDD)
-  int m_elementMask;
+  int m_elementMask{};
 
   // Shall we cheat the sensitive thicknesses?
-  bool m_cheatSensorThicknesses;
+  bool m_cheatSensorThicknesses{};
   // Cheat values for sensitive thicknesses. Default = -1. (no cheating)
-  FloatVec m_sensThicknessCheatVals;
+  FloatVec m_sensThicknessCheatVals{};
 
   // Choice of estimator for dEdx
-  std::string m_dEdxEstimator;
+  std::string m_dEdxEstimator{};
 
   /*** Detector-related objects ***/
   const dd4hep::rec::SurfaceMap *surfMap;
   MarlinTrk::IMarlinTrkSystem *trkSystem;
 
-  double _bField;
+  double _bField{};
 
-  LayerFinder *collFinder;
+  LayerFinder *collFinder{};
 
-  int lastRunHeaderProcessed;
+  int lastRunHeaderProcessed{};
 } ;
 
 #endif

@@ -45,41 +45,41 @@ private:
   const  double getValue(int type, int valtype,  double value);
   double getPenalty(int ptype, int hypothesis,  double p);
   
-  double par[5][5];
-  TFile* fpdf;
-  TH1F* pdf[6][20];
+  double par[5][5]{};
+  TFile* fpdf{};
+  TH1F* pdf[6][20]{};
   
   //define masses
-  double emass;
-  double mmass;
-  double pimass;
-  double kmass;
-  double pmass;
+  double emass{};
+  double mmass{};
+  double pimass{};
+  double kmass{};
+  double pmass{};
   
   //threshold
-  double threshold[5];
+  double threshold[5]{};
   //penality
-  double penalty[5][5];
-  double prior[5];
+  double penalty[5][5]{};
+  double prior[5]{};
   
-  double fact[5][5];
+  double fact[5][5]{};
   
   //weights for hadron likelihood calculation
-  double _weights[6][20];
+  double _weights[6][20]{};
 
   //posterior
-  double _posterior[6];   //add ahdron type
-  double _likelihood[6];  //add hadron type
+  double _posterior[6]{};   //add ahdron type
+  double _likelihood[6]{};  //add hadron type
   
   //distance from bethe bloch line with each particle hypothesis
-  double _dEdxDist[5];
+  double _dEdxDist[5]{};
   
   //for shower profile
-  EVENT::FloatVec shapes;
+  EVENT::FloatVec shapes{};
 
-  bool _basicFlg, _dEdxFlg, _showerShapesFlg;
-  int _usebayes, _usecorr;
-  float _dEdxnorm, _dEdxerrfact;
+  bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
+  int _usebayes{}, _usecorr{};
+  float _dEdxnorm{}, _dEdxerrfact{};
 };
 
 #endif 

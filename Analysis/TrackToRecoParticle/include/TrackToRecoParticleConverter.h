@@ -48,8 +48,8 @@ class TrackToRecoParticleConverter : public Processor
 
   /** Input collection name.
    */
-	std::string _inputTrackCollectionName;
-	std::string _outputPFOCollectionName;
+	std::string _inputTrackCollectionName{};
+	std::string _outputPFOCollectionName{};
 } ;
 
 #endif

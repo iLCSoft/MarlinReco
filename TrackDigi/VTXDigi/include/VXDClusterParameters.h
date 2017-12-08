@@ -50,11 +50,11 @@ protected:
     _ladderId(-1) {
   }
 
-  gear::Vector3D _localPos ; // position of hit on ladder
-  gear::Vector3D _cluAxisA ;
-  gear::Vector3D _cluAxisB ;
-  int _layerId ;
-  int _ladderId ;
+  gear::Vector3D _localPos{}; // position of hit on ladder
+  gear::Vector3D _cluAxisA{};
+  gear::Vector3D _cluAxisB{};
+  int _layerId{};
+  int _ladderId{};
 } ;
 
 

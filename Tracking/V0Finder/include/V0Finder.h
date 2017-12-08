@@ -74,33 +74,33 @@ class V0Finder : public Processor {
   void Sorting( TrackPairVec & trkPairVec );
   float Rmin( Track* track );
   
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
   
-  std::string _trackColName;
-  std::string _vertexColName;
-  std::string _recoPartColName;
+  std::string _trackColName{};
+  std::string _vertexColName{};
+  std::string _recoPartColName{};
   
-  float _rVertCut;
-  float _dVertCut;
+  float _rVertCut{};
+  float _dVertCut{};
 
-  float _bField;
+  float _bField{};
 
-  float MASSProton;
-  float MASSPion;
-  float MASSLambda0;
-  float MASSK0S;
-  float MASSGamma;
+  float MASSProton{};
+  float MASSPion{};
+  float MASSLambda0{};
+  float MASSK0S{};
+  float MASSGamma{};
 
-  float _deltaMassK0S;
-  float _deltaMassL0;
-  float _deltaMassGamma;
+  float _deltaMassK0S{};
+  float _deltaMassL0{};
+  float _deltaMassGamma{};
 
-  float _rxyCutGamma;
-  float _rxyCutK0S;
-  float _rxyCutLambda;
+  float _rxyCutGamma{};
+  float _rxyCutK0S{};
+  float _rxyCutLambda{};
 
-  float _minTrackHitRatio;
+  float _minTrackHitRatio{};
 
 } ;
 

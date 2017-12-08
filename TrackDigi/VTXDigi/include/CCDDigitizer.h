@@ -116,78 +116,78 @@ class CCDDigitizer : public Processor {
 
   /** Input collection name.
    */
-  std::string _colName ;
-  std::string _outputCollectionName;
-  std::string _colVTXRelation ;
+  std::string _colName{};
+  std::string _outputCollectionName{};
+  std::string _colVTXRelation{};
 
   /** Run number
    */
-  int _nRun ;
+  int _nRun{};
   
   /** Event number
    */
-  int _nEvt ;
+  int _nEvt{};
   /** tangent of Lorentz angle
    */
  
-  double _cutOnDeltaRays;
+  double _cutOnDeltaRays{};
   /** Diffusion coefficient in mm for nominla layer thickness
    */
-  double _diffusionCoefficient; 
+  double _diffusionCoefficient{}; 
 
 
 
-  int _numberOfLayers;
-  double _pixelSizeX;
-  double _pixelSizeY;
-  double _electronsPerKeV;
-  double _segmentDepth;
-  double _currentTotalCharge;
+  int _numberOfLayers{};
+  double _pixelSizeX{};
+  double _pixelSizeY{};
+  double _electronsPerKeV{};
+  double _segmentDepth{};
+  double _currentTotalCharge{};
 
-  std::vector<int> _laddersInLayer;
-  std::vector<float> _layerRadius;
-  std::vector<float> _layerThickness;
-  std::vector<float> _layerHalfThickness;
-  std::vector<float> _layerLadderLength;
-  std::vector<float> _layerLadderHalfWidth;
-  std::vector<float> _layerPhiOffset;
-  std::vector<float> _layerActiveSiOffset;
-  std::vector<float> _layerHalfPhi;
-  std::vector<float> _layerLadderGap;
-  std::vector<float> _bkgdHitsInLayer;
-  std::vector<float> _layerLadderWidth;
+  std::vector<int> _laddersInLayer{};
+  std::vector<float> _layerRadius{};
+  std::vector<float> _layerThickness{};
+  std::vector<float> _layerHalfThickness{};
+  std::vector<float> _layerLadderLength{};
+  std::vector<float> _layerLadderHalfWidth{};
+  std::vector<float> _layerPhiOffset{};
+  std::vector<float> _layerActiveSiOffset{};
+  std::vector<float> _layerHalfPhi{};
+  std::vector<float> _layerLadderGap{};
+  std::vector<float> _bkgdHitsInLayer{};
+  std::vector<float> _layerLadderWidth{};
 
-  int _currentLayer;
-  int _currentModule;
-  int _generateBackground;
-  double _currentParticleMomentum;
-  double _currentParticleEnergy;
-  double _currentParticleMass;
-  double _currentPhi;
+  int _currentLayer{};
+  int _currentModule{};
+  int _generateBackground{};
+  double _currentParticleMomentum{};
+  double _currentParticleEnergy{};
+  double _currentParticleMass{};
+  double _currentPhi{};
 
-  double PI,TWOPI,PI2;
+  double PI{},TWOPI{},PI2{};
 
-  int _produceFullPattern;
-  int _numberOfSegments;
-  int _debug;
-  int _PoissonSmearing;
-  int _electronicEffects;
-  int _useMCPMomentum;
+  int _produceFullPattern{};
+  int _numberOfSegments{};
+  int _debug{};
+  int _PoissonSmearing{};
+  int _electronicEffects{};
+  int _useMCPMomentum{};
  
-  int _recmethod;
-  double _threshold;
-  double _saturation;
-  int _framesize;
-  int maxnionpoint;
+  int _recmethod{};
+  double _threshold{};
+  double _saturation{};
+  int _framesize{};
+  int maxnionpoint{};
   
-  double _currentLocalPosition[3];
-  double _electronicNoise;
-  double _segmentLength;
+  double _currentLocalPosition[3]{};
+  double _electronicNoise{};
+  double _segmentLength{};
 
-  IonisationPointVec _ionisationPoints;
+  IonisationPointVec _ionisationPoints{};
  
 
-  MyG4UniversalFluctuationForSi * _fluctuate;
+  MyG4UniversalFluctuationForSi * _fluctuate{};
 
    
   //Finds coordinates    
@@ -219,47 +219,47 @@ class CCDDigitizer : public Processor {
 //   double _currentEntryPoint[3];
 //   double _currentExitPoint[3];
  
-  double _energyLoss;
-  std::vector <SimTrackerHitImplVec> _hitsInLayer;
+  double _energyLoss{};
+  std::vector <SimTrackerHitImplVec> _hitsInLayer{};
 
-  double depdep;
-  double undep;
-  double epitaxdep;
+  double depdep{};
+  double undep{};
+  double epitaxdep{};
 
-  double pxl[maxpixx][maxpixy];
-  int midpixx;
-  int midpixy;
-  double stepx;
-  double stepy;
-  double xobsoffset;
-  double yobsoffset;  
+  double pxl[maxpixx][maxpixy]{};
+  int midpixx{};
+  int midpixy{};
+  double stepx{};
+  double stepy{};
+  double xobsoffset{};
+  double yobsoffset{};  
  
-  double sigmacoefficient;
-  double sigmin;
-  double _difcoef;
-  double _efield;
-  double _biasvolt;
-  double _bfield;
-  double _T;
-  double _mu;
-  double TanLorentzAngle;
+  double sigmacoefficient{};
+  double sigmin{};
+  double _difcoef{};
+  double _efield{};
+  double _biasvolt{};
+  double _bfield{};
+  double _T{};
+  double _mu{};
+  double TanLorentzAngle{};
 
 
 #ifdef CCD_diagnostics
-  double dirraw[3];
-  double posraw[3];
-  AIDA::IHistogram1D* histdist;
-  AIDA::IHistogram1D* histcluster;
-  AIDA::IHistogram2D* histclustxy;
-  AIDA::IHistogram1D* histcharge;
-  AIDA::IHistogram2D* histdistxy;
-  AIDA::IHistogram1D* histNionpoint;
-  AIDA::IHistogram1D* histzcoord;
-  AIDA::IHistogram1D* histenergy;
-  AIDA::IHistogram1D* histsignal;
-  AIDA::IHistogram1D* histsignalframe;
-  AIDA::IHistogram1D* histenergycentre;
-  int Nionpoint; 
+  double dirraw[3]{};
+  double posraw[3]{};
+  AIDA::IHistogram1D* histdist{};
+  AIDA::IHistogram1D* histcluster{};
+  AIDA::IHistogram2D* histclustxy{};
+  AIDA::IHistogram1D* histcharge{};
+  AIDA::IHistogram2D* histdistxy{};
+  AIDA::IHistogram1D* histNionpoint{};
+  AIDA::IHistogram1D* histzcoord{};
+  AIDA::IHistogram1D* histenergy{};
+  AIDA::IHistogram1D* histsignal{};
+  AIDA::IHistogram1D* histsignalframe{};
+  AIDA::IHistogram1D* histenergycentre{};
+  int Nionpoint{};
 #endif
 
  // table

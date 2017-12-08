@@ -67,20 +67,20 @@ protected:
   /** Input collection name.
    */
 
-  std::string  _inputCollectionName ;
-  int _typeOfThrustFinder;
+  std::string  _inputCollectionName{};
+  int _typeOfThrustFinder{};
 
-  float _principleThrustValue;
-  float _majorThrustValue;
-  float _minorThrustValue;
-  Hep3Vector _principleThrustAxis;
-  Hep3Vector _majorThrustAxis;
-  Hep3Vector _minorThrustAxis;
-  float _min,_max;
-  LCCollection* _inParVec;
-  std::vector<Hep3Vector> _partMom;
-  std::string filename;
-  RanluxEngine myrnd;
+  float _principleThrustValue{};
+  float _majorThrustValue{};
+  float _minorThrustValue{};
+  Hep3Vector _principleThrustAxis{};
+  Hep3Vector _majorThrustAxis{};
+  Hep3Vector _minorThrustAxis{};
+  float _min{},_max{};
+  LCCollection* _inParVec{};
+  std::vector<Hep3Vector> _partMom{};
+  std::string filename{};
+  RanluxEngine myrnd{};
 } ;
 
 #endif

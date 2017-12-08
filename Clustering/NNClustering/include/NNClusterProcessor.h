@@ -56,17 +56,17 @@ class NNClusterProcessor : public Processor {
 
   /** Input collection name.
    */
-  StringVec _colNames ;
+  StringVec _colNames{};
 
-  std::string _outputColName ;
+  std::string _outputColName{};
 
-  float _distCut ;
-  float _eCut ;
+  float _distCut{};
+  float _eCut{};
 
-  int _nThetaPhi ;
+  int _nThetaPhi{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
 //   NNClusterer* _clusterer ;
 

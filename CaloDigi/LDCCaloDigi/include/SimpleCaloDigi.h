@@ -86,29 +86,29 @@ class SimpleCaloDigi : public Processor {
   
  protected:
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
   
-  std::vector<std::string> _ecalCollections;
-  std::vector<std::string> _hcalCollections;
+  std::vector<std::string> _ecalCollections{};
+  std::vector<std::string> _hcalCollections{};
 
-  std::string _outputEcalCollection;
-  std::string _outputHcalCollection;
-  std::string _outputRelCollection;
-
-
-  float _thresholdEcal;
-  float _thresholdHcal;
-
-  int _digitalEcal;
-  int _digitalHcal;
+  std::string _outputEcalCollection{};
+  std::string _outputHcalCollection{};
+  std::string _outputRelCollection{};
 
 
-  std::vector<float> _calibrCoeffEcal;
-  std::vector<float> _calibrCoeffHcal;
+  float _thresholdEcal{};
+  float _thresholdHcal{};
 
-  std::vector<int> _ecalLayers;
-  std::vector<int> _hcalLayers;
+  int _digitalEcal{};
+  int _digitalHcal{};
+
+
+  std::vector<float> _calibrCoeffEcal{};
+  std::vector<float> _calibrCoeffHcal{};
+
+  std::vector<int> _ecalLayers{};
+  std::vector<int> _hcalLayers{};
 
 
 } ;

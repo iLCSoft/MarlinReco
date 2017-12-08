@@ -10,13 +10,13 @@ typedef std::vector<Category*> CatVec;
 
 class PDF{
 private:
-  std::string pdfName ;         // name of the PDF object, e.g. charged particles
-  int nCats ;                   // number of categories
-  CatVec cat;                   // array of categories in the pdf
-  unsigned int IniCount;
+  std::string pdfName{};         // name of the PDF object, e.g. charged particles
+  int nCats{};                   // number of categories
+  CatVec cat{};                   // array of categories in the pdf
+  unsigned int IniCount{};
 
 public:
-  VObject *VO;
+  VObject *VO{};
   
   // constructor: creates arrays
   PDF(std::string PDFname, int NoOfCats, std::string* CatNames, int NoOfHists, int NoOfVar, std::string *VarNames);

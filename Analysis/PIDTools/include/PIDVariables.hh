@@ -202,8 +202,8 @@ public:
   virtual void ClearVars();
 
 protected:
-  VarVec _varVec;
-  float _p;
+  VarVec _varVec{};
+  float _p{};
   virtual void Populate() = 0;
 };
 
@@ -241,7 +241,7 @@ protected:
 
   // Copy of all variables for the TMVA::Reader and TMVA::Factory
   // As they do not accept const pointers
-  FloatVec _mvaVars;
+  FloatVec _mvaVars{};
   void RefreshMvaVars();
 
 };

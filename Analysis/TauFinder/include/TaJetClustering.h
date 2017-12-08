@@ -43,52 +43,52 @@ class TaJetClustering : public Processor {
 
   /** Input collection name.
    */
-	std::string _pfoCollectionName;
-	std::string _tauCollectionName;
-	std::string _remainCollectionName;
+	std::string _pfoCollectionName{};
+	std::string _tauCollectionName{};
+	std::string _remainCollectionName{};
 
 	// parameters for tau clustering
-	double _tauMass;
-	double _tauCosAngle;
+	double _tauMass{};
+	double _tauCosAngle{};
 
 	// selection
-	int _noSelection;
+	int _noSelection{};
 
 	// primary cuts
-	double _minimumTrackEnergy;
-	double _minimumJetEnergy;
-	double _minimumTrackEnergyAssoc;
-	int _acceptFlexibleLowEnergyTrack;
+	double _minimumTrackEnergy{};
+	double _minimumJetEnergy{};
+	double _minimumTrackEnergyAssoc{};
+	int _acceptFlexibleLowEnergyTrack{};
 	//int _maxTracks; // now fixed: allowed only 1 or 3
 
 	// three prong cut
-	double _maximumNeutralEnergyInThreeProng;
+	double _maximumNeutralEnergyInThreeProng{};
 
 	// cone cuts
-	double _coneMinCosAngle;
-	double _coneMaxCosAngle;
-	double _coneMaxEnergyFrac;
+	double _coneMinCosAngle{};
+	double _coneMaxCosAngle{};
+	double _coneMaxEnergyFrac{};
 
 	// impact parameter cuts
-	double _ipCutsMinimumTrackEnergy;
-	double _ipCutsSigmaOneProng;			// and cut, d0 or z0
-	double _ipCutsSigmaThreeProngNoNeutrals;	// and cut, one of three, d0 or z0
-	double _ipCutsSigmaThreeProngWithNeutrals;	// or cut with cone, one of three, d0 or z0
-	double _ipMaxAbsolute; // d0 or z0, max allowed absolute value in mm
+	double _ipCutsMinimumTrackEnergy{};
+	double _ipCutsSigmaOneProng{};			// and cut, d0 or z0
+	double _ipCutsSigmaThreeProngNoNeutrals{};	// and cut, one of three, d0 or z0
+	double _ipCutsSigmaThreeProngWithNeutrals{};	// or cut with cone, one of three, d0 or z0
+	double _ipMaxAbsolute{}; // d0 or z0, max allowed absolute value in mm
 
 	// lepton ID cuts: only applicable when ntr==1 && eneutral<1 GeV
-	double _leptonCutsMinimumTrackEnergy;
-	double _muMaxFracEcal;
-	double _muMaxCalByTrack;
-	double _eMinFracEcal;
-	double _eMinCalByTrack;
-	double _eMaxCalByTrack;
+	double _leptonCutsMinimumTrackEnergy{};
+	double _muMaxFracEcal{};
+	double _muMaxCalByTrack{};
+	double _eMinFracEcal{};
+	double _eMinCalByTrack{};
+	double _eMaxCalByTrack{};
 
 	//int _maxTaus; // throw away too many taus: energy order after all cuts
 	//int _returnCutTaus; // put cut taus to remain collection or not
 
-	int _nRun ;
-	int _nEvt ;
+	int _nRun{};
+	int _nEvt{};
 } ;
 
 #endif

@@ -45,16 +45,16 @@ class GammaGammaCandidateFinder : public marlin::Processor {
 
 private:
 
-  std::vector<ReconstructedParticle*>_pfovec;
-  int   _printing;
-  std::string _inputParticleCollectionName;
-  std::string _outputParticleCollectionName;
-  std::string _ggResonanceName;
-  float _gammaMomentumCut;
-  float _ggResonanceMass;
-  float _dmggcut;
-  double _fitProbabilityCut;
-  int _ifitter;
+  std::vector<ReconstructedParticle*>_pfovec{};
+  int   _printing{};
+  std::string _inputParticleCollectionName{};
+  std::string _outputParticleCollectionName{};
+  std::string _ggResonanceName{};
+  float _gammaMomentumCut{};
+  float _ggResonanceMass{};
+  float _dmggcut{};
+  double _fitProbabilityCut{};
+  int _ifitter{};
 
 protected:
 

@@ -48,23 +48,23 @@ class ZFinder : public marlin::Processor {
 
 private:
 
-  std::vector<ReconstructedParticle*>_pfovec;
-  int   _printing;
-  std::string _zdecay;
-  std::string _inputParticleCollectionName;
-  std::string _outputParticleCollectionName;
-  float _momentumCut;
-  float _muonEcalEnergyCut;
-  float _muonHcalEnergyCut;
-  float _muonHcalEnergyCut1;
-  float _electronEcalEnergyCut;
-  float _electronHcalEnergyCut;
-  float _electronEoPCutLow;
-  float _electronEoPCutHigh;
-  float _dmzcut;
-  int   _addPhotons;
-  int   _canUseClusterEnergyForElectrons;
-  float _cosTrackGammaCut;
+  std::vector<ReconstructedParticle*>_pfovec{};
+  int   _printing{};
+  std::string _zdecay{};
+  std::string _inputParticleCollectionName{};
+  std::string _outputParticleCollectionName{};
+  float _momentumCut{};
+  float _muonEcalEnergyCut{};
+  float _muonHcalEnergyCut{};
+  float _muonHcalEnergyCut1{};
+  float _electronEcalEnergyCut{};
+  float _electronHcalEnergyCut{};
+  float _electronEoPCutLow{};
+  float _electronEoPCutHigh{};
+  float _dmzcut{};
+  int   _addPhotons{};
+  int   _canUseClusterEnergyForElectrons{};
+  float _cosTrackGammaCut{};
 
 protected:
 

@@ -72,10 +72,10 @@ class MomentumCov : public marlin::Processor {
 
   /** Input collection name.
    */
-  std::string _colPFOs ;
-  std::string _colNewPFOs ;
-  int _nRun  ;
-  int _nEvt  ;
+  std::string _colPFOs{};
+  std::string _colNewPFOs{};
+  int _nRun{};
+  int _nEvt{};
 
 } ;
 

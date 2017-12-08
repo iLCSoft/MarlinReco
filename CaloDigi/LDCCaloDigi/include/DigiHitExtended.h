@@ -29,11 +29,11 @@ class DigiHitExtended {
 
     private:
 
-    SimCalorimeterHitVec _simHitVec;
+    SimCalorimeterHitVec _simHitVec{};
     
-    int _cellid;
-    float _pos[3];
-    float _ampl;
+    int _cellid{};
+    float _pos[3]{};
+    float _ampl{};
 
 };
 

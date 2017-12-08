@@ -64,43 +64,43 @@ class GammaGammaSolutionFinder : public marlin::Processor {
   void FindCombinations(std::vector<std::vector<int> > array, unsigned int i, std::vector<int> accum);
 
   struct MyEdge {
-     int u,v;                             // Edge from vertex u to vertex v with weight w
-     std::bitset<NVMAX> vbits;            // Bitset with the vertices used in this edge
-     int pdgid;                           // PDG particle id (111 = pi0, 221 = eta, 331 = eta' )
-     double edge_pvalue;                  // Chi-squared p-value for this edge being consistent with the mass constraint  (1 dof)
-     double edge_chisq;                   // Chi-squared for this edge being consistent with the mass constraint
-     double w;                            // Edge weight
+    int u{},v{};                             // Edge from vertex u to vertex v with weight w
+    std::bitset<NVMAX> vbits{};            // Bitset with the vertices used in this edge
+    int pdgid{};                           // PDG particle id (111 = pi0, 221 = eta, 331 = eta' )
+    double edge_pvalue{};                  // Chi-squared p-value for this edge being consistent with the mass constraint  (1 dof)
+    double edge_chisq{};                   // Chi-squared for this edge being consistent with the mass constraint
+    double w{};                            // Edge weight
   };
 
   struct FirstVertex {                    // struct for those vertices which correspond to min(u,v) 
-     int ivertex;                         // Vertex index from the initial graph definition
-     int nedges;                          // Number of edges with which this vertex is the first vertex
-     std::bitset<NEMAX> febits;           // Bitset with the edge IDs available for this first vertex
-     std::list<int> fvelist;              // List with the edge IDs
-     int fedge;                           // First edge ID
+    int ivertex{};                         // Vertex index from the initial graph definition
+    int nedges{};                          // Number of edges with which this vertex is the first vertex
+    std::bitset<NEMAX> febits{};           // Bitset with the edge IDs available for this first vertex
+    std::list<int> fvelist{};              // List with the edge IDs
+    int fedge{};                           // First edge ID
   };
 
   struct CandidateSolution {
-     int ne;                              // Number of edges used 
-     int nv;                              // Number of vertices used (should always be ne/2)
-     std::bitset<NEMAX> ebits;            // Bitset with the edges used in this solution
-     double wsum;                         // Sum of the weights of the edges in the solution
-     double pvalue;                       // Chi-squared p-value for wsum being consistent with ne edges (ne dof) 
-     int icomb;                           // Combination number
-     int npi0;                            // Number of pi0s in the solution     
-     int neta;                            // Number of etas in the solution
-     int netap;                           // Number of etaps in the solution
+    int ne{};                              // Number of edges used 
+    int nv{};                              // Number of vertices used (should always be ne/2)
+    std::bitset<NEMAX> ebits{};            // Bitset with the edges used in this solution
+    double wsum{};                         // Sum of the weights of the edges in the solution
+    double pvalue{};                       // Chi-squared p-value for wsum being consistent with ne edges (ne dof) 
+    int icomb{};                           // Combination number
+    int npi0{};                            // Number of pi0s in the solution     
+    int neta{};                            // Number of etas in the solution
+    int netap{};                           // Number of etaps in the solution
   };
 
 private:
 
-  std::vector<ReconstructedParticle*>_pfovec;
-  int   _printing;
-  std::vector<std::string> _gammagammaCandidateCollections;
-  std::string _outputParticleCollectionName;
-  double _maxCombinationsCut;
-  int _nToRemove;                         // Number of edges less than maximal to consider
-  int _algorithm;                         // Solution Finding Algorithm (1=Greedy, 2=Exhaustive)
+  std::vector<ReconstructedParticle*>_pfovec{};
+  int   _printing{};
+  std::vector<std::string> _gammagammaCandidateCollections{};
+  std::string _outputParticleCollectionName{};
+  double _maxCombinationsCut{};
+  int _nToRemove{};                         // Number of edges less than maximal to consider
+  int _algorithm{};                         // Solution Finding Algorithm (1=Greedy, 2=Exhaustive)
   static bool PfoProbabilitySortFunction(ReconstructedParticle* lhs,ReconstructedParticle* rhs);
 
 protected:

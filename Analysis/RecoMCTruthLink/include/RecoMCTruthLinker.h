@@ -165,54 +165,54 @@ protected:
 
   /**  input collection names */
 
-  std::string _mcParticleCollectionName ;
-  std::string _trackCollectionName ;
-  std::string _clusterCollectionName ;
-  std::string _recoParticleCollectionName ;
+  std::string _mcParticleCollectionName{};
+  std::string _trackCollectionName{};
+  std::string _clusterCollectionName{};
+  std::string _recoParticleCollectionName{};
  
-  StringVec   _simTrkHitCollectionNames ;
-  StringVec   _simCaloHitCollectionNames ;
+  StringVec   _simTrkHitCollectionNames{};
+  StringVec   _simCaloHitCollectionNames{};
  
-  StringVec  _colNamesTrackerHitRelations ;
-  StringVec   _caloHitRelationNames;
+  StringVec  _colNamesTrackerHitRelations{};
+  StringVec   _caloHitRelationNames{};
   
   LCCollectionVec* _mergedTrackerHitRelCol=nullptr;
   LCRelationNavigator* _navMergedTrackerHitRel=nullptr;
   LCCollectionVec* _mergedCaloHitRelCol=nullptr;
   LCRelationNavigator* _navMergedCaloHitRel=nullptr;
  
-  bool _use_tracker_hit_relations;
+  bool _use_tracker_hit_relations{};
   
   /**  output collection names */
-  std::string _trackMCTruthLinkName;
-  std::string _mCTruthTrackLinkName;
-  std::string _clusterMCTruthLinkName;
-  std::string _mCTruthClusterLinkName;
-  std::string _recoMCTruthLinkName;
-  std::string _mCTruthRecoLinkName;
-  std::string _mcParticlesSkimmedName;
-  std::string _calohitMCTruthLinkName;
+  std::string _trackMCTruthLinkName{};
+  std::string _mCTruthTrackLinkName{};
+  std::string _clusterMCTruthLinkName{};
+  std::string _mCTruthClusterLinkName{};
+  std::string _recoMCTruthLinkName{};
+  std::string _mCTruthRecoLinkName{};
+  std::string _mcParticlesSkimmedName{};
+  std::string _calohitMCTruthLinkName{};
   /**  output collection steering */
-  bool  _FullRecoRelation;
-  bool  _OutputTrackTruthRelation;
-  bool  _OutputTruthTrackRelation;
-  bool  _OutputClusterTruthRelation;
-  bool  _OutputTruthClusterRelation;
-  bool  _OutputCalohitRelation;
-  bool  _OutputTruthRecoRelation;
-  float _eCutMeV ;
-  bool   _saveBremsstrahlungPhotons;
-  float _bremsstrahlungEnergyCut;
-  bool	_invertedNonDestructiveInteractionLogic;
+  bool  _FullRecoRelation{};
+  bool  _OutputTrackTruthRelation{};
+  bool  _OutputTruthTrackRelation{};
+  bool  _OutputClusterTruthRelation{};
+  bool  _OutputTruthClusterRelation{};
+  bool  _OutputCalohitRelation{};
+  bool  _OutputTruthRecoRelation{};
+  float _eCutMeV{};
+  bool   _saveBremsstrahlungPhotons{};
+  float _bremsstrahlungEnergyCut{};
+  bool	_invertedNonDestructiveInteractionLogic{};
   
-  bool _using_particle_gun;
+  bool _using_particle_gun{};
   
-  IntVec _pdgVec ;
+  IntVec _pdgVec{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  PDGSet _pdgSet ;
+  PDGSet _pdgSet{};
 
 } ;
 

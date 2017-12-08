@@ -154,116 +154,116 @@ protected:
 
   /** Input collection name.
    */
-  std::string _padRowHitColName ;
-  std::string _spacePointColName ;
-  std::string _lowPtHitscolName ;
+  std::string _padRowHitColName{};
+  std::string _spacePointColName{};
+  std::string _lowPtHitscolName{};
 
   
   /** Output collection name.
    */
-  std::string _TPCTrackerHitsCol ;
-  std::string _outRelColName ;
+  std::string _TPCTrackerHitsCol{};
+  std::string _outRelColName{};
 
-  bool _use_raw_hits_to_store_simhit_pointer;
+  bool _use_raw_hits_to_store_simhit_pointer{};
   
-  int _rejectCellID0;
-  float _padWidth;
+  int _rejectCellID0{};
+  float _padWidth{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  EVENT::MCParticle* _mcp;
-  EVENT::MCParticle* _previousMCP;
-  EVENT::MCParticle* _nextMCP;
-  EVENT::MCParticle* _nMinus2MCP;
-  EVENT::MCParticle* _nPlus2MCP;   
+  EVENT::MCParticle* _mcp{};
+  EVENT::MCParticle* _previousMCP{};
+  EVENT::MCParticle* _nextMCP{};
+  EVENT::MCParticle* _nMinus2MCP{};
+  EVENT::MCParticle* _nPlus2MCP{};   
 
-  SimTrackerHit* _SimTHit;
-  SimTrackerHit* _previousSimTHit;
-  SimTrackerHit* _nextSimTHit;
-  SimTrackerHit* _nPlus2SimHit;
-  SimTrackerHit* _nMinus2SimHit;
+  SimTrackerHit* _SimTHit{};
+  SimTrackerHit* _previousSimTHit{};
+  SimTrackerHit* _nextSimTHit{};
+  SimTrackerHit* _nPlus2SimHit{};
+  SimTrackerHit* _nMinus2SimHit{};
 
   // gsl random number generator
-  gsl_rng * _random ;
+  gsl_rng * _random{};
 
-  bool _dontEncodeSide ;
+  bool _dontEncodeSide{};
 
-  float _pointResoRPhi0; // Coefficient for RPhi point res independant of drift length 
-  float _pointResoPadPhi; // Coefficient for the point res dependance on relative phi angle to the pad verticle 
-  float _diffRPhi; // Coefficient for the rphi point res dependance on diffusion 
-  int   _nEff; // number of effective electrons 
+  float _pointResoRPhi0{}; // Coefficient for RPhi point res independant of drift length 
+  float _pointResoPadPhi{}; // Coefficient for the point res dependance on relative phi angle to the pad verticle 
+  float _diffRPhi{}; // Coefficient for the rphi point res dependance on diffusion 
+  int   _nEff{}; // number of effective electrons 
 
 
-  float _pointResoZ0; // Coefficient Z point res independant of drift length 
-  float _diffZ; // Coefficient for the Z point res dependance on diffusion 
+  float _pointResoZ0{}; // Coefficient Z point res independant of drift length 
+  float _diffZ{}; // Coefficient for the Z point res dependance on diffusion 
 
-  float _binningZ;
-  float _binningRPhi;
-  float _doubleHitResZ;
-  float _doubleHitResRPhi;
-  int _maxMerge;
+  float _binningZ{};
+  float _binningRPhi{};
+  float _doubleHitResZ{};
+  float _doubleHitResRPhi{};
+  int _maxMerge{};
 
-  int _nRechits;
+  int _nRechits{};
 
-  std::vector< std::vector <Voxel_tpc *> > _tpcRowHits;
-  std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap;
-  std::vector<float> _length;
-  int lenpos;
+  std::vector< std::vector <Voxel_tpc *> > _tpcRowHits{};
+  std::map< Voxel_tpc *,SimTrackerHit *> _tpcHitMap{};
+  std::vector<float> _length{};
+  int lenpos{};
 
-  LCCollectionVec* _trkhitVec;
-  LCCollectionVec* _relCol;  
-  CellIDEncoder<TrackerHitImpl>* _cellid_encoder ;
+  LCCollectionVec* _trkhitVec{};
+  LCCollectionVec* _relCol{};  
+  CellIDEncoder<TrackerHitImpl>* _cellid_encoder{};
 
-  int  _NSimTPCHits;
-  int  _NBackgroundSimTPCHits;
-  int  _NPhysicsSimTPCHits;
-  int  _NPhysicsAbove02GeVSimTPCHits;
-  int  _NPhysicsAbove1GeVSimTPCHits;
-  int  _NRecTPCHits;
+  int  _NSimTPCHits{};
+  int  _NBackgroundSimTPCHits{};
+  int  _NPhysicsSimTPCHits{};
+  int  _NPhysicsAbove02GeVSimTPCHits{};
+  int  _NPhysicsAbove1GeVSimTPCHits{};
+  int  _NRecTPCHits{};
   
-  int  _NLostPhysicsTPCHits;
-  int  _NLostPhysicsAbove02GeVPtTPCHits;
-  int  _NLostPhysicsAbove1GeVPtTPCHits;
-  int  _NRevomedHits;
+  int  _NLostPhysicsTPCHits{};
+  int  _NLostPhysicsAbove02GeVPtTPCHits{};
+  int  _NLostPhysicsAbove1GeVPtTPCHits{};
+  int  _NRevomedHits{};
 
 
 #ifdef DIGIPLOTS
-  IAnalysisFactory * _AF;
-  ITreeFactory * _TRF;
-  ITree * _TREE;
-  IHistogramFactory * _HF;
-  IHistogram1D * _phiDiffHisto;
-  IHistogram1D * _thetaDiffHisto;
-  IHistogram1D * _phiRelHisto;
-  IHistogram1D * _thetaRelHisto;
+  IAnalysisFactory * _AF{};
+  ITreeFactory * _TRF{};
+  ITree * _TREE{};
+  IHistogramFactory * _HF{};
+  IHistogram1D * _phiDiffHisto{};
+  IHistogram1D * _thetaDiffHisto{};
+  IHistogram1D * _phiRelHisto{};
+  IHistogram1D * _thetaRelHisto{};
 
-  IHistogram1D * _phiDistHisto;
-  IHistogram1D * _rPhiPullHisto;
-  IHistogram1D * _rPhiDiffHisto;
-  IHistogram1D * _zDiffHisto;
-  IHistogram1D * _zPullHisto;
-  IHistogram2D * _zSigmaVsZHisto;
-  IHistogram1D * _zSigmaHisto;
-  IHistogram1D * _rPhiSigmaHisto;
-  IHistogram1D * _radiusCheckHisto;
-  IHistogram1D * _ResidualsRPhiHisto;
+  IHistogram1D * _phiDistHisto{};
+  IHistogram1D * _rPhiPullHisto{};
+  IHistogram1D * _rPhiDiffHisto{};
+  IHistogram1D * _zDiffHisto{};
+  IHistogram1D * _zPullHisto{};
+  IHistogram2D * _zSigmaVsZHisto{};
+  IHistogram1D * _zSigmaHisto{};
+  IHistogram1D * _rPhiSigmaHisto{};
+  IHistogram1D * _radiusCheckHisto{};
+  IHistogram1D * _ResidualsRPhiHisto{};
 
-  IHistogram1D * _NSimTPCHitsHisto;
-  IHistogram1D * _NBackgroundSimTPCHitsHisto;
-  IHistogram1D * _NPhysicsSimTPCHitsHisto;
-  IHistogram1D * _NPhysicsAbove02GeVSimTPCHitsHisto;
-  IHistogram1D * _NPhysicsAbove1GeVSimTPCHitsHisto;
-  IHistogram1D * _NRecTPCHitsHisto;
+  IHistogram1D * _NSimTPCHitsHisto{};
+  IHistogram1D * _NBackgroundSimTPCHitsHisto{};
+  IHistogram1D * _NPhysicsSimTPCHitsHisto{};
+  IHistogram1D * _NPhysicsAbove02GeVSimTPCHitsHisto{};
+  IHistogram1D * _NPhysicsAbove1GeVSimTPCHitsHisto{};
+  IHistogram1D * _NRecTPCHitsHisto{};
 
-  IHistogram1D * _NLostPhysicsTPCHitsHisto;
-  IHistogram1D * _NLostPhysicsAbove02GeVPtTPCHitsHisto;
-  IHistogram1D * _NLostPhysicsAbove1GeVPtTPCHitsHisto;
-  IHistogram1D * _NRevomedHitsHisto;
+  IHistogram1D * _NLostPhysicsTPCHitsHisto{};
+  IHistogram1D * _NLostPhysicsAbove02GeVPtTPCHitsHisto{};
+  IHistogram1D * _NLostPhysicsAbove1GeVPtTPCHitsHisto{};
+  IHistogram1D * _NRevomedHitsHisto{};
 
-  IHistogram1D * _NKeptPhysicsTPCHitsHistoPercent;
-  IHistogram1D * _NKeptPhysicsAbove02GeVPtTPCHitsHistoPercent;
-  IHistogram1D * _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent;
+  IHistogram1D * _NKeptPhysicsTPCHitsHistoPercent{};
+  IHistogram1D * _NKeptPhysicsAbove02GeVPtTPCHitsHistoPercent{};
+  IHistogram1D * _NKeptPhysicsAbove1GeVPtTPCHitsHistoPercent{};
 
 #endif
 

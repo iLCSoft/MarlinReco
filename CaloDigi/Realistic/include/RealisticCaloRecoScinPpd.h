@@ -19,8 +19,8 @@ class RealisticCaloRecoScinPpd : public RealisticCaloReco {
  protected:
   virtual float reconstructEnergy(const CalorimeterHit* hit);
 
-  float _PPD_pe_per_mip;         // # photoelectrons/MIP for MPPC
-  int   _PPD_n_pixels;           // # pixels in MPPC
+  float _PPD_pe_per_mip{};         // # photoelectrons/MIP for MPPC
+  int   _PPD_n_pixels{};           // # pixels in MPPC
 } ;
 
 #endif 

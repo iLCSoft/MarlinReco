@@ -34,7 +34,7 @@ namespace TTbarAnalysis
 		//
 		//	Data
 		//
-			EVENT::LCCollection * myRelCollection;
+			EVENT::LCCollection * myRelCollection{};
 			/* data */
 		//
 		//	Private methods

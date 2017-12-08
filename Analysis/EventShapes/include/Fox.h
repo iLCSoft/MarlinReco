@@ -56,12 +56,12 @@ class Fox: public Processor {
 
   /** Input collection name.
    */
-  std::string _colName ;
+  std::string _colName{};
   /** Vector of moments orders to be calculated
    */
-  std::vector<int> _momentsToCalculate;
-  int _nRun ;
-  int _nEvt ;
+  std::vector<int> _momentsToCalculate{};
+  int _nRun{};
+  int _nEvt{};
 } ;
 
 #endif

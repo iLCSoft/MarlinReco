@@ -46,18 +46,18 @@ class RealisticCaloReco : virtual public Processor {
   virtual float reconstructEnergy(const CalorimeterHit* hit)=0;  // to be overloaded, technology-specific
 
   // parameters
-  std::vector <std::string> _inputHitCollections;
-  std::vector <std::string> _inputRelCollections;
-  std::vector <std::string> _outputHitCollections;
-  std::vector <std::string> _outputRelCollections;
-  std::vector <float> _calibrCoeff;
-  std::vector <int>   _calLayers;
+  std::vector <std::string> _inputHitCollections{};
+  std::vector <std::string> _inputRelCollections{};
+  std::vector <std::string> _outputHitCollections{};
+  std::vector <std::string> _outputRelCollections{};
+  std::vector <float> _calibrCoeff{};
+  std::vector <int>   _calLayers{};
 
-  std::string _cellIDLayerString;
+  std::string _cellIDLayerString{};
 
   // internal variables
-  LCFlagImpl _flag;
-  CellIDDecoder<CalorimeterHit> * _idDecoder;
+  LCFlagImpl _flag{};
+  CellIDDecoder<CalorimeterHit> * _idDecoder{};
 
 } ;
 

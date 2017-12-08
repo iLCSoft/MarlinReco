@@ -52,20 +52,20 @@ class ClusterCheater5_3 : public Processor {
   
  protected:
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  double gearRMax;
-  double zmax;
-  int _nlost;
-  std::string _trueClustCollection;
-  std::vector<std::string> _caloCollections;
-  std::string _relCollection;
-  std::string _trueClustToMCP;
-  std::string _MCcollection;
+  double gearRMax{};
+  double zmax{};
+  int _nlost{};
+  std::string _trueClustCollection{};
+  std::vector<std::string> _caloCollections{};
+  std::string _relCollection{};
+  std::string _trueClustToMCP{};
+  std::string _MCcollection{};
  
-  int _backcut;
- int _Nmin;
+  int _backcut{};
+ int _Nmin{};
 } ;
 
 #endif

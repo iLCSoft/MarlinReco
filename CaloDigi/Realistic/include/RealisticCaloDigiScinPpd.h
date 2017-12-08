@@ -22,10 +22,10 @@ class RealisticCaloDigiScinPpd : public RealisticCaloDigi {
   float digitiseDetectorEnergy(float energy); // apply scin+PPD specific effects
   float convertEnergy( float energy, int inputUnit ); // convert energy from input to output scale
 
-  float _PPD_pe_per_mip;         // # photoelectrons/MIP for PPD
-  int   _PPD_n_pixels;           // # pixels in PPD
-  float _misCalibNpix;           // miscalibration of # PPD pixels
-  float _pixSpread;              // relative spread of PPD pixel signal
+  float _PPD_pe_per_mip{};         // # photoelectrons/MIP for PPD
+  int   _PPD_n_pixels{};           // # pixels in PPD
+  float _misCalibNpix{};           // miscalibration of # PPD pixels
+  float _pixSpread{};              // relative spread of PPD pixel signal
 
 } ;
 

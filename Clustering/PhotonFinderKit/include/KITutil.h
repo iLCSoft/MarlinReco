@@ -52,57 +52,57 @@ class Superhit2
   /**
    *   Pointer to the LCIO calorimeter hit
    */
-  CalorimeterHit* chit;
+  CalorimeterHit* chit{};
   
-  bool connect;
+  bool connect{};
   /**
    *   Transformed position of the hit
    */
-  float point[3];  // transform position
+  float point[3]{};  // transform position
   /**
    *   Real coordinate of the hit, copy of calorimeter hit data for direct access
    */
-  float pointt[3]; // true position
+  float pointt[3]{}; // true position
   /**
    *   Energy of hit i terms of MIP
    */ 
-  float mip;
+  float mip{};
   /**
    *   MIP value [GeV]
    */
-  float mipE;
+  float mipE{};
   /**
    *   Number of neighbours
    */
-  int top;         // topological parameter
+  int top{};         // topological parameter
   /**
    *    Is hit assigned to a cluster or not 
    */
-  bool is_assigned;  
+  bool is_assigned{};
   /**
    *    Vector of pointers to the neighbouring hits of Superhit2 type
    */
-  vector <Superhit2*> neighbours;
+  vector <Superhit2*> neighbours{};
   /**
    *   Pointer to the cluster to wich hit belong 
    */
-  Tmpcl2 * cl;
+  Tmpcl2 * cl{};
   /**
    *  stove as coded by Mokka 
    */
-  int S;
+  int S{};
   /**
    *  layer as coded by Mokka 
    */
-  int K;
+  int K{};
   /**
    *  module as coded by Mokka
    */
-  int M;
+  int M{};
   /**
    *  0 by constructor  1 for ecal 2 for hcal 
    */ 
-  int tip; 
+  int tip{};
  
 };  
 /**
@@ -141,40 +141,40 @@ class Tmpcl2{
   /**
    * hit in the cluster
    */
-   vector<Superhit2*> hits;
+   vector<Superhit2*> hits{};
    /**
     * pointers to clusters that are contained in this cluster
     */
-  vector<Tmpcl2*> daughters;
+  vector<Tmpcl2*> daughters{};
   /**
    * pointers to clusters that contain this cluster
    */
-  vector<Tmpcl2*> parents;
+  vector<Tmpcl2*> parents{};
   /**
    * energy  in GeV (sum over hits in cluster) 
    */
-  double energy;  
+  double energy{};
   /**
    *  position of cluster center (x,y,z)
    */
-  double center[3];
+  double center[3]{};
   /**
    *  principal axes of inertia tensor , calculated in calcInertia
    */
-  double direction[3];
+  double direction[3]{};
   /**
    * normalized eigenvalues of inertia tensor
    */
-  double inteigen[3]; 
+  double inteigen[3]{}; 
   /**
    * eigenvectors of inertia tensor
    */       
-  double inteigenvec[9];     
+  double inteigenvec[9]{};     
 
   /**
    *  Internal type of the cluster
    */
-  int type ;      
+  int type{};      
 };
 
 class Photon2
@@ -193,33 +193,33 @@ class Photon2
   void Prob(CalorimeterHit* ch,double cut,double* out);
   
   // data- stvari koje se racunaju jednom i gotovo 
-  double z1;
-  double z2;
-  double k1;
-  double k2;
-  double k3;
-  double k4;
-  double p1;
-  double p2;
-  double p3;
-  double y;
-  double eprime;
-  double Z;
-  double x0eff;
-  double sampling;
-  double Eceff;
-  double Rm;
-  double Fs;
-  double Thom;
-  double Tsam;
+  double z1{};
+  double z2{};
+  double k1{};
+  double k2{};
+  double k3{};
+  double k4{};
+  double p1{};
+  double p2{};
+  double p3{};
+  double y{};
+  double eprime{};
+  double Z{};
+  double x0eff{};
+  double sampling{};
+  double Eceff{};
+  double Rm{};
+  double Fs{};
+  double Thom{};
+  double Tsam{};
 
-  double alfahom;
-  double alfasam; 
-  double betasam;
+  double alfahom{};
+  double alfasam{};
+  double betasam{};
   //  
-  double Ee;
-  double dir[3];
-  double start[3];
+  double Ee{};
+  double dir[3]{};
+  double start[3]{};
 };
 typedef vector<Superhit2*>  Shitvec2;
 typedef vector<Tmpcl2*>     Tmpclvec2;

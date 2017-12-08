@@ -126,29 +126,29 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   
  protected:
 
-  std::string _colNameVTX ;
-  std::string _outColNameVTX ;
-  LCCollection* col;
+  std::string _colNameVTX{};
+  std::string _outColNameVTX{};
+  LCCollection* col{};
   
-  int _nRun ;
-  int _nEvt ;
-  int _debug;
-  int _OccupancyStudy;
-  int _signalProperty;
-  double _cutThetaFrom;
-  double _cutThetaTo;
-  double _cutPhiFrom;
-  double _cutPhiTo;
+  int _nRun{};
+  int _nEvt{};
+  int _debug{};
+  int _OccupancyStudy{};
+  int _signalProperty{};
+  double _cutThetaFrom{};
+  double _cutThetaTo{};
+  double _cutPhiFrom{};
+  double _cutPhiTo{};
 
-  bool _cutMode;
-  bool _modifySimTHit;
-  bool _ladder_Number_encoded_in_cellID;
-  bool _EL_almostOFF;
-  float _pixelSize;
-  FloatVec _pixelSizeVec;
-  IntVec _escapedEvtVec;
-  int _esc_count;
-  float _pixelheight;
+  bool _cutMode{};
+  bool _modifySimTHit{};
+  bool _ladder_Number_encoded_in_cellID{};
+  bool _EL_almostOFF{};
+  float _pixelSize{};
+  FloatVec _pixelSizeVec{};
+  IntVec _escapedEvtVec{};
+  int _esc_count{};
+  float _pixelheight{};
   
   static int _mcp_number;
 
@@ -156,7 +156,7 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   struct{
      double x[_ARRAY_NUM];
      double y[_ARRAY_NUM];
-  }_position;
+  }_position{};
   struct{
      int nsimthits;
      double x[_ARRAY_NUM];
@@ -167,7 +167,7 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
      int nloopy[_ARRAY_NUM];
      int xiID[_ARRAY_NUM];
      int zetaID[_ARRAY_NUM];
-  }_simthits;
+  }_simthits{};
   struct{
      double px[_ARRAY_NUM];
      double py[_ARRAY_NUM];
@@ -175,48 +175,48 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
      double vx[_ARRAY_NUM];
      double vy[_ARRAY_NUM];
      double vz[_ARRAY_NUM];
-  }_ori_mcp;
+  }_ori_mcp{};
     
   struct{
-     int ideal_condition;
-  }_something;
+     int ideal_condition{};
+  }_something{};
  
   struct{
      int x[6];
      int y[6];
-  }_counter;
+  }_counter{};
 
  
-  TFile* _rootf;
-  TTree* _tree;
-  std::string _rootFileName;
-  std::string _treeName;
+  TFile* _rootf{};
+  TTree* _tree{};
+  std::string _rootFileName{};
+  std::string _treeName{};
 
-  float _momCut;
+  float _momCut{};
   
-  double _sigmaConst;
+  double _sigmaConst{};
 
-  float _pointResoRPhi, _pointResoZ;
+  float _pointResoRPhi{}, _pointResoZ{};
   
-  bool _isSignal;
+  bool _isSignal{};
   
 // Variables to store geometry information 
-  int _nLayer;  // Number of layers
-  int _maxLadder; // max no. of ladder in each layer
+  int _nLayer{};  // Number of layers
+  int _maxLadder{}; // max no. of ladder in each layer
 
   struct GeoData_t {
-    int nladder;
-    double rmin;  // distance of inner surface of sensitive region from IP
-    double dphi;  // azimuthal angle step of each ladder
-    double phi0;  // aximuthal angle offset
-    std::vector<double> cosphi;  // cos[phi_ladder], cos_phi of each ladder
-    std::vector<double> sinphi;  // sin[phi_ladder], sin_phi of each ladder
-    double sthick;  // sensitive region thickness
-    double sximin;  // minimum xi of sensitive region.
-    double sximax;  // maximum xi of sensitive region
-    double hlength; // ladder's half length in z
+    int nladder{};
+    double rmin{};  // distance of inner surface of sensitive region from IP
+    double dphi{};  // azimuthal angle step of each ladder
+    double phi0{};  // aximuthal angle offset
+    std::vector<double> cosphi{};  // cos[phi_ladder], cos_phi of each ladder
+    std::vector<double> sinphi{};  // sin[phi_ladder], sin_phi of each ladder
+    double sthick{};  // sensitive region thickness
+    double sximin{};  // minimum xi of sensitive region.
+    double sximax{};  // maximum xi of sensitive region
+    double hlength{}; // ladder's half length in z
   };
-  std::vector<GeoData_t> _geodata;
+  std::vector<GeoData_t> _geodata{};
 
 } ;
 

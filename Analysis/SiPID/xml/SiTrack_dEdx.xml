@@ -4,7 +4,29 @@
 
     <!-- ========== setup  ========== -->
     <processor name="MyAIDAProcessor"/>
+    <processor name="EventNumber" />
     <processor name="InitDD4hep"/>
+    <processor name="Config" />
+
+    <!--if condition="Config.Overlay350GeV">
+      <processor name="Overlay350GeV"/>
+    </if>
+
+    <if condition="Config.Overlay380GeV">
+      <processor name="Overlay380GeV"/>
+    </if>
+
+    <if condition="Config.Overlay500GeV">
+      <processor name="Overlay500GeV"/>
+    </if>
+
+    <if condition="Config.Overlay1.4TeV">
+      <processor name="Overlay1.4TeV"/>
+    </if>
+
+    <if condition="Config.Overlay3TeV">
+      <processor name="Overlay3TeV"/>
+    </if-->
 
     <!-- ========== digitisation  ========== -->
     <processor name="VXDBarrelDigitiser"/>
@@ -15,37 +37,53 @@
     <processor name="OuterEndcapPlanarDigiProcessor"/>
 
     <!-- ========== tracking  ========== -->
-    <processor name="MyTruthTrackFinder"/>
-    <!--processor name="MyConformalTracking"/--> <!-- VXD only -->
-    <!-- <processor name="MyExtrToTracker_InOut"/> -->
+    <!-- At the moment the name of the final track collection for the MyTruthTrackFinder and MyExtrToTracker processors is the same, so that users can use this example to run easily both the cheater track pattern recognition (still the default for many tasks) or the real one (under final tests) -->
+    <!--if condition="Config.TruthTracking"-->
+      <processor name="MyTruthTrackFinder"/>
+    <!--/if>
+    <if condition="Config.ConformalPlusExtrapolatorTracking">
+      <processor name="MyConformalTracking"/>
+      <processor name="MyExtrToTracker"/>
+    </if>
+    <if condition="Config.ConformalTracking">
+      <processor name="MyConformalTrackingFull"/>
+    </if-->
+
+    <processor name="Refit" />
 
     <!-- === calorimeter digitization and pandora reco === -->
     <!--processor name="MyDDCaloDigi"/>
-    <processor name="MyDDSimpleMuonDigi"/> 
-    <processor name="MyDDMarlinPandora"/--> 
+    <processor name="MyDDSimpleMuonDigi"/>
+    <processor name="MyDDMarlinPandora"/>
+    <processor name="LumiCalReco"/>
+    <processor name="BeamCalReco"/-->
 
     <!-- ========== monitoring  ========== -->
     <!--processor name="MyClicEfficiencyCalculator"/-->
-    <!--processor name="MyTrackChecker"/-->
-
     <processor name="MyRecoMCTruthLinker"/>
+    <!--processor name="MyTrackChecker"/-->
+    <!--Xprocessor name="MyHitResiduals"/> < please uncomment the use of this processor only if needed -->
 
-    <!-- ========== track dE/dx  ========== -->
     <processor name="MySiTracker_dEdxProcessor"/>
 
     <!-- ========== output  ========== -->
-    <processor name="MyLCIOOutputProcessor"/>
+
+    <group name="PfoSelector" />
+
+    <processor name="Output_REC"/>
+    <processor name="Output_DST"/>
 
   </execute>
 
 
   <global>
     <parameter name="LCIOInputFiles">
-      gun.mu.slcio  </parameter>
+      /afs/cern.ch/work/e/eleogran/public/mu_sim/mu_validation_50kevents.slcio
+    </parameter>
     <!-- Limit the number of processed records (run+evt): -->
-    <parameter name="MaxRecordNumber" value="0" />
+    <parameter name="MaxRecordNumber" value="10" />
     <parameter name="SkipNEvents" value="0" />
-    <parameter name="SupressCheck" value="false" />  
+    <parameter name="SupressCheck" value="false" />
     <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
     <parameter name="RandomSeed" value="1234567890" />
   </global>
@@ -54,10 +92,91 @@
   <processor name="InitDD4hep" type="InitializeDD4hep">
     <!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
     <!--Name of the DD4hep compact xml file to load-->
-    <!--Even if ddsim performed with CLIC_o2_v05_TrkOnly.xml, full detector needed here for MyTruthTrackFinder.-->
-    <parameter name="DD4hepXMLFile" type="string"> ../xml/CLIC_o2_v05/CLIC_o2_v05.xml </parameter>
+    <parameter name="EncodingStringParameter"> GlobalTrackerReadoutID </parameter>
+    <parameter name="DD4hepXMLFile" type="string">
+      ../xml/CLIC_o3_v13/CLIC_o3_v13.xml
+    </parameter>
+      <!--../xml/CLIC_o2_v05/CLIC_o2_v05.xml (incompatible with CLIC reco!) -->
+      <!--/cvmfs/clicdp.cern.ch/iLCSoft/builds/nightly/x86_64-slc6-gcc62-opt/lcgeo/HEAD/CLIC/compact/CLIC_o3_v13/CLIC_o3_v13.xml-->
   </processor>
 
+  <processor name="Config" type="CLICRecoConfig" >
+    <!--Which option to use for overlay: False, 3TeV, 380GeV. Then use, e.g., Config.Overlay3TeV in the condition-->
+    <parameter name="Overlay" type="string">False </parameter>
+    <!--Which option to use for tracking: Truth, ConformalPlusExtrapolator, Conformal-->
+    <parameter name="Tracking" type="string">Truth </parameter>
+  </processor>
+
+  <group name="Overlay">
+    <parameter name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    <!--The output MC Particle Collection Name for the physics event-->
+    <parameter name="MCPhysicsParticleCollectionName" type="string"> MCPhysicsParticles </parameter>
+    <!--Time difference between bunches in the bunch train in ns-->
+    <parameter name="Delta_t" type="float" value="0.5"/>
+    <!--Number of bunches in a bunch train-->
+    <parameter name="NBunchtrain" type="int" value="30"/>
+
+    <parameter name="Collection_IntegrationTimes" type="StringVec" >
+      VertexBarrelCollection        10
+      VertexEndcapCollection        10
+
+      InnerTrackerBarrelCollection  10
+      InnerTrackerEndcapCollection  10
+
+      OuterTrackerBarrelCollection  10
+      OuterTrackerEndcapCollection  10
+
+      ECalBarrelCollection          10
+      ECalEndcapCollection          10
+      ECalPlugCollection            10
+
+      HCalBarrelCollection          10
+      HCalEndcapCollection          10
+      HCalRingCollection            10
+
+      YokeBarrelCollection          10
+      YokeEndcapCollection          10
+
+      LumiCalCollection             10
+      BeamCalCollection             10
+    </parameter>
+    <!--Number of the Bunch crossing of the physics event-->
+    <parameter name="PhysicsBX" type="int" value="10"/>
+    <!--Draw random number of Events to overlay from Poisson distribution with  mean value NumberBackground-->
+    <parameter name="Poisson_random_NOverlay" type="bool" value="true"/>
+    <!--Place the physics event at an random position in the train - overrides PhysicsBX-->
+    <parameter name="RandomBx" type="bool" value="false"/>
+    <!--[mm/ns] (float) - default 5.0e-2 (5cm/us)-->
+    <parameter name="TPCDriftvelocity" type="float" value="0.05"/>
+    <parameter name="BackgroundFileNames" type="StringVec">
+      gghad_01.slcio
+      gghad_02.slcio
+    </parameter>
+
+      <processor name="Overlay350GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="0.0464"/>
+      </processor>
+
+      <processor name="Overlay380GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="0.0464"/>
+      </processor>
+
+      <processor name="Overlay420GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="0.17"/>
+      </processor>
+
+      <processor name="Overlay500GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="0.3"/>
+      </processor>
+
+      <processor name="Overlay1.4TeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="1.3"/>
+      </processor>
+
+      <processor name="Overlay3TeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="3.2"/>
+      </processor>
+  </group>
 
   <processor name="VXDBarrelDigitiser" type="DDPlanarDigiProcessor">
     <parameter name="SubDetectorName" type="string">Vertex </parameter>
@@ -100,7 +219,6 @@
   </processor>
 
 
-
   <processor name="InnerPlanarDigiProcessor" type="DDPlanarDigiProcessor">
     <!--PlanarDigiProcessor creates TrackerHits from SimTrackerHits, smearing them according to the input parameters.-->
     <parameter name="SubDetectorName" type="string"> InnerTrackers </parameter>
@@ -109,7 +227,7 @@
     <!--resolution in direction of u-->
     <parameter name="ResolutionU" type="float">0.007 </parameter> <!-- when only one number is provided, the hits in all the layers wll be smeared with the same resolution => it works for both CLIC_o2_v04 with 2 layers and CLIC_o3_v5 with 3 layers  -->
     <!--resolution in direction of v-->
-    <parameter name="ResolutionV" type="float">0.3 </parameter> <!-- when only one number is provided, the hits in all the layers wll be smeared with the same resolution => it works for both CLIC_o2_v04 with 2 layers and CLIC_o3_v5 with 3 layers  --> 
+    <parameter name="ResolutionV" type="float">0.3 </parameter> <!-- when only one number is provided, the hits in all the layers wll be smeared with the same resolution => it works for both CLIC_o2_v04 with 2 layers and CLIC_o3_v5 with 3 layers  -->
     <!--Name of the Input SimTrackerHit collection-->
     <parameter name="SimTrackHitCollectionName" type="string" lcioInType="SimTrackerHit"> InnerTrackerBarrelCollection </parameter>
     <!--Name of TrackerHit SimTrackHit relation collection-->
@@ -117,22 +235,19 @@
     <!--Name of the TrackerHit output collection-->
     <parameter name="TrackerHitCollectionName" type="string" lcioOutType="TrackerHitPlane">ITrackerHits </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-    <parameter name="Verbosity" type="string">MESSAGE</parameter>
+    <parameter name="Verbosity" type="string">WARNING </parameter>
     <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
-
-
-
 
   <processor name="InnerEndcapPlanarDigiProcessor" type="DDPlanarDigiProcessor">
     <!--PlanarDigiProcessor creates TrackerHits from SimTrackerHits, smearing them according to the input parameters.-->
     <parameter name="SubDetectorName" type="string"> InnerTrackers </parameter>
     <!--whether hits are 1D strip hits-->
     <parameter name="IsStrip" type="bool"> false </parameter>
-    <!--resolution in direction of v-->
-    <parameter name="ResolutionV" type="float"> 0.005 0.007 0.007 0.007 0.007 0.007 0.007</parameter>
     <!--resolution in direction of u-->
-    <parameter name="ResolutionU" type="float"> 0.005 0.3 0.3 0.3 0.3 0.3 0.3</parameter>
+    <parameter name="ResolutionU" type="float"> 0.005 0.007 0.007 0.007 0.007 0.007 0.007</parameter>
+    <!--resolution in direction of v-->
+    <parameter name="ResolutionV" type="float"> 0.005 0.3 0.3 0.3 0.3 0.3 0.3</parameter>
     <!--Name of the Input SimTrackerHit collection-->
     <parameter name="SimTrackHitCollectionName" type="string" lcioInType="SimTrackerHit"> InnerTrackerEndcapCollection </parameter>
     <!--Name of TrackerHit SimTrackHit relation collection-->
@@ -169,10 +284,10 @@
     <parameter name="SubDetectorName" type="string"> OuterTrackers </parameter>
     <!--whether hits are 1D strip hits-->
     <parameter name="IsStrip" type="bool"> false </parameter>
-    <!--resolution in direction of v-->
-    <parameter name="ResolutionV" type="float"> 0.007 0.007 0.007 0.007 0.007 </parameter>
     <!--resolution in direction of u-->
-    <parameter name="ResolutionU" type="float"> 3.0 3.0 3.0 3.0 3.0 </parameter>
+    <parameter name="ResolutionU" type="float"> 0.007 0.007 0.007 0.007 0.007 </parameter>
+    <!--resolution in direction of v-->
+    <parameter name="ResolutionV" type="float"> 3.0 3.0 3.0 3.0 3.0 </parameter>
     <!--Name of the Input SimTrackerHit collection-->
     <parameter name="SimTrackHitCollectionName" type="string" lcioInType="SimTrackerHit">OuterTrackerEndcapCollection </parameter>
     <!--Name of TrackerHit SimTrackHit relation collection-->
@@ -184,64 +299,281 @@
     <parameter name="ForceHitsOntoSurface" type="bool"> true </parameter>
   </processor>
 
-
-  <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
-    <!--   standard output: full reconstruction keep all collections -->
-    <parameter name="LCIOOutputFile" type="string"> reco.mu.storeCos.slcio </parameter>
-    <parameter name="FullSubsetCollections" type="StringVec"> EfficientMCParticles InefficientMCParticles </parameter>
-    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
-    <parameter name="Verbosity" type="string">WARNING </parameter>
-  </processor>
-
-  <!-- == Track checker parameters == -->
-  <processor name="MyTrackChecker" type="TrackChecker">
-    <!--Use default settings-->
-    <parameter name="OutputFileName" type="string"> TrackChecker.root </parameter>
-    <parameter name="Verbosity" type="string">WARNING </parameter>
-  </processor>
-
-
   <!-- == TruthTrackFinder parameters == -->
   <processor name="MyTruthTrackFinder" type="TruthTrackFinder">
+    <parameter name="FitForward" type="bool">true</parameter>
     <!--Define input tracker hits and relations. NB. Order must be respected -->
-    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane">VXDTrackerHits ITrackerHits OTrackerHits VXDEndcapTrackerHits ITrackerEndcapHits OTrackerEndcapHits</parameter>
-    <parameter name="SimTrackerHitRelCollectionNames" type="StringVec" lcioInType="LCRelation">VXDTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations VXDEndcapTrackerHitRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
+    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane">
+      VXDTrackerHits
+      ITrackerHits
+      OTrackerHits
+      VXDEndcapTrackerHits
+      ITrackerEndcapHits
+      OTrackerEndcapHits
+    </parameter>
+    <parameter name="SimTrackerHitRelCollectionNames" type="StringVec" lcioInType="LCRelation">
+      VXDTrackerHitRelations
+      InnerTrackerBarrelHitsRelations
+      OuterTrackerBarrelHitsRelations
+      VXDEndcapTrackerHitRelations
+      InnerTrackerEndcapHitsRelations
+      OuterTrackerEndcapHitsRelations
+    </parameter>
+
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--Silicon track Collection Name-->
     <parameter name="SiTrackCollectionName" type="string" lcioOutType="Track">SiTracks </parameter>
+    <!--Silicon track particle relation Collection Name-->
     <parameter name="SiTrackRelationCollectionName" type="string" lcioOutType="LCRelation">SiTrackRelations </parameter>
-    <parameter name="Verbosity" type="string">MESSAGE </parameter>
+    <!--If true use the truth information to initialise the helical prefit, otherwise use prefit by fitting 3 hits-->
+    <parameter name="UseTruthInPrefit" type="bool">false </parameter>
+
+    <parameter name="Verbosity" type="string">WARNING </parameter>
   </processor>
 
   <!-- == Pattern recognition parameters == -->
+
   <processor name="MyConformalTracking" type="ConformalTracking">
-    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane"> VXDTrackerHits VXDEndcapTrackerHits </parameter>
-    <parameter name="RelationsNames" type="StringVec" lcioInType="TrackerHitPlane"> VXDTrackerHitRelations VXDEndcapTrackerHitRelations </parameter>
-    <parameter name="ThetaRange" type="double"> 0.025 </parameter>
-    <parameter name="MaxCellAngle" type="double"> 0.06 </parameter>
+    <!--ConformalTracking constructs tracks using a combined conformal mapping and cellular automaton approach.-->
+
+    <!--Name of the TrackerHit input collections-->
+    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane">VXDTrackerHits VXDEndcapTrackerHits </parameter>
+    <!--Name of the TrackerHit relation collections-->
+    <parameter name="RelationsNames" type="StringVec" lcioInType="LCRelation">VXDTrackerHitRelations VXDEndcapTrackerHitRelations </parameter>
+
+    <!--Cut values for the pattern recognition -->
+    <parameter name="ThetaRange" type="double"> 0.05 </parameter>
+    <parameter name="MaxCellAngle" type="double"> 0.005 </parameter>
+    <parameter name="MaxCellAngleRZ" type="double"> 0.005 </parameter>
     <parameter name="MaxDistance" type="double"> 0.02 </parameter>
-    <parameter name="MinClustersOnTrack" type="int"> 5 </parameter>
-    <parameter name="MaxChi2" type="double"> 1000 </parameter>
-    <parameter name="DebugPlots" type="bool"> true </parameter>
+    <parameter name="MinClustersOnTrack" type="int"> 4 </parameter>
+    <parameter name="MaxChi2" type="double"> 100 </parameter>
+    <parameter name="DebugPlots" type="bool"> false </parameter>
+    <parameter name="trackPurity" type="double">0.7 </parameter>
+
+    <!--Silicon track Collection Name-->
+    <parameter name="SiTrackCollectionName" type="string" lcioOutType="Track">CATracks </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
   </processor>
 
-  <processor name="MyExtrToTracker_InOut" type="ExtrToTracker">
+
+
+
+  <processor name="MyExtrToTracker" type="ExtrToTracker">
+    <!--ExtrToTracker refits an input VXD track collection, and used IMarlinTrk tools to propagate it to the main tracker-->
+
+    <!--maximum allowable chi2 increment when moving from one site to another-->
+    <parameter name="Max_Chi2_Incr" type="double">10 </parameter>
+    <!--Name of the input track collection-->
+    <parameter name="InputTrackCollectionName" type="string" lcioInType="Track">CATracks </parameter>
+    <!--Name of the output track collection-->
+    <parameter name="OutputTrackCollectionName" type="string" lcioOutType="Track">SiTracks </parameter>
+    <!--vector of name of the digi hits collection - nned to be syncro with vecSubdetName!-->
+    <parameter name="vecDigiHits" type="StringVec" lcioInType="TrackerHitPlane">ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits  </parameter>
+    <!--vector of names of all subdetector to exrapolate to-->
+    <parameter name="vecSubdetName" type="StringVec">InnerTrackerBarrel OuterTrackerBarrel InnerTrackerEndcap OuterTrackerEndcap  </parameter>
+    <!--Name of the output collection with the not used hits-->
+    <parameter name="OutputNotUsedHitCollectionName" type="string" lcioOutType="TrackerHitPlane">NotUsedHits </parameter>
     <!--perform a final refit of the extrapolated track-->
     <parameter name="PerformFinalRefit" type="bool">false </parameter>
-    <!--Name of the input track collection-->
-    <parameter name="InputTrackCollectionName" type="string" lcioInType="Track"> CATracks </parameter>
-    <!--Name of the output track collection-->
-    <parameter name="OutputTrackCollectionName" type="string" lcioOutType="Track">ExtrapolatedTracks </parameter>
-    <!--Name of the MCParticle-Track Relations collection for output tracks-->
-    <parameter name="OutputTrackRelCollection" type="string" lcioOutType="LCRelation">ExtrapolatedTracksRelation </parameter>
-    <parameter name="Max_Chi2_Incr" type="double">10. </parameter>
-    <parameter name="Verbosity" type="string">ERROR </parameter>
+    <!--Use Energy Loss in Fit-->
+    <parameter name="EnergyLossOn" type="bool">true </parameter>
+    <!--Use MultipleScattering in Fit-->
+    <parameter name="MultipleScatteringOn" type="bool">true </parameter>
+    <!--Smooth All Mesurement Sites in Fit-->
+    <parameter name="SmoothOn" type="bool">false </parameter>
+    <!--times d0(Z0) acceptable from track extrapolation point-->
+    <parameter name="SearchSigma" type="double">3 </parameter> <!-- not used but in doubt to use it, that's why it still exists -->
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
   </processor>
 
-  <!-- == Efficiency calculator parameters == -->
+  <processor name="MyConformalTrackingFull" type="ConformalTracking">
+    <!--ConformalTracking constructs tracks using a combined conformal mapping and cellular automaton approach.-->
+
+    <!--Name of the TrackerHit input collections-->
+    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane"> VXDTrackerHits VXDEndcapTrackerHits ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits </parameter>
+    <!--Name of the TrackerHit relation collections-->
+    <parameter name="RelationsNames" type="StringVec" lcioInType="LCRelation"> VXDTrackerHitRelations VXDEndcapTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
+
+    <!--Cut values for the pattern recognition -->
+    <parameter name="ThetaRange" type="double"> 0.05 </parameter>
+    <parameter name="MaxCellAngle" type="double"> 0.005 </parameter>
+    <parameter name="MaxCellAngleRZ" type="double"> 0.005 </parameter>
+    <parameter name="MaxDistance" type="double"> 0.02 </parameter>
+    <parameter name="MinClustersOnTrack" type="int"> 4 </parameter>
+    <parameter name="MaxChi2" type="double"> 100 </parameter>
+    <parameter name="DebugPlots" type="bool"> false </parameter>
+    <parameter name="trackPurity" type="double">0.7 </parameter>
+
+    <!--Silicon track Collection Name-->
+    <parameter name="SiTrackCollectionName" type="string" lcioOutType="Track">SiTracks </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  </processor>
+
+  <processor name="Refit" type="RefitFinal">
+    <!--Refit processor that calls finaliseLCIOTrack after taking the trackstate from the existing track. No re-sorting of hits is done-->
+    <!--Use Energy Loss in Fit-->
+    <parameter name="EnergyLossOn" type="bool"> true </parameter>
+    <!--Name of the input track to MCParticle relation collection-->
+    <parameter name="InputRelationCollectionName" type="string" lcioInType="LCRelation"> SiTrackRelations </parameter>
+    <!--Name of the input track collection-->
+    <parameter name="InputTrackCollectionName" type="string" lcioInType="Track"> SiTracks </parameter>
+    <!--maximum allowable chi2 increment when moving from one site to another-->
+    <parameter name="Max_Chi2_Incr" type="double"> 1.79769e+30 </parameter>
+    <!--Use MultipleScattering in Fit-->
+    <parameter name="MultipleScatteringOn" type="bool"> true </parameter>
+    <!--Refit Track to MCParticle relation collection Name-->
+    <parameter name="OutputRelationCollectionName" type="string" lcioOutType="LCRelation">
+      SiTracks_Refitted_Relation
+    </parameter>
+    <!--Name of the output track collection-->
+    <parameter name="OutputTrackCollectionName" type="string" lcioOutType="Track">
+      SiTracks_Refitted
+    </parameter>
+    <!--Identifier of the reference point to use for the fit initialisation, -1 means at 0 0 0-->
+    <parameter name="ReferencePoint" type="int"> -1 </parameter>
+    <!--Smooth All Mesurement Sites in Fit-->
+    <parameter name="SmoothOn" type="bool"> false </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string"> DEBUG </parameter-->
+    <!--if true extrapolation in the forward direction (in-out), otherwise backward (out-in)-->
+    <parameter name="extrapolateForward" type="bool"> true </parameter>
+  </processor>
+
+
+  <processor name="MyDDCellsAutomatonMV" type="DDCellsAutomatonMV">
+    <!--ForwardTracking reconstructs tracks through the FTDs-->
+    <!--Name of the Cellular Automaton Tracking output collection-->
+    <parameter name="CATrackCollection" type="string" lcioOutType="Track"> CATracks </parameter>
+    <!--Use Energy Loss in Fit-->
+    <parameter name="EnergyLossOn" type="bool">true </parameter>
+    <!--Number of divisions in Phi-->
+    <parameter name="NDivisionsInPhi" type="int"> 160 </parameter>
+    <!--Number of divisions in Theta-->
+    <parameter name="NDivisionsInTheta" type="int"> 80 </parameter>
+    <!--Number of divisions in Phi in  order to create mini-vectors-->
+    <parameter name="NDivisionsInPhiMV" type="int"> 80 </parameter>
+    <!--Number of divisions in Theta  in  order to create mini-vectors-->
+    <parameter name="NDivisionsInThetaMV" type="int"> 80 </parameter>
+    <!--VXD pixels resolution-->
+    <parameter name="PixRes" type="float"> 0.003 0.003 0.003 0.003 0.003 0.003 </parameter>
+    <!--VXD Hit Collections-->
+    <parameter name="VTXHitCollectionName" type="StringVec"> VXDTrackerHits </parameter>
+    <!--SIT Hit Collections-->
+    <parameter name="SITHitCollectionName" type="StringVec"> ITrackerHits</parameter>
+    <!--Use MultipleScattering in Fit-->
+    <parameter name="MultipleScatteringOn" type="bool">true </parameter>
+    <!--Smooth All Measurement Sites in Fit-->
+    <parameter name="SmoothOn" type="bool">false </parameter>
+    <!--Cut on minimum PT-->
+    <parameter name="PTCut" type="double"> 0.0 </parameter>
+    <!--Use SIT-->
+    <parameter name="UseSIT" type="int"> 0 </parameter>
+    <!--The chi2 probability value below which tracks will be cut-->
+    <parameter name="Chi2ProbCut" type="double">0.005 </parameter>
+    <!--the maximum chi2/Ndf that is allowed as result of a helix fit-->
+    <parameter name="HelixFitMax" type="double"> 100 </parameter>
+    <!--the maximum chi2/Ndf that is allowed as result of a Kalman fit-->
+    <parameter name="kalFitMax" type="double"> 50 </parameter>
+    <!--The minimum number of hits to create a track-->
+    <parameter name="HitsPerTrackMin" type="int"> 2 </parameter>
+    <!--Maximal number of hits for which a track with n hits is better than one with n-1hits-->
+    <parameter name="NHitsChi2" type="int"> 6 </parameter>
+    <!--The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple or NoSelection-->
+    <parameter name="BestSubsetFinder" type="string"> SubsetSimple </parameter>
+    <!--Whether when adding hits to a track only the track with highest quality should be further processed-->
+    <!--parameter name="TakeBestVersionOfTrack" type="bool">true </parameter-->
+    <!--If the automaton has more connections than this it will be redone with the next parameters-->
+    <parameter name="MaxConnectionsAutomaton" type="int"> 10000000 </parameter>
+    <!--Maximal number of hits allowed on a sector-->
+    <parameter name="MaxHitsPerSector" type="int">1000 </parameter>
+    <!--The maximum distance between two hits in adjacent layers in order to form a minivector-->
+    <parameter name="MaxDistance" type="double"> 5.0 </parameter>
+    <!--The difference in polar angle (in degrees)  between two hits in adjacent layers in order to form a minivector-->
+    <parameter name="MVHitsThetaDifference" type="double"> 0.1 </parameter>
+    <!--The difference in polar angle (in degrees)  between two hits in the INNER layer in order to form a minivector-->
+    <parameter name="MVHitsThetaDifferenceInner" type="double"> 0.1 </parameter>
+    <!--The maximum step between layers-->
+    <parameter name="StepMax" type="int"> 4 </parameter>
+    <!--The last layer that can be connected directly with the IP-->
+    <parameter name="LastLayerToIP" type="int"> 4 </parameter>
+
+    <parameter name="Crit2_DeltaPhi_MV_min" type="float"> 0.0 </parameter>
+    <parameter name="Crit2_DeltaPhi_MV_max" type="float"> 8.0 </parameter>
+    <parameter name="Crit2_DeltaTheta_MV_min" type="float"> 0.0 </parameter>
+    <parameter name="Crit2_DeltaTheta_MV_max" type="float"> 1.5 </parameter>
+    <parameter name="Crit3_NoZigZag_MV_min" type="float"> -1.0 </parameter>
+    <parameter name="Crit3_NoZigZag_MV_max" type="float"> 1.0 </parameter>
+
+    <parameter name="Criteria" type="StringVec">
+
+      Crit2_DeltaPhi_MV
+      Crit2_DeltaTheta_MV
+      Crit3_NoZigZag_MV
+    </parameter>
+
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> WARNING </parameter>
+
+  </processor>
+
+
+
+
+
   <processor name="MyClicEfficiencyCalculator" type="ClicEfficiencyCalculator">
-    <parameter name="TrackCollectionName" type="String" lcioInType="Track"> SiTracks </parameter>
-    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane">VXDTrackerHits VXDEndcapTrackerHits ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits </parameter>
-    <parameter name="TrackerHitRelCollectionNames" type="StringVec" lcioInType="LCRelation">VXDTrackerHitRelations VXDEndcapTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
-    <parameter name="Verbosity" type="string">WARNING </parameter>
+    <!--ClicEfficiencyCalculator calculates the tracking efficiency and makes some performance plots-->
+    <!--Name of the efficiency tree-->
+    <parameter name="efficiencyTreeName" type="string">trktree </parameter>
+    <!--Name of the purity tree-->
+    <parameter name="purityTreeName" type="string">puritytree </parameter>
+    <!--Name of the efficiency tree-->
+    <parameter name="mcTreeName" type="string">mctree </parameter>   <!-- probably to be killed soon -->
+    <!--Track collection name-->
+    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
+    <!--Name of the TrackerHit input collections-->
+    <parameter name="TrackerHitCollectionNames" type="StringVec" lcioInType="TrackerHitPlane"> VXDTrackerHits VXDEndcapTrackerHits ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits  </parameter>
+    <!--Name of TrackerHit relation collections-->
+    <parameter name="TrackerHitRelCollectionNames" type="StringVec" lcioInType="LCRelation"> VXDTrackerHitRelations VXDEndcapTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--Name of the MCPhysicsParticles input collection-->
+    <parameter name="MCPhysicsParticleCollectionName" type="string" lcioInType="MCParticle">MCPhysicsParticles </parameter>
+    <!--Name of the output collection of the not reconstructed charged MCParticle-->
+    <parameter name="MCParticleNotReco" type="string" lcioOutType="MCParticle">MCParticleNotReco </parameter>
+    <!--If true additional plots (n of hits per subdetector per mc particle, mc theta, mc pt, info if the particle is decayed in the tracker) will be added to the Ntuple mctree-->
+    <parameter name="morePlots" type="bool">false </parameter>
+    <!--Set of cuts to define 'reconstractable' particles for eff computation. The options are: NHits, NHitsVXD, ILDLike-->
+    <parameter name="reconstructableDefinition" type="string">ILDLike </parameter>
+    <!--Detector element ID for the vertex Barrel-->
+    <parameter name="vertexBarrelID" type="int">1 </parameter>  <!-- obsolete -->
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  </processor>
+
+
+  <processor name="MyTrackChecker" type="TrackChecker">
+    <!--TrackChecker plots pull distributions, track resolution parameters and reconstruction efficiencies-->
+    <!--Name of the MCParticle input collection-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--Track collection name-->
+    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
+    <!--Track relation collection name-->
+    <parameter name="TrackRelationCollectionName" type="string" lcioInType="LCRelation">SiTracksMCTruthLink </parameter>
+    <!--Name of the root tree-->
+    <parameter name="TreeName" type="string">checktree </parameter>
+    <!--Flag to fill only tree variables or also histogram version of pulls and residuals-->
+    <parameter name="UseOnlyTree" type="bool">true </parameter>  <!-- probably obsolete- to be checked -->
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
   </processor>
 
 
@@ -250,30 +582,16 @@
     <!-- compression of output file 0: false >0: true (default) -->
     <parameter name="Compress" type="int" value="1"/>
     <!-- filename without extension-->
-    <parameter name="FileName" type="string" value="histograms.SC"/>
+    <parameter name="FileName" type="string" value="histograms500GeV_ttbar"/>
     <!-- type of output file xml (default) or root ( only OpenScientist)-->
     <parameter name="FileType" type="string" value="root "/>
   </processor>
 
-  <processor name="MyDiagnostics_Si" type="DiagnosticsCLIC">
-    <!-- <processor name="MyDiagnostics_Si" type="Diagnostics"> -->
-    <!--Name of the FullLDC track collection-->
-    <parameter name="MarlinTrkTracks" type="string" lcioInType="Track"> SiTracks </parameter>
-    <parameter name="MCTracksTruthLinkCollectionName" type="string" lcioInType="Track"> MCTruthSiTracksLink </parameter>
-    <parameter name="TracksMCTruthLinkCollectionName" type="string" lcioInType="Track"> SiTracksMCTruthLink </parameter>
-    <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticle </parameter>
-    <!--Enables cuts to define the examined track sample-->
-    <parameter name="TrkEffOn" type="bool"> true </parameter>
-    <!--If we want to apply a cut on the minimum TPC hits-->
-    <parameter name="CutOnTPChits" type="int"> 10 </parameter>
-    <!--If we want to apply a cut on the minimum transverse momentum-->
-    <parameter name="CutOnPt" type="float"> 0.3 </parameter>
-    <parameter name="SimTrackerHitCollections" type="StringVec" lcioInType="SimTrackerHit"> VertexBarrelHits InnerTrackerBarrelHits  </parameter>
-    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-    <parameter name="Verbosity" type="string"> WARNING </parameter>
+
+  <processor name="EventNumber" type="Statusmonitor">
+    <parameter name="HowOften" type="int">1 </parameter>
+    <parameter name="Verbosity" type="string"> MESSAGE </parameter>
   </processor>
-
-
 
 
   <processor name="MyDDCaloDigi" type="DDCaloDigi">
@@ -281,6 +599,7 @@
 
     <!--Hit times histograms-->
     <parameter name="Histograms" type="int">0 </parameter>
+    <parameter name="RootFile" type="string">Digi_SiW.root</parameter>
     <!--CaloHit Relation Collection-->
     <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
     <!--energy required to create e-h pair in silicon (in eV)-->
@@ -302,7 +621,7 @@
     <!--Digital Ecal-->
     <parameter name="IfDigitalEcal" type="int">0 </parameter>
     <!--Index of ECal Layers-->
-    <parameter name="ECALLayers" type="IntVec">17 100  </parameter>
+    <parameter name="ECALLayers" type="IntVec">41 100  </parameter>
     <!--default ECAL layer configuration (used if not found in gear file)-->
     <parameter name="ECAL_default_layerConfig" type="string">000000000000000 </parameter>
     <!--default number of virtual cells (used if not found in gear file)-->
@@ -311,13 +630,13 @@
     <!--calibration to convert ECAL deposited energy to MIPs-->
     <parameter name="CalibECALMIP" type="float">0.0001 </parameter>
     <!--Calibration coefficients for ECAL-->
-    <parameter name="CalibrECAL" type="FloatVec">40.3366 80.6732 </parameter>
+    <parameter name="CalibrECAL" type="FloatVec">35.7873928132 35.7873928132</parameter>
     <!--Threshold for ECAL Hits in GeV-->
     <parameter name="ECALThreshold" type="float">5e-05 </parameter>
     <!--Unit for ECAL Threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
     <parameter name="ECALThresholdUnit" type="string">GeV </parameter>
     <!--Energy correction for ECAL endcap-->
-    <parameter name="ECALEndcapCorrectionFactor" type="float">1.025 </parameter>
+    <parameter name="ECALEndcapCorrectionFactor" type="float">1.070 </parameter>
     <!--Correct for ECAL gaps-->
     <parameter name="ECALGapCorrection" type="int">1 </parameter>
     <!--Factor applied to gap correction-->
@@ -353,7 +672,7 @@
     <parameter name="ECAL_pixel_spread" type="float">0.05 </parameter>
     <!--length scale for absorbtion along scintillator strip (mm)-->
     <parameter name="ECAL_strip_absorbtionLength" type="float">1e+06 </parameter>
-    
+
     <!--Use ECAL hit times-->
     <parameter name="UseEcalTiming" type="int">1 </parameter>
     <!--Correct ECAL hit times for propagation: radial distance/c-->
@@ -373,7 +692,7 @@
 
 
     <!-- HCAL -->
-    
+
     <!--HCAL Collection Names-->
     <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">HCalBarrelCollection HCalEndcapCollection HCalRingCollection </parameter>
     <!--HCAL Collection of real Hits-->
@@ -390,18 +709,18 @@
     <!--calibration to convert HCAL deposited energy to MIPs-->
     <parameter name="CalibHCALMIP" type="float">0.0001 </parameter>
     <!--Calibration coefficients for Barrel HCAL-->
-    <parameter name="CalibrHCALBarrel" type="FloatVec">46.6171 </parameter>
+    <parameter name="CalibrHCALBarrel" type="FloatVec">48.6089541748</parameter>
     <!-- CalibrHcalBarrel Should be 38.995 for 17 mm -->
     <!--Calibration coefficients for EndCap HCAL-->
-    <parameter name="CalibrHCALEndcap" type="FloatVec">50.0706 </parameter>
+    <parameter name="CalibrHCALEndcap" type="FloatVec">53.2899125895</parameter>
     <!--Calibration coefficients for Other (Ring) HCAL-->
-    <parameter name="CalibrHCALOther" type="FloatVec">57.0109 </parameter>
+    <parameter name="CalibrHCALOther" type="FloatVec">63.5104693008</parameter>
     <!--Threshold for HCAL Hits in GeV-->
     <parameter name="HCALThreshold" type="FloatVec">0.00025  </parameter>
     <!--Unit for HCAL Threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
     <parameter name="HCALThresholdUnit" type="string">GeV </parameter>
     <!--Energy correction for HCAL endcap-->
-    <parameter name="HCALEndcapCorrectionFactor" type="float">1.025 </parameter>
+    <parameter name="HCALEndcapCorrectionFactor" type="float">1.000 </parameter>
     <!--Correct for ECAL gaps-->
     <parameter name="HCALGapCorrection" type="int">1 </parameter>
     <!--Factor applied to module gap correction-->
@@ -444,7 +763,7 @@
     <parameter name="HCALEndcapTimeWindowMax" type="float">10 </parameter>
     <!--Use simple time window cut on hit times? If false: use original hit-time clustering algorithm. If true: use time window defined by HCALBarrelTimeWindowMin and HCALBarrelTimeWindowMax-->
     <parameter name="HCALSimpleTimingCut" type="bool">true </parameter>
-    <!--HCAL Minimum Delta Time in ns for resolving two hits--> <!-- used only if HCALSimpleTimingCut is false --> 
+    <!--HCAL Minimum Delta Time in ns for resolving two hits--> <!-- used only if HCALSimpleTimingCut is false -->
     <parameter name="HCALDeltaTimeHitResolution" type="float">10 </parameter>
     <!--HCAL Time Resolution used to smear hit times-->
     <parameter name="HCALTimeResolution" type="float">10 </parameter>
@@ -456,7 +775,7 @@
   <processor name="MyDDMarlinPandora" type="DDPandoraPFANewProcessor">
     <parameter name="PandoraSettingsXmlFile" type="String"> PandoraSettings/PandoraSettingsDefault.xml </parameter>
     <!-- Collection names -->
-    <parameter name="TrackCollections" type="StringVec">SiTracks</parameter>
+    <parameter name="TrackCollections" type="StringVec"> SiTracks_Refitted </parameter>
     <parameter name="ECalCaloHitCollections" type="StringVec">ECALBarrel ECALEndcap ECALOther</parameter>
     <parameter name="HCalCaloHitCollections" type="StringVec">HCALBarrel HCALEndcap HCALOther</parameter>
     <parameter name="LCalCaloHitCollections" type="StringVec"></parameter>
@@ -464,7 +783,7 @@
     <parameter name="MuonCaloHitCollections" type="StringVec">MUON</parameter>
     <parameter name="MCParticleCollections" type="StringVec">MCParticle</parameter>
     <parameter name="RelCaloHitCollections" type="StringVec">RelationCaloHit RelationMuonHit</parameter>
-    <parameter name="RelTrackCollections" type="StringVec">SiTrackRelations</parameter>
+    <parameter name="RelTrackCollections" type="StringVec"> SiTracks_Refitted_Relation </parameter>
     <parameter name="KinkVertexCollections" type="StringVec">KinkVertices</parameter>
     <parameter name="ProngVertexCollections" type="StringVec">ProngVertices</parameter>
     <parameter name="SplitVertexCollections" type="StringVec">SplitVertices</parameter>
@@ -472,18 +791,18 @@
     <parameter name="ClusterCollectionName" type="String">PandoraClusters</parameter>
     <parameter name="PFOCollectionName" type="String">PandoraPFOs</parameter>
     <!-- Calibration constants -->
-    <parameter name="ECalToMipCalibration" type="float">163.934</parameter>
-    <parameter name="HCalToMipCalibration" type="float">43.29</parameter>
+    <parameter name="ECalToMipCalibration" type="float">181.818 </parameter>
+    <parameter name="HCalToMipCalibration" type="float">41.1523</parameter>
     <parameter name="ECalMipThreshold" type="float">0.5</parameter>
     <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-    <parameter name="ECalToEMGeVCalibration" type="float">1.0043</parameter>
-    <parameter name="HCalToEMGeVCalibration" type="float">1.0043</parameter>
-    <parameter name="ECalToHadGeVCalibrationBarrel" type="float">0.97499</parameter>
-    <parameter name="ECalToHadGeVCalibrationEndCap" type="float">0.97499</parameter>
-    <parameter name="HCalToHadGeVCalibration" type="float">1.04848</parameter>
-    <parameter name="MuonToMipCalibration" type="float">10.0</parameter>
+    <parameter name="ECalToEMGeVCalibration" type="float">1.02382098451</parameter>
+    <parameter name="HCalToEMGeVCalibration" type="float">1.02382098451</parameter>
+    <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.1944452816</parameter>
+    <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.1944452816</parameter>
+    <parameter name="HCalToHadGeVCalibration" type="float">1.04328949699</parameter>
+    <parameter name="MuonToMipCalibration" type="float">19607.8</parameter>
     <parameter name="DigitalMuonHits" type="int">0</parameter>
-    <parameter name="MaxHCalHitHadronicEnergy" type="float">1</parameter> 
+    <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000</parameter>
     <!--Whether to calculate track states manually, rather than copy stored fitter values-->
     <parameter name="UseOldTrackStateCalculation" type="int">0 </parameter>
     <parameter name="NEventsToSkip" type="int">0</parameter>
@@ -491,10 +810,10 @@
     <!--Energy Corrections in Marlin Pandora-->
     <!--parameter name="InputEnergyCorrectionPoints" type="FloatVec">InputEnergyCorrectionPoints_XXXX</parameter-->
     <!--parameter name="OutputEnergyCorrectionPoints" type="FloatVec">OutputEnergyCorrectionPoints_XXXX</parameter-->
-    
+
     <!--Decides whether to create gaps in the geometry (ILD-specific)-->
     <parameter name="CreateGaps" type="bool">false </parameter>
-    
+
     <!--Track quality settings: need to be optimized! More in processor-->
     <!--Cut on fractional of expected number of BarrelTracker hits-->
     <parameter name="MinBarrelTrackerHitFractionOfExpected" type="int">0 </parameter>
@@ -510,7 +829,7 @@
     <parameter name="MinTrackECalDistanceFromIp" type="float">0 </parameter>
     <!--Track quality cut: the minimum number of track hits-->
     <parameter name="MinTrackHits" type="int">0 </parameter>
-    
+
     <!-- MORE TRACKING  CUTS -->
     <!--Max distance from track to BarrelTracker r max to id whether track reaches ecal-->
     <parameter name="ReachesECalBarrelTrackerOuterDistance" type="float">-100 </parameter>
@@ -550,6 +869,12 @@
     <parameter name="D0TrackCut" type="float">50 </parameter>
     <!--d0 cut used to determine whether unmatched vertex track can form pfo-->
     <parameter name="D0UnmatchedVertexTrackCut" type="float">5 </parameter>
+
+    <!--The algorithm name for filling start vertex-->
+    <parameter name="StartVertexAlgorithmName" type="string">PandoraPFANew </parameter>
+    <!--Start Vertex Collection Name-->
+    <parameter name="StartVertexCollectionName" type="string" lcioOutType="Vertex"> PandoraStartVertices </parameter>
+
   </processor>
 
   <processor name="MyDDSimpleMuonDigi" type="DDSimpleMuonDigi">
@@ -560,7 +885,7 @@
     <parameter name="MaxHitEnergyMUON" type="float">2.0</parameter>
     <!--MUON Collection Names-->
     <parameter name="MUONCollections" type="StringVec">
-      MuonBarrelCollection MuonEndCapCollection</parameter>
+      YokeBarrelCollection YokeEndcapCollection</parameter>
     <!--MUON Collection of real Hits-->
     <parameter name="MUONOutputCollection" type="string">MUON </parameter>
     <!--Threshold for MUON Hits in GeV-->
@@ -637,11 +962,9 @@
       OuterTrackerEndcapCollection
     </parameter>
     <!--Name of the Tracks input collection-->
-    <parameter name="TrackCollection" type="string" lcioInType="Track">
-      SiTracks
-    </parameter>
+    <parameter name="TrackCollection" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
     <!--Name of the trackMCTruthLink output collection - not created if empty()-->
-    <parameter name="TrackMCTruthLinkName" type="string" lcioOutType="LCRelation"> TrackMCTruthLink </parameter>
+    <parameter name="TrackMCTruthLinkName" type="string" lcioOutType="LCRelation"> SiTracksMCTruthLink </parameter>
     <!--Name of the lcrelation collections, that link the TrackerHits to their SimTrackerHits.-->
     <parameter name="TrackerHitsRelInputCollections" type="StringVec" lcioInType="LCRelation">
       VXDTrackerHitRelations
@@ -654,11 +977,330 @@
     <!--true: use relations for TrackerHits, false : use getRawHits -->
     <parameter name="UseTrackerHitRelations" type="bool"> true </parameter>
     <!--If Using Particle Gun Ignore Gen Stat-->
-    <parameter name="UsingParticleGun" type="bool"> false </parameter>
+    <parameter name="UsingParticleGun" type="bool"> true </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-    <parameter name="Verbosity" type="string"> WARNING </parameter>
+    <parameter name="Verbosity" type="string"> MESSAGE </parameter>
     <!--energy cut for daughters that are kept from KeepDaughtersPDG-->
     <parameter name="daughtersECutMeV" type="float"> 10 </parameter>
+  </processor>
+
+
+
+  <processor name="MyHitResiduals" type="HitResiduals">
+    <!--HitResiduals plots te residual between the track fit and the hit in the local coordinate system u,v,w.-->
+    <!--Use Energy Loss in Fit-->
+    <parameter name="EnergyLossOn" type="bool">true </parameter>
+    <!--Maximum increment allowed for the chi2-->
+    <parameter name="MaxChi2Increment" type="double">1000 </parameter>
+    <!--Use MultipleScattering in Fit-->
+    <parameter name="MultipleScatteringOn" type="bool">true </parameter>
+    <!--Smooth All Mesurement Sites in Fit-->
+    <parameter name="SmoothOn" type="bool">false </parameter>
+    <!--Name of the input track collection-->
+    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
+    <!--Name of the output root file-->
+    <parameter name="outFileName" type="string">residuals.root </parameter>
+    <!--Name of the tree-->
+    <parameter name="treeName" type="string">restree </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  </processor>
+
+  <processor name="LumiCalReco" type="MarlinLumiCalClusterer">
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> WARNING </parameter>
+    <!--Collection Containing the Hits in the LumiCal-->
+    <parameter name="LumiCal_Collection" type="string" lcioInType="SimCalorimeterHit"> LumiCalCollection </parameter>
+    <!--Collection of Cluster found in the LumiCal-->
+    <parameter name="LumiCal_Clusters" type="string" lcioOutType="Cluster">LumiCalClusters </parameter>
+    <!--Collection of Reconstructed Particles found in the LumiCal-->
+    <parameter name="LumiCal_RecoParticles" type="string" lcioOutType="ReconstructedParticle">LumiCalRecoParticles </parameter>
+    <!-- Number of events to skip at the begining of the LCIO file-->
+    <parameter name="SkipNEvents" type="int">0 </parameter>
+    <!-- Number of event to work with-->
+    <parameter name="MaxRecordNumber" type="int">10 </parameter>
+    <!--Name of output directory-->
+    <parameter name="OutDirName" type="string">rootOut </parameter>
+    <!--Name of output ROOT file ( without suffix)-->
+    <parameter name="OutRootFileName" type="string"></parameter>
+    <!-- Place for ROOT tree memory(1) or disk (0) -->
+    <parameter name="MemoryResidentTree" type="int">0 </parameter>
+    <!-- Number of events in memory resident ROOT tree.-->
+    <parameter name="NumEventsTree" type="int">500 </parameter>
+
+    <!--  Clustering/Geometry Parameters -->
+    <!-- Minimal number of hits in cluster-->
+    <parameter name="ClusterMinNumHits" type="int">15 </parameter>
+    <!-- fraction of number of hits in one arm found in one layer to consider this layer as the ShowerPeak layer-->
+    <parameter name="ElementsPercentInShowerPeakLayer" type="double">0.03 </parameter>
+    <!-- Sets minimum for logarithmic energy weights-->
+    <parameter name="LogWeigthConstant" type="double"> 6.5 </parameter>
+    <!-- BP: see explanation in LumiCalClusterer.cpp-->
+    <parameter name="MiddleEnergyHitBoundFrac" type="double"> 0.01 </parameter>
+    <!-- Sets minimum energy deposit for cluster to be accepted [GeV]-->
+    <parameter name="MinClusterEngy" type="double"> 2.0 </parameter>
+    <!-- Calibration factor - converts cluster energy to primary
+	 particle energy ( E_cluster = EnrgyCalibConst*E_primary default value for LCal ILD )-->
+    <parameter name="EnergyCalibConst" type="double"> 0.01213 </parameter>
+    <!-- Hit energy cut - minimum hit energy required [Gev] -->
+    <parameter  name="MinHitEnergy"  type="double"> 20e-06 </parameter>
+    <!-- Moliere radius, controls clusters separation distance [mm]-->
+    <parameter name="MoliereRadius" type="double"> 20 </parameter>
+    <!--Number of neighbor hits to consider -->
+    <parameter name="NumOfNearNeighbor" type="int"> 6 </parameter>
+    <!-- Choose cluster hit position weights LogMthod=-1 or simple EnergyMethod=1 -->
+    <parameter name="WeightingMethod" type="string"> LogMethod </parameter>
+    <!-- Layers relative phi offset (default for model ILD_o1_05,must go to gear sometimes)  [deg]-->
+    <parameter name="ZLayerPhiOffset" type="double"> 0.0 </parameter>
+  </processor>
+
+
+  <processor name="BeamCalReco" type="BeamCalClusterReco">
+    <!--BeamCalClusterReco reproduces the beamstrahlung background for a given number of bunch-crossings NumberOfBX and puts the signal hits from the lcio input file on top of that, and then clustering is attempted.-->
+    <!--How to estimate background [Gaussian, Parametrised, Pregenerated, Averaged]-->
+    <parameter name="BackgroundMethod" type="string">Gaussian </parameter>
+    <!--Name of BeamCal Collection-->
+    <parameter name="BeamCalCollectionName" type="string" lcioInType="SimCalorimeterHit">BeamCalCollection </parameter>
+    <!--Flag to create the TEfficiency for fast tagging library-->
+    <parameter name="CreateEfficiencyFile" type="bool">false </parameter>
+    <!--Rings from which onwards the outside Thresholds are used-->
+    <parameter name="StartingRing" type="FloatVec">0.0 1.0 1.5 2.5 3.5  4.5 </parameter>
+    <!--Energy in a Cluster to consider it an electron-->
+    <parameter name="ETCluster" type="FloatVec">   5.0 4.0 3.0 2.0 2.0  1.0 </parameter>
+    <!--Energy in a Pad, after subtraction of background required to consider it for signal-->
+    <parameter name="ETPad" type="FloatVec">       0.5 0.4 0.3 0.2 0.15 0.1 </parameter>
+    <!--The name of the rootFile which will contain the TEfficiency objects-->
+    <parameter name="EfficiencyFilename" type="string">TaggingEfficiency.root </parameter>
+    <!--Root Inputfile(s)-->
+    <parameter name="InputFileBackgrounds" type="StringVec">BeamCal_BackgroundPars_3TeV.root </parameter>
+    <!--Multiply deposit energy by this factor to account for sampling fraction-->
+    <parameter name="LinearCalibrationFactor" type="double">116.44 </parameter>
+    <!--MCParticle Collection Name, only needed and used to estimate efficiencies-->
+    <parameter name="MCParticleCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <!--Minimum number of pads in a single tower to be considered for signal-->
+    <parameter name="MinimumTowerSize" type="int">4 </parameter>
+    <!--How many layers are used for shower fitting-->
+    <parameter name="NShowerCountingLayers" type="int">3 </parameter>
+    <!--Number of Bunch Crossings of Background-->
+    <parameter name="NumberOfBX" type="int"> 40 </parameter>
+    <!--Number of Event that should be printed to PDF File-->
+    <parameter name="PrintThisEvent" type="int">-1 </parameter>
+    <!--Name of the Reconstructed Cluster collection-->
+    <parameter name="RecoClusterCollectionname" type="string" lcioOutType="Cluster">BCalClusters </parameter>
+    <!--Name of the Reconstructed Particle collection-->
+    <parameter name="RecoParticleCollectionname" type="string" lcioOutType="ReconstructedParticle">BCalRecoParticle </parameter>
+    <!--If not using ConstPadCuts, each pad SigmaCut*standardDeviation is considered for clusters-->
+    <parameter name="SigmaCut" type="double">1 </parameter>
+    <!--Layer (inclusive) from which on we start looking for signal clusters-->
+    <parameter name="StartLookingInLayer" type="int">10 </parameter>
+    <!--Limit on square norm of tower energy chi2/ndf, where chi2 = (E_dep - E_bg)^2/sig^2. 			      Reasonable value for pregenerated bkg is 5., for parametrised is 2.-->
+    <parameter name="TowerChi2ndfLimit" type="double">5 </parameter>
+    <!--Use Chi2 selection criteria to detect high energy electron in the signal.-->
+    <parameter name="UseChi2Selection" type="bool">false </parameter>
+    <!--Use the cuts for the pads specified in ETPad. If false, the standard deviation of each pad times the SigmaCut Factor is used, the first entry in ETPad is used as a minimum energy to consider a pad at all-->
+    <parameter name="UseConstPadCuts" type="bool">true </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  </processor>
+
+  <group name="PfoSelector">
+    <!--Selects Pfos from full PFO list using timing cuts-->
+    <!--ChargedPfoLooseTimingCut-->
+    <parameter name="ChargedPfoLooseTimingCut" type="float">3 </parameter>
+    <!--ChargedPfoNegativeLooseTimingCut-->
+    <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-1 </parameter>
+    <!--ChargedPfoNegativeTightTimingCut-->
+    <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-0.5 </parameter>
+    <!--ChargedPfoPtCut-->
+    <parameter name="ChargedPfoPtCut" type="float">0 </parameter>
+    <!--ChargedPfoPtCutForLooseTiming-->
+    <parameter name="ChargedPfoPtCutForLooseTiming" type="float">4 </parameter>
+    <!--ChargedPfoTightTimingCut-->
+    <parameter name="ChargedPfoTightTimingCut" type="float">1.5 </parameter>
+    <!--CheckKaonCorrection-->
+    <parameter name="CheckKaonCorrection" type="int">0 </parameter>
+    <!--CheckProtonCorrection-->
+    <parameter name="CheckProtonCorrection" type="int">0 </parameter>
+    <!--ClusterLessPfoTrackTimeCut-->
+    <parameter name="ClusterLessPfoTrackTimeCut" type="float">10 </parameter>
+    <!--CorrectHitTimesForTimeOfFlight-->
+    <parameter name="CorrectHitTimesForTimeOfFlight" type="int">0 </parameter>
+    <!--DisplayRejectedPfos-->
+    <parameter name="DisplayRejectedPfos" type="int">1 </parameter>
+    <!--DisplaySelectedPfos-->
+    <parameter name="DisplaySelectedPfos" type="int">1 </parameter>
+    <!--FarForwardCosTheta-->
+    <parameter name="FarForwardCosTheta" type="float">0.975 </parameter>
+    <!--ForwardCosThetaForHighEnergyNeutralHadrons-->
+    <parameter name="ForwardCosThetaForHighEnergyNeutralHadrons" type="float">0.95 </parameter>
+    <!--ForwardHighEnergyNeutralHadronsEnergy-->
+    <parameter name="ForwardHighEnergyNeutralHadronsEnergy" type="float">10 </parameter>
+    <!--HCalBarrelLooseTimingCut-->
+    <parameter name="HCalBarrelLooseTimingCut" type="float">20 </parameter>
+    <!--HCalBarrelTightTimingCut-->
+    <parameter name="HCalBarrelTightTimingCut" type="float">10 </parameter>
+    <!--HCalEndCapTimingFactor-->
+    <parameter name="HCalEndCapTimingFactor" type="float">1 </parameter>
+    <!--Input PFO Collection-->
+    <parameter name="InputPfoCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+    <!--KeepKShorts-->
+    <parameter name="KeepKShorts" type="int">1 </parameter>
+    <!--MaxMomentumForClusterLessPfos-->
+    <parameter name="MaxMomentumForClusterLessPfos" type="float">2 </parameter>
+    <!--MinECalHitsForTiming-->
+    <parameter name="MinECalHitsForTiming" type="int">5 </parameter>
+    <!--MinHCalEndCapHitsForTiming-->
+    <parameter name="MinHCalEndCapHitsForTiming" type="int">5 </parameter>
+    <!--MinMomentumForClusterLessPfos-->
+    <parameter name="MinMomentumForClusterLessPfos" type="float">0.5 </parameter>
+    <!--MinPtForClusterLessPfos-->
+    <parameter name="MinPtForClusterLessPfos" type="float">0.5 </parameter>
+    <!--MinimumEnergyForNeutronTiming-->
+    <parameter name="MinimumEnergyForNeutronTiming" type="float">1 </parameter>
+    <!--Monitoring-->
+    <parameter name="Monitoring" type="int">0 </parameter>
+    <!--MonitoringPfoEnergyToDisplay-->
+    <parameter name="MonitoringPfoEnergyToDisplay" type="float">1 </parameter>
+    <!--NeutralFarForwardLooseTimingCut-->
+    <parameter name="NeutralFarForwardLooseTimingCut" type="float">2 </parameter>
+    <!--NeutralFarForwardTightTimingCut-->
+    <parameter name="NeutralFarForwardTightTimingCut" type="float">1 </parameter>
+    <!--NeutralHadronBarrelPtCutForLooseTiming-->
+    <parameter name="NeutralHadronBarrelPtCutForLooseTiming" type="float">3.5 </parameter>
+    <!--NeutralHadronLooseTimingCut-->
+    <parameter name="NeutralHadronLooseTimingCut" type="float">2.5 </parameter>
+    <!--NeutralHadronPtCut-->
+    <parameter name="NeutralHadronPtCut" type="float">0 </parameter>
+    <!--NeutralHadronPtCutForLooseTiming-->
+    <parameter name="NeutralHadronPtCutForLooseTiming" type="float">8 </parameter>
+    <!--NeutralHadronTightTimingCut-->
+    <parameter name="NeutralHadronTightTimingCut" type="float">1.5 </parameter>
+    <!--PhotonFarForwardLooseTimingCut-->
+    <parameter name="PhotonFarForwardLooseTimingCut" type="float">2 </parameter>
+    <!--PhotonFarForwardTightTimingCut-->
+    <parameter name="PhotonFarForwardTightTimingCut" type="float">1 </parameter>
+    <!--PhotonLooseTimingCut-->
+    <parameter name="PhotonLooseTimingCut" type="float">2 </parameter>
+    <!--PhotonPtCut-->
+    <parameter name="PhotonPtCut" type="float">0 </parameter>
+    <!--PhotonPtCutForLooseTiming-->
+    <parameter name="PhotonPtCutForLooseTiming" type="float">4 </parameter>
+    <!--PhotonTightTimingCut-->
+    <parameter name="PhotonTightTimingCut" type="float">1 </parameter>
+    <!--PtCutForTightTiming-->
+    <parameter name="PtCutForTightTiming" type="float">0.75 </parameter>
+    <!--Selected pfo collection name-->
+    <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">SelectedPandoraPFOs </parameter>
+    <!--UseClusterLessPfos-->
+    <parameter name="UseClusterLessPfos" type="int">1 </parameter>
+    <!--UseNeutronTiming-->
+    <parameter name="UseNeutronTiming" type="int">0 </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
+
+    <processor name="MyCLICPfoSelectorDefault" type="CLICPfoSelector">
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle"> SelectedPandoraPFOs </parameter>
+    </processor>
+
+    <processor name="MyCLICPfoSelectorLoose" type="CLICPfoSelector">
+      <!--Selects Pfos from full PFO list using timing cuts-->
+      <!--ChargedPfoNegativeLooseTimingCut-->
+      <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-2.0</parameter>
+      <!--ChargedPfoNegativeTightTimingCut-->
+      <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-2.0</parameter>
+      <!-- ClusterLessPfoTrackTimeCut -->
+      <parameter name = "ClusterLessPfoTrackTimeCut" type="float">1000.</parameter>
+      <!--MinMomentumForClusterLessPfos-->
+      <parameter name="MinMomentumForClusterLessPfos" type="float">0.0 </parameter>
+      <!--MaxMomentumForClusterLessPfos-->
+      <parameter name="MinPtForClusterLessPfos" type="float">0.25 </parameter>
+      <!--MinimumEnergyForNeutronTiming-->
+      <!--NeutralFarForwardLooseTimingCut-->
+      <parameter name="NeutralFarForwardLooseTimingCut" type="float">2.5 </parameter>
+      <!--NeutralFarForwardTightTimingCut-->
+      <parameter name="NeutralFarForwardTightTimingCut" type="float">1.5 </parameter>
+      <!--PhotonLooseTimingCut-->
+      <parameter name="PhotonLooseTimingCut" type="float">2. </parameter>
+      <!--PhotonTightTimingCut-->
+      <parameter name="PhotonTightTimingCut" type="float">2. </parameter>
+      <!--Selected pfo collection name-->
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">LooseSelectedPandoraPFOs </parameter>
+      <parameter name="Monitoring" type="int">0</parameter>
+    </processor>
+
+    <processor name="MyCLICPfoSelectorTight" type="CLICPfoSelector">
+      <!--Selects Pfos from full PFO list using timing cuts-->
+      <!--ChargedPfoLooseTimingCut-->
+      <parameter name="ChargedPfoLooseTimingCut" type="float">2.0 </parameter>
+      <!--ChargedPfoNegativeLooseTimingCut-->
+      <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-0.5 </parameter>
+      <!--ChargedPfoNegativeTightTimingCut-->
+      <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-0.25 </parameter>
+      <!--ChargedPfoTightTimingCut-->
+      <parameter name="ChargedPfoTightTimingCut" type="float">1.0 </parameter>
+      <!--FarForwardCosTheta-->
+      <parameter name="FarForwardCosTheta" type="float">0.95 </parameter>
+      <!--MaxMomentumForClusterLessPfos-->
+      <parameter name="MaxMomentumForClusterLessPfos" type="float">1.5 </parameter>
+      <!--MinPtForClusterLessPfos-->
+      <parameter name="MinPtForClusterLessPfos" type="float">1.0 </parameter>
+      <!--NeutralFarForwardLooseTimingCut-->
+      <parameter name="NeutralFarForwardLooseTimingCut" type="float">1.5 </parameter>
+      <!--NeutralHadronPtCut-->
+      <parameter name="NeutralHadronPtCut" type="float">0.5 </parameter>
+      <!--PhotonPtCut-->
+      <parameter name="PhotonPtCut" type="float">0.2 </parameter>
+      <!--PtCutForTightTiming-->
+      <parameter name="PtCutForTightTiming" type="float">1.0 </parameter>
+      <!--Selected pfo collection name-->
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">TightSelectedPandoraPFOs </parameter>
+      <!--UseClusterLessPfos-->
+      <parameter name="UseClusterLessPfos" type="int">0 </parameter>
+      <parameter name="Monitoring" type="int">0</parameter>
+    </processor>
+
+  </group>
+
+  <processor name="Output_REC" type="LCIOOutputProcessor">
+    <!--   standard output: full reconstruction keep all collections -->
+    <parameter name="LCIOOutputFile" type="string"> Output_REC.slcio </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec"> EfficientMCParticles InefficientMCParticles </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="Output_DST" type="LCIOOutputProcessor">
+    <!--   dst output: keep only collections for analysis -->
+    <parameter name="LCIOOutputFile" type="string"> Output_DST.slcio </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec">
+      EfficientMCParticles
+      InefficientMCParticles
+      MCParticlesSkimmed
+    </parameter>
+    <parameter name="DropCollectionTypes" type="StringVec">
+      MCParticle
+      LCRelation
+      SimCalorimeterHit
+      CalorimeterHit
+      SimTrackerHit
+      TrackerHit
+      TrackerHitPlane
+      Track
+      ReconstructedParticle
+      LCFloatVec
+    </parameter>
+    <parameter name="KeepCollectionNames" type="StringVec">
+      MCParticlesSkimmed
+      RecoMCTruthLink
+      SiTracks
+      PandoraClusters
+      PandoraPFOs
+      SelectedPandoraPFOs
+      LooseSelectedPandoraPFOs
+      TightSelectedPandoraPFOs
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <parameter name="Verbosity" type="string">WARNING </parameter>
   </processor>
 
   <!-- == Track dE/dx parameters == -->
@@ -667,39 +1309,39 @@
     <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation">TrackMCTruthLink </parameter>
     <parameter name="Verbosity" type="string">MESSAGE </parameter>
     <parameter name="TrkHitCollections" type="StringVec">
-      ITrackerHits 
-      ITrackerEndcapHits 
-      OTrackerHits 
-      OTrackerEndcapHits 
-      VXDTrackerHits 
+      ITrackerHits
+      ITrackerEndcapHits
+      OTrackerHits
+      OTrackerEndcapHits
+      VXDTrackerHits
       VXDEndcapTrackerHits
     </parameter>
     <!-- Normally, sensor thicknesses are read from the detector geometry.
          Occasionally brand new constructors for tracker elements do not set
-         the sensor thicknesses in the layer structure. If this happens, it is 
-         still possible to set thicknesses by hand (cheat) using the two 
+         the sensor thicknesses in the layer structure. If this happens, it is
+         still possible to set thicknesses by hand (cheat) using the two
          parameters below. -->
     <parameter name="CheatSensorThicknesses" type="bool"> false </parameter>
-    <!-- Values for sensor thickness to use when cheating. 
+    <!-- Values for sensor thickness to use when cheating.
          Finer selection of which thicknesses to cheat is possible by setting
-         negative values for thicknesses that should not be cheated 
-         Here we are cheating the thicknesses of the tracker barrel regions 
+         negative values for thicknesses that should not be cheated
+         Here we are cheating the thicknesses of the tracker barrel regions
          because they are defined per "layer" with 2 sensors. -->
     <parameter name="SensorThicknessCheatValues" type="FloatVec"> 0.015 -1 0.015 -1 -1 -1 </parameter>
-    <!-- Integer bitmask that specifies which tracker detector elements to use. 
-         To obtain the integer value of the mask, add up 2^i for each tracker 
-         element that you want to use, where i is the order of the tracker 
+    <!-- Integer bitmask that specifies which tracker detector elements to use.
+         To obtain the integer value of the mask, add up 2^i for each tracker
+         element that you want to use, where i is the order of the tracker
          element in LCDD.
          Default: use all elements.
           -->
     <!--parameter name="ElementMask" type="int"> 15 </parameter-->
     <!-- Type of estimator for dEdx.
-         Available estimators: mean, truncMean, harmonic, harmonic-2, 
+         Available estimators: mean, truncMean, harmonic, harmonic-2,
          weighted-harmonic, weighted-harmonic-2
          Default: mean.
           -->
     <parameter name="dEdxEstimator" type="string">harmonic-2 </parameter>
-    
+
   </processor>
 
 

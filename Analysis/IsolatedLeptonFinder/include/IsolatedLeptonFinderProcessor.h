@@ -23,10 +23,8 @@
 #include "IMPL/ReconstructedParticleImpl.h"
 #include <UTIL/LCRelationNavigator.h>
 
-using namespace lcio ;
-using namespace marlin ;
 
-class IsolatedLeptonFinderProcessor : public Processor {
+class IsolatedLeptonFinderProcessor : public marlin::Processor {
 
 	public:
 

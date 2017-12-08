@@ -298,18 +298,18 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	_pfoCol = evt->getCollection( _inputPFOsCollection ) ;
 
 	// Output PFOs removed isolated leptons
-	LCCollectionVec* otPFOsRemovedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
+	auto otPFOsRemovedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 	otPFOsRemovedIsoLepCol->setSubset(true) ;
 
 	// Output PFOs of isolated leptons
-	LCCollectionVec* otIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
+	auto otIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 	otIsoLepCol->setSubset(true);
 
 	// Output PFOs removed dressed isolated leptons
-	LCCollectionVec* otPFOsRemovedDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
+	auto otPFOsRemovedDressedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 
 	// Output PFOs of dressed isolated leptons
-	LCCollectionVec* otDressedIsoLepCol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
+	auto otDressedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 
 	// Prepare jet/recoparticle map for jet-based isolation
 	if (_useJetIsolation) {
@@ -444,16 +444,16 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 	// Add PFOs to new collections
 	if (_whichLeptons == "BOTH"){
-		evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
-		evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedDressedIsoLepCollection.c_str() );
-		evt->addCollection( otDressedIsoLepCol, _outputDressedIsoLepCollection.c_str() );
+		evt->addCollection( otPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otIsoLepCol.release(), _outputIsoLepCollection.c_str() );
+		evt->addCollection( otPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedDressedIsoLepCollection.c_str() );
+		evt->addCollection( otDressedIsoLepCol.release(), _outputDressedIsoLepCollection.c_str() );
 	}else if (_whichLeptons == "DRESSED"){
-		evt->addCollection( otPFOsRemovedDressedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( otDressedIsoLepCol, _outputIsoLepCollection.c_str() );
+		evt->addCollection( otPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otDressedIsoLepCol.release(), _outputIsoLepCollection.c_str() );
 	}else if (_whichLeptons == "UNDRESSED"){
-		evt->addCollection( otPFOsRemovedIsoLepCol, _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( otIsoLepCol, _outputIsoLepCollection.c_str() );
+		evt->addCollection( otPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
+		evt->addCollection( otIsoLepCol.release(), _outputIsoLepCollection.c_str() );
 	}
 }
 void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) {

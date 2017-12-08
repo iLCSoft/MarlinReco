@@ -316,7 +316,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		LCCollection *colJet = evt->getCollection(_jetCollectionName);
 		int njet = colJet->getNumberOfElements();
 		for (int i=0; i<njet; ++i) {
-			ReconstructedParticle* jet = dynamic_cast<ReconstructedParticle*>( colJet->getElementAt(i) );
+			ReconstructedParticle* jet = static_cast<ReconstructedParticle*>( colJet->getElementAt(i) );
 			for (ReconstructedParticleVec::const_iterator iter = jet->getParticles().begin();
 					iter != jet->getParticles().end(); ++iter) {
 				_rpJetMap.insert( std::make_pair( *iter, jet ) );
@@ -329,7 +329,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	std::vector<int> goodLeptonIndices;
 	int npfo = _pfoCol->getNumberOfElements();
 	for (int i = 0; i < npfo; i++ ) {
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
 		if ( !IsGoodLepton( pfo )){
 			otPFOsRemovedIsoLepCol->addElement( pfo );
@@ -355,7 +355,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	// dress them
 	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
 	{
-		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
+		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
 
@@ -368,7 +368,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		streamlog_out(DEBUG) << "Processing lep "<<i<<" with type "<< pfo->getType()<<" with E = "<<pfo->getEnergy()<<" isPhoton "<<IsPhoton(pfo)<< " isElectron "<<IsElectron(pfo)<<std::endl;
 		for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
 		{
-			ReconstructedParticle* pfo_other = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
+			ReconstructedParticle* pfo_other = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
 			TVector3 P_this( pfo->getMomentum() );
 			TVector3 P_other( pfo_other->getMomentum() );
 			float theta = TMath::ACos(P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag())) * 360 / (2 * TMath::Pi());
@@ -401,7 +401,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 			continue;
 		}
 
-		ReconstructedParticle* pfo_tmp = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 		otPFOsRemovedDressedIsoLepCol->addElement( pfo );
 	}
@@ -414,23 +414,23 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	double etot_iso(0);
 	for (int i = 0; i < otPFOsRemovedIsoLepCol->getNumberOfElements(); ++i)
 	{
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otPFOsRemovedIsoLepCol->getElementAt(i) );
+		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( otPFOsRemovedIsoLepCol->getElementAt(i) );
 		etot_iso += pfo->getEnergy();
 	}
 	for (int i = 0; i < otIsoLepCol->getNumberOfElements(); ++i)
 	{
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otIsoLepCol->getElementAt(i) );
+		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( otIsoLepCol->getElementAt(i) );
 		etot_iso += pfo->getEnergy();
 	}
 	double etot_dressediso(0);
 	for (int i = 0; i < otPFOsRemovedDressedIsoLepCol->getNumberOfElements(); ++i)
 	{
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otPFOsRemovedDressedIsoLepCol->getElementAt(i) );
+		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( otPFOsRemovedDressedIsoLepCol->getElementAt(i) );
 		etot_dressediso += pfo->getEnergy();
 	}
 	for (int i = 0; i < otDressedIsoLepCol->getNumberOfElements(); ++i)
 	{
-		ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>( otDressedIsoLepCol->getElementAt(i) );
+		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( otDressedIsoLepCol->getElementAt(i) );
 		etot_dressediso += pfo->getEnergy();
 	}
 
@@ -460,7 +460,7 @@ void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo,
 	TVector3 P_lep( pfo->getMomentum() );
 	int npfo = _pfoCol->getNumberOfElements();
 	for ( int i = 0; i < npfo; i++ ) {
-		ReconstructedParticle* pfo_dress = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_dress = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
 		// only add photons and electrons
 		bool isPhoton = IsPhoton(pfo_dress);
@@ -698,7 +698,7 @@ float IsolatedLeptonFinderProcessor::getConeEnergy( ReconstructedParticle* pfo, 
 	TVector3 P( pfo->getMomentum() );
 	int npfo = _pfoCol->getNumberOfElements();
 	for ( int i = 0; i < npfo; i++ ) {
-		ReconstructedParticle* pfo_i = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_i = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 
 		// don't add itself to the cone energy
 		if ( pfo == pfo_i ) continue;

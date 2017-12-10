@@ -187,7 +187,7 @@ void VTXDigitizer::init() {
   _fluctuate = new MyG4UniversalFluctuationForSi();
 }
 
-void VTXDigitizer::processRunHeader( LCRunHeader* run) { 
+void VTXDigitizer::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
 
@@ -425,7 +425,7 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
 
 
 
-void VTXDigitizer::check( LCEvent * evt ) { 
+void VTXDigitizer::check( LCEvent *  /*evt*/ ) { 
 
 }
 

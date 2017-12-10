@@ -106,7 +106,7 @@ void RealisticCaloReco::init() {
 }
 
 
-void RealisticCaloReco::processRunHeader( LCRunHeader* run) {
+void RealisticCaloReco::processRunHeader( LCRunHeader*  /*run*/) {
 }
 
 void RealisticCaloReco::processEvent( LCEvent * evt ) {
@@ -202,7 +202,7 @@ float RealisticCaloReco::getLayerCalib( int ilayer ) {
   return calib_coeff;
 }
 
-void RealisticCaloReco::check( LCEvent * evt ) { }
+void RealisticCaloReco::check( LCEvent *  /*evt*/ ) { }
 
 void RealisticCaloReco::end(){ }
 

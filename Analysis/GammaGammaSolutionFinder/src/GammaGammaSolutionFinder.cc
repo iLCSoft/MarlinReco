@@ -77,7 +77,7 @@ void GammaGammaSolutionFinder::init() {
 
 //===================================================================================
 
-void GammaGammaSolutionFinder::processRunHeader( LCRunHeader* run) { 
+void GammaGammaSolutionFinder::processRunHeader( LCRunHeader*  /*run*/) { 
   return;
 }
 

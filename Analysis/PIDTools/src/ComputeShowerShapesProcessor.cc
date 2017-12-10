@@ -98,7 +98,7 @@ void ComputeShowerShapesProcessor::init( LCEvent * evt ) {
   
 }
 
-void ComputeShowerShapesProcessor::processRunHeader( LCRunHeader* run) { 
+void ComputeShowerShapesProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) { 
@@ -240,7 +240,7 @@ void ComputeShowerShapesProcessor::processEvent( LCEvent * evt ) {
   }  
 }
 
-void ComputeShowerShapesProcessor::check( LCEvent * evt ) { 
+void ComputeShowerShapesProcessor::check( LCEvent *  /*evt*/ ) { 
 }
 
 void ComputeShowerShapesProcessor::end() { 

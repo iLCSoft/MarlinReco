@@ -470,7 +470,7 @@ void FPCCDClustering::InitGeometry()
 
 
 // =====================================================================
-void FPCCDClustering::processRunHeader( LCRunHeader* run) { 
+void FPCCDClustering::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
@@ -1201,7 +1201,7 @@ void FPCCDClustering::makeClustersInALadder(int layer, FPCCDLadderHit_t &ladderH
 
 
 // =====================================================================
-void FPCCDClustering::check( LCEvent * evt ) { 
+void FPCCDClustering::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

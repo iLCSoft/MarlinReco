@@ -86,7 +86,7 @@ void KIT::init() {
   _nEvt = 0 ;   
 }
 
-void KIT::processRunHeader( LCRunHeader* run) { 
+void KIT::processRunHeader( LCRunHeader*  /*run*/) { 
       
   _nRun++ ;
 } 
@@ -188,7 +188,7 @@ void KIT::processEvent( LCEvent * evt ) {
 
 
 
-void KIT::check( LCEvent * evt ) { 
+void KIT::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

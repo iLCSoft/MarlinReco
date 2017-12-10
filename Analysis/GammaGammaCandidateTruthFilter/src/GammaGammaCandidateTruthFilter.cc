@@ -76,7 +76,7 @@ void GammaGammaCandidateTruthFilter::init() {
 //  gROOT->ProcessLine("#include <vector>");
 }
 
-void GammaGammaCandidateTruthFilter::processRunHeader( LCRunHeader* run) { 
+void GammaGammaCandidateTruthFilter::processRunHeader( LCRunHeader*  /*run*/) { 
     
 }
  
@@ -485,7 +485,7 @@ void GammaGammaCandidateTruthFilter::processEvent( LCEvent * evt ) {
 }
 
 
-void GammaGammaCandidateTruthFilter::check( LCEvent * evt ) { 
+void GammaGammaCandidateTruthFilter::check( LCEvent *  /*evt*/ ) { 
 
 }
 

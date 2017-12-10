@@ -384,7 +384,7 @@ void CreatePDFProcessor::init() {
   printParameters();  
 }
 
-void CreatePDFProcessor::processRunHeader( LCRunHeader* run) { 
+void CreatePDFProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void CreatePDFProcessor::processEvent( LCEvent * evt ) { 
@@ -480,7 +480,7 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
   }  
 }
 
-void CreatePDFProcessor::check( LCEvent * evt ) { 
+void CreatePDFProcessor::check( LCEvent *  /*evt*/ ) { 
 }
 
 void CreatePDFProcessor::end() { 

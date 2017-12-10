@@ -65,7 +65,7 @@ void DistilledPFOCreator::init() {
 
 //===================================================================================
 
-void DistilledPFOCreator::processRunHeader( LCRunHeader* run) { 
+void DistilledPFOCreator::processRunHeader( LCRunHeader*  /*run*/) { 
   return;
 }
 

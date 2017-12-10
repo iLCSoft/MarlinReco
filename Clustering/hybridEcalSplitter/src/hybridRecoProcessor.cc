@@ -141,7 +141,7 @@ void hybridRecoProcessor::init() {
   return;
 }
 
-void hybridRecoProcessor::processRunHeader( LCRunHeader* run) { 
+void hybridRecoProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
    return;
 }
 
@@ -637,7 +637,7 @@ std::pair < TVector3, TVector3 > hybridRecoProcessor::getStripEnds(CalorimeterHi
 }
 
 
-void hybridRecoProcessor::check( LCEvent * evt ) { 
+void hybridRecoProcessor::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

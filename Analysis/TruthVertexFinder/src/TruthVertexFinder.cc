@@ -222,7 +222,7 @@ namespace TTbarAnalysis
 	}
 
 
-	void TruthVertexFinder::processRunHeader( LCRunHeader* run) 
+	void TruthVertexFinder::processRunHeader( LCRunHeader*  /*run*/) 
 	{ 
 		_nRun++ ;
 	} 
@@ -713,7 +713,7 @@ namespace TTbarAnalysis
 	}
 	
 	
-	void TruthVertexFinder::check( LCEvent * evt ) 
+	void TruthVertexFinder::check( LCEvent *  /*evt*/ ) 
 	{ 
 		// nothing to check here - could be used to fill checkplots in reconstruction processor
 		

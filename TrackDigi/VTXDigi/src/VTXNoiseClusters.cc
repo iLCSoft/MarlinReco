@@ -170,11 +170,11 @@ void VTXNoiseClusters::init() {
 }
 
 
-void VTXNoiseClusters::processRunHeader( LCRunHeader* run) { 
+void VTXNoiseClusters::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
-void VTXNoiseClusters::processEvent( LCEvent * evt ) { 
+void VTXNoiseClusters::processEvent( LCEvent *  /*evt*/ ) { 
 }
 
 void VTXNoiseClusters::modifyEvent( LCEvent * evt ) { 

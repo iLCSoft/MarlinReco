@@ -177,7 +177,7 @@ void RealisticCaloDigi::init() {
 }
 
 
-void RealisticCaloDigi::processRunHeader( LCRunHeader* run) {
+void RealisticCaloDigi::processRunHeader( LCRunHeader*  /*run*/) {
 }
 
 void RealisticCaloDigi::processEvent( LCEvent * evt ) {
@@ -273,7 +273,7 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void RealisticCaloDigi::check( LCEvent * evt ) { }
+void RealisticCaloDigi::check( LCEvent *  /*evt*/ ) { }
 
 void RealisticCaloDigi::end(){
 }

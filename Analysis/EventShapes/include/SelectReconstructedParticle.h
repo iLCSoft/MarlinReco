@@ -30,12 +30,12 @@ public:
   /** Called for every run.
    */
   virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void modifyRunHeader( LCRunHeader* run ) {}
+  virtual void modifyRunHeader( LCRunHeader* /*run*/ ) {}
   
   /** Called for every event - the working horse.
    */
   virtual void processEvent( LCEvent * evt ) ; 
-  virtual void modifyEvent( LCEvent * evt ) {} 
+  virtual void modifyEvent( LCEvent * /*evt*/ ) {}
   
  
   

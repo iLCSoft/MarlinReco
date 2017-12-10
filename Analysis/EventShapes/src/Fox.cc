@@ -71,7 +71,7 @@ void Fox::init() {
   
 }
 
-void Fox::processRunHeader( LCRunHeader* run) { 
+void Fox::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
 } 
@@ -167,7 +167,7 @@ void Fox::processEvent( LCEvent * evt ) {
 
 
 
-void Fox::check( LCEvent * evt ) { 
+void Fox::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

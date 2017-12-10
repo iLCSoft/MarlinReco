@@ -68,7 +68,7 @@ void AddClusterProperties::init() {
 }
 
 
-void AddClusterProperties::processRunHeader( LCRunHeader* run) { 
+void AddClusterProperties::processRunHeader( LCRunHeader*  /*run*/) { 
 
     _nRun++ ;
 } 
@@ -494,7 +494,7 @@ void AddClusterProperties::debuging(LCCollection* clucol ,ClusterImpl* clu,doubl
           streamlog_out(DEBUG2) << " read back: E, np, sum, sum_sq, sum_4 " << clu->getEnergy() << " " << np_readback << " " << sum_wgt_readback << " " << sum_wgtsqr_readback << " " << sum_wgt4_readback <<  std::endl; 
 }
 
-void AddClusterProperties::check( LCEvent * evt ) { 
+void AddClusterProperties::check( LCEvent *  /*evt*/ ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

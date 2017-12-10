@@ -127,7 +127,7 @@ void PFOID::init() {
 }
 
 
-void PFOID::processRunHeader( LCRunHeader * run ) {
+void PFOID::processRunHeader( LCRunHeader *  /*run*/ ) {
   _nRun++ ;
 }
 
@@ -354,7 +354,7 @@ void PFOID::processEvent( LCEvent * evt ) {
 
 
 
-void PFOID::check( LCEvent * evt ) {}
+void PFOID::check( LCEvent *  /*evt*/ ) {}
 
 
 

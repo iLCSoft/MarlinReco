@@ -125,7 +125,7 @@ void SimpleFCalDigi::init() {
 }
 
 
-void SimpleFCalDigi::processRunHeader( LCRunHeader* run) { 
+void SimpleFCalDigi::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
   _nEvt = 0;
 } 
@@ -228,6 +228,6 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void SimpleFCalDigi::check( LCEvent * evt ) { }
+void SimpleFCalDigi::check( LCEvent *  /*evt*/ ) { }
   
 void SimpleFCalDigi::end(){ } 

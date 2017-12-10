@@ -174,7 +174,7 @@ void VTXDigiProcessor::init() {
   _vxdCount.resize( nLayer ) ;
 }
 
-void VTXDigiProcessor::processRunHeader( LCRunHeader* run) { 
+void VTXDigiProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
@@ -470,7 +470,7 @@ void VTXDigiProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void VTXDigiProcessor::check( LCEvent * evt ) { 
+void VTXDigiProcessor::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

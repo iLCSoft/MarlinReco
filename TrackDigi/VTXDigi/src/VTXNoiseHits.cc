@@ -78,7 +78,7 @@ void VTXNoiseHits::init() {
 }
 
 
-void VTXNoiseHits::processRunHeader( LCRunHeader* run) { 
+void VTXNoiseHits::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
@@ -218,7 +218,7 @@ void VTXNoiseHits::processEvent( LCEvent * evt ) {
 
 
 
-  void VTXNoiseHits::check( LCEvent * evt ) { 
+  void VTXNoiseHits::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

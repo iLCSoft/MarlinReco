@@ -46,7 +46,7 @@ void TrackToRecoParticleConverter::init() {
 		printParameters() ;
 }
 
-void TrackToRecoParticleConverter::processRunHeader( LCRunHeader* run) { 
+void TrackToRecoParticleConverter::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void TrackToRecoParticleConverter::processEvent( LCEvent * evt ) { 
@@ -98,7 +98,7 @@ void TrackToRecoParticleConverter::processEvent( LCEvent * evt ) {
 	evt->addCollection( outCol, _outputPFOCollectionName.c_str() );
 }
 
-void TrackToRecoParticleConverter::check( LCEvent * evt ) { 
+void TrackToRecoParticleConverter::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

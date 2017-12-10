@@ -129,7 +129,7 @@ void TrueJet::init() {
 }
 
 
-void TrueJet::processRunHeader( LCRunHeader* run) { 
+void TrueJet::processRunHeader( LCRunHeader*  /*run*/) { 
 
     _nRun++ ;
 } 
@@ -2431,7 +2431,7 @@ void TrueJet::fix_top(int& first_line)
 }
 
 
-void TrueJet::check( LCEvent * evt ) { 
+void TrueJet::check( LCEvent *  /*evt*/ ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

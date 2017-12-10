@@ -259,7 +259,7 @@ void MokkaCaloDigi::init() {
 
 }
 
-void MokkaCaloDigi::processRunHeader( LCRunHeader* run) { 
+void MokkaCaloDigi::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++  ;
 } 
@@ -666,7 +666,7 @@ MyHit * MokkaCaloDigi::ProcessHitInEndcap(SimCalorimeterHit * hit) {
 }
 
 
-void MokkaCaloDigi::check( LCEvent * evt ) { 
+void MokkaCaloDigi::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

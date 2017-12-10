@@ -316,7 +316,7 @@ void RecoMCTruthLinker::init() {
 }
 
 
-void RecoMCTruthLinker::processRunHeader( LCRunHeader* run) { 
+void RecoMCTruthLinker::processRunHeader( LCRunHeader*  /*run*/) { 
   
   _nRun++ ;
 } 

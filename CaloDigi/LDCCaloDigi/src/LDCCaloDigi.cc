@@ -175,7 +175,7 @@ void LDCCaloDigi::init() {
 }
 
 
-void LDCCaloDigi::processRunHeader( LCRunHeader* run) { 
+void LDCCaloDigi::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
   _nEvt = 0;
@@ -388,7 +388,7 @@ void LDCCaloDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void LDCCaloDigi::check( LCEvent * evt ) { }
+void LDCCaloDigi::check( LCEvent *  /*evt*/ ) { }
   
 void LDCCaloDigi::end(){ } 
 

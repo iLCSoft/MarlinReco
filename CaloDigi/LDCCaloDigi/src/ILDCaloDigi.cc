@@ -737,7 +737,7 @@ void ILDCaloDigi::init() {
 }
 
 
-void ILDCaloDigi::processRunHeader( LCRunHeader* run) {
+void ILDCaloDigi::processRunHeader( LCRunHeader*  /*run*/) {
 
   _nRun++ ;
   _nEvt = 0;
@@ -1245,7 +1245,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void ILDCaloDigi::check( LCEvent * evt ) { }
+void ILDCaloDigi::check( LCEvent *  /*evt*/ ) { }
 
 void ILDCaloDigi::end(){
 

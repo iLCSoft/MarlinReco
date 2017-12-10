@@ -97,7 +97,7 @@ void GammaGammaCandidateFinder::init() {
 
 //===================================================================================
 
-void GammaGammaCandidateFinder::processRunHeader( LCRunHeader* run) { 
+void GammaGammaCandidateFinder::processRunHeader( LCRunHeader*  /*run*/) { 
   return;
 }
 

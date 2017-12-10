@@ -299,7 +299,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void AnalyseSidEdxProcessor::check( LCEvent * evt ) {
+void AnalyseSidEdxProcessor::check( LCEvent *  /*evt*/ ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

@@ -131,7 +131,7 @@ void ZFinder::init() {
 
 //===================================================================================
 
-void ZFinder::processRunHeader( LCRunHeader* run) { 
+void ZFinder::processRunHeader( LCRunHeader*  /*run*/) { 
   return;
 }
 

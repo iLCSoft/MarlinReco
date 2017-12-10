@@ -41,7 +41,7 @@ void Add4MomCovMatrixCharged::init() {
   _nEvt = 0 ;
 }
 
-void Add4MomCovMatrixCharged::processRunHeader(LCRunHeader* run) {
+void Add4MomCovMatrixCharged::processRunHeader(LCRunHeader*  /*run*/) {
 
   _nRun++ ;
 }
@@ -109,7 +109,7 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
 }
 
 
-void Add4MomCovMatrixCharged::check(LCEvent * evt) {
+void Add4MomCovMatrixCharged::check(LCEvent *  /*evt*/) {
   // nothing to check here - could be used to fill
   // checkplots in reconstruction processor
 }

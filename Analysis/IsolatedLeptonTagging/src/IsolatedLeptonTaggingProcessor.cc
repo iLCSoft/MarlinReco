@@ -198,7 +198,7 @@ void IsolatedLeptonTaggingProcessor::init() {
   
 }
 
-void IsolatedLeptonTaggingProcessor::processRunHeader( LCRunHeader* run) { 
+void IsolatedLeptonTaggingProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) { 
@@ -383,7 +383,7 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void IsolatedLeptonTaggingProcessor::check( LCEvent * evt ) { 
+void IsolatedLeptonTaggingProcessor::check( LCEvent *  /*evt*/ ) { 
 }
 
 

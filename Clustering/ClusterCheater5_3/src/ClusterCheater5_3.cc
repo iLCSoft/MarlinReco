@@ -105,7 +105,7 @@ void ClusterCheater5_3::init() {
 }
 
 
-void ClusterCheater5_3::processRunHeader( LCRunHeader* run) { 
+void ClusterCheater5_3::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
   _nEvt = 0;
 } 
@@ -290,7 +290,7 @@ void ClusterCheater5_3::processEvent( LCEvent * evt ) {
 }
 
 
-void ClusterCheater5_3::check( LCEvent * evt ) { }
+void ClusterCheater5_3::check( LCEvent *  /*evt*/ ) { }
   
 void ClusterCheater5_3::end()
 {  

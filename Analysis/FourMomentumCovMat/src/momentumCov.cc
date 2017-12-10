@@ -55,7 +55,7 @@ void MomentumCov::init() {
   _nEvt = 0 ;
 }
 
-void MomentumCov::processRunHeader(LCRunHeader* run) {
+void MomentumCov::processRunHeader(LCRunHeader*  /*run*/) {
 
   _nRun++ ;
 }
@@ -105,7 +105,7 @@ void MomentumCov::processEvent(LCEvent * evt) {
 }
 
 
-void MomentumCov::check(LCEvent * evt) {
+void MomentumCov::check(LCEvent *  /*evt*/) {
   // nothing to check here - could be used to fill
   // checkplots in reconstruction processor
 }

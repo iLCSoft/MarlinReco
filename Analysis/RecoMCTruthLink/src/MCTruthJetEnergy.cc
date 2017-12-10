@@ -93,7 +93,7 @@ void MCTruthJetEnergy::init() {
   
 }
 
-void MCTruthJetEnergy::processRunHeader( LCRunHeader* run) { 
+void MCTruthJetEnergy::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
 } 

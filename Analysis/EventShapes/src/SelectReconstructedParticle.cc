@@ -60,7 +60,7 @@ void SelectReconstructedParticle::init() {
 
 }
 
-void SelectReconstructedParticle::processRunHeader( LCRunHeader* run) { 
+void SelectReconstructedParticle::processRunHeader( LCRunHeader*  /*run*/) { 
   //   cout << "processing runheader" << endl;
 } 
 

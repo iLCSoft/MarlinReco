@@ -170,7 +170,7 @@ void TaJetClustering::init() {
   
 }
 
-void TaJetClustering::processRunHeader( LCRunHeader* run ) { 
+void TaJetClustering::processRunHeader( LCRunHeader*  /*run*/ ) { 
 
   _nRun++ ;
 } 
@@ -468,7 +468,7 @@ void TaJetClustering::processEvent( LCEvent * evt ) {
 
 
 
-void TaJetClustering::check( LCEvent * evt ) { 
+void TaJetClustering::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

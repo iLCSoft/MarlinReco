@@ -181,7 +181,7 @@ void CreatePDFs::init() {
 
 
 //***********************************************************//
-void CreatePDFs::processRunHeader( LCRunHeader * run ) {
+void CreatePDFs::processRunHeader( LCRunHeader *  /*run*/ ) {
   int oldIndex=myindex;
 
   if(_nStart.size()>0){
@@ -590,7 +590,7 @@ void CreatePDFs::processEvent( LCEvent * evt ) {
 
 }
 
-void CreatePDFs::check( LCEvent * evt ) {
+void CreatePDFs::check( LCEvent *  /*evt*/ ) {
 }
 
 void CreatePDFs::end() {

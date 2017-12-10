@@ -114,7 +114,7 @@ void VTXBgClusters::init() {
   }
 }
 
-void VTXBgClusters::processRunHeader( LCRunHeader* run) { 
+void VTXBgClusters::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 

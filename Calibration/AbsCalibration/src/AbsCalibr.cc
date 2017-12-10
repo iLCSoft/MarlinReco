@@ -276,7 +276,7 @@ double  Balance(LCEvent * evt);
 }
 
 //============================================================================
-void AbsCalibr::check( LCEvent * evt ) { ;}
+void AbsCalibr::check( LCEvent *  /*evt*/ ) { ;}
 
 //============================================================================
 void AbsCalibr::end(){ 

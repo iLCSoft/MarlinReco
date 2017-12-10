@@ -373,7 +373,7 @@ void TPCDigiProcessor::init()
   
 }
 
-void TPCDigiProcessor::processRunHeader( LCRunHeader* run) 
+void TPCDigiProcessor::processRunHeader( LCRunHeader*  /*run*/) 
 { 
   _nRun++ ;
 } 
@@ -1063,7 +1063,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
 
 
 
-void TPCDigiProcessor::check( LCEvent * evt ) 
+void TPCDigiProcessor::check( LCEvent *  /*evt*/ ) 
 { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }

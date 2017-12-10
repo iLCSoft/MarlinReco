@@ -72,7 +72,7 @@ void Sphere::init() {
   
 }
 
-void Sphere::processRunHeader( LCRunHeader* run) { 
+void Sphere::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
 } 
@@ -184,7 +184,7 @@ void Sphere::processEvent( LCEvent * evt ) {
 
 
 
-void Sphere::check( LCEvent * evt ) { 
+void Sphere::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

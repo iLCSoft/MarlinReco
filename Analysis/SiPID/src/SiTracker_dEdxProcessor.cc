@@ -328,7 +328,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void SiTracker_dEdxProcessor::check( LCEvent * evt ) {
+void SiTracker_dEdxProcessor::check( LCEvent *  /*evt*/ ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 /**/

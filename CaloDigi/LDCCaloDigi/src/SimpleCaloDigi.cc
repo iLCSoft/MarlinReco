@@ -146,7 +146,7 @@ void SimpleCaloDigi::init() {
 }
 
 
-void SimpleCaloDigi::processRunHeader( LCRunHeader* run) { 
+void SimpleCaloDigi::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
   _nEvt = 0;
 } 
@@ -306,6 +306,6 @@ void SimpleCaloDigi::processEvent( LCEvent * evt ) {
 }
 
 
-void SimpleCaloDigi::check( LCEvent * evt ) { }
+void SimpleCaloDigi::check( LCEvent *  /*evt*/ ) { }
   
 void SimpleCaloDigi::end(){ } 

@@ -207,7 +207,7 @@ void FPCCDDigitizer::InitGeometry()
 
 
 // =====================================================================
-void FPCCDDigitizer::processRunHeader( LCRunHeader* run) { 
+void FPCCDDigitizer::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
@@ -394,7 +394,7 @@ void FPCCDDigitizer::makePixelHits(SimTrackerHitImpl *SimTHit,  FPCCDData &hitVe
 
 
 // =====================================================================
-void FPCCDDigitizer::check( LCEvent * evt ) { 
+void FPCCDDigitizer::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
   

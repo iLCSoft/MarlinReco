@@ -246,7 +246,7 @@ void LikelihoodPIDProcessor::init() {
   
 }
 
-void LikelihoodPIDProcessor::processRunHeader( LCRunHeader* run) { 
+void LikelihoodPIDProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) { 
@@ -410,7 +410,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   
 }
 
-void LikelihoodPIDProcessor::check( LCEvent * evt ) { 
+void LikelihoodPIDProcessor::check( LCEvent *  /*evt*/ ) { 
 }
 
 void LikelihoodPIDProcessor::end() { 

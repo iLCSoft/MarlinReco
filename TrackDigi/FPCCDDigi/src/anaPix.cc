@@ -165,7 +165,7 @@ void anaPix::InitGeometry()
 
 
 // =====================================================================
-void anaPix::processRunHeader( LCRunHeader* run) { 
+void anaPix::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 } 
 
@@ -279,7 +279,7 @@ void anaPix::fillTTree(FPCCDData &pHitCol) {
 
 
 // =====================================================================
-void anaPix::check( LCEvent * evt ) { 
+void anaPix::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

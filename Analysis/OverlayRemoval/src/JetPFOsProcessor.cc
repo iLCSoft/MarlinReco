@@ -53,7 +53,7 @@ void JetPFOsProcessor::init() {
   
 }
 
-void JetPFOsProcessor::processRunHeader( LCRunHeader* run) { 
+void JetPFOsProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 } 
 
 void JetPFOsProcessor::processEvent( LCEvent * evt ) { 
@@ -79,7 +79,7 @@ void JetPFOsProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void JetPFOsProcessor::check( LCEvent * evt ) { 
+void JetPFOsProcessor::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

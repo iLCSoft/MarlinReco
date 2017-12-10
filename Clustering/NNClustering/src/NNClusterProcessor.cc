@@ -61,7 +61,7 @@ void NNClusterProcessor::init() {
   
 }
 
-void NNClusterProcessor::processRunHeader( LCRunHeader* run) { 
+void NNClusterProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
 
   _nRun++ ;
 } 
@@ -130,7 +130,7 @@ void NNClusterProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void NNClusterProcessor::check( LCEvent * evt ) { 
+void NNClusterProcessor::check( LCEvent *  /*evt*/ ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

@@ -388,7 +388,7 @@ void CCDDigitizer::init() {
 
 }
 
-void CCDDigitizer::processRunHeader( LCRunHeader* run) { 
+void CCDDigitizer::processRunHeader( LCRunHeader*  /*run*/) { 
   _nRun++ ;
 
 
@@ -538,7 +538,7 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
 
 
 
-void CCDDigitizer::check( LCEvent * evt ) { 
+void CCDDigitizer::check( LCEvent *  /*evt*/ ) { 
 
 }
 

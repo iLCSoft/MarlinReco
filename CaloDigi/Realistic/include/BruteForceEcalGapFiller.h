@@ -26,9 +26,9 @@ class BruteForceEcalGapFiller : public Processor {
 
   BruteForceEcalGapFiller( ) ;
   virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) {}
+  virtual void processRunHeader( LCRunHeader* /*run*/ ) {}
   virtual void processEvent( LCEvent * evt ) ;
-  virtual void check( LCEvent * evt ) {}
+  virtual void check( LCEvent * /*evt*/ ) {}
   virtual void end() ;
 
  protected:

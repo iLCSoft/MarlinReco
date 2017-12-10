@@ -118,7 +118,7 @@ void EMShowerFinder::init() {
 }
 
 
-void EMShowerFinder::processRunHeader( LCRunHeader* run) {
+void EMShowerFinder::processRunHeader( LCRunHeader*  /*run*/) {
 
   ++_nRun;
 
@@ -622,7 +622,7 @@ void EMShowerFinder::processEvent( LCEvent * evt ) {
 }
 
 
-void EMShowerFinder::check( LCEvent * evt ) {
+void EMShowerFinder::check( LCEvent *  /*evt*/ ) {
  
 }
 

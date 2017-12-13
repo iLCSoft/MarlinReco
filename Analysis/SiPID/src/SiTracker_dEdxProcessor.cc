@@ -38,11 +38,37 @@ dEdxPoint::dEdxPoint(const dEdxPoint& orig) :
 
 SiTracker_dEdxProcessor aSiTracker_dEdxProcessor ;
 
+/**/
+
+SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_dEdxProcessor &orig) {
+
+  if (this == &orig) return *this;
+
+  this->m_trackCollName = orig.getTrackCollName();
+  this->m_trkHitCollNames = orig.getTrkHitCollNames();
+  this->m_elementMask = orig.getElementMask();
+  this->surfMap = orig.getSurfaceMap();
+  this->trkSystem = orig.getTrkSystem();
+  this->_bField = orig.getBField();
+  this->layerFinder = orig.getLayerFinder();
+  this->lastRunHeaderProcessed = orig.getLastRunHeaderProcessed();
+  //this->dEdxEval = otig.
+
+  return *this;
+}
+
+SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& orig) :
+    Processor("SiTracker_dEdxProcessor"),
+    m_trackCollName(orig.getTrackCollName()), m_trkHitCollNames(orig.getTrkHitCollNames()),
+    m_elementMask(orig.getElementMask()), surfMap(orig.getSurfaceMap()), trkSystem(orig.getTrkSystem()),
+    _bField(orig.getBField()), layerFinder(orig.getLayerFinder()),
+    lastRunHeaderProcessed(orig.getLastRunHeaderProcessed())
+{}
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxProcessor"),
-    m_trackColName(""), m_trkHitCollNames(), m_elementMask(0),
+    m_trackCollName(""), m_trkHitCollNames(), m_elementMask(0),
     surfMap(NULL), trkSystem(NULL), _bField(0),
-    collFinder(NULL),
+    layerFinder(NULL),
     lastRunHeaderProcessed(-1)
     {
 
@@ -55,7 +81,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
   registerInputCollection( LCIO::TRACK,
       "TrackCollectionName" ,
       "Name of the input Track collection"  ,
-      m_trackColName ,
+      m_trackCollName ,
       std::string("SiTracks")
   );
 
@@ -74,7 +100,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
                              defaultTrkHitCollections ) ;
 
   int elementMask = 0;
-  for (int ibit=0; ibit<sizeof(int)*CHAR_BIT; ibit++) {
+  for (unsigned ibit=0; ibit<sizeof(int)*CHAR_BIT; ibit++) {
     elementMask += 1 << ibit;
   }
 
@@ -156,7 +182,7 @@ void SiTracker_dEdxProcessor::init() {
     }
   }
 
-  collFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals, m_elementMask);
+  layerFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals, m_elementMask);
  // exit(0);
 
   const double pos[3]={0,0,0};
@@ -213,10 +239,10 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
   LCCollection* tracks = NULL;
   try {
-    tracks = evt->getCollection(m_trackColName);
+    tracks = evt->getCollection(m_trackCollName);
   }
   catch(EVENT::DataNotAvailableException &dataex) {
-    streamlog_out(MESSAGE) << "Collection " << m_trackColName << " not found. Skipping event #" << evt->getEventNumber() << ".\n";
+    streamlog_out(MESSAGE) << "Collection " << m_trackCollName << " not found. Skipping event #" << evt->getEventNumber() << ".\n";
     tracks = NULL;
     return;
   }
@@ -224,12 +250,12 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   tracks->getFlag();
 
   /*** Collection finder for hit collections ***/
-  if (collFinder->ReadCollections(evt) == 0) {
+  if (layerFinder->ReadCollections(evt) == 0) {
     streamlog_out(WARNING) << "None of the requested collections found in event #" << evt->getEventNumber() << ". Skipping event.\n";
     return;
   }
 
-  collFinder->ReportKnownDetectors();
+  layerFinder->ReportKnownDetectors();
   streamlog_out(DEBUG5) << "Done reporting detectors.\n";
 
   int nTracks = tracks->getNumberOfElements()  ;
@@ -294,7 +320,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       double cosAngle = fabs(trackDir.dot(surfaceNormal)) / norm ;
 
       int detTypeFlag = 0;
-      double thickness = collFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
+      double thickness = layerFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
       if (thickness < 0.) {
         streamlog_out(ERROR) << "Could not find hit collection corresponding to hit CellID " << cellid
                              << ", hit ID " << trackhits.at(ihit)->id() << " .\n";

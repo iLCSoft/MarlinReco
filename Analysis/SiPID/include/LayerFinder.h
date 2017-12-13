@@ -61,7 +61,7 @@ protected:
 
   LayerResolverFn ThicknessSensitive;
   virtual double SensitiveThicknessRead(int nLayer) const = 0;
-  double SensitiveThicknessCheat(int nLayer) const { return sensThickCheatVal; };
+  double SensitiveThicknessCheat(int) const { return sensThickCheatVal; };
   // Thickness value used for cheating
   const double sensThickCheatVal;
 

@@ -370,7 +370,7 @@ double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
   double mu2dEdx = 0.;
   for (unsigned i=0; i<n; i++) {
     eDepSum += hitVec.at(i).Get_dE();
-    thickness =+ hitVec.at(i).Get_dx();
+    thickness += hitVec.at(i).Get_dx();
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 
@@ -400,7 +400,7 @@ double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
   double mu2dEdx = 0.;
   for (unsigned i=0; i<n; i++) {
     eDepSum += hitVec.at(i).Get_dE();
-    thickness =+ hitVec.at(i).Get_dx();
+    thickness += hitVec.at(i).Get_dx();
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 
@@ -429,7 +429,7 @@ double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError)
   double mu2dEdx = 0.;
   for (unsigned i=iStart; i<iEnd; i++) {
     eDepSum += hitVec.at(i).Get_dE();
-    thickness =+ hitVec.at(i).Get_dx();
+    thickness += hitVec.at(i).Get_dx();
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 

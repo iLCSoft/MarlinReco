@@ -51,7 +51,10 @@ class SiTracker_dEdxProcessor : public Processor {
   virtual Processor*  newProcessor() { return new SiTracker_dEdxProcessor ; }
   
   SiTracker_dEdxProcessor() ;
+  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) ;
   
+  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &);
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -85,13 +88,28 @@ class SiTracker_dEdxProcessor : public Processor {
   static double dEdxWgtHarmonic(dEdxVec, double &dEdxError);
   static double dEdxWgtHarmonic2(dEdxVec, double &dEdxError);
 
-  double (*dEdxEval)(dEdxVec, double &dEdxError){};
+  // Getters for the copy constructor
+  std::string getTrackCollName() const { return m_trackCollName; }
+  StringVec getTrkHitCollNames() const { return m_trkHitCollNames; }
+  int getElementMask() const { return m_elementMask; }
+  bool cheatsSensorThicknesses() const { return m_cheatSensorThicknesses; }
+  std::string getDEdxEstimator() const { return m_dEdxEstimator; }
+  const dd4hep::rec::SurfaceMap* getSurfaceMap() const { return surfMap; }
+  MarlinTrk::IMarlinTrkSystem* getTrkSystem() const { return trkSystem; }
+  double getBField() const { return _bField; }
+  LayerFinder* getLayerFinder() const { return layerFinder; }
+  int getLastRunHeaderProcessed() const { return lastRunHeaderProcessed; }
 
- protected:
+  typedef double (*evalChoice)(dEdxVec, double &dEdxError);
+  evalChoice getDEdxEval() const { return dEdxEval; }
+
+  protected:
+
+  evalChoice dEdxEval{};
 
   /*** Steerable parameters ***/
   // Input collection names
-  std::string m_trackColName{};
+  std::string m_trackCollName{};
   /* Tracker hit collection names.
    * Must be in the same order as tracker detector elements in LCDD.
    * (Check the order of tracker hit collections in the input LCIO file.)
@@ -114,7 +132,7 @@ class SiTracker_dEdxProcessor : public Processor {
 
   double _bField{};
 
-  LayerFinder *collFinder{};
+  LayerFinder *layerFinder{};
 
   int lastRunHeaderProcessed{};
 } ;

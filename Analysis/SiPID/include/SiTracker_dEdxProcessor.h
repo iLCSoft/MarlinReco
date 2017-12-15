@@ -80,6 +80,9 @@ class SiTracker_dEdxProcessor : public Processor {
   static bool dEdxOrder(dEdxPoint p1, dEdxPoint p2) { return p1.Get_dEdx() < p2.Get_dEdx() ; }
   static double truncFractionUp;
   static double truncFractionLo;
+  static double dEdxGeneralTruncMean(dEdxVec, double &dEdxError,
+                              const double truncLo=0,
+                              const double truncHi=0);
   static double dEdxMean(dEdxVec, double &dEdxError);
   static double dEdxMedian(dEdxVec, double &dEdxError);
   static double dEdxTruncMean(dEdxVec, double &dEdxError);

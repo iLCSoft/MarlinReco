@@ -275,10 +275,16 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     }//end loop on hits
 
     streamlog_out(DEBUG5) << "Created marlin_trk.\n";
-    TrackStateImpl trackState( *(track->getTrackState(TrackState::AtFirstHit)) );
+    const TrackStateImpl *trackState = dynamic_cast<const TrackStateImpl*>(track->getTrackState(TrackState::AtFirstHit));
+    if (!trackState) {
+      streamlog_out(WARNING) << "Cannot get track state for track #" << i
+                             << " in event " << evt->getEventNumber() << std::endl;
+      streamlog_out(WARNING) << "Skipping track.\n";
+      continue;
+    }
     streamlog_out(DEBUG5) << "Got track state." << std::endl;
 
-    marlin_trk->initialise( trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
+    marlin_trk->initialise( *trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
     streamlog_out(DEBUG5) << "Initialized marlin_trk.\n";
 
     dEdxVec dEdxHitVec;

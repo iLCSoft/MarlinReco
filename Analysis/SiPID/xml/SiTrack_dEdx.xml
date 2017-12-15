@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="us-ascii"?>
+
+<!-- Steering file to run CLIC reconstruction with the dE/dx processor
+     for the silicon tracker -->
+
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
   <execute>
 
@@ -1303,10 +1307,10 @@
     <parameter name="Verbosity" type="string">WARNING </parameter>
   </processor>
 
+
   <!-- == Track dE/dx parameters == -->
   <processor name="MySiTracker_dEdxProcessor" type="SiTracker_dEdxProcessor">
-    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks </parameter>
-    <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation">TrackMCTruthLink </parameter>
+    <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
     <parameter name="Verbosity" type="string">MESSAGE </parameter>
     <parameter name="TrkHitCollections" type="StringVec">
       ITrackerHits
@@ -1333,6 +1337,7 @@
          element that you want to use, where i is the order of the tracker
          element in LCDD.
          Default: use all elements.
+         Feature not ready.
           -->
     <!--parameter name="ElementMask" type="int"> 15 </parameter-->
     <!-- Type of estimator for dEdx.
@@ -1341,7 +1346,6 @@
          Default: mean.
           -->
     <parameter name="dEdxEstimator" type="string">harmonic-2 </parameter>
-
   </processor>
 
 

@@ -217,8 +217,16 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     /*** Find the associated MC particle ***/
 
     const LCObjectVec& mcParticles = track2mcNav->getRelatedToObjects(track);
+    if (mcParticles.size() == 0) {
+      streamlog_out(WARNING) << " No MCParticles connected to this track! Skipping track.\n";
+      continue;
+    }
     streamlog_out(DEBUG) << " Number of MCParticles connected to this track " << mcParticles.size() << std::endl;
     const FloatVec& mcpWeights = track2mcNav->getRelatedToWeights(track);
+    if (mcpWeights.size() == 0) {
+      streamlog_out(WARNING) << " Set of MC particle weights for this track is empty! Skipping track.\n";
+      continue;
+    }
     streamlog_out(DEBUG) << " Number of weights of MCParticle connections " << mcpWeights.size() << std::endl;
 
     if(mcParticles.size() != mcpWeights.size()) {
@@ -276,7 +284,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       m.push_back(mass);
 
       nTrkHits.push_back(trackhits.size());
-      /**********************/
+      **********************/
 
       eDepHit += trackhits[ihit]->getEDep();
     }
@@ -285,11 +293,6 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     // Repeatedly store total energy in event for easier analysis in ROOT
     eEvt.push_back(eThisEvt);
   }
-
-
-
-
-
 
   tree->Fill();
 

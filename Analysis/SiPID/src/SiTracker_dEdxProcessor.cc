@@ -390,25 +390,38 @@ void SiTracker_dEdxProcessor::end(){
 double SiTracker_dEdxProcessor::truncFractionUp = 0.3;
 double SiTracker_dEdxProcessor::truncFractionLo = 0.1;
 
-// Weighted mean
+// Weighted truncated mean with arbitrary truncation
 // Weight of a measurement is the material thickness traversed in the hit
-double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
+double SiTracker_dEdxProcessor::dEdxGeneralTruncMean(dEdxVec hitVec, double &dEdxError,
+    const double truncLo, const double truncHi) {
 
   const unsigned n = hitVec.size();
   if(n == 0) return 0;
 
+  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
+  const unsigned iStart = static_cast<unsigned>(floor(n*truncLo + 0.5));
+  const unsigned iEnd = static_cast<unsigned>(floor(n*(1-truncHi) + 0.5));
+
   double eDepSum = 0.;
   double thickness = 0.;
   double mu2dEdx = 0.;
-  for (unsigned i=0; i<n; i++) {
+  for (unsigned i=iStart; i<iEnd; i++) {
     eDepSum += hitVec.at(i).Get_dE();
     thickness += hitVec.at(i).Get_dx();
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 
   double track_dEdx = eDepSum / thickness;
-  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/n);
+  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/(iEnd-iStart));
   return track_dEdx;
+}
+
+
+// Weighted mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
+
+  return dEdxGeneralTruncMean(hitVec, dEdxError, 0., 0.);
 }
 
 
@@ -427,47 +440,20 @@ double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
     median = (hitVec.at(n/2-1).Get_dEdx() + hitVec.at(n/2).Get_dEdx()) / 2;
   }
 
-  double eDepSum = 0.;
-  double thickness = 0.;
-  double mu2dEdx = 0.;
-  for (unsigned i=0; i<n; i++) {
-    eDepSum += hitVec.at(i).Get_dE();
-    thickness += hitVec.at(i).Get_dx();
-    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
-  }
-
-  double mean = eDepSum / thickness;
-  // Temporarily using sigma/sqrt(n) for the error of the median
-  // TODO: Implement a more accurate estimate of the error of the median
-  // using a correction factor tbd from toy MC with Landau distribution
-  dEdxError = sqrt((mu2dEdx - pow(mean, 2))/n);
+  double errMean = 0.;
+  dEdxMean(hitVec, errMean);
+  // Using ratio of the variance of the median to that of the mean
+  // from http://mathworld.wolfram.com/StatisticalMedian.html
+  dEdxError = sqrt(n * M_PI / 2 / (n-1)) * errMean;
   return median;
 }
 
 
-// Weighted truncated mean
+// Weighted truncated mean with standard truncation
 // Weight of a measurement is the material thickness traversed in the hit
 double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError) {
 
-  const unsigned n = hitVec.size();
-  if(n == 0) return 0;
-
-  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
-  const unsigned iStart = unsigned(n*truncFractionLo + 0.5);
-  const unsigned iEnd = unsigned(n*(1-truncFractionUp) + 0.5);
-
-  double eDepSum = 0.;
-  double thickness = 0.;
-  double mu2dEdx = 0.;
-  for (unsigned i=iStart; i<iEnd; i++) {
-    eDepSum += hitVec.at(i).Get_dE();
-    thickness += hitVec.at(i).Get_dx();
-    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
-  }
-
-  double track_dEdx = eDepSum / thickness;
-  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/(iEnd-iStart));
-  return track_dEdx;
+  return dEdxGeneralTruncMean(hitVec, dEdxError, truncFractionLo, truncFractionUp);
 }
 
 

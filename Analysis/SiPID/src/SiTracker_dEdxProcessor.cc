@@ -411,6 +411,8 @@ double SiTracker_dEdxProcessor::dEdxGeneralTruncMean(dEdxVec hitVec, double &dEd
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 
+  mu2dEdx /= thickness;
+
   double track_dEdx = eDepSum / thickness;
   dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/(iEnd-iStart));
   return track_dEdx;

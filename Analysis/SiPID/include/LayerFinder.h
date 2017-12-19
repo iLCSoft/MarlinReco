@@ -47,13 +47,13 @@ public:
   int   GetNumberOfHits() const;
   TrackerHitPlane* GetHit(int i) const;
 
-  virtual int GetNumberOfLayers() const = 0;
+  virtual unsigned GetNumberOfLayers() const = 0;
 
   int Decode(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"];}
 
   const LayerResolver& operator=(const LayerResolver&);
 
-  double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
+  virtual double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
   typedef  double (LayerResolver::*LayerResolverFn)(int) const;
   bool CheatsSensThickness() const { return (ThicknessSensitive==&LayerResolver::SensitiveThicknessCheat) ; }
 
@@ -78,6 +78,32 @@ protected:
 };
 
 
+template <class T> class SmartResolver : public LayerResolver {
+
+public:
+  SmartResolver(const SmartResolver<T> &lt);
+  SmartResolver(const int _detTypeFlag, T *,
+                const std::string _collectionName,
+                double _sensThickCheatVal=-1.);
+
+  ~SmartResolver() {};
+
+  unsigned GetNumberOfLayers() const { return layering->layers.size(); }
+
+  const SmartResolver& operator=(const SmartResolver<T>&);
+  const T *GetLayering() const {return layering;};
+
+protected:
+  double SensitiveThicknessRead(int nLayer) const ;
+  const T *layering;
+
+  SmartResolver();
+};
+
+typedef SmartResolver<dd4hep::rec::ZDiskPetalsData> PETAL_RESOLVER;
+typedef SmartResolver<dd4hep::rec::ZPlanarData> PLANE_RESOLVER;
+
+/*
 class PetalResolver : public LayerResolver{
 public:
   PetalResolver(const PetalResolver &lt);
@@ -126,7 +152,7 @@ protected:
 
 };
 
-
+*/
 
 /* LayerFinder class parses tracker hit collections in the event
  * finds where the hit belogs,

@@ -105,9 +105,63 @@ int LayerResolver::SetCollection(EVENT::LCEvent *evt) {
 
 
 /******************************************
- * Implementation of class PetalResolver
+ * Implementation of class SmartResolver
  * ************************************** */
 
+template <class T>
+SmartResolver<T>::SmartResolver(const SmartResolver<T> &lt) :
+  LayerResolver(lt),
+  layering(lt.GetLayering())
+{
+  ThicknessSensitive = (lt.CheatsSensThickness() ?
+      &SmartResolver::SensitiveThicknessCheat :
+      &SmartResolver::SensitiveThicknessRead );
+}
+
+template <class T>
+SmartResolver<T>::SmartResolver(const int _detTypeFlag,
+          T *_layering,
+          const std::string _collectionName,
+          double _sensThickCheatVal) :
+  LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
+  layering(_layering)
+{
+  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&SmartResolver::SensitiveThicknessRead);
+}
+
+template <class T>
+SmartResolver<T>::SmartResolver() :
+  LayerResolver(),
+  layering(NULL)
+{}
+
+template <class T>
+const SmartResolver<T>& SmartResolver<T>::operator=(const SmartResolver<T>& pr)
+  {
+  this->sensThickCheatVal = pr.sensThickCheatVal;
+  this->detTypeFlag = pr.detTypeFlag;
+  this->collectionName = pr.collectionName;
+  this->collection = pr.collection;
+  this->decoder = pr.decoder;
+  this->layering = pr.layering;
+
+  this->ThicknessSensitive = (pr.CheatsSensThickness() ?
+      &LayerResolver::SensitiveThicknessCheat :
+      &LayerResolver::SensitiveThicknessRead );
+
+  return *this;
+}
+
+template <class T>
+double SmartResolver<T>::SensitiveThicknessRead(int nLayer) const {
+  return layering->layers.at(nLayer).thicknessSensitive;
+}
+
+
+/******************************************
+ * Implementation of class PetalResolver
+ * ************************************** */
+/*
 PetalResolver::PetalResolver(const PetalResolver &lt) :
   LayerResolver(lt),
   layering(lt.GetLayering())
@@ -143,13 +197,13 @@ double PetalResolver::SensitiveThicknessRead(int nLayer) const {
   return layering->layers.at(nLayer).thicknessSensitive;
 }
 
-
+*/
 
 
 /******************************************
  * Implementation of class PlaneResolver
  * ************************************** */
-
+/*
 PlaneResolver::PlaneResolver(const PlaneResolver &lt) :
   LayerResolver(lt),
   layering(lt.GetLayering())
@@ -191,7 +245,7 @@ LayerFinder::LayerFinder() :
 knownDetectors()
 {}
 
-
+*/
 /******************************************
  * Implementation of class LayerFinder
  * ************************************** */
@@ -223,78 +277,51 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
       continue;
     }
 
-    int tf = 0;
+    int tf = detElements.at(i).typeFlag();
 
-    void *layering_tmp = NULL;
+    LayerResolver *sr = NULL;
 
     try {
       streamlog_out(DEBUG) << "Trying ZPlanarData.\n";
-      layering_tmp = detElements.at(i).extension<dd4hep::rec::ZPlanarData>() ;
-      tf = dd4hep::DetType::BARREL;
+      dd4hep::rec::ZPlanarData* layering = detElements.at(i).extension<dd4hep::rec::ZPlanarData>() ;
+      sr = new PLANE_RESOLVER(tf, layering, _collectionNames[i], sensThickCheatVals.at(i));
     }
     catch ( std::exception &e) {
       streamlog_out(DEBUG) << "Caught exception " << e.what() << std::endl;
       try {
             streamlog_out(DEBUG) << "Trying ZDiskPetalsData.\n";
-            layering_tmp = detElements.at(i).extension<dd4hep::rec::ZDiskPetalsData>() ;
-            tf = dd4hep::DetType::ENDCAP;
+            dd4hep::rec::ZDiskPetalsData *layering = detElements.at(i).extension<dd4hep::rec::ZDiskPetalsData>() ;
+            sr = new PETAL_RESOLVER(tf, layering, _collectionNames[i], sensThickCheatVals.at(i));
           }
       catch ( std::exception &e1) {
         streamlog_out(DEBUG) << "Caught exception " << e1.what() << std::endl;
       }
     }
 
-    if (tf & dd4hep::DetType::BARREL) {
+    if (!sr) {
+      streamlog_out(ERROR) << "Could not find a semiconductor layering extension in the detector element! Aborting.";
+      exit(0);
+    }
 
-      dd4hep::rec::ZPlanarData *layering = static_cast<dd4hep::rec::ZPlanarData*>(layering_tmp);
-      streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
+    streamlog_out(MESSAGE) << "Detector element has " << sr->GetNumberOfLayers() << " layers with thicknesses: ";
 
-      for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
+    for(unsigned iLayer = 0; iLayer < sr->GetNumberOfLayers(); iLayer++) {
 
-        double sensThick = layering->layers.at(i).thicknessSensitive/dd4hep::mm;
-        streamlog_out(MESSAGE) << sensThick << " mm, ";
+      double sensThick = sr->SensitiveThickness(iLayer)/dd4hep::mm;
+      streamlog_out(MESSAGE) << sensThick << " mm, ";
 
-        if(sensThick < 1.e-6 && sensThickCheatVals.at(i) < 0.) {
-          streamlog_out(ERROR) << "Detector element #" << i << ", named " << detElements.at(i).name()
-              << " has sensitive thickness " << sensThick << " mm in layer " << iLayer
-              << " and cheat value has not been set.\n";
-          exit(0);
-        }
+      if(sensThick < 1.e-6 && sensThickCheatVals.at(i) < 0.) {
+        streamlog_out(ERROR) << "Detector element #" << i << ", named " << detElements.at(i).name()
+            << " has sensitive thickness " << sensThick << " mm in layer " << iLayer
+            << " and cheat value has not been set.\n";
+        exit(0);
       }
 
       streamlog_out(MESSAGE) << "\n";
-      knownDetectors.push_back(new PlaneResolver(tf, layering, _collectionNames[i], sensThickCheatVals.at(i)));
-
     }
-    else if (tf & dd4hep::DetType::ENDCAP) {
 
-      dd4hep::rec::ZDiskPetalsData *layering = static_cast<dd4hep::rec::ZDiskPetalsData*>(layering_tmp);
-      streamlog_out(MESSAGE) << " ... has " << layering->layers.size() << " layers with thicknesses: ";
+    knownDetectors.push_back(sr);
 
-      for(unsigned iLayer = 0; iLayer < layering->layers.size(); iLayer++) {
-
-        double sensThick = layering->layers.at(i).thicknessSensitive/dd4hep::mm;
-        streamlog_out(MESSAGE) << sensThick << " mm, ";
-
-        if(sensThick < 1.e-6 && sensThickCheatVals.at(i) < 0.) {
-          streamlog_out(ERROR) << "Detector element #" << i << ", named " << detElements.at(i).name()
-              << " has sensitive thickness " << sensThick << " mm in layer " << iLayer
-              << " and cheat value has not been set.\n";
-          exit(0);
-        }
-      }
-
-      streamlog_out(MESSAGE) << "\n";
-      knownDetectors.push_back(new PetalResolver(tf, layering, _collectionNames[i], sensThickCheatVals.at(i)));
-    }
-    else {
-      streamlog_out(WARNING) << "Detector element #" << i << " of type " << detElements.at(i).type();
-      streamlog_out(WARNING) << ", named " << detElements.at(i).name() << " has neither an extension"
-          " of type ZPlanarData nor of type ZDiskPetalsData and will not be added!\n";
-      streamlog_out(WARNING) << "dd4hep::DetType::BARREL = " << dd4hep::DetType::BARREL << "\n";
-      streamlog_out(WARNING) << "dd4hep::DetType::ENDCAP = " << dd4hep::DetType::ENDCAP << "\n";
-      streamlog_out(WARNING) << "Our type = " << tf << "\n";
-    }
 
     if(sensThickCheatVals.at(i) > 0.) {
       streamlog_out(MESSAGE) << " ... Replacing this detector sensitive thicknesses with value "
@@ -353,8 +380,11 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
           return 1.;
         }
 
+        double t = (*cit)->SensitiveThickness(nLayer);
+        streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
+        return t;
 
-        if (tf & dd4hep::DetType::BARREL) {
+/*        if (tf & dd4hep::DetType::BARREL) {
           double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer);
           streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
           return t;
@@ -365,7 +395,7 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
           return t;
         }
         streamlog_out(WARNING) << " ... Detector type flag not found!!!\n";
-
+*/
         // We found it so we can stop searching
         break;
       }

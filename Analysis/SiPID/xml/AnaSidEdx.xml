@@ -30,7 +30,7 @@
     <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
     <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation"> SiTracksMCTruthLink </parameter>
     <parameter name="RootFilename" type="string">ana.mu.root </parameter>
-    <parameter name="Verbosity" type="string">DEBUG </parameter>
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
   </processor>
 
 

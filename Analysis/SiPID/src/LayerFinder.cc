@@ -384,18 +384,6 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
         streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
         return t;
 
-/*        if (tf & dd4hep::DetType::BARREL) {
-          double t = dynamic_cast<PlaneResolver*>(*cit)->SensitiveThickness(nLayer);
-          streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
-          return t;
-        }
-        if (tf & dd4hep::DetType::ENDCAP) {
-          double t = dynamic_cast<PetalResolver*>(*cit)->SensitiveThickness(nLayer);
-          streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
-          return t;
-        }
-        streamlog_out(WARNING) << " ... Detector type flag not found!!!\n";
-*/
         // We found it so we can stop searching
         break;
       }

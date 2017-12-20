@@ -14,8 +14,8 @@
  * Implementation of base class LayerResolver
  * ************************************** */
 
-LayerResolver::LayerResolver(const LayerResolver &lt) :
-  ThicknessSensitive( lt.CheatsSensThickness() ? &LayerResolver::SensitiveThicknessCheat : NULL ),
+LayerResolverBase::LayerResolverBase(const LayerResolverBase &lt) :
+  ThicknessSensitive( lt.CheatsSensThickness() ? &LayerResolverBase::SensitiveThicknessCheat : NULL ),
   sensThickCheatVal(lt.SensitiveThicknessCheat(0)),
   detTypeFlag(lt.GetDetTypeFlag()),
   collectionName(lt.GetCollectionName()),
@@ -23,9 +23,9 @@ LayerResolver::LayerResolver(const LayerResolver &lt) :
   decoder(lt.decoder)
 {}
 
-LayerResolver::LayerResolver(const int _detTypeFlag,
+LayerResolverBase::LayerResolverBase(const int _detTypeFlag,
               const std::string _collectionName, double _sensThickCheatVal) :
-  ThicknessSensitive( _sensThickCheatVal>0. ? &LayerResolver::SensitiveThicknessCheat : NULL ),
+  ThicknessSensitive( _sensThickCheatVal>0. ? &LayerResolverBase::SensitiveThicknessCheat : NULL ),
   sensThickCheatVal(_sensThickCheatVal),
   detTypeFlag(_detTypeFlag),
   collectionName(_collectionName),
@@ -33,7 +33,7 @@ LayerResolver::LayerResolver(const int _detTypeFlag,
   decoder(NULL)
 {}
 
-LayerResolver::LayerResolver() :
+LayerResolverBase::LayerResolverBase() :
   ThicknessSensitive(NULL),
   sensThickCheatVal(0),
   detTypeFlag(0),
@@ -43,41 +43,41 @@ LayerResolver::LayerResolver() :
 {}
 
 
-LayerResolver::~LayerResolver() {
+LayerResolverBase::~LayerResolverBase() {
   if(decoder) delete decoder;
   decoder=NULL;
 }
 
-const LayerResolver& LayerResolver::operator =(const LayerResolver& lr) {
+const LayerResolverBase& LayerResolverBase::operator =(const LayerResolverBase& lr) {
   this->detTypeFlag = lr.detTypeFlag;
   this->collectionName = lr.collectionName;
   this->decoder = lr.decoder;
   return *this;
 }
 
-std::string LayerResolver::GetCollectionType() const {
+std::string LayerResolverBase::GetCollectionType() const {
   if (collection) return collection->getTypeName();
   else return "NONE";
 }
 
-std::string LayerResolver::GetCollectionEncoding() const {
+std::string LayerResolverBase::GetCollectionEncoding() const {
   if (collection)
     return collection->getParameters().getStringVal( lcio::LCIO::CellIDEncoding );
   else return "EMPTY";
 }
 
 // Event-by-event:
-int LayerResolver::GetNumberOfHits() const {
+int LayerResolverBase::GetNumberOfHits() const {
   if (collection) return collection->getNumberOfElements();
   else return -1;
 }
 
-TrackerHitPlane* LayerResolver::GetHit(int i) const {
+TrackerHitPlane* LayerResolverBase::GetHit(int i) const {
   if (collection) return dynamic_cast<TrackerHitPlane*>(collection->getElementAt(i));
   else return NULL;
 }
 
-int LayerResolver::SetCollection(EVENT::LCEvent *evt) {
+int LayerResolverBase::SetCollection(EVENT::LCEvent *evt) {
 
   delete decoder;
   decoder = NULL;
@@ -109,34 +109,34 @@ int LayerResolver::SetCollection(EVENT::LCEvent *evt) {
  * ************************************** */
 
 template <class T>
-SmartResolver<T>::SmartResolver(const SmartResolver<T> &lt) :
-  LayerResolver(lt),
+LayerResolver<T>::LayerResolver(const LayerResolver<T> &lt) :
+  LayerResolverBase(lt),
   layering(lt.GetLayering())
 {
   ThicknessSensitive = (lt.CheatsSensThickness() ?
-      &SmartResolver::SensitiveThicknessCheat :
-      &SmartResolver::SensitiveThicknessRead );
+      &LayerResolver::SensitiveThicknessCheat :
+      &LayerResolver::SensitiveThicknessRead );
 }
 
 template <class T>
-SmartResolver<T>::SmartResolver(const int _detTypeFlag,
+LayerResolver<T>::LayerResolver(const int _detTypeFlag,
           T *_layering,
           const std::string _collectionName,
           double _sensThickCheatVal) :
-  LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
+  LayerResolverBase(_detTypeFlag, _collectionName, _sensThickCheatVal),
   layering(_layering)
 {
-  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&SmartResolver::SensitiveThicknessRead);
+  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&LayerResolver::SensitiveThicknessRead);
 }
 
 template <class T>
-SmartResolver<T>::SmartResolver() :
-  LayerResolver(),
+LayerResolver<T>::LayerResolver() :
+  LayerResolverBase(),
   layering(NULL)
 {}
 
 template <class T>
-const SmartResolver<T>& SmartResolver<T>::operator=(const SmartResolver<T>& pr)
+const LayerResolver<T>& LayerResolver<T>::operator=(const LayerResolver<T>& pr)
   {
   this->sensThickCheatVal = pr.sensThickCheatVal;
   this->detTypeFlag = pr.detTypeFlag;
@@ -146,106 +146,19 @@ const SmartResolver<T>& SmartResolver<T>::operator=(const SmartResolver<T>& pr)
   this->layering = pr.layering;
 
   this->ThicknessSensitive = (pr.CheatsSensThickness() ?
-      &LayerResolver::SensitiveThicknessCheat :
-      &LayerResolver::SensitiveThicknessRead );
+      &LayerResolverBase::SensitiveThicknessCheat :
+      &LayerResolverBase::SensitiveThicknessRead );
 
   return *this;
 }
 
 template <class T>
-double SmartResolver<T>::SensitiveThicknessRead(int nLayer) const {
+double LayerResolver<T>::SensitiveThicknessRead(int nLayer) const {
   return layering->layers.at(nLayer).thicknessSensitive;
 }
 
 
-/******************************************
- * Implementation of class PetalResolver
- * ************************************** */
-/*
-PetalResolver::PetalResolver(const PetalResolver &lt) :
-  LayerResolver(lt),
-  layering(lt.GetLayering())
-{
-  if(ThicknessSensitive == NULL) ThicknessSensitive = (LayerResolverFn)(&PetalResolver::SensitiveThicknessRead);
-}
 
-PetalResolver::PetalResolver(const int _detTypeFlag,
-          dd4hep::rec::ZDiskPetalsData *_layering,
-          const std::string _collectionName,
-          double _sensThickCheatVal) :
-  LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
-  layering(_layering)
-{
-  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&PetalResolver::SensitiveThicknessRead);
-}
-
-PetalResolver::PetalResolver() :
-  LayerResolver(),
-  layering(NULL)
-{}
-
-const PetalResolver& PetalResolver::operator=(const PetalResolver& pr)
-  {
-  this->detTypeFlag = pr.detTypeFlag;
-  this->collectionName = pr.collectionName;
-  this->decoder = pr.decoder;
-  this->layering = pr.layering;
-  return *this;
-}
-
-double PetalResolver::SensitiveThicknessRead(int nLayer) const {
-  return layering->layers.at(nLayer).thicknessSensitive;
-}
-
-*/
-
-
-/******************************************
- * Implementation of class PlaneResolver
- * ************************************** */
-/*
-PlaneResolver::PlaneResolver(const PlaneResolver &lt) :
-  LayerResolver(lt),
-  layering(lt.GetLayering())
-{
-  if(!lt.CheatsSensThickness()) ThicknessSensitive = (LayerResolverFn)(&PlaneResolver::SensitiveThicknessRead);
-}
-
-PlaneResolver::PlaneResolver(const int _detTypeFlag,
-                             dd4hep::rec::ZPlanarData *_layering,
-                             const std::string _collectionName,
-                             double _sensThickCheatVal):
-  LayerResolver(_detTypeFlag, _collectionName, _sensThickCheatVal),
-  layering(_layering)
-{
-  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&PlaneResolver::SensitiveThicknessRead);
-}
-
-PlaneResolver::PlaneResolver() :
-  LayerResolver(),
-  layering(NULL)
-{}
-
-
-const PlaneResolver& PlaneResolver::operator=(const PlaneResolver& pr)
-  {
-  this->detTypeFlag = pr.detTypeFlag;
-  this->collectionName = pr.collectionName;
-  this->decoder = pr.decoder;
-  this->layering = pr.layering;
-  return *this;
-}
-
-double PlaneResolver::SensitiveThicknessRead(int nLayer) const {
-  return layering->layers.at(nLayer).thicknessSensitive;
-}
-
-
-LayerFinder::LayerFinder() :
-knownDetectors()
-{}
-
-*/
 /******************************************
  * Implementation of class LayerFinder
  * ************************************** */
@@ -279,7 +192,7 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
 
     int tf = detElements.at(i).typeFlag();
 
-    LayerResolver *sr = NULL;
+    LayerResolverBase *sr = NULL;
 
     try {
       streamlog_out(DEBUG) << "Trying ZPlanarData.\n";
@@ -341,7 +254,7 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
   streamlog_out(DEBUG5) << "CollectionFinder::ReadCollections. Event #" << evt->getEventNumber()
       << ". Number of collections to look for: " << knownDetectors.size() << "\n";
 
-  for(std::vector<LayerResolver*>::iterator collit=knownDetectors.begin(); collit!=knownDetectors.end(); collit++) {
+  for(std::vector<LayerResolverBase*>::iterator collit=knownDetectors.begin(); collit!=knownDetectors.end(); collit++) {
 
     if ((*collit)->SetCollection(evt) == 0) nFound++;
 
@@ -355,7 +268,7 @@ double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
   streamlog_out(DEBUG5) << "CollectionFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
 
-  for(std::vector<LayerResolver*>::iterator cit=knownDetectors.begin(); cit!=knownDetectors.end(); cit++) {
+  for(std::vector<LayerResolverBase*>::iterator cit=knownDetectors.begin(); cit!=knownDetectors.end(); cit++) {
 
     streamlog_out(DEBUG5) << " ... Looking in collection " << (*cit)->GetCollectionName() ;
     streamlog_out(DEBUG5) << " of type "
@@ -397,7 +310,7 @@ void LayerFinder::ReportKnownDetectors() {
 
 
   streamlog_out(DEBUG5) << "LayerFinder knows the following detectors:\n";
-  for(std::vector<LayerResolver*>::iterator dit=knownDetectors.begin(); dit!=knownDetectors.end(); dit++) {
+  for(std::vector<LayerResolverBase*>::iterator dit=knownDetectors.begin(); dit!=knownDetectors.end(); dit++) {
     std::string dettype;
     if      ((*dit)->GetDetTypeFlag() & dd4hep::DetType::BARREL) dettype = "BARREL";
     else if ((*dit)->GetDetTypeFlag() & dd4hep::DetType::ENDCAP) dettype = "ENDCAP";

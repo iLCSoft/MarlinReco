@@ -341,22 +341,14 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       double effThickness = thickness / cosAngle;
 
       dEdxHitVec.push_back( dEdxPoint(trackhits[ihit]->getEDep(), effThickness) );
-      // At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
-
-      // I am not sure whether the following is the intended use of the hit "type".
-      // The hit type value is being overwritten here, but it was apparently not used before.
-      // Todo: Why was I doing this at all?
-      /*try {
-        ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
-      }
-      catch (std::exception &) {}*/
 
     }
     if(dEdxHitVec.size() == 0) continue;
 
     double dEdx, dEdxError;
     dEdx = dEdxEval(dEdxHitVec, dEdxError);
-    // This is read-only if track is read from existing lcio file!
+    // Todo: This is read-only if track is read from existing lcio file!
+    // Is there a way to process tracks that are read from the input file?
     track->setdEdx(dEdx);
     track->setdEdxError(dEdxError);
   }

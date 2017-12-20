@@ -388,11 +388,20 @@ double SiTracker_dEdxProcessor::dEdxGeneralTruncMean(dEdxVec hitVec, double &dEd
     const double truncLo, const double truncHi) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
-
-  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
   const unsigned iStart = static_cast<unsigned>(floor(n*truncLo + 0.5));
   const unsigned iEnd = static_cast<unsigned>(floor(n*(1-truncHi) + 0.5));
+
+  if(iEnd-iStart == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(iEnd-iStart == 1) {
+    double track_dEdx = hitVec.at(iStart).Get_dE();
+    dEdxError = track_dEdx;
+    return track_dEdx;
+  }
+
+  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
 
   double eDepSum = 0.;
   double thickness = 0.;

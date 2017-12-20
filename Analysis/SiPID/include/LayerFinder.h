@@ -29,7 +29,10 @@ class LayerResolverBase {
 
 public:
   LayerResolverBase(const LayerResolverBase &);
-  LayerResolverBase(const int _detTypeFlag, const std::string _collectionName, double _sensThickCheatVal=-1.);
+  LayerResolverBase(const int _detTypeFlag,
+                    const std::string _collectionName,
+                    const std::string _detectorName,
+                    double _sensThickCheatVal=-1.);
 
   virtual ~LayerResolverBase() ;
 
@@ -40,6 +43,7 @@ public:
 
   int SetCollection(EVENT::LCEvent *) ;
   std::string GetCollectionName() const { return collectionName; }
+  std::string GetDetectorName() const { return detectorName; }
   std::string GetCollectionType() const;
   std::string GetCollectionEncoding() const;
 
@@ -49,7 +53,7 @@ public:
 
   virtual unsigned GetNumberOfLayers() const = 0;
 
-  int Decode(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"];}
+  int Decode(TrackerHitPlane* thit, const char *what="layer") const { return (*decoder)(thit)[what];}
 
   const LayerResolverBase& operator=(const LayerResolverBase&);
 
@@ -69,6 +73,7 @@ protected:
   // Constant in run:
   int detTypeFlag;
   std::string collectionName;
+  std::string detectorName;
   // Event-to-event
   EVENT::LCCollection *collection;
   CellIDDecoder<TrackerHitPlane>* decoder;
@@ -84,6 +89,7 @@ public:
   LayerResolver(const LayerResolver<T> &lt);
   LayerResolver(const int _detTypeFlag, T *,
                 const std::string _collectionName,
+                const std::string _detectorName,
                 double _sensThickCheatVal=-1.);
 
   ~LayerResolver() {};
@@ -100,59 +106,10 @@ protected:
   LayerResolver();
 };
 
-typedef LayerResolver<dd4hep::rec::ZDiskPetalsData> PETAL_RESOLVER;
-typedef LayerResolver<dd4hep::rec::ZPlanarData> PLANE_RESOLVER;
-
-/*
-class PetalResolver : public LayerResolver{
-public:
-  PetalResolver(const PetalResolver &lt);
-  PetalResolver(const int _detTypeFlag,
-                dd4hep::rec::ZDiskPetalsData *,
-                const std::string _collectionName,
-                double _sensThickCheatVal=-1.);
-
-  ~PetalResolver() {};
-
-  int GetNumberOfLayers() const { return layering->layers.size(); }
-
-  const PetalResolver& operator=(const PetalResolver&);
-  const dd4hep::rec::ZDiskPetalsData *GetLayering() const {return layering;};
-
-protected:
-  double SensitiveThicknessRead(int nLayer) const ;
-  const dd4hep::rec::ZDiskPetalsData *layering;
-
-  PetalResolver();
-
-};
+typedef LayerResolver<dd4hep::rec::ZDiskPetalsData> PetalResolver;
+typedef LayerResolver<dd4hep::rec::ZPlanarData> PlaneResolver;
 
 
-class PlaneResolver : public LayerResolver{
-public:
-  PlaneResolver(const PlaneResolver &lt);
-  PlaneResolver(const int _detTypeFlag,
-                dd4hep::rec::ZPlanarData *,
-                const std::string _collectionName,
-                double _sensThickCheatVal=-1.);
-
-  ~PlaneResolver() {};
-
-  int GetNumberOfLayers() const { return layering->layers.size(); }
-
-  const PlaneResolver& operator=(const PlaneResolver&);
-  const dd4hep::rec::ZPlanarData *GetLayering() const {return layering;};
-
-
-protected:
-  double SensitiveThicknessRead(int nLayer) const ;
-  const dd4hep::rec::ZPlanarData *layering;
-
-  PlaneResolver();
-
-};
-
-*/
 
 /* LayerFinder class parses tracker hit collections in the event
  * finds where the hit belogs,
@@ -185,8 +142,11 @@ public:
   // Sensitive thickness of layer
   void ReportKnownDetectors();
 
+  typedef std::map<int, LayerResolverBase*> ResolverMap;
+  typedef ResolverMap::iterator ResolverMapIter;
+
 protected:
-  std::vector<LayerResolverBase*> knownDetectors{};
+  ResolverMap knownDetectors{};
 
   // Default constructor. Not very useful.
   LayerFinder();

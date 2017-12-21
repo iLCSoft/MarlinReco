@@ -586,7 +586,7 @@
     <!-- compression of output file 0: false >0: true (default) -->
     <parameter name="Compress" type="int" value="1"/>
     <!-- filename without extension-->
-    <parameter name="FileName" type="string" value="histograms500GeV_ttbar"/>
+    <parameter name="FileName" type="string" value="aida_histograms"/>
     <!-- type of output file xml (default) or root ( only OpenScientist)-->
     <parameter name="FileType" type="string" value="root "/>
   </processor>
@@ -1311,7 +1311,7 @@
   <!-- == Track dE/dx parameters == -->
   <processor name="MySiTracker_dEdxProcessor" type="SiTracker_dEdxProcessor">
     <parameter name="TrackCollectionName" type="string" lcioInType="Track"> SiTracks_Refitted </parameter>
-    <parameter name="Verbosity" type="string">DEBUG5 </parameter>
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
     <parameter name="TrkHitCollections" type="StringVec">
       ITrackerHits
       ITrackerEndcapHits

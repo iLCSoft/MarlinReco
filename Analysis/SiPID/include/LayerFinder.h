@@ -54,6 +54,7 @@ public:
   virtual unsigned GetNumberOfLayers() const = 0;
 
   int Decode(TrackerHitPlane* thit, const char *what="layer") const { return (*decoder)(thit)[what];}
+  bool HasCollection() const { return static_cast<bool>(decoder); }
 
   const LayerResolverBase& operator=(const LayerResolverBase&);
 

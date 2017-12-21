@@ -282,51 +282,41 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 
 double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
 
-  streamlog_out(DEBUG5) << "CollectionFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
+  streamlog_out(DEBUG5) << "LayerFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
 
+  LayerResolverBase *resolver = NULL;
+
+  // Decode system ID where the hit is located.
   for(ResolverMapIter cit=knownDetectors.begin(); cit!=knownDetectors.end(); cit++) {
 
-    streamlog_out(DEBUG5) << " ... Looking in collection \'" << cit->second->GetCollectionName() ;
-    streamlog_out(DEBUG5) << "\' of type \'"
-                         << cit->second->GetCollectionType() << "\' with " << cit->second->GetNumberOfHits() << " hits.\n";
-
-    for(int i=0; i<cit->second->GetNumberOfHits(); i++) {
-
-      if( thit == cit->second->GetHit(i) ) {
-
-        streamlog_out(DEBUG5) << " ... Found matching hit " << cit->second->GetHit(i)->getCellID0()
-                                 << " with energy " << cit->second->GetHit(i)->getEDep()
-                                 << " in collection \'" << cit->second->GetCollectionName() << "\'.\n";
-
-        streamlog_out(DEBUG5) << " ... Detector ID is " << cit->first << "\n";
-        streamlog_out(DEBUG5) << " ... Hit encoding is:\n";
-        streamlog_out(DEBUG5) << "     System: " << cit->second->Decode(thit, "system");
-        streamlog_out(DEBUG5) << "     Side:   " << cit->second->Decode(thit, "side");
-        streamlog_out(DEBUG5) << "     Layer:  " << cit->second->Decode(thit, "layer");
-        streamlog_out(DEBUG5) << "     Module: " << cit->second->Decode(thit, "module");
-        streamlog_out(DEBUG5) << "     Sensor: " << cit->second->Decode(thit, "sensor") << "\n";
-
-        int nLayer = cit->second->Decode(thit);
-        tf = cit->second->GetDetTypeFlag();
-        int nLayers = cit->second->GetNumberOfLayers();
-
-        streamlog_out(DEBUG5) << " ... Layer number is " << nLayer << ".\n";
-        streamlog_out(DEBUG5) << " ... Number of layers is " << nLayers << ".\n";
-        if(nLayer >= nLayers) {
-          streamlog_out(ERROR) << "CollectionFinder::SensitiveThickness() -- Layer number out of range!\n";
-          return 1.;
-        }
-
-        double t = cit->second->SensitiveThickness(nLayer);
-        streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
-        return t;
-
-        // We found it so we can stop searching
-        break;
+    if (cit->second->HasCollection()) {
+      int systemID = cit->second->Decode(thit, "system");
+      ResolverMapIter systemit = knownDetectors.find(systemID);
+      if (systemit == knownDetectors.end()) {
+        streamlog_out(WARNING) << "Hit is located in the system with ID " << systemID
+            << " which is not configured for handling by the processor.\n";
+        return -1.;
       }
+
+      streamlog_out(DEBUG5) << "Hit is located in subdetector \'" << knownDetectors[systemID]->GetDetectorName()
+          << "\' with system ID " << systemID << "\n";
+      resolver = systemit->second;
+      break;
     }
   }
-  return -1.;
+
+  if (resolver == NULL) {
+    streamlog_out(WARNING) << "No collections present in event for subsystems handled by the processor.\n";
+    return -1.;
+  }
+
+  int nLayer = resolver->Decode(thit, "layer");
+
+  tf = resolver->GetDetTypeFlag();
+
+  double t = resolver->SensitiveThickness(nLayer);
+  streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
+  return t;
 }
 
 

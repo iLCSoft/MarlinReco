@@ -256,7 +256,6 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   }
 
   layerFinder->ReportKnownDetectors();
-  streamlog_out(DEBUG5) << "Done reporting detectors.\n";
 
   int nTracks = tracks->getNumberOfElements()  ;
 
@@ -274,7 +273,6 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       marlin_trk->addHit(*it);
     }//end loop on hits
 
-    streamlog_out(DEBUG5) << "Created marlin_trk.\n";
     const TrackStateImpl *trackState = dynamic_cast<const TrackStateImpl*>(track->getTrackState(TrackState::AtFirstHit));
     if (!trackState) {
       streamlog_out(WARNING) << "Cannot get track state for track #" << i
@@ -282,10 +280,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       streamlog_out(WARNING) << "Skipping track.\n";
       continue;
     }
-    streamlog_out(DEBUG5) << "Got track state." << std::endl;
 
     marlin_trk->initialise( *trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
-    streamlog_out(DEBUG5) << "Initialized marlin_trk.\n";
 
     dEdxVec dEdxHitVec;
 
@@ -310,7 +306,6 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       dd4hep::rec::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
 
       // Normal to the surface of hit
-      streamlog_out(DEBUG5) << "Looking for the Normal to the surface of hit.\n";
       unsigned long cellid = trackhits[ihit]->getCellID0();
       dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
       if (surface == surfMap->end()) {
@@ -319,7 +314,6 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
         exit(0);
       }
       dd4hep::rec::Vector3D surfaceNormal = surface->second->normal();
-      streamlog_out(DEBUG5) << "Found surface corresponding to track hit ID " << cellid << ".\n";
 
       double norm = sqrt(trackDir.dot(trackDir)*surfaceNormal.dot(surfaceNormal));
       if (norm < FLT_MIN) continue;

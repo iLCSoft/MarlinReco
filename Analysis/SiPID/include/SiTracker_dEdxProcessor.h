@@ -2,6 +2,7 @@
 #define SiTracker_dEdxProcessor_h 1
 
 #include <string>
+#include <chrono>
 
 #include "marlin/Processor.h"
 #include "MarlinTrk/Factory.h"
@@ -138,6 +139,17 @@ class SiTracker_dEdxProcessor : public Processor {
   LayerFinder *layerFinder{};
 
   int lastRunHeaderProcessed{};
+
+  unsigned nTimers = 8;
+  std::vector<std::chrono::duration<double>> timers;
+  std::chrono::high_resolution_clock::time_point lastTP;
+  std::chrono::high_resolution_clock::time_point newTP;
+  void addTime(int i) {
+    newTP = std::chrono::high_resolution_clock::now();
+    timers.at(i) += std::chrono::duration_cast<std::chrono::duration<double>>(newTP - lastTP);
+    lastTP = newTP;
+  }
+
 } ;
 
 #endif

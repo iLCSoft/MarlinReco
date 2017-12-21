@@ -267,7 +267,7 @@ int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 
   int nFound=0;
 
-  streamlog_out(DEBUG5) << "CollectionFinder::ReadCollections. Event #" << evt->getEventNumber()
+  streamlog_out(DEBUG5) << "LayerFinder::ReadCollections. Event #" << evt->getEventNumber()
       << ". Number of collections to look for: " << knownDetectors.size() << "\n";
 
   for(ResolverMapIter collit=knownDetectors.begin(); collit!=knownDetectors.end(); collit++) {

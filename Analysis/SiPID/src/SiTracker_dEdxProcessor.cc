@@ -62,14 +62,20 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& 
     m_trackCollName(orig.getTrackCollName()), m_trkHitCollNames(orig.getTrkHitCollNames()),
     m_elementMask(orig.getElementMask()), surfMap(orig.getSurfaceMap()), trkSystem(orig.getTrkSystem()),
     _bField(orig.getBField()), layerFinder(orig.getLayerFinder()),
-    lastRunHeaderProcessed(orig.getLastRunHeaderProcessed())
+    lastRunHeaderProcessed(orig.getLastRunHeaderProcessed()),
+    timers(),
+    lastTP(std::chrono::high_resolution_clock::now()),
+    newTP(std::chrono::high_resolution_clock::now())
 {}
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxProcessor"),
     m_trackCollName(""), m_trkHitCollNames(), m_elementMask(0),
     surfMap(NULL), trkSystem(NULL), _bField(0),
     layerFinder(NULL),
-    lastRunHeaderProcessed(-1)
+    lastRunHeaderProcessed(-1),
+    timers(),
+    lastTP(std::chrono::high_resolution_clock::now()),
+    newTP(std::chrono::high_resolution_clock::now())
     {
 
   // modify processor description
@@ -207,6 +213,10 @@ void SiTracker_dEdxProcessor::init() {
 
   lastRunHeaderProcessed = -1;
 
+  for (unsigned i=0; i<nTimers; i++) {
+    timers.push_back(std::chrono::duration<double>(std::chrono::duration_values<double>::zero()));
+  }
+
   streamlog_out(DEBUG) << "   init done  " << std::endl ;
 
 }
@@ -237,6 +247,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   /***       Get collections        ***/
   /************************************/
 
+  lastTP = std::chrono::high_resolution_clock::now();
+
   LCCollection* tracks = NULL;
   try {
     tracks = evt->getCollection(m_trackCollName);
@@ -249,6 +261,10 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
   tracks->getFlag();
 
+
+  addTime(0);
+
+
   /*** Collection finder for hit collections ***/
   if (layerFinder->ReadCollections(evt) == 0) {
     streamlog_out(WARNING) << "None of the requested collections found in event #" << evt->getEventNumber() << ". Skipping event.\n";
@@ -256,6 +272,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   }
 
   layerFinder->ReportKnownDetectors();
+
+  addTime(1);
 
   int nTracks = tracks->getNumberOfElements()  ;
 
@@ -283,6 +301,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
     marlin_trk->initialise( *trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
 
+    addTime(2);
+
     dEdxVec dEdxHitVec;
 
     for(unsigned int ihit = 0; ihit < trackhits.size(); ihit++) {
@@ -293,7 +313,11 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       IMPL::TrackStateImpl ts;
       double chi2 = 0.;
       int ndf = 0;
+      // ToDo marlin_trk->propagate() consumes the bulk of the time
+      // of the processor. Can the processor run without it?
       marlin_trk->propagate(hitpos, ts, chi2, ndf);
+
+      addTime(3);
 
       dd4hep::rec::Vector3D rp(ts.getReferencePoint());
 
@@ -305,6 +329,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       float trackDirZ = tanLambda*sinTheta;
       dd4hep::rec::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
 
+      addTime(4);
+
       // Normal to the surface of hit
       unsigned long cellid = trackhits[ihit]->getCellID0();
       dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
@@ -314,6 +340,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
         exit(0);
       }
       dd4hep::rec::Vector3D surfaceNormal = surface->second->normal();
+
+      addTime(5);
 
       double norm = sqrt(trackDir.dot(trackDir)*surfaceNormal.dot(surfaceNormal));
       if (norm < FLT_MIN) continue;
@@ -336,7 +364,11 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
       dEdxHitVec.push_back( dEdxPoint(trackhits[ihit]->getEDep(), effThickness) );
 
+      addTime(6);
+
     }
+
+
     if(dEdxHitVec.size() == 0) continue;
 
     double dEdx, dEdxError;
@@ -345,6 +377,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     // Is there a way to process tracks that are read from the input file?
     track->setdEdx(dEdx);
     track->setdEdxError(dEdxError);
+
+    addTime(7);
   }
 
 }
@@ -360,6 +394,9 @@ void SiTracker_dEdxProcessor::check( LCEvent *  /*evt*/ ) {
 
 void SiTracker_dEdxProcessor::end(){
 
+  for (unsigned i=0; i<timers.size(); i++) {
+    streamlog_out(MESSAGE) << "Total time in timer #" << i << ": " << timers.at(i).count() << " s\n";
+  }
   //   std::cout << "SiTracker_dEdxProcessor::end()  " << name()
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;

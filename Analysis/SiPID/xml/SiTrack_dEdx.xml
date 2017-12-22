@@ -1341,9 +1341,9 @@
           -->
     <!--parameter name="ElementMask" type="int"> 15 </parameter-->
     <!-- Type of estimator for dEdx.
-         Available estimators: mean, truncMean, harmonic, harmonic-2,
+         Available estimators: mean, median, truncMean, harmonic, harmonic-2,
          weighted-harmonic, weighted-harmonic-2
-         Default: mean.
+         Default: median.
           -->
     <parameter name="dEdxEstimator" type="string">harmonic-2 </parameter>
   </processor>

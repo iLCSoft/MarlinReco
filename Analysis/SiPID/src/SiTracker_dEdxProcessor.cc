@@ -137,7 +137,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
   registerProcessorParameter("dEdxEstimator" ,
                              "Type of estimator for dEdx.",
                              m_dEdxEstimator ,
-                             std::string("mean") ) ;
+                             std::string("median") ) ;
 
 }
 

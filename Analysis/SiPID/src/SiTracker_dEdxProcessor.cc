@@ -313,9 +313,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       IMPL::TrackStateImpl ts;
       double chi2 = 0.;
       int ndf = 0;
-      // ToDo marlin_trk->propagate() consumes the bulk of the time
-      // of the processor. Can the processor run without it?
-      marlin_trk->propagate(hitpos, ts, chi2, ndf);
+      marlin_trk->extrapolate(hitpos, ts, chi2, ndf);
 
       addTime(3);
 

@@ -44,26 +44,27 @@ SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_d
 
   if (this == &orig) return *this;
 
-  this->m_trackCollName = orig.getTrackCollName();
-  this->m_trkHitCollNames = orig.getTrkHitCollNames();
-  this->m_elementMask = orig.getElementMask();
-  this->surfMap = orig.getSurfaceMap();
-  this->trkSystem = orig.getTrkSystem();
-  this->_bField = orig.getBField();
-  this->layerFinder = orig.getLayerFinder();
-  this->lastRunHeaderProcessed = orig.getLastRunHeaderProcessed();
-  //this->dEdxEval = otig.
+  this->m_trackCollName = orig.m_trackCollName;
+  this->m_trkHitCollNames = orig.m_trkHitCollNames;
+  this->m_elementMask = orig.m_elementMask;
+  this->surfMap = orig.surfMap;
+  this->trkSystem = orig.trkSystem;
+  this->_bField = orig._bField;
+  this->layerFinder = orig.layerFinder;
+  this->lastRunHeaderProcessed = orig.lastRunHeaderProcessed;
+  this->dEdxEval = orig.dEdxEval;
 
   return *this;
 }
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& orig) :
     Processor("SiTracker_dEdxProcessor"),
-    m_trackCollName(orig.getTrackCollName()), m_trkHitCollNames(orig.getTrkHitCollNames()),
-    m_elementMask(orig.getElementMask()), surfMap(orig.getSurfaceMap()), trkSystem(orig.getTrkSystem()),
-    _bField(orig.getBField()), layerFinder(orig.getLayerFinder()),
-    lastRunHeaderProcessed(orig.getLastRunHeaderProcessed()),
-    timers(),
+    dEdxEval(orig.dEdxEval),
+    m_trackCollName(orig.m_trackCollName), m_trkHitCollNames(orig.m_trkHitCollNames),
+    m_elementMask(orig.m_elementMask), surfMap(orig.surfMap), trkSystem(orig.trkSystem),
+    _bField(orig._bField), layerFinder(orig.layerFinder),
+    lastRunHeaderProcessed(orig.lastRunHeaderProcessed),
+    timers(orig.timers),
     lastTP(std::chrono::high_resolution_clock::now()),
     newTP(std::chrono::high_resolution_clock::now())
 {}
@@ -265,8 +266,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   addTime(0);
 
 
-  /*** Collection finder for hit collections ***/
-  if (layerFinder->ReadCollections(evt) == 0) {
+  /*** Read collections to find a valid decoder for CELLID encoding ***/
+  if (layerFinder->ReadCollections(evt) != 0) {
     streamlog_out(WARNING) << "None of the requested collections found in event #" << evt->getEventNumber() << ". Skipping event.\n";
     return;
   }
@@ -345,8 +346,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       if (norm < FLT_MIN) continue;
       double cosAngle = fabs(trackDir.dot(surfaceNormal)) / norm ;
 
-      int detTypeFlag = 0;
-      double thickness = layerFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
+      double thickness = layerFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]));
       if (thickness < 0.) {
         streamlog_out(ERROR) << "Could not find hit collection corresponding to hit CellID " << cellid
                              << ", hit ID " << trackhits.at(ihit)->id() << " .\n";

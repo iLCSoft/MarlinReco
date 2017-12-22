@@ -171,7 +171,8 @@ double LayerResolver<T>::SensitiveThicknessRead(int nLayer) const {
 
 LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& theDetector,
                           FloatVec sensThickCheatVals, int elementMask) :
-  knownDetectors()
+  knownDetectors(),
+  decoder()
 {
 
   const std::vector< dd4hep::DetElement > &detElements = theDetector.detectors("tracker", true);
@@ -262,59 +263,66 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
 }
 
 
+LayerFinder::LayerFinder( const LayerFinder& orig ) :
+  knownDetectors(orig.knownDetectors),
+  decoder(orig.decoder)
+{
+}
+
+
+LayerFinder& LayerFinder::operator = (const LayerFinder& orig) {
+
+  this->decoder = orig.decoder;
+  this->knownDetectors = orig.knownDetectors;
+
+  return *this;
+}
+
 
 int LayerFinder::ReadCollections(EVENT::LCEvent *evt) {
 
-  int nFound=0;
-
-  streamlog_out(DEBUG5) << "LayerFinder::ReadCollections. Event #" << evt->getEventNumber()
-      << ". Number of collections to look for: " << knownDetectors.size() << "\n";
+  bool isDecoderUpToDate = false;
 
   for(ResolverMapIter collit=knownDetectors.begin(); collit!=knownDetectors.end(); collit++) {
 
-    if (collit->second->SetCollection(evt) == 0) nFound++;
+    int collSet = collit->second->SetCollection(evt);
+
+    if (!isDecoderUpToDate) {
+      if (collSet == 0) {
+        decoder = collit->second->GetDecoder();
+        isDecoderUpToDate = true;
+      }
+    }
 
   } // End loop over known detectors
-  return nFound;
+
+  if (isDecoderUpToDate) return 0;
+
+  return -1; // No tracker hit collections found.
 
 }
 
 
-double LayerFinder::SensitiveThickness(TrackerHitPlane* thit, int &tf) {
+double LayerFinder::SensitiveThickness(TrackerHitPlane* thit) {
 
   streamlog_out(DEBUG5) << "LayerFinder::SensitiveThickness() for hit ID = " << thit->getCellID0() << ".\n";
 
-  LayerResolverBase *resolver = NULL;
-
   // Decode system ID where the hit is located.
-  for(ResolverMapIter cit=knownDetectors.begin(); cit!=knownDetectors.end(); cit++) {
+  int systemID = Decode(thit, "system");
 
-    if (cit->second->HasCollection()) {
-      int systemID = cit->second->Decode(thit, "system");
-      ResolverMapIter systemit = knownDetectors.find(systemID);
-      if (systemit == knownDetectors.end()) {
-        streamlog_out(WARNING) << "Hit is located in the system with ID " << systemID
-            << " which is not configured for handling by the processor.\n";
-        return -1.;
-      }
-
-      streamlog_out(DEBUG5) << "Hit is located in subdetector \'" << knownDetectors[systemID]->GetDetectorName()
-          << "\' with system ID " << systemID << "\n";
-      resolver = systemit->second;
-      break;
-    }
-  }
-
-  if (resolver == NULL) {
-    streamlog_out(WARNING) << "No collections present in event for subsystems handled by the processor.\n";
+  // Check if the system is registered for handling by the processor
+  ResolverMapIter resolver = knownDetectors.find(systemID);
+  if (resolver == knownDetectors.end()) {
+    streamlog_out(WARNING) << "Hit is located in the system with ID " << systemID
+        << " which is not configured for handling by the processor.\n";
     return -1.;
   }
 
-  int nLayer = resolver->Decode(thit, "layer");
+  streamlog_out(DEBUG5) << "Hit is located in subdetector \'" << knownDetectors[systemID]->GetDetectorName()
+      << "\' with system ID " << systemID << "\n";
 
-  tf = resolver->GetDetTypeFlag();
+  double t = resolver->second->SensitiveThickness(thit);
 
-  double t = resolver->SensitiveThickness(nLayer);
   streamlog_out(DEBUG5) << " ... Thickness is " << t/dd4hep::mm << " mm.\n";
   return t;
 }

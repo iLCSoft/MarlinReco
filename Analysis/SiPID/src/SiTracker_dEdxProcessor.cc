@@ -425,9 +425,8 @@ double SiTracker_dEdxProcessor::dEdxGeneralTruncMean(dEdxVec hitVec, double &dEd
     return 0;
   }
   if(iEnd-iStart == 1) {
-    double track_dEdx = hitVec.at(iStart).Get_dE();
-    dEdxError = track_dEdx;
-    return track_dEdx;
+    dEdxError = hitVec.at(iStart).Get_dEdx() ;
+    return hitVec.at(iStart).Get_dEdx() ;
   }
 
   sort(hitVec.begin(), hitVec.end(), dEdxOrder);
@@ -461,7 +460,14 @@ double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
 double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   sort(hitVec.begin(), hitVec.end(), dEdxOrder);
   double median=0.;
@@ -472,11 +478,9 @@ double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
     median = (hitVec.at(n/2-1).Get_dEdx() + hitVec.at(n/2).Get_dEdx()) / 2;
   }
 
-  double errMean = 0.;
-  dEdxMean(hitVec, errMean);
-  // Using ratio of the variance of the median to that of the mean
-  // from http://mathworld.wolfram.com/StatisticalMedian.html
-  dEdxError = sqrt(n * M_PI / 2 / (n-1)) * errMean;
+  // Substituting error of the mean for dEdxError here
+  // instead of bootstrapping the error of the median
+  dEdxMean(hitVec, dEdxError);
   return median;
 }
 
@@ -493,7 +497,14 @@ double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError)
 double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)
@@ -507,10 +518,10 @@ double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) 
 
   double mu2 = mu2sum / n;
   double mu1 = mu1sum / n;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / mu1;
-  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+  dEdxError = sigma / pow(mu1, 2) ;
 
   return dEdx;
 }
@@ -520,7 +531,14 @@ double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) 
 double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)^2
@@ -534,10 +552,10 @@ double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError)
 
   double mu2 = mu2sum / n;
   double mu1 = mu1sum / n;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / sqrt(mu1);
-  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 3) / 2 ;
 
   return dEdx;
 }
@@ -548,7 +566,14 @@ double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError)
 double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)
@@ -565,10 +590,10 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxErro
 
   double mu2 = mu2sum / wgtsum;
   double mu1 = mu1sum / wgtsum;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / mu1;
-  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 2) ;
 
   return dEdx;
 }
@@ -579,7 +604,14 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxErro
 double SiTracker_dEdxProcessor::dEdxWgtHarmonic2(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)^2
@@ -596,10 +628,10 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic2(dEdxVec hitVec, double &dEdxErr
 
   double mu2 = mu2sum / wgtsum;
   double mu1 = mu1sum / wgtsum;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / sqrt(mu1);
-  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 3) / 2 ;
 
   return dEdx;
 }

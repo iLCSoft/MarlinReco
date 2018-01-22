@@ -54,6 +54,8 @@ class SiTracker_dEdxProcessor : public Processor {
   SiTracker_dEdxProcessor() ;
   SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) ;
   
+  virtual ~SiTracker_dEdxProcessor() ;
+
   SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &);
 
   /** Called at the begin of the job before anything is read.

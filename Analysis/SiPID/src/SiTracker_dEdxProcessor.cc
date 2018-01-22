@@ -50,7 +50,7 @@ SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_d
   this->surfMap = orig.surfMap;
   this->trkSystem = orig.trkSystem;
   this->_bField = orig._bField;
-  this->layerFinder = orig.layerFinder;
+  this->layerFinder = NULL;
   this->lastRunHeaderProcessed = orig.lastRunHeaderProcessed;
   this->dEdxEval = orig.dEdxEval;
 
@@ -62,7 +62,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& 
     dEdxEval(orig.dEdxEval),
     m_trackCollName(orig.m_trackCollName), m_trkHitCollNames(orig.m_trkHitCollNames),
     m_elementMask(orig.m_elementMask), surfMap(orig.surfMap), trkSystem(orig.trkSystem),
-    _bField(orig._bField), layerFinder(orig.layerFinder),
+    _bField(orig._bField), layerFinder(NULL),
     lastRunHeaderProcessed(orig.lastRunHeaderProcessed),
     timers(orig.timers),
     lastTP(std::chrono::high_resolution_clock::now()),
@@ -141,6 +141,11 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
 
 }
 
+
+SiTracker_dEdxProcessor::~SiTracker_dEdxProcessor() {
+
+  if (layerFinder) delete layerFinder;
+}
 
 
 void SiTracker_dEdxProcessor::init() {
@@ -398,6 +403,9 @@ void SiTracker_dEdxProcessor::end(){
   //   std::cout << "SiTracker_dEdxProcessor::end()  " << name()
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;
+
+  delete layerFinder;
+  layerFinder = NULL;
 }
 
 

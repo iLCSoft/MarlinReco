@@ -20,13 +20,13 @@ using namespace marlin ;
 
 
 
-/**  SiTracker_dEdxProcessor for marlin.
+/**  SiTracker_dEdxProcessor for Marlin.
  *
  *  Calculates dEdx for planar silicon trackers and stores the information
  *  with the tracks in the lcio file.
  *
- * @author S. Lukic, Vinca, Belgrade
- * December 2016
+ * S. Lukic, Vinca, Belgrade
+ * Dec 2016 - Jan 2018
  */
 
 
@@ -63,8 +63,7 @@ class SiTracker_dEdxProcessor : public Processor {
    */
   virtual void init() ;
   
-  /** Called for every run.
-   * Really?
+  /** Called at the end of every run.
    */
   virtual void processRunHeader( LCRunHeader* run ) ;
   

@@ -86,8 +86,8 @@ AnalyseSidEdxProcessor::AnalyseSidEdxProcessor(const AnalyseSidEdxProcessor& ori
     Processor("AnalyseSidEdxProcessor"),
     m_rootFileName(orig.m_rootFileName), m_trackColName(orig.m_trackColName),
     m_linkColName(orig.m_linkColName), m_trkHitCollNames(orig.m_trkHitCollNames),
-    rootfile(orig.rootfile ? orig.rootfile : NULL),
-    tree(orig.tree ? orig.tree : NULL),
+    rootfile(NULL),
+    tree(NULL),
     nTracks(orig.nTracks), lastRunHeaderProcessed(orig.lastRunHeaderProcessed)
 {
 
@@ -338,6 +338,6 @@ void AnalyseSidEdxProcessor::end(){
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;
   rootfile->Write();
-
+  rootfile->Close();
 }
 

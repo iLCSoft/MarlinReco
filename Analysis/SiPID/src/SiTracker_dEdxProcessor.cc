@@ -38,35 +38,6 @@ dEdxPoint::dEdxPoint(const dEdxPoint& orig) :
 
 SiTracker_dEdxProcessor aSiTracker_dEdxProcessor ;
 
-/**/
-
-SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_dEdxProcessor &orig) {
-
-  if (this == &orig) return *this;
-
-  this->m_trackCollName = orig.m_trackCollName;
-  this->m_trkHitCollNames = orig.m_trkHitCollNames;
-  this->surfMap = orig.surfMap;
-  this->trkSystem = orig.trkSystem;
-  this->_bField = orig._bField;
-  this->layerFinder = NULL;
-  this->lastRunHeaderProcessed = orig.lastRunHeaderProcessed;
-  this->dEdxEval = orig.dEdxEval;
-
-  return *this;
-}
-
-SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& orig) :
-    Processor("SiTracker_dEdxProcessor"),
-    dEdxEval(orig.dEdxEval),
-    m_trackCollName(orig.m_trackCollName), m_trkHitCollNames(orig.m_trkHitCollNames),
-    surfMap(orig.surfMap), trkSystem(orig.trkSystem),
-    _bField(orig._bField), layerFinder(NULL),
-    lastRunHeaderProcessed(orig.lastRunHeaderProcessed),
-    timers(orig.timers),
-    lastTP(std::chrono::high_resolution_clock::now()),
-    newTP(std::chrono::high_resolution_clock::now())
-{}
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxProcessor"),
     m_trackCollName(""), m_trkHitCollNames(),

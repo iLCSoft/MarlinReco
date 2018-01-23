@@ -101,7 +101,7 @@ class SiTracker_dEdxProcessor : public Processor {
   evalChoice dEdxEval{};
 
   /*** Steerable parameters ***/
-  // Input collection names
+  // Name of the track collection
   std::string m_trackCollName{};
   /* Tracker hit collection names.
    * Must be in the same order as tracker detector elements in LCDD.

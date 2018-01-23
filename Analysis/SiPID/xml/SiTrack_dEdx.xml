@@ -983,7 +983,7 @@
     <!--If Using Particle Gun Ignore Gen Stat-->
     <parameter name="UsingParticleGun" type="bool"> true </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-    <parameter name="Verbosity" type="string"> MESSAGE </parameter>
+    <parameter name="Verbosity" type="string"> WARNING </parameter>
     <!--energy cut for daughters that are kept from KeepDaughtersPDG-->
     <parameter name="daughtersECutMeV" type="float"> 10 </parameter>
   </processor>

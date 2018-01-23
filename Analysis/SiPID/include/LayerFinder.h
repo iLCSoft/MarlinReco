@@ -55,13 +55,14 @@ public:
 
   CellIDDecoder<TrackerHitPlane>* GetDecoder() const { return decoder; }
   bool HasCollection() const { return static_cast<bool>(decoder); }
+  int DecodeLayer(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"]; }
+  int DecodeSystem(TrackerHitPlane* thit) const { return (*decoder)(thit)["system"]; }
 
   const LayerResolverBase& operator=(const LayerResolverBase&);
 
   virtual double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
   virtual double SensitiveThickness(TrackerHitPlane* thit) const {
-    int nLayer = (*decoder)(thit)["layer"];
-    return (this->*ThicknessSensitive)(nLayer);
+    return (this->*ThicknessSensitive)(DecodeLayer(thit));
   }
 
   typedef  double (LayerResolverBase::*LayerResolverFn)(int) const;
@@ -126,14 +127,13 @@ typedef LayerResolver<dd4hep::rec::ZPlanarData> PlaneResolver;
 class LayerFinder {
 
 public:
+  LayerFinder() = delete;
   // Constructor with the vector of collection names that the finder
-  // will use when looking for the collection.
+  // will use when looking for the collections.
   LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals);
-  // Copy constructor
-  LayerFinder( const LayerFinder& );
+  LayerFinder( const LayerFinder& ) = delete;
 
-  // Copy assignment
-  LayerFinder& operator = ( const LayerFinder& );
+  LayerFinder& operator = ( const LayerFinder& ) = delete;
 
   /* Reads the decoders of whichever collections are found in the event
    * among those stored in knownDetectors. Returns zero on success and -1 if
@@ -141,16 +141,13 @@ public:
    */
   int ReadCollections(EVENT::LCEvent *);
 
-  // Decode requested information from the CellID encoding
-  int Decode(TrackerHitPlane* thit, const char *what="system") const { return (*decoder)(thit)[what];}
-
   /* Returns the sensitive thickness of the layer where the hit was recorded
    * Also returns the detector type flag in the second argument
    */
   double SensitiveThickness(TrackerHitPlane*);
 
   // Sensitive thickness of layer
-  void ReportKnownDetectors();
+  void ReportHandledDetectors();
 
   typedef std::map<int, LayerResolverBase*> ResolverMap;
   typedef ResolverMap::iterator ResolverMapIter;
@@ -158,11 +155,12 @@ public:
 //  CellIDDecoder<TrackerHitPlane>* GetDecoder() const { return decoder; }
 
 protected:
-  ResolverMap knownDetectors{};
-  CellIDDecoder<TrackerHitPlane>* decoder;
+  ResolverMap layerResolvers{};
 
-  // Default constructor. Not very useful.
-  LayerFinder();
+  // Search for the TrackerHit collection that contains the hit and
+  // use the collection decoder string to decode the system from CellID
+  int FindSystem(TrackerHitPlane* thit) const ;
+
 };
 
 

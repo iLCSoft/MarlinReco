@@ -177,9 +177,10 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
   const std::vector< dd4hep::DetElement > &detElements = theDetector.detectors("tracker", true);
 
   if(_collectionNames.size() != detElements.size()) {
-    streamlog_out(WARNING) << "There are " <<  detElements.size() << " tracker detector elements in "
+    streamlog_out(ERROR) << "There are " <<  detElements.size() << " tracker detector elements in "
         "the geometry and " << _collectionNames.size() << " tracker hit collection names have been "
             "set in the parameters.\n";
+    exit(0);
   }
 
   streamlog_out(MESSAGE) << "Tracker has " << detElements.size() << " elements:\n";

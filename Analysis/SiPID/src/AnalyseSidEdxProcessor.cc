@@ -145,14 +145,14 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
   zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear(); typeHit.clear();
   double eThisEvt = 0.;
 
-  for(unsigned icoll=0; icoll<m_trkHitCollNames.size(); icoll++) {
+  for( auto hitCollName : m_trkHitCollNames) {
 
     LCCollection* hits = NULL;
     try {
-      hits = evt->getCollection(m_trkHitCollNames.at(icoll));
+      hits = evt->getCollection(hitCollName);
     }
     catch(EVENT::DataNotAvailableException &dataex) {
-      streamlog_out(DEBUG) << "Collection " << m_trkHitCollNames.at(icoll) << " not found in event #" << evt->getEventNumber() << ".\n";
+      streamlog_out(DEBUG) << "Collection " << hitCollName << " not found in event #" << evt->getEventNumber() << ".\n";
       hits = NULL;
       continue;
     }

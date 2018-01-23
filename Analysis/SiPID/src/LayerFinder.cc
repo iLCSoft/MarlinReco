@@ -170,7 +170,7 @@ double LayerResolver<T>::SensitiveThicknessRead(int nLayer) const {
  * ************************************** */
 
 LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& theDetector,
-                          FloatVec sensThickCheatVals, int elementMask) :
+                          FloatVec sensThickCheatVals) :
   knownDetectors(),
   decoder()
 {
@@ -191,11 +191,6 @@ LayerFinder::LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector& th
     streamlog_out(MESSAGE) << "\', named \'" << detElements.at(i).name() << "\'\n";
     streamlog_out(MESSAGE) << " ... expects collection name " << _collectionNames[i] << "\n";
     streamlog_out(MESSAGE) << " ... has type flags " << detElements.at(i).typeFlag() << "\n";
-
-    if(! (elementMask & 1 << i) ) {
-      streamlog_out(MESSAGE) << "Turned OFF in the element mask (see ElementMask parameter).\n";
-      continue;
-    }
 
     int tf = detElements.at(i).typeFlag();
 

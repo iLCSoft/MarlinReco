@@ -108,8 +108,6 @@ class SiTracker_dEdxProcessor : public Processor {
    * (Check the order of tracker hit collections in the input LCIO file.)
    */
   StringVec m_trkHitCollNames{};
-  // Bit mask which tracker detector elements to use (respecting the order in LCDD)
-  int m_elementMask{};
 
   // Shall we cheat the sensitive thicknesses?
   bool m_cheatSensorThicknesses{};

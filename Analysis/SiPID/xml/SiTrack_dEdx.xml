@@ -1332,14 +1332,6 @@
          Here we are cheating the thicknesses of the tracker barrel regions
          because they are defined per "layer" with 2 sensors. -->
     <parameter name="SensorThicknessCheatValues" type="FloatVec"> 0.015 -1 0.015 -1 -1 -1 </parameter>
-    <!-- Integer bitmask that specifies which tracker detector elements to use.
-         To obtain the integer value of the mask, add up 2^i for each tracker
-         element that you want to use, where i is the order of the tracker
-         element in LCDD.
-         Default: use all elements.
-         Feature not ready.
-          -->
-    <!--parameter name="ElementMask" type="int"> 15 </parameter-->
     <!-- Type of estimator for dEdx.
          Available estimators: mean, median, truncMean, harmonic, harmonic-2,
          weighted-harmonic, weighted-harmonic-2

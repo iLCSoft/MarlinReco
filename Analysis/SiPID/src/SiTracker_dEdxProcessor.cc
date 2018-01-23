@@ -258,8 +258,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     EVENT::TrackerHitVec trackhits = track->getTrackerHits();
 
     MarlinTrk::IMarlinTrack* marlin_trk = trkSystem->createTrack();
-    for( EVENT::TrackerHitVec::iterator it = trackhits.begin() ; it != trackhits.end() ; ++it ){
-      marlin_trk->addHit(*it);
+    for( auto it : trackhits ){
+      marlin_trk->addHit(it);
     }//end loop on hits
 
     const TrackStateImpl *trackState = dynamic_cast<const TrackStateImpl*>(track->getTrackState(TrackState::AtFirstHit));

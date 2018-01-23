@@ -52,11 +52,11 @@ class SiTracker_dEdxProcessor : public Processor {
   virtual Processor*  newProcessor() { return new SiTracker_dEdxProcessor ; }
   
   SiTracker_dEdxProcessor() ;
-  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) ;
+  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) = delete;
   
   virtual ~SiTracker_dEdxProcessor() ;
 
-  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &);
+  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &) = delete;
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.

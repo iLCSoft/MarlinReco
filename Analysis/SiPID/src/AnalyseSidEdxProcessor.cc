@@ -82,32 +82,6 @@ AnalyseSidEdxProcessor::AnalyseSidEdxProcessor() : Processor("AnalyseSidEdxProce
 }
 
 
-AnalyseSidEdxProcessor::AnalyseSidEdxProcessor(const AnalyseSidEdxProcessor& orig) :
-    Processor("AnalyseSidEdxProcessor"),
-    m_rootFileName(orig.m_rootFileName), m_trackColName(orig.m_trackColName),
-    m_linkColName(orig.m_linkColName), m_trkHitCollNames(orig.m_trkHitCollNames),
-    rootfile(NULL),
-    tree(NULL),
-    nTracks(orig.nTracks), lastRunHeaderProcessed(orig.lastRunHeaderProcessed)
-{
-
-}
-
-AnalyseSidEdxProcessor& AnalyseSidEdxProcessor::operator =(const AnalyseSidEdxProcessor& orig) {
-    if (this == &orig) return *this;
-    this->m_rootFileName = orig.m_rootFileName;
-    this->m_trackColName = orig.m_trackColName;
-    this->m_linkColName = orig.m_linkColName;
-    this->m_trkHitCollNames = orig.m_trkHitCollNames;
-    this->rootfile = orig.rootfile;
-    this->tree = orig.tree;
-    this->nTracks = orig.nTracks;
-    this->lastRunHeaderProcessed = orig.lastRunHeaderProcessed;
-
-    return *this;
-}
-
-
 void AnalyseSidEdxProcessor::init() {
 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;

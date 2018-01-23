@@ -271,7 +271,7 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     return;
   }
 
-  layerFinder->ReportKnownDetectors();
+  //layerFinder->ReportHandledDetectors();
 
   addTime(1);
 

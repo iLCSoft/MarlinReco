@@ -128,7 +128,7 @@ class LayerFinder {
 public:
   // Constructor with the vector of collection names that the finder
   // will use when looking for the collection.
-  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals, int elementMask);
+  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals);
   // Copy constructor
   LayerFinder( const LayerFinder& );
 

@@ -46,7 +46,6 @@ SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_d
 
   this->m_trackCollName = orig.m_trackCollName;
   this->m_trkHitCollNames = orig.m_trkHitCollNames;
-  this->m_elementMask = orig.m_elementMask;
   this->surfMap = orig.surfMap;
   this->trkSystem = orig.trkSystem;
   this->_bField = orig._bField;
@@ -61,7 +60,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& 
     Processor("SiTracker_dEdxProcessor"),
     dEdxEval(orig.dEdxEval),
     m_trackCollName(orig.m_trackCollName), m_trkHitCollNames(orig.m_trkHitCollNames),
-    m_elementMask(orig.m_elementMask), surfMap(orig.surfMap), trkSystem(orig.trkSystem),
+    surfMap(orig.surfMap), trkSystem(orig.trkSystem),
     _bField(orig._bField), layerFinder(NULL),
     lastRunHeaderProcessed(orig.lastRunHeaderProcessed),
     timers(orig.timers),
@@ -70,7 +69,7 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& 
 {}
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxProcessor"),
-    m_trackCollName(""), m_trkHitCollNames(), m_elementMask(0),
+    m_trackCollName(""), m_trkHitCollNames(),
     surfMap(NULL), trkSystem(NULL), _bField(0),
     layerFinder(NULL),
     lastRunHeaderProcessed(-1),
@@ -110,11 +109,6 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
   for (unsigned ibit=0; ibit<sizeof(int)*CHAR_BIT; ibit++) {
     elementMask += 1 << ibit;
   }
-
-  registerProcessorParameter("ElementMask" ,
-                             "Bit mask which tracker detector elements to use (respecting the order in LCDD)",
-                             m_elementMask ,
-                             elementMask ) ;
 
   registerProcessorParameter("CheatSensorThicknesses" ,
                              "Shall we use the sensitive thicknesses from parameters?",
@@ -194,7 +188,7 @@ void SiTracker_dEdxProcessor::init() {
     }
   }
 
-  layerFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals, m_elementMask);
+  layerFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals);
  // exit(0);
 
   const double pos[3]={0,0,0};

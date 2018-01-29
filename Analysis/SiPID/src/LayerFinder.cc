@@ -14,16 +14,6 @@
  * Implementation of base class LayerResolverBase
  * *********************************************** */
 
-LayerResolverBase::LayerResolverBase(const LayerResolverBase &lt) :
-  ThicknessSensitive( lt.CheatsSensThickness() ? &LayerResolverBase::SensitiveThicknessCheat : NULL ),
-  sensThickCheatVal(lt.SensitiveThicknessCheat(0)),
-  detTypeFlag(lt.GetDetTypeFlag()),
-  collectionName(lt.GetCollectionName()),
-  detectorName(lt.GetDetectorName()),
-  collection(lt.collection),
-  decoder(lt.decoder)
-{}
-
 LayerResolverBase::LayerResolverBase(const int _detTypeFlag,
     const std::string _collectionName, const std::string _detectorName, double _sensThickCheatVal) :
   ThicknessSensitive( _sensThickCheatVal>0. ? &LayerResolverBase::SensitiveThicknessCheat : NULL ),
@@ -35,28 +25,9 @@ LayerResolverBase::LayerResolverBase(const int _detTypeFlag,
   decoder(NULL)
 {}
 
-LayerResolverBase::LayerResolverBase() :
-  ThicknessSensitive(NULL),
-  sensThickCheatVal(0),
-  detTypeFlag(0),
-  collectionName(""),
-  detectorName(""),
-  collection(NULL),
-  decoder(NULL)
-{}
-
-
 LayerResolverBase::~LayerResolverBase() {
   if(decoder) delete decoder;
   decoder=NULL;
-}
-
-const LayerResolverBase& LayerResolverBase::operator =(const LayerResolverBase& lr) {
-  this->detTypeFlag = lr.detTypeFlag;
-  this->collectionName = lr.collectionName;
-  this->detectorName = lr.detectorName;
-  this->decoder = lr.decoder;
-  return *this;
 }
 
 std::string LayerResolverBase::GetCollectionType() const {
@@ -113,16 +84,6 @@ int LayerResolverBase::SetCollection(EVENT::LCEvent *evt) {
  * ************************************** */
 
 template <class T>
-LayerResolver<T>::LayerResolver(const LayerResolver<T> &lt) :
-  LayerResolverBase(lt),
-  layering(lt.GetLayering())
-{
-  ThicknessSensitive = (lt.CheatsSensThickness() ?
-      &LayerResolver::SensitiveThicknessCheat :
-      &LayerResolver::SensitiveThicknessRead );
-}
-
-template <class T>
 LayerResolver<T>::LayerResolver(const int _detTypeFlag,
           T *_layering,
           const std::string _collectionName,
@@ -131,32 +92,9 @@ LayerResolver<T>::LayerResolver(const int _detTypeFlag,
   LayerResolverBase(_detTypeFlag, _collectionName, _detectorName, _sensThickCheatVal),
   layering(_layering)
 {
-  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&LayerResolver::SensitiveThicknessRead);
+  if(_sensThickCheatVal < 0) ThicknessSensitive = (LayerResolverFn)(&LayerResolver<T>::SensitiveThicknessRead);
 }
 
-template <class T>
-LayerResolver<T>::LayerResolver() :
-  LayerResolverBase(),
-  layering(NULL)
-{}
-
-template <class T>
-const LayerResolver<T>& LayerResolver<T>::operator=(const LayerResolver<T>& pr)
-  {
-  this->sensThickCheatVal = pr.sensThickCheatVal;
-  this->detTypeFlag = pr.detTypeFlag;
-  this->collectionName = pr.collectionName;
-  this->detectorName = pr.detectorName;
-  this->collection = pr.collection;
-  this->decoder = pr.decoder;
-  this->layering = pr.layering;
-
-  this->ThicknessSensitive = (pr.CheatsSensThickness() ?
-      &LayerResolverBase::SensitiveThicknessCheat :
-      &LayerResolverBase::SensitiveThicknessRead );
-
-  return *this;
-}
 
 template <class T>
 double LayerResolver<T>::SensitiveThicknessRead(int nLayer) const {

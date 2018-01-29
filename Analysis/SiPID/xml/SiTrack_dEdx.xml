@@ -109,6 +109,8 @@
     <parameter name="Overlay" type="string">False </parameter>
     <!--Which option to use for tracking: Truth, ConformalPlusExtrapolator, Conformal-->
     <parameter name="Tracking" type="string">Truth </parameter>
+    <parameter name="Tracking" type="string">Truth </parameter>
+    <parameter name="Verbosity" type="string">WARNING </parameter>
   </processor>
 
   <group name="Overlay">
@@ -1331,7 +1333,7 @@
          negative values for thicknesses that should not be cheated
          Here we are cheating the thicknesses of the tracker barrel regions
          because they are defined per "layer" with 2 sensors. -->
-    <parameter name="SensorThicknessCheatValues" type="FloatVec"> 0.015 -1 0.015 -1 -1 -1 </parameter>
+    <parameter name="SensorThicknessCheatValues" type="FloatVec"> 0.05 0.05 0.1 0.1 0.1 0.1 </parameter>
     <!-- Type of estimator for dEdx.
          Available estimators: mean, median, truncMean, harmonic, harmonic-2,
          weighted-harmonic, weighted-harmonic-2

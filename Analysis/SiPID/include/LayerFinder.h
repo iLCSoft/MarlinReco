@@ -28,13 +28,16 @@ typedef std::map<EVENT::LCCollection*, CellIDDecoder<TrackerHitPlane>*> Collecti
 class LayerResolverBase {
 
 public:
-  LayerResolverBase(const LayerResolverBase &);
+  LayerResolverBase() = delete ;
+  LayerResolverBase(const LayerResolverBase &) = delete ;
   LayerResolverBase(const int _detTypeFlag,
                     const std::string _collectionName,
                     const std::string _detectorName,
                     double _sensThickCheatVal=-1.);
 
   virtual ~LayerResolverBase() ;
+
+  const LayerResolverBase& operator=(const LayerResolverBase&) = delete;
 
   /* The detector type flag helps to distinguish pointers
    * to plane from petal resolver objects at runtime.
@@ -58,7 +61,6 @@ public:
   int DecodeLayer(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"]; }
   int DecodeSystem(TrackerHitPlane* thit) const { return (*decoder)(thit)["system"]; }
 
-  const LayerResolverBase& operator=(const LayerResolverBase&);
 
   virtual double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
   virtual double SensitiveThickness(TrackerHitPlane* thit) const {
@@ -85,15 +87,14 @@ protected:
   EVENT::LCCollection *collection;
   CellIDDecoder<TrackerHitPlane>* decoder;
 
-  LayerResolverBase();
-
 };
 
 
 template <class T> class LayerResolver : public LayerResolverBase {
 
 public:
-  LayerResolver(const LayerResolver<T> &lt);
+  LayerResolver() = delete ;
+  LayerResolver(const LayerResolver<T> &lt) = delete ;
   LayerResolver(const int _detTypeFlag, T *,
                 const std::string _collectionName,
                 const std::string _detectorName,
@@ -103,14 +104,13 @@ public:
 
   unsigned GetNumberOfLayers() const { return layering->layers.size(); }
 
-  const LayerResolver& operator=(const LayerResolver<T>&);
+  const LayerResolver& operator=(const LayerResolver<T>&) = delete ;
   const T *GetLayering() const {return layering;};
 
 protected:
   double SensitiveThicknessRead(int nLayer) const ;
   const T *layering;
 
-  LayerResolver();
 };
 
 typedef LayerResolver<dd4hep::rec::ZDiskPetalsData> PetalResolver;

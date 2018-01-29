@@ -593,7 +593,7 @@
 
 
   <processor name="EventNumber" type="Statusmonitor">
-    <parameter name="HowOften" type="int">1 </parameter>
+    <parameter name="HowOften" type="int">100 </parameter>
     <parameter name="Verbosity" type="string"> MESSAGE </parameter>
   </processor>
 

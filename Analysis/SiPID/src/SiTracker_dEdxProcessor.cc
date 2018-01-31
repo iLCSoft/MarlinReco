@@ -38,38 +38,15 @@ dEdxPoint::dEdxPoint(const dEdxPoint& orig) :
 
 SiTracker_dEdxProcessor aSiTracker_dEdxProcessor ;
 
-/**/
-
-SiTracker_dEdxProcessor & SiTracker_dEdxProcessor::operator = (const SiTracker_dEdxProcessor &orig) {
-
-  if (this == &orig) return *this;
-
-  this->m_trackCollName = orig.getTrackCollName();
-  this->m_trkHitCollNames = orig.getTrkHitCollNames();
-  this->m_elementMask = orig.getElementMask();
-  this->surfMap = orig.getSurfaceMap();
-  this->trkSystem = orig.getTrkSystem();
-  this->_bField = orig.getBField();
-  this->layerFinder = orig.getLayerFinder();
-  this->lastRunHeaderProcessed = orig.getLastRunHeaderProcessed();
-  //this->dEdxEval = otig.
-
-  return *this;
-}
-
-SiTracker_dEdxProcessor::SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor& orig) :
-    Processor("SiTracker_dEdxProcessor"),
-    m_trackCollName(orig.getTrackCollName()), m_trkHitCollNames(orig.getTrkHitCollNames()),
-    m_elementMask(orig.getElementMask()), surfMap(orig.getSurfaceMap()), trkSystem(orig.getTrkSystem()),
-    _bField(orig.getBField()), layerFinder(orig.getLayerFinder()),
-    lastRunHeaderProcessed(orig.getLastRunHeaderProcessed())
-{}
 
 SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxProcessor"),
-    m_trackCollName(""), m_trkHitCollNames(), m_elementMask(0),
+    m_trackCollName(""), m_trkHitCollNames(),
     surfMap(NULL), trkSystem(NULL), _bField(0),
     layerFinder(NULL),
-    lastRunHeaderProcessed(-1)
+    lastRunHeaderProcessed(-1),
+    timers(),
+    lastTP(std::chrono::high_resolution_clock::now()),
+    newTP(std::chrono::high_resolution_clock::now())
     {
 
   // modify processor description
@@ -104,11 +81,6 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
     elementMask += 1 << ibit;
   }
 
-  registerProcessorParameter("ElementMask" ,
-                             "Bit mask which tracker detector elements to use (respecting the order in LCDD)",
-                             m_elementMask ,
-                             elementMask ) ;
-
   registerProcessorParameter("CheatSensorThicknesses" ,
                              "Shall we use the sensitive thicknesses from parameters?",
                              m_cheatSensorThicknesses ,
@@ -130,10 +102,15 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor() : Processor("SiTracker_dEdxPr
   registerProcessorParameter("dEdxEstimator" ,
                              "Type of estimator for dEdx.",
                              m_dEdxEstimator ,
-                             std::string("mean") ) ;
+                             std::string("median") ) ;
 
 }
 
+
+SiTracker_dEdxProcessor::~SiTracker_dEdxProcessor() {
+
+  if (layerFinder) delete layerFinder;
+}
 
 
 void SiTracker_dEdxProcessor::init() {
@@ -182,7 +159,7 @@ void SiTracker_dEdxProcessor::init() {
     }
   }
 
-  layerFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals, m_elementMask);
+  layerFinder = new LayerFinder(m_trkHitCollNames, theDetector, m_sensThicknessCheatVals);
  // exit(0);
 
   const double pos[3]={0,0,0};
@@ -206,6 +183,10 @@ void SiTracker_dEdxProcessor::init() {
   gROOT->ProcessLine("#include <vector>");
 
   lastRunHeaderProcessed = -1;
+
+  for (unsigned i=0; i<nTimers; i++) {
+    timers.push_back(std::chrono::duration<double>(std::chrono::duration_values<double>::zero()));
+  }
 
   streamlog_out(DEBUG) << "   init done  " << std::endl ;
 
@@ -237,6 +218,8 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
   /***       Get collections        ***/
   /************************************/
 
+  lastTP = std::chrono::high_resolution_clock::now();
+
   LCCollection* tracks = NULL;
   try {
     tracks = evt->getCollection(m_trackCollName);
@@ -249,14 +232,19 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
 
   tracks->getFlag();
 
-  /*** Collection finder for hit collections ***/
-  if (layerFinder->ReadCollections(evt) == 0) {
+
+  addTime(0);
+
+
+  /*** Read collections to find a valid decoder for CELLID encoding ***/
+  if (layerFinder->ReadCollections(evt) != 0) {
     streamlog_out(WARNING) << "None of the requested collections found in event #" << evt->getEventNumber() << ". Skipping event.\n";
     return;
   }
 
-  layerFinder->ReportKnownDetectors();
-  streamlog_out(DEBUG5) << "Done reporting detectors.\n";
+  //layerFinder->ReportHandledDetectors();
+
+  addTime(1);
 
   int nTracks = tracks->getNumberOfElements()  ;
 
@@ -270,16 +258,21 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
     EVENT::TrackerHitVec trackhits = track->getTrackerHits();
 
     MarlinTrk::IMarlinTrack* marlin_trk = trkSystem->createTrack();
-    for( EVENT::TrackerHitVec::iterator it = trackhits.begin() ; it != trackhits.end() ; ++it ){
-      marlin_trk->addHit(*it);
+    for( auto it : trackhits ){
+      marlin_trk->addHit(it);
     }//end loop on hits
 
-    streamlog_out(DEBUG5) << "Created marlin_trk.\n";
-    TrackStateImpl trackState( *(track->getTrackState(TrackState::AtFirstHit)) );
-    streamlog_out(DEBUG5) << "Got track state." << std::endl;
+    const TrackStateImpl *trackState = dynamic_cast<const TrackStateImpl*>(track->getTrackState(TrackState::AtFirstHit));
+    if (!trackState) {
+      streamlog_out(WARNING) << "Cannot get track state for track #" << i
+                             << " in event " << evt->getEventNumber() << std::endl;
+      streamlog_out(WARNING) << "Skipping track.\n";
+      continue;
+    }
 
-    marlin_trk->initialise( trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
-    streamlog_out(DEBUG5) << "Initialized marlin_trk.\n";
+    marlin_trk->initialise( *trackState, _bField, MarlinTrk::IMarlinTrack::forward ) ;
+
+    addTime(2);
 
     dEdxVec dEdxHitVec;
 
@@ -291,7 +284,9 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       IMPL::TrackStateImpl ts;
       double chi2 = 0.;
       int ndf = 0;
-      marlin_trk->propagate(hitpos, ts, chi2, ndf);
+      marlin_trk->extrapolate(hitpos, ts, chi2, ndf);
+
+      addTime(3);
 
       dd4hep::rec::Vector3D rp(ts.getReferencePoint());
 
@@ -303,8 +298,9 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       float trackDirZ = tanLambda*sinTheta;
       dd4hep::rec::Vector3D trackDir(trackDirX, trackDirY, trackDirZ);
 
+      addTime(4);
+
       // Normal to the surface of hit
-      streamlog_out(DEBUG5) << "Looking for the Normal to the surface of hit.\n";
       unsigned long cellid = trackhits[ihit]->getCellID0();
       dd4hep::rec::SurfaceMap::const_iterator surface = surfMap->find(cellid);
       if (surface == surfMap->end()) {
@@ -313,14 +309,14 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
         exit(0);
       }
       dd4hep::rec::Vector3D surfaceNormal = surface->second->normal();
-      streamlog_out(DEBUG5) << "Found surface corresponding to track hit ID " << cellid << ".\n";
+
+      addTime(5);
 
       double norm = sqrt(trackDir.dot(trackDir)*surfaceNormal.dot(surfaceNormal));
       if (norm < FLT_MIN) continue;
       double cosAngle = fabs(trackDir.dot(surfaceNormal)) / norm ;
 
-      int detTypeFlag = 0;
-      double thickness = layerFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]), detTypeFlag);
+      double thickness = layerFinder->SensitiveThickness(dynamic_cast<TrackerHitPlane*>(trackhits[ihit]));
       if (thickness < 0.) {
         streamlog_out(ERROR) << "Could not find hit collection corresponding to hit CellID " << cellid
                              << ", hit ID " << trackhits.at(ihit)->id() << " .\n";
@@ -335,24 +331,22 @@ void SiTracker_dEdxProcessor::processEvent( LCEvent * evt ) {
       double effThickness = thickness / cosAngle;
 
       dEdxHitVec.push_back( dEdxPoint(trackhits[ihit]->getEDep(), effThickness) );
-      // At present there is no method to set dEdx for a EVENT::TrackerHit, IMPL::TrackerHitImpl or IMPL::TrackerHitPlaneImpl
 
-      // I am not sure whether the following is the intended use of the hit "type".
-      // The hit type value is being overwritten here, but it was apparently not used before.
-      // Todo: Why was I doing this at all?
-      /*try {
-        ((IMPL::TrackerHitImpl*)(trackhits[ihit]))->setType(detTypeFlag);
-      }
-      catch (std::exception &) {}*/
+      addTime(6);
 
     }
+
+
     if(dEdxHitVec.size() == 0) continue;
 
     double dEdx, dEdxError;
     dEdx = dEdxEval(dEdxHitVec, dEdxError);
-    // This is read-only if track is read from existing lcio file!
+    // Todo: This is read-only if track is read from existing lcio file!
+    // Is there a way to process tracks that are read from the input file?
     track->setdEdx(dEdx);
     track->setdEdxError(dEdxError);
+
+    addTime(7);
   }
 
 }
@@ -368,9 +362,15 @@ void SiTracker_dEdxProcessor::check( LCEvent *  /*evt*/ ) {
 
 void SiTracker_dEdxProcessor::end(){
 
+  for (unsigned i=0; i<timers.size(); i++) {
+    streamlog_out(MESSAGE) << "Total time in timer #" << i << ": " << timers.at(i).count() << " s\n";
+  }
   //   std::cout << "SiTracker_dEdxProcessor::end()  " << name()
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;
+
+  delete layerFinder;
+  layerFinder = NULL;
 }
 
 
@@ -384,71 +384,25 @@ void SiTracker_dEdxProcessor::end(){
 double SiTracker_dEdxProcessor::truncFractionUp = 0.3;
 double SiTracker_dEdxProcessor::truncFractionLo = 0.1;
 
-// Weighted mean
+// Weighted truncated mean with arbitrary truncation
 // Weight of a measurement is the material thickness traversed in the hit
-double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
+double SiTracker_dEdxProcessor::dEdxGeneralTruncMean(dEdxVec hitVec, double &dEdxError,
+    const double truncLo, const double truncHi) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  const unsigned iStart = static_cast<unsigned>(floor(n*truncLo + 0.5));
+  const unsigned iEnd = static_cast<unsigned>(floor(n*(1-truncHi) + 0.5));
 
-  double eDepSum = 0.;
-  double thickness = 0.;
-  double mu2dEdx = 0.;
-  for (unsigned i=0; i<n; i++) {
-    eDepSum += hitVec.at(i).Get_dE();
-    thickness += hitVec.at(i).Get_dx();
-    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
+  if(iEnd-iStart == 0) {
+    dEdxError = 0;
+    return 0;
   }
-
-  double track_dEdx = eDepSum / thickness;
-  dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/n);
-  return track_dEdx;
-}
-
-
-// Median
-double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
-
-  const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(iEnd-iStart == 1) {
+    dEdxError = hitVec.at(iStart).Get_dEdx() ;
+    return hitVec.at(iStart).Get_dEdx() ;
+  }
 
   sort(hitVec.begin(), hitVec.end(), dEdxOrder);
-  double median=0.;
-  if (n%2 ==1) {
-    median = hitVec.at(n/2).Get_dEdx();
-  }
-  else {
-    median = (hitVec.at(n/2-1).Get_dEdx() + hitVec.at(n/2).Get_dEdx()) / 2;
-  }
-
-  double eDepSum = 0.;
-  double thickness = 0.;
-  double mu2dEdx = 0.;
-  for (unsigned i=0; i<n; i++) {
-    eDepSum += hitVec.at(i).Get_dE();
-    thickness += hitVec.at(i).Get_dx();
-    mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
-  }
-
-  double mean = eDepSum / thickness;
-  // Temporarily using sigma/sqrt(n) for the error of the median
-  // TODO: Implement a more accurate estimate of the error of the median
-  // using a correction factor tbd from toy MC with Landau distribution
-  dEdxError = sqrt((mu2dEdx - pow(mean, 2))/n);
-  return median;
-}
-
-
-// Weighted truncated mean
-// Weight of a measurement is the material thickness traversed in the hit
-double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError) {
-
-  const unsigned n = hitVec.size();
-  if(n == 0) return 0;
-
-  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
-  const unsigned iStart = unsigned(n*truncFractionLo + 0.5);
-  const unsigned iEnd = unsigned(n*(1-truncFractionUp) + 0.5);
 
   double eDepSum = 0.;
   double thickness = 0.;
@@ -459,9 +413,56 @@ double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError)
     mu2dEdx += pow(hitVec.at(i).Get_dE(), 2) / hitVec.at(i).Get_dx();
   }
 
+  mu2dEdx /= thickness;
+
   double track_dEdx = eDepSum / thickness;
   dEdxError = sqrt((mu2dEdx - pow(track_dEdx, 2))/(iEnd-iStart));
   return track_dEdx;
+}
+
+
+// Weighted mean
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxMean(dEdxVec hitVec, double &dEdxError) {
+
+  return dEdxGeneralTruncMean(hitVec, dEdxError, 0., 0.);
+}
+
+
+// Median
+double SiTracker_dEdxProcessor::dEdxMedian(dEdxVec hitVec, double &dEdxError) {
+
+  const unsigned n = hitVec.size();
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
+
+  sort(hitVec.begin(), hitVec.end(), dEdxOrder);
+  double median=0.;
+  if (n%2 ==1) {
+    median = hitVec.at(n/2).Get_dEdx();
+  }
+  else {
+    median = (hitVec.at(n/2-1).Get_dEdx() + hitVec.at(n/2).Get_dEdx()) / 2;
+  }
+
+  // Substituting error of the mean for dEdxError here
+  // instead of bootstrapping the error of the median
+  dEdxMean(hitVec, dEdxError);
+  return median;
+}
+
+
+// Weighted truncated mean with standard truncation
+// Weight of a measurement is the material thickness traversed in the hit
+double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError) {
+
+  return dEdxGeneralTruncMean(hitVec, dEdxError, truncFractionLo, truncFractionUp);
 }
 
 
@@ -469,7 +470,14 @@ double SiTracker_dEdxProcessor::dEdxTruncMean(dEdxVec hitVec, double &dEdxError)
 double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)
@@ -483,10 +491,10 @@ double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) 
 
   double mu2 = mu2sum / n;
   double mu1 = mu1sum / n;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / mu1;
-  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+  dEdxError = sigma / pow(mu1, 2) ;
 
   return dEdx;
 }
@@ -496,7 +504,14 @@ double SiTracker_dEdxProcessor::dEdxHarmonic(dEdxVec hitVec, double &dEdxError) 
 double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)^2
@@ -510,10 +525,10 @@ double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError)
 
   double mu2 = mu2sum / n;
   double mu1 = mu1sum / n;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / sqrt(mu1);
-  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 3) / 2 ;
 
   return dEdx;
 }
@@ -524,7 +539,14 @@ double SiTracker_dEdxProcessor::dEdxHarmonic2(dEdxVec hitVec, double &dEdxError)
 double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)
@@ -541,10 +563,10 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxErro
 
   double mu2 = mu2sum / wgtsum;
   double mu1 = mu1sum / wgtsum;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / mu1;
-  dEdxError = sigma * pow(dEdx, 2) / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 2) ;
 
   return dEdx;
 }
@@ -555,7 +577,14 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic(dEdxVec hitVec, double &dEdxErro
 double SiTracker_dEdxProcessor::dEdxWgtHarmonic2(dEdxVec hitVec, double &dEdxError) {
 
   const unsigned n = hitVec.size();
-  if(n == 0) return 0;
+  if(n == 0) {
+    dEdxError = 0;
+    return 0;
+  }
+  if(n == 1) {
+    dEdxError = hitVec.at(0).Get_dEdx();
+    return hitVec.at(0).Get_dEdx();
+  }
 
   // Calculation of the first and the second moment of
   // 1 / (dE/dx)^2
@@ -572,10 +601,10 @@ double SiTracker_dEdxProcessor::dEdxWgtHarmonic2(dEdxVec hitVec, double &dEdxErr
 
   double mu2 = mu2sum / wgtsum;
   double mu1 = mu1sum / wgtsum;
-  double sigma = sqrt( mu2 - pow(mu1, 2) );
+  double sigma = sqrt( (mu2 - pow(mu1, 2)) / n );
 
   double dEdx = 1 / sqrt(mu1);
-  dEdxError = sigma * pow(dEdx, 3) / 2 / sqrt(n) ;
+  dEdxError = sigma * pow(dEdx, 3) / 2 ;
 
   return dEdx;
 }

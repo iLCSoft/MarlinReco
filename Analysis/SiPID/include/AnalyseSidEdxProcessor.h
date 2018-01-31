@@ -36,6 +36,9 @@ class AnalyseSidEdxProcessor : public Processor {
   virtual Processor*  newProcessor() { return new AnalyseSidEdxProcessor ; }
 
   AnalyseSidEdxProcessor() ;
+  AnalyseSidEdxProcessor(const AnalyseSidEdxProcessor&) = delete ;
+
+  AnalyseSidEdxProcessor& operator=(const AnalyseSidEdxProcessor&) = delete ;
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.

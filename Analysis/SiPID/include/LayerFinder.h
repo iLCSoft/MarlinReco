@@ -25,13 +25,19 @@ typedef std::map<EVENT::LCCollection*, CellIDDecoder<TrackerHitPlane>*> Collecti
  * - Hit collection
  * - decoder (layer number decoder string)
  */
-class LayerResolver {
+class LayerResolverBase {
 
 public:
-  LayerResolver(const LayerResolver &);
-  LayerResolver(const int _detTypeFlag, const std::string _collectionName, double _sensThickCheatVal=-1.);
+  LayerResolverBase() = delete ;
+  LayerResolverBase(const LayerResolverBase &) = delete ;
+  LayerResolverBase(const int _detTypeFlag,
+                    const std::string _collectionName,
+                    const std::string _detectorName,
+                    double _sensThickCheatVal=-1.);
 
-  virtual ~LayerResolver() ;
+  virtual ~LayerResolverBase() ;
+
+  const LayerResolverBase& operator=(const LayerResolverBase&) = delete;
 
   /* The detector type flag helps to distinguish pointers
    * to plane from petal resolver objects at runtime.
@@ -40,6 +46,7 @@ public:
 
   int SetCollection(EVENT::LCEvent *) ;
   std::string GetCollectionName() const { return collectionName; }
+  std::string GetDetectorName() const { return detectorName; }
   std::string GetCollectionType() const;
   std::string GetCollectionEncoding() const;
 
@@ -47,15 +54,21 @@ public:
   int   GetNumberOfHits() const;
   TrackerHitPlane* GetHit(int i) const;
 
-  virtual int GetNumberOfLayers() const = 0;
+  virtual unsigned GetNumberOfLayers() const = 0;
 
-  int Decode(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"];}
+  CellIDDecoder<TrackerHitPlane>* GetDecoder() const { return decoder; }
+  bool HasCollection() const { return static_cast<bool>(decoder); }
+  int DecodeLayer(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"]; }
+  int DecodeSystem(TrackerHitPlane* thit) const { return (*decoder)(thit)["system"]; }
 
-  const LayerResolver& operator=(const LayerResolver&);
 
-  double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
-  typedef  double (LayerResolver::*LayerResolverFn)(int) const;
-  bool CheatsSensThickness() const { return (ThicknessSensitive==&LayerResolver::SensitiveThicknessCheat) ; }
+  virtual double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
+  virtual double SensitiveThickness(TrackerHitPlane* thit) const {
+    return (this->*ThicknessSensitive)(DecodeLayer(thit));
+  }
+
+  typedef  double (LayerResolverBase::*LayerResolverFn)(int) const;
+  bool CheatsSensThickness() const { return (ThicknessSensitive==&LayerResolverBase::SensitiveThicknessCheat) ; }
 
 protected:
 
@@ -69,62 +82,39 @@ protected:
   // Constant in run:
   int detTypeFlag;
   std::string collectionName;
+  std::string detectorName;
   // Event-to-event
   EVENT::LCCollection *collection;
   CellIDDecoder<TrackerHitPlane>* decoder;
 
-  LayerResolver();
-
 };
 
 
-class PetalResolver : public LayerResolver{
+template <class T> class LayerResolver : public LayerResolverBase {
+
 public:
-  PetalResolver(const PetalResolver &lt);
-  PetalResolver(const int _detTypeFlag,
-                dd4hep::rec::ZDiskPetalsData *,
+  LayerResolver() = delete ;
+  LayerResolver(const LayerResolver<T> &lt) = delete ;
+  LayerResolver(const int _detTypeFlag, T *,
                 const std::string _collectionName,
+                const std::string _detectorName,
                 double _sensThickCheatVal=-1.);
 
-  ~PetalResolver() {};
+  ~LayerResolver() {};
 
-  int GetNumberOfLayers() const { return layering->layers.size(); }
+  unsigned GetNumberOfLayers() const { return layering->layers.size(); }
 
-  const PetalResolver& operator=(const PetalResolver&);
-  const dd4hep::rec::ZDiskPetalsData *GetLayering() const {return layering;};
+  const LayerResolver& operator=(const LayerResolver<T>&) = delete ;
+  const T *GetLayering() const {return layering;};
 
 protected:
   double SensitiveThicknessRead(int nLayer) const ;
-  const dd4hep::rec::ZDiskPetalsData *layering;
-
-  PetalResolver();
+  const T *layering;
 
 };
 
-
-class PlaneResolver : public LayerResolver{
-public:
-  PlaneResolver(const PlaneResolver &lt);
-  PlaneResolver(const int _detTypeFlag,
-                dd4hep::rec::ZPlanarData *,
-                const std::string _collectionName,
-                double _sensThickCheatVal=-1.);
-
-  ~PlaneResolver() {};
-
-  int GetNumberOfLayers() const { return layering->layers.size(); }
-
-  const PlaneResolver& operator=(const PlaneResolver&);
-  const dd4hep::rec::ZPlanarData *GetLayering() const {return layering;};
-
-
-protected:
-  double SensitiveThicknessRead(int nLayer) const ;
-  const dd4hep::rec::ZPlanarData *layering;
-
-  PlaneResolver();
-
-};
+typedef LayerResolver<dd4hep::rec::ZDiskPetalsData> PetalResolver;
+typedef LayerResolver<dd4hep::rec::ZPlanarData> PlaneResolver;
 
 
 
@@ -137,10 +127,13 @@ protected:
 class LayerFinder {
 
 public:
+  LayerFinder() = delete;
   // Constructor with the vector of collection names that the finder
-  // will use when looking for the collection.
-  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals, int elementMask);
+  // will use when looking for the collections.
+  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals);
+  LayerFinder( const LayerFinder& ) = delete;
 
+  LayerFinder& operator = ( const LayerFinder& ) = delete;
 
   /* Reads the decoders of whichever collections are found in the event
    * among those stored in knownDetectors. Returns zero on success and -1 if
@@ -151,19 +144,23 @@ public:
   /* Returns the sensitive thickness of the layer where the hit was recorded
    * Also returns the detector type flag in the second argument
    */
-  double SensitiveThickness(TrackerHitPlane*, int &detTypeFlag);
+  double SensitiveThickness(TrackerHitPlane*);
 
-  EVENT::LCCollection* GetCollection(EVENT::LCObject*);
-  CellIDDecoder<TrackerHitPlane>* GetDecoder(EVENT::LCObject*);
-  int GetLayer(TrackerHitPlane*);
   // Sensitive thickness of layer
-  void ReportKnownDetectors();
+  void ReportHandledDetectors();
+
+  typedef std::map<int, LayerResolverBase*> ResolverMap;
+  typedef ResolverMap::iterator ResolverMapIter;
+
+//  CellIDDecoder<TrackerHitPlane>* GetDecoder() const { return decoder; }
 
 protected:
-  std::vector<LayerResolver*> knownDetectors{};
+  ResolverMap layerResolvers{};
 
-  // Default constructor. Not very useful.
-  LayerFinder();
+  // Search for the TrackerHit collection that contains the hit and
+  // use the collection decoder string to decode the system from CellID
+  int FindSystem(TrackerHitPlane* thit) const ;
+
 };
 
 

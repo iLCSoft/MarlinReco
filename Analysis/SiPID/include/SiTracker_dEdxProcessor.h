@@ -2,6 +2,7 @@
 #define SiTracker_dEdxProcessor_h 1
 
 #include <string>
+#include <chrono>
 
 #include "marlin/Processor.h"
 #include "MarlinTrk/Factory.h"
@@ -19,13 +20,13 @@ using namespace marlin ;
 
 
 
-/**  SiTracker_dEdxProcessor for marlin.
+/**  SiTracker_dEdxProcessor for Marlin.
  *
  *  Calculates dEdx for planar silicon trackers and stores the information
  *  with the tracks in the lcio file.
  *
- * @author S. Lukic, Vinca, Belgrade
- * December 2016
+ * S. Lukic, Vinca, Belgrade
+ * Dec 2016 - Jan 2018
  */
 
 
@@ -51,17 +52,18 @@ class SiTracker_dEdxProcessor : public Processor {
   virtual Processor*  newProcessor() { return new SiTracker_dEdxProcessor ; }
   
   SiTracker_dEdxProcessor() ;
-  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) ;
+  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) = delete;
   
-  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &);
+  virtual ~SiTracker_dEdxProcessor() ;
+
+  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &) = delete;
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
   virtual void init() ;
   
-  /** Called for every run.
-   * Really?
+  /** Called at the end of every run.
    */
   virtual void processRunHeader( LCRunHeader* run ) ;
   
@@ -80,6 +82,9 @@ class SiTracker_dEdxProcessor : public Processor {
   static bool dEdxOrder(dEdxPoint p1, dEdxPoint p2) { return p1.Get_dEdx() < p2.Get_dEdx() ; }
   static double truncFractionUp;
   static double truncFractionLo;
+  static double dEdxGeneralTruncMean(dEdxVec, double &dEdxError,
+                              const double truncLo=0,
+                              const double truncHi=0);
   static double dEdxMean(dEdxVec, double &dEdxError);
   static double dEdxMedian(dEdxVec, double &dEdxError);
   static double dEdxTruncMean(dEdxVec, double &dEdxError);
@@ -88,35 +93,21 @@ class SiTracker_dEdxProcessor : public Processor {
   static double dEdxWgtHarmonic(dEdxVec, double &dEdxError);
   static double dEdxWgtHarmonic2(dEdxVec, double &dEdxError);
 
-  // Getters for the copy constructor
-  std::string getTrackCollName() const { return m_trackCollName; }
-  StringVec getTrkHitCollNames() const { return m_trkHitCollNames; }
-  int getElementMask() const { return m_elementMask; }
-  bool cheatsSensorThicknesses() const { return m_cheatSensorThicknesses; }
-  std::string getDEdxEstimator() const { return m_dEdxEstimator; }
-  const dd4hep::rec::SurfaceMap* getSurfaceMap() const { return surfMap; }
-  MarlinTrk::IMarlinTrkSystem* getTrkSystem() const { return trkSystem; }
-  double getBField() const { return _bField; }
-  LayerFinder* getLayerFinder() const { return layerFinder; }
-  int getLastRunHeaderProcessed() const { return lastRunHeaderProcessed; }
 
   typedef double (*evalChoice)(dEdxVec, double &dEdxError);
-  evalChoice getDEdxEval() const { return dEdxEval; }
 
   protected:
 
   evalChoice dEdxEval{};
 
   /*** Steerable parameters ***/
-  // Input collection names
+  // Name of the track collection
   std::string m_trackCollName{};
   /* Tracker hit collection names.
    * Must be in the same order as tracker detector elements in LCDD.
    * (Check the order of tracker hit collections in the input LCIO file.)
    */
   StringVec m_trkHitCollNames{};
-  // Bit mask which tracker detector elements to use (respecting the order in LCDD)
-  int m_elementMask{};
 
   // Shall we cheat the sensitive thicknesses?
   bool m_cheatSensorThicknesses{};
@@ -135,6 +126,17 @@ class SiTracker_dEdxProcessor : public Processor {
   LayerFinder *layerFinder{};
 
   int lastRunHeaderProcessed{};
+
+  unsigned nTimers = 8;
+  std::vector<std::chrono::duration<double>> timers;
+  std::chrono::high_resolution_clock::time_point lastTP;
+  std::chrono::high_resolution_clock::time_point newTP;
+  void addTime(int i) {
+    newTP = std::chrono::high_resolution_clock::now();
+    timers.at(i) += std::chrono::duration_cast<std::chrono::duration<double>>(newTP - lastTP);
+    lastTP = newTP;
+  }
+
 } ;
 
 #endif

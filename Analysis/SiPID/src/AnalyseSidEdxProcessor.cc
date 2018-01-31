@@ -82,7 +82,6 @@ AnalyseSidEdxProcessor::AnalyseSidEdxProcessor() : Processor("AnalyseSidEdxProce
 }
 
 
-
 void AnalyseSidEdxProcessor::init() {
 
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
@@ -146,14 +145,14 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
   zHit.clear(); xHit.clear(); yHit.clear(); eHit.clear(); typeHit.clear();
   double eThisEvt = 0.;
 
-  for(unsigned icoll=0; icoll<m_trkHitCollNames.size(); icoll++) {
+  for( auto hitCollName : m_trkHitCollNames) {
 
     LCCollection* hits = NULL;
     try {
-      hits = evt->getCollection(m_trkHitCollNames.at(icoll));
+      hits = evt->getCollection(hitCollName);
     }
     catch(EVENT::DataNotAvailableException &dataex) {
-      streamlog_out(DEBUG) << "Collection " << m_trkHitCollNames.at(icoll) << " not found in event #" << evt->getEventNumber() << ".\n";
+      streamlog_out(DEBUG) << "Collection " << hitCollName << " not found in event #" << evt->getEventNumber() << ".\n";
       hits = NULL;
       continue;
     }
@@ -217,8 +216,16 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     /*** Find the associated MC particle ***/
 
     const LCObjectVec& mcParticles = track2mcNav->getRelatedToObjects(track);
+    if (mcParticles.size() == 0) {
+      streamlog_out(WARNING) << " No MCParticles connected to this track! Skipping track.\n";
+      continue;
+    }
     streamlog_out(DEBUG) << " Number of MCParticles connected to this track " << mcParticles.size() << std::endl;
     const FloatVec& mcpWeights = track2mcNav->getRelatedToWeights(track);
+    if (mcpWeights.size() == 0) {
+      streamlog_out(WARNING) << " Set of MC particle weights for this track is empty! Skipping track.\n";
+      continue;
+    }
     streamlog_out(DEBUG) << " Number of weights of MCParticle connections " << mcpWeights.size() << std::endl;
 
     if(mcParticles.size() != mcpWeights.size()) {
@@ -276,7 +283,7 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
       m.push_back(mass);
 
       nTrkHits.push_back(trackhits.size());
-      /**********************/
+      **********************/
 
       eDepHit += trackhits[ihit]->getEDep();
     }
@@ -285,11 +292,6 @@ void AnalyseSidEdxProcessor::processEvent( LCEvent * evt ) {
     // Repeatedly store total energy in event for easier analysis in ROOT
     eEvt.push_back(eThisEvt);
   }
-
-
-
-
-
 
   tree->Fill();
 
@@ -310,6 +312,6 @@ void AnalyseSidEdxProcessor::end(){
   //     << " processed " << _nEvt << " events in " << _nRun << " runs "
   //     << std::endl ;
   rootfile->Write();
-
+  rootfile->Close();
 }
 

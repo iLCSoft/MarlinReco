@@ -13,21 +13,10 @@ using namespace marlin ;
 
 class TH1 ;
 
-/**  Example processor for marlin.
+/** Computes various estimators for the time of flight from CalorimeterHits.
+ * Creates ROOT histograms for these parameters.
  * 
- *  If compiled with MARLIN_USE_AIDA 
- *  it creates a histogram (cloud) of the MCParticle energies.
- * 
- *  <h4>Input - Prerequisites</h4>
- *  Needs the collection of MCParticles.
- *
- *  <h4>Output</h4> 
- *  A histogram.
- * 
- * @param CollectionName Name of the MCParticle collection
- * 
- * @author F. Gaede, DESY
- * @version $Id: TOFPlots.h,v 1.4 2005-10-11 12:57:39 gaede Exp $ 
+ * @author N. Weinhold, DESY internship 2017
  */
 
 class TOFPlots : public Processor {
@@ -36,7 +25,9 @@ class TOFPlots : public Processor {
   
   virtual Processor*  newProcessor() { return new TOFPlots ; }
   
-  
+  TOFPlots(const TOFPlots&) = delete;
+  TOFPlots& operator=(const TOFPlots&) = delete;
+
   TOFPlots() ;
   
   /** Called at the begin of the job before anything is read.
@@ -65,15 +56,15 @@ class TOFPlots : public Processor {
 
   /** Input collection name.
    */
-  std::string _colNameMCP ;
-  std::string _colNamePFO ;
+  std::string _colNameMCP{};
+  std::string _colNamePFO{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{};
+  int _nEvt{};
 
-  gsl_rng* _rng ;
+  gsl_rng* _rng = nullptr ;
 
-  std::vector<TH1*> _h;
+  std::vector<TH1*> _h{};
 
 } ;
 

@@ -155,6 +155,7 @@ ADD_MARLINRECO_PKG( ./Tracking/KinkFinder )
 ADD_MARLINRECO_PKG( ./Tracking/V0Finder )
 ADD_MARLINRECO_PKG( ./Analysis/FourMomentumCovMat )
 ADD_MARLINRECO_PKG( ./PFOID )
+ADD_MARLINRECO_PKG( ./TimeOfFlight )
 
 IF( DD4hep_FOUND )
   # if(DD4HEP_USE_XERCESC)

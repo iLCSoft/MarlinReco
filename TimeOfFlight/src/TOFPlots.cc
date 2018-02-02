@@ -179,7 +179,7 @@ void TOFPlots::init() {
 }
 
 
-void TOFPlots::processRunHeader( LCRunHeader* run) { 
+void TOFPlots::processRunHeader( LCRunHeader* ) {
 
   _nRun++ ;
 } 
@@ -534,7 +534,7 @@ void TOFPlots::processEvent( LCEvent * evt ) {
 
 
 
-void TOFPlots::check( LCEvent * evt ) { 
+void TOFPlots::check( LCEvent *) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -623,7 +623,7 @@ CluTime computeClusterTimes(EVENT::Cluster* clu, const float* refPoint, float ti
 
   //  for( CalorimeterHit* calohit : chv){ 
 
-  for(int i=0 ; i < chv.size() ; ++i){
+  for(size_t i=0 ; i < chv.size() ; ++i){
 
     EVENT::CalorimeterHit* calohit = chv.at(i);
 
@@ -701,9 +701,7 @@ CluTime computeClusterTimes(EVENT::Cluster* clu, const float* refPoint, float ti
   float total_cor_ref_time10hits = 0 ;
   float total_cor_ref_time20hits = 0 ;
 
-  float smear_10ps = timeResolution;
-
-  for(int i=0 ; i < chv.size() ; ++i){
+  for(size_t i=0 ; i < chv.size() ; ++i){
 
     EVENT::CalorimeterHit* calohit = chv.at(i);
 

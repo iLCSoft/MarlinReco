@@ -47,18 +47,6 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_outputIsoLepCollection,
 				std::string("Isolep") );
 
-		registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-				"OutputCollectionWithoutDressedIsolatedLeptons",
-				"Copy of input collection but without the dressed isolated leptons",
-				_outputPFOsRemovedDressedIsoLepCollection,
-				std::string("PandoraPFOsWithoutDressedIsoLep") );
-
-		registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-				"OutputCollectionDressedIsolatedLeptons",
-				"Output collection of dressed isolated leptons",
-				_outputDressedIsoLepCollection,
-				std::string("DressedIsolep") );
-
 		registerProcessorParameter( "CosConeAngle",
 				"Cosine of the half-angle of the cone used in isolation criteria",
 				_cosConeAngle,
@@ -256,7 +244,7 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				float(0.6));
 
 		registerProcessorParameter( "WhichLeptons",
-				"Use DRESSED, UNDRESSED or BOTH lepton algorithms",
+				"Use DRESSED or UNDRESSED lepton algorithms",
 				_whichLeptons,
 				std::string("UNDRESSED"));
 
@@ -445,12 +433,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 
 	// Add PFOs to new collections
-	if (_whichLeptons == "BOTH"){
-		evt->addCollection( otPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( otIsoLepCol.release(), _outputIsoLepCollection.c_str() );
-		evt->addCollection( otPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedDressedIsoLepCollection.c_str() );
-		evt->addCollection( otDressedIsoLepCol.release(), _outputDressedIsoLepCollection.c_str() );
-	}else if (_whichLeptons == "DRESSED"){
+	if (_whichLeptons == "DRESSED"){
 		evt->addCollection( otPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
 		evt->addCollection( otDressedIsoLepCol.release(), _outputIsoLepCollection.c_str() );
 	}else if (_whichLeptons == "UNDRESSED"){

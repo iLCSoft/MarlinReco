@@ -280,7 +280,6 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	streamlog_out(MESSAGE) <<std::endl;
 	streamlog_out(MESSAGE) << "processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
 
-	_dressedPFOs.clear();
 	_rpJetMap.clear();
 	_workingList.clear();
 
@@ -348,9 +347,8 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
-
 		// don't reprocess merged leptons
-		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
+		if (std::find(_workingList.begin(), _workingList.end(), pfo_tmp) == _workingList.end()) {
 			continue;
 		}
 
@@ -379,20 +377,16 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	}
 
 	// PFO loop for filling remaining PFOs
-	for (int i = 0; i < npfo; i++ ) {
+	for (int i = 0; i < _workingList.size(); i++ ) {
 
 		// don't add leptons again
 		if (std::find(goodLeptonIndices.begin(), goodLeptonIndices.end(), i) != goodLeptonIndices.end()){
 			continue;
 		}
 
-		// don't add dressed PFOs
-		if (std::find(_dressedPFOs.begin(), _dressedPFOs.end(), i) != _dressedPFOs.end()){
-			continue;
-		}
-
-		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _workingList->at(i) );
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
+
 		outPFOsRemovedDressedIsoLepCol->addElement( pfo );
 	}
 
@@ -426,7 +420,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 	streamlog_out(DEBUG) << "npfo:                     " <<npfo<<std::endl;
 	streamlog_out(DEBUG) << "nLepton:                  " <<goodLeptonIndices.size()<<std::endl;
-	streamlog_out(DEBUG) << "nDressed:                 " <<_dressedPFOs.size()<<std::endl;
+	streamlog_out(DEBUG) << "nDressed:                 " <<npfo - _workingList.size()<<std::endl;
 	streamlog_out(DEBUG) << "Energy:                   " <<etot_iso<<" and "<<etot_dressediso<<std::endl;
 	streamlog_out(DEBUG) << "Sizes removed collection: " <<outPFOsRemovedIsoLepCol->getNumberOfElements()<<" and "<<outPFOsRemovedDressedIsoLepCol->getNumberOfElements()<<std::endl;
 	streamlog_out(DEBUG) << "Sizes lepton collection:  " <<outIsoLepCol->getNumberOfElements()<<" and "<<outDressedIsoLepCol->getNumberOfElements()<<std::endl;
@@ -444,6 +438,7 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) {
 	TVector3 P_lep( pfo->getMomentum() );
 	int npfo = _pfoCol->getNumberOfElements();
+	std::vector<int> _dressedPFOs {};
 	for ( int i = 0; i < npfo; i++ ) {
 		ReconstructedParticle* pfo_dress = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 

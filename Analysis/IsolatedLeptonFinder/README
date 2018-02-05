@@ -4,6 +4,7 @@ IsolatedLeptonFinderProcessor:
 Authors:
   Ryo Yonamine <yonamine@post.kek.jp>
   Tomohiko Tanabe <tomohiko@icepp.s.u-tokyo.ac.jp>
+  Andreas Alexander Maier <andreas.alexander.maier@cern.ch>
 
 Description:
   This processor takes an input collection of ReconstructedParticle.
@@ -69,13 +70,13 @@ Description:
 
         The minimum and maximum values of Xt and Z can be specified.
         - JetIsolationVetoMinimumXt
-        - JetIsolationVetoMaximumXt 
+        - JetIsolationVetoMaximumXt
         - JetIsolationVetoMinimumZ
         - JetIsolationVetoMaximumZ
         Cuts on these vairables will be applied as veto of non-isolated
         leptons, applied as the AND requirement.
 
-        One needs to supply the jet collection name for jets which are 
+        One needs to supply the jet collection name for jets which are
         clustered before the isolated lepton finder runs.
         - JetCollection
         In general, this jet finder can be (and often should be)
@@ -129,5 +130,12 @@ Description:
      - ImpactParameterMaxZ0Significance
      - ImpactParameterMin3DSignificance
      - ImpactParameterMax3DSignificance
+
+  6) Optionally, close-by photons and low-energy leptons can be merged
+     into the lepton candidates, referred to as lepton dressing. The
+     lepton dressing can be controlled via the WhichLeptons parameter.
+     The maximum merging angles for both, leptons and photons can be
+     set. When merging leptons, the lower energy lepton within the
+     defined cone is merged into the higher energy lepton.
 
 [End of Description]

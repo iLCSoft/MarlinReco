@@ -377,14 +377,14 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 	}
 
 	// PFO loop for filling remaining PFOs
-	for (int i = 0; i < _workingList.size(); i++ ) {
+	for (unsigned int i = 0; i < _workingList.size(); i++ ) {
 
 		// don't add leptons again
 		if (std::find(goodLeptonIndices.begin(), goodLeptonIndices.end(), i) != goodLeptonIndices.end()){
 			continue;
 		}
 
-		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _workingList->at(i) );
+		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _workingList.at(i) );
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
 		outPFOsRemovedDressedIsoLepCol->addElement( pfo );

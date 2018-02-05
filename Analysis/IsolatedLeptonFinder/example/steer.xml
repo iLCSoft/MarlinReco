@@ -89,4 +89,22 @@
   <!--Maximum impact parameter in 3D-->
   <parameter name="ImpactParameterMax3D" type="float">0.01 </parameter>
 
+  <!-------------------------------->
+  <!-- Lepton dressing parameters -->
+  <!-------------------------------->
+
+  <!-- Use DRESSED or UNDRESSED lepton algorithms -->
+  <parameter name="WhichLeptons" type="string">UNDRESSED</parameter>
+
+  <!-- Merge close-by electrons into higher energy lepton -->
+  <parameter name="MergeCloseElectrons" type="bool">true</parameter>
+
+  <!-- Half-angle (in degrees) of the cone used for lepton merging -->
+  <parameter name="MergeLeptonConeAngle" type="float">2</parameter>
+  <!-- Half-angle (in degrees) of the cone used for lepton dressing with photons -->
+  <parameter name="DressPhotonConeAngle" type="float">1</parameter>
+
+  <!-- Use Pandora particle IDs for algorithm -->
+  <parameter name="UsePandoraIDs" type="bool">false</parameter>
+
 </processor>

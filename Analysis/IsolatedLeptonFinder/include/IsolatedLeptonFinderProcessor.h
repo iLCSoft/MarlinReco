@@ -168,7 +168,6 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 		bool _mergeCloseElectrons = false;
 		float _dressPhotonConeAngle = 0;
 		float _mergeLeptonConeAngle = 0;
-		std::vector<int> _dressedPFOs {};
 
 		/** If set to true, uses Pandora particle IDs */
 		bool _usePandoraIDs = false;

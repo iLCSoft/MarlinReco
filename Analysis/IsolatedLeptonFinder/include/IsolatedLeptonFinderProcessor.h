@@ -45,11 +45,11 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 		bool IsGoodLepton( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if pfo is an isolated lepton */
-		bool IsIsolatedLepton( ReconstructedParticle* pfo , bool omitDressed) ;
+		bool IsIsolatedLepton( ReconstructedParticle* pfo) ;
 
 		/** Returns true if isolated, as defined by the cone energy */
-		bool IsIsolatedRectangular( ReconstructedParticle* pfo , bool omitDressed) ;
-		bool IsIsolatedPolynomial( ReconstructedParticle* pfo , bool omitDressed) ;
+		bool IsIsolatedRectangular( ReconstructedParticle* pfo) ;
+		bool IsIsolatedPolynomial( ReconstructedParticle* pfo) ;
 		bool IsIsolatedJet( ReconstructedParticle* pfo ) ;
 
 		/** Returns true if charged */
@@ -84,7 +84,7 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 		void dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) ;
 
 		/** Calculates the cone energy */
-		float getConeEnergy( ReconstructedParticle* pfo, bool omitDressed) ;
+		float getConeEnergy( ReconstructedParticle* pfo) ;
 
 		/** [0]:Ecal energy, [1]:Hcal energy */
 		void getCalEnergy( ReconstructedParticle* pfo , float* cale) ;
@@ -109,6 +109,7 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 
 		LCCollection* _pfoCol=nullptr;
 		float _cosConeAngle = 0;
+		std::vector<ReconstructedParticle*> _workingList = {};
 
 		/** If set to true, uses PID cuts */
 		bool _usePID = false;

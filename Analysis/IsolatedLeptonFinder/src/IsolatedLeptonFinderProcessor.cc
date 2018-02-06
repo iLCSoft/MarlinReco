@@ -277,8 +277,8 @@ void IsolatedLeptonFinderProcessor::init() {
 
 void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
-	streamlog_out(MESSAGE) <<std::endl;
-	streamlog_out(MESSAGE) << "processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
+	streamlog_out(DEBUG) <<std::endl;
+	streamlog_out(DEBUG) << "processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 	_rpJetMap.clear();
 	_workingList.clear();

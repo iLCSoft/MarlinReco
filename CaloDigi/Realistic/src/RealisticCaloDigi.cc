@@ -18,6 +18,9 @@
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandFlat.h"
 
+#define RELATIONFROMTYPESTR "FromType"
+#define RELATIONTOTYPESTR "ToType"
+
 using namespace std;
 using namespace lcio ;
 using namespace marlin ;
@@ -173,6 +176,9 @@ void RealisticCaloDigi::init() {
   _flag.setBit(LCIO::CHBIT_LONG);
   _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
 
+  _flag_rel.setBit(LCIO::LCREL_WEIGHTED); // for the hit relations
+
+
   return;
 }
 
@@ -212,8 +218,11 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
       LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
       newcol->setFlag(_flag.getFlag());
 
-      // hit realtions to simhits
+      // hit relations to simhits [calo -> sim]
       LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+      relcol->setFlag(_flag_rel.getFlag());
+      relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
+      relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
       // loop over input hits
       for (int j(0); j < numElements; ++j) {
@@ -227,13 +236,13 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
           timeClusteredHits.push_back( std::pair < float , float > ( 0, simhit->getEnergy() ) );
         }
 
-        for ( size_t j=0; j<timeClusteredHits.size(); j++) {
-          float time      = timeClusteredHits[j].first;
-          float energyDep = timeClusteredHits[j].second;
+        for ( size_t jj=0; jj<timeClusteredHits.size(); jj++) {
+          float time      = timeClusteredHits[jj].first;
+          float energyDep = timeClusteredHits[jj].second;
           // apply extra energy digitisation onto the energy
           float energyDig = EnergyDigi(energyDep, simhit->getCellID0() , simhit->getCellID1() );
 
-	  streamlog_out ( DEBUG0 ) << " hit " << j << " time: " << time << " eDep: " << energyDep << " eDigi: " << energyDig << " " << _threshold_value << endl;
+	  streamlog_out ( DEBUG0 ) << " hit " << jj << " time: " << time << " eDep: " << energyDep << " eDigi: " << energyDig << " " << _threshold_value << endl;
 
           if (energyDig > _threshold_value) { // write out this hit
             CalorimeterHitImpl* newhit = new CalorimeterHitImpl();
@@ -249,7 +258,7 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 
 	    streamlog_out ( DEBUG1 ) << "orig/new hit energy: " << simhit->getEnergy() << " " << newhit->getEnergy() << endl;
 
-            LCRelationImpl *rel = new LCRelationImpl(simhit,newhit,1.0);
+            LCRelationImpl *rel = new LCRelationImpl(newhit,simhit,1.0);
             relcol->addElement( rel );
 
           } // theshold
@@ -301,7 +310,7 @@ std::vector < std::pair < float , float > > RealisticCaloDigi::timingCuts( const
   //  - assign time of earliest contribution to hit
   float energySum = 0;
   float earliestTime=9999999;
-  for(unsigned int i = 0; i<hit->getNMCContributions(); i++){ // loop over all contributions
+  for(int i = 0; i<hit->getNMCContributions(); i++){ // loop over all contributions
     float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
     float energyi = hit->getEnergyCont(i); //energy of current subhit
     float relativetime = timei - timeCorrection; // wrt time of flight

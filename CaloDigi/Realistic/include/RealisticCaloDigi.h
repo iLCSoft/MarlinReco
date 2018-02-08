@@ -24,6 +24,9 @@ class RealisticCaloDigi : virtual public Processor {
  public:
 
   RealisticCaloDigi( ) ;
+  RealisticCaloDigi ( const RealisticCaloDigi& ) = delete;
+  RealisticCaloDigi& operator=(const RealisticCaloDigi&) = delete;
+
   virtual void init() ;
   virtual void processRunHeader( LCRunHeader* run ) ;
   virtual void processEvent( LCEvent * evt ) ; 
@@ -81,6 +84,7 @@ class RealisticCaloDigi : virtual public Processor {
   int _threshold_iunit{};
 
   LCFlagImpl _flag{};
+  LCFlagImpl _flag_rel{};
 
   float _event_correl_miscalib{};
 

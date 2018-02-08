@@ -21,6 +21,9 @@
 #include <assert.h>
 #include <cmath>
 
+#define RELATIONFROMTYPESTR "FromType"
+#define RELATIONTOTYPESTR "ToType"
+
 using namespace std;
 using namespace lcio ;
 using namespace marlin ;
@@ -103,6 +106,11 @@ void RealisticCaloReco::init() {
   assert ( _calibrCoeff.size()>0 );
   assert ( _calibrCoeff.size() == _calLayers.size() );
 
+  _flag.setBit(LCIO::CHBIT_LONG);
+  _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
+
+  _flag_rel.setBit(LCIO::LCREL_WEIGHTED); // for the hit relations
+
 }
 
 
@@ -110,9 +118,6 @@ void RealisticCaloReco::processRunHeader( LCRunHeader*  /*run*/) {
 }
 
 void RealisticCaloReco::processEvent( LCEvent * evt ) {
-
-  _flag.setBit(LCIO::CHBIT_LONG);
-  _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
 
   // * Reading Collections of digitised calorimeter Hits *
 
@@ -135,8 +140,11 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
       LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
       newcol->setFlag(_flag.getFlag());
 
-      // relation between digitised and reconstructed hits
+      // relation from reconstructed to sim hits
       LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+      relcol->setFlag(_flag_rel.getFlag());
+      relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
+      relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
       int numElements = col->getNumberOfElements();
       streamlog_out ( DEBUG ) << colName << " number of elements = " << numElements << endl;
@@ -162,10 +170,10 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 	newcol->addElement( calhit );
 
 	// get the simcalohit corresponding to this digitised hit
-	if ( navi.getRelatedFromObjects( hit ) .size() > 0 ) {
-	  SimCalorimeterHit* simhit = (SimCalorimeterHit*) navi.getRelatedFromObjects(hit)[0]; // assume the first one (should be only one)
-	  // make a relation, add to collection - now keep relations between sim and reco hits
-	  relcol->addElement( new LCRelationImpl(simhit,calhit,1.0) );
+	if ( navi.getRelatedToObjects( hit ) .size() > 0 ) {
+	  SimCalorimeterHit* simhit = (SimCalorimeterHit*) navi.getRelatedToObjects(hit)[0]; // assume the first one (should be only one)
+	  // make a relation, add to collection - keep relations from reco to sim hits
+	  relcol->addElement( new LCRelationImpl(calhit,simhit,1.0) );
 	} else {
 	  streamlog_out ( WARNING ) << "could not find relation to sim calo hit!" << endl;
 	}

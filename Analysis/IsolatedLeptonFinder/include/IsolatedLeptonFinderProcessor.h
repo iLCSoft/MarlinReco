@@ -164,7 +164,7 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 
 
 		/** If set to true, uses lepton dressing */
-		std::string _whichLeptons = "UNDRESSED";
+		bool _useDressedLeptons = false;
 		bool _mergeCloseElectrons = false;
 		float _dressPhotonConeAngle = 0;
 		float _mergeLeptonConeAngle = 0;

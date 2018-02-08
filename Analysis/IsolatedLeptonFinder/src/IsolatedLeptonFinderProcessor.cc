@@ -285,19 +285,10 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 	_pfoCol = evt->getCollection( _inputPFOsCollection ) ;
 
+	// Output PFOs isolated leptons
+	auto outIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 	// Output PFOs removed isolated leptons
 	auto outPFOsRemovedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
-	outPFOsRemovedIsoLepCol->setSubset(true) ;
-
-	// Output PFOs of isolated leptons
-	auto outIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
-	outIsoLepCol->setSubset(true);
-
-	// Output PFOs removed dressed isolated leptons
-	auto outPFOsRemovedDressedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
-
-	// Output PFOs of dressed isolated leptons
-	auto outDressedIsoLepCol = std::unique_ptr<LCCollectionVec>(new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) );
 
 	// Prepare jet/recoparticle map for jet-based isolation
 	if (_useJetIsolation) {
@@ -312,128 +303,70 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 		}
 	}
 
-
-	// Undressed leptons
+	// Determine lepton pfos
 	std::vector<int> goodLeptonIndices;
 	int npfo = _pfoCol->getNumberOfElements();
 	for (int i = 0; i < npfo; i++ ) {
 		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
 		_workingList.push_back( pfo );
 
-		if ( !IsGoodLepton( pfo )){
-			outPFOsRemovedIsoLepCol->addElement( pfo );
+		if ( !IsGoodLepton( pfo )) {
 			continue;
 		}
 
-		if  ( IsIsolatedLepton( pfo ) ){
-			streamlog_out(DEBUG) << "ISOLATION undressed "<<pfo->getType()<<": SUCCESS !" << std::endl;
-			outIsoLepCol->addElement( pfo );
+		// remember lepton indices for later
+		if (_useDressedLeptons){
+			if (IsLepton( pfo )) goodLeptonIndices.push_back(i);
+		}else{
+			goodLeptonIndices.push_back(i);
 		}
-		else{
-			streamlog_out(DEBUG) << "ISOLATION undressed "<<pfo->getType()<<": FAILED" << std::endl;
-			outPFOsRemovedIsoLepCol->addElement( pfo );
-		}
-
-		// remember lepton indices for dressing
-		if (IsLepton( pfo )) goodLeptonIndices.push_back(i);
 	}
 
-	// Dressed leptons
 	// order by energy
 	std::sort(goodLeptonIndices.begin(), goodLeptonIndices.end(), [this](const int i, const int j) {return isMoreEnergetic(i, j);});
-	// dress them
+
+	// process and save leptons
 	for (unsigned int i = 0; i < goodLeptonIndices.size(); ++i)
 	{
 		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(i) ));
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
 
-		// don't reprocess merged leptons
-		if (std::find(_workingList.begin(), _workingList.end(), pfo_tmp) == _workingList.end()) {
-			continue;
-		}
+		if (_useDressedLeptons){
+			// don't reprocess merged leptons
+			if (std::find(_workingList.begin(), _workingList.end(), pfo_tmp) == _workingList.end()) {
+				continue;
+			}
 
-		// test how close they are to the other leptons
-		streamlog_out(DEBUG) << "Processing lep "<<i<<" with type "<< pfo->getType()<<" with E = "<<pfo->getEnergy()<<" isPhoton "<<IsPhoton(pfo)<< " isElectron "<<IsElectron(pfo)<<std::endl;
-		for (unsigned int j = i+1; j < goodLeptonIndices.size(); ++j)
-		{
-			ReconstructedParticle* pfo_other = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(goodLeptonIndices.at(j) ));
-			TVector3 P_this( pfo->getMomentum() );
-			TVector3 P_other( pfo_other->getMomentum() );
-			float theta = TMath::ACos(P_this.Dot( P_other )/(P_this.Mag()*P_other.Mag())) * 360 / (2 * TMath::Pi());
-			streamlog_out(DEBUG) << "Lep "<<i<<"("<<goodLeptonIndices.at(i)<<") - "<<j<<"("<<goodLeptonIndices.at(j)<<"): "<<theta<<"°"<<std::endl;
-		}
+			double energy_before = pfo->getEnergy();
+			int n_working_list_before = _workingList.size();
 
-		dressLepton(pfo, goodLeptonIndices.at(i));
-  		// printf("dressedMomentum: %.2f -> %.2f, %.2f -> %.2f ,%.2f -> %.2f ,%.2f -> %.2f\n", pfo_tmp->getMomentum()[0], pfo->getMomentum()[0], pfo_tmp->getMomentum()[1], pfo->getMomentum()[1], pfo_tmp->getMomentum()[2], pfo->getMomentum()[2], pfo->getEnergy(), pfo_tmp->getEnergy());
+			dressLepton(pfo, goodLeptonIndices.at(i));
+
+			streamlog_out(DEBUG) << "dress lepton " << i << " with " << n_working_list_before - _workingList.size() << " particles: energy " << energy_before << " -> " << pfo->getEnergy() << std::endl ;
+	  		// printf("dressedMomentum: %.2f -> %.2f, %.2f -> %.2f ,%.2f -> %.2f ,%.2f -> %.2f\n", pfo_tmp->getMomentum()[0], pfo->getMomentum()[0], pfo_tmp->getMomentum()[1], pfo->getMomentum()[1], pfo_tmp->getMomentum()[2], pfo->getMomentum()[2], pfo->getEnergy(), pfo_tmp->getEnergy());
+		}
 
 		if  ( IsIsolatedLepton( pfo ) ){
-			streamlog_out(DEBUG) << "ISOLATION dressed "<<pfo->getType()<<": SUCCESS !" << std::endl;
-			outDressedIsoLepCol->addElement( pfo );
-		}
-		else{
-			streamlog_out(DEBUG) << "ISOLATION dressed "<<pfo->getType()<<": FAILED" << std::endl;
-			outPFOsRemovedDressedIsoLepCol->addElement( pfo );
+			outIsoLepCol->addElement( pfo );
+		}else{
+			outPFOsRemovedIsoLepCol->addElement( pfo );
 		}
 	}
 
-	// PFO loop for filling remaining PFOs
+	// filling remaining non-lepton PFOs
 	for (unsigned int i = 0; i < _workingList.size(); i++ ) {
-
 		// don't add leptons again
 		if (std::find(goodLeptonIndices.begin(), goodLeptonIndices.end(), i) != goodLeptonIndices.end()){
 			continue;
 		}
-
 		ReconstructedParticle* pfo_tmp = static_cast<ReconstructedParticle*>( _workingList.at(i) );
 		ReconstructedParticleImpl* pfo = CopyReconstructedParticle( pfo_tmp );
-
-		outPFOsRemovedDressedIsoLepCol->addElement( pfo );
+		outPFOsRemovedIsoLepCol->addElement( pfo );
 	}
-
-
-	streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber() << std::endl ;
-
-
-	// calculate total energy
-	double etot_iso(0);
-	for (int i = 0; i < outPFOsRemovedIsoLepCol->getNumberOfElements(); ++i)
-	{
-		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( outPFOsRemovedIsoLepCol->getElementAt(i) );
-		etot_iso += pfo->getEnergy();
-	}
-	for (int i = 0; i < outIsoLepCol->getNumberOfElements(); ++i)
-	{
-		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( outIsoLepCol->getElementAt(i) );
-		etot_iso += pfo->getEnergy();
-	}
-	double etot_dressediso(0);
-	for (int i = 0; i < outPFOsRemovedDressedIsoLepCol->getNumberOfElements(); ++i)
-	{
-		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( outPFOsRemovedDressedIsoLepCol->getElementAt(i) );
-		etot_dressediso += pfo->getEnergy();
-	}
-	for (int i = 0; i < outDressedIsoLepCol->getNumberOfElements(); ++i)
-	{
-		ReconstructedParticle* pfo = static_cast<ReconstructedParticle*>( outDressedIsoLepCol->getElementAt(i) );
-		etot_dressediso += pfo->getEnergy();
-	}
-
-	streamlog_out(DEBUG) << "npfo:                     " <<npfo<<std::endl;
-	streamlog_out(DEBUG) << "nLepton:                  " <<goodLeptonIndices.size()<<std::endl;
-	streamlog_out(DEBUG) << "nDressed:                 " <<npfo - _workingList.size()<<std::endl;
-	streamlog_out(DEBUG) << "Energy:                   " <<etot_iso<<" and "<<etot_dressediso<<std::endl;
-	streamlog_out(DEBUG) << "Sizes removed collection: " <<outPFOsRemovedIsoLepCol->getNumberOfElements()<<" and "<<outPFOsRemovedDressedIsoLepCol->getNumberOfElements()<<std::endl;
-	streamlog_out(DEBUG) << "Sizes lepton collection:  " <<outIsoLepCol->getNumberOfElements()<<" and "<<outDressedIsoLepCol->getNumberOfElements()<<std::endl;
-
 
 	// Add PFOs to new collections
-	if (_useDressedLeptons){
-		evt->addCollection( outPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( outDressedIsoLepCol.release(), _outputIsoLepCollection.c_str() );
-	}else{
-		evt->addCollection( outPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
-		evt->addCollection( outIsoLepCol.release(), _outputIsoLepCollection.c_str() );
-	}
+	evt->addCollection( outPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
+	evt->addCollection( outIsoLepCol.release(), _outputIsoLepCollection.c_str() );
 }
 void IsolatedLeptonFinderProcessor::dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) {
 	TVector3 P_lep( pfo->getMomentum() );

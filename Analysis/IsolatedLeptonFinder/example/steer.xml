@@ -93,8 +93,8 @@
   <!-- Lepton dressing parameters -->
   <!-------------------------------->
 
-  <!-- Use DRESSED or UNDRESSED lepton algorithms -->
-  <parameter name="WhichLeptons" type="string">UNDRESSED</parameter>
+  <!-- Dress leptons with close-by particles -->
+  <parameter name="UseDressedLeptons" type="bool">false</parameter>
 
   <!-- Merge close-by electrons into higher energy lepton -->
   <parameter name="MergeCloseElectrons" type="bool">true</parameter>

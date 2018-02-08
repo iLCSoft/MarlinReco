@@ -243,10 +243,10 @@ IsolatedLeptonFinderProcessor::IsolatedLeptonFinderProcessor()
 				_jetIsoVetoMaxZ,
 				float(0.6));
 
-		registerProcessorParameter( "WhichLeptons",
-				"Use DRESSED or UNDRESSED lepton algorithms",
-				_whichLeptons,
-				std::string("UNDRESSED"));
+		registerProcessorParameter( "UseDressedLeptons",
+				"Dress leptons with close-by particles",
+				_useDressedLeptons,
+				bool(false));
 
 		registerProcessorParameter( "MergeCloseElectrons",
 				"Merge close-by electrons into higher energy lepton",
@@ -427,10 +427,10 @@ void IsolatedLeptonFinderProcessor::processEvent( LCEvent * evt ) {
 
 
 	// Add PFOs to new collections
-	if (_whichLeptons == "DRESSED"){
+	if (_useDressedLeptons){
 		evt->addCollection( outPFOsRemovedDressedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
 		evt->addCollection( outDressedIsoLepCol.release(), _outputIsoLepCollection.c_str() );
-	}else if (_whichLeptons == "UNDRESSED"){
+	}else{
 		evt->addCollection( outPFOsRemovedIsoLepCol.release(), _outputPFOsRemovedIsoLepCollection.c_str() );
 		evt->addCollection( outIsoLepCol.release(), _outputIsoLepCollection.c_str() );
 	}

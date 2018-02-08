@@ -34,11 +34,15 @@ class RealisticCaloReco : virtual public Processor {
   
  public:
   RealisticCaloReco() ;
+  RealisticCaloReco ( const RealisticCaloReco& ) = delete;
+  RealisticCaloReco& operator=(const RealisticCaloReco&) = delete;
+
   virtual void init() ;
   virtual void processRunHeader( LCRunHeader* run ) ;
   virtual void processEvent( LCEvent * evt ) ; 
   virtual void check( LCEvent * evt ) ; 
   virtual void end() ;
+
 
  protected:
 
@@ -57,6 +61,8 @@ class RealisticCaloReco : virtual public Processor {
 
   // internal variables
   LCFlagImpl _flag{};
+  LCFlagImpl _flag_rel{};
+
   CellIDDecoder<CalorimeterHit> * _idDecoder{};
 
 } ;

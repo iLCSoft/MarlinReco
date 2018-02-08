@@ -81,6 +81,8 @@ IF(CLANG_TIDY AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             COMMAND ! grep -c ": error: " ${CMAKE_BINARY_DIR}/check_lint_file.txt > /dev/null
             COMMENT "Checking for problems in source files"
         )
+    ELSE()
+        MESSAGE(WARNING "run-clang-tidy.py not found on system, skip creating lint target!")
     ENDIF()
 ELSE()
     IF(NOT CLANG_TIDY)

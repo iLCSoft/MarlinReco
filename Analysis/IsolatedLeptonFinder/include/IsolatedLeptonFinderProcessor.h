@@ -75,8 +75,8 @@ class IsolatedLeptonFinderProcessor : public marlin::Processor {
 
 		/** Helper function to order PFOS by energy */
 		bool isMoreEnergetic (int i, int j) {
-			ReconstructedParticle* pfo_i = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
-			ReconstructedParticle* pfo_j = dynamic_cast<ReconstructedParticle*>( _pfoCol->getElementAt(j) );
+			ReconstructedParticle* pfo_i = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
+			ReconstructedParticle* pfo_j = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(j) );
 			return (pfo_i->getEnergy()>pfo_j->getEnergy());
 		}
 

@@ -79,10 +79,10 @@ private:
   //for shower profile
   EVENT::FloatVec shapes;
 
-  bool _basicFlg=0.0, _dEdxFlg=0.0, _showerShapesFlg=0.0;
-  int _usebayes=0, _usecorr=0;
-  float _dEdxnorm=0.0, _dEdxerrfact=0.0, _bfield=0.0;
-  double _delpos[3] = {};
+  bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
+  int _usebayes{}, _usecorr{};
+  float _dEdxnorm{}, _dEdxerrfact{}, _bfield{};
+  double _delpos[3]{};
 };
 
 #endif 

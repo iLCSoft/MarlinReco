@@ -42,13 +42,12 @@ private:
   std::vector<float> _dEdxParamsPion = {};
   std::vector<float> _dEdxParamsKaon = {};
   std::vector<float> _dEdxParamsProton = {};
+  float _dEdxNormalization{}, _dEdxErrorFactor{}, _bfield{};
 
-  float _dEdxNormalization = 0.0, _dEdxErrorFactor = 0.0, _bfield = 0.0;
-
-  LikelihoodPID *_myPID = NULL;
-  TFile* _fpdf = NULL;
-  TH1F* pidvariable[6][21] = {};
-  std::string _filename = "";
+  LikelihoodPID *_myPID{};
+  TFile* _fpdf{};
+  TH1F* pidvariable[6][21]{};
+  std::string _filename{};
 
   std::string itos(int i)
   {

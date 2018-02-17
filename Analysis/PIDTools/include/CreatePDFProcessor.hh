@@ -30,25 +30,25 @@ public:
 private:
   void CalculateDeltaPosition(float charge, TVector3 &p, const float* caylpos, float* delpos);
 
-  std::string _description;
-  std::string _PfoCollection;
-  std::string _LinkCollection;
+  std::string _description = {};
+  std::string _PfoCollection = {};
+  std::string _LinkCollection = {};
 
-  LCCollection* _PFOCol;
-  LCCollection* _LinkCol;
+  LCCollection* _PFOCol = NULL;
+  LCCollection* _LinkCol = NULL;
 
-  std::vector<float> _dEdxParamsElectron;
-  std::vector<float> _dEdxParamsMuon;
-  std::vector<float> _dEdxParamsPion;
-  std::vector<float> _dEdxParamsKaon;
-  std::vector<float> _dEdxParamsProton;
+  std::vector<float> _dEdxParamsElectron = {};
+  std::vector<float> _dEdxParamsMuon = {};
+  std::vector<float> _dEdxParamsPion = {};
+  std::vector<float> _dEdxParamsKaon = {};
+  std::vector<float> _dEdxParamsProton = {};
 
-  float _dEdxNormalization, _dEdxErrorFactor;
+  float _dEdxNormalization = 0.0, _dEdxErrorFactor = 0.0, _bfield = 0.0;
 
-  LikelihoodPID *_myPID;
-  TFile* _fpdf;
-  TH1F* pidvariable[6][18];
-  std::string _filename;
+  LikelihoodPID *_myPID = NULL;
+  TFile* _fpdf = NULL;
+  TH1F* pidvariable[6][21] = {};
+  std::string _filename = "";
 
   std::string itos(int i)
   {

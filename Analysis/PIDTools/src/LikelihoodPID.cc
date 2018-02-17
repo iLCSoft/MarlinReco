@@ -22,6 +22,11 @@ risk-minimization and MAP
 #include <sstream>
 #include <TFile.h>
 #include <TH1F.h>
+
+#include "marlin/Global.h"
+#include "gear/GEAR.h"
+#include "gearimpl/ConstantBField.h"
+
 #include "LikelihoodPID.hh"
 
 using namespace std;
@@ -59,6 +64,9 @@ LikelihoodPID::LikelihoodPID(double *pars){
   kmass=0.493677;
   pmass=0.938272;
 
+  //get B field
+  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+  
   return;
 }
 
@@ -79,6 +87,7 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
   _usebayes=(int)pars[25];
   _dEdxnorm=(float)pars[26];
   _dEdxerrfact=pars[27];
+  _usecorr=(int)pars[28];
 
   //set mass
   emass=0.000510998;
@@ -88,7 +97,7 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
   pmass=0.938272;
 
   //get pdf plots
-  string ffstr1 = fname;  //"./pdf_standard_HighStat_v01.root";
+  string ffstr1 = fname;    //"./pdf_standard_s_05_v01.root";
   fpdf=new TFile(ffstr1.c_str());
 
   string hname,hname2;
@@ -142,31 +151,84 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
     hname="hlikelip" + itos(i+1);
     hname2="hlikelip" + itos(i+1) + "_2";
     pdf[i][11]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
-    //deltax
-    hname="hdeltax" + itos(i+1);
-    hname2="hdeltax" + itos(i+1) + "_2";
-    pdf[i][12]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
+
+    TObject *obj;
+    //cluster depth
+    hname="hcludepth" + itos(i+1);
+    fpdf->GetObject(hname.c_str(), obj);
+    if(obj){
+      hname2="hcludepth" + itos(i+1) + "_2";
+      pdf[i][14]=(TH1F*)obj->Clone(hname2.c_str());
+
+      //deltax
+      hname="hdeltax" + itos(i+1);
+      fpdf->GetObject(hname.c_str(), obj);
+      hname2="hdeltax" + itos(i+1) + "_2";
+      pdf[i][12]=(TH1F*)obj->Clone(hname2.c_str());
+
+      //deltaz
+      hname="hdeltaz" + itos(i+1);
+      fpdf->GetObject(hname.c_str(), obj);
+      hname2="hdeltaz" + itos(i+1) + "_2";
+      pdf[i][13]=(TH1F*)obj->Clone(hname2.c_str());
+
+      //hitmean
+      hname="hhitmean" + itos(i+1);
+      fpdf->GetObject(hname.c_str(), obj);
+      hname2="hhitmean" + itos(i+1) + "_2";
+      pdf[i][15]=(TH1F*)obj->Clone(hname2.c_str());
+
+      //hitrms
+      hname="hhitrms" + itos(i+1);
+      fpdf->GetObject(hname.c_str(), obj);
+      hname2="hhitrms" + itos(i+1) + "_2";
+      pdf[i][16]=(TH1F*)obj->Clone(hname2.c_str());
+    }else{
+      pdf[i][12]=NULL;  //backward compatibility
+      pdf[i][13]=NULL;  //backward compatibility
+      pdf[i][14]=NULL;  //backward compatibility
+      pdf[i][15]=NULL;  //backward compatibility
+      pdf[i][16]=NULL;  //backward compatibility
+    }
+    
     //deltaz
-    hname="hdeltaz" + itos(i+1);
-    hname2="hdeltaz" + itos(i+1) + "_2";
-    pdf[i][13]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
+    /*hname="hdeltaz" + itos(i+1);
+      hname2="hdeltaz" + itos(i+1) + "_2";
+      pdf[i][13]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
+      //cluster depth
+      hname="hcludepth" + itos(i+1);
+      hname2="hcludepth" + itos(i+1) + "_2";
+      pdf[i][14]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
+      //hitmean
+      hname="hhitmean" + itos(i+1);
+      hname2="hhitmean" + itos(i+1) + "_2";
+      pdf[i][15]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());
+      //hitrms
+      hname="hhitrms" + itos(i+1);
+      hname2="hhitrms" + itos(i+1) + "_2";
+      pdf[i][16]=(TH1F*)fpdf->Get(hname.c_str())->Clone(hname2.c_str());*/
   }
-  
+
   //normalize histograms
   double weight=1.0;
   for(int i=0;i<6;i++){
-    for(int j=0;j<14;j++){
+    for(int j=0;j<17;j++){
       //normalize histograms
-      weight=pdf[i][j]->Integral(0,pdf[i][j]->GetNbinsX()+1,"");
-      pdf[i][j]->Scale(1.0/weight);
-      _weights[i][j]=weight;  //for hadron likelihood calculation
+      if(pdf[i][j]!=NULL){
+	weight=pdf[i][j]->Integral(0,pdf[i][j]->GetNbinsX()+1,"");
+	pdf[i][j]->Scale(1.0/weight);
+	_weights[i][j]=weight;  //for hadron likelihood calculation
+      }
     }
   }
-
+    
   //normalize weights
-  for(int j=0;j<14;j++){
-    double denom = _weights[2][j]+_weights[3][j]+_weights[4][j];
-    for(int i=2;i<5;i++) _weights[i][j] = _weights[i][j]/denom;
+  for(int j=0;j<17;j++){
+    if(pdf[2][j]!=NULL && pdf[3][j]!=NULL && pdf[4][j]!=NULL){
+      double denom = _weights[2][j]+_weights[3][j]+_weights[4][j];
+      for(int i=2;i<5;i++) _weights[i][j] = _weights[i][j]/denom;
+    }else
+      for(int i=2;i<5;i++) _weights[i][j] = 1.0 / 3.0;  //same weights
   }
 
   //set threshold
@@ -192,6 +254,10 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
       }
     }
   }
+
+  //get z component of B field
+  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+  //cout << "magnetic field: " << _bfield << endl;
 
   return;
 }
@@ -249,8 +315,7 @@ int LikelihoodPID::Classification(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   tmpid=Class_hadron(pp, trk, cluvec);
 
   //avoid strange value
-  //cannot estimate likelihood and probability
-  if(_posterior[0]!=_posterior[0]){
+  if(_posterior[0]!=_posterior[0]){  //cannot estimate likelihood and probability
     for(int i=0;i<6;i++){
       _likelihood[i] = 999.0;
       _posterior[i] = 0.0;
@@ -435,7 +500,7 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   if(cluvec.size()!=0) shapes=cluvec[0]->getShape();
 
   //get variables
-  double var[11]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //11 variales used(is it OK?)
+  double var[11]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //11
   //for track variables
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
@@ -444,7 +509,6 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
     var[3]=shapes[5+4];
     var[4]=fabs(shapes[3+4])/(shapes[6+4]);
     var[5]=shapes[15+4]/(2.0*3.50);
-
   }else var[2]=-1.0;
 
   var[6]=get_dEdxChi2(0,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //chi2
@@ -479,27 +543,22 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
       if(j==4) valtype=5;
       if(j==5) valtype=6;
       if(j==6) valtype=7;
-      if(j==7) valtype=8;
-      if(j==8) valtype=9;
-      if(j==9) valtype=10;
-      if(j==10) valtype=11;
       
       if(j<6){
 	okval[i]=getValue(i,valtype,var[j]);   //likelihood
 	if(mucal==0.0 && i==1) okval[i]=getValue(5,valtype,var[j]);   //likelihood
-      }else if(j>=6)
+      }else if(j==6)
 	okval[i]=std::max(std::exp(var[6+i]), 1.0e-300);   //just use dE/dx likelihood 
-	//okval[i]=std::exp(var[6+i]);   //just use dE/dx likelihood 
-      
     }
+    
     //for basic variables flg
     if(!_basicFlg && j<2) continue;
     //for cluster shape flg
-    if(!_showerShapesFlg && j>=2 && j<=5) continue;
+    if(!_showerShapesFlg && (j>=2 && j<=5)) continue;
     //for dEdx flg
-    if(!_dEdxFlg && j>=6) continue; 
+    if(!_dEdxFlg && j==6) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=5 || j==6)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=6)) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=6 && var[j]<=-50.0) continue;
@@ -605,15 +664,21 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   if(cluvec.size()!=0) shapes=cluvec[0]->getShape();
 
   //get variables
-  double var[12]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //12 variales used(is it OK?)
+  double var[17]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //17 variales used(is it OK?)
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
   var[2]=mucal;
+
   if(shapes.size()!=0){
     var[3]=shapes[0+4];
     var[4]=shapes[5+4];
     var[5]=fabs(shapes[3+4])/(shapes[6+4]);
     var[6]=shapes[15+4]/(2.0*3.50);
+
+    //for low momentum mu/pi separation
+    var[14]= shapes[17+4];
+    var[15]= shapes[18+4];
+    var[16]= shapes[19+4];
   }else var[3]=-1.0;
   
   var[7]=get_dEdxChi2(0,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //chi2
@@ -628,6 +693,9 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   var[10]=-0.5*fabs(var[10])+get_dEdxFactor(3,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //log likelihood
   var[11]=-0.5*fabs(var[11])+get_dEdxFactor(4,pp.Vect(),trk->getdEdxError(),trk->getdEdx());   //log likelihood
 
+  var[12] = _delpos[0];
+  var[13] = _delpos[2];
+
   //get likelihood for each class
   double posterior[5]={0.0,0.0,0.0,0.0,0.0};
   double risk[5]={0.0,0.0,0.0,0.0,0.0};
@@ -635,7 +703,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   double okval[5]={0.0,0.0,0.0,0.0,0.0};
   double total=0.0;     //[5]={0.0,0.0,0.0,0.0,0.0};
   double priorprob[5]={0.0,0.0,0.0,0.0,0.0};
-  for(int j=0;j<8;j++){   //variables
+  for(int j=0;j<13;j++){   //variables
 
     if(var[0]>0.0){
       //avoid pion misID when energy deposit to mucal is zero
@@ -645,6 +713,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
     }else{
       //avoid very low momentum tracks (no energy deposit in the cal.)
       if(j<=6) continue;
+      if(j>7) continue;
     }
 
     //first, get likelihood
@@ -657,26 +726,35 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
       if(j==5) valtype=5;
       if(j==6) valtype=6;
       if(j==7) valtype=7;
-      if(j==8) valtype=8;
-      if(j==9) valtype=9;
-      if(j==10) valtype=10;
-      if(j==11) valtype=11;
+      if(j==8) valtype=11;
+      if(j==9) valtype=12;
+      if(j==10) valtype=13;
+      if(j==11) valtype=14;
+      if(j==12) valtype=15;
       
       if(j<7){
 	okval[i]=getValue(i,valtype,var[j]);   //likelihood
 	if(var[2]==0.0 && i==1) okval[i]=getValue(5,valtype,var[j]);   //likelihood 
-      }else if(j>=7)
+      }else if(j==7){
 	okval[i]=std::max(std::exp(var[7+i]), 1.0e-300);   //just use dE/dx likelihood 
+      }else if(j==8 || j==9){
+	okval[i]=getValue(i,valtype,var[j+4]);   //likelihood
+	if(var[2]==0.0 && i==1) okval[i]=getValue(5,valtype,var[j+4]);   //likelihood 
+      }else if(j>=10 && pp.P()>0.3 && pp.P()<6.0){  //for low momentum mu/pi
+	okval[i]=getValue(i,valtype,var[j+4]);   //likelihood
+	if(var[2]==0.0 && i==1) okval[i]=getValue(5,valtype,var[j+4]);   //likelihood 
+      }
     }
 
     //for basic variables flg
     if(!_basicFlg && j<=2) continue;
     //for cluster shape flg
-    if(!_showerShapesFlg && j>2 && j<=6) continue;
+    if(!_showerShapesFlg && ((j>2 && j<=6) || j>=8)) continue;
     //for dEdx flg
-    if(!_dEdxFlg && j>6) continue; 
+    if(!_dEdxFlg && j==7) continue; 
     //don't use some dEdxin the case of LikelihoodPID
-    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=7)) continue;
+    if(_basicFlg && _showerShapesFlg && _dEdxFlg && !(j<=9 || (j>=10 && pp.P()>0.3 && pp.P()<6.0))) continue;
+    if(mucal!=0.0 && j==10) continue;
 
     //to avoid strange value for dE/dx
     //if(j>=7 && j<=11 && var[j]<=-50.0) continue;
@@ -1027,11 +1105,14 @@ const double LikelihoodPID::getValue(int type, int valtype, double value){
   double val=1.0e-100;
   int bin=0;
 
-  bin=pdf[type][valtype]->GetXaxis()->FindBin(value);
-
-  //get probability
-  val=pdf[type][valtype]->GetBinContent(bin);
-  if(val==0.0) val= 1.0e-100;
+  if(pdf[type][valtype]!=NULL){
+    bin=pdf[type][valtype]->GetXaxis()->FindBin(value);
+    
+    //get probability
+    val=pdf[type][valtype]->GetBinContent(bin);
+    if(val==0.0) val= 1.0e-100;
+  }else
+    val = 1.0;
 
   return val;
 }
@@ -1184,5 +1265,63 @@ double LikelihoodPID::getPenalty(int ptype, int hypothesis, double p){
   }
 
   return par[0]/sqrt(p*p+par[1])+par[2]; 
+}
+
+void LikelihoodPID::CalculateDeltaPosition(float charge, TVector3 p, const float* calpos){
+  //calculate some variables for preparation
+  //transverse momentum
+  double prphi=sqrt(pow(p[0],2)+pow(p[1],2));
+  //momentum
+  double pp=p.Mag();
+  //radius in r-phi plane
+  double radius=prphi/(0.3*_bfield);
+  //tangent lambda
+  double tanlam=p[2]/prphi;
+  //change to unit vector
+  p[0]=p[0]/prphi;
+  p[1]=p[1]/prphi;
+  p[2]=p[2]/pp;
+
+  //chenge position vector to meter
+  float calcalpos[3];
+  calcalpos[0]=calpos[0]/1000.0;
+  calcalpos[1]=calpos[1]/1000.0;
+  calcalpos[2]=calpos[2]/1000.0;
+
+
+  //radius at the tracker end
+  double rradius=sqrt(pow(calcalpos[0],2)+pow(calcalpos[1],2));
+
+  //cout << "check val. " << prphi << " " << radius << " " << tanlam
+  //     << " " << rradius << endl;
+
+  //cal. the position of the center of track circle
+  TVector3 cc;
+  cc[0]=-charge*p[1]*prphi/(0.3*_bfield);
+  cc[1]=charge*p[0]*prphi/(0.3*_bfield);
+  cc[2]=radius*tanlam;
+
+  //cal. sign and cosine 2theta
+  double sintheta=charge*rradius/(2*radius);
+  double costheta=sqrt(1-sintheta*sintheta);
+  double sin2theta=2*sintheta*costheta;
+  double cos2theta=costheta*costheta-sintheta*sintheta;
+
+  TVector3 calpos2;
+  calpos2[2]=rradius*tanlam;
+  calpos2[0]=cc[0]*(1-cos2theta)+cc[1]*sin2theta;
+  calpos2[1]=-cc[0]*sin2theta+cc[1]*(1-cos2theta);
+
+  //cal. difference of the position
+  //float delpos[3];
+  _delpos[0]=charge*fabs(calcalpos[0]-calpos2[0]);
+  _delpos[1]=charge*fabs(calcalpos[1]-calpos2[1]);
+  _delpos[2]=fabs(calcalpos[2]-calpos2[2]);
+
+
+  //cout << "calpos: " << calcalpos[0] << " " << calcalpos[1] << " " << calcalpos[2] << endl; 
+  //cout << "calpos2: " << calpos2[0] << " " << calpos2[1] << " " << calpos2[2] << endl; 
+  //cout << "result: " << delpos[0] << " " << delpos[1] << " " << delpos[2] << endl; 
+  return;
 }
 

@@ -77,6 +77,10 @@ void Compute_dEdxProcessor::init() {
   const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>() ;
   _TPC_inner = tpc->rMinReadout ;
 
+  //random generator
+  engine = new std::default_random_engine(seed_gen());
+  std::uniform_real_distribution<>::param_type param(0.0, 1.0);
+  dist.param(param);
   
   printParameters();
   

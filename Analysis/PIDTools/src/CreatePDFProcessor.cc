@@ -2,8 +2,9 @@
 #include <vector>
 
 #include <marlin/Global.h>
-#include "gear/GEAR.h"
-#include "gearimpl/ConstantBField.h"
+#include "DD4hep/Detector.h"
+#include "DDSurfaces/Vector3D.h"
+#include "DD4hep/DD4hepUnits.h"
 
 #include "EVENT/ReconstructedParticle.h"
 #include "EVENT/LCRelation.h"
@@ -417,13 +418,16 @@ void CreatePDFProcessor::init() {
 
   _myPID = new LikelihoodPID(pars);
 
-  //get B field
-  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+  //get B field                                          
+  double bfield[3]={};
+  dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
+  lcdd.field().magneticField({0.0,0.0,0.0}, bfield);
+  _bfield = (float)bfield[2]/dd4hep::tesla;
 
   printParameters();  
 }
 
-void CreatePDFProcessor::processRunHeader( LCRunHeader* run) { 
+void CreatePDFProcessor::processRunHeader( LCRunHeader* /*run*/) { 
 } 
 
 void CreatePDFProcessor::processEvent( LCEvent * evt ) { 
@@ -528,7 +532,7 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
   }  
 }
 
-void CreatePDFProcessor::check( LCEvent * evt ) { 
+void CreatePDFProcessor::check( LCEvent * /*evt*/ ) { 
 }
 
 void CreatePDFProcessor::end() { 
@@ -543,6 +547,9 @@ void CreatePDFProcessor::end() {
   }
 
   _fpdf->Close();
+
+  delete _fpdf;
+  delete _myPID;
 }
 
 void CreatePDFProcessor::CalculateDeltaPosition(float charge, TVector3& p, const float* calpos, float* delpos){

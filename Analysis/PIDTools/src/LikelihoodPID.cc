@@ -23,9 +23,9 @@ risk-minimization and MAP
 #include <TFile.h>
 #include <TH1F.h>
 
-#include "marlin/Global.h"
-#include "gear/GEAR.h"
-#include "gearimpl/ConstantBField.h"
+#include "DD4hep/Detector.h"
+#include "DDSurfaces/Vector3D.h"
+#include "DD4hep/DD4hepUnits.h"
 
 #include "LikelihoodPID.hh"
 
@@ -65,7 +65,10 @@ LikelihoodPID::LikelihoodPID(double *pars){
   pmass=0.938272;
 
   //get B field
-  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+  double bfield[3]={};
+  dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
+  lcdd.field().magneticField({0.0,0.0,0.0}, bfield);
+  _bfield = (float)bfield[2]/dd4hep::tesla;
   
   return;
 }
@@ -256,7 +259,10 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
   }
 
   //get z component of B field
-  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+  double bfield[3]={};
+  dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
+  lcdd.field().magneticField({0.0,0.0,0.0}, bfield);
+  _bfield = (float)bfield[2]/dd4hep::tesla;
   //cout << "magnetic field: " << _bfield << endl;
 
   return;
@@ -500,7 +506,7 @@ int LikelihoodPID::Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::C
   if(cluvec.size()!=0) shapes=cluvec[0]->getShape();
 
   //get variables
-  double var[11]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //11
+  double var[11]={}; //11
   //for track variables
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
@@ -664,7 +670,7 @@ int LikelihoodPID::Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::Clust
   if(cluvec.size()!=0) shapes=cluvec[0]->getShape();
 
   //get variables
-  double var[17]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //17 variales used(is it OK?)
+  double var[17]={}; //17 variales used(is it OK?)
   var[0]=(ecal+hcal)/pp.P();
   if(ecal+hcal!=0.0) var[1]=ecal/(ecal+hcal);
   var[2]=mucal;

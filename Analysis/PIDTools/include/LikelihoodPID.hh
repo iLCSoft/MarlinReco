@@ -35,6 +35,8 @@ public:
   double get_dEdxChi2(int parttype, TVector3 p, float hit,  double dEdx);
   double get_dEdxFactor(int parttype, TVector3 p, float hit,  double dEdx);
 
+  void CalculateDeltaPosition(float charge, TVector3 p, const float* calpos);
+
 private:
   double get_Norm( double dedx, float hit,  double trkcos);
   double BetheBloch( double x,  double mass,  double *pars);
@@ -79,7 +81,8 @@ private:
 
   bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
   int _usebayes{}, _usecorr{};
-  float _dEdxnorm{}, _dEdxerrfact{};
+  float _dEdxnorm{}, _dEdxerrfact{}, _bfield{};
+  double _delpos[3]{};
 };
 
 #endif 

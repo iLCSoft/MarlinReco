@@ -1,20 +1,15 @@
 #include <cmath>
-#include <gsl/gsl_sf_gamma.h>
 #include <vector>
 
 #include <marlin/Global.h>
-#include <gear/GEAR.h>
-#include <gear/CalorimeterParameters.h>
+#include "gear/GEAR.h"
+#include "gearimpl/ConstantBField.h"
 
 #include "EVENT/ReconstructedParticle.h"
 #include "EVENT/LCRelation.h"
 #include "EVENT/MCParticle.h"
 #include "IMPL/ClusterImpl.h"
 #include <lcio.h>
-
-#include "CalorimeterHitType.h"
-
-//#include "Api/PandoraApi.h"
 
 #include "TVector3.h"
 
@@ -125,7 +120,7 @@ void CreatePDFProcessor::init() {
   //create histograms
   std::string histtxt,labeltxt;
   for(int i=0;i<6;i++){
-    for(int j=0;j<18;j++){
+    for(int j=0;j<21;j++){
       switch(j){
       case 0:
         //momentum          
@@ -347,7 +342,7 @@ void CreatePDFProcessor::init() {
         //delta x                                                                
         histtxt="hdeltax" + itos(i+1);
         labeltxt="#Deltax#timesQ";
-        pidvariable[i][j]=new TH1F(histtxt.c_str(),"",200,-0.50,0.50);
+        pidvariable[i][j]=new TH1F(histtxt.c_str(),"",200,-5.0,5.0);
         pidvariable[i][j]->SetMarkerStyle(20);
         pidvariable[i][j]->SetFillColor(0);
         pidvariable[i][j]->SetLineColor(1);
@@ -360,7 +355,48 @@ void CreatePDFProcessor::init() {
         //delta z              
         histtxt="hdeltaz" + itos(i+1);
         labeltxt="#Deltaz";
-        pidvariable[i][j]=new TH1F(histtxt.c_str(),"",200,-0.50,0.50);
+        pidvariable[i][j]=new TH1F(histtxt.c_str(),"",200,-5.0,5.0);
+        pidvariable[i][j]->SetMarkerStyle(20);
+        pidvariable[i][j]->SetFillColor(0);
+        pidvariable[i][j]->SetLineColor(1);
+        pidvariable[i][j]->SetLineWidth(2.0);
+        pidvariable[i][j]->GetYaxis()->SetTitle("Normalized Events");
+        pidvariable[i][j]->GetXaxis()->SetTitle(labeltxt.c_str());
+        pidvariable[i][j]->SetMinimum(0.0);
+        break;
+      case 18:
+        //cluster depth            
+        histtxt="hcludepth" + itos(i+1);
+        labeltxt="cluster depth";
+        pidvariable[i][j]=new TH1F(histtxt.c_str(),"",200,1500.0,3500.0);
+        pidvariable[i][j]->SetMarkerStyle(20);
+        pidvariable[i][j]->SetFillColor(0);
+        pidvariable[i][j]->SetLineColor(1);
+        pidvariable[i][j]->SetLineWidth(2.0);
+        pidvariable[i][j]->GetYaxis()->SetTitle("Normalized Events");
+        pidvariable[i][j]->GetXaxis()->SetTitle(labeltxt.c_str());
+        pidvariable[i][j]->SetMinimum(0.0);
+        break;
+      case 19:
+        //hit mean             
+        histtxt="hhitmean" + itos(i+1);
+        labeltxt="hit mean";
+        if(i==0) pidvariable[i][j]=new TH1F(histtxt.c_str(),"",100,0.0,2500.0);
+        if(i!=0) pidvariable[i][j]=new TH1F(histtxt.c_str(),"",100,0.0,1000.0);
+        pidvariable[i][j]->SetMarkerStyle(20);
+        pidvariable[i][j]->SetFillColor(0);
+        pidvariable[i][j]->SetLineColor(1);
+        pidvariable[i][j]->SetLineWidth(2.0);
+        pidvariable[i][j]->GetYaxis()->SetTitle("Normalized Events");
+        pidvariable[i][j]->GetXaxis()->SetTitle(labeltxt.c_str());
+        pidvariable[i][j]->SetMinimum(0.0);
+        break;
+      case 20:
+        //hitrms              
+        histtxt="hhitrms" + itos(i+1);
+        labeltxt="hitrms";
+        if(i==0) pidvariable[i][j]=new TH1F(histtxt.c_str(),"",100,0.0,2500.0);
+        if(i!=0) pidvariable[i][j]=new TH1F(histtxt.c_str(),"",100,0.0,1000.0);
         pidvariable[i][j]->SetMarkerStyle(20);
         pidvariable[i][j]->SetFillColor(0);
         pidvariable[i][j]->SetLineColor(1);
@@ -381,10 +417,13 @@ void CreatePDFProcessor::init() {
 
   _myPID = new LikelihoodPID(pars);
 
+  //get B field
+  _bfield = marlin::Global::GEAR->getBField().at(0.0,0.0,0.0)[2];
+
   printParameters();  
 }
 
-void CreatePDFProcessor::processRunHeader( LCRunHeader*  /*run*/) { 
+void CreatePDFProcessor::processRunHeader( LCRunHeader* run) { 
 } 
 
 void CreatePDFProcessor::processEvent( LCEvent * evt ) { 
@@ -452,6 +491,13 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
       pidvariable[pdfid][6]->Fill(shapes[5+4]);
       pidvariable[pdfid][7]->Fill(fabs(shapes[3+4])/shapes[6+4]);
       pidvariable[pdfid][8]->Fill(fabs(shapes[15+4])/7.00);
+
+      //for mu/pi<5.0GeV?
+      if(pp.Mag()>0.3 && pp.Mag()<6.0){
+	pidvariable[pdfid][18]->Fill(shapes[17+4]);
+	pidvariable[pdfid][19]->Fill(shapes[18+4]);
+	pidvariable[pdfid][20]->Fill(shapes[19+4]);
+      }
     }
 
     //get dedx info
@@ -474,13 +520,15 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
     
     //deltax and deltaz
     float delpos[3]={0.0,0.0,0.0};
-    if(cluvec.size()!=0) CalculateDeltaPosition(part->getCharge(), pp, cluvec[0]->getPosition(), delpos);
-    pidvariable[pdfid][16]->Fill(delpos[0]);
-    pidvariable[pdfid][17]->Fill(delpos[2]);
+    if(cluvec.size()!=0){   // && pp.Mag()<6.0){
+      CalculateDeltaPosition(part->getCharge(), pp, cluvec[0]->getPosition(), delpos);
+      pidvariable[pdfid][16]->Fill(delpos[0]);
+      pidvariable[pdfid][17]->Fill(delpos[2]);
+    }
   }  
 }
 
-void CreatePDFProcessor::check( LCEvent *  /*evt*/ ) { 
+void CreatePDFProcessor::check( LCEvent * evt ) { 
 }
 
 void CreatePDFProcessor::end() { 
@@ -489,7 +537,7 @@ void CreatePDFProcessor::end() {
   _fpdf = new TFile(_filename.c_str(), "RECREATE");
 
   for(int i=0;i<6;i++){
-    for(int j=0;j<18;j++){
+    for(int j=0;j<21;j++){
       pidvariable[i][j]->Write();
     }
   }
@@ -504,7 +552,7 @@ void CreatePDFProcessor::CalculateDeltaPosition(float charge, TVector3& p, const
   //momentum
   double pp=p.Mag();
   //radius in r-phi plane
-  double radius=prphi/(0.3*3.5);
+  double radius=prphi/(0.3*_bfield);
   //tangent lambda
   double tanlam=p[2]/prphi;
   //change to unit vector
@@ -527,8 +575,8 @@ void CreatePDFProcessor::CalculateDeltaPosition(float charge, TVector3& p, const
 
   //cal. the position of the center of track circle
   TVector3 cc;
-  cc[0]=-charge*p[1]*prphi/(0.3*3.5);
-  cc[1]=charge*p[0]*prphi/(0.3*3.5);
+  cc[0]=-charge*p[1]*prphi/(0.3*_bfield);
+  cc[1]=charge*p[0]*prphi/(0.3*_bfield);
   cc[2]=radius*tanlam;
 
   //cal. sign and cosine 2theta

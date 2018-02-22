@@ -43,11 +43,11 @@ private:
   std::vector<float> _dEdxParamsKaon{};
   std::vector<float> _dEdxParamsProton{};
 
-  float _dEdxNormalization{}, _dEdxErrorFactor{};
+  float _dEdxNormalization{}, _dEdxErrorFactor{}, _bfield{};
 
   LikelihoodPID *_myPID{};
   TFile* _fpdf{};
-  TH1F* pidvariable[6][18]{};
+  TH1F* pidvariable[6][21]{};
   std::string _filename{};
 
   std::string itos(int i)

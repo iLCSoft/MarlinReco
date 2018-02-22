@@ -78,7 +78,7 @@ void Compute_dEdxProcessor::init() {
   _TPC_inner = tpc->rMinReadout ;
 
   engine = new std::default_random_engine();
-  
+
   printParameters();
   
 }
@@ -121,7 +121,7 @@ void Compute_dEdxProcessor::processEvent( LCEvent * evt ) {
     //fill values
     trkCand->setdEdx(dedx);
     trkCand->setdEdxError(unum);
-    
+
     delete [] dummy;
   }
 }
@@ -207,7 +207,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
       //biH=iH;
     }
   }
-  
+
   delete [] depe;
 
   //cal. truncated mean
@@ -233,7 +233,7 @@ float* Compute_dEdxProcessor::CalculateEnergyLoss(TrackerHitVec& hitVec, Track* 
 //correct polar angle dependence and number of hits dependence
 float Compute_dEdxProcessor::getNormalization(double dedx, float hit, double trkcos){
   //cal. hit dep.
-  double f1=1.0+std::exp(-hit/_ncorrpar);
+  double f1 = 1.0+std::exp(-hit/_ncorrpar);
   //cal. polar angle dep.
   // double c=1.0/sqrt(1.0-trkcos*trkcos);
   // double f2=1.0/(1.0-0.08887*std::log(c)); 

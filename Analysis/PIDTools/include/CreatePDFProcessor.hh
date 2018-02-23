@@ -28,6 +28,8 @@ public:
   virtual void end();
  
 private:
+  CreatePDFProcessor(const CreatePDFProcessor&) = delete;
+  CreatePDFProcessor& operator=(const CreatePDFProcessor&) = delete;
   void CalculateDeltaPosition(float charge, TVector3 &p, const float* caylpos, float* delpos);
 
   std::string _description{};

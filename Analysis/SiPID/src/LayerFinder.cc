@@ -10,6 +10,8 @@
 #include <LayerFinder.h>
 #include "DD4hep/DD4hepUnits.h"
 
+using namespace lcio;
+
 /***************************************************
  * Implementation of base class LayerResolverBase
  * *********************************************** */

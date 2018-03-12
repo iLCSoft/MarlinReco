@@ -17,7 +17,7 @@
 #include <DD4hep/Detector.h>
 #include "DDRec/DetectorData.h"
 
-typedef std::map<EVENT::LCCollection*, CellIDDecoder<TrackerHitPlane>*> CollectionMap;
+typedef std::map<EVENT::LCCollection*, lcio::CellIDDecoder<lcio::TrackerHitPlane>*> CollectionMap;
 
 /* Utility class to connect the dots:
  * - Detector element type flagword
@@ -52,18 +52,18 @@ public:
 
   // Event-by-event:
   int   GetNumberOfHits() const;
-  TrackerHitPlane* GetHit(int i) const;
+  lcio::TrackerHitPlane* GetHit(int i) const;
 
   virtual unsigned GetNumberOfLayers() const = 0;
 
-  CellIDDecoder<TrackerHitPlane>* GetDecoder() const { return decoder; }
+  lcio::CellIDDecoder<lcio::TrackerHitPlane>* GetDecoder() const { return decoder; }
   bool HasCollection() const { return static_cast<bool>(decoder); }
-  int DecodeLayer(TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"]; }
-  int DecodeSystem(TrackerHitPlane* thit) const { return (*decoder)(thit)["system"]; }
+  int DecodeLayer(lcio::TrackerHitPlane* thit) const { return (*decoder)(thit)["layer"]; }
+  int DecodeSystem(lcio::TrackerHitPlane* thit) const { return (*decoder)(thit)["system"]; }
 
 
   virtual double SensitiveThickness(int nLayer) const { return (this->*ThicknessSensitive)(nLayer); }
-  virtual double SensitiveThickness(TrackerHitPlane* thit) const {
+  virtual double SensitiveThickness(lcio::TrackerHitPlane* thit) const {
     return (this->*ThicknessSensitive)(DecodeLayer(thit));
   }
 
@@ -85,7 +85,7 @@ protected:
   std::string detectorName;
   // Event-to-event
   EVENT::LCCollection *collection;
-  CellIDDecoder<TrackerHitPlane>* decoder;
+  lcio::CellIDDecoder<lcio::TrackerHitPlane>* decoder;
 
 };
 
@@ -130,7 +130,7 @@ public:
   LayerFinder() = delete;
   // Constructor with the vector of collection names that the finder
   // will use when looking for the collections.
-  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, FloatVec sensThickCheatVals);
+  LayerFinder(EVENT::StringVec _collectionNames, dd4hep::Detector&, lcio::FloatVec sensThickCheatVals);
   LayerFinder( const LayerFinder& ) = delete;
 
   LayerFinder& operator = ( const LayerFinder& ) = delete;
@@ -144,7 +144,7 @@ public:
   /* Returns the sensitive thickness of the layer where the hit was recorded
    * Also returns the detector type flag in the second argument
    */
-  double SensitiveThickness(TrackerHitPlane*);
+  double SensitiveThickness(lcio::TrackerHitPlane*);
 
   // Sensitive thickness of layer
   void ReportHandledDetectors();
@@ -159,7 +159,7 @@ protected:
 
   // Search for the TrackerHit collection that contains the hit and
   // use the collection decoder string to decode the system from CellID
-  int FindSystem(TrackerHitPlane* thit) const ;
+  int FindSystem(lcio::TrackerHitPlane* thit) const ;
 
 };
 

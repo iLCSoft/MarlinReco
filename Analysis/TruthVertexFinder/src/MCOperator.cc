@@ -4,6 +4,7 @@ using std::string;
 using EVENT::LCCollection;
 using EVENT::MCParticle;
 using IMPL::MCParticleImpl;
+using namespace lcio;
 namespace TTbarAnalysis
 {
 	MCOperator:: MCOperator (LCCollection * col, LCCollection * rel)

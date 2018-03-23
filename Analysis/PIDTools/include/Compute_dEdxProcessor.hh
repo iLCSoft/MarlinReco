@@ -44,10 +44,12 @@ using namespace marlin ;
  *  default: false<br>
  *  @param _smearingFactor - width of the Gaussian function used for the additional smearing<br>
  *  default: 0.035  (3.5%)<br>
- *  @param _acorrpar - parameters for angular correction<br>
- *  default: {0.635762, -0.0573237}<br>
  *  @param _ncorrpar - parameter for number-of-hits correction<br>
  *  default: 1.468<br>
+ *  @param _acorrpar - parameters for angular correction<br>
+ *  default: {0.635762, -0.0573237}<br>
+ *  @param _errexp - scaling exponents of the dE/dx error for path length and number of hits, respectively<br>
+ *  default: {-0.34, -0.45}<br>
  *  @param _dxStrategy - ID specifying which strategy for calculating dx should be used<br>
  *  Strategy 1: hit-to-hit distance<br>
  *  Strategy 2: hit-to-hit path length of projected hits  (do not use at the moment)<br>
@@ -95,6 +97,7 @@ private:
   float _upperTrunFrac = 0;
   float _ncorrpar = 0;
   std::vector<float> _acorrpar = {};
+  std::vector<float> _errexp = {};
   int _dxStrategy = 0;
   bool _StratCompHist = false;
   bool _StratCompHistWeight = false;
@@ -117,9 +120,6 @@ private:
   TH2* _BBHist_Strategy1{};
   TH2* _BBHist_Strategy2{};
   TH2* _BBHist_Strategy3{};
-  TH2* _BBHist_n30_Strategy1{};
-  TH2* _BBHist_n30_Strategy2{};
-  TH2* _BBHist_n30_Strategy3{};
 };
 
 #endif

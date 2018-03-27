@@ -24,7 +24,7 @@ risk-minimization and MAP
 #include <TH1F.h>
 
 #include "DD4hep/Detector.h"
-#include "DDSurfaces/Vector3D.h"
+#include "DDRec/Vector3D.h"
 #include "DD4hep/DD4hepUnits.h"
 
 #include "LikelihoodPID.hh"

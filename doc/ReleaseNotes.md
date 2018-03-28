@@ -1,3 +1,66 @@
+# v01-23
+
+* 2018-01-31 Strahinja Lukić ([PR#37](https://github.com/iLCSoft/MarlinReco/pull/37))
+  Updates of SiTracker_dEdxProcessor:
+  
+  - Cleaned up unnecessary code.
+  - Added runtime protection against failure of `TrackImpl::getTrackState()`.
+  - Replaced `MarlinTrk::IMarlinTrack::propagate()` which was making the processor ~1000X slower than necessary with `MarlinTrk::IMarlinTrack::extrapolate()`.
+  - Removed unnecessary parameters.
+  
+  Updates of AnalyseSidEdxProcessor:
+  
+  -   Added minor runtime protections.
+
+* 2018-01-09 Strahinja Lukić ([PR#35](https://github.com/iLCSoft/MarlinReco/pull/35))
+  - `SiTracker_dEdxProcessor` was adapted to determine the barrel/endcap type of tracker detector by checking the layering extension, rather than the type flag as before. 
+  - A bug was corrected in `SiTracker_dEdxProcessor` that caused miscalculation of total sensor thickness for some of the available dEdx estimators.
+
+* 2018-02-25 KURATA Masakazu ([PR#42](https://github.com/iLCSoft/MarlinReco/pull/42))
+  - Focus on low momentum mu/pi separation
+  - Correct the corresponding change for createPDF processor
+   
+  - update: correct bad lines:
+    1. use DD4hepAPI to get b field
+    2. correct array initialization
+    3. prevent memory leak when using ROOT
+
+* 2018-02-25 KURATA Masakazu ([PR#42](https://github.com/iLCSoft/MarlinReco/pull/42))
+  - Thank you for writing the text to appear in the release notes. It will show up
+    exactly as it appears between the two bold lines
+  - ...
+
+* 2018-02-08 Daniel Jeans ([PR#38](https://github.com/iLCSoft/MarlinReco/pull/38))
+  - Change order of hit relations: now from reco/digi -> sim [to be consistent with past practice and all other processors]
+  - Add to/from type info to the relation collections
+  - Fix warnings from the compiler
+
+* 2018-02-08 Andreas Alexander Maier ([PR#33](https://github.com/iLCSoft/MarlinReco/pull/33))
+  - This package is an extension to the IsolatedLeptonFinderProcessor. The default functionality is untouched.
+    - Optionally, it dresses leptons with close-by particles. By default it dresses electrons and muons with photons.
+    - The algorithm starts with the highest energy lepton and adds all photons (and, optionally, electrons) in a cone of a given size around to it. As the original, it creates a collection with the dressed leptons and another collections with all remaining particles, except the ones that were dressed into the leptons.
+    - All compiler warnings are fixed
+
+* 2018-03-13 Frank Gaede ([PR#43](https://github.com/iLCSoft/MarlinReco/pull/43))
+  -  Fix for iLCSoft/LCIO#35
+
+* 2018-03-28 Frank Gaede ([PR#46](https://github.com/iLCSoft/MarlinReco/pull/46))
+  - Fix for the removal of DDSurfaces which have been merged into DDRec 
+    -  includes from `DDSurfaces` -> `DDRec`
+    - namespace `DDSurfaces` -> `dd4hep::rec`
+
+* 2017-12-12 Frank Gaede ([PR#34](https://github.com/iLCSoft/MarlinReco/pull/34))
+  - Remove all warnings of type `should be initialized in the member initialization list [-Weffc++]`
+  - Remove all warnings of type `unused parameter ‘run’` for `processRunHeader( LCRunHeader*  /*run*/)`
+  - Remove all warnings of type `unused parameter ‘evt’` for `check( LCEvent *  /*evt*/ )`
+
+* 2018-03-23 Ulrich Einhaus ([PR#44](https://github.com/iLCSoft/MarlinReco/pull/44))
+  - Compute_dEdXProcessor:
+    - geometry issue: gear to DD4hep unit adaption, fixed low momentum problem
+    - added dx calculation strategies
+    - added various processor options, default are all old version
+    - added documentation
+
 # v01-22
 
 * 2017-11-15 Ete Remi ([PR#30](https://github.com/ilcsoft/MarlinReco/pull/30))

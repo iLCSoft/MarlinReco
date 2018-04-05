@@ -24,28 +24,23 @@ void ChargeSpreader::addCharge(float charge, float posI, float posJ , SimDigital
 	if ( parameters.padSeparation > parameters.cellSize )
 		return ;
 
-	int icell = static_cast<int>( parameters.range/parameters.cellSize ) ;
-
 	float chargeTotCheck = 0 ;
-	for (int I = -icell ; I <= icell ; I++)
+
+	int minCellI = static_cast<int>( std::round(posI-parameters.range)/parameters.cellSize ) ;
+	int maxCellI = static_cast<int>( std::round(posI+parameters.range)/parameters.cellSize ) ;
+
+	int minCellJ = static_cast<int>( std::round(posJ-parameters.range)/parameters.cellSize ) ;
+	int maxCellJ = static_cast<int>( std::round(posJ+parameters.range)/parameters.cellSize ) ;
+
+	for ( int I = minCellI ; I <= maxCellI ; ++I )
 	{
 		float minI = (I-0.5f)*parameters.cellSize - posI + 0.5f*parameters.padSeparation ;
 		float maxI = (I+0.5f)*parameters.cellSize - posI - 0.5f*parameters.padSeparation ;
 
-		if ( minI < -parameters.range )
-			minI = -parameters.range ;
-		if ( maxI > parameters.range )
-			maxI = parameters.range ;
-
-		for (int J = -icell ; J <= icell ; J++)
+		for ( int J = minCellJ ; J <= maxCellJ ; ++J )
 		{
 			float minJ = (J-0.5f)*parameters.cellSize - posJ + 0.5f*parameters.padSeparation ;
 			float maxJ = (J+0.5f)*parameters.cellSize - posJ - 0.5f*parameters.padSeparation ;
-
-			if ( minJ < -parameters.range )
-				minJ = -parameters.range ;
-			if ( maxJ > parameters.range )
-				maxJ = parameters.range ;
 
 			float integralResult = computeIntegral(minI , maxI , minJ , maxJ) ;
 

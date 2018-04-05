@@ -45,7 +45,7 @@ class ChargeSpreader
 		std::map<I_J_Coordinates,float> chargeMap ;
 		ChargeSpreaderParameters parameters ;
 
-		float normalisation = 0.f ;
+		float normalisation = 0.f ; //store inverse of normalisation (to multiply instead of divide)
 } ;
 
 

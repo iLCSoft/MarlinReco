@@ -49,7 +49,7 @@ void ChargeSpreader::addCharge(float charge, float posI, float posJ , SimDigital
 
 			float integralResult = computeIntegral(minI , maxI , minJ , maxJ) ;
 
-			chargeMap[I_J_Coordinates(I,J)] += charge * integralResult/normalisation ;
+			chargeMap[I_J_Coordinates(I,J)] += charge * integralResult*normalisation ;
 
 			if( chargeMap[I_J_Coordinates(I,J)] < 0 )
 				streamlog_out( MESSAGE ) << "!!!!!!!!!!Negative Charge!!!!!!!!!!" << std::endl
@@ -57,7 +57,6 @@ void ChargeSpreader::addCharge(float charge, float posI, float posJ , SimDigital
 										 << " Y " << posI << " " << minI << " " << maxI << std::endl ;
 
 			chargeTotCheck += chargeMap[I_J_Coordinates(I,J)] ;
-
 		}
 	}
 	streamlog_out( DEBUG ) << " Charge = " << charge << " ; total splitted charge = " << chargeTotCheck << std::endl ;
@@ -76,12 +75,14 @@ void GaussianSpreader::init()
 {
 	assert ( parameters.erfWidth.size() == parameters.erfWeigth.size() ) ;
 
-	normalisation = 0 ;
+	float _normalisation = 0 ;
 	for ( unsigned int i = 0 ; i < parameters.erfWidth.size() ; i++ )
 	{
 		streamlog_out( DEBUG ) << "Erf function parameters " << i+1 << " : " << parameters.erfWidth[i] << ", " << parameters.erfWeigth[i] << std::endl ;
-		normalisation += parameters.erfWeigth.at(i) * parameters.erfWidth.at(i) * parameters.erfWidth.at(i) * M_PI ;
+		_normalisation += parameters.erfWeigth.at(i) * parameters.erfWidth.at(i) * parameters.erfWidth.at(i) * M_PI ;
 	}
+
+	normalisation = 1.f/_normalisation ;
 
 	streamlog_out( DEBUG ) << "Charge splitter normalisation factor: " << normalisation << std::endl;
 	streamlog_out( DEBUG ) << "range : " << parameters.range << " ; padseparation : " << parameters.padSeparation << std::endl;
@@ -112,7 +113,8 @@ ExactSpreader::~ExactSpreader()
 
 void ExactSpreader::init()
 {
-	normalisation = static_cast<float>( 2*M_PI ) ;
+	float _normalisation = static_cast<float>( 2*M_PI ) ;
+	normalisation = 1.0f/_normalisation ;
 
 	streamlog_out( DEBUG ) << "Charge splitter normalisation factor: " << normalisation << std::endl ;
 	streamlog_out( DEBUG ) << "range : " << parameters.range << " ; padseparation : " << parameters.padSeparation << std::endl ;

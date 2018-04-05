@@ -130,7 +130,7 @@ class SimDigital : public Processor
 		typedef std::map<dd4hep::long64, hitMemory> cellIDHitMap ;
 
 
-		void processCollection(LCCollection* inputCol , LCCollectionVec*& outputCol , LCCollectionVec*& outputRelCol , CHT::Layout layout, LCFlagImpl& flag) ;
+		void processCollection(LCCollection* inputCol , LCCollectionVec*& outputCol , LCCollectionVec*& outputRelCol , CHT::Layout layout) ;
 		cellIDHitMap createPotentialOutputHits(LCCollection* col , SimDigitalGeomCellId* aGeomCellId) ;
 
 		void removeAdjacentStep(std::vector<StepAndCharge>& vec) ;
@@ -142,6 +142,9 @@ class SimDigital : public Processor
 
 		std::vector<std::string> _outputCollections{};
 		std::vector<std::string> _outputRelCollections{};
+
+		LCFlagImpl flag {} ;
+		LCFlagImpl flagRel {} ;
 
 		std::map<std::string, int> _counters{};
 		std::vector<float> _thresholdHcal{};

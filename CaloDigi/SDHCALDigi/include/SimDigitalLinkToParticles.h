@@ -4,6 +4,7 @@
 #include <marlin/Processor.h>
 #include <IMPL/LCCollectionVec.h>
 
+//used for standalone SDHCAL Simulation
 
 class SimDigitalLinkToParticles : public marlin::Processor
 {

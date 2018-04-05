@@ -294,6 +294,10 @@ void SimDigital::init()
 
 	_histoCellCharge = AIDAProcessor::histogramFactory( this )->createHistogram1D("CellCharge","CellCharge",10000,0,100) ;
 
+	//flags
+	flag.setBit(LCIO::CHBIT_LONG) ;
+	flag.setBit(LCIO::RCHBIT_TIME) ;
+	flagRel.setBit(LCIO::LCREL_WEIGHTED) ;
 }
 
 void SimDigital::removeAdjacentStep(std::vector<StepAndCharge>& vec)
@@ -524,12 +528,16 @@ void SimDigital::applyThresholds(cellIDHitMap& myHitMap)
 	}
 }
 
-void SimDigital::processCollection(LCCollection* inputCol , LCCollectionVec*& outputCol , LCCollectionVec*& outputRelCol , CHT::Layout layout, LCFlagImpl& flag)
+void SimDigital::processCollection(LCCollection* inputCol , LCCollectionVec*& outputCol , LCCollectionVec*& outputRelCol , CHT::Layout layout)
 {
 	outputCol = new LCCollectionVec(LCIO::CALORIMETERHIT) ;
 	outputRelCol = new LCCollectionVec(LCIO::LCRELATION) ;
 
 	outputCol->setFlag(flag.getFlag()) ;
+
+	outputRelCol->setFlag(flagRel.getFlag()) ;
+	outputRelCol->parameters().setValue("FromType" , LCIO::CALORIMETERHIT ) ;
+	outputRelCol->parameters().setValue("ToType" , LCIO::SIMCALORIMETERHIT ) ;
 
 	SimDigitalGeomCellId* geomCellId = nullptr ;
 
@@ -564,7 +572,7 @@ void SimDigital::processCollection(LCCollection* inputCol , LCCollectionVec*& ou
 
 		//put only one relation with the SimCalorimeterHit which contributes most
 		SimCalorimeterHit* hit = dynamic_cast<SimCalorimeterHit*>( inputCol->getElementAt( currentHitMem.rawHit ) ) ;
-		LCRelationImpl* rel = new LCRelationImpl(hit , caloHit , 1.0) ;
+		LCRelationImpl* rel = new LCRelationImpl(caloHit , hit , 1.0) ;
 		outputRelCol->addElement( rel ) ;
 
 	} //end of loop on myHitMap
@@ -587,15 +595,6 @@ void SimDigital::processEvent( LCEvent* evt )
 	geneMap.clear() ;
 	_hitCharge.clear() ;
 
-
-
-	/////////////////for ECAL---------------------------------------------------
-	// copy the flags from the input collection
-	//GG : it should be checked why we put the flag like this.
-	LCFlagImpl flag ;
-	flag.setBit(LCIO::CHBIT_LONG) ;
-	flag.setBit(LCIO::RCHBIT_TIME);
-
 	for (unsigned int i(0) ; i < _inputCollections.size() ; ++i)
 	{
 		try
@@ -611,7 +610,7 @@ void SimDigital::processEvent( LCEvent* evt )
 			LCCollectionVec* outputCol = nullptr ;
 			LCCollectionVec* outputRelCol = nullptr ;
 
-			processCollection(inputCol , outputCol , outputRelCol , layout , flag) ;
+			processCollection(inputCol , outputCol , outputRelCol , layout) ;
 
 			_counters["NReco"] += outputCol->getNumberOfElements() ;
 

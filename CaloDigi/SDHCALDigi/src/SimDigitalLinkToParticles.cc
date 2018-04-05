@@ -83,9 +83,9 @@ LCCollectionVec* SimDigitalLinkToParticles::processCollection(LCCollection* inpu
 	{
 		CalorimeterHit* hit = dynamic_cast<CalorimeterHit*>( inputCol->getElementAt(i) ) ;
 
-		if ( navi.getRelatedFromObjects( hit ).size() > 0 )
+		if ( navi.getRelatedToObjects( hit ).size() > 0 )
 		{
-			SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( navi.getRelatedFromObjects(hit)[0] ) ;
+			SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( navi.getRelatedToObjects(hit)[0] ) ;
 
 			std::map<MCParticle* , unsigned int> linkMap ;
 			unsigned int total = 0U ;

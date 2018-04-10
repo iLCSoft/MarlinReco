@@ -13,9 +13,27 @@ using namespace marlin ;
 
 class TH2F ;
 
-/** Compute various estimators for the time of flight from the CalorimeterHits in Clusters.
+/** Compute estimators for the time of flight from the CalorimeterHits in Clusters.
+ *  The estimators are stored in a PID object with the name of the processor.
+ *  The following parameters are stored:
+ *  TOFFirstHit  -  use time of hit closest to reference point
+ *  TOFClosestHits -   use the hits that are closest to straight line estimate
+ *  TOFClosestHitsError - error for this estimator (simple sqrt(variance))
+ *  TOFCluster  - use all relevant hits in the cluster
+ *  TOFClusterError - error for this estimator (simple sqrt(variance))
+ *  parameters:
+ *  MaxLayerNumber  - restrict the hits to the first MaxLayerNumbers
+ *  ReconstructedParticleCollection - input collection
+ *  TimeResolution  - assumed single hit resolution in ps
+ *
+ *  Only Ecal hits are considered.
+ *  For charged particles the TrackState at the calorimeter is used as reference point and for the 
+ *  extrapolation into the calorimeter. For neutral particles the position of the first hit (the one closest to the IP) 
+ *  is used and a straight flight path from the IP is taken for the extrapolation.
+ *  The hit time is corrected for the flight time from the reference assuming speed of light.
  *  
- * 
+ *  See ../scripts/tofestimators.xml for example steering file.
+ *
  * @author F.Gaede, DESY, April 2018
  */
 

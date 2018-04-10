@@ -242,8 +242,10 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
       
       
       // --- define reference point: track state at calo for charged - hit closest to IP for neutral
+      //     and direction of straight line - either from IP or from track state at calo
 
       dd4hep::rec::Vector3D refPoint ;
+      dd4hep::rec::Vector3D unitDir ;
       
       if( isCharged ){
 
@@ -253,8 +255,14 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	refPoint = { tscalo->getReferencePoint()[0],
 		     tscalo->getReferencePoint()[1],
 		     tscalo->getReferencePoint()[2] } ;
+		
+	float tanL = tscalo->getTanLambda() ;
+	float theta = std::atan( 1. / tanL ) ;
+
+	unitDir = dd4hep::rec::Vector3D( 1. ,  tscalo->getPhi() , theta , dd4hep::rec::Vector3D::spherical ) ;
+
 	
-      } else {
+      } else {  // neutral particle
 
 	CaloHitDataVec chv =  layerMap.begin()->second ; // only look in first layer w/ hits   
 
@@ -266,7 +274,14 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	refPoint = { closestHit->lcioHit->getPosition()[0],
 		     closestHit->lcioHit->getPosition()[1],
 		     closestHit->lcioHit->getPosition()[2]  } ; 
-
+	
+	
+	dd4hep::rec::Vector3D cluPos( clu->getPosition()[0], 
+				      clu->getPosition()[1], 
+				      clu->getPosition()[2] ) ;
+	
+	unitDir = cluPos.unit() ;
+	
       } 
       
       streamlog_out( DEBUG2 ) << " ----- use reference point for TOF : " << refPoint << std::endl ;
@@ -286,7 +301,9 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 	ch->distanceFromReferencePoint = ( pos - refPoint ).r()   ; 
 
+	ch->distancefromStraightline = computeDistanceFromLine( calohit, refPoint, unitDir ) ;
 
+	  
 	streamlog_out( DEBUG ) <<  "     ----- " << caloTypeStr( calohit )
 			       <<  " --  " <<  ch->toString()   <<   std::endl ;
 

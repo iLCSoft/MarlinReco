@@ -25,7 +25,7 @@ namespace EVENT{
 namespace TOFUtils{
 
 
-  /// handle for calorimeter hit meta data
+  /// handle for calorimeter hit meta data used for TOF estimators
   struct CaloHitData{
     CaloHitData() = delete ;
     CaloHitData(const CaloHitData&) = default ;
@@ -57,6 +57,10 @@ namespace TOFUtils{
 				   const dd4hep::rec::Vector3D& unitDir) ;
 
   
+  /// return vector with hits that have the shortest distancefromStraightline for every layer
+  CaloHitDataVec findHitsClosestToLine( const CaloHitLayerMap& layerMap ) ;
+
+
   /// compute the flight length of the particle from the IP to the calorimeter
   float computeFlightLength( EVENT::Track* trk) ;
 
@@ -71,6 +75,12 @@ namespace TOFUtils{
 
   /// string with calo type information
   std::string caloTypeStr(  EVENT::CalorimeterHit* h ) ;
+
+
+  /* compute the average TOF from all given hits - correcting for time of 
+   * flight from reference point
+   */
+   std::pair<float,float>  computeTOFEstimator( const CaloHitDataVec& chv ) ;
 
   
 }

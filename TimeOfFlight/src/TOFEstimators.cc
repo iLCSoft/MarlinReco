@@ -108,9 +108,11 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
   // use the global Marlin random seed for this processor
   gsl_rng_set( _rng, Global::EVENTSEEDER->getSeed(this) ) ;   
 
-  streamlog_out( DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
-  
-  
+  streamlog_out(DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
+
+  streamlog_out(DEBUG2) << "   process event: " << evt->getEventNumber() 
+			<< "   in run:  " << evt->getRunNumber() << std::endl ;
+
 
   // get the PFO collection from the event if it exists
   LCCollection* colPFO = nullptr ;
@@ -140,16 +142,8 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 
     int nPFO = colPFO->getNumberOfElements()  ;
-
-    // split into charged and neutral PFOs
-
-    std::vector<ReconstructedParticle*> chargedPFOs ;
-    std::vector<ReconstructedParticle*> neutralPFOs ;
-
-    chargedPFOs.reserve( nPFO ) ;
-    neutralPFOs.reserve( nPFO ) ;
-
-
+    
+    
     for(int i=0; i< nPFO ; ++i){ 
 
       ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>(  colPFO->getElementAt( i ) ) ;
@@ -163,18 +157,16 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
       }
 
       if( std::fabs( pfo->getCharge() ) < 0.1  && pfo->getTracks().size() == 0  ) {
-
-	neutralPFOs.push_back( pfo ) ;
+	
+	isCharged = false ;
       }
-
+      
       else if ( std::fabs( pfo->getCharge() ) > 0.1  && pfo->getTracks().size() == 1  ) {
-
-	chargedPFOs.push_back( pfo ) ;
-
+	
 	isCharged = true ;
-
+	
       } else {
-
+	
 	streamlog_out( DEBUG1 ) << " ignore particle w/ track number other than zero or one:  " <<  *pfo << std::endl ; 
 	continue ;
       }
@@ -186,7 +178,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
       // =======  use only Ecal hits  (requires the CalorimeterHitType to be set in the digitizer )
       //          with time information ( > 1 ps) and layer <= max layer
 
-      unsigned maxLayerNum = unsigned(  _maxLayerNum ) ;
+      int maxLayerNum = _maxLayerNum ;
       std::function<bool(CalorimeterHit*)> selectHits =  [maxLayerNum](CalorimeterHit* h){
 
 	return ( isEcal( h )            &&
@@ -225,7 +217,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	  ch->timeResolution = _resolution ; 
 
 	  ch->smearedTime  = ( _resolution > 0. ?
-			       gsl_ran_gaussian( _rng, _resolution / 1000. ) : // convert ps to ns 
+			       ch->lcioHit->getTime() + gsl_ran_gaussian( _rng, _resolution / 1000. ) : // convert ps to ns 
 			       ch->lcioHit->getTime() ) ;
 
 	  ch->distanceFromIP = dd4hep::rec::Vector3D( clh->getPosition()[0],
@@ -347,59 +339,31 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
     
     }
 
-    streamlog_out( DEBUG2 ) << "  --- will compute TOF estimators for " << chargedPFOs.size()
-			    << " charged and " << neutralPFOs.size()
-			    << " neutral particles " << std::endl ; 
-    
-
-
-   for( auto* pfo : chargedPFOs ) {
-      
-      
-      streamlog_out( DEBUG ) << " -----  compute TOF estimators for charged particle : " << *pfo << std::endl ;
-      
-      
-      const double* mom = pfo->getMomentum() ;
-      double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
-      double energy =  pfo->getEnergy() ;
-      
-      Cluster* clu = pfo->getClusters()[0] ;
-      
-      Track* trk =  pfo->getTracks()[0] ;
-      
-      
-      const TrackState* tscalo = trk->getTrackState( TrackState::AtCalorimeter ) ; 	
-      
-      float x_ref  = tscalo->getReferencePoint()[0] ;
-      float y_ref  = tscalo->getReferencePoint()[1] ;
-      float z_ref  = tscalo->getReferencePoint()[2] ;
-      
-      
-    }
-    
   }
 
-  streamlog_out(DEBUG2) << "   processed event: " << evt->getEventNumber() 
-			<< "   in run:  " << evt->getRunNumber() << std::endl ;
-
-
-
   _nEvt ++ ;
+
 }
 
 
 
 void TOFEstimators::check( LCEvent *evt) {
 
-  streamlog_out( DEBUG ) << " ****  check called !!! " << std::endl ; 
+  streamlog_out( DEBUG ) << " --- check called ! " << std::endl ; 
 
 
+  // create some histograms with beta vs momentum for charged particles
+  
   if( isFirstEvent() ){
+
+    // this creates a directory for this processor ....
+    AIDAProcessor::histogramFactory( this ) ;
+
     _h.resize(5) ;
     int nBins = 100 ;
-    _h[0] = new TH2F( "hbetaFirstHit", "beta vs momentum - first hit ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
-    _h[1] = new TH2F( "hbetaCloseHit", "beta vs momentum - closest hits ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
-    _h[2] = new TH2F( "hbetaCluster",  "beta vs momentum - cluster hits ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[0] = new TH2F( "hbetaFirstHit", "beta vs momentum - first hit ",    nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[1] = new TH2F( "hbetaCloseHit", "beta vs momentum - closest hits ", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[2] = new TH2F( "hbetaCluster",  "beta vs momentum - cluster hits ", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
   }
 
   // get the PFO collection from the event if it exists

@@ -16,11 +16,16 @@ Creates ROOT histograms for these parameters.
 
 
 
-### TOFParameters
+### TOFEstimators
 
 author F.Gaede, DESY, 2018
 
-Compute various estimators for time of flight and particle velocity.
-Add these to the ReconstrucedParticles as PIDParameters
+Compute various estimators for time of flight and add these to the 
+ReconstrucedParticles as PIDParameters.
 
 
+### Examples
+
+See [./scripts/tofestimators.xml](./scripts/tofestimators.xml) for and example 
+steering file that computes TOF estimators for 0,10 and 50 ps single hit 
+time resolution.

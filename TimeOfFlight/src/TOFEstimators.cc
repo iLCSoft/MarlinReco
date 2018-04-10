@@ -136,57 +136,40 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
     chargedPFOs.reserve( nPFO ) ;
     neutralPFOs.reserve( nPFO ) ;
 
+
     for(int i=0; i< nPFO ; ++i){ 
 
-      ReconstructedParticle* p = static_cast<ReconstructedParticle*>(  colPFO->getElementAt( i ) ) ;
+      ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>(  colPFO->getElementAt( i ) ) ;
 
-      if(  p->getClusters().size() != 1 ){
+      bool isCharged = false ;
+
+      if(  pfo->getClusters().size() != 1 ){
 	
-	streamlog_out( DEBUG1 ) << " ignore particle w/ cluster number other than one:  " <<  *p << std::endl ; 
+	streamlog_out( DEBUG1 ) << " ignore particle w/ cluster number other than one:  " <<  *pfo << std::endl ; 
 	continue ;
       }
 
-      if( std::fabs( p->getCharge() ) < 0.1  && p->getTracks().size() == 0  ) {
+      if( std::fabs( pfo->getCharge() ) < 0.1  && pfo->getTracks().size() == 0  ) {
 
-	neutralPFOs.push_back( p ) ;
+	neutralPFOs.push_back( pfo ) ;
       }
-      else if ( std::fabs( p->getCharge() ) > 0.1  && p->getTracks().size() == 1  ) {
 
-	chargedPFOs.push_back( p ) ;
+      else if ( std::fabs( pfo->getCharge() ) > 0.1  && pfo->getTracks().size() == 1  ) {
+
+	chargedPFOs.push_back( pfo ) ;
+
+	isCharged = true ;
+
+      } else {
+
+	streamlog_out( DEBUG1 ) << " ignore particle w/ track number other than zero or one:  " <<  *pfo << std::endl ; 
+	continue ;
       }
-      else {
-	streamlog_out( DEBUG1 ) << " ignore particle w/ track number other than zero or one:  " <<  *p << std::endl ; 
-      }
-    }
 
-    streamlog_out( DEBUG2 ) << "  --- will compute TOF estimators for " << chargedPFOs.size()
-			    << " charged and " << neutralPFOs.size()
-			    << " neutral particles " << std::endl ; 
+      streamlog_out( DEBUG1 ) << " --- compute TOF estimators for particle : " << *pfo << std::endl ;
 
 
-    for( auto* p : chargedPFOs ) {
-    
-
-      streamlog_out( DEBUG ) << " -----  compute TOF estimators for charged particle : " << *p << std::endl ;
-
-
-      const double* mom = p->getMomentum() ;
-      double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
-      double energy =  p->getEnergy() ;
       
-      Cluster* clu = p->getClusters()[0] ;
-
-      Track* trk =  p->getTracks()[0] ;
-
-
-      const TrackState* tscalo = trk->getTrackState( TrackState::AtCalorimeter ) ; 	
-
-      float x_ref  = tscalo->getReferencePoint()[0] ;
-      float y_ref  = tscalo->getReferencePoint()[1] ;
-      float z_ref  = tscalo->getReferencePoint()[2] ;
-
-
-
       // =======  use only Ecal hits  (requires the CalorimeterHitType to be set in the digitizer )
       //          with time information ( > 1 ps) and layer <= max layer
 
@@ -200,13 +183,17 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
       // -------------------------------------------------------------------------------------------
 
+      Cluster* clu = pfo->getClusters()[0] ;
       const CalorimeterHitVec& cluhv = clu->getCalorimeterHits() ;
       
-      // create a vector of extended handle objects for relevant calorimeter hits
+      // create vectors of extended handle objects for relevant calorimeter hits
+      // one w/ unique_ptr for memory handling
       
       CaloHitUPtrVec uniqueVec ;
       uniqueVec.reserve( cluhv.size()  ) ;
       
+      CaloHitDataVec caloHitVec ;
+      caloHitVec.reserve( cluhv.size()  ) ;
       //-------------------------------------------------------------------------------
       
       CaloHitLayerMap layerMap ;
@@ -218,6 +205,8 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	  uniqueVec.push_back(  std::unique_ptr<CaloHitData>( new CaloHitData( clh) )  ) ; 
 
 	  CaloHitData* ch = uniqueVec.back().get() ;
+
+	  caloHitVec.push_back( ch ) ;
 
 	  ch->layer = layer( ch->lcioHit ) ;
 	  ch->timeResolution = _resolution ; 
@@ -231,55 +220,116 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 						      clh->getPosition()[2] ).r() ; 
 
 
-
-
 	  layerMap[ ch->layer ].push_back( ch ) ;
 	}
       }
       
+      
+      if( layerMap.empty() ) {
+
+	streamlog_out( DEBUG1 ) << " --- not suitable Ecal hits found for particle " << std::endl ;
+	continue ;
+      }
+
+      
+
       streamlog_out( DEBUG ) << " --- map with hits per layer : " << std::endl ;
       for( auto m : layerMap ){
 	streamlog_out( DEBUG ) << "  ----- layer " << m.first << " : " << std::endl ;
 	for( auto ch : m.second )
 	  streamlog_out( DEBUG ) << "            " << caloTypeStr( ch->lcioHit ) << std::endl ; 		
       }
-
       
-      //=========================  loop over all relevant hits in this particle's cluster ================
+      
+      // --- define reference point: track state at calo for charged - hit closest to IP for neutral
 
-      streamlog_out( DEBUG ) << " -----  calorimeter hits used for estimators : " << std::endl ;
+      dd4hep::rec::Vector3D refPoint ;
+      
+      if( isCharged ){
 
-      for( auto it = uniqueVec.begin() ; it != uniqueVec.end() ; ++it ){
+	Track* trk =  pfo->getTracks()[0] ;
+	const TrackState* tscalo = trk->getTrackState( TrackState::AtCalorimeter ) ; 	
+	
+	refPoint = { tscalo->getReferencePoint()[0],
+		     tscalo->getReferencePoint()[1],
+		     tscalo->getReferencePoint()[2] } ;
+	
+      } else {
 
-	CaloHitData* ch = it->get() ;
+	CaloHitDataVec chv =  layerMap.begin()->second ; // only look in first layer w/ hits   
+
+	CaloHitData* closestHit =
+	  *std::min_element( chv.begin() , chv.end () ,
+			    [](CaloHitData* c0, CaloHitData* c1 ){ return c0->distanceFromIP < c1->distanceFromIP  ; }
+	    ) ; 
+	  
+	refPoint = { closestHit->lcioHit->getPosition()[0],
+		     closestHit->lcioHit->getPosition()[1],
+		     closestHit->lcioHit->getPosition()[2]  } ; 
+
+      } 
+      
+      streamlog_out( DEBUG2 ) << " ----- use reference point for TOF : " << refPoint << std::endl ;
+
+      streamlog_out( DEBUG ) << " -----  calorimeter hits considered for estimators : " << std::endl ;
+
+
+      // ------  loop again over hits and fill missing data
+
+      for( auto ch : caloHitVec ){
+
 	CalorimeterHit* calohit = ch->lcioHit ; 
 
+	dd4hep::rec::Vector3D pos = { ch->lcioHit->getPosition()[0], 
+				      ch->lcioHit->getPosition()[1], 
+				      ch->lcioHit->getPosition()[2] } ;
+
+	ch->distanceFromReferencePoint = ( pos - refPoint ).r()   ; 
+
+
 	streamlog_out( DEBUG ) <<  "     ----- " << caloTypeStr( calohit )
-			       <<  " -- time : " <<  calohit->getTime()  <<   std::endl ;
+			       <<  " --  " <<  ch->toString()   <<   std::endl ;
 
-
-
-	// compute distance of hit from the IP
-	float x  = calohit->getPosition()[0] ;
-	float y  = calohit->getPosition()[1] ;
-	float z  = calohit->getPosition()[2] ;
-	      
-	float distFromIP = std::sqrt( x*x + y*y + z*z ) ;
-
-	float distFromRef = std::sqrt( (x-x_ref)*(x-x_ref) 
-				       + (y-y_ref)*(y-y_ref) 
-				       + (z-z_ref)*(z-z_ref)  ) ;
-	      
       }
    //=========================================================================================
     
     }
+
+    streamlog_out( DEBUG2 ) << "  --- will compute TOF estimators for " << chargedPFOs.size()
+			    << " charged and " << neutralPFOs.size()
+			    << " neutral particles " << std::endl ; 
+    
+
+
+   //============ fill data for releven
+   for( auto* pfo : chargedPFOs ) {
+      
+      
+      streamlog_out( DEBUG ) << " -----  compute TOF estimators for charged particle : " << *pfo << std::endl ;
+      
+      
+      const double* mom = pfo->getMomentum() ;
+      double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
+      double energy =  pfo->getEnergy() ;
+      
+      Cluster* clu = pfo->getClusters()[0] ;
+      
+      Track* trk =  pfo->getTracks()[0] ;
+      
+      
+      const TrackState* tscalo = trk->getTrackState( TrackState::AtCalorimeter ) ; 	
+      
+      float x_ref  = tscalo->getReferencePoint()[0] ;
+      float y_ref  = tscalo->getReferencePoint()[1] ;
+      float z_ref  = tscalo->getReferencePoint()[2] ;
+      
+      
+    }
+    
   }
-
-
   //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
 
-  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
+  streamlog_out(DEBUG) << "   processed event: " << evt->getEventNumber() 
 		       << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 

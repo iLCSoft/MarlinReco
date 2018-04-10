@@ -12,6 +12,7 @@
 #include <UTIL/BitField64.h>
 #include <UTIL/ILDConf.h>
 #include <UTIL/Operators.h>
+#include <UTIL/PIDHandler.h>
 
 #include "DDRec/Vector3D.h"
 
@@ -85,6 +86,12 @@ void TOFEstimators::init() {
   _rng = gsl_rng_alloc(gsl_rng_ranlxs2);
 
   Global::EVENTSEEDER->registerProcessor(this);
+
+
+  _TOFNames = { "TOFFirstHit",
+		"TOFClosestHits", "TOFClosestHitsError",
+		"TOFCluster",     "TOFClusterError" } ;
+
 }
 
 
@@ -126,6 +133,12 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
     
   if( colPFO != nullptr ){
     
+
+
+    PIDHandler pidh( colPFO );
+    int algoID = pidh.addAlgorithm( name()  , _TOFNames);
+
+
     int nPFO = colPFO->getNumberOfElements()  ;
 
     // split into charged and neutral PFOs
@@ -231,14 +244,12 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	continue ;
       }
 
-      
-
-      streamlog_out( DEBUG ) << " --- map with hits per layer : " << std::endl ;
-      for( auto m : layerMap ){
-	streamlog_out( DEBUG ) << "  ----- layer " << m.first << " : " << std::endl ;
-	for( auto ch : m.second )
-	  streamlog_out( DEBUG ) << "            " << caloTypeStr( ch->lcioHit ) << std::endl ; 		
-      }
+      // streamlog_out( DEBUG ) << " --- map with hits per layer : " << std::endl ;
+      // for( auto m : layerMap ){
+      // 	streamlog_out( DEBUG ) << "  ----- layer " << m.first << " : " << std::endl ;
+      // 	for( auto ch : m.second )
+      // 	  streamlog_out( DEBUG ) << "            " << caloTypeStr( ch->lcioHit ) << std::endl ; 		
+      // }
       
       
       // --- define reference point: track state at calo for charged - hit closest to IP for neutral
@@ -274,12 +285,11 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	refPoint = { closestHit->lcioHit->getPosition()[0],
 		     closestHit->lcioHit->getPosition()[1],
 		     closestHit->lcioHit->getPosition()[2]  } ; 
-	
-	
+
 	dd4hep::rec::Vector3D cluPos( clu->getPosition()[0], 
 				      clu->getPosition()[1], 
 				      clu->getPosition()[2] ) ;
-	
+
 	unitDir = cluPos.unit() ;
 	
       } 
@@ -301,6 +311,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 	ch->distanceFromReferencePoint = ( pos - refPoint ).r()   ; 
 
+
 	ch->distancefromStraightline = computeDistanceFromLine( calohit, refPoint, unitDir ) ;
 
 	  
@@ -308,6 +319,30 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 			       <<  " --  " <<  ch->toString()   <<   std::endl ;
 
       }
+
+      // ---- now get hits that are closest to the extrapolated line
+      CaloHitDataVec tofHits = findHitsClosestToLine( layerMap ) ;
+
+
+      streamlog_out( DEBUG )   <<  " ***** hits used for the TOF estimator : " << std::endl ;
+      for( auto ch : tofHits ){
+	streamlog_out( DEBUG ) <<  "     ----- " << ch->toString() << std::endl ;
+      }
+
+      auto t_dt     = computeTOFEstimator( tofHits ) ;
+      auto t_dt_clu = computeTOFEstimator( caloHitVec ) ; 
+      
+      streamlog_out( DEBUG2 ) << "  #### tof ( first ) : " <<  tofHits[0]->smearedTime << " +/- " << 0 << std::endl ; 
+      streamlog_out( DEBUG2 ) << "  #### tof ( straight line ) : " << t_dt.first << " +/- " << t_dt.second << std::endl ; 
+      streamlog_out( DEBUG2 ) << "  #### tof ( cluster ) : " << t_dt_clu.first << " +/- " << t_dt_clu.second << std::endl ; 
+
+      FloatVec TOF_params = { tofHits[0]->smearedTime,
+			      t_dt.first, t_dt.second,
+			      t_dt_clu.first, t_dt_clu.second } ; 
+
+      pidh.setParticleID(pfo , 0, 0 , 0.0 , algoID, TOF_params );
+
+													      
    //=========================================================================================
     
     }
@@ -318,7 +353,6 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
     
 
 
-   //============ fill data for releven
    for( auto* pfo : chargedPFOs ) {
       
       
@@ -344,10 +378,9 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
     }
     
   }
-  //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
 
-  streamlog_out(DEBUG) << "   processed event: " << evt->getEventNumber() 
-		       << "   in run:  " << evt->getRunNumber() << std::endl ;
+  streamlog_out(DEBUG2) << "   processed event: " << evt->getEventNumber() 
+			<< "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
 

@@ -84,4 +84,49 @@ namespace TOFUtils{
     
   }
  
-}
+
+  CaloHitDataVec findHitsClosestToLine( const CaloHitLayerMap& layerMap ){
+    
+    CaloHitDataVec hitVec ;
+    
+    for( auto m : layerMap ){
+      
+      const CaloHitDataVec& chv = m.second ;
+      
+      CaloHitData* closestHit =
+	*std::min_element( chv.begin() , chv.end () ,
+			   [](CaloHitData* c0, CaloHitData* c1 ){ return c0->distancefromStraightline < c1->distancefromStraightline  ; }
+	  ) ; 
+
+      hitVec.push_back( closestHit ) ;
+    }
+
+    return hitVec ;
+  }
+
+
+  std::pair<float,float> computeTOFEstimator( const CaloHitDataVec& chv ){
+
+    const static float c_mm_per_ns = 299.792458 ;
+
+    int   nHit = 0 ;
+    float mean = 0. ;
+    float meansq = 0. ;
+
+    for( auto ch : chv ){
+      float t = ch->smearedTime - ch->distanceFromReferencePoint / c_mm_per_ns ; 
+      mean   += t   ;
+      ++nHit ;
+    }
+    mean /= nHit ;
+
+    for( auto ch : chv ){
+      float t = ch->smearedTime - ch->distanceFromReferencePoint / c_mm_per_ns ; 
+      meansq += ( t - mean ) * ( t - mean )   ;
+    }
+
+    return std::make_pair( mean, std::sqrt(meansq/nHit ) );
+  }
+
+
+} //namespace

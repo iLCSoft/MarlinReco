@@ -60,6 +60,8 @@ class TOFEstimators : public Processor {
   int   _maxLayerNum{} ;
   float _resolution{} ;
   
+  std::vector<std::string> _TOFNames {} ; 
+
   int _nRun{};
   int _nEvt{};
 

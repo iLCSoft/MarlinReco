@@ -11,7 +11,7 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-class TH1 ;
+class TH2F ;
 
 /** Compute various estimators for the time of flight from the CalorimeterHits in Clusters.
  *  
@@ -67,7 +67,7 @@ class TOFEstimators : public Processor {
 
   gsl_rng* _rng = nullptr ;
 
-  std::vector<TH1*> _h{};
+  std::vector<TH2F*> _h{};
 
 } ;
 

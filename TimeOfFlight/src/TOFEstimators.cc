@@ -33,7 +33,7 @@
 #include <gsl/gsl_randist.h>
 
 //---- ROOT -----
-#include "TH1F.h" 
+#include "TH2F.h" 
 
 using namespace lcio ;
 using namespace marlin ;
@@ -389,7 +389,68 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 
 
-void TOFEstimators::check( LCEvent *) {}
+void TOFEstimators::check( LCEvent *evt) {
+
+  streamlog_out( DEBUG ) << " ****  check called !!! " << std::endl ; 
+
+
+  if( isFirstEvent() ){
+    _h.resize(5) ;
+    int nBins = 100 ;
+    _h[0] = new TH2F( "hbetaFirstHit", "beta vs momentum - first hit ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[1] = new TH2F( "hbetaCloseHit", "beta vs momentum - closest hits ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[2] = new TH2F( "hbetaCluster",  "beta vs momentum - cluster hits ", nBins, 1. , 10., nBins, 0.93 , 1.03 ) ; 
+  }
+
+  // get the PFO collection from the event if it exists
+  LCCollection* colPFO = nullptr ;
+  try{ colPFO = evt->getCollection( _colNamePFO ) ; } catch(lcio::Exception){}
+
+  if( colPFO != nullptr ){
+  
+    PIDHandler pidh( colPFO );
+    int algoID = pidh.getAlgorithmID( name() );
+    int fh_idx = pidh.getParameterIndex(algoID,"TOFFirstHit") ;
+    int ch_idx = pidh.getParameterIndex(algoID,"TOFClosestHits") ;
+    int cl_idx = pidh.getParameterIndex(algoID,"TOFCluster") ;
+    
+    
+    int nPFO = colPFO->getNumberOfElements()  ;
+
+    for( int i=0 ; i< nPFO ; ++i){
+
+      ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>(  colPFO->getElementAt( i ) ) ;
+
+      const ParticleID& tofPID = pidh.getParticleID( pfo , algoID ) ;
+      
+      const FloatVec& tofParams = tofPID.getParameters() ;
+
+      streamlog_out( DEBUG ) << " ****  found TOF parameters for pfo w/ size " << tofParams.size() << std::endl ;
+
+      if( !tofParams.empty() && pfo->getTracks().size() == 1 ){
+
+	const double* mom = pfo->getMomentum() ;
+	double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
+
+	Track* trk =  pfo->getTracks()[0] ;
+	float length = computeFlightLength( trk ) ;
+
+	double beta_fh = ( length / tofParams[ fh_idx  ] ) / 299.8 ;
+	double beta_ch = ( length / tofParams[ ch_idx  ] ) / 299.8 ;
+	double beta_cl = ( length / tofParams[ cl_idx  ] ) / 299.8 ;
+
+	_h[0]->Fill( momentum , beta_fh );
+	_h[1]->Fill( momentum , beta_ch );
+	_h[2]->Fill( momentum , beta_cl );
+
+
+      } 
+
+    }
+  }
+    
+}
+
 
 
 

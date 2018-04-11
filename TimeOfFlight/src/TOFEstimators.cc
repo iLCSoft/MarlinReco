@@ -91,7 +91,8 @@ void TOFEstimators::init() {
 
   _TOFNames = { "TOFFirstHit",
 		"TOFClosestHits", "TOFClosestHitsError",
-		"TOFCluster",     "TOFClusterError" } ;
+		"TOFFlightLength",  "TOFLastTrkHit" ,
+		"TOFLastTrkHitFlightLength" } ;
 
 }
 
@@ -250,7 +251,11 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
       dd4hep::rec::Vector3D refPoint ;
       dd4hep::rec::Vector3D unitDir ;
-      
+      float flightLength = 0. ;
+
+      TrackerHit* lastTrackerHit = nullptr ;
+      float flightLengthTrkHit = 0. ;
+
       if( isCharged ){
 
 	Track* trk =  pfo->getTracks()[0] ;
@@ -265,6 +270,16 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 	unitDir = dd4hep::rec::Vector3D( 1. ,  tscalo->getPhi() , theta , dd4hep::rec::Vector3D::spherical ) ;
 
+	flightLength = computeFlightLength( trk ) ;
+	
+
+	// also store time and flight length of last tracker hit
+	const TrackState* tsIP = trk->getTrackState( TrackState::AtIP ) ; 	
+ 	const TrackState* tslh = trk->getTrackState( TrackState::AtLastHit ) ; 	
+
+	lastTrackerHit = trk->getTrackerHits().back() ;
+
+	flightLengthTrkHit = computeFlightLength( tsIP , tslh ) ;
 	
       } else {  // neutral particle
 
@@ -278,6 +293,9 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 	refPoint = { closestHit->lcioHit->getPosition()[0],
 		     closestHit->lcioHit->getPosition()[1],
 		     closestHit->lcioHit->getPosition()[2]  } ; 
+
+	flightLength = refPoint.r() ;
+
 
 	dd4hep::rec::Vector3D cluPos( clu->getPosition()[0], 
 				      clu->getPosition()[1], 
@@ -323,15 +341,19 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
       }
 
       auto t_dt     = computeTOFEstimator( tofHits ) ;
-      auto t_dt_clu = computeTOFEstimator( caloHitVec ) ; 
+//      auto t_dt_clu = computeTOFEstimator( caloHitVec ) ; 
       
       streamlog_out( DEBUG2 ) << "  #### tof ( first ) : " <<  tofHits[0]->smearedTime << " +/- " << 0 << std::endl ; 
       streamlog_out( DEBUG2 ) << "  #### tof ( straight line ) : " << t_dt.first << " +/- " << t_dt.second << std::endl ; 
-      streamlog_out( DEBUG2 ) << "  #### tof ( cluster ) : " << t_dt_clu.first << " +/- " << t_dt_clu.second << std::endl ; 
+//      streamlog_out( DEBUG2 ) << "  #### tof ( cluster ) : " << t_dt_clu.first << " +/- " << t_dt_clu.second << std::endl ; 
+
+
+      float trkHitTime = ( lastTrackerHit ?   lastTrackerHit->getTime()   : 0.  ) ;
+
 
       FloatVec TOF_params = { tofHits[0]->smearedTime,
 			      t_dt.first, t_dt.second,
-			      t_dt_clu.first, t_dt_clu.second } ; 
+			      flightLength , trkHitTime , flightLengthTrkHit } ;
 
       pidh.setParticleID(pfo , 0, 0 , 0.0 , algoID, TOF_params );
 
@@ -362,9 +384,15 @@ void TOFEstimators::check( LCEvent *evt) {
 
     _h.resize(5) ;
     int nBins = 100 ;
-    _h[0] = new TH2F( "hbetaFirstHit", "beta vs momentum - first hit ",    nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
-    _h[1] = new TH2F( "hbetaCloseHit", "beta vs momentum - closest hits ", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
-    _h[2] = new TH2F( "hbetaCluster",  "beta vs momentum - cluster hits ", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[0] = new TH2F( "hbetaFirstHitsChrg", "beta vs momentum - first hit - charged",    nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[1] = new TH2F( "hbetaCloseHitsChrg", "beta vs momentum - closest hits - charged", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+
+    _h[2] = new TH2F( "hbetaFirstHitsNeut", "beta vs momentum - first hit - neutral",    nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+    _h[3] = new TH2F( "hbetaCloseHitsNeut", "beta vs momentum - closest hits - neutral", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+
+    _h[4] = new TH2F( "hbetaLastTrkHit",    "beta vs momentum - last tracker hit", nBins, .1 , 10., nBins, 0.93 , 1.03 ) ; 
+
+
   }
 
   // get the PFO collection from the event if it exists
@@ -377,8 +405,9 @@ void TOFEstimators::check( LCEvent *evt) {
     int algoID = pidh.getAlgorithmID( name() );
     int fh_idx = pidh.getParameterIndex(algoID,"TOFFirstHit") ;
     int ch_idx = pidh.getParameterIndex(algoID,"TOFClosestHits") ;
-    int cl_idx = pidh.getParameterIndex(algoID,"TOFCluster") ;
-    
+    int fl_idx = pidh.getParameterIndex(algoID,"TOFFlightLength") ;
+    int lt_idx = pidh.getParameterIndex(algoID,"TOFLastTrkHit") ;
+    int ft_idx = pidh.getParameterIndex(algoID,"TOFLastTrkHitFlightLength") ;
     
     int nPFO = colPFO->getNumberOfElements()  ;
 
@@ -392,24 +421,64 @@ void TOFEstimators::check( LCEvent *evt) {
 
       streamlog_out( DEBUG ) << " ****  found TOF parameters for pfo w/ size " << tofParams.size() << std::endl ;
 
-      if( !tofParams.empty() && pfo->getTracks().size() == 1 ){
+      if( !tofParams.empty() ){
 
 	const double* mom = pfo->getMomentum() ;
 	double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
 
-	Track* trk =  pfo->getTracks()[0] ;
-	float length = computeFlightLength( trk ) ;
+	double length  =  tofParams[ fl_idx  ] ; 
+
 
 	double beta_fh = ( length / tofParams[ fh_idx  ] ) / 299.8 ;
 	double beta_ch = ( length / tofParams[ ch_idx  ] ) / 299.8 ;
-	double beta_cl = ( length / tofParams[ cl_idx  ] ) / 299.8 ;
 
-	_h[0]->Fill( momentum , beta_fh );
-	_h[1]->Fill( momentum , beta_ch );
-	_h[2]->Fill( momentum , beta_cl );
+
+	if( std::abs( pfo->getCharge() )  > 0.5 ) { 
+	  _h[0]->Fill( momentum , beta_fh );
+	  _h[1]->Fill( momentum , beta_ch );
+	} else {
+	  _h[2]->Fill( momentum , beta_fh );
+	  _h[3]->Fill( momentum , beta_ch );
+	}
+
+	if( tofParams[ lt_idx  ] > 1.e-3 ){ // if TOF from last tracker hit has been set
+
+	  double beta    = ( tofParams[ ft_idx  ] / tofParams[ lt_idx  ] ) / 299.8 ;
+
+	  _h[4]->Fill( momentum , beta );
+	}
+
 
 
       } 
+    // for( int i=0 ; i< nPFO ; ++i){
+
+    //   ReconstructedParticle* pfo = dynamic_cast<ReconstructedParticle*>(  colPFO->getElementAt( i ) ) ;
+
+    //   const ParticleID& tofPID = pidh.getParticleID( pfo , algoID ) ;
+      
+    //   const FloatVec& tofParams = tofPID.getParameters() ;
+
+    //   streamlog_out( DEBUG ) << " ****  found TOF parameters for pfo w/ size " << tofParams.size() << std::endl ;
+
+    //   if( !tofParams.empty() && pfo->getTracks().size() == 1 ){
+
+    // 	const double* mom = pfo->getMomentum() ;
+    // 	double momentum = sqrt( mom[0] * mom[0] +  mom[1] * mom[1] +  mom[2] * mom[2] ) ;
+
+    // 	Track* trk =  pfo->getTracks()[0] ;
+    // 	float length = computeFlightLength( trk ) ;
+
+    // 	double beta_fh = ( length / tofParams[ fh_idx  ] ) / 299.8 ;
+    // 	double beta_ch = ( length / tofParams[ ch_idx  ] ) / 299.8 ;
+    // 	double beta_cl = ( length / tofParams[ cl_idx  ] ) / 299.8 ;
+
+    // 	_h[0]->Fill( momentum , beta_fh );
+    // 	_h[1]->Fill( momentum , beta_ch );
+    // 	_h[2]->Fill( momentum , beta_cl );
+
+
+    //   } 
 
     }
   }

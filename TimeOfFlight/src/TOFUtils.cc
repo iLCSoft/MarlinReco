@@ -34,6 +34,19 @@ namespace TOFUtils{
     return length ;
   }
 
+  float computeFlightLength(const TrackState* ts0,  const TrackState* ts1 ){
+    
+    float Phicalo = ts1->getPhi() ;
+    float PhiIP = ts0->getPhi() ;
+    
+    float Omega = ts0->getOmega()  ;
+    float tanL = ts0->getTanLambda() ;
+    
+    float length = (PhiIP-Phicalo)*(1/Omega) * sqrt( 1 + tanL * tanL ) ;
+
+    return length ;
+  }
+
 
   int layer( EVENT::CalorimeterHit* h ) {
     

@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "EVENT/CalorimeterHit.h"
+#include "EVENT/Track.h"
 #include "DDRec/Vector3D.h"
 
 namespace EVENT{
@@ -64,6 +65,8 @@ namespace TOFUtils{
   /// compute the flight length of the particle from the IP to the calorimeter
   float computeFlightLength( EVENT::Track* trk) ;
 
+  /// compute the flight length of the particle between the two given track states
+  float computeFlightLength(const EVENT::TrackState* ts0,  const EVENT::TrackState* ts1 ) ;
 
   /// helper function to get the layer of the calo hit
   int layer( EVENT::CalorimeterHit* h ) ; 

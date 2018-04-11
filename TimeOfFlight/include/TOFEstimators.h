@@ -16,12 +16,14 @@ class TH2F ;
 /** Compute estimators for the time of flight from the CalorimeterHits in Clusters.
  *  The estimators are stored in a PID object with the name of the processor.
  *  The following parameters are stored:
- *  TOFFirstHit  -  use time of hit closest to reference point
- *  TOFClosestHits -   use the hits that are closest to straight line estimate
- *  TOFClosestHitsError - error for this estimator (simple sqrt(variance))
- *  TOFCluster  - use all relevant hits in the cluster
- *  TOFClusterError - error for this estimator (simple sqrt(variance))
- *  parameters:
+ *   TOFFirstHit         -  first hit ( closest to calo entry point)
+ *   TOFClosestHits      -  closest hit in every layer (<lMax)
+ *   TOFClosestHitsError -  error of above 
+ *   TOFFlightLength     -  trajectory length to reference point
+ *   TOFLastTrkHit       -  (unsmeared) time of last tracker hit (in SET)
+ *   TOFLastTrkHitFlightLength -  trajectory length to last trk hit
+ *
+ *  processor parameters:
  *  MaxLayerNumber  - restrict the hits to the first MaxLayerNumbers
  *  ReconstructedParticleCollection - input collection
  *  TimeResolution  - assumed single hit resolution in ps

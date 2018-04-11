@@ -747,7 +747,7 @@ CluTime computeClusterTimes(EVENT::Cluster* clu, const float* refPoint, float ti
 
 
 
-  return std::move( ct ) ;
+  return ct ;
 }
 
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <functional>
+#include <algorithm>
 
 
 #include <lcio.h>

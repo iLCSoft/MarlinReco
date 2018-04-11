@@ -1,6 +1,7 @@
 #include "TOFUtils.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include <lcio.h>
 #include <EVENT/LCCollection.h>

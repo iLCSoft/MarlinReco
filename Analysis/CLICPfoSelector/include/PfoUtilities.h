@@ -3,6 +3,7 @@
 
 #include <EVENT/ReconstructedParticle.h>
 #include <EVENT/LCObject.h>
+#include "TrackHitPair.h"
 
 #include <vector>
 
@@ -37,7 +38,18 @@ namespace PfoUtil{
    if(lhs_type==rhs_type)return (lhs_energy>rhs_energy);
    return (lhs_type<rhs_type);
 
-}
+  }
+/*
+  float Time(const Track* pTrack, float &tof){
+
+    std::cout << "Using PfoUtil::TimeAtEcal" << std::endl;
+    float time = 0.0;
+    std::cout << time << std::endl;
+    return time;
+  }
+*/
+  void GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCaloHitsUsed, float &meanTimeEcal, 
+                       int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd);
 
 }//namespace
 

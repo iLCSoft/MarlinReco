@@ -158,7 +158,7 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
 
-
+      //get clusters time
       for(unsigned int clu = 0; clu < clusters.size(); clu++){
 	float meanTime(999.);
 	float meanTimeEcal(999.);
@@ -168,7 +168,7 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 	int   nCaloHitsUsed(0);
 
 	const Cluster *cluster = clusters[clu];
-	PfoUtil::GetClusterTimes(cluster,meanTime,nCaloHitsUsed,meanTimeEcal,nEcal,meanTimeHcalEndcap,nHcalEnd);
+	PfoUtil::GetClusterTimes(cluster,meanTime,nCaloHitsUsed,meanTimeEcal,nEcal,meanTimeHcalEndcap,nHcalEnd,false);
 /*
 	// correct for track propagation time
 	if(!tracks.empty()){

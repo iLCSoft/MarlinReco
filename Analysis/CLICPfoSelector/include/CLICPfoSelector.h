@@ -39,7 +39,6 @@ class CLICPfoSelector : public Processor {
   virtual Processor*  newProcessor() { return new CLICPfoSelector ; }  
   CLICPfoSelector() ;  
   float  TimeAtEcal(const Track* pTrack, float &tof);
-  void   GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCaloHitsUsed, float &meanTimeEcal, int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd);
   virtual void init() ;
   virtual void processRunHeader( LCRunHeader* run ) ;
   virtual void processEvent( LCEvent * evt ) ; 

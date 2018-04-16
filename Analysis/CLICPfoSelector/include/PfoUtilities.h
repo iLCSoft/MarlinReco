@@ -49,7 +49,7 @@ namespace PfoUtil{
   }
 */
   void GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCaloHitsUsed, float &meanTimeEcal, 
-                       int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd);
+                       int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd, bool correctHitTimesForTimeOfFlight);
 
 }//namespace
 

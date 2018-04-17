@@ -43,6 +43,9 @@ class TrueJet : public Processor {
   
   
   TrueJet() ;
+
+  TrueJet& operator=(const TrueJet&) = delete ;
+  TrueJet(const TrueJet&) = delete ;  
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -135,7 +138,7 @@ private:
                         // or from a W from eg a top decay
     int elementon[26]{};  // I just invented that word (collective for quarks, leptons and elementary bosons) 
     int boson[26]{};
-    int fafp_boson[25]{};  // fafp of the boson creating this jet. 
+    int fafp_boson[26]{};  // fafp of the boson creating this jet. 
     int fafp[26]{};       // first fafp of the jet = either fafp_last (jet not from boson) or fafp_boson (jet from boson)
     int nfsr[26]{};
     int type[26]{};

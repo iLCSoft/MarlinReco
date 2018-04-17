@@ -179,7 +179,7 @@ void TrueJet::processEvent( LCEvent * event ) {
       //std::cout << " return from getPyjets"<< std::endl;
 	fix94();
       njet=0 ; i_jet=0 ; nstr=0 ;
-      for ( int kk=1 ; kk <= 26 ; kk++ ) {
+      for ( int kk=1 ; kk <= 25 ; kk++ ) {
         boson[kk]=0;  
         elementon[kk]=0;
         fafp_last[kk]=0;
@@ -187,7 +187,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         fafp[kk]=0;
         nfsr[kk]=0 ;
       }
-      for ( int kk=1 ; kk <= 4001 ; kk++ ) {
+      for ( int kk=1 ; kk <= 4000 ; kk++ ) {
         jet[kk]=0;
         companion[kk] = 0;
       }
@@ -405,7 +405,7 @@ void TrueJet::processEvent( LCEvent * event ) {
 
                 } // end if not yet used
                 else{
-		  streamlog_out(DEBUG6) << " " << reco_part << " seen more than once ! ";
+		  streamlog_out(DEBUG1) << " " << reco_part << " seen more than once ! " << std::endl;
 		}
               } // end reco-of-this-true loop
 
@@ -562,7 +562,7 @@ void TrueJet::processEvent( LCEvent * event ) {
       LCRelationNavigator FinalElementon_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::MCPARTICLE ) ;
 
       for ( int kk=1; kk<=n_dje ; kk++ ) {
-        double E=0, M=0 , mom[3]={0,0.0} ;  int  pdg[10]={0,0,0,0,0,0,0,0,0,0};
+        double E=0, M=0 , mom[3]={} ;  int  pdg[26]={};
         if ( type[jets_end[1][kk]]%100 == 5 ) {
           // beam-jet: No ancestor - just use sum of true-stable
           E=tE[jets_end[1][kk]];
@@ -652,7 +652,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         for(int jj=1 ; jj<=jets_end[0][kk] ; jj++) {
           fafpf->addParticle(dynamic_cast<ReconstructedParticle*>(jet_vec->getElementAt(jets_end[jj][kk]-1)) );
         }
-        ParticleIDImpl* pid[10];
+        ParticleIDImpl* pid[26];
         pid[0] = new ParticleIDImpl; 
         pid[0]->setPDG(pdg[0]);
         pid[0]->setType(type[jets_end[1][kk]]%100);  // maybe flag from boson? could be 0,1, or 2 jets in the fafp that's from boson ..
@@ -679,8 +679,8 @@ void TrueJet::processEvent( LCEvent * event ) {
       LCRelationNavigator InitialColourNeutral_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::RECONSTRUCTEDPARTICLE ) ;
 
       for (int kk=1 ; kk<=n_djb ; kk++ ) {
-        double E=0, M=0 , mom[3]={0,0.0} ; 
-        int pdg[10]={0,0,0,0,0,0,0,0,0,0}; 
+        double E=0, M=0 , mom[3]={} ; 
+        int pdg[26]= {};
         //JL assume Z as default, check for W, H later
         int bosonid=23 ;
              // E and P is sum of (unique) direct decendants of the
@@ -692,29 +692,44 @@ void TrueJet::processEvent( LCEvent * event ) {
              // the genertor quarks of the string.
         int first=nlund , last=0;
         for ( int jj=1 ; jj<=jets_begin[0][kk] ; jj++ ) {
-          if (  k [fafp [jets_begin[jj][kk]] ] [4] < first ) {
-            first= k[fafp[jets_begin[jj][kk]]][4] ;
+          if ( k [fafp [jets_begin[jj][kk]] ] [4] == 0 ) {
+            if (  fafp[jets_begin[jj][kk]] < first ) {
+              first= fafp[jets_begin[jj][kk]] ;
+            }
+          } else {
+            if (  k [fafp [jets_begin[jj][kk]] ] [4] < first ) {
+              first= k[fafp[jets_begin[jj][kk]]][4] ;
+            }
           }
-          if (  k[fafp[jets_begin[jj][kk]]][5] > last ) {
-            last= k[fafp[jets_begin[jj][kk]]][5] ;
+          if ( k [fafp [jets_begin[jj][kk]] ] [5] == 0 ) {
+            if (  fafp[jets_begin[jj][kk]] > last ) {
+              last= fafp[jets_begin[jj][kk]] ;
+            }
+          } else { 
+            if (  k[fafp[jets_begin[jj][kk]]][5] > last ) {
+              last= k[fafp[jets_begin[jj][kk]]][5] ;
+            }
           }
 	  //          pdg[jj]=k[fafp[jets_begin[jj][kk]]][2];
           pdg[jj]=k[elementon[jets_begin[jj][kk]]][2];
+          // TODO: maybe lift this part out into a separate loop ?
           // JL: first check whether we have an explicit mother in the event listing, like for Higgs events
+          // MB: only do this if the parent *is* a boson
           if ( k[fafp[jets_begin[jj][kk]]][3] > 0) {
-            bosonid = abs(k [k[fafp[jets_begin[jj][kk]]][3]] [2]);
-            streamlog_out(DEBUG3) << " elementon " << fafp[jets_begin[jj][kk]] << " has explicit mother with PDG = " << bosonid << std::endl;
+            if (  abs(k [k[fafp[jets_begin[jj][kk]]][3]] [2]) > 21 &&  abs(k [k[fafp[jets_begin[jj][kk]]][3]] [2]) <= 39 ) {
+                // ie. any IVB except the gluon
+              bosonid = abs(k [k[fafp[jets_begin[jj][kk]]][3]] [2]);
+              streamlog_out(DEBUG3) << " elementon " << fafp[jets_begin[jj][kk]] << " has explicit mother with PDG = " << bosonid << std::endl;
+            }
           }
-          else {
-            if ( pdg[0] == 0 ) {
+          if ( pdg[0] == 0 ) {
               //JL this is _not_ the mother boson pdg yet, but a temporary storage for the pdg of the (first) elementon of this boson
-              pdg[0]=abs(k[fafp[jets_begin[jj][kk]]][2]);
+            pdg[0]=abs(k[fafp[jets_begin[jj][kk]]][2]);
               //JL if ID of one of the following elementons of this boson has a different pdg, assume we have a W
-            } 
-            else if ( bosonid==23 && abs(k[fafp[jets_begin[jj][kk]]][2]) != pdg[0] ) {
-              bosonid=24;
-            } 
-          }  
+          } 
+          else if ( bosonid==23 && abs(k[fafp[jets_begin[jj][kk]]][2]) != pdg[0] ) {
+            bosonid=24;
+          } 
         }
         pdg[0]=bosonid;
         if ( last == first ) {
@@ -726,7 +741,7 @@ void TrueJet::processEvent( LCEvent * event ) {
           // if several, sum up but make sure that there are no intruders between first and last.
           for ( int ii=1 ; ii<=jets_begin[0][kk] ; ii++ ) {
             for ( int jj=first ; jj<=last ; jj++ ) {
-              if ( abs(jet[jj]) == jets_begin[ii][kk] ) {
+             if ( abs(jet[jj]) == jets_begin[ii][kk] && k[jj][3] < first ) {
                 E+=  p[jj][4];
                 for ( int ll=1 ; ll<=3 ; ll++ ) {
                   mom[ll-1] +=    p[jj][ll];
@@ -748,7 +763,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         fafpi->setEnergy(E);
         fafpi->setMass(M);
         fafpi->setMomentum(mom);
-        ParticleIDImpl* pid[10] ;
+        ParticleIDImpl* pid[26] ;
         pid[0]= new ParticleIDImpl; 
         pid[0]->setPDG(pdg[0]);
         pid[0]->setType(type[jets_begin[1][kk]]%100);  
@@ -803,8 +818,6 @@ void TrueJet::processEvent( LCEvent * event ) {
       for ( int i=1 ; i <= nlund ; i++){
         int istat=0;
         if ( jet[i] != 0 ) {
-          ReconstructedParticle* true_jet;
-          true_jet=dynamic_cast<ReconstructedParticle*>(jet_vec->at(abs(jet[i])-1));
           static FloatVec www;
           www = truejet_truepart_Nav.getRelatedFromWeights(mcp_pyjets[i]);
           istat=int(www[0]);
@@ -947,8 +960,10 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
   int nMCP = mcpcol->getNumberOfElements()  ;
   //JL: added so that first_line is the same in all events!
   first_line=1;
-  
-  for(int j=0; j< nMCP ; j++){
+  if ( nMCP > 4000 ) {
+    streamlog_out(WARNING)  << " More than 4000 MCParticles in event " << evt->getEventNumber() << ",   run  " << evt->getRunNumber() << std::endl ;
+  }
+  for(int j=0; j< std::min(nMCP,4000) ; j++){
 
     MCParticle* mcp = dynamic_cast<MCParticle*>( mcpcol->getElementAt( j ) ) ;
     //  (assume this is not needed, ie. that the k-vector  can be set up correctly
@@ -965,7 +980,6 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
       p[i][3]=ptemp[2]; 
       p[i][4]=mcp->getEnergy();
       p[i][5]=mcp->getMass();
-
       k[i][1]=mcp->getGeneratorStatus();
       if ( k[i][1] == 2 ) {  k[i][1]=11 ;}
       if ( k[i][1] == 3 ) {  k[i][1]=21 ;}
@@ -1277,6 +1291,7 @@ void TrueJet::true_lepton()
          n_hard_lepton++;
          ihard_lepton_1[n_hard_lepton]=kk;
          ihard_lepton[n_hard_lepton]=0;
+         streamlog_out(DEBUG1) << "     hard according to condition 1 " << std::endl;
        }
        //JL also count leptons as hard if their mother or grandma is a Higgs boson
        //JL necessary to protect into W bosons from semi-leptonic quark decays etc
@@ -1284,6 +1299,7 @@ void TrueJet::true_lepton()
          n_hard_lepton++;
          ihard_lepton_1[n_hard_lepton]=kk;
          ihard_lepton[n_hard_lepton]=0;
+         streamlog_out(DEBUG1) << "     hard according to condition 2 " << std::endl;
        }
      }
    }
@@ -1393,8 +1409,17 @@ void TrueJet::true_lepton()
 
      jet[lept]=-(i_jet+kk);
      //JL this is premature - set elementon below after checking for 94 daughters of leptons (tau's!)
-     //elementon[i_jet+kk]=k[lept][4];  // Behold the beauty of my new word !
-     streamlog_out(DEBUG1) << "not setting elementon[" << i_jet+kk << "] = " << k[lept][4] << ", lept =  " << lept << ", i_jet = " << i_jet << std::endl ; 
+     //MB reverted that, the elementon should be as close as possible to the hard interaction; the check for 94:s is
+     //just to check if the jet-number should be positive or negative.
+     if ( k[lept][4] == k[lept][5] &&  k[lept][4] != 0 ) {
+       if ( k[ k[lept][4] ][2] == 94 ) {
+          elementon[i_jet+kk]=lept ;
+       } else {
+         elementon[i_jet+kk]=k[lept][4];  // Behold the beauty of my new word !
+       }
+     } else {
+       elementon[i_jet+kk]=lept ;
+     } 
      fafp_last[i_jet+kk]=lept;  // so it goes when too specific variable names were choosen ...
 
         // ! loop until either stable or 94 descendent found
@@ -1428,8 +1453,7 @@ void TrueJet::true_lepton()
         // ! set jet to +ve.
      jet[lept]=i_jet+kk ;
      //JL set elementon here after 94 check!
-     elementon[i_jet+kk]=lept;  // Behold the beauty of my new word !
-     streamlog_out(DEBUG0) << " setting elementon[" << i_jet+kk << "] = " << lept << std::endl ; 
+     //MB: reverted
    }
 
      // ! set jet for all further descendants of hard leptons . Don't change already set assignments,
@@ -1735,7 +1759,8 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
 
 //JL   while (  abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   &&  abs(k[k[this_quark][3]][2]) != 24  ) {
 // JL and what about Z?
-   while (  abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   
+   while (  k[this_quark][3] > 0 &&
+            abs(k[k[this_quark][3]][2]) != 11 &&  abs(k[k[this_quark][3]][2]) != 21   
         &&  abs(k[k[this_quark][3]][2]) != 23 &&  abs(k[k[this_quark][3]][2]) != 24    &&  abs(k[k[this_quark][3]][2]) != 25  ) {
  
      streamlog_out(DEBUG0) << "start of while loop:  this_quark = " << this_quark 
@@ -2004,6 +2029,11 @@ void TrueJet::grouping(){
       }
       if ( fafp_boson[kk] != 0 ) {
         fafp[kk]=fafp_boson[kk];
+        if ( k[ fafp_boson[kk] ] [4] != 0 ) {
+          if ( k [k[ fafp_boson[kk] ] [4]][2] != 94 ) {
+            fafp[kk]=fafp_last[kk];
+          }
+        }
       } else {
         fafp[kk]=fafp_last[kk];
       }
@@ -2040,9 +2070,10 @@ void TrueJet::grouping(){
     for ( int  kk=1; kk<= njet ; kk++ ){
       if ( type[kk]%100 <= 3 ) {
         //!  possible special case: the original fermions goes directly into the final string, without
-        //!  passing a 94
-        if ( group[0][kk] == 1 ) {
-          if ( k[fafp[kk]][4] == elementon[kk] && k[fafp[companion[kk]]][4] == elementon[companion[kk]]) {
+        //!  passing a 94 (first condition) or there is no copy, ie. the first f-anti-f pair already is the elementon
+        if ( group[0][kk] <= 1 ) {
+          if ( ( k[fafp[kk]][4] == elementon[kk] && k[fafp[companion[kk]]][4] == elementon[companion[kk]] ) ||
+               ( fafp[kk]  == elementon[kk] && fafp[companion[kk]] == elementon[companion[kk]]) ) {
             //! ... this is the case
            group[0][kk]=2 ;  group[0][companion[kk]]=2 ; 
            group[1][kk] = std::min(kk,companion[kk]);
@@ -2083,7 +2114,6 @@ void TrueJet::grouping(){
           jets_begin[jj][n_djb] = group[jj][kk];
         }
       }
-   
       dijet_end[kk] = 0;
       for ( int jj=1 ; jj<=n_dje ; jj++ ) {
         if ( std::min(kk,companion[kk])==jets_end[1][jj] &&

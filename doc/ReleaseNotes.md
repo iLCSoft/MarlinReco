@@ -1,3 +1,10 @@
+# v01-24-01
+
+* 2018-04-18 Ete Remi ([PR#51](https://github.com/ilcsoft/MarlinReco/pull/51))
+  - RecoMCThruthLinker processor
+      - Turned WARNING message to DEBUG9 to avoid log pollution
+      - this warning occurs only for the SDHcal case where one SimCalorimeterHit can create more than CalorimeterHit
+
 # v01-24
 
 * 2018-04-10 Guillaume ([PR#48](https://github.com/ilcsoft/MarlinReco/pull/48))

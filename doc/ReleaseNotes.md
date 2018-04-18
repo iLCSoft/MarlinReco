@@ -50,9 +50,9 @@
     - namespace `DDSurfaces` -> `dd4hep::rec`
 
 * 2017-12-12 Frank Gaede ([PR#34](https://github.com/iLCSoft/MarlinReco/pull/34))
-  - Remove all warnings of type `should be initialized in the member initialization list [-Weffc++]`
-  - Remove all warnings of type `unused parameter ‘run’` for `processRunHeader( LCRunHeader*  /*run*/)`
-  - Remove all warnings of type `unused parameter ‘evt’` for `check( LCEvent *  /*evt*/ )`
+  - Remove all warnings of type "should be initialized in the member initialization list [-Weffc++]"
+  - Remove all warnings of type "unused parameter 'run'" for processRunHeader( LCRunHeader*  /*run*/)
+  - Remove all warnings of type "unused parameter 'evt'" for "check( LCEvent *  /*evt*/ )"
 
 * 2018-03-23 Ulrich Einhaus ([PR#44](https://github.com/iLCSoft/MarlinReco/pull/44))
   - Compute_dEdXProcessor:

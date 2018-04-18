@@ -1,3 +1,24 @@
+# v01-24
+
+* 2018-04-10 Guillaume ([PR#48](https://github.com/ilcsoft/MarlinReco/pull/48))
+  - SDHCAL digitizer : 
+     - Switch order of the LCRelation collection between SDHCAL SimCalorimeterHits and Digitized CalorimeterHits (now from CalorimeterHit to SimCalorimeterHit)
+
+* 2018-04-18 Carl Mikael Berggren ([PR#50](https://github.com/ilcsoft/MarlinReco/pull/50))
+  - improved TrueJet processor:
+       - Fixed crash due to index out-of-range
+       - Remove all compiler warnings except local shadow (cheked to be OK)
+       -  id of initial ColourNeutrals fixed (should be a boson (W,Z,H))
+       - MCParticle collection does not need to start with the beam-particles, back-tracking now also
+  gracefully stops if the first entry is reached. This should allow for usage also for the DBD-250 samples, in which the initial beam-particles are missing in the MCParticle collections.
+       - nitty-gritty special cases in history fixed.
+       - Now also works for higgs-samples *except for h->gluon gluon*, which will need a completely different treatment fro back-track through the parton shower, as there is no quark-line to follow...
+
+* 2018-04-17 Frank Gaede ([PR#49](https://github.com/ilcsoft/MarlinReco/pull/49))
+  - add new package TimeOfFlight
+       - use TOFEstimators processor to compute TOF parameters
+       - will be added as PID object to the ReconstructedParticles
+
 # v01-23
 
 * 2018-01-31 Strahinja Lukic ([PR#37](https://github.com/iLCSoft/MarlinReco/pull/37))

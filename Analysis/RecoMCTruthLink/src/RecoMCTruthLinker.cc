@@ -696,7 +696,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         SimCalorimeterHit* simHit = (SimCalorimeterHit*) col->getElementAt( j ) ; 
         LCObjectVec caloHits  = _navMergedCaloHitRel->getRelatedFromObjects(simHit);
         if (   caloHits.size() == 0 ) { continue ;}
-        if (   caloHits.size() != 1 ) { streamlog_out( WARNING ) << " Sim hit with nore than one calo hit ? " << std::endl; }
+        if (   caloHits.size() != 1 ) { streamlog_out( DEBUG9 ) << " Sim hit with nore than one calo hit ? " << std::endl; }
         CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
         double calib_factor = caloHit->getEnergy()/simHit->getEnergy();
 

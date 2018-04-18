@@ -1,6 +1,6 @@
 # v01-23
 
-* 2018-01-31 Strahinja Lukić ([PR#37](https://github.com/iLCSoft/MarlinReco/pull/37))
+* 2018-01-31 Strahinja Lukic ([PR#37](https://github.com/iLCSoft/MarlinReco/pull/37))
   Updates of SiTracker_dEdxProcessor:
   
   - Cleaned up unnecessary code.
@@ -12,7 +12,7 @@
   
   -   Added minor runtime protections.
 
-* 2018-01-09 Strahinja Lukić ([PR#35](https://github.com/iLCSoft/MarlinReco/pull/35))
+* 2018-01-09 Strahinja Lukic ([PR#35](https://github.com/iLCSoft/MarlinReco/pull/35))
   - `SiTracker_dEdxProcessor` was adapted to determine the barrel/endcap type of tracker detector by checking the layering extension, rather than the type flag as before. 
   - A bug was corrected in `SiTracker_dEdxProcessor` that caused miscalculation of total sensor thickness for some of the available dEdx estimators.
 

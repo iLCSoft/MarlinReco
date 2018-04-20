@@ -314,6 +314,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     float eTotalOutput(0.);
 
     for (int iPfo=0; iPfo<nelem; ++iPfo) {
+  streamlog_out( MESSAGE ) << " *** PFO particle #" << iPfo << std::endl;
       bool passPfoSelection = true;
       ReconstructedParticle * pPfo = pfos[iPfo];
 //      const int id = pPfo->id();
@@ -326,10 +327,12 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       const float cosTheta = fabs(momentum[2])/p_pfo;
       const float energy  = pPfo->getEnergy();
       eTotalInput+=energy;
+  streamlog_out( MESSAGE ) << " *** PFO type " << type << std::endl;
 
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       //const Vertex startVertex(pPfo->getStartVertex());
+      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << std::endl;
 
       float trackTime = std::numeric_limits<float>::max();
       float clusterTime = 999.;
@@ -343,6 +346,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
       for(unsigned int i = 0; i< tracks.size(); i++){
 	const Track *track = tracks[i];
+  streamlog_out( MESSAGE ) << " track phi " << track->getPhi() << std::endl;
 	const float d0    = track->getD0();
 	const float z0    = track->getZ0();
 	const float omega = track->getOmega();
@@ -356,7 +360,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	const float pz = helix.getMomentum()[2];
 	const float p  = sqrt(px*px+py*py+pz*pz);
 	float tof;
-	const float time = this->TimeAtEcal(track,tof);
+	const float time = PfoUtil::TimeAtEcal(track,tof);
 	if( fabs(time) < trackTime ){
 	  trackTime = time;
 	  const float cproton = sqrt((p*p+0.94*0.94)/(p*p+0.14*0.14));
@@ -398,6 +402,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  nHcalEndCapHits = nHcalEnd;
 	}
       }
+      streamlog_out(DEBUG) << " *** PFO finish " << std::endl;
 
       // now make selection
 
@@ -583,33 +588,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
   
   _nEvt++;
 
-}
-
-
-
-float CLICPfoSelector::TimeAtEcal(const Track* pTrack, float &tof){
-
-  const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
-  const float* locationAtECal = pTrackState->getReferencePoint();
-
-  HelixClass helix;
-  helix.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), _bField);
-
-  tof = sqrt( locationAtECal[0]*locationAtECal[0]+
-              locationAtECal[1]*locationAtECal[1]+
-              locationAtECal[2]*locationAtECal[2])/300;
-  
-  float distance[3] = {0.0, 0.0, 0.0};
-  float minTime = helix.getDistanceToPoint(locationAtECal, distance);
-  
-  const float px = helix.getMomentum()[0];
-  const float py = helix.getMomentum()[1];
-  const float pz = helix.getMomentum()[2];
-  const float E = sqrt(px*px+py*py+pz*pz+0.139*0.139);
-  minTime = minTime/300*E-tof;
-
-  return minTime;
-  
 }
 
 void CLICPfoSelector::CleanUp(){

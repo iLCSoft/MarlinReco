@@ -5,8 +5,16 @@
 #include <EVENT/LCObject.h>
 #include "TrackHitPair.h"
 
-#include <vector>
+#include "lcio.h"
+#include "TrackHitPair.h"
+#include "HelixClass.h"
+#include <string>
+#include <map>
+#include <set>
+#include <algorithm>
 
+#include <marlinutil/GeometryUtil.h>
+#include <vector>
 
 namespace PfoUtil{
 
@@ -39,15 +47,10 @@ namespace PfoUtil{
    return (lhs_type<rhs_type);
 
   }
-/*
-  float Time(const Track* pTrack, float &tof){
 
-    std::cout << "Using PfoUtil::TimeAtEcal" << std::endl;
-    float time = 0.0;
-    std::cout << time << std::endl;
-    return time;
-  }
-*/
+  float TimeAtEcal(const Track* pTrack, float &tof);
+
+  // Calculate cluster times
   void GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCaloHitsUsed, float &meanTimeEcal, 
                        int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd, bool correctHitTimesForTimeOfFlight);
 

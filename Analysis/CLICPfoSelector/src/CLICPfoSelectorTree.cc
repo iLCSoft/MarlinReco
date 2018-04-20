@@ -11,6 +11,9 @@
 using namespace lcio ;
 using namespace marlin ;
 
+const int precision = 2;
+const int widthFloat = 7;
+const int widthInt = 5;
 
 CLICPfoSelectorTree aCLICPfoSelectorTree ;
 
@@ -53,6 +56,14 @@ void CLICPfoSelectorTree::init() {
   m_tree->Branch("energy", &energy, "energy/D");
   m_tree->Branch("mass", &mass, "mass/D");
   m_tree->Branch("charge", &charge, "charge/D");
+
+  m_tree->Branch("clusterTime", &clusterTime, "clusterTime/D");
+  m_tree->Branch("clusterTimeEcal", &clusterTimeEcal, "clusterTimeEcal/D");
+  m_tree->Branch("clusterTimeHcalEndcap", &clusterTimeHcalEndcap, "clusterTimeHcalEndcap/D");
+
+  m_tree->Branch("nCaloHits", &nCaloHits, "nCaloHits/I");
+  m_tree->Branch("nEcalHits", &nEcalHits, "nEcalHits/I");
+  m_tree->Branch("nHcalEndCapHits", &nHcalEndCapHits, "nHcalEndCapHits/I");
 
   m_tree->Branch("eventNumber", &eventNumber, "eventNumber/I");
 
@@ -135,6 +146,8 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 
   LCCollection* col = evt->getCollection( collName ) ;
 
+  streamlog_out( MESSAGE ) << "    Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << std::endl;
+
   // this will only be entered if the collection is available
   if( col != NULL){
     int nelem = col->getNumberOfElements();
@@ -143,7 +156,7 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
     // loop on MC/PFO particles
     for(int i=0; i< nelem ; i++){
 
-      ReconstructedParticle* pPfo = dynamic_cast<ReconstructedParticle*>( col->getElementAt( i ) ) ;
+      ReconstructedParticle* pPfo = static_cast<ReconstructedParticle*>( col->getElementAt( i ) ) ;
       type = pPfo->getType();
       px = pPfo->getMomentum()[0];
       py = pPfo->getMomentum()[1];
@@ -155,10 +168,27 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
       mass     = pPfo->getMass();
       charge   = pPfo->getCharge();
 
-      const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
+      const ClusterVec clusters = pPfo->getClusters();
+
+      //get track time
+      float trackTime = std::numeric_limits<float>::max();
+      clusterTime = 999.;
+      clusterTimeEcal = 999.;
+      clusterTimeHcalEndcap = 999.;
+
+//      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << std::endl;
+      for(unsigned int trk = 0; trk < tracks.size(); trk++){
+	const Track *track = tracks[trk];
+	float tof;
+  	const float time = PfoUtil::TimeAtEcal(track,tof);
+  	if( fabs(time) < trackTime ){
+  	  trackTime = time;
+  	}
+      }
 
       //get clusters time
+//      streamlog_out(DEBUG) << "PFO with number of clusters = " << clusters.size() << std::endl;
       for(unsigned int clu = 0; clu < clusters.size(); clu++){
 	float meanTime(999.);
 	float meanTimeEcal(999.);
@@ -169,7 +199,7 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 
 	const Cluster *cluster = clusters[clu];
 	PfoUtil::GetClusterTimes(cluster,meanTime,nCaloHitsUsed,meanTimeEcal,nEcal,meanTimeHcalEndcap,nHcalEnd,false);
-/*
+
 	// correct for track propagation time
 	if(!tracks.empty()){
 	  meanTime -= trackTime;
@@ -189,12 +219,24 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 	  clusterTimeHcalEndcap=meanTimeHcalEndcap;
 	  nHcalEndCapHits = nHcalEnd;
         }
-*/
+
+        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
+      
       }
 
 
+      std::stringstream output;
+      output << std::fixed;
+      output << std::setprecision(precision);
 
+     if(clusters.size()==0)
+       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
+     if(tracks.size()==0)
+       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+     if(tracks.size()>0&&clusters.size()>0)
+       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
 
+      streamlog_out( MESSAGE ) << output.str();
 
       m_tree->Fill();
 

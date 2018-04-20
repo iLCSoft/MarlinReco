@@ -314,7 +314,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     float eTotalOutput(0.);
 
     for (int iPfo=0; iPfo<nelem; ++iPfo) {
-  streamlog_out( MESSAGE ) << " *** PFO particle #" << iPfo << std::endl;
       bool passPfoSelection = true;
       ReconstructedParticle * pPfo = pfos[iPfo];
 //      const int id = pPfo->id();
@@ -327,12 +326,11 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       const float cosTheta = fabs(momentum[2])/p_pfo;
       const float energy  = pPfo->getEnergy();
       eTotalInput+=energy;
-  streamlog_out( MESSAGE ) << " *** PFO type " << type << std::endl;
 
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       //const Vertex startVertex(pPfo->getStartVertex());
-      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << std::endl;
+//      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << std::endl;
 
       float trackTime = std::numeric_limits<float>::max();
       float clusterTime = 999.;
@@ -346,7 +344,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
       for(unsigned int i = 0; i< tracks.size(); i++){
 	const Track *track = tracks[i];
-  streamlog_out( MESSAGE ) << " track phi " << track->getPhi() << std::endl;
 	const float d0    = track->getD0();
 	const float z0    = track->getZ0();
 	const float omega = track->getOmega();
@@ -401,8 +398,8 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  clusterTimeHcalEndcap=meanTimeHcalEndcap;
 	  nHcalEndCapHits = nHcalEnd;
 	}
+        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
       }
-      streamlog_out(DEBUG) << " *** PFO finish " << std::endl;
 
       // now make selection
 

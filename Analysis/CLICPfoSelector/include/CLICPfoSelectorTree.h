@@ -12,7 +12,18 @@
 
 using namespace lcio ;
 using namespace marlin ;
-
+#define FORMATTED_OUTPUT_TRACK_CLUSTER(out, N1, E1,E2,E3,N2,E4,N3,E5,E6,E7) \
+    out <<                                                                                      \
+    std::right << std::setw(widthInt)      <<    N1        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
+    std::right << std::setw(widthInt)      <<    N2        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E4        <<                                   \
+    std::right << std::setw(widthInt  )    <<    N3        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E5        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E6        <<                                   \
+    std::right << std::setw(widthFloat)    <<    E7  << std::endl
 
 /**  Example processor for marlin.
  * 
@@ -73,8 +84,10 @@ class CLICPfoSelectorTree : public Processor {
   TTree *m_tree = NULL;
   int type = 0;
   double p = 0.0, px = 0.0, py = 0.0, pz = 0.0, pT = 0.0;
-  double costheta = 0.0;
-  double energy = 0.0, mass = 0.0, charge = 0.0;
+  double costheta = 0.0, energy = 0.0, mass = 0.0, charge = 0.0;
+  double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
+  int nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
+
   int eventNumber = 0, nPartMC = 0, nPartPFO = 0.0;
 
 } ;

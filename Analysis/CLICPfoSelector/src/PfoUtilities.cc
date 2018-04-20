@@ -18,11 +18,9 @@
 
 float PfoUtil::TimeAtEcal(const Track* pTrack, float &tof){
 
-  streamlog_out( MESSAGE ) << " Using PfoUtil::TimeAtEcal " << std::endl;
+//  streamlog_out( MESSAGE ) << " Using PfoUtil::TimeAtEcal " << std::endl;
   float bField = MarlinUtil::getBzAtOrigin();
-//  streamlog_out( MESSAGE ) << " bfield " << bField << std::endl;
   const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
-//  streamlog_out( MESSAGE ) << " track state " << pTrackState->getReferencePoint() << std::endl;
 
   const float* locationAtECal = pTrackState->getReferencePoint();
   HelixClass helix;
@@ -41,7 +39,7 @@ float PfoUtil::TimeAtEcal(const Track* pTrack, float &tof){
   const float E = sqrt(px*px+py*py+pz*pz+0.139*0.139);
   minTime = minTime/300*E-tof;
 
-  streamlog_out( MESSAGE ) << " minTime: " << minTime << std::endl;
+//  streamlog_out( MESSAGE ) << " minTime: " << minTime << std::endl;
   return minTime;
 
 }
@@ -49,7 +47,7 @@ float PfoUtil::TimeAtEcal(const Track* pTrack, float &tof){
 void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCaloHitsUsed, float &meanTimeEcal, 
                               int &nEcal, float &meanTimeHcalEndcap, int &nHcalEnd, bool correctHitTimesForTimeOfFlight){
 
-  streamlog_out( MESSAGE ) << " Using PfoUtil::GetClusterTimes " << std::endl;
+//  streamlog_out( MESSAGE ) << " Using PfoUtil::GetClusterTimes " << std::endl;
 
   float sumTimeEnergy(0.f);
   float sumEnergy(0.f);
@@ -89,7 +87,7 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCal
   
   int iMedian = static_cast<int>(hits.size()/2.);
   float medianTime = hittimes[iMedian];
-  streamlog_out( MESSAGE ) << " Median time : " << medianTime << std::endl;
+//  streamlog_out( MESSAGE ) << " Median time : " << medianTime << std::endl;
 
   for(unsigned int ihit=0;ihit<hits.size();++ihit)deltaTimes.push_back( fabs(hittimes[ihit]-medianTime)); 
   std::sort(deltaTimes.begin(),deltaTimes.end());
@@ -103,9 +101,9 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCal
     ihit90 = 0;
   }
   
-  streamlog_out( MESSAGE ) << " hits " << hits.size() << " hit 90 = " << ihit90 << std::endl;    
+//  streamlog_out( MESSAGE ) << " hits " << hits.size() << " hit 90 = " << ihit90 << std::endl;    
   float deltaMedian = deltaTimes[ihit90]+0.1;
-  streamlog_out( MESSAGE ) << " deltaCut : " << deltaMedian << std::endl;
+//  streamlog_out( MESSAGE ) << " deltaMedian : " << deltaMedian << std::endl;
 
   for(unsigned int ihit=0;ihit<hits.size();++ihit){
     CalorimeterHit *hit = hits[ihit];
@@ -116,7 +114,7 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCal
       sumEnergy += hit->getEnergy();
       sumTimeEnergy += hit->getEnergy()*hitTime;
       nCaloHitsUsed++;
-      streamlog_out( MESSAGE ) << " Using : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
+//      streamlog_out( MESSAGE ) << " Using : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
 
       CHT ch = hit->getType();
       if(ch.is(CHT::ecal)){
@@ -132,7 +130,7 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCal
         }
       }
     }else{
-      streamlog_out( MESSAGE ) << " notus : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
+//      streamlog_out( MESSAGE ) << " notus : " << hit->getEnergy() << " : " << hit->getTime() << std::endl;
     }
   }
   
@@ -140,7 +138,8 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float &meanTime, int &nCal
   if (sumEnergyEcal > 0.f)meanTimeEcal = sumTimeEnergyEcal/sumEnergyEcal;
   if (sumEnergyHcalEndcap > 0.f)meanTimeHcalEndcap = sumTimeEnergyHcalEndcap/sumEnergyHcalEndcap;
 
-  streamlog_out( MESSAGE ) << sumEnergy << " " << sumEnergyEcal << " " << nEcal << std::endl;
+//  streamlog_out( MESSAGE ) << "Tot En. = " << sumEnergy << " in ECAL: sum = " << sumEnergyEcal << ", nClu = " << nEcal << "\n"
+//                           << "          " << " in HcalEnd: sum = " << sumEnergyHcalEndcap << ", nHcalEndClu = " << nHcalEnd << std::endl;
 
   return;
 

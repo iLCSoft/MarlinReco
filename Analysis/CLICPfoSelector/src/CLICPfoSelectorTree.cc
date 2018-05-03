@@ -94,49 +94,6 @@ void CLICPfoSelectorTree::processEvent( LCEvent * evt ) {
 }
 
 void CLICPfoSelectorTree::end(){ 
-/*
-  std::pair<double,double> resoPFO_tot = computeEnReso("energyPFO");
-  streamlog_out(DEBUG) << "Total PFO energy resolution with error: " << resoPFO_tot.first << " , " << resoPFO_tot.second << std::endl;
-
-  std::pair<double,double> resoMC_tot = computeEnReso("energyMC");
-  streamlog_out(DEBUG) << "Total MC energy resolution with error: " << resoMC_tot.first << " , " << resoMC_tot.second << std::endl;
-
-  const unsigned int nRegionBins(13);
-  float pRegionBinEdges[nRegionBins + 1] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.925, 0.95, 0.975, 1.0};
-
-  AIDAProcessor::histogramFactory(this);
-  TGraphErrors* resoVsCostheta = new TGraphErrors(nRegionBins);
-  resoVsCostheta->SetTitle("RMS_{90}(E_{j}) / Mean_{90}(E_{j}) vs |cos(#theta)|");
-  resoVsCostheta->SetName("enResoVsCosTheta");
-  TGraphErrors* scaleVsCostheta = new TGraphErrors(nRegionBins);
-  scaleVsCostheta->SetTitle("Mean(E_{TOT,PFO}/E_{TOT,MC}) vs |cos(#theta)|");
-  scaleVsCostheta->SetName("enScaleVsCosTheta");
-
-  // filling graph with energy resolution and scale
-  std::pair<double,double> resoTemp;
-  double scaleTemp;
-
-  for (unsigned int i = 0; i < nRegionBins; ++i){
-    std::ostringstream lowBin;
-    std::ostringstream uppBin;
-
-    lowBin << pRegionBinEdges[i];
-    uppBin << pRegionBinEdges[i+1];
-
-    std::string cosThetaCut = lowBin.str() + " <= costhetaMC && costhetaMC < " + uppBin.str(); 
-    resoTemp = computeEnReso("energyPFO", cosThetaCut);
-
-    if(resoTemp.first!=0.0) resoVsCostheta->SetPoint(i,(pRegionBinEdges[i+1]-pRegionBinEdges[i])/2+pRegionBinEdges[i], resoTemp.first);
-    if(resoTemp.first!=0.0) resoVsCostheta->SetPointError(i,(pRegionBinEdges[i+1]-pRegionBinEdges[i])/2, resoTemp.second);
-
-    scaleTemp = profiling("energyScale", cosThetaCut);
-    scaleVsCostheta->SetPoint(i,(pRegionBinEdges[i+1]-pRegionBinEdges[i])/2+pRegionBinEdges[i], scaleTemp);
-    scaleVsCostheta->SetPointError(i,(pRegionBinEdges[i+1]-pRegionBinEdges[i])/2, 0.0);
-  }
-
-  resoVsCostheta->Write();
-  scaleVsCostheta->Write();
-*/
   streamlog_out(DEBUG) << "CLICPfoSelectorTree::end()  " << name() 
     << " processed " << _nEvt << " events in " << _nRun << " runs " << std::endl;
 
@@ -224,8 +181,6 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 	  nHcalEndCapHits = nHcalEnd;
         }
 
-//        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
-      
       }
 
 

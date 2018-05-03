@@ -56,6 +56,8 @@ void CLICPfoSelectorTree::init() {
   m_tree->Branch("energy", &energy, "energy/D");
   m_tree->Branch("mass", &mass, "mass/D");
   m_tree->Branch("charge", &charge, "charge/D");
+  m_tree->Branch("nTracks", &nTracks, "nTracks/I");
+  m_tree->Branch("nClusters", &nClusters, "nClusters/I");
 
   m_tree->Branch("clusterTime", &clusterTime, "clusterTime/D");
   m_tree->Branch("clusterTimeEcal", &clusterTimeEcal, "clusterTimeEcal/D");
@@ -170,6 +172,8 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 
       const TrackVec   tracks   = pPfo->getTracks();
       const ClusterVec clusters = pPfo->getClusters();
+      nTracks = tracks.size();
+      nClusters = clusters.size();
 
       //get track time
       float trackTime = std::numeric_limits<float>::max();
@@ -220,7 +224,7 @@ void CLICPfoSelectorTree::fillTree(LCEvent * evt, std::string collName){
 	  nHcalEndCapHits = nHcalEnd;
         }
 
-        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
+//        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
       
       }
 

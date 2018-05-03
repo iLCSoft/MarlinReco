@@ -314,6 +314,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     float eTotalOutput(0.);
 
     for (int iPfo=0; iPfo<nelem; ++iPfo) {
+//      streamlog_out(DEBUG) << " *** PFO #" << iPfo << std::endl;
       bool passPfoSelection = true;
       ReconstructedParticle * pPfo = pfos[iPfo];
 //      const int id = pPfo->id();
@@ -398,7 +399,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  clusterTimeHcalEndcap=meanTimeHcalEndcap;
 	  nHcalEndCapHits = nHcalEnd;
 	}
-        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
+//        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
       }
 
       // now make selection

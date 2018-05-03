@@ -274,11 +274,11 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
     if( analyzePhotons==true && type==22 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "photons") != particleCategories.end()){
         streamlog_out(DEBUG) << "Filling scatter plot for photon " << endl;
-        timeVsPt["photons"]->SetPoint(ie,clusterTime,pT);
+        timeVsPt["photons"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["photons"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_barrel["photons"]->SetPoint(ie,pT,clusterTime);
         else
-          timeVsPt_endcap["photons"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_endcap["photons"]->SetPoint(ie,pT,clusterTime);
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for photons was not created. " << endl;
         exit(0);
@@ -288,11 +288,11 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
     if( analyzeNeutralHadrons==true && type!=22 && charge==0 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "neutralHadrons") != particleCategories.end()){
         streamlog_out(DEBUG) << "Filling scatter plot for neutralHadrons " << endl;
-        timeVsPt["neutralHadrons"]->SetPoint(ie,clusterTime,pT);
+        timeVsPt["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["neutralHadrons"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_barrel["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
         else
-          timeVsPt_endcap["neutralHadrons"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_endcap["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for neutralHadrons was not created. " << endl;
         exit(0);
@@ -302,11 +302,11 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
     if( analyzeChargedPfos==true && charge!=0 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "chargedPfos") != particleCategories.end()){
         streamlog_out(DEBUG) << "Filling scatter plot for chargedPfos " << endl;
-        timeVsPt["chargedPfos"]->SetPoint(ie,clusterTime,pT);
+        timeVsPt["chargedPfos"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["chargedPfos"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_barrel["chargedPfos"]->SetPoint(ie,pT,clusterTime);
         else
-          timeVsPt_endcap["chargedPfos"]->SetPoint(ie,clusterTime,pT);
+          timeVsPt_endcap["chargedPfos"]->SetPoint(ie,pT,clusterTime);
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for chargedPfos was not created. " << endl;
         exit(0);

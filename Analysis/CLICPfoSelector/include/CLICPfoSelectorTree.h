@@ -85,6 +85,7 @@ class CLICPfoSelectorTree : public Processor {
   int type = 0;
   double p = 0.0, px = 0.0, py = 0.0, pz = 0.0, pT = 0.0;
   double costheta = 0.0, energy = 0.0, mass = 0.0, charge = 0.0;
+  int nTracks = 0, nClusters = 0;
   double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
   int nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
 

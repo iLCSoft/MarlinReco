@@ -20,26 +20,40 @@ float PfoUtil::TimeAtEcal(const Track* pTrack, float &tof){
 
 //  streamlog_out( MESSAGE ) << " Using PfoUtil::TimeAtEcal " << std::endl;
   float bField = MarlinUtil::getBzAtOrigin();
+  //streamlog_out(DEBUG1) << " bField = " << bField << endl;
   const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
+  //streamlog_out(DEBUG1) << " pTrackState = " << pTrackState << endl;
 
+  //locationAtEcal in mm
   const float* locationAtECal = pTrackState->getReferencePoint();
+  //streamlog_out(DEBUG1) << " locationAtECal = " << locationAtECal[0] << "," << locationAtECal[1] << ","  << locationAtECal[2] << endl;
+  //streamlog_out(DEBUG1) << " locationAtECal (T) = " << sqrt(locationAtECal[0]*locationAtECal[0]+locationAtECal[1]*locationAtECal[1]) << endl;
   HelixClass helix;
   helix.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
 
+  //time-of-flight is distance divided by c=300mm/ns
   tof = sqrt( locationAtECal[0]*locationAtECal[0]+
               locationAtECal[1]*locationAtECal[1]+
               locationAtECal[2]*locationAtECal[2])/300;
-  
+ // streamlog_out(DEBUG1) << " tof = " << tof << endl;
+
+  //HelixClass::getDistanceToPoint(float const* xPoint, float * Distance) returns
+  //a time computed as distance/momentum  
   float distance[3] = {0.0, 0.0, 0.0};
   float minTime = helix.getDistanceToPoint(locationAtECal, distance);
+ // streamlog_out(DEBUG1) << " minTime: " << minTime << std::endl;
   
   const float px = helix.getMomentum()[0];
   const float py = helix.getMomentum()[1];
   const float pz = helix.getMomentum()[2];
+  //streamlog_out(DEBUG1) << " getMomentum = " << px << "," << py << ","  << pz << endl;
+  //139MeV is mass of pion
   const float E = sqrt(px*px+py*py+pz*pz+0.139*0.139);
+  //streamlog_out(DEBUG1) << " getEnergy = " << E << endl;
+  //streamlog_out(DEBUG1) << " minTime/300*E: " << minTime/300*E << std::endl;
   minTime = minTime/300*E-tof;
 
-//  streamlog_out( MESSAGE ) << " minTime: " << minTime << std::endl;
+ // streamlog_out(DEBUG1) << " minTime final: " << minTime << std::endl;
   return minTime;
 
 }

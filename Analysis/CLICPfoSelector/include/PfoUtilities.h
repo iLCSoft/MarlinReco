@@ -16,6 +16,8 @@
 #include <marlinutil/GeometryUtil.h>
 #include <vector>
 
+using namespace std;
+
 namespace PfoUtil{
 
   typedef std::vector<EVENT::ReconstructedParticle*> PfoList;

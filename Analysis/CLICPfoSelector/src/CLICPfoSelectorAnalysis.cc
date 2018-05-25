@@ -70,6 +70,10 @@ void CLICPfoSelectorAnalysis::init() {
 
   //initializing TTree
   pfo_tree = new TTree(treeName.c_str(), treeName.c_str());
+  pfo_tree->Branch("eventNumber", &eventNumber, "eventNumber/I");
+  pfo_tree->Branch("runNumber", &runNumber, "runNumber/I");
+  pfo_tree->Branch("nPartPFO", &nPartPFO, "nPartPFO/I");
+
   pfo_tree->Branch("type", &type, "type/I");
   pfo_tree->Branch("p", &p, "p/D");
   pfo_tree->Branch("px", &px, "px/D");
@@ -91,11 +95,6 @@ void CLICPfoSelectorAnalysis::init() {
   pfo_tree->Branch("nCaloHits", &nCaloHits, "nCaloHits/I");
   pfo_tree->Branch("nEcalHits", &nEcalHits, "nEcalHits/I");
   pfo_tree->Branch("nHcalEndCapHits", &nHcalEndCapHits, "nHcalEndCapHits/I");
-
-  pfo_tree->Branch("eventNumber", &eventNumber, "eventNumber/I");
-
-  pfo_tree->Branch("nPartPFO", &nPartPFO, "nPartPFO/I");
-  pfo_tree->Branch("nPartMC", &nPartMC, "nPartMC/I");
 
   streamlog_out(DEBUG) << "   set up ttree  " << endl ;
 
@@ -125,16 +124,17 @@ void CLICPfoSelectorAnalysis::processRunHeader( LCRunHeader* run) {
 
 void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) { 
 
-  streamlog_out( DEBUG ) << "Processing event " << evt->getEventNumber() << " in CLICPfoSelectorAnalysis processor " << endl;
+  streamlog_out( DEBUG1 ) << "Processing event " << evt->getEventNumber() << " in CLICPfoSelectorAnalysis processor " << endl;
 
   eventNumber=evt->getEventNumber();
+  runNumber=_nRun;
 
   fillTree(evt, colNamePFOs);
 
   fillScatterPlots();
 
-  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-      << "   in run:  " << evt->getRunNumber() << endl ;
+  streamlog_out( DEBUG1 ) << "   processing event: " << evt->getEventNumber() 
+      << "   in run:  " << _nRun << endl ;
 
   _nEvt ++ ;
 }
@@ -155,16 +155,16 @@ void CLICPfoSelectorAnalysis::end(){
 
 void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
-  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillTree" << endl; 
+  //streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillTree" << endl; 
 
   LCCollection* col = evt->getCollection( collName ) ;
 
-  streamlog_out( MESSAGE ) << "    Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << endl;
+  streamlog_out( DEBUG1 ) << "    Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << endl;
 
   // this will only be entered if the collection is available
   if( col != NULL){
     int nelem = col->getNumberOfElements();
-    streamlog_out(DEBUG) << "Number of PFOs in this event = " << nelem << endl;
+    //streamlog_out(DEBUG) << "Number of PFOs in this event = " << nelem << endl;
 
     // loop on MC/PFO particles
     for(int i=0; i< nelem ; i++){
@@ -192,7 +192,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       clusterTimeEcal = 999.;
       clusterTimeHcalEndcap = 999.;
 
-//      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << endl;
+      //streamlog_out(DEBUG1) << " PFO with number of tracks = " << tracks.size() << endl;
       for(unsigned int trk = 0; trk < tracks.size(); trk++){
 	const Track *track = tracks[trk];
 	float tof;
@@ -201,9 +201,10 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
   	  trackTime = time;
   	}
       }
+      streamlog_out(DEBUG1) << " trackTime = " << trackTime << endl;
 
       //get clusters time
-//      streamlog_out(DEBUG) << "PFO with number of clusters = " << clusters.size() << endl;
+      //streamlog_out(DEBUG1) << " PFO with number of clusters = " << clusters.size() << endl;
       for(unsigned int clu = 0; clu < clusters.size(); clu++){
 	float meanTime(999.);
 	float meanTimeEcal(999.);
@@ -237,20 +238,21 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
       }
 
-
       stringstream output;
       output << fixed;
       output << setprecision(precision);
 
-     if(clusters.size()==0)
-       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
-     if(tracks.size()==0)
-       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
-     if(tracks.size()>0&&clusters.size()>0)
-       FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
-
-      streamlog_out( MESSAGE ) << output.str();
-
+      if(clusterTime<-20){
+       output << " *** Interesting PFO: ";
+      } 
+      if(clusters.size()==0)
+        FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
+      if(tracks.size()==0)
+         FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+      if(tracks.size()>0&&clusters.size()>0)
+         FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+        
+      streamlog_out( DEBUG1 ) << output.str();
       pfo_tree->Fill();
 
     }
@@ -261,19 +263,18 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
 void CLICPfoSelectorAnalysis::fillScatterPlots(){
 
-  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillScatterPlots" << endl; 
+//  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillScatterPlots" << endl; 
 
   Int_t nEntries = pfo_tree->GetEntries();
-  streamlog_out(DEBUG) << "Reading TTree with nEntries: " << nEntries << endl;
+//  streamlog_out(DEBUG) << "Reading TTree with nEntries: " << nEntries << endl;
 
   for (int ie = 0; ie < nEntries; ie++){
     pfo_tree->GetEntry(ie);
-    streamlog_out(DEBUG) << "pfo pT: " << pT << endl;
 
     //in the case of photons, the time of ECAL clusters are used
     if( analyzePhotons==true && type==22 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "photons") != particleCategories.end()){
-        streamlog_out(DEBUG) << "Filling scatter plot for photon " << endl;
+//        streamlog_out(DEBUG2) << "Filling scatter plot for photon " << endl;
         timeVsPt["photons"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
           timeVsPt_barrel["photons"]->SetPoint(ie,pT,clusterTime);
@@ -287,7 +288,7 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
 
     if( analyzeNeutralHadrons==true && type!=22 && charge==0 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "neutralHadrons") != particleCategories.end()){
-        streamlog_out(DEBUG) << "Filling scatter plot for neutralHadrons " << endl;
+//        streamlog_out(DEBUG2) << "Filling scatter plot for neutralHadrons " << endl;
         timeVsPt["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
           timeVsPt_barrel["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
@@ -301,7 +302,7 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
 
     if( analyzeChargedPfos==true && charge!=0 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "chargedPfos") != particleCategories.end()){
-        streamlog_out(DEBUG) << "Filling scatter plot for chargedPfos " << endl;
+//        streamlog_out(DEBUG2) << "Filling scatter plot for chargedPfos " << endl;
         timeVsPt["chargedPfos"]->SetPoint(ie,pT,clusterTime);
         if(costheta < cutCosTheta)
           timeVsPt_barrel["chargedPfos"]->SetPoint(ie,pT,clusterTime);

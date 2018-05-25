@@ -82,7 +82,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
   int nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
 
-  int eventNumber = 0, nPartMC = 0, nPartPFO = 0.0;
+  int eventNumber = 0, runNumber = 0, nPartMC = 0, nPartPFO = 0.0;
 
   //List of scatter plots
   vector<string> particleCategories;

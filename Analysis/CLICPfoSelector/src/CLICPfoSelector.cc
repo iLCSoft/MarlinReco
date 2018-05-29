@@ -450,7 +450,14 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	      timingCutHigh = m_chargedPfoTightTimingCut;
             }
         }
- 
+      
+      streamlog_out( MESSAGE ) << "m_farForwardCosTheta = " << m_farForwardCosTheta << " and cosTheta = " << cosTheta << std::endl;
+      if (cosTheta > m_farForwardCosTheta)
+      	streamlog_out( MESSAGE ) << "Is forward (m_farForwardCosTheta = " << m_farForwardCosTheta << ")" << std::endl;
+      if (tracks.empty() && type != 22)
+      	streamlog_out( MESSAGE ) << "Is neutral hadron" << std::endl;
+      if (cosTheta > m_farForwardCosTheta && tracks.empty() && type != 22)
+        streamlog_out( MESSAGE ) << "Timing cuts: " << timingCutLow << "," << timingCutHigh << std::endl;
    
       // Reject low pt pfos (default is to set ptcut to zero)
       if (pT_pfo < ptCut)
@@ -478,6 +485,7 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
 	// Examine any associated clusters for additional timing information
 	bool selectPfo(false);
+        streamlog_out( MESSAGE ) << "Is useHcalTimingOnly: " << useHcalTimingOnly << " and has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
 	// Require any cluster to be "in time" to select pfo
 	if (!clusters.empty())
 	  {
@@ -486,24 +494,30 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	      {
 		if ((clusterTimeEcal >= timingCutLow) && (clusterTimeEcal <= timingCutHigh))
 		  selectPfo = true;
+        streamlog_out( MESSAGE ) << "Is selected1: " << selectPfo << ", clusterTimeEcal: " << clusterTimeEcal << " with cuts: " << timingCutLow << "," << timingCutHigh << std::endl;
 	      }
 	    else if (type == 22)
 	      {
 		if ((clusterTime >= timingCutLow) && (clusterTime <= timingCutHigh))
 		  selectPfo = true;
+        streamlog_out( MESSAGE ) << "Is selected2: " << selectPfo << std::endl;
 	      }
 	    else if ( (nHcalEndCapHits >= m_minHCalEndCapHitsForTiming) || (nHcalEndCapHits >= nCaloHits/2.) )
 	      {
 		if ((clusterTimeHcalEndcap >= timingCutLow) && (clusterTimeHcalEndcap <= (m_hCalEndCapTimingFactor * timingCutHigh)))
 		  selectPfo = true;
+        streamlog_out( MESSAGE ) << "Is selected3: " << selectPfo << ", clusterTimeHcalEndcap: " << clusterTimeHcalEndcap << ", cutHigh: " << m_hCalEndCapTimingFactor * timingCutHigh << std::endl;
 	      }
 	    else
 	      {
 		if ((clusterTime >= timingCutLow) && (clusterTime < hCalBarrelTimingCut))
 		  selectPfo = true;
+        streamlog_out( MESSAGE ) << "Is selected4: " << selectPfo << std::endl;
 		
 		if (tracks.empty() && (pT_pfo > m_neutralHadronBarrelPtCutForLooseTiming))
 		  selectPfo = true;
+        streamlog_out( MESSAGE ) << "Is selected5: " << selectPfo << std::endl;
+
 	      }
 
 
@@ -545,6 +559,9 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
           std::stringstream output;
           output << std::fixed;
           output << std::setprecision(precision);
+          if((clusterTime>2 || clusterTimeEcal>2) && cosTheta > 0.975 && tracks.size()==0 && type!=22 && pT_pfo < 3){
+           output << " *** Interesting PFO  with nEcalHits less nCaloHits/2 *** (cut on hCalBarrelTimingCut): " << hCalBarrelTimingCut << " ";
+          } 
           if(passPfoSelection) {
             output << " Selected PFO : ";
           } else {

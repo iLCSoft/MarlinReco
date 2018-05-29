@@ -40,6 +40,26 @@ CLICPfoSelectorAnalysis::CLICPfoSelectorAnalysis() : Processor("CLICPfoSelectorA
                              cutCosTheta,
                              float(0.975));
 
+  registerProcessorParameter("MinECalHitsForHadrons",
+			    			 "Min number of Ecal hits to use clusterTime info from Ecal (for neutral and charged hadrons only)",
+			     			 minECalHits,
+			     			 int(5));
+
+  registerProcessorParameter("MinHcalEndcapHitsForHadrons",
+			    			 "Min number of Hcal Endcap hits to use clusterTime info from Hcal Endcap (for neutral and charged hadrons only)",
+			     			 minHcalEndcapHits,
+			     			 int(5));
+
+  registerProcessorParameter("ForwardCosThetaForHighEnergyNeutralHadrons",
+			                 "ForwardCosThetaForHighEnergyNeutralHadrons",
+			                 forwardCosThetaForHighEnergyNeutralHadrons,
+			                 float(0.95));
+
+  registerProcessorParameter("ForwardHighEnergyNeutralHadronsEnergy",
+			                 "ForwardHighEnergyNeutralHadronsEnergy",
+			                 forwardHighEnergyNeutralHadronsEnergy,
+			                 float(10.00));
+  
   registerProcessorParameter("AnalyzePhotons",
                              "Boolean factor to decide if perform the analysis on photons",
                              analyzePhotons,
@@ -242,7 +262,8 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       output << fixed;
       output << setprecision(precision);
 
-      if(clusterTime<-20){
+      //if(clusterTime<-20){
+      if((clusterTime>2 || clusterTimeEcal>2) && costheta > 0.95 && tracks.size()==0 && type!=22){
        output << " *** Interesting PFO: ";
       } 
       if(clusters.size()==0)
@@ -255,7 +276,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       streamlog_out( DEBUG1 ) << output.str();
       pfo_tree->Fill();
 
-    }
+      }
 
   }
 
@@ -270,16 +291,24 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
 
   for (int ie = 0; ie < nEntries; ie++){
     pfo_tree->GetEntry(ie);
+    double currentClusterTime = clusterTime;
+    bool useHcalTimingOnly = ( (costheta > forwardCosThetaForHighEnergyNeutralHadrons) && (type == 2112) && (energy > forwardHighEnergyNeutralHadronsEnergy));
 
     //in the case of photons, the time of ECAL clusters are used
     if( analyzePhotons==true && type==22 ){
+      
       if(std::find(particleCategories.begin(), particleCategories.end(), "photons") != particleCategories.end()){
-//        streamlog_out(DEBUG2) << "Filling scatter plot for photon " << endl;
-        timeVsPt["photons"]->SetPoint(ie,pT,clusterTime);
+
+      	//in the case of photons, the clusterTimeEcal is used
+      	currentClusterTime = clusterTimeEcal;
+      	streamlog_out(DEBUG2) << "Filling scatter plot for photon with pT and current clusterTime: " << pT << "," << currentClusterTime << endl;
+
+        timeVsPt["photons"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["photons"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_barrel["photons"]->SetPoint(ie,pT,currentClusterTime);
         else
-          timeVsPt_endcap["photons"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_endcap["photons"]->SetPoint(ie,pT,currentClusterTime);
+
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for photons was not created. " << endl;
         exit(0);
@@ -287,27 +316,51 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
     }
 
     if( analyzeNeutralHadrons==true && type!=22 && charge==0 ){
+
       if(std::find(particleCategories.begin(), particleCategories.end(), "neutralHadrons") != particleCategories.end()){
-//        streamlog_out(DEBUG2) << "Filling scatter plot for neutralHadrons " << endl;
-        timeVsPt["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
+        streamlog_out( MESSAGE ) << "Has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
+        streamlog_out( MESSAGE ) << "Has clusterTimeEcal = " << clusterTimeEcal << ", clusterTimeHcalEndcap = " << clusterTimeHcalEndcap << std::endl;
+        //in the case the nEcalHits is more than expected, the time computed Ecal is used
+        if(!useHcalTimingOnly && ( nEcalHits > minECalHits || nEcalHits >= nCaloHits/2.) ){
+          currentClusterTime = clusterTimeEcal;
+        //in the case the nHcalEndCapHits is more than expected, the time computed Hcal endcap is used
+        } else if ( (nHcalEndCapHits >= minHcalEndcapHits) || (nHcalEndCapHits >= nCaloHits/2.) ) {
+        	currentClusterTime = clusterTimeHcalEndcap;
+        }
+        streamlog_out(DEBUG2) << "Filling scatter plot for neutralHadrons with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
+
+        timeVsPt["neutralHadrons"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_barrel["neutralHadrons"]->SetPoint(ie,pT,currentClusterTime);
         else
-          timeVsPt_endcap["neutralHadrons"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_endcap["neutralHadrons"]->SetPoint(ie,pT,currentClusterTime);
+
+          
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for neutralHadrons was not created. " << endl;
         exit(0);
       }
+    
     }
-
+    
     if( analyzeChargedPfos==true && charge!=0 ){
       if(std::find(particleCategories.begin(), particleCategories.end(), "chargedPfos") != particleCategories.end()){
-//        streamlog_out(DEBUG2) << "Filling scatter plot for chargedPfos " << endl;
-        timeVsPt["chargedPfos"]->SetPoint(ie,pT,clusterTime);
+
+        //in the case the nEcalHits is more than expected, the time computed Ecal is used
+        if((!useHcalTimingOnly && ( nEcalHits > minECalHits || nEcalHits >= nCaloHits/2.) )){
+          currentClusterTime = clusterTimeEcal;
+        //in the case the nHcalEndCapHits is more than expected, the time computed Hcal endcap is used
+        } else if ( (nHcalEndCapHits >= minHcalEndcapHits) || (nHcalEndCapHits >= nCaloHits/2.) ) {
+        	currentClusterTime = clusterTimeHcalEndcap;
+        }
+        streamlog_out(DEBUG2) << "Filling scatter plot for chargedPfos with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
+
+        timeVsPt["chargedPfos"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta)
-          timeVsPt_barrel["chargedPfos"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_barrel["chargedPfos"]->SetPoint(ie,pT,currentClusterTime);
         else
-          timeVsPt_endcap["chargedPfos"]->SetPoint(ie,pT,clusterTime);
+          timeVsPt_endcap["chargedPfos"]->SetPoint(ie,pT,currentClusterTime);
+
       } else {
         streamlog_out(ERROR) << "Cannot fill scatter plots because TGraph for chargedPfos was not created. " << endl;
         exit(0);

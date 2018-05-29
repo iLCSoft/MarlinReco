@@ -68,6 +68,9 @@ class CLICPfoSelectorAnalysis : public Processor {
   string colNamePFOs{};
   string treeName{};
   float cutCosTheta;
+  int minECalHits;
+  int minHcalEndcapHits;
+  float forwardCosThetaForHighEnergyNeutralHadrons, forwardHighEnergyNeutralHadronsEnergy;
   bool analyzePhotons, analyzeChargedPfos, analyzeNeutralHadrons;
 
   int _nRun{};

@@ -3,6 +3,8 @@
 
 #include "marlin/Processor.h"
 #include <EVENT/ReconstructedParticle.h>
+#include <EVENT/LCRelation.h>
+#include <UTIL/LCRelationNavigator.h>
 #include "lcio.h"
 #include <string>
 
@@ -80,6 +82,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   TTree *pfo_tree = NULL;
   int type = 0;
   double p = 0.0, px = 0.0, py = 0.0, pz = 0.0, pT = 0.0;
+  int sameMCPart = 0;
   double costheta = 0.0, energy = 0.0, mass = 0.0, charge = 0.0;
   int nTracks = 0, nClusters = 0;
   double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
@@ -92,6 +95,10 @@ class CLICPfoSelectorAnalysis : public Processor {
   map<string,TGraph*> timeVsPt;
   map<string,TGraph*> timeVsPt_barrel;
   map<string,TGraph*> timeVsPt_endcap;
+
+  std::string     m_recoMCTruthLink{};
+  std::string     m_SiTracksMCTruthLink{};
+  std::string     m_ClusterMCTruthLink{};
 
 } ;
 

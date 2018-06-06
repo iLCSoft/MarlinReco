@@ -3,6 +3,7 @@
 
 #include <EVENT/LCCollection.h>
 #include "PfoUtilities.h"
+#include <EVENT/MCParticle.h>
 
 #include "marlin/VerbosityLevels.h"
 
@@ -14,6 +15,10 @@ using namespace marlin ;
 const int precision = 2;
 const int widthFloat = 7;
 const int widthInt = 5;
+
+LCRelationNavigator* m_reltrue = 0;
+LCRelationNavigator* m_trackreltrue = 0;
+LCRelationNavigator* m_clureltrue = 0;
 
 CLICPfoSelectorAnalysis aCLICPfoSelectorAnalysis ;
 
@@ -41,24 +46,24 @@ CLICPfoSelectorAnalysis::CLICPfoSelectorAnalysis() : Processor("CLICPfoSelectorA
                              float(0.975));
 
   registerProcessorParameter("MinECalHitsForHadrons",
-			    			 "Min number of Ecal hits to use clusterTime info from Ecal (for neutral and charged hadrons only)",
-			     			 minECalHits,
-			     			 int(5));
+			    			             "Min number of Ecal hits to use clusterTime info from Ecal (for neutral and charged hadrons only)",
+			     			             minECalHits,
+			     			             int(5));
 
   registerProcessorParameter("MinHcalEndcapHitsForHadrons",
-			    			 "Min number of Hcal Endcap hits to use clusterTime info from Hcal Endcap (for neutral and charged hadrons only)",
-			     			 minHcalEndcapHits,
-			     			 int(5));
+			    			             "Min number of Hcal Endcap hits to use clusterTime info from Hcal Endcap (for neutral and charged hadrons only)",
+			     			             minHcalEndcapHits,
+			     			             int(5));
 
   registerProcessorParameter("ForwardCosThetaForHighEnergyNeutralHadrons",
-			                 "ForwardCosThetaForHighEnergyNeutralHadrons",
-			                 forwardCosThetaForHighEnergyNeutralHadrons,
-			                 float(0.95));
+			                       "ForwardCosThetaForHighEnergyNeutralHadrons",
+			                       forwardCosThetaForHighEnergyNeutralHadrons,
+			                       float(0.95));
 
   registerProcessorParameter("ForwardHighEnergyNeutralHadronsEnergy",
-			                 "ForwardHighEnergyNeutralHadronsEnergy",
-			                 forwardHighEnergyNeutralHadronsEnergy,
-			                 float(10.00));
+			                       "ForwardHighEnergyNeutralHadronsEnergy",
+			                       forwardHighEnergyNeutralHadronsEnergy,
+			                       float(10.00));
   
   registerProcessorParameter("AnalyzePhotons",
                              "Boolean factor to decide if perform the analysis on photons",
@@ -74,6 +79,24 @@ CLICPfoSelectorAnalysis::CLICPfoSelectorAnalysis() : Processor("CLICPfoSelectorA
                              "Boolean factor to decide if perform the analysis on neutral hadrons",
                              analyzeNeutralHadrons,
                              bool(true));
+
+  registerInputCollection(LCIO::LCRELATION,
+                          "RecoMCTruthLink",
+                          "Name of the RecoMCTruthLink input collection"  ,
+                          m_recoMCTruthLink,
+                          std::string("RecoMCTruthLink") ) ;
+
+  registerInputCollection(LCIO::LCRELATION,
+                          "SiTracksMCTruthLink",
+                          "Name of the SiTracksMCTruthLink input collection"  ,
+                          m_SiTracksMCTruthLink,
+                          std::string("SiTracksMCTruthLink") ) ;
+
+registerInputCollection(LCIO::LCRELATION,
+                        "ClusterMCTruthLink",
+                        "Name of the ClusterMCTruthLink input collection"  ,
+                        m_ClusterMCTruthLink,
+                        std::string("ClusterMCTruthLink") ) ;
 }
 
 
@@ -100,6 +123,7 @@ void CLICPfoSelectorAnalysis::init() {
   pfo_tree->Branch("py", &py, "py/D");
   pfo_tree->Branch("pz", &pz, "pz/D");
   pfo_tree->Branch("pT", &pT, "pT/D");
+  pfo_tree->Branch("sameMCPart", &sameMCPart, "sameMCPart/I");
 
   pfo_tree->Branch("costheta", &costheta, "costhetaMC/D");
   pfo_tree->Branch("energy", &energy, "energy/D");
@@ -149,6 +173,48 @@ void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) {
   eventNumber=evt->getEventNumber();
   runNumber=_nRun;
 
+  //Get MC Particles associated to the PFOs
+  LCCollection* rmclcol = NULL;
+  try{
+    rmclcol = evt->getCollection( m_recoMCTruthLink );
+  }
+  catch( lcio::DataNotAvailableException e )
+  {
+    streamlog_out(WARNING) << m_recoMCTruthLink   << " collection not available" << std::endl;
+    rmclcol = NULL;
+  }
+  if( rmclcol != NULL ){
+    m_reltrue = new LCRelationNavigator( rmclcol );
+  }
+
+  //Get MC Particles associated to the track of the PFOs
+  LCCollection* rtrkclcol = NULL;
+  try{
+    rtrkclcol = evt->getCollection( m_SiTracksMCTruthLink );
+  }
+  catch( lcio::DataNotAvailableException e )
+  {
+    streamlog_out(WARNING) << m_SiTracksMCTruthLink   << " collection not available" << std::endl;
+    rtrkclcol = NULL;
+  }
+  if( rtrkclcol != NULL ){
+    m_trackreltrue = new LCRelationNavigator( rtrkclcol );
+  }
+    
+  //Get MC Particles associated to this cluster
+  LCCollection* rclulcol = NULL;
+  try{
+    rclulcol = evt->getCollection( m_ClusterMCTruthLink );
+  }
+  catch( lcio::DataNotAvailableException e )
+  {
+    streamlog_out(WARNING) << m_ClusterMCTruthLink   << " collection not available" << std::endl;
+    rclulcol = NULL;
+  }
+  if( rclulcol != NULL ){
+    m_clureltrue = new LCRelationNavigator( rclulcol );
+  }
+
   fillTree(evt, colNamePFOs);
 
   fillScatterPlots();
@@ -186,7 +252,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
     int nelem = col->getNumberOfElements();
     //streamlog_out(DEBUG) << "Number of PFOs in this event = " << nelem << endl;
 
-    // loop on MC/PFO particles
+    // loop on PFO particles
     for(int i=0; i< nelem ; i++){
 
       ReconstructedParticle* pPfo = static_cast<ReconstructedParticle*>( col->getElementAt( i ) ) ;
@@ -258,12 +324,54 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
       }
 
+      sameMCPart = 0;
+      for(unsigned int it = 0; it < tracks.size(); it++){
+        Track *track = tracks[it];
+
+        //MC linker to tracks
+        LCObjectVec mctrkvec;
+        mctrkvec = m_trackreltrue->getRelatedToObjects( track );
+        if ( mctrkvec.size() > 0 ) {
+          streamlog_out( DEBUG ) << " Track is associated to " << mctrkvec.size() << " MC particles." << std::endl;
+          for(unsigned int ic = 0; ic< clusters.size(); ic++){
+            Cluster *cluster = clusters[ic];
+
+            //MC linker to clusters
+            LCObjectVec mccluvec;
+            mccluvec = m_clureltrue->getRelatedToObjects( cluster );
+            if ( mccluvec.size() > 0 ) {
+              streamlog_out( DEBUG ) << " Cluster is also associated to " << mccluvec.size() << " MC particles." << std::endl;
+
+              for ( auto imctrk : mctrkvec ) { //  loop on MC Particles associated with track x
+                streamlog_out( DEBUG ) << " Running on new mc_part_trk " << std::endl;
+                if(sameMCPart == 1)
+                  break;
+                for ( auto imcclu : mccluvec ){
+                  streamlog_out( DEBUG ) << " Running on new mc_part_clu " << std::endl;
+                  if(sameMCPart == 0 && imcclu->id() == imctrk->id()){
+                    streamlog_out( DEBUG ) << " \t SAME MC PARTICLE!" << std::endl;
+                    sameMCPart = 1;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if(sameMCPart == 0)
+        streamlog_out( DEBUG ) << " \t NOT same MC particle!" << std::endl;
+
+      std::cout << " " << std::endl;
+
+  
       stringstream output;
       output << fixed;
       output << setprecision(precision);
 
-      //if(clusterTime<-20){
-      if((clusterTime>2 || clusterTimeEcal>2) && costheta > 0.95 && tracks.size()==0 && type!=22){
+      if(clusterTime<-20){
+      //if((clusterTime>2 || clusterTimeEcal>2) && costheta > 0.95 && tracks.size()==0 && type!=22){
        output << " *** Interesting PFO: ";
       } 
       if(clusters.size()==0)
@@ -273,7 +381,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       if(tracks.size()>0&&clusters.size()>0)
          FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
         
-      streamlog_out( DEBUG1 ) << output.str();
+      streamlog_out( DEBUG ) << output.str();
       pfo_tree->Fill();
 
       }
@@ -284,10 +392,10 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
 void CLICPfoSelectorAnalysis::fillScatterPlots(){
 
-//  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillScatterPlots" << endl; 
+  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillScatterPlots" << endl; 
 
   Int_t nEntries = pfo_tree->GetEntries();
-//  streamlog_out(DEBUG) << "Reading TTree with nEntries: " << nEntries << endl;
+  streamlog_out(DEBUG) << "Reading TTree with nEntries: " << nEntries << endl;
 
   for (int ie = 0; ie < nEntries; ie++){
     pfo_tree->GetEntry(ie);
@@ -318,8 +426,9 @@ void CLICPfoSelectorAnalysis::fillScatterPlots(){
     if( analyzeNeutralHadrons==true && type!=22 && charge==0 ){
 
       if(std::find(particleCategories.begin(), particleCategories.end(), "neutralHadrons") != particleCategories.end()){
-        streamlog_out( MESSAGE ) << "Has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
-        streamlog_out( MESSAGE ) << "Has clusterTimeEcal = " << clusterTimeEcal << ", clusterTimeHcalEndcap = " << clusterTimeHcalEndcap << std::endl;
+        //streamlog_out( MESSAGE ) << "Has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
+        //streamlog_out( MESSAGE ) << "Has clusterTimeEcal = " << clusterTimeEcal << ", clusterTimeHcalEndcap = " << clusterTimeHcalEndcap << std::endl;
+
         //in the case the nEcalHits is more than expected, the time computed Ecal is used
         if(!useHcalTimingOnly && ( nEcalHits > minECalHits || nEcalHits >= nCaloHits/2.) ){
           currentClusterTime = clusterTimeEcal;

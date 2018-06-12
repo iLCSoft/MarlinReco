@@ -3,6 +3,7 @@
 
 #include "marlin/Processor.h"
 #include <EVENT/ReconstructedParticle.h>
+#include <EVENT/MCParticle.h>
 #include <EVENT/LCRelation.h>
 #include <UTIL/LCRelationNavigator.h>
 #include "lcio.h"
@@ -62,7 +63,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   //filling the TTree  
   void fillTree(LCEvent * evt, string collName); 
 
-  void fillScatterPlots();
+  void fillScatterPlots(std::string signalOrBkg = "");
 
  protected:
 
@@ -74,6 +75,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   int minHcalEndcapHits;
   float forwardCosThetaForHighEnergyNeutralHadrons, forwardHighEnergyNeutralHadronsEnergy;
   bool analyzePhotons, analyzeChargedPfos, analyzeNeutralHadrons;
+  bool analyzeAll, analyzeSignal, analyzeOverlay;
 
   int _nRun{};
   int _nEvt{};
@@ -82,23 +84,29 @@ class CLICPfoSelectorAnalysis : public Processor {
   TTree *pfo_tree = NULL;
   int type = 0;
   double p = 0.0, px = 0.0, py = 0.0, pz = 0.0, pT = 0.0;
-  int sameMCPart = 0;
   double costheta = 0.0, energy = 0.0, mass = 0.0, charge = 0.0;
   int nTracks = 0, nClusters = 0;
   double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
   int nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
 
+  int trk_clu_sameMCPart = 0, atLeastOneSignal = 0;
+
   int eventNumber = 0, runNumber = 0, nPartMC = 0, nPartPFO = 0.0;
 
   //List of scatter plots
   vector<string> particleCategories;
+  vector<string> generationCategories;
   map<string,TGraph*> timeVsPt;
   map<string,TGraph*> timeVsPt_barrel;
   map<string,TGraph*> timeVsPt_endcap;
 
-  std::string     m_recoMCTruthLink{};
-  std::string     m_SiTracksMCTruthLink{};
-  std::string     m_ClusterMCTruthLink{};
+  //MC particles collections
+  string m_inputPhysicsParticleCollection{};
+  string m_recoMCTruthLink{};
+  string m_SiTracksMCTruthLink{};
+  string m_ClusterMCTruthLink{};
+
+  vector<MCParticle*> physicsParticles;
 
 } ;
 

@@ -63,7 +63,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   //filling the TTree  
   void fillTree(LCEvent * evt, string collName); 
 
-  void fillScatterPlots(std::string signalOrBkg = "");
+  void fillScatterPlots();
 
  protected:
 
@@ -96,9 +96,18 @@ class CLICPfoSelectorAnalysis : public Processor {
   //List of scatter plots
   vector<string> particleCategories;
   vector<string> generationCategories;
-  map<string,TGraph*> timeVsPt;
-  map<string,TGraph*> timeVsPt_barrel;
-  map<string,TGraph*> timeVsPt_endcap;
+  map<string,TGraph*> g_timeVsPt;
+  map<string,TGraph*> g_timeVsPt_barrel;
+  map<string,TGraph*> g_timeVsPt_endcap;
+  TH1F* h_energy_tot;
+  TH1F* h_energy_tot_signal;
+  TH1F* h_energy_tot_background;
+  map<string,TH1F*> h_energy;
+  map<string,TH1F*> h_energy_barrel;
+  map<string,TH1F*> h_energy_endcap;
+  map<string,double> energy_tot;
+  map<string,double> energy_tot_barrel;
+  map<string,double> energy_tot_endcap;
 
   //MC particles collections
   string m_inputPhysicsParticleCollection{};

@@ -257,7 +257,7 @@ void TJjetsPFOAnalysisProcessor::makeNTuple() {
 
 
 
-void TJjetsPFOAnalysisProcessor::processRunHeader( LCRunHeader* run) {
+void TJjetsPFOAnalysisProcessor::processRunHeader( LCRunHeader* /*run*/) {
   m_nRun = 0;
   m_nEvt = 0;
   ++m_nRunSum;
@@ -266,23 +266,24 @@ void TJjetsPFOAnalysisProcessor::processRunHeader( LCRunHeader* run) {
 
 
 
-void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * evt ) {
+
+void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * event ) {
 
   // tj is a pointer to a Trujet_Parser, with the data of this processor object:
-  Adjusted_TrueJet_Parser* tj= this ;
+  TrueJet_Parser* tj= this ;
   // this method gets all the collections needed + initialises a few convienent variables.
-  tj->getall(evt);
+  tj->getall(event);
 
 
-  m_nRun = evt->getRunNumber();
-  m_nEvt = evt->getEventNumber();
+  m_nRun = event->getRunNumber();
+  m_nEvt = event->getEventNumber();
   ++m_nEvtSum;
 
   if ((m_nEvtSum % 100) == 0)
     std::cout << " processed events: " << m_nEvtSum << std::endl;
 
   m_jets.clear();
-  this->findTrueJetParticles(evt);
+  this->findTrueJetParticles(event);
 
   for (int i_jet=0; i_jet<njets(); i_jet++) {
     m_nJet = i_jet;
@@ -310,7 +311,7 @@ void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void TJjetsPFOAnalysisProcessor::check( LCEvent * evt ) {
+void TJjetsPFOAnalysisProcessor::check( LCEvent * /*event*/ ) {
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

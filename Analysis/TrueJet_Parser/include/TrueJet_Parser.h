@@ -18,17 +18,20 @@ struct MCPpyjet : LCIntExtension<MCPpyjet> {};
 struct JetIndex : LCIntExtension<JetIndex> {};
 struct IcnIndex : LCIntExtension<IcnIndex> {};
 struct FcnIndex : LCIntExtension<FcnIndex> {};
-LCRelationNavigator* reltrue_tj =0;
+// LCRelationNavigator* reltrue_tj =0;
 
 class TrueJet_Parser {
-  
+ 
  public:
-  
-  
+ 
+ 
   TrueJet_Parser()   ;
-  ~TrueJet_Parser() ;
-  
-  
+  virtual ~TrueJet_Parser() ;
+
+  // These two lines avoid frequent compiler warnings when using -Weffc++
+  TrueJet_Parser( const TrueJet_Parser& ) = delete;
+  TrueJet_Parser& operator=( const TrueJet_Parser& ) = delete;
+
   virtual    std::string get_recoMCTruthLink(){ return _recoMCTruthLink  ;};
  
   ReconstructedParticleVec* getJets();
@@ -135,5 +138,3 @@ private:
   MCParticleVec* mcpartvec{};
 } ;
 #endif
-
-

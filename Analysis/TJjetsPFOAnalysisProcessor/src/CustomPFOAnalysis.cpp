@@ -139,7 +139,7 @@ bool TJjetsPFOAnalysisProcessor::hasSomeParentsInMCList(EVENT::MCParticle *pMCPa
   if ( ! areDisjointVectors( pMCParticleParents, mcs_vector ) ) {
     found_parent = true;
   } else { // Check next higher generation
-    for (auto i=0; i<pMCParticleParents.size(); i++) {
+    for (unsigned int i=0; i<pMCParticleParents.size(); i++) {
       if ( hasSomeParentsInMCList(pMCParticleParents[i], mcs) ) {
         found_parent = true;
       }
@@ -181,24 +181,26 @@ void TJjetsPFOAnalysisProcessor::MakeQuarkVariables(JetContentPair* jet_content)
 {
     MCParticleVector mcQuarkVector;
 
+///////////////////////////////////////////////////////////////////
     try
     {
 
         MCParticleVec mcs = jet_content->first;
+        MCParticleList mcs_list =  MCParticleList(mcs.begin(),mcs.end());
 
         for (unsigned int i = 0, nElements = mcs.size(); i < nElements; ++i)
         {
-            const EVENT::MCParticle *pMCParticle = mcs[i];
+            EVENT::MCParticle *pMCParticle = mcs[i];
 
             if (NULL == pMCParticle)
                 throw EVENT::Exception("Collection type mismatch");
 
             const int absPdgCode(std::abs(pMCParticle->getPDG()));
 
-            // By default, the primary quarks are the ones without any parents
+            // By default, the primary quarks are the ones without parents included in the jet-mc
             if (!m_lookForQuarksWithMotherZ)
             {
-                if ((absPdgCode >= 1) && (absPdgCode <= 6) && pMCParticle->getParents().empty())
+                if ((absPdgCode >= 1) && (absPdgCode <= 6) && !hasSomeParentsInMCList(pMCParticle, mcs_list) )// pMCParticle->getParents().empty()) //!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     mcQuarkVector.push_back(pMCParticle);
             }
             else
@@ -216,6 +218,7 @@ void TJjetsPFOAnalysisProcessor::MakeQuarkVariables(JetContentPair* jet_content)
     {
         streamlog_out(WARNING) << "Could not extract mc quark information" << std::endl;
     }
+///////////////////////////////////////////////////////////////////
 
     if (!mcQuarkVector.empty())
     {
@@ -326,9 +329,9 @@ void TJjetsPFOAnalysisProcessor::PerformPfoAnalysis()
             float cellEnergySum(0.f);
             const EVENT::ClusterVec &clusterVec(pPfo->getClusters());
 
-            for (EVENT::ClusterVec::const_iterator iter = clusterVec.begin(), iterEnd = clusterVec.end(); iter != iterEnd; ++iter)
+            for (EVENT::ClusterVec::const_iterator clustIter = clusterVec.begin(), clustIterEnd = clusterVec.end(); clustIter != clustIterEnd; ++clustIter)
             {
-                const EVENT::CalorimeterHitVec &calorimeterHitVec((*iter)->getCalorimeterHits());
+                const EVENT::CalorimeterHitVec &calorimeterHitVec((*clustIter)->getCalorimeterHits());
 
                 for (EVENT::CalorimeterHitVec::const_iterator hitIter = calorimeterHitVec.begin(), hitIterEnd = calorimeterHitVec.end(); hitIter != hitIterEnd; ++hitIter)
                 {
@@ -345,9 +348,9 @@ void TJjetsPFOAnalysisProcessor::PerformPfoAnalysis()
                 ++m_nPfosPhotons;
                 m_pfoEnergyPhotons += pPfo->getEnergy();
 
-                for (EVENT::ClusterVec::const_iterator iter = clusterVec.begin(), iterEnd = clusterVec.end(); iter != iterEnd; ++iter)
+                for (EVENT::ClusterVec::const_iterator clustIter = clusterVec.begin(), clustIterEnd = clusterVec.end(); clustIter != clustIterEnd; ++clustIter)
                 {
-                    const EVENT::CalorimeterHitVec &calorimeterHitVec((*iter)->getCalorimeterHits());
+                    const EVENT::CalorimeterHitVec &calorimeterHitVec((*clustIter)->getCalorimeterHits());
 
                     for (EVENT::CalorimeterHitVec::const_iterator hitIter = calorimeterHitVec.begin(), hitIterEnd = calorimeterHitVec.end(); hitIter != hitIterEnd; ++hitIter)
                     {
@@ -381,9 +384,9 @@ void TJjetsPFOAnalysisProcessor::PerformPfoAnalysis()
                 ++m_nPfosNeutralHadrons;
                 m_pfoEnergyNeutralHadrons += pPfo->getEnergy();
 
-                for (EVENT::ClusterVec::const_iterator iter = clusterVec.begin(), iterEnd = clusterVec.end(); iter != iterEnd; ++iter)
+                for (EVENT::ClusterVec::const_iterator clustIter = clusterVec.begin(), clustIterEnd = clusterVec.end(); clustIter != clustIterEnd; ++clustIter)
                 {
-                    const EVENT::CalorimeterHitVec &calorimeterHitVec((*iter)->getCalorimeterHits());
+                    const EVENT::CalorimeterHitVec &calorimeterHitVec((*clustIter)->getCalorimeterHits());
 
                     for (EVENT::CalorimeterHitVec::const_iterator hitIter = calorimeterHitVec.begin(), hitIterEnd = calorimeterHitVec.end(); hitIter != hitIterEnd; ++hitIter)
                     {

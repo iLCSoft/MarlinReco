@@ -1,3 +1,6 @@
+#ifndef STANDARD_INCLUDES_H
+#define STANDARD_INCLUDES_H 1
+
 #include "lcio.h"
 #include <iostream>
 #include <fstream>
@@ -29,3 +32,5 @@
 
 using namespace lcio ;
 using namespace marlin ;
+
+#endif

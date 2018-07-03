@@ -21,10 +21,10 @@ struct FcnIndex : LCIntExtension<FcnIndex> {};
 // LCRelationNavigator* reltrue_tj =0;
 
 class TrueJet_Parser {
- 
+  
  public:
- 
- 
+  
+  
   TrueJet_Parser()   ;
   virtual ~TrueJet_Parser() ;
 

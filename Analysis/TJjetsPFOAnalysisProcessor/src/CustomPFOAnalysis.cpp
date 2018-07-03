@@ -181,7 +181,6 @@ void TJjetsPFOAnalysisProcessor::MakeQuarkVariables(JetContentPair* jet_content)
 {
     MCParticleVector mcQuarkVector;
 
-///////////////////////////////////////////////////////////////////
     try
     {
 
@@ -218,7 +217,6 @@ void TJjetsPFOAnalysisProcessor::MakeQuarkVariables(JetContentPair* jet_content)
     {
         streamlog_out(WARNING) << "Could not extract mc quark information" << std::endl;
     }
-///////////////////////////////////////////////////////////////////
 
     if (!mcQuarkVector.empty())
     {
@@ -239,56 +237,59 @@ void TJjetsPFOAnalysisProcessor::MakeQuarkVariables(JetContentPair* jet_content)
         }
 
         m_thrust = costTot / energyTot;
-    }
 
-    if (mcQuarkVector.size() == 2)
-    {
         const float pQ1x = mcQuarkVector[0]->getMomentum()[0];
         const float pQ1y = mcQuarkVector[0]->getMomentum()[1];
         const float pQ1z = mcQuarkVector[0]->getMomentum()[2];
 
-        const float pQ2x = mcQuarkVector[1]->getMomentum()[0];
-        const float pQ2y = mcQuarkVector[1]->getMomentum()[1];
-        const float pQ2z = mcQuarkVector[1]->getMomentum()[2];
-
         const float pQ1[3] = {pQ1x, pQ1y, pQ1z};
-        const float pQ2[3] = {pQ2x, pQ2y, pQ2z};
-        const float pQQ[3] = {pQ1[0] + pQ2[0], pQ1[1] + pQ2[1], pQ1[2] + pQ2[2]};
-
         const TLorentzVector q1(pQ1[0], pQ1[1], pQ1[2], mcQuarkVector[0]->getEnergy());
-        const TLorentzVector q2(pQ2[0], pQ2[1], pQ2[2], mcQuarkVector[1]->getEnergy());
-        const TLorentzVector qq = q1 + q2;
-
-        m_mQQ = qq.M();
-        m_eQQ = mcQuarkVector[0]->getEnergy() + mcQuarkVector[1]->getEnergy();
-
         const float pQ1Tot(std::sqrt(pQ1[0] * pQ1[0] + pQ1[1] * pQ1[1] + pQ1[2] * pQ1[2]));
-        const float pQ2Tot(std::sqrt(pQ2[0] * pQ2[0] + pQ2[1] * pQ2[1] + pQ2[2] * pQ2[2]));
-        const float pQQTot(std::sqrt(pQQ[0] * pQQ[0] + pQQ[1] * pQQ[1] + pQQ[2] * pQQ[2]));
-
-        if (std::fabs(pQQTot) > std::numeric_limits<float>::epsilon())
-            m_costQQ = pQQ[2] / pQQTot;
 
         if (std::fabs(pQ1Tot) > std::numeric_limits<float>::epsilon())
-            m_costQ1 = pQ1[2] / pQ1Tot;
-
-        if (std::fabs(pQ2Tot) > std::numeric_limits<float>::epsilon())
-            m_costQ2 = pQ2[2] / pQ2Tot;
+          m_costQ1 = pQ1[2] / pQ1Tot;
 
         m_eQ1 = pQ1Tot;
-        m_eQ2 = pQ2Tot;
 
-        if (m_printing > 0)
+        if (mcQuarkVector.size() == 2)
         {
-            std::cout << " eQQ    = " << m_eQQ << std::endl
-                      << " eQ1    = " << m_eQ1 << std::endl
-                      << " eQ2    = " << m_eQ2 << std::endl
-                      << " costQQ = " << m_costQQ << std::endl
-                      << " costQ1 = " << m_costQ1 << std::endl
-                      << " costQ2 = " << m_costQ2 << std::endl
-                      << " mQQ    = " << m_mQQ << std::endl
-                      << " Thrust = " << m_thrust << std::endl
-                      << " QPDG   = " << m_qPdg << std::endl;
+
+          const float pQ2x = mcQuarkVector[1]->getMomentum()[0];
+          const float pQ2y = mcQuarkVector[1]->getMomentum()[1];
+          const float pQ2z = mcQuarkVector[1]->getMomentum()[2];
+
+          const float pQ2[3] = {pQ2x, pQ2y, pQ2z};
+          const float pQQ[3] = {pQ1[0] + pQ2[0], pQ1[1] + pQ2[1], pQ1[2] + pQ2[2]};
+
+          const TLorentzVector q2(pQ2[0], pQ2[1], pQ2[2], mcQuarkVector[1]->getEnergy());
+          const TLorentzVector qq = q1 + q2;
+
+          m_mQQ = qq.M();
+          m_eQQ = mcQuarkVector[0]->getEnergy() + mcQuarkVector[1]->getEnergy();
+
+          const float pQ2Tot(std::sqrt(pQ2[0] * pQ2[0] + pQ2[1] * pQ2[1] + pQ2[2] * pQ2[2]));
+          const float pQQTot(std::sqrt(pQQ[0] * pQQ[0] + pQQ[1] * pQQ[1] + pQQ[2] * pQQ[2]));
+
+          if (std::fabs(pQQTot) > std::numeric_limits<float>::epsilon())
+              m_costQQ = pQQ[2] / pQQTot;
+
+          if (std::fabs(pQ2Tot) > std::numeric_limits<float>::epsilon())
+              m_costQ2 = pQ2[2] / pQ2Tot;
+
+          m_eQ2 = pQ2Tot;
+
+          if (m_printing > 0)
+          {
+              std::cout << " eQQ    = " << m_eQQ << std::endl
+                        << " eQ1    = " << m_eQ1 << std::endl
+                        << " eQ2    = " << m_eQ2 << std::endl
+                        << " costQQ = " << m_costQQ << std::endl
+                        << " costQ1 = " << m_costQ1 << std::endl
+                        << " costQ2 = " << m_costQ2 << std::endl
+                        << " mQQ    = " << m_mQQ << std::endl
+                        << " Thrust = " << m_thrust << std::endl
+                        << " QPDG   = " << m_qPdg << std::endl;
+          }
         }
     }
 }

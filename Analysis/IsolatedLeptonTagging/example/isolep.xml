@@ -69,20 +69,22 @@ data_dbd_500/higgs_ffh/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.
   <parameter name="DirOfISOMuonWeights" type="string">isolated_muon_weights </parameter>
   <!--Name of the PandoraPFOs collection-->
   <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the Primary Vertex collection-->
+  <parameter name="InputPrimaryVertexCollection" type="string" lcioInType="ReconstructedParticle">PrimaryVertex </parameter>
   <!--flag to select one most like isolated lepton-->
   <parameter name="IsSelectingOneIsoLep" type="bool">true </parameter>
   <!--Maximum d0 significance for electron-->
   <parameter name="MaxD0SigForElectron" type="float">50 </parameter>
   <!--Maximum D0 significance for muon-->
-  <parameter name="MaxD0SigForMuon" type="float">5 </parameter>
+  <parameter name="MaxD0SigForMuon" type="float">20 </parameter>
   <!--Maximum ratio of energy in calorimeters over momentum for electron-->
   <parameter name="MaxEOverPForElectron" type="float">1.3 </parameter>
   <!--Maximum ratio of energy in calorimeters over momentum for muon-->
   <parameter name="MaxEOverPForMuon" type="float">0.3 </parameter>
   <!--Maximum Z0 significance for electron-->
-  <parameter name="MaxZ0SigForElectron" type="float">5 </parameter>
+  <parameter name="MaxZ0SigForElectron" type="float">50 </parameter>
   <!--Maximum Z0 significance for muon-->
-  <parameter name="MaxZ0SigForMuon" type="float">5 </parameter>
+  <parameter name="MaxZ0SigForMuon" type="float">20 </parameter>
   <!--minimum ratio of energy in calorimeters over momentum for electron-->
   <parameter name="MinEOverPForElectron" type="float">0.5 </parameter>
   <!--minimum ratio of energy in ecal over energy in ecal+hcal-->

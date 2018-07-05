@@ -12,6 +12,7 @@
 #include <UTIL/LCTypedVector.h>
 #include <EVENT/Track.h>
 #include <marlin/Exceptions.h>
+#include <EVENT/Vertex.h>
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -46,6 +47,12 @@ IsolatedLeptonTaggingProcessor::IsolatedLeptonTaggingProcessor() : Processor("Is
 			   "Name of the PandoraPFOs collection"  ,
 			   _colPFOs ,
 			   std::string("PandoraPFOs") ) ;
+
+  registerInputCollection( LCIO::VERTEX,
+			   "InputPrimaryVertexCollection" , 
+			   "Name of the Primary Vertex collection"  ,
+			   _colPVtx ,
+			   std::string("PrimaryVertex") ) ;
 
   registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE, 
 			    "OutputPFOsWithoutIsoLepCollection",
@@ -206,6 +213,17 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     
   streamlog_out(DEBUG) << "Hello, Isolated Lepton Tagging!" << endl;
 
+  // -- get Primary Vertex collection --
+  // primary vertex from VertexFinder (LCFIPlus)
+  LCCollection *colPVtx = evt->getCollection(_colPVtx);
+  if (!colPVtx) {
+    std::cerr << "No PrimaryVertex Collection Found!" << std::endl;
+    throw marlin::SkipEventException(this);
+  }
+  Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
+  Double_t z_pvtx = pvtx->getPosition()[2];
+  
+
   // -- get PFO collection --
   LCCollection *colPFO = evt->getCollection(_colPFOs);
   if (!colPFO) {
@@ -232,6 +250,7 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     if (ntracks > 0) {
       d0 = tckvec[0]->getD0();
       z0 = tckvec[0]->getZ0();
+      z0 -= z_pvtx;   // substract z of primary vertex
       deltad0 = TMath::Sqrt(tckvec[0]->getCovMatrix()[0]);
       deltaz0 = TMath::Sqrt(tckvec[0]->getCovMatrix()[9]);
       nsigd0 = d0/deltad0;
@@ -295,7 +314,7 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
 	totalCalEnergy/momentumMagnitude < _maxEOverPForElectron &&
 	ecalEnergy/(totalCalEnergy + fEpsilon) > _minEecalOverTotEForElectron && 
 	(momentumMagnitude > _minPForElectron)) { // basic electron ID, should be replaced by external general PID
-      if (nsigd0 < _maxD0SigForElectron && nsigz0 < _maxZ0SigForElectron) {   // contraint to primary vertex
+      if (TMath::Abs(nsigd0) < _maxD0SigForElectron && TMath::Abs(nsigz0) < _maxZ0SigForElectron) {   // contraint to primary vertex
 	mva_electron = _readers[0]->EvaluateMVA( "MLP method"           );
       }
     }
@@ -303,7 +322,7 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
 	totalCalEnergy/momentumMagnitude < _maxEOverPForMuon && 
 	yokeEnergy > _minEyokeForMuon && 
 	(momentumMagnitude > _minPForMuon)) { // basic muon ID, should be replaced by external general PID
-      if (nsigd0 < _maxD0SigForMuon && nsigz0 < _maxZ0SigForMuon) {  // contraint to primary vertex
+      if (TMath::Abs(nsigd0) < _maxD0SigForMuon && TMath::Abs(nsigz0) < _maxZ0SigForMuon) {  // contraint to primary vertex
 	mva_muon = _readers[1]->EvaluateMVA( "MLP method"           );
       }
     }

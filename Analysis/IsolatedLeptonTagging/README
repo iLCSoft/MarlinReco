@@ -4,6 +4,19 @@ A new MVA based Isolated Lepton Tagging Processor
 ### see recent introduction
 https://agenda.linearcollider.org/event/6787/session/10/contribution/17/material/slides/0.pdf
 
+## any problem contact: tian@icepp.s.u-tokyo.ac.jp
+
+
+### change for the new ILD samples 07/06/2018
+1.) since the interaction point is smeared, the impact parameters for every track should be redefined with respect to primary vertex position. It is now fixed. The fixed processor should be backward compatible (can be used without any change for DBD samples as well). See more details in recent reports at ILD Soft & Ana Meeting
+
+https://agenda.linearcollider.org/event/7978/contributions/41777/attachments/33315/50904/IsoLep_20180627.pdf
+
+2.) weights have been re-trained using new samples yyxylv (yyxyev) as signal and yyxyyx (including yycyyc, yycyyu, yyuyyc and yyuyyu) as background. Available now are for ILD_l5_o1_v02. Same weights can be used in most studies for ILD_s5_o1_v02 as well. Re-trained weigts for ILD_s5_o1_v02 will be provided later. 
+
+3.) upon request, more weights would be available for 4-fermion processes, or more optimised pre-cuts for MVA might be provided. 
+
+
 
 #a minimum instruction to use
 1.) see steering in example/isolep.xml

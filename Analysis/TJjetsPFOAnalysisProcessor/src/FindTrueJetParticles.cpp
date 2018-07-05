@@ -28,6 +28,7 @@ void TJjetsPFOAnalysisProcessor::findTrueJetParticles(LCEvent* event) {
           unique_jet_mcs.insert( jet_mc );
         }
       }
+      delete tj_mc_relations[i_rel];
     }
     MCParticleVec jet_mcs (unique_jet_mcs.begin(), unique_jet_mcs.end());
 

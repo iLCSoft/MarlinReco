@@ -306,6 +306,8 @@ void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * event ) {
     this->PerformPfoAnalysis();
 
     m_pTTree->Fill();
+    
+    delete m_jets[i_jet];
   }
 }
 

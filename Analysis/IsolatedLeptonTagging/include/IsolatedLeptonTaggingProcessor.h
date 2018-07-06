@@ -47,7 +47,7 @@ class IsolatedLeptonTaggingProcessor : public marlin::Processor {
   /** Input collection name.
    */
   std::string _colPFOs{};
-  std::string _colPVtx ;  
+  std::string _colPVtx{};  
   std::string _colNewPFOs{};
   std::string _colLeptons{};
   std::string _isolated_electron_weights{};

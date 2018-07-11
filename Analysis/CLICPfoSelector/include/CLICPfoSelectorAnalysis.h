@@ -94,17 +94,17 @@ class CLICPfoSelectorAnalysis : public Processor {
   vector<string> particleCategories{};
   vector<string> generationCategories{};
   map<string,TGraph*> g_timeVsPt{};
-  map<string,TGraph*> g_timeVsPt_barrel{};
-  map<string,TGraph*> g_timeVsPt_endcap{};
+  map<string,TGraph*> g_timeVsPt_central{};
+  map<string,TGraph*> g_timeVsPt_forward{};
   TH1F* h_energy_tot{};
   TH1F* h_energy_tot_signal{};
   TH1F* h_energy_tot_background{};
   map<string,TH1F*> h_energy{};
-  map<string,TH1F*> h_energy_barrel{};
-  map<string,TH1F*> h_energy_endcap{};
+  map<string,TH1F*> h_energy_central{};
+  map<string,TH1F*> h_energy_forward{};
   map<string,double> energy_tot{};
-  map<string,double> energy_tot_barrel{};
-  map<string,double> energy_tot_endcap{};
+  map<string,double> energy_tot_central{};
+  map<string,double> energy_tot_forward{};
   float en_min = 0.0, en_max = 500;
 
   //MC particles collections

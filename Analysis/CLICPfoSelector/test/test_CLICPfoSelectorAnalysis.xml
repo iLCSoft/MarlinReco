@@ -12,13 +12,12 @@
     <processor name="InitDD4hep"/>
     <processor name="Config" />
 
-    <!-- ========== output  ========== -->
+    <!-- ========== Running CLICPfoSelectorAnalysis on different PFO selection ========== -->
 
-    <group name="PfoSelector" />
-    <processor name="PfoSelectorAnalysis" />
-    <processor name="LE_TightSelPfoSelectorAnalysis_new" />
-    <processor name="LE_SelPfoSelectorAnalysis_new" />
-    <processor name="LE_LooseSelPfoSelectorAnalysis_new" />
+    <processor name="MyCLICPfoSelectorAnalysis" />
+    <processor name="LE_TightSelPfoSelectorAnalysis" />
+    <processor name="LE_SelPfoSelectorAnalysis" />
+    <processor name="LE_LooseSelPfoSelectorAnalysis" />
 
     <!--processor name="Output_DST"/-->
 
@@ -30,7 +29,7 @@
     /eos/experiment/clicdp//grid/ilc/prod/clic/380gev/dduyyu_o/CLIC_o3_v14/REC/00009763/000/dduyyu_o_rec_9763_100.slcio
     </parameter>
     <!-- Limit the number of processed records (run+evt): -->
-    <parameter name="MaxRecordNumber" value="-1" />
+    <parameter name="MaxRecordNumber" value="10" />
     <parameter name="SkipNEvents" value="0" />
     <parameter name="SupressCheck" value="false" />  
     <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
@@ -424,31 +423,59 @@
     <parameter name="extrapolateForward" type="bool"> true </parameter>
   </processor>
 
- <processor name="PfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
- <!--CLICPfoSelectorAnalysis produces a tree with the variables used in the CLICPfoSelector.-->
-  <!--Boolean factor to decide if perform the analysis on photons-->
-  <parameter name="AnalyzePhotons" type="bool">true </parameter>
-  <!--Cut on the PFO cosTheta to define barrel/forward region-->
-  <parameter name="CosThetaCut" type="float">0.975 </parameter>
-  <!--Min number of Ecal hits to use clusterTime info from Ecal (for neutral hadrons only)-->
-  <parameter name="MinECalHitsForNeutralHad" type="int">5 </parameter>
-  <!--Name of the PFO collection-->
-  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
-  <!--Name of input tree -->
-  <parameter name="TreeName" type="string">PfoTree </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <parameter name="Verbosity" type="string">DEBUG </parameter>
-</processor>
+  <processor name="MyCLICPfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
+  <!--CLICPfoSelectorAnalysis produces a tree and scatter plots using PFO variables defined in the CLICPfoSelector.-->
+   <!--Boolean factor to decide if perform the analysis on all PFOs-->
+   <parameter name="AnalyzeAll" type="bool">true </parameter>
+   <!--Boolean factor to decide if perform the analysis on charged PFOs-->
+   <parameter name="AnalyzeChargedPfos" type="bool">true </parameter>
+   <!--Boolean factor to decide if perform the analysis on neutral hadrons-->
+   <parameter name="AnalyzeNeutralHadrons" type="bool">true </parameter>
+   <!--Boolean factor to decide if perform the analysis on only on PFOs belonging to the overlay-->
+   <parameter name="AnalyzeOverlay" type="bool">true </parameter>
+   <!--Boolean factor to decide if perform the analysis on photons-->
+   <parameter name="AnalyzePhotons" type="bool">true </parameter>
+   <!--Boolean factor to decide if perform the analysis only on PFOs belonging to the signal-->
+   <parameter name="AnalyzeSignal" type="bool">true </parameter>
+   <!--Name of the ClusterMCTruthLink input collection-->
+   <parameter name="ClusterMCTruthLink" type="string" lcioInType="LCRelation">ClusterMCTruthLink </parameter>
+   <!--Cut on the PFO cosTheta to define central/forward region-->
+   <parameter name="CosThetaCut" type="float">0.975 </parameter>
+   <!--ForwardCosThetaForHighEnergyNeutralHadrons-->
+   <parameter name="ForwardCosThetaForHighEnergyNeutralHadrons" type="float">0.95 </parameter>
+   <!--ForwardHighEnergyNeutralHadronsEnergy-->
+   <parameter name="ForwardHighEnergyNeutralHadronsEnergy" type="float">10 </parameter>
+   <!--Name of the MCPhysicsParticle input collection-->
+   <parameter name="MCPhysicsParticleCollectionName" type="string" lcioInType="MCParticle">MCPhysicsParticles </parameter>
+   <!--Maximum energy (needed for the energy histos)-->
+   <parameter name="MaxEnergy" type="float">500 </parameter>
+   <!--Min number of Ecal hits to use clusterTime info from Ecal (for neutral and charged hadrons only)-->
+   <parameter name="MinECalHitsForHadrons" type="int">5 </parameter>
+   <!--Minimum energy (needed for the energy histos)-->
+   <parameter name="MinEnergy" type="float">0 </parameter>
+   <!--Min number of Hcal Endcap hits to use clusterTime info from Hcal Endcap (for neutral and charged hadrons only)-->
+   <parameter name="MinHcalEndcapHitsForHadrons" type="int">5 </parameter>
+   <!--Name of the PFO collection-->
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+   <!--Name of the RecoMCTruthLink input collection-->
+   <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+   <!--Name of the SiTracksMCTruthLink input collection-->
+   <parameter name="SiTracksMCTruthLink" type="string" lcioInType="LCRelation">SiTracksMCTruthLink </parameter>
+   <!--Name of output tree-->
+   <parameter name="TreeName" type="string">PfoTree </parameter>
+   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+   <parameter name="Verbosity" type="string">DEBUG </parameter>
+  </processor>
 
- <processor name="LE_TightSelPfoSelectorAnalysis_new" type="CLICPfoSelectorAnalysis">
-  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_TightSelectedPandoraPFOs_new </parameter>
-</processor>
- <processor name="LE_SelPfoSelectorAnalysis_new" type="CLICPfoSelectorAnalysis">
-  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_SelectedPandoraPFOs_new </parameter>
-</processor>
- <processor name="LE_LooseSelPfoSelectorAnalysis_new" type="CLICPfoSelectorAnalysis">
-  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_LooseSelectedPandoraPFOs_new </parameter>
-</processor>
+  <processor name="LE_TightSelPfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_TightSelectedPandoraPFOs </parameter>
+  </processor>
+  <processor name="LE_SelPfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_SelectedPandoraPFOs </parameter>
+  </processor>
+  <processor name="LE_LooseSelPfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
+   <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">LE_LooseSelectedPandoraPFOs </parameter>
+  </processor>
 
   <processor name="MyClicEfficiencyCalculator" type="ClicEfficiencyCalculator">
     <!--ClicEfficiencyCalculator calculates the tracking efficiency and makes some performance plots-->
@@ -1299,7 +1326,7 @@
     <!--PtCutForTightTiming-->
     <parameter name="PtCutForTightTiming" type="float">0.75 </parameter>
     <!--Selected pfo collection name-->
-    <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">SelectedPandoraPFOs_new </parameter>
+    <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">SelectedPandoraPFOs </parameter>
     <!--UseClusterLessPfos-->
     <parameter name="UseClusterLessPfos" type="int">1 </parameter>
     <!--UseNeutronTiming-->
@@ -1308,7 +1335,7 @@
     <parameter name="Verbosity" type="string">MESSAGE </parameter>
 
     <processor name="CLICPfoSelectorDefault_HE" type="CLICPfoSelector">
-      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle"> SelectedPandoraPFOs_new </parameter>
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle"> SelectedPandoraPFOs </parameter>
     </processor>
 
     <processor name="CLICPfoSelectorLoose_HE" type="CLICPfoSelector">
@@ -1333,7 +1360,7 @@
       <!--PhotonTightTimingCut-->
       <parameter name="PhotonTightTimingCut" type="float">2. </parameter>
       <!--Selected pfo collection name-->
-      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">LooseSelectedPandoraPFOs_new </parameter>
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">LooseSelectedPandoraPFOs </parameter>
       <parameter name="Monitoring" type="int">1</parameter>
     </processor>
 
@@ -1362,7 +1389,7 @@
       <!--PtCutForTightTiming-->
       <parameter name="PtCutForTightTiming" type="float">1.0 </parameter>
       <!--Selected pfo collection name-->
-      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">TightSelectedPandoraPFOs_new </parameter>
+      <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">TightSelectedPandoraPFOs </parameter>
       <!--UseClusterLessPfos-->
       <parameter name="UseClusterLessPfos" type="int">0 </parameter>
       <parameter name="Monitoring" type="int">0</parameter>
@@ -1372,7 +1399,7 @@
       <!--Selects Pfos from full PFO list using timing cuts-->
       <!--Selected pfo collection name-->
       <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">
-        LE_SelectedPandoraPFOs_new
+        LE_SelectedPandoraPFOs
       </parameter>
       <!-- <parameter name="ChargedPfoPtCutForTightTiming" type="float">1.0</parameter> -->
       <!-- <parameter name="NeutralHadronPtCutForTightTiming" type="float">1.0</parameter> -->
@@ -1405,7 +1432,7 @@
       <!--Selects Pfos from full PFO list using timing cuts-->
       <!--Input PFO Collection-->
       <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">
-        LE_LooseSelectedPandoraPFOs_new
+        LE_LooseSelectedPandoraPFOs
       </parameter>
       <parameter name="NeutralHadronPtCut" type="float">0.0</parameter>
       <!-- <parameter name="NeutralHadronPtCutForTightTiming" type="float">0.75</parameter> -->
@@ -1438,7 +1465,7 @@
       <!--Selects Pfos from full PFO list using timing cuts-->
       <!--Input PFO Collection-->
       <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">
-        LE_TightSelectedPandoraPFOs_new
+        LE_TightSelectedPandoraPFOs
       </parameter>
       <parameter name = "NeutralHadronPtCut" type="float">0.0</parameter>
       <!-- <parameter name = "NeutralHadronPtCutForTightTiming" type="float">1.0</parameter> -->
@@ -1506,12 +1533,12 @@
       SiTracks_Refitted
       PandoraClusters
       PandoraPFOs
-      SelectedPandoraPFOs_new
-      LooseSelectedPandoraPFOs_new
-      TightSelectedPandoraPFOs_new
-      LE_SelectedPandoraPFOs_new
-      LE_LooseSelectedPandoraPFOs_new
-      LE_TightSelectedPandoraPFOs_new
+      SelectedPandoraPFOs
+      LooseSelectedPandoraPFOs
+      TightSelectedPandoraPFOs
+      LE_SelectedPandoraPFOs
+      LE_LooseSelectedPandoraPFOs
+      LE_TightSelectedPandoraPFOs
       LumiCalClusters
       LumiCalRecoParticles
       BeamCalClusters

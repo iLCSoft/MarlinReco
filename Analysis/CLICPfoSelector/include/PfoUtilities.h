@@ -29,7 +29,7 @@ using namespace std;
     std::right << std::setw(widthInt  )    <<    N3        <<                                   \
     std::right << std::setw(widthFloat)    <<    E5        <<                                   \
     std::right << std::setw(widthFloat)    <<    E6        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E7  << std::endl
+    std::right << std::setw(widthFloat)    <<    E7  	   << std::endl
 
 #define FORMATTED_OUTPUT_TRACK_CLUSTER(out, N1, E1,E2,E3,N2,N3) \
     out <<                                                                                      \
@@ -38,7 +38,7 @@ using namespace std;
     std::right << std::setw(widthFloat)    <<    E2        <<                                   \
     std::right << std::setw(widthFloat)    <<    E3        <<                                   \
     std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3
+    std::right << std::setw(widthSmallInt) <<    N3	   << std::endl
 
 #define FORMATTED_OUTPUT_TRACK(out, N1, E1,E2,E3,N2,N3) \
     out <<                                                                                      \
@@ -47,7 +47,7 @@ using namespace std;
     std::right << std::setw(widthFloat)    <<    E2        <<                                   \
     std::right << std::setw(widthFloat)    <<    E3        <<                                   \
     std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3 
+    std::right << std::setw(widthSmallInt) <<    N3 	   << std::endl
 
 #define FORMATTED_OUTPUT_CLUSTER(out, N1, E1,E2,E3,N2,N3) \
     out <<                                                                                      \
@@ -56,12 +56,12 @@ using namespace std;
     std::right << std::setw(widthFloat)    <<    E2        <<                                   \
     std::right << std::setw(widthFloat)    <<    E3        <<                                   \
     std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3 
+    std::right << std::setw(widthSmallInt) <<    N3 	   << std::endl
 
 #define FORMATTED_OUTPUT_MC(out, N1,E1) \
     out <<                                                                                      \
     std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1
+    std::right << std::setw(widthFloat)    <<    E1        << std::endl
 
 namespace PfoUtil{
 

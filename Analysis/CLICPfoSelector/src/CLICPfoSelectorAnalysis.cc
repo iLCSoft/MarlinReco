@@ -132,10 +132,9 @@ registerInputCollection(LCIO::LCRELATION,
 
 void CLICPfoSelectorAnalysis::init() { 
 
-  streamlog_out(DEBUG) << "   init called  " << endl ;
   printParameters() ;
 
-  _nRun = 0 ;
+  _nRun = -1 ;
   _nEvt = 0 ;
 
   AIDAProcessor::histogramFactory(this);
@@ -169,9 +168,9 @@ void CLICPfoSelectorAnalysis::init() {
   pfo_tree->Branch("trk_clu_sameMCPart", &trk_clu_sameMCPart, "trk_clu_sameMCPart/I");
   pfo_tree->Branch("atLeastOneSignal", &atLeastOneSignal, "atLeastOneSignal/I");
 
-  streamlog_out(DEBUG) << "   set up ttree  " << endl ;
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> set up ttree " << std::endl;
 
-  //initializing TGraphs
+  //initializing TGraphs and TH1Fs
   if(analyzePhotons){
     particleCategories.push_back("photons");
   }
@@ -191,46 +190,43 @@ void CLICPfoSelectorAnalysis::init() {
     generationCategories.push_back("overlay");
   }
 
+  h_energy_tot = new TH1F("h_en_tot_all", "h_en_tot_all", 1000, en_min, en_max);
+  h_energy_tot_signal = new TH1F("h_en_tot_signal", "h_en_tot_signal", 1000, en_min, en_max);
+  h_energy_tot_background = new TH1F("h_en_tot_overlay", "h_en_tot_overlay", 1000, en_min, en_max);
+  
   std::string graphLabel = "";
   for(auto ipc : particleCategories){
     for(auto igc : generationCategories){
       graphLabel = ipc + "_" + igc;
-      streamlog_out(DEBUG) << "Analysing followig particle category: " << graphLabel << endl;
+      streamlog_out( DEBUG ) << "Analysing followig particle category: " << graphLabel << endl;
       g_timeVsPt[graphLabel] = new TGraph();
-      g_timeVsPt_barrel[graphLabel] = new TGraph();
-      g_timeVsPt_endcap[graphLabel] = new TGraph();
-    }
-  }
-
-  h_energy_tot = new TH1F("h_en_tot_all", "h_en_tot_all", 1000, en_min, en_max);
-  h_energy_tot_signal = new TH1F("h_en_tot_signal", "h_en_tot_signal", 1000, en_min, en_max);
-  h_energy_tot_background = new TH1F("h_en_tot_overlay", "h_en_tot_overlay", 1000, en_min, en_max);
-  for(auto ipc : particleCategories){
-    for(auto igc : generationCategories){
-      graphLabel = ipc + "_" + igc;
-      streamlog_out(DEBUG) << "Analysing followig particle category: " << graphLabel << endl;
+      g_timeVsPt_central[graphLabel] = new TGraph();
+      g_timeVsPt_forward[graphLabel] = new TGraph();
       h_energy[graphLabel] = new TH1F((graphLabel+"_energy").c_str(), (graphLabel+"_energy").c_str(), 1000, en_min, en_max);
-      h_energy_barrel[graphLabel] = new TH1F((graphLabel+"_energy_central").c_str(), (graphLabel+"_energy_central").c_str(), 1000, en_min, en_max);
-      h_energy_endcap[graphLabel] = new TH1F((graphLabel+"_energy_forward").c_str(), (graphLabel+"_energy_forward").c_str(), 1000, en_min, en_max);
+      h_energy_central[graphLabel] = new TH1F((graphLabel+"_energy_central").c_str(), (graphLabel+"_energy_central").c_str(), 1000, en_min, en_max);
+      h_energy_forward[graphLabel] = new TH1F((graphLabel+"_energy_forward").c_str(), (graphLabel+"_energy_forward").c_str(), 1000, en_min, en_max);
     }
   }
 
 }
 
-void CLICPfoSelectorAnalysis::processRunHeader( LCRunHeader* run) { 
-  streamlog_out( DEBUG1 ) << "Processing run " << run->getRunNumber() << endl;
+void CLICPfoSelectorAnalysis::processRunHeader( LCRunHeader* ) { 
   _nRun++ ;
+  _nEvt = 0 ;
+
+  streamlog_out( DEBUG ) << std::endl;
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> new run : run number = " << _nRun << std::endl;
+
 } 
 
 void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) { 
 
-  streamlog_out( DEBUG1 ) << "Processing event " << evt->getEventNumber() << " in CLICPfoSelectorAnalysis processor " << endl;
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> processing run = " << _nRun << " event = "<< _nEvt << std::endl;
 
-  eventNumber=evt->getEventNumber();
-  runNumber=_nRun;
+  eventNumber = _nEvt;
+  runNumber = _nRun;
 
-  // Get the collection of MC physics particles (signal)
-  // and store them in a std::set
+  // Get the collection of MC physics particles (signal) and store them in a vector
   LCCollection* physicsParticleCollection = NULL;
   try{
     physicsParticleCollection = evt->getCollection( m_inputPhysicsParticleCollection );
@@ -244,7 +240,7 @@ void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) {
     MCParticle *signal = static_cast<MCParticle*> ( physicsParticleCollection->getElementAt(ipart) );
     physicsParticles.push_back(signal);
   }
-  streamlog_out( DEBUG1 ) << physicsParticles.size() << " MC Particles belong to the signal." << endl;
+  streamlog_out( DEBUG ) << physicsParticles.size() << " MC Particles belong to the signal." << endl;
 
   //Get MC Particles associated to the PFOs
   LCCollection* rmclcol = NULL;
@@ -290,7 +286,7 @@ void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) {
 
   fillTree(evt, colNamePFOs);
 
-  streamlog_out( DEBUG1 ) << "   processing event: " << evt->getEventNumber() 
+  streamlog_out( DEBUG ) << " finished event: " << evt->getEventNumber() 
       << "   in run:  " << _nRun << endl ;
   
   physicsParticles.clear();
@@ -298,33 +294,32 @@ void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) {
 }
 
 void CLICPfoSelectorAnalysis::end(){ 
-  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::end()  " << name() 
-    << " processed " << _nEvt << " events in " << _nRun << " runs " << endl;
 
   fillPlots();
 
-  //filling TGraphs for each category
+  //writing TGraphs for each category
   AIDAProcessor::histogramFactory(this);
   std::string graphLabel = "";
   for(auto ipc : particleCategories){
     for(auto igc : generationCategories){
       graphLabel = ipc + "_" + igc;
-      streamlog_out(DEBUG) << "Analysing followig particle category: " << graphLabel << endl;
       g_timeVsPt[graphLabel]->Write((graphLabel + "_timeVsPt").c_str());
-      g_timeVsPt_barrel[graphLabel]->Write((graphLabel + "_timeVsPt_central").c_str());
-      g_timeVsPt_endcap[graphLabel]->Write((graphLabel + "_timeVsPt_forward").c_str());
+      g_timeVsPt_central[graphLabel]->Write((graphLabel + "_timeVsPt_central").c_str());
+      g_timeVsPt_forward[graphLabel]->Write((graphLabel + "_timeVsPt_forward").c_str());
     }
   }
+
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> finished " << name() 
+    << " processed " << _nEvt << " events in " << _nRun << " runs " << endl;
 
 }
 
 void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
-  //streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillTree" << endl; 
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> filling TTree " << std::endl;
 
   LCCollection* col = evt->getCollection( collName ) ;
 
-  streamlog_out( DEBUG1 ) << "    Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << endl;
   double en_tot = 0.0;
   double en_tot_signal = 0.0;
   double en_tot_background = 0.0;
@@ -334,18 +329,20 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
     for(auto igc : generationCategories){
       graphLabel = ipc + "_" + igc;
       energy_tot[graphLabel] = 0.0;
-      energy_tot_barrel[graphLabel] = 0.0;
-      energy_tot_endcap[graphLabel] = 0.0;
+      energy_tot_central[graphLabel] = 0.0;
+      energy_tot_forward[graphLabel] = 0.0;
     }
   }
 
   // this will only be entered if the collection is available
   if( col != NULL){
     int nelem = col->getNumberOfElements();
-    streamlog_out(DEBUG) << nelem << " PFOs in this event" << endl;
+    streamlog_out( DEBUG ) << "Number of Input Pfos = " << nelem << endl;
 
     // loop on PFO particles
     for(int i=0; i< nelem ; i++){
+
+      streamlog_out( DEBUG ) << " --- " << std::endl;
 
       ReconstructedParticle* pPfo = static_cast<ReconstructedParticle*>( col->getElementAt( i ) ) ;
       type = pPfo->getType();
@@ -356,43 +353,43 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       p  = sqrt(pT*pT + pz*pz);
       costheta = fabs(pz)/p;
       energy   = pPfo->getEnergy();
-      en_tot += energy;
       mass     = pPfo->getMass();
       charge   = pPfo->getCharge();
 
-      //MC linker
+      //MC linker to check if it belongs to the signal
       LCObjectVec mcvec;
       mcvec = m_reltrue->getRelatedToObjects( pPfo );
       atLeastOneSignal = 0;
-      streamlog_out( DEBUG4 ) << "Pfos Type = " << pPfo->getType() << std::endl;
-      streamlog_out( DEBUG4 ) << "Pfos Pt = " << pT << std::endl;
-      streamlog_out( DEBUG4 ) << "Pfos Energy = " << pPfo->getEnergy() << std::endl;
 
-      streamlog_out( DEBUG4 ) << "mcvec size = " << mcvec.size() << std::endl;
-      if ( mcvec.size() > 0 ) { // if the PFO is associated to MC Particle
-        for ( auto imcp : mcvec ) { //  MC Particles loop
+      streamlog_out( DEBUG ) << " PFO with number of linked MC particles = " << mcvec.size() << endl;
+
+      // if the PFO is associated to MC Particle, check if the MC Particle belongs to physicsParticles
+      if ( mcvec.size() > 0 ) { 
+
+        for ( auto imcp : mcvec ) {
           MCParticle* mc_part  = dynamic_cast<MCParticle*>(imcp);
-          streamlog_out( DEBUG4 ) << "MC Part id = " << mc_part->id() << std::endl;
-          streamlog_out( DEBUG4 ) << "MC Part Type = " << mc_part->getPDG() << std::endl;
-          streamlog_out( DEBUG4 ) << "MC Part Pt = " << sqrt(mc_part->getMomentum()[0]*mc_part->getMomentum()[0] + mc_part->getMomentum()[1]*mc_part->getMomentum()[1]) << std::endl;
-          streamlog_out( DEBUG4 ) << "MC Part energy = " << mc_part->getEnergy() << std::endl;
+    
+          streamlog_out( DEBUG ) << " MC Type PDG    Energy" << endl;
           stringstream output;
           output << fixed;
           output << setprecision(precision);
-          if(mc_part!=NULL)
+          if(mc_part!=NULL){
             FORMATTED_OUTPUT_MC(output, mc_part->getPDG(), mc_part->getEnergy());
             streamlog_out( DEBUG ) << output.str();
+          }
     
           if(find(physicsParticles.begin(), physicsParticles.end(), mc_part) != physicsParticles.end() && atLeastOneSignal == 0) {
-             streamlog_out( DEBUG4 ) << "MC Part is the first signal" << std::endl;
+             streamlog_out( DEBUG ) << " -> belongs to the PhysicsParticle (skip the others)" << std::endl;
              atLeastOneSignal = 1;
           } else { 
-            streamlog_out( DEBUG4 ) << "MC Part is overlay" << std::endl;
+            streamlog_out( DEBUG ) << "-> does not belong to the PhysicsParticle" << std::endl;
           }
 
         }
+
       }
 
+      en_tot += energy;
       if(atLeastOneSignal){
         en_tot_signal += energy;
       } else {
@@ -410,7 +407,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       clusterTimeEcal = 999.;
       clusterTimeHcalEndcap = 999.;
 
-      //streamlog_out(DEBUG1) << " PFO with number of tracks = " << tracks.size() << endl;
+      streamlog_out( DEBUG ) << " PFO with number of tracks = " << tracks.size() << endl;
       for(unsigned int trk = 0; trk < tracks.size(); trk++){
         const Track *track = tracks[trk];
         float tof;
@@ -419,10 +416,9 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       	  trackTime = time;
       	}
       }
-      streamlog_out(DEBUG1) << " trackTime = " << trackTime << endl;
 
       //get clusters time
-      //streamlog_out(DEBUG1) << " PFO with number of clusters = " << clusters.size() << endl;
+      streamlog_out( DEBUG ) << " PFO with number of clusters = " << clusters.size() << endl;
       for(unsigned int clu = 0; clu < clusters.size(); clu++){
       	
         float meanTime(999.);
@@ -460,44 +456,45 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       //check if tracks and clusters have at least one MC particle in common
       trk_clu_sameMCPart = 0;
       for(unsigned int it = 0; it < tracks.size(); it++){
-        Track *track = tracks[it];
 
         //MC linker to tracks
+        Track *track = tracks[it];
         LCObjectVec mctrkvec;
         mctrkvec = m_trackreltrue->getRelatedToObjects( track );
-        if ( mctrkvec.size() > 0 ) {
 
+        if ( mctrkvec.size() > 0 ) {
           for(unsigned int ic = 0; ic< clusters.size(); ic++){
 
-            Cluster *cluster = clusters[ic];
             //MC linker to clusters
+            Cluster *cluster = clusters[ic];
             LCObjectVec mccluvec;
             mccluvec = m_clureltrue->getRelatedToObjects( cluster );
-            if ( mccluvec.size() > 0 ) {
 
-              for ( auto imctrk : mctrkvec ) { //  loop on MC Particles associated with track x
+            // check if MC Particle associated to the track
+            // has the same Id of at least one MC Particle associated to the cluster
+            if ( mccluvec.size() > 0 ) {
+              for ( auto imctrk : mctrkvec ) {
+
                 if(trk_clu_sameMCPart == 1)
                   break;
                 for ( auto imcclu : mccluvec ){
                   if(trk_clu_sameMCPart == 0 && imcclu->id() == imctrk->id()){
-                    streamlog_out( DEBUG ) << " \t SAME MC PARTICLE!" << std::endl;
+                    streamlog_out( DEBUG ) << " -> PFO track and cluster have same MCParticle" << std::endl;
                     trk_clu_sameMCPart = 1;
                     break;
                   }
                 }
+
               }
-
             }
-          }
 
+          }
         }
 
       }
 
       if(trk_clu_sameMCPart == 0)
-        streamlog_out( DEBUG ) << " \t NOT same MC particle!" << std::endl;
-
-      streamlog_out( DEBUG ) << " " << std::endl;
+        streamlog_out( DEBUG ) << " -> PFO track and cluster have NOT same MCParticle" << std::endl;
 
       //computing energy for signal and overlay for the particles categories
       std::string h_label;
@@ -512,36 +509,34 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       if(std::find(generationCategories.begin(), generationCategories.end(), "all") != generationCategories.end()){
         energy_tot[h_label+"_all"] += energy;
         if( costheta < cutCosTheta ){
-          energy_tot_barrel[h_label+"_all"] += energy;
+          energy_tot_central[h_label+"_all"] += energy;
         } else {
-          energy_tot_endcap[h_label+"_all"] += energy;
+          energy_tot_forward[h_label+"_all"] += energy;
         }
       }
       if(atLeastOneSignal && std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()) {
         energy_tot[h_label+"_signal"] += energy;
         if(costheta < cutCosTheta) {
-        energy_tot_barrel[h_label+"_signal"] += energy;
+        energy_tot_central[h_label+"_signal"] += energy;
         } else {
-        energy_tot_endcap[h_label+"_signal"] += energy;
+        energy_tot_forward[h_label+"_signal"] += energy;
         }
       } 
       if(!atLeastOneSignal && std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()) {
         energy_tot[h_label+"_overlay"] += energy;
         if(costheta < cutCosTheta) {
-        energy_tot_barrel[h_label+"_overlay"] += energy;
+        energy_tot_central[h_label+"_overlay"] += energy;
         } else {
-        energy_tot_endcap[h_label+"_overlay"] += energy;
+        energy_tot_forward[h_label+"_overlay"] += energy;
         }
       }
-  
+      
+      streamlog_out( DEBUG ) << " Type          PDG    E      Pt  cosTheta #trk time  #Clu  time   ecal  hcal  " << endl;
+      
       stringstream output;
       output << fixed;
       output << setprecision(precision);
 
-      if(clusterTime<-20){
-      //if((clusterTime>2 || clusterTimeEcal>2) && costheta > 0.95 && tracks.size()==0 && type!=22){
-       output << " *** Interesting PFO: ";
-      } 
       if(clusters.size()==0)
         FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
       if(tracks.size()==0)
@@ -550,26 +545,29 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
          FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
         
       streamlog_out( DEBUG ) << output.str();
+
       pfo_tree->Fill();
 
-      }
+      streamlog_out( DEBUG ) << " " << std::endl;
+
+    }
 
   }
 
   h_energy_tot->Fill(en_tot);
   h_energy_tot_signal->Fill(en_tot_signal);
   h_energy_tot_background->Fill(en_tot_background);
-  streamlog_out( DEBUG ) << " Energies: " << en_tot << "," << en_tot_signal << "," << en_tot_background << std::endl;
+  streamlog_out( DEBUG ) << " Energy: TOTAL = " << en_tot << ", SIGNAL = " << en_tot_signal << ", OVERLAY = " << en_tot_background << std::endl;
   
   for(auto ipc : particleCategories){
     for(auto igc : generationCategories){
       graphLabel = ipc + "_" + igc;
       h_energy[graphLabel]->Fill(energy_tot[graphLabel]);
-      h_energy_barrel[graphLabel]->Fill(energy_tot_barrel[graphLabel]);
-      h_energy_endcap[graphLabel]->Fill(energy_tot_endcap[graphLabel]);
-      streamlog_out( DEBUG ) << " Energies (" << graphLabel << " - all): " << energy_tot[graphLabel] << std::endl;
-      streamlog_out( DEBUG ) << " Energies (" << graphLabel << " - bar): " << energy_tot_barrel[graphLabel] << std::endl;
-      streamlog_out( DEBUG ) << " Energies (" << graphLabel << " - end): " << energy_tot_endcap[graphLabel] << std::endl;
+      h_energy_central[graphLabel]->Fill(energy_tot_central[graphLabel]);
+      h_energy_forward[graphLabel]->Fill(energy_tot_forward[graphLabel]);
+      streamlog_out( DEBUG ) << " Energy (" << graphLabel << " - all    ): " << energy_tot[graphLabel] << std::endl;
+      streamlog_out( DEBUG ) << " Energy (" << graphLabel << " - central): " << energy_tot_central[graphLabel] << std::endl;
+      streamlog_out( DEBUG ) << " Energy (" << graphLabel << " - forward): " << energy_tot_forward[graphLabel] << std::endl;
     }
   }
 
@@ -577,11 +575,8 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
 void CLICPfoSelectorAnalysis::fillPlots(){
 
-  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillPlots" << endl; 
-  int tot_charg = 0, tot_charg_over = 0, tot_charg_sig = 0;
-
   Int_t nEntries = pfo_tree->GetEntries();
-  streamlog_out(DEBUG) << "Reading TTree with nEntries: " << nEntries << endl;
+  streamlog_out( DEBUG ) << "CLICPfoSelectorAnalysis ---> filling plots with TTree (nEntries = " << nEntries << ")" << std::endl;
 
   for (int ie = 0; ie < nEntries; ie++){
     pfo_tree->GetEntry(ie);
@@ -594,15 +589,14 @@ void CLICPfoSelectorAnalysis::fillPlots(){
       if(std::find(particleCategories.begin(), particleCategories.end(), "photons") != particleCategories.end() &&
          std::find(generationCategories.begin(), generationCategories.end(), "all") != generationCategories.end()){
 
-      	//in the case of photons, the clusterTimeEcal is used
       	currentClusterTime = clusterTimeEcal;
-      	streamlog_out(DEBUG2) << "Filling scatter plot for photon with pT and current clusterTime: " << pT << "," << currentClusterTime << endl;
+      	//streamlog_out( DEBUG ) << "Filling scatter plot for photon with pT and current clusterTime: " << pT << "," << currentClusterTime << endl;
 
         g_timeVsPt["photons_all"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta) {
-          g_timeVsPt_barrel["photons_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_central["photons_all"]->SetPoint(ie,pT,currentClusterTime);
         } else {
-          g_timeVsPt_endcap["photons_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_forward["photons_all"]->SetPoint(ie,pT,currentClusterTime);
         }
 
         if(analyzeSignal && atLeastOneSignal &&
@@ -610,9 +604,9 @@ void CLICPfoSelectorAnalysis::fillPlots(){
         
           g_timeVsPt["photons_signal"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta) {
-            g_timeVsPt_barrel["photons_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["photons_signal"]->SetPoint(ie,pT,currentClusterTime);
           } else {
-            g_timeVsPt_endcap["photons_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["photons_signal"]->SetPoint(ie,pT,currentClusterTime);
           }
         }
 
@@ -620,9 +614,9 @@ void CLICPfoSelectorAnalysis::fillPlots(){
            std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()){
           g_timeVsPt["photons_overlay"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta){
-            g_timeVsPt_barrel["photons_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["photons_overlay"]->SetPoint(ie,pT,currentClusterTime);
           } else {
-            g_timeVsPt_endcap["photons_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["photons_overlay"]->SetPoint(ie,pT,currentClusterTime);
           }
         }
 
@@ -636,8 +630,6 @@ void CLICPfoSelectorAnalysis::fillPlots(){
 
       if(std::find(particleCategories.begin(), particleCategories.end(), "neutralHadrons") != particleCategories.end() &&
          std::find(generationCategories.begin(), generationCategories.end(), "all") != generationCategories.end()){
-        //streamlog_out( MESSAGE ) << "Has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
-        //streamlog_out( MESSAGE ) << "Has clusterTimeEcal = " << clusterTimeEcal << ", clusterTimeHcalEndcap = " << clusterTimeHcalEndcap << std::endl;
 
         //in the case the nEcalHits is more than expected, the time computed Ecal is used
         if(!useHcalTimingOnly && ( nEcalHits > minECalHits || nEcalHits >= nCaloHits/2.) ){
@@ -646,30 +638,30 @@ void CLICPfoSelectorAnalysis::fillPlots(){
         } else if ( (nHcalEndCapHits >= minHcalEndcapHits) || (nHcalEndCapHits >= nCaloHits/2.) ) {
         	currentClusterTime = clusterTimeHcalEndcap;
         }
-        streamlog_out(DEBUG2) << "Filling scatter plot for neutralHadrons with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
+        //streamlog_out( DEBUG ) << "Filling scatter plot for neutralHadrons with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
 
         g_timeVsPt["neutralHadrons_all"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta)
-          g_timeVsPt_barrel["neutralHadrons_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_central["neutralHadrons_all"]->SetPoint(ie,pT,currentClusterTime);
         else
-          g_timeVsPt_endcap["neutralHadrons_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_forward["neutralHadrons_all"]->SetPoint(ie,pT,currentClusterTime);
 
         if(analyzeSignal && atLeastOneSignal &&
            std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()){
           g_timeVsPt["neutralHadrons_signal"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta)
-            g_timeVsPt_barrel["neutralHadrons_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["neutralHadrons_signal"]->SetPoint(ie,pT,currentClusterTime);
           else
-            g_timeVsPt_endcap["neutralHadrons_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["neutralHadrons_signal"]->SetPoint(ie,pT,currentClusterTime);
         }
 
         if(analyzeOverlay && !atLeastOneSignal &&
            std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()){
           g_timeVsPt["neutralHadrons_overlay"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta)
-            g_timeVsPt_barrel["neutralHadrons_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["neutralHadrons_overlay"]->SetPoint(ie,pT,currentClusterTime);
           else
-            g_timeVsPt_endcap["neutralHadrons_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["neutralHadrons_overlay"]->SetPoint(ie,pT,currentClusterTime);
         }
 
           
@@ -691,30 +683,30 @@ void CLICPfoSelectorAnalysis::fillPlots(){
         } else if ( (nHcalEndCapHits >= minHcalEndcapHits) || (nHcalEndCapHits >= nCaloHits/2.) ) {
         	currentClusterTime = clusterTimeHcalEndcap;
         }
-        streamlog_out(DEBUG2) << "Filling scatter plot for chargedPfos with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
+        //streamlog_out( DEBUG ) << "Filling scatter plot for chargedPfos with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
 
-        g_timeVsPt["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime); tot_charg++;
+        g_timeVsPt["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime);
         if(costheta < cutCosTheta)
-          g_timeVsPt_barrel["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_central["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime);
         else
-          g_timeVsPt_endcap["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime);
+          g_timeVsPt_forward["chargedPfos_all"]->SetPoint(ie,pT,currentClusterTime);
 
         if(analyzeSignal && atLeastOneSignal &&
            std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()){
-          g_timeVsPt["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime); tot_charg_sig++;
+          g_timeVsPt["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta)
-            g_timeVsPt_barrel["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime);
           else
-            g_timeVsPt_endcap["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["chargedPfos_signal"]->SetPoint(ie,pT,currentClusterTime);
         }
 
         if(analyzeOverlay && !atLeastOneSignal &&
            std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()){
-          g_timeVsPt["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime); tot_charg_over++;
+          g_timeVsPt["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime);
           if(costheta < cutCosTheta)
-            g_timeVsPt_barrel["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_central["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime);
           else
-            g_timeVsPt_endcap["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime);
+            g_timeVsPt_forward["chargedPfos_overlay"]->SetPoint(ie,pT,currentClusterTime);
         }
 
       } else {
@@ -724,9 +716,5 @@ void CLICPfoSelectorAnalysis::fillPlots(){
     }
 
   }
-
-streamlog_out(DEBUG) << "Tot charged Pfos (all): " << tot_charg << endl;
-streamlog_out(DEBUG) << "Tot charged Pfos (sig): " << tot_charg_sig << endl;
-streamlog_out(DEBUG) << "Tot charged Pfos (bkg): " << tot_charg_over << endl;
 
 }

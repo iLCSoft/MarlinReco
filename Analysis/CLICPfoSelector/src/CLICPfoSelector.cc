@@ -314,7 +314,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
     float eTotalOutput(0.);
 
     for (int iPfo=0; iPfo<nelem; ++iPfo) {
-//      streamlog_out(DEBUG) << " *** PFO #" << iPfo << std::endl;
       bool passPfoSelection = true;
       ReconstructedParticle * pPfo = pfos[iPfo];
 //      const int id = pPfo->id();
@@ -331,7 +330,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
       const ClusterVec clusters = pPfo->getClusters();
       const TrackVec   tracks   = pPfo->getTracks();
       //const Vertex startVertex(pPfo->getStartVertex());
-//      streamlog_out(DEBUG) << " *** PFO with number of tracks = " << tracks.size() << std::endl;
 
       float trackTime = std::numeric_limits<float>::max();
       float clusterTime = 999.;
@@ -399,7 +397,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	  clusterTimeHcalEndcap=meanTimeHcalEndcap;
 	  nHcalEndCapHits = nHcalEnd;
 	}
-//        streamlog_out(DEBUG) << "clusterTime: " << clusterTime << std::endl;
       }
 
       // now make selection
@@ -451,14 +448,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
             }
         }
       
-      streamlog_out( MESSAGE ) << "m_farForwardCosTheta = " << m_farForwardCosTheta << " and cosTheta = " << cosTheta << std::endl;
-      if (cosTheta > m_farForwardCosTheta)
-      	streamlog_out( MESSAGE ) << "Is forward (m_farForwardCosTheta = " << m_farForwardCosTheta << ")" << std::endl;
-      if (tracks.empty() && type != 22)
-      	streamlog_out( MESSAGE ) << "Is neutral hadron" << std::endl;
-      if (cosTheta > m_farForwardCosTheta && tracks.empty() && type != 22)
-        streamlog_out( MESSAGE ) << "Timing cuts: " << timingCutLow << "," << timingCutHigh << std::endl;
-   
       // Reject low pt pfos (default is to set ptcut to zero)
       if (pT_pfo < ptCut)
         {
@@ -494,29 +483,24 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 	      {
 		if ((clusterTimeEcal >= timingCutLow) && (clusterTimeEcal <= timingCutHigh))
 		  selectPfo = true;
-        streamlog_out( MESSAGE ) << "Is selected1: " << selectPfo << ", clusterTimeEcal: " << clusterTimeEcal << " with cuts: " << timingCutLow << "," << timingCutHigh << std::endl;
 	      }
 	    else if (type == 22)
 	      {
 		if ((clusterTime >= timingCutLow) && (clusterTime <= timingCutHigh))
 		  selectPfo = true;
-        streamlog_out( MESSAGE ) << "Is selected2: " << selectPfo << std::endl;
 	      }
 	    else if ( (nHcalEndCapHits >= m_minHCalEndCapHitsForTiming) || (nHcalEndCapHits >= nCaloHits/2.) )
 	      {
 		if ((clusterTimeHcalEndcap >= timingCutLow) && (clusterTimeHcalEndcap <= (m_hCalEndCapTimingFactor * timingCutHigh)))
 		  selectPfo = true;
-        streamlog_out( MESSAGE ) << "Is selected3: " << selectPfo << ", clusterTimeHcalEndcap: " << clusterTimeHcalEndcap << ", cutHigh: " << m_hCalEndCapTimingFactor * timingCutHigh << std::endl;
 	      }
 	    else
 	      {
 		if ((clusterTime >= timingCutLow) && (clusterTime < hCalBarrelTimingCut))
 		  selectPfo = true;
-        streamlog_out( MESSAGE ) << "Is selected4: " << selectPfo << std::endl;
 		
 		if (tracks.empty() && (pT_pfo > m_neutralHadronBarrelPtCutForLooseTiming))
 		  selectPfo = true;
-        streamlog_out( MESSAGE ) << "Is selected5: " << selectPfo << std::endl;
 
 	      }
 
@@ -559,9 +543,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
           std::stringstream output;
           output << std::fixed;
           output << std::setprecision(precision);
-          if((clusterTime>2 || clusterTimeEcal>2) && cosTheta > 0.975 && tracks.size()==0 && type!=22 && pT_pfo < 3){
-           output << " *** Interesting PFO  with nEcalHits less nCaloHits/2 *** (cut on hCalBarrelTimingCut): " << hCalBarrelTimingCut << " ";
-          } 
           if(passPfoSelection) {
             output << " Selected PFO : ";
           } else {

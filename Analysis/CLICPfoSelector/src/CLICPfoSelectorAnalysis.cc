@@ -93,6 +93,16 @@ CLICPfoSelectorAnalysis::CLICPfoSelectorAnalysis() : Processor("CLICPfoSelectorA
                              analyzeOverlay,
                              bool(true));
 
+  registerProcessorParameter("MinEnergy",
+                             "Minimum energy (needed for the energy histos)",
+                             en_min,
+                             float(0));
+
+  registerProcessorParameter("MaxEnergy",
+                             "Maximum energy (needed for the energy histos)",
+                             en_max,
+                             float(500));
+
   registerInputCollection(LCIO::MCPARTICLE,
                           "MCPhysicsParticleCollectionName",
                           "Name of the MCPhysicsParticle input collection",
@@ -134,7 +144,6 @@ void CLICPfoSelectorAnalysis::init() {
   pfo_tree = new TTree(treeName.c_str(), treeName.c_str());
   pfo_tree->Branch("eventNumber", &eventNumber, "eventNumber/I");
   pfo_tree->Branch("runNumber", &runNumber, "runNumber/I");
-  pfo_tree->Branch("nPartPFO", &nPartPFO, "nPartPFO/I");
 
   pfo_tree->Branch("type", &type, "type/I");
   pfo_tree->Branch("p", &p, "p/D");
@@ -193,18 +202,16 @@ void CLICPfoSelectorAnalysis::init() {
     }
   }
 
-  double en_centre = 380;
-  double en_width = 400;
-  h_energy_tot = new TH1F("h_en_tot_all", "h_en_tot_all", 1000, 0, en_centre+en_width/2);
-  h_energy_tot_signal = new TH1F("h_en_tot_signal", "h_en_tot_signal", 1000, 0, en_centre+en_width/2);
-  h_energy_tot_background = new TH1F("h_en_tot_overlay", "h_en_tot_overlay", 1000, 0, en_centre+en_width/2);
+  h_energy_tot = new TH1F("h_en_tot_all", "h_en_tot_all", 1000, en_min, en_max);
+  h_energy_tot_signal = new TH1F("h_en_tot_signal", "h_en_tot_signal", 1000, en_min, en_max);
+  h_energy_tot_background = new TH1F("h_en_tot_overlay", "h_en_tot_overlay", 1000, en_min, en_max);
   for(auto ipc : particleCategories){
     for(auto igc : generationCategories){
       graphLabel = ipc + "_" + igc;
       streamlog_out(DEBUG) << "Analysing followig particle category: " << graphLabel << endl;
-      h_energy[graphLabel] = new TH1F((graphLabel+"_energy").c_str(), (graphLabel+"_energy").c_str(), 1000, 0, en_centre+en_width/2);
-      h_energy_barrel[graphLabel] = new TH1F((graphLabel+"_energy_central").c_str(), (graphLabel+"_energy_central").c_str(), 1000, 0, en_centre+en_width/2);
-      h_energy_endcap[graphLabel] = new TH1F((graphLabel+"_energy_forward").c_str(), (graphLabel+"_energy_forward").c_str(), 1000, 0, en_centre+en_width/2);
+      h_energy[graphLabel] = new TH1F((graphLabel+"_energy").c_str(), (graphLabel+"_energy").c_str(), 1000, en_min, en_max);
+      h_energy_barrel[graphLabel] = new TH1F((graphLabel+"_energy_central").c_str(), (graphLabel+"_energy_central").c_str(), 1000, en_min, en_max);
+      h_energy_endcap[graphLabel] = new TH1F((graphLabel+"_energy_forward").c_str(), (graphLabel+"_energy_forward").c_str(), 1000, en_min, en_max);
     }
   }
 
@@ -238,9 +245,6 @@ void CLICPfoSelectorAnalysis::processEvent( LCEvent * evt ) {
     physicsParticles.push_back(signal);
   }
   streamlog_out( DEBUG1 ) << physicsParticles.size() << " MC Particles belong to the signal." << endl;
-  //for(auto part : physicsParticles){
-  //  streamlog_out( DEBUG1 ) << part->id() << endl;
-  //}
 
   //Get MC Particles associated to the PFOs
   LCCollection* rmclcol = NULL;
@@ -297,7 +301,7 @@ void CLICPfoSelectorAnalysis::end(){
   streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::end()  " << name() 
     << " processed " << _nEvt << " events in " << _nRun << " runs " << endl;
 
-  fillScatterPlots();
+  fillPlots();
 
   //filling TGraphs for each category
   AIDAProcessor::histogramFactory(this);
@@ -571,9 +575,9 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
 
 }
 
-void CLICPfoSelectorAnalysis::fillScatterPlots(){
+void CLICPfoSelectorAnalysis::fillPlots(){
 
-  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillScatterPlots" << endl; 
+  streamlog_out(DEBUG) << "CLICPfoSelectorAnalysis::fillPlots" << endl; 
   int tot_charg = 0, tot_charg_over = 0, tot_charg_sig = 0;
 
   Int_t nEntries = pfo_tree->GetEntries();

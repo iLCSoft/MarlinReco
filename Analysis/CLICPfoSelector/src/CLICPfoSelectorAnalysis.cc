@@ -487,7 +487,7 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
       if(trk_clu_sameMCPart == 0)
         streamlog_out( DEBUG ) << " \t NOT same MC particle!" << std::endl;
 
-      std::cout << " " << std::endl;
+      streamlog_out( DEBUG ) << " " << std::endl;
 
       //computing energy for signal and overlay for the particles categories
       std::string h_label;

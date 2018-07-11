@@ -211,6 +211,7 @@ void CLICPfoSelectorAnalysis::init() {
 }
 
 void CLICPfoSelectorAnalysis::processRunHeader( LCRunHeader* run) { 
+  streamlog_out( DEBUG1 ) << "Processing run " << run->getRunNumber() << endl;
   _nRun++ ;
 } 
 

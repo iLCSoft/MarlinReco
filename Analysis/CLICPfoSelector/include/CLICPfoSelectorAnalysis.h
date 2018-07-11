@@ -21,13 +21,23 @@ using namespace std;
 
 /**  CLICPfoSelectorAnalysis processor
  * 
- *  It creates a TTree with the PFO variables used in the CLIC selection.
+ *  Run on the PFO input collection and create:
+ * - a TTree with the PFO variables used in the CLICPfoSelector
+ * - cluster time vs pT graphs for each particle category and region
+ * - PFO energy sum histos for each particle category and region
+ * Possibility to detect if the PFO belongs to signal/overlay
+ * Possibility to check if the track and the cluster belonging to
+ * the same PFO were produced by at least one common MCParticle
  * 
  *  <h4>Input - Prerequisites</h4>
  *  Needs the collection of ReconstructedParticles.
+ *  Needs the collection of MCParticles.
+ *  Needs the collection of LCRelations - to do the match track/cluster.
  *
  *  <h4>Output</h4> 
  *  A TTree.
+ *  Time vs pT graphs.
+ *  Energy histos.
  * 
  */
 
@@ -58,12 +68,12 @@ class CLICPfoSelectorAnalysis : public Processor {
   // Input collection name
   string colNamePFOs{};
   string treeName{};
-  float cutCosTheta;
-  int minECalHits;
-  int minHcalEndcapHits;
-  float forwardCosThetaForHighEnergyNeutralHadrons, forwardHighEnergyNeutralHadronsEnergy;
-  bool analyzePhotons, analyzeChargedPfos, analyzeNeutralHadrons;
-  bool analyzeAll, analyzeSignal, analyzeOverlay;
+  float cutCosTheta = 0.975;
+  int minECalHits = 5;
+  int minHcalEndcapHits = 5;
+  float forwardCosThetaForHighEnergyNeutralHadrons = 0.95, forwardHighEnergyNeutralHadronsEnergy = 10.0;
+  bool analyzePhotons = true, analyzeChargedPfos = true, analyzeNeutralHadrons = true;
+  bool analyzeAll = true, analyzeSignal = true, analyzeOverlay = true;
 
   int _nRun{};
   int _nEvt{};
@@ -82,20 +92,20 @@ class CLICPfoSelectorAnalysis : public Processor {
   int eventNumber = 0, runNumber = 0, nPartMC = 0, nPartPFO = 0.0;
 
   //List of scatter plots
-  vector<string> particleCategories;
-  vector<string> generationCategories;
-  map<string,TGraph*> g_timeVsPt;
-  map<string,TGraph*> g_timeVsPt_barrel;
-  map<string,TGraph*> g_timeVsPt_endcap;
-  TH1F* h_energy_tot;
-  TH1F* h_energy_tot_signal;
-  TH1F* h_energy_tot_background;
-  map<string,TH1F*> h_energy;
-  map<string,TH1F*> h_energy_barrel;
-  map<string,TH1F*> h_energy_endcap;
-  map<string,double> energy_tot;
-  map<string,double> energy_tot_barrel;
-  map<string,double> energy_tot_endcap;
+  vector<string> particleCategories{};
+  vector<string> generationCategories{};
+  map<string,TGraph*> g_timeVsPt{};
+  map<string,TGraph*> g_timeVsPt_barrel{};
+  map<string,TGraph*> g_timeVsPt_endcap{};
+  TH1F* h_energy_tot{};
+  TH1F* h_energy_tot_signal{};
+  TH1F* h_energy_tot_background{};
+  map<string,TH1F*> h_energy{};
+  map<string,TH1F*> h_energy_barrel{};
+  map<string,TH1F*> h_energy_endcap{};
+  map<string,double> energy_tot{};
+  map<string,double> energy_tot_barrel{};
+  map<string,double> energy_tot_endcap{};
 
   //MC particles collections
   string m_inputPhysicsParticleCollection{};
@@ -103,7 +113,7 @@ class CLICPfoSelectorAnalysis : public Processor {
   string m_SiTracksMCTruthLink{};
   string m_ClusterMCTruthLink{};
 
-  vector<MCParticle*> physicsParticles;
+  vector<MCParticle*> physicsParticles{};
 
 } ;
 

@@ -474,7 +474,6 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
 
 	// Examine any associated clusters for additional timing information
 	bool selectPfo(false);
-        streamlog_out( MESSAGE ) << "Is useHcalTimingOnly: " << useHcalTimingOnly << " and has nEcalHits = " << nEcalHits << ", nHcalEndCapHits = " << nHcalEndCapHits << ", nCaloHits/2 = " << nCaloHits/2. << ", "<< std::endl;
 	// Require any cluster to be "in time" to select pfo
 	if (!clusters.empty())
 	  {

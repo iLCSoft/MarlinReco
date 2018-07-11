@@ -1,6 +1,7 @@
 #ifndef CLICDSTCHECKER_H
 #define CLICDSTCHECKER 1
 
+#include "PfoUtilities.h"
 #include "marlin/Processor.h"
 #include <EVENT/ReconstructedParticle.h>
 #include <EVENT/MCParticle.h>
@@ -10,39 +11,6 @@
 #include <map>
 #include <set>
 #include <algorithm>
-
-#define FORMATTED_OUTPUT_TRACK_CLUSTER(out, N1, E1,E2,E3,N2,N3) \
-    out <<                                                                                      \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3
-
-#define FORMATTED_OUTPUT_TRACK(out, N1, E1,E2,E3,N2,N3) \
-    out <<                                                                                      \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3 
-
-#define FORMATTED_OUTPUT_CLUSTER(out, N1, E1,E2,E3,N2,N3) \
-    out <<                                                                                      \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E2        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E3        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N2        <<                                   \
-    std::right << std::setw(widthSmallInt) <<    N3 
-
-#define FORMATTED_OUTPUT_MC(out, N1,E1) \
-    out <<                                                                                      \
-    std::right << std::setw(widthInt)      <<    N1        <<                                   \
-    std::right << std::setw(widthFloat)    <<    E1
-
 
 using namespace lcio ;
 using namespace marlin ;

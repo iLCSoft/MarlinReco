@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include <EVENT/LCCollection.h>
-#include "PfoUtilities.h"
 
 #include "marlin/VerbosityLevels.h"
 
@@ -372,7 +371,13 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
           streamlog_out( DEBUG4 ) << "MC Part Type = " << mc_part->getPDG() << std::endl;
           streamlog_out( DEBUG4 ) << "MC Part Pt = " << sqrt(mc_part->getMomentum()[0]*mc_part->getMomentum()[0] + mc_part->getMomentum()[1]*mc_part->getMomentum()[1]) << std::endl;
           streamlog_out( DEBUG4 ) << "MC Part energy = " << mc_part->getEnergy() << std::endl;
-          
+          stringstream output;
+          output << fixed;
+          output << setprecision(precision);
+          if(mc_part!=NULL)
+            FORMATTED_OUTPUT_MC(output, mc_part->getPDG(), mc_part->getEnergy());
+            streamlog_out( DEBUG ) << output.str();
+    
           if(find(physicsParticles.begin(), physicsParticles.end(), mc_part) != physicsParticles.end() && atLeastOneSignal == 0) {
              streamlog_out( DEBUG4 ) << "MC Part is the first signal" << std::endl;
              atLeastOneSignal = 1;
@@ -533,11 +538,11 @@ void CLICPfoSelectorAnalysis::fillTree(LCEvent * evt, string collName){
        output << " *** Interesting PFO: ";
       } 
       if(clusters.size()==0)
-        FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
+        FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT,costheta,tracks.size(),trackTime,"-","-","-","-");
       if(tracks.size()==0)
-         FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+         FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT,costheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
       if(tracks.size()>0&&clusters.size()>0)
-         FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+         FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT,costheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
         
       streamlog_out( DEBUG ) << output.str();
       pfo_tree->Fill();

@@ -568,11 +568,11 @@ void CLICPfoSelector::processEvent( LCEvent * evt ) {
             output << " Rejected PFO : ";
           }
           if(clusters.size()==0)
-            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,"-","-","-","-");
+            FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,"-","-","-","-");
           if(tracks.size()==0)
-            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+            FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT_pfo,cosTheta,"","-",clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
           if(tracks.size()>0&&clusters.size()>0)
-            FORMATTED_OUTPUT_TRACK_CLUSTER(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
+            FORMATTED_OUTPUT_TRACK_CLUSTER_full(output,type,energy,pT_pfo,cosTheta,tracks.size(),trackTime,clusters.size(),clusterTime,clusterTimeEcal,clusterTimeHcalEndcap);
           streamlog_out( MESSAGE ) << output.str();
         }
       }      

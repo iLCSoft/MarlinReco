@@ -216,10 +216,6 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
   // -- get Primary Vertex collection --
   // primary vertex from VertexFinder (LCFIPlus)
   LCCollection *colPVtx = evt->getCollection(_colPVtx);
-  if (!colPVtx) {
-    std::cerr << "No PrimaryVertex Collection Found!" << std::endl;
-    throw marlin::SkipEventException(this);
-  }
   Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
   Double_t z_pvtx = pvtx->getPosition()[2];
   

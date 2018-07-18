@@ -155,6 +155,11 @@ IsolatedLeptonTaggingProcessor::IsolatedLeptonTaggingProcessor() : Processor("Is
 			     "cosine of the larger cone"  ,
 			     _cosConeLarge ,
 			     float(0.95) ) ;
+
+  registerProcessorParameter("UseYokeForMuonID",
+			     "use yoke for muon ID"  ,
+			     _use_yoke_for_muon ,
+			     bool(false) ) ;
 }
 
 void IsolatedLeptonTaggingProcessor::init() { 
@@ -187,7 +192,7 @@ void IsolatedLeptonTaggingProcessor::init() {
       reader->AddVariable( "momentum",        &_momentum );
       reader->AddVariable( "coslarcon",       &_coslarcon );
       reader->AddVariable( "energyratio",     &_energyratio );
-      reader->AddVariable( "yokeenergy",      &_yokeenergy ); // energy in yoke
+      if (_use_yoke_for_muon) reader->AddVariable( "yokeenergy",      &_yokeenergy ); // energy in yoke
       reader->AddVariable( "nsigd0",          &_nsigd0 );
       reader->AddVariable( "nsigz0",          &_nsigz0 );
       reader->AddVariable( "totalcalenergy",  &_totalcalenergy );
@@ -316,10 +321,14 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     }
     if (charge != 0 && 
 	totalCalEnergy/momentumMagnitude < _maxEOverPForMuon && 
-	yokeEnergy > _minEyokeForMuon && 
 	(momentumMagnitude > _minPForMuon)) { // basic muon ID, should be replaced by external general PID
       if (TMath::Abs(nsigd0) < _maxD0SigForMuon && TMath::Abs(nsigz0) < _maxZ0SigForMuon) {  // contraint to primary vertex
-	mva_muon = _readers[1]->EvaluateMVA( "MLP method"           );
+	if (_use_yoke_for_muon && yokeEnergy > _minEyokeForMuon) {
+	  mva_muon = _readers[1]->EvaluateMVA( "MLP method"           );
+	}
+	else {   // temporarily, provide this option for muon ID without using energy in Yoke; default option for now before problems get fixed
+	  mva_muon = _readers[1]->EvaluateMVA( "MLP method"           );
+	}
       }
     }
     // use output tagging for isolation requirement

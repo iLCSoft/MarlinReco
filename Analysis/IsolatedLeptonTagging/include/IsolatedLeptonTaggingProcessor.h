@@ -68,6 +68,8 @@ class IsolatedLeptonTaggingProcessor : public marlin::Processor {
 
   float _cosConeSmall{};
   float _cosConeLarge{};  
+
+  bool _use_yoke_for_muon{};
   
   std::vector<TMVA::Reader*> _readers{};
   Float_t _coneec{}, _coneen{}, _momentum{}, _coslarcon{}, _energyratio{};

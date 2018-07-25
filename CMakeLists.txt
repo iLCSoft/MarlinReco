@@ -215,5 +215,6 @@ DISPLAY_STD_VARIABLES()
 FILE(GLOB_RECURSE
      CHECK_CXX_SOURCE_FILES
         Analysis/IsolatedLeptonFinder/src/*.cc Analysis/IsolatedLeptonFinder/include/*.h
+        Analysis/CLICPfoSelector/src/*.cc Analysis/CLICPfoSelector/include/*.h
      )
 INCLUDE("cmake/clang-cpp-checks.cmake")

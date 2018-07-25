@@ -1,21 +1,21 @@
 #ifndef CLICPfoSelectorAnalysis_h
 #define CLICPfoSelectorAnalysis_h 1
 
-#include "PfoUtilities.h"
-#include "marlin/Processor.h"
-#include <EVENT/ReconstructedParticle.h>
-#include <EVENT/MCParticle.h>
 #include <EVENT/LCRelation.h>
+#include <EVENT/MCParticle.h>
+#include <EVENT/ReconstructedParticle.h>
 #include <UTIL/LCRelationNavigator.h>
-#include "lcio.h"
 #include <string>
+#include "PfoUtilities.h"
+#include "lcio.h"
+#include "marlin/Processor.h"
 
-#include "TTree.h"
 #include "TGraph.h"
 #include "TH1F.h"
+#include "TTree.h"
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 using namespace std;
 
@@ -42,81 +42,74 @@ using namespace std;
  */
 
 class CLICPfoSelectorAnalysis : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new CLICPfoSelectorAnalysis ; }
-  
-  CLICPfoSelectorAnalysis() ;
-  
-  //initializing the variables in the TTree  
-  virtual void init() ;
+public:
+  virtual Processor* newProcessor() { return new CLICPfoSelectorAnalysis; }
 
-  virtual void processRunHeader( LCRunHeader* run ) ;
+  CLICPfoSelectorAnalysis();
 
-  virtual void processEvent( LCEvent * evt ) ; 
+  //initializing the variables in the TTree
+  virtual void init();
 
-  virtual void end() ;
+  virtual void processRunHeader(LCRunHeader* run);
 
-  //filling the TTree  
-  void fillTree(LCEvent * evt, string collName); 
+  virtual void processEvent(LCEvent* evt);
 
-  //filling the graphs and histos  
+  virtual void end();
+
+  //filling the TTree
+  void fillTree(LCEvent* evt, string collName);
+
+  //filling the graphs and histos
   void fillPlots();
 
- protected:
-
+protected:
   // Input collection name
   string colNamePFOs{};
   string treeName{};
-  float cutCosTheta = 0.975;
-  int minECalHits = 5;
-  int minHcalEndcapHits = 5;
-  float forwardCosThetaForHighEnergyNeutralHadrons = 0.95, forwardHighEnergyNeutralHadronsEnergy = 10.0;
-  bool analyzePhotons = true, analyzeChargedPfos = true, analyzeNeutralHadrons = true;
-  bool analyzeAll = true, analyzeSignal = true, analyzeOverlay = true;
+  float  cutCosTheta                                = 0.975;
+  int    minECalHits                                = 5;
+  int    minHcalEndcapHits                          = 5;
+  float  forwardCosThetaForHighEnergyNeutralHadrons = 0.95, forwardHighEnergyNeutralHadronsEnergy = 10.0;
+  bool   analyzePhotons = true, analyzeChargedPfos = true, analyzeNeutralHadrons = true;
+  bool   analyzeAll = true, analyzeSignal = true, analyzeOverlay = true;
 
   int _nRun{};
   int _nEvt{};
 
   //Variables in the TTree
-  TTree *pfo_tree = NULL;
-  int eventNumber = 0, runNumber = 0;
-  int type = 0;
+  TTree* pfo_tree    = NULL;
+  int    eventNumber = 0, runNumber = 0;
+  int    type = 0;
   double p = 0.0, px = 0.0, py = 0.0, pz = 0.0, pT = 0.0;
   double costheta = 0.0, energy = 0.0, mass = 0.0, charge = 0.0;
-  int nTracks = 0, nClusters = 0;
+  int    nTracks = 0, nClusters = 0;
   double clusterTime = 0.0, clusterTimeEcal = 0.0, clusterTimeHcalEndcap = 0.0;
-  int nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
-  int trk_clu_sameMCPart = 0, atLeastOneSignal = 0;
+  int    nCaloHits = 0, nEcalHits = 0, nHcalEndCapHits = 0;
+  int    trk_clu_sameMCPart = 0, atLeastOneSignal = 0;
 
   //List of plots
   vector<string> particleCategories{};
   vector<string> generationCategories{};
-  map<string,TGraph*> g_timeVsPt{};
-  map<string,TGraph*> g_timeVsPt_central{};
-  map<string,TGraph*> g_timeVsPt_forward{};
+  map<string, TGraph*> g_timeVsPt{};
+  map<string, TGraph*> g_timeVsPt_central{};
+  map<string, TGraph*> g_timeVsPt_forward{};
   TH1F* h_energy_tot{};
   TH1F* h_energy_tot_signal{};
   TH1F* h_energy_tot_background{};
-  map<string,TH1F*> h_energy{};
-  map<string,TH1F*> h_energy_central{};
-  map<string,TH1F*> h_energy_forward{};
-  map<string,double> energy_tot{};
-  map<string,double> energy_tot_central{};
-  map<string,double> energy_tot_forward{};
+  map<string, TH1F*>  h_energy{};
+  map<string, TH1F*>  h_energy_central{};
+  map<string, TH1F*>  h_energy_forward{};
+  map<string, double> energy_tot{};
+  map<string, double> energy_tot_central{};
+  map<string, double> energy_tot_forward{};
   float en_min = 0.0, en_max = 500;
 
   //MC particles collections
-  string m_inputPhysicsParticleCollection{};
-  string m_recoMCTruthLink{};
-  string m_SiTracksMCTruthLink{};
-  string m_ClusterMCTruthLink{};
+  string              m_inputPhysicsParticleCollection{};
+  string              m_recoMCTruthLink{};
+  string              m_SiTracksMCTruthLink{};
+  string              m_ClusterMCTruthLink{};
   vector<MCParticle*> physicsParticles{};
-
-} ;
+};
 
 #endif
-
-
-

@@ -142,6 +142,7 @@ ADD_MARLINRECO_PKG( ./Analysis/ZFinder )
 ADD_MARLINRECO_PKG( ./Analysis/CLICPfoSelector )
 ADD_MARLINRECO_PKG( ./Analysis/EventShapes )
 ADD_MARLINRECO_PKG( ./Analysis/TJjetsPFOAnalysisProcessor )
+ADD_MARLINRECO_PKG( ./Analysis/GammaGammaHadronRemoval )
 
 ADD_MARLINRECO_PKG( ./Calibration/AbsCalibration )
 ADD_MARLINRECO_PKG( ./CaloDigi/LDCCaloDigi )

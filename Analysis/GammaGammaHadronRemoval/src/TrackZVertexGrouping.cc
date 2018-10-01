@@ -32,7 +32,47 @@ using namespace marlin ;
 
 TrackZVertexGrouping aTrackZVertexGrouping ;
 
+//=========================================================================================
 
+/// helper struct for clustering tracks
+
+struct TrackGroup {
+
+  std::list<Track*> tracks ;
+  double z0Significance ;
+
+
+  TrackGroup( Track* trk){
+    tracks.push_back( trk ) ;
+    z0Significance = trk->getZ0() / trk->getCovMatrix()[ 9 ] ; // 9 should be index of sigma_z0 !!
+  }
+
+  // merge other group into this - after this the other group is emtpy
+  void merge( TrackGroup& other ){
+    tracks.merge( other.tracks ) ;
+
+    //FIXME: re-compute the Z0 significance - can this be made more efficient ?
+    int ntrk = 0 ;
+    double z0SigMean = 0.;
+
+    for(auto trk : tracks ){
+      z0SigMean += ( trk->getZ0() / trk->getCovMatrix()[ 9 ] ) ;
+      ++ntrk;
+    }
+    z0Significance = z0SigMean / ntrk ;
+  }
+} ;
+
+std::ostream& operator<<( std::ostream& os, const TrackGroup& grp ){
+  
+  os << " group with " << grp.tracks.size() << " elements - z0Significance = " << grp.z0Significance  << std::endl ;
+  for( auto trk : grp.tracks ){
+    os  << "       - trk: " << lcshort( trk ) << std::endl ; 
+  }
+  return os ;
+}
+
+//=========================================================================================
 
 TrackZVertexGrouping::TrackZVertexGrouping() : Processor("TrackZVertexGrouping") {
 
@@ -63,7 +103,7 @@ TrackZVertexGrouping::TrackZVertexGrouping() : Processor("TrackZVertexGrouping")
     );
   
   registerProcessorParameter("Z0SignificanceCut",
-			     "Cut for merging tracks groups in Z0 significance",
+			     "Cut for merging track groups in Z0 significance",
 			     _z0SignificanceCut,
 			     float(1.7) );
   
@@ -123,18 +163,89 @@ void TrackZVertexGrouping::processEvent( LCEvent * evt ) {
   int nTrk = colTrk->getNumberOfElements()  ;
     
     
+  std::vector<Track*> tracks ;
+  tracks.reserve( nTrk ) ;
+
+  // copy all relevant tracks to a vector first
   for(int i=0; i< nTrk ; ++i){ 
     
     Track* trk = dynamic_cast<Track*>(  colTrk->getElementAt( i ) ) ;
-    
+
+    // could apply track quality criteria here ...
+    if( true ){
+
+      tracks.push_back( trk ) ;
+    }
   }
       
-													      
+  
+  // ========================================================================================
+  // list of groups - initially all tracks
+  std::list< TrackGroup > groups ;
+  for( auto trk : tracks ){
+    groups.emplace_back( TrackGroup( trk ) ) ;
+  }
+
+  // sort wrt ascending z0 significance
+  groups.sort( [](TrackGroup& a, TrackGroup& b) {return a.z0Significance < b.z0Significance ; } ) ;
+
   //=========================================================================================
     
+  bool keepGoing = true ;
   
-  
+  while( keepGoing ) {
 
+    // loop over all neighboring pairs of groups:
+    double deltaMin = 1.e9 ;
+    std::list< TrackGroup >::iterator smallestDistGroup =  groups.end() ;
+    
+    auto gEnd = groups.end() ;
+    std::advance( gEnd , - 1 ) ;  // end loop one before the last 
+    for( auto gIt = groups.begin() ; gIt != gEnd ; ++gIt ) {
+      
+      auto nextGrp = gIt ;
+      std::advance( nextGrp, 1 ) ;
+      double deltaZ0Sig = std::fabs( gIt->z0Significance - nextGrp->z0Significance ) ;
+      if( deltaZ0Sig < deltaMin ) {
+	deltaMin = deltaZ0Sig ;
+	smallestDistGroup = gIt ;
+      }
+    }
+    if( smallestDistGroup == groups.end() ){
+      keepGoing = false;
+      break ;
+    }
+
+    // now merge the two groups w/ smallest difference in z0Sigma
+    if(  deltaMin < _z0SignificanceCut ){
+    
+      auto nextGrp = smallestDistGroup ;
+      std::advance( nextGrp, 1 ) ;
+      
+      smallestDistGroup->merge( *nextGrp ) ;
+      
+      // and remove the empty group from the list
+      groups.erase( nextGrp ) ;
+
+    } else { // we are done
+ 
+      keepGoing = false;
+      break ;
+    }
+
+  }
+
+  streamlog_out( DEBUG3 ) << " ========================================================================= " << std::endl
+			  << "      found " << groups.size() << " groups " << std::endl ;
+  
+  for(auto grp : groups ) {
+
+    streamlog_out( DEBUG3 ) << grp << std::endl ;
+  }
+  
+  
+    
+ //=========================================================================================
   _nEvt ++ ;
 
 }

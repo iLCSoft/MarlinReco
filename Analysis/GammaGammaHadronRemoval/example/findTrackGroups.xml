@@ -63,7 +63,7 @@
   <!-- name of output file -->
   <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
   <!--write mode for output file:  WRITE_APPEND, WRITE_NEW or None-->
-  <parameter name="LCIOWriteMode" type="string">None </parameter>
+  <parameter name="LCIOWriteMode" type="string">WRITE_NEW  </parameter>
   <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
   <!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
@@ -78,7 +78,7 @@
   <!--Name of the ReconstructedParticle output collection-->
   <parameter name="TrackGroupPFOs" type="string" lcioOutType="ReconstructedParticle">TrackGroupPFOs </parameter>
   <!--Name of the Vertex output collection-->
-  <parameter name="TrackGroupVertices" type="string" lcioOutType="Vertex">TrackGroupPFOs </parameter>
+  <parameter name="TrackGroupVertices" type="string" lcioOutType="Vertex">TrackGroupVertices </parameter>
   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
   <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
   <!--Cut for merging track groups in Z0 significance-->

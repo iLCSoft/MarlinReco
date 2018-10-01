@@ -7,7 +7,7 @@
 
 
 #include <lcio.h>
-#include <EVENT/LCCollection.h>
+#include <IMPL/LCCollectionVec.h>
 #include <EVENT/Track.h>
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <IMPL/VertexImpl.h>
@@ -15,6 +15,7 @@
 // #include <UTIL/BitField64.h>
 // #include <UTIL/ILDConf.h>
 #include <UTIL/Operators.h>
+#include <UTIL/LCTOOLS.h>
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -99,7 +100,7 @@ TrackZVertexGrouping::TrackZVertexGrouping() : Processor("TrackZVertexGrouping")
 			    "TrackGroupVertices",
 			    "Name of the Vertex output collection"  ,
 			    _colNameTrkGroupVertices ,
-			    std::string("TrackGroupPFOs")
+			    std::string("TrackGroupVertices")
     );
   
   registerProcessorParameter("Z0SignificanceCut",
@@ -160,14 +161,14 @@ void TrackZVertexGrouping::processEvent( LCEvent * evt ) {
     
 
 
-  int nTrk = colTrk->getNumberOfElements()  ;
+  int nTrkTotal = colTrk->getNumberOfElements()  ;
     
     
   std::vector<Track*> tracks ;
-  tracks.reserve( nTrk ) ;
+  tracks.reserve( nTrkTotal ) ;
 
   // copy all relevant tracks to a vector first
-  for(int i=0; i< nTrk ; ++i){ 
+  for(int i=0; i< nTrkTotal ; ++i){ 
     
     Track* trk = dynamic_cast<Track*>(  colTrk->getElementAt( i ) ) ;
 
@@ -235,24 +236,64 @@ void TrackZVertexGrouping::processEvent( LCEvent * evt ) {
 
   }
 
-  streamlog_out( DEBUG3 ) << " ========================================================================= " << std::endl
-			  << "      found " << groups.size() << " groups " << std::endl ;
+  //=========================================================================================
+  // some debug printout:
   
+  streamlog_out( DEBUG3 ) << " ==============================================================  " << std::endl
+			  << "      found " << groups.size() << " groups " << std::endl ;
   for(auto grp : groups ) {
 
     streamlog_out( DEBUG3 ) << grp << std::endl ;
   }
-  
-  
+
+
+  // create output collections:
+
+  LCCollectionVec* pfos     = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE ) ;
+  LCCollectionVec* vertices = new LCCollectionVec( LCIO::VERTEX ) ;
+
+  evt->addCollection( pfos,     _colNameTrkGroupPFOs ) ;
+  evt->addCollection( vertices, _colNameTrkGroupVertices ) ;
+
+  for(auto grp : groups ) {
+
+    IMPL::ReconstructedParticleImpl* pfo = new IMPL::ReconstructedParticleImpl ;
+
+    //FIXME: simplistic mean of z0
+    double z0Mean = 0. ;
+    int nTrk=0;
+    for(auto trk : grp.tracks){
+      pfo->addTrack( trk ) ;
+      z0Mean += trk->getZ0() ;
+      ++nTrk ;
+    }
+    z0Mean /= nTrk ;
     
- //=========================================================================================
+    pfos->addElement( pfo ) ;
+
+    IMPL::VertexImpl* vtx = new IMPL::VertexImpl ;
+    vtx->setAssociatedParticle( pfo ) ;
+    vtx->setPosition( 0., 0., z0Mean ) ;
+    //FIXME: compute a meaningful covariance/error for the position
+    
+    vertices->addElement( vtx ) ;
+    
+  }    
+
+
+
+  LCTOOLS::printReconstructedParticles( pfos ) ;
+  LCTOOLS::printVertices( vertices ) ;
+
+
+  //=========================================================================================
   _nEvt ++ ;
 
 }
 
 
 
-void TrackZVertexGrouping::check( LCEvent *evt) {
+void TrackZVertexGrouping::check( LCEvent* /*evt*/) {
 
   streamlog_out( DEBUG ) << " --- check called ! " << std::endl ; 
 

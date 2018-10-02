@@ -63,7 +63,7 @@
   <!-- name of output file -->
   <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
   <!--write mode for output file:  WRITE_APPEND, WRITE_NEW or None-->
-  <parameter name="LCIOWriteMode" type="string">WRITE_NEW  </parameter>
+  <parameter name="LCIOWriteMode" type="string"> WRITE_NEW  </parameter>
   <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
   <!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->

@@ -280,12 +280,6 @@ void TrackZVertexGrouping::processEvent( LCEvent * evt ) {
     
   }    
 
-
-
-  LCTOOLS::printReconstructedParticles( pfos ) ;
-  LCTOOLS::printVertices( vertices ) ;
-
-
   //=========================================================================================
   _nEvt ++ ;
 

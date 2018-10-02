@@ -37,42 +37,43 @@ TrackZVertexGrouping aTrackZVertexGrouping ;
 
 /// helper struct for clustering tracks
 
-struct TrackGroup {
+namespace {
 
-  std::list<Track*> tracks ;
-  double z0Significance ;
+  struct TrackGroup {
 
+    std::list<Track*> tracks{} ;
+    double z0Significance=0. ;
 
-  TrackGroup( Track* trk){
-    tracks.push_back( trk ) ;
-    z0Significance = trk->getZ0() / trk->getCovMatrix()[ 9 ] ; // 9 should be index of sigma_z0 !!
-  }
-
-  // merge other group into this - after this the other group is emtpy
-  void merge( TrackGroup& other ){
-    tracks.merge( other.tracks ) ;
-
-    //FIXME: re-compute the Z0 significance - can this be made more efficient ?
-    int ntrk = 0 ;
-    double z0SigMean = 0.;
-
-    for(auto trk : tracks ){
-      z0SigMean += ( trk->getZ0() / trk->getCovMatrix()[ 9 ] ) ;
-      ++ntrk;
+    TrackGroup( Track* trk){
+      tracks.push_back( trk ) ;
+      z0Significance = trk->getZ0() / trk->getCovMatrix()[ 9 ] ; // 9 should be index of sigma_z0 !!
     }
-    z0Significance = z0SigMean / ntrk ;
-  }
-} ;
 
-std::ostream& operator<<( std::ostream& os, const TrackGroup& grp ){
+    // merge other group into this - after this the other group is emtpy
+    void merge( TrackGroup& other ){
+      tracks.merge( other.tracks ) ;
+
+      //FIXME: re-compute the Z0 significance - can this be made more efficient ?
+      int ntrk = 0 ;
+      double z0SigMean = 0.;
+
+      for(auto trk : tracks ){
+	z0SigMean += ( trk->getZ0() / trk->getCovMatrix()[ 9 ] ) ;
+	++ntrk;
+      }
+      z0Significance = z0SigMean / ntrk ;
+    }
+  } ;
+
+  std::ostream& operator<<( std::ostream& os, const TrackGroup& grp ){
   
-  os << " group with " << grp.tracks.size() << " elements - z0Significance = " << grp.z0Significance  << std::endl ;
-  for( auto trk : grp.tracks ){
-    os  << "       - trk: " << lcshort( trk ) << std::endl ; 
+    os << " group with " << grp.tracks.size() << " elements - z0Significance = " << grp.z0Significance  << std::endl ;
+    for( auto trk : grp.tracks ){
+      os  << "       - trk: " << lcshort( trk ) << std::endl ; 
+    }
+    return os ;
   }
-  return os ;
 }
-
 //=========================================================================================
 
 TrackZVertexGrouping::TrackZVertexGrouping() : Processor("TrackZVertexGrouping") {

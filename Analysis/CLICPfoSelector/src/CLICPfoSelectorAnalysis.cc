@@ -532,30 +532,30 @@ void CLICPfoSelectorAnalysis::fillPlots() {
         currentClusterTime = clusterTimeEcal;
         //streamlog_out( DEBUG ) << "Filling scatter plot for photon with pT and current clusterTime: " << pT << "," << currentClusterTime << endl;
 
-        g_timeVsPt["photons_all"]->SetPoint(ie, pT, currentClusterTime);
+        g_timeVsPt["photons_all"]->SetPoint(g_timeVsPt["photons_all"]->GetN(), pT, currentClusterTime);
         if (costheta < cutCosTheta) {
-          g_timeVsPt_central["photons_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_central["photons_all"]->SetPoint(g_timeVsPt_central["photons_all"]->GetN(), pT, currentClusterTime);
         } else {
-          g_timeVsPt_forward["photons_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_forward["photons_all"]->SetPoint(g_timeVsPt_forward["photons_all"]->GetN(), pT, currentClusterTime);
         }
 
         if (analyzeSignal && atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()) {
-          g_timeVsPt["photons_signal"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["photons_signal"]->SetPoint(g_timeVsPt["photons_signal"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta) {
-            g_timeVsPt_central["photons_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["photons_signal"]->SetPoint(g_timeVsPt_central["photons_signal"]->GetN(), pT, currentClusterTime);
           } else {
-            g_timeVsPt_forward["photons_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["photons_signal"]->SetPoint(g_timeVsPt_forward["photons_signal"]->GetN(), pT, currentClusterTime);
           }
         }
 
         if (analyzeOverlay && !atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()) {
-          g_timeVsPt["photons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["photons_overlay"]->SetPoint(g_timeVsPt["photons_overlay"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta) {
-            g_timeVsPt_central["photons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["photons_overlay"]->SetPoint(g_timeVsPt_central["photons_overlay"]->GetN(), pT, currentClusterTime);
           } else {
-            g_timeVsPt_forward["photons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["photons_overlay"]->SetPoint(g_timeVsPt_forward["photons_overlay"]->GetN(), pT, currentClusterTime);
           }
         }
 
@@ -577,28 +577,28 @@ void CLICPfoSelectorAnalysis::fillPlots() {
         }
         //streamlog_out( DEBUG ) << "Filling scatter plot for neutralHadrons with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
 
-        g_timeVsPt["neutralHadrons_all"]->SetPoint(ie, pT, currentClusterTime);
+        g_timeVsPt["neutralHadrons_all"]->SetPoint(g_timeVsPt["neutralHadrons_all"]->GetN(), pT, currentClusterTime);
         if (costheta < cutCosTheta)
-          g_timeVsPt_central["neutralHadrons_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_central["neutralHadrons_all"]->SetPoint(g_timeVsPt_central["neutralHadrons_all"]->GetN(), pT, currentClusterTime);
         else
-          g_timeVsPt_forward["neutralHadrons_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_forward["neutralHadrons_all"]->SetPoint(g_timeVsPt_forward["neutralHadrons_all"]->GetN(), pT, currentClusterTime);
 
         if (analyzeSignal && atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()) {
-          g_timeVsPt["neutralHadrons_signal"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["neutralHadrons_signal"]->SetPoint(g_timeVsPt["neutralHadrons_signal"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta)
-            g_timeVsPt_central["neutralHadrons_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["neutralHadrons_signal"]->SetPoint(g_timeVsPt_central["neutralHadrons_signal"]->GetN(), pT, currentClusterTime);
           else
-            g_timeVsPt_forward["neutralHadrons_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["neutralHadrons_signal"]->SetPoint(g_timeVsPt_forward["neutralHadrons_signal"]->GetN(), pT, currentClusterTime);
         }
 
         if (analyzeOverlay && !atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()) {
-          g_timeVsPt["neutralHadrons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["neutralHadrons_overlay"]->SetPoint(g_timeVsPt["neutralHadrons_overlay"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta)
-            g_timeVsPt_central["neutralHadrons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["neutralHadrons_overlay"]->SetPoint(g_timeVsPt_central["neutralHadrons_overlay"]->GetN(), pT, currentClusterTime);
           else
-            g_timeVsPt_forward["neutralHadrons_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["neutralHadrons_overlay"]->SetPoint(g_timeVsPt_forward["neutralHadrons_overlay"]->GetN(), pT, currentClusterTime);
         }
 
       } else {
@@ -619,28 +619,28 @@ void CLICPfoSelectorAnalysis::fillPlots() {
         }
         //streamlog_out( DEBUG ) << "Filling scatter plot for chargedPfos with pT and clusterTime: " << pT << "," << currentClusterTime << endl;
 
-        g_timeVsPt["chargedPfos_all"]->SetPoint(ie, pT, currentClusterTime);
+        g_timeVsPt["chargedPfos_all"]->SetPoint(g_timeVsPt["chargedPfos_all"]->GetN(), pT, currentClusterTime);
         if (costheta < cutCosTheta)
-          g_timeVsPt_central["chargedPfos_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_central["chargedPfos_all"]->SetPoint(g_timeVsPt_central["chargedPfos_all"]->GetN(), pT, currentClusterTime);
         else
-          g_timeVsPt_forward["chargedPfos_all"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt_forward["chargedPfos_all"]->SetPoint(g_timeVsPt_forward["chargedPfos_all"]->GetN(), pT, currentClusterTime);
 
         if (analyzeSignal && atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "signal") != generationCategories.end()) {
-          g_timeVsPt["chargedPfos_signal"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["chargedPfos_signal"]->SetPoint(g_timeVsPt["chargedPfos_signal"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta)
-            g_timeVsPt_central["chargedPfos_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["chargedPfos_signal"]->SetPoint(g_timeVsPt_central["chargedPfos_signal"]->GetN(), pT, currentClusterTime);
           else
-            g_timeVsPt_forward["chargedPfos_signal"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["chargedPfos_signal"]->SetPoint(g_timeVsPt_forward["chargedPfos_signal"]->GetN(), pT, currentClusterTime);
         }
 
         if (analyzeOverlay && !atLeastOneSignal &&
             std::find(generationCategories.begin(), generationCategories.end(), "overlay") != generationCategories.end()) {
-          g_timeVsPt["chargedPfos_overlay"]->SetPoint(ie, pT, currentClusterTime);
+          g_timeVsPt["chargedPfos_overlay"]->SetPoint(g_timeVsPt["chargedPfos_overlay"]->GetN(), pT, currentClusterTime);
           if (costheta < cutCosTheta)
-            g_timeVsPt_central["chargedPfos_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_central["chargedPfos_overlay"]->SetPoint(g_timeVsPt_central["chargedPfos_overlay"]->GetN(), pT, currentClusterTime);
           else
-            g_timeVsPt_forward["chargedPfos_overlay"]->SetPoint(ie, pT, currentClusterTime);
+            g_timeVsPt_forward["chargedPfos_overlay"]->SetPoint(g_timeVsPt_forward["chargedPfos_overlay"]->GetN(), pT, currentClusterTime);
         }
 
       } else {

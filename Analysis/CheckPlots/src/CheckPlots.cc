@@ -171,66 +171,68 @@ void CheckPlots::end(){
 
 void CheckPlots::createClouds() {
 
+  int nMax = 100 ;
+
   if (_fillMCSim) {
 
     // numbers per event
-    _cMCNumberSim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSim", "number of all MC particles per event (generator status != 1)", -1 );
-    _cMCEnergySumSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumSim", "MC particle energy sum per event (generator status != 1)", -1 );
+    _cMCNumberSim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSim", "number of all MC particles per event (generator status != 1)", nMax );
+    _cMCEnergySumSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumSim", "MC particle energy sum per event (generator status != 1)", nMax );
     
-    _cMCNumberElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsSim", "number of the e+/- per event (generator status != 1)", -1 );
-    _cMCNumberMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsSim", "number of the mu+/- per event (generator status != 1)", -1 );
-    _cMCNumberTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausSim", "number of the tau+/- per event (generator status != 1)", -1 );
-    _cMCNumberNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusSim", "number of neutrinos per event (generator status != 1)", -1 );
+    _cMCNumberElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsSim", "number of the e+/- per event (generator status != 1)", nMax );
+    _cMCNumberMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsSim", "number of the mu+/- per event (generator status != 1)", nMax );
+    _cMCNumberTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausSim", "number of the tau+/- per event (generator status != 1)", nMax );
+    _cMCNumberNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusSim", "number of neutrinos per event (generator status != 1)", nMax );
     
-    _cMCNumberPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChSim", "number of Pi+/- per event (generator status != 1)", -1 );
-    _cMCNumberKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChSim", "number of K+/- per event (generator status != 1)", -1 );
-    _cMCNumberProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsSim", "number of protons per event (generator status != 1)", -1 );
-    _cMCNumberPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Sim", "number of Pi0 per event (generator status != 1)", -1 );
-    _cMCNumberK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lSim", "number of K0l per event (generator status != 1)", -1 );
-    _cMCNumberK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sSim", "number of K0s per event (generator status != 1)", -1 );
-    _cMCNumberNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsSim", "number of neutrons per event (generator status != 1)", -1 );
-    _cMCNumberGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasSim", "number of gammas per event (generator status != 1)", -1 );
-    _cMCNumberLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sSim", "number of Lambda0s per event (generator status != 1)", -1 );
-    _cMCNumberSigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status != 1)", -1 );
-    _cMCNumberXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status != 1)", -1 );
+    _cMCNumberPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChSim", "number of Pi+/- per event (generator status != 1)", nMax );
+    _cMCNumberKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChSim", "number of K+/- per event (generator status != 1)", nMax );
+    _cMCNumberProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsSim", "number of protons per event (generator status != 1)", nMax );
+    _cMCNumberPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Sim", "number of Pi0 per event (generator status != 1)", nMax );
+    _cMCNumberK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lSim", "number of K0l per event (generator status != 1)", nMax );
+    _cMCNumberK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sSim", "number of K0s per event (generator status != 1)", nMax );
+    _cMCNumberNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsSim", "number of neutrons per event (generator status != 1)", nMax );
+    _cMCNumberGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasSim", "number of gammas per event (generator status != 1)", nMax );
+    _cMCNumberLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sSim", "number of Lambda0s per event (generator status != 1)", nMax );
+    _cMCNumberSigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status != 1)", nMax );
+    _cMCNumberXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status != 1)", nMax );
     
-    _cMCNumberRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingSim", "number of the remaining particles per event (generator status != 1)", -1 );
+    _cMCNumberRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingSim", "number of the remaining particles per event (generator status != 1)", nMax );
     
   }
   
 
   if (_fillMCGen) {
 
-    _cMCNumberGen             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGen", "number of all MC particles per event (generator status == 1)", -1 );
-    _cMCEnergySumGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumGen", "MC particle energy sum per event (generator status == 1)", -1 );
+    _cMCNumberGen             = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGen", "number of all MC particles per event (generator status == 1)", nMax );
+    _cMCEnergySumGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySumGen", "MC particle energy sum per event (generator status == 1)", nMax );
 
-    _cMCNumberHChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberHChGen", "number of charged particles/hadrons (generator status == 1)", -1 );
-    _cMCNumberH0Gen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberH0Gen", "number of neutral particles/hadrons (generator status == 1)", -1 );
-    _cMCNumberGGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGGen", "number of gammas and pi0s (generator status == 1)", -1 );
-    _cMCFractionHChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionHChGen", "fraction of charged particles/hadrons (generator status == 1)", -1 );
-    _cMCFractionH0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionH0Gen", "fraction of neutral particles/hadrons (generator status == 1)", -1 );
-    _cMCFractionGGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionGGen", "fraction of gammas and pi0s (generator status == 1)", -1 );
+    _cMCNumberHChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberHChGen", "number of charged particles/hadrons (generator status == 1)", nMax );
+    _cMCNumberH0Gen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberH0Gen", "number of neutral particles/hadrons (generator status == 1)", nMax );
+    _cMCNumberGGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGGen", "number of gammas and pi0s (generator status == 1)", nMax );
+    _cMCFractionHChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionHChGen", "fraction of charged particles/hadrons (generator status == 1)", nMax );
+    _cMCFractionH0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionH0Gen", "fraction of neutral particles/hadrons (generator status == 1)", nMax );
+    _cMCFractionGGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCFractionGGen", "fraction of gammas and pi0s (generator status == 1)", nMax );
 
-    _cMCNumberElectronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsGen", "number of the e+/- per event (generator status == 1)", -1 );
-    _cMCNumberMuonsGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsGen", "number of the mu+/- per event (generator status == 1)", -1 );
-    _cMCNumberTausGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausGen", "number of the tau+/- per event (generator status == 1)", -1 );
-    _cMCNumberNusGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusGen", "number of neutrinos per event (generator status == 1)", -1 );
+    _cMCNumberElectronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberElectronsGen", "number of the e+/- per event (generator status == 1)", nMax );
+    _cMCNumberMuonsGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberMuonsGen", "number of the mu+/- per event (generator status == 1)", nMax );
+    _cMCNumberTausGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberTausGen", "number of the tau+/- per event (generator status == 1)", nMax );
+    _cMCNumberNusGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNusGen", "number of neutrinos per event (generator status == 1)", nMax );
     
-    _cMCNumberPiChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChGen", "number of Pi+/- per event (generator status == 1)", -1 );
-    _cMCNumberKChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChGen", "number of K+/- per event (generator status == 1)", -1 );
-    _cMCNumberProtonsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsGen", "number of protons per event (generator status == 1)", -1 );
-    _cMCNumberPi0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Gen", "number of Pi0 per event (generator status == 1)", -1 );
-    _cMCNumberK0lGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lGen", "number of K0l per event (generator status == 1)", -1 );
-    _cMCNumberK0sGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sGen", "number of K0s per event (generator status == 1)", -1 );
-    _cMCNumberNeutronsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsGen", "number of neutrons per event (generator status == 1)", -1 );
-    _cMCNumberGammasGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasGen", "number of gammas per event (generator status == 1)", -1 );
-    _cMCNumberLambda0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sGen", "number of Lambda0s per event (generator status == 1)", -1 );
-    _cMCNumberSigma0sGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status == 1)", -1 );
-    _cMCNumberXi0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status == 1)", -1 );
+    _cMCNumberPiChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPiChGen", "number of Pi+/- per event (generator status == 1)", nMax );
+    _cMCNumberKChGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberKChGen", "number of K+/- per event (generator status == 1)", nMax );
+    _cMCNumberProtonsGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberProtonsGen", "number of protons per event (generator status == 1)", nMax );
+    _cMCNumberPi0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberPi0Gen", "number of Pi0 per event (generator status == 1)", nMax );
+    _cMCNumberK0lGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0lGen", "number of K0l per event (generator status == 1)", nMax );
+    _cMCNumberK0sGen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberK0sGen", "number of K0s per event (generator status == 1)", nMax );
+    _cMCNumberNeutronsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberNeutronsGen", "number of neutrons per event (generator status == 1)", nMax );
+    _cMCNumberGammasGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberGammasGen", "number of gammas per event (generator status == 1)", nMax );
+    _cMCNumberLambda0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLambda0sGen", "number of Lambda0s per event (generator status == 1)", nMax );
+    _cMCNumberSigma0sGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberSigma0sSim", "number of Sigma0s per event (generator status == 1)", nMax );
+    _cMCNumberXi0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberXi0sSim", "number of Xi0s per event (generator status == 1)", nMax );
 
 
-    _cMCNumberLostInBeamPipe  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLostInBeamPipe", "number of particles lost in beam pipe (generator status == 1)", -1 );
-    _cMCNumberRemainingGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingGen", "number of the remaining particles per event (generator status == 1)", -1 );
+    _cMCNumberLostInBeamPipe  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberLostInBeamPipe", "number of particles lost in beam pipe (generator status == 1)", nMax );
+    _cMCNumberRemainingGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCNumberRemainingGen", "number of the remaining particles per event (generator status == 1)", nMax );
       
   }  
     
@@ -238,25 +240,25 @@ void CheckPlots::createClouds() {
   if (_fillMCSim) {
 	
     // numbers per single particle
-    _cMCEnergySim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySim", "energy spectrum of all MC particles in one event (generator status != 1)", -1 );
-    _cMCEnergyElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsSim", "energy spectrum of the e+/- in one event (generator status != 1)", -1 );
-    _cMCEnergyMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsSim", "energy spectrum of the mu+/- in one event (generator status != 1)", -1 );
-    _cMCEnergyTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausSim", "energy spectrum of the tau+/- in one event (generator status != 1)", -1 );
-    _cMCEnergyNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusSim", "energy spectrum of the neutrinos in one event (generator status != 1)", -1 );
+    _cMCEnergySim           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySim", "energy spectrum of all MC particles in one event (generator status != 1)", nMax );
+    _cMCEnergyElectronsSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsSim", "energy spectrum of the e+/- in one event (generator status != 1)", nMax );
+    _cMCEnergyMuonsSim      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsSim", "energy spectrum of the mu+/- in one event (generator status != 1)", nMax );
+    _cMCEnergyTausSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausSim", "energy spectrum of the tau+/- in one event (generator status != 1)", nMax );
+    _cMCEnergyNusSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusSim", "energy spectrum of the neutrinos in one event (generator status != 1)", nMax );
     
-    _cMCEnergyPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChSim", "energy spectrum of Pi+/- in one event (generator status != 1)", -1 );
-    _cMCEnergyKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChSim", "energy spectrum of K+/- in one event (generator status != 1)", -1 );
-    _cMCEnergyProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsSim", "energy spectrum of protons in one event (generator status != 1)", -1 );
-    _cMCEnergyPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Sim", "energy spectrum of Pi0 in one event (generator status != 1)", -1 );
-    _cMCEnergyK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lSim", "energy spectrum of K0l in one event (generator status != 1)", -1 );
-    _cMCEnergyK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sSim", "energy spectrum of K0s in one event (generator status != 1)", -1 );
-    _cMCEnergyNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsSim", "energy spectrum of neutrons in one event (generator status != 1)", -1 );
-    _cMCEnergyGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasSim", "energy spectrum of gammas in one event (generator status != 1)", -1 );
-    _cMCEnergyLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sSim", "energy spectrum of Lambda0s in one event (generator status != 1)", -1 );
-    _cMCEnergySigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sSim", "energy spectrum of Sigma0s in one event (generator status != 1)", -1 );
-    _cMCEnergyXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyXi0sSim", "energy spectrum of Xi0s in one event (generator status != 1)", -1 );
+    _cMCEnergyPiChSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChSim", "energy spectrum of Pi+/- in one event (generator status != 1)", nMax );
+    _cMCEnergyKChSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChSim", "energy spectrum of K+/- in one event (generator status != 1)", nMax );
+    _cMCEnergyProtonsSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsSim", "energy spectrum of protons in one event (generator status != 1)", nMax );
+    _cMCEnergyPi0Sim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Sim", "energy spectrum of Pi0 in one event (generator status != 1)", nMax );
+    _cMCEnergyK0lSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lSim", "energy spectrum of K0l in one event (generator status != 1)", nMax );
+    _cMCEnergyK0sSim        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sSim", "energy spectrum of K0s in one event (generator status != 1)", nMax );
+    _cMCEnergyNeutronsSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsSim", "energy spectrum of neutrons in one event (generator status != 1)", nMax );
+    _cMCEnergyGammasSim     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasSim", "energy spectrum of gammas in one event (generator status != 1)", nMax );
+    _cMCEnergyLambda0sSim   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sSim", "energy spectrum of Lambda0s in one event (generator status != 1)", nMax );
+    _cMCEnergySigma0sSim    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sSim", "energy spectrum of Sigma0s in one event (generator status != 1)", nMax );
+    _cMCEnergyXi0sSim       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyXi0sSim", "energy spectrum of Xi0s in one event (generator status != 1)", nMax );
   
-    _cMCEnergyRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingSim", "energy spectrum of the remaining particles in one event (generator status != 1)", -1 );
+    _cMCEnergyRemainingSim  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingSim", "energy spectrum of the remaining particles in one event (generator status != 1)", nMax );
     
   }
 
@@ -264,37 +266,37 @@ void CheckPlots::createClouds() {
 
   if (_fillMCGen) {    
    
-    _cMCEnergyGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGen", "energy spectrum of all MC particles in one event (generator status == 1)", -1 );
+    _cMCEnergyGen            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGen", "energy spectrum of all MC particles in one event (generator status == 1)", nMax );
 
-    _cMCEnergyHChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyHChGen", "energy of charged particles/hadrons (generator status == 1)", -1 );
-    _cMCEnergyH0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyH0Gen", "energy of neutral particles/hadrons (generator status == 1)", -1 );  
-    _cMCEnergyGGen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGGen", "energy of gammas and pi0s (generator status == 1)", -1 );  
-    _cMCEnergyFractionHChGen = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionHChGen", "energy fraction of charged particles/hadrons (generator status == 1)", -1 );
-    _cMCEnergyFractionH0Gen  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionH0Gen", "energy fraction of neutral particles/hadrons (generator status == 1)", -1 );
-    _cMCEnergyFractionGGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionGGen", "energy fraction of gammas and pi0s (generator status == 1)", -1 );  
+    _cMCEnergyHChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyHChGen", "energy of charged particles/hadrons (generator status == 1)", nMax );
+    _cMCEnergyH0Gen          = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyH0Gen", "energy of neutral particles/hadrons (generator status == 1)", nMax );  
+    _cMCEnergyGGen           = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGGen", "energy of gammas and pi0s (generator status == 1)", nMax );  
+    _cMCEnergyFractionHChGen = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionHChGen", "energy fraction of charged particles/hadrons (generator status == 1)", nMax );
+    _cMCEnergyFractionH0Gen  = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionH0Gen", "energy fraction of neutral particles/hadrons (generator status == 1)", nMax );
+    _cMCEnergyFractionGGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyFractionGGen", "energy fraction of gammas and pi0s (generator status == 1)", nMax );  
 
 
 
-    _cMCEnergyElectronsGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsGen", "energy spectrum of the e+/- in one event (generator status == 1)", -1 );
-    _cMCEnergyMuonsGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsGen", "energy spectrum of the mu+/- in one event (generator status == 1)", -1 );
-    _cMCEnergyTausGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausGen", "energy spectrum of the tau+/- in one event (generator status == 1)", -1 );
-    _cMCEnergyNusGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusGen", "energy spectrum of the neutrinos in one event (generator status == 1)", -1 );
+    _cMCEnergyElectronsGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyElectronsGen", "energy spectrum of the e+/- in one event (generator status == 1)", nMax );
+    _cMCEnergyMuonsGen       = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyMuonsGen", "energy spectrum of the mu+/- in one event (generator status == 1)", nMax );
+    _cMCEnergyTausGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyTausGen", "energy spectrum of the tau+/- in one event (generator status == 1)", nMax );
+    _cMCEnergyNusGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNusGen", "energy spectrum of the neutrinos in one event (generator status == 1)", nMax );
        
-    _cMCEnergyPiChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChGen", "energy spectrum of Pi+/- in one event (generator status == 1)", -1 );
-    _cMCEnergyKChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChGen", "energy spectrum of K+/- in one event (generator status == 1)", -1 );
-    _cMCEnergyProtonsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsGen", "energy spectrum of protons in one event (generator status == 1)", -1 );
-    _cMCEnergyPi0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Gen", "energy spectrum of Pi0 in one event (generator status == 1)", -1 );
-    _cMCEnergyK0lGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lGen", "energy spectrum of K0l in one event (generator status == 1)", -1 );
-    _cMCEnergyK0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sGen", "energy spectrum of K0s in one event (generator status == 1)", -1 );
-    _cMCEnergyNeutronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsGen", "energy spectrum of neutrons in one event (generator status == 1)", -1 );
-    _cMCEnergyGammasGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasGen", "energy spectrum of gammas in one event (generator status == 1)", -1 );
-    _cMCEnergyLambda0sGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Lambda0s in one event (generator status == 1)", -1 );
-    _cMCEnergySigma0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sGen", "energy spectrum of Sigma0s in one event (generator status == 1)", -1 );
-    _cMCEnergyXi0sGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Xi0s in one event (generator status == 1)", -1 );
+    _cMCEnergyPiChGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPiChGen", "energy spectrum of Pi+/- in one event (generator status == 1)", nMax );
+    _cMCEnergyKChGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyKChGen", "energy spectrum of K+/- in one event (generator status == 1)", nMax );
+    _cMCEnergyProtonsGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyProtonsGen", "energy spectrum of protons in one event (generator status == 1)", nMax );
+    _cMCEnergyPi0Gen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyPi0Gen", "energy spectrum of Pi0 in one event (generator status == 1)", nMax );
+    _cMCEnergyK0lGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0lGen", "energy spectrum of K0l in one event (generator status == 1)", nMax );
+    _cMCEnergyK0sGen         = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyK0sGen", "energy spectrum of K0s in one event (generator status == 1)", nMax );
+    _cMCEnergyNeutronsGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyNeutronsGen", "energy spectrum of neutrons in one event (generator status == 1)", nMax );
+    _cMCEnergyGammasGen      = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyGammasGen", "energy spectrum of gammas in one event (generator status == 1)", nMax );
+    _cMCEnergyLambda0sGen    = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Lambda0s in one event (generator status == 1)", nMax );
+    _cMCEnergySigma0sGen     = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergySigma0sGen", "energy spectrum of Sigma0s in one event (generator status == 1)", nMax );
+    _cMCEnergyXi0sGen        = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLambda0sGen", "energy spectrum of Xi0s in one event (generator status == 1)", nMax );
 
     
-    _cMCEnergyLostInBeamPipe = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLostInBeamPipe", "energy of particles lost in beam pipe (generator status == 1)", -1 ); 
-    _cMCEnergyRemainingGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingGen", "energy spectrum of the remaining particles in one event (generator status == 1)", -1 );
+    _cMCEnergyLostInBeamPipe = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyLostInBeamPipe", "energy of particles lost in beam pipe (generator status == 1)", nMax ); 
+    _cMCEnergyRemainingGen   = AIDAProcessor::histogramFactory(this)->createCloud1D( "MCEnergyRemainingGen", "energy spectrum of the remaining particles in one event (generator status == 1)", nMax );
         
   }
    
@@ -304,9 +306,9 @@ void CheckPlots::createClouds() {
 
   if (_fillSimCaloHit) {  
     
-    _cNumberSimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberSimCaloHits", "number of SimCaloHits per event", -1 );
-    _cEnergySimCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHitsSum", "energy sum of the SimCaloHits per event", -1 );    
-    _cEnergySimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHits", "energy spectrum of the SimCaloHits per event", -1 );
+    _cNumberSimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberSimCaloHits", "number of SimCaloHits per event", nMax );
+    _cEnergySimCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHitsSum", "energy sum of the SimCaloHits per event", nMax );    
+    _cEnergySimCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySimCaloHits", "energy spectrum of the SimCaloHits per event", nMax );
       
   }
 
@@ -315,9 +317,9 @@ void CheckPlots::createClouds() {
 
   if (_fillCaloHit) {  
     
-    _cNumberCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberCaloHits", "number of CaloHits per event", -1 );
-    _cEnergyCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHitsSum", "energy sum of the CaloHits per event", -1 );    
-    _cEnergyCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHits", "energy spectrum of the CaloHits per event", -1 );
+    _cNumberCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberCaloHits", "number of CaloHits per event", nMax );
+    _cEnergyCaloHitsSum = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHitsSum", "energy sum of the CaloHits per event", nMax );    
+    _cEnergyCaloHits    = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyCaloHits", "energy spectrum of the CaloHits per event", nMax );
       
   }
 
@@ -326,10 +328,10 @@ void CheckPlots::createClouds() {
 
   if (_fillTracks) {  
 
-    _cNumberTracks              = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTracks", "number of tracks per event", -1 );
-    _cNumberTrackerHitsPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTrackerHitsPerTrack", "number of tracker hits per track", -1 );
-    _cMomentumTracks            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MomentumTracks", "|p| of tracks", -1 );
-    _cNumberMCParticlesPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberMCParticlesPerTrack", "number of MC particles per track", -1 );
+    _cNumberTracks              = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTracks", "number of tracks per event", nMax );
+    _cNumberTrackerHitsPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberTrackerHitsPerTrack", "number of tracker hits per track", nMax );
+    _cMomentumTracks            = AIDAProcessor::histogramFactory(this)->createCloud1D( "MomentumTracks", "|p| of tracks", nMax );
+    _cNumberMCParticlesPerTrack = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberMCParticlesPerTrack", "number of MC particles per track", nMax );
 
   }
 
@@ -337,9 +339,9 @@ void CheckPlots::createClouds() {
 
  if (_fillReconstructedParticles) {  
 
-   _cNumberReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberReconstructedParticles", "number of reconstructed particles per event", -1 );
-   _cEnergyReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyReconstructedParticles", "energy spectrum of reconstructed particles", -1 );
-   _cEnergySumReconstructedParticles  = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySumReconstructedParticles", "energy sum of all reconstructed particles in an event", -1 );
+   _cNumberReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "NumberReconstructedParticles", "number of reconstructed particles per event", nMax );
+   _cEnergyReconstructedParticles     = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergyReconstructedParticles", "energy spectrum of reconstructed particles", nMax );
+   _cEnergySumReconstructedParticles  = AIDAProcessor::histogramFactory(this)->createCloud1D( "EnergySumReconstructedParticles", "energy sum of all reconstructed particles in an event", nMax );
    
  }
 
@@ -347,13 +349,13 @@ void CheckPlots::createClouds() {
 
  if (_fillComparisonMCReco) {  
 
-   _cNumberMCvsNumberReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCvsNumberReco", "number of MC particles vs. number of reconstructed particles" , -1);
-   _cNumberMCChvsNumberRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCChvsNumberRecoCh", "number of charged MCparticles vs. number of charged reconstructed particles" , -1);
-   _cNumberMCNvsNumberRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCNvsNumberRecoN", "number of neutral MCparticles vs. number of neutral reconstructed particles" , -1);
+   _cNumberMCvsNumberReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCvsNumberReco", "number of MC particles vs. number of reconstructed particles" , nMax );
+   _cNumberMCChvsNumberRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCChvsNumberRecoCh", "number of charged MCparticles vs. number of charged reconstructed particles" , nMax );
+   _cNumberMCNvsNumberRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "NumberMCNvsNumberRecoN", "number of neutral MCparticles vs. number of neutral reconstructed particles" , nMax );
    
-   _cEnergyMCvsEnergyReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCvsEnergyReco", "energy of MC particles vs. energy of reconstructed particles" , -1);
-   _cEnergyMCChvsEnergyRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCChvsEnergyRecoCh", "energy of charged MC particles vs. energy of charged reconstructed particles" , -1);
-   _cEnergyMCNvsEnergyRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCNvsEnergyRecoN", "energy of neutral MC particles vs. energy of neutral reconstructed particles" , -1);
+   _cEnergyMCvsEnergyReco      = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCvsEnergyReco", "energy of MC particles vs. energy of reconstructed particles" , nMax );
+   _cEnergyMCChvsEnergyRecoCh  = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCChvsEnergyRecoCh", "energy of charged MC particles vs. energy of charged reconstructed particles" , nMax );
+   _cEnergyMCNvsEnergyRecoN    = AIDAProcessor::histogramFactory(this)->createCloud2D( "EnergyMCNvsEnergyRecoN", "energy of neutral MC particles vs. energy of neutral reconstructed particles" , nMax );
 
 
  }

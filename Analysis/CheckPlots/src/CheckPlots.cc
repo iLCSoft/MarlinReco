@@ -476,7 +476,8 @@ void CheckPlots::fillMCGenCheckPlots(LCEvent * evt){
 		}
 		case  12 : {
 		  ++NMCNusGen;
-
+		  energyGen -= e; // exclude nuetrino energy
+                  
                   #ifdef MARLIN_USE_AIDA
 		  _cMCEnergyNusGen->fill(e);
 	          #endif
@@ -484,6 +485,7 @@ void CheckPlots::fillMCGenCheckPlots(LCEvent * evt){
 		}
 		case  14 : {
 		  ++NMCNusGen;
+		  energyGen -= e; // exclude nuetrino energy
 
                   #ifdef MARLIN_USE_AIDA
 		  _cMCEnergyNusGen->fill(e);
@@ -492,6 +494,7 @@ void CheckPlots::fillMCGenCheckPlots(LCEvent * evt){
 		}
 		case  16 : {
 		  ++NMCNusGen;
+		  energyGen -= e; // exclude nuetrino energy
 
                   #ifdef MARLIN_USE_AIDA
 		  _cMCEnergyNusGen->fill(e);

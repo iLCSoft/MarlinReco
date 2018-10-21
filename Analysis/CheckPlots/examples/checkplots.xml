@@ -1,0 +1,2567 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
+
+<!-- Loading shared library : /data/ilcsoft/HEAD/MarlinReco/HEAD/lib/libMarlinReco.1.25.0.dylib (libMarlinReco.dylib)-->
+
+<!--##########################################
+    #                                        #
+    #     Example steering file for marlin   #
+    #                                        #
+    ##########################################-->
+
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+ <constants>
+  <!-- define constants here - use in steering file as ${ConstantName} --> 
+  <!--constant name="DetectorModel" value="ILD_l5_o1_v02" /-->
+ </constants>
+
+ <execute>
+   <processor name="MyAIDAProcessor"/>
+   <processor name="MyCheckPlots" type="CheckPlots"/>
+ </execute>
+
+ <global>
+   <parameter name="LCIOInputFiles">
+     /data/ilcsoft/data/bb_500_1_DST.slcio
+   </parameter>
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="5001" />  
+  <parameter name="SkipNEvents" value="0" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="AllowToModifyEvent" value="false" />  
+  <parameter name="GearXMLFile">gear_ILD_l5_v02.xml</parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <parameter name="RandomSeed" value="1234567890" />
+  <!-- optionally limit the collections that are read from the input file: -->  
+  <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
+ </global>
+
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">checkplots </parameter>
+  <!-- type of output file root (default) or xml )-->
+  <parameter name="FileType" type="string">root </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCheckPlots" type="CheckPlots">
+ <!--produces Check Plots-->
+  <!--name of the ReconstructedParticles collection-->
+  <parameter name="ColNameReconstructedParticles" type="string"> PandoraPFOs </parameter>
+  <!--name of the LC Relation collection between Tracks and MC particles-->
+  <parameter name="ColNameRelationTrackToMCP" type="string">MarlinTrkTracksMCTruthLink  </parameter>
+  <!--name of the Track collection-->
+  <parameter name="ColNameTracks" type="string"> MarlinTrkTracks </parameter>
+  <!--energy cut for filling clouds for Calorimeter hits-->
+  <parameter name="ECut" type="float">0.0001 </parameter>
+  <!--fill clouds for comparison of MC tree and reconstructed particles-->
+  <parameter name="Fill" type="int">1 </parameter>
+  <!--fill clouds for Calorimeter hits-->
+  <parameter name="FillCaloHit" type="int"> 0 </parameter>
+  <!--fill clouds for MC particles generated at IP-->
+  <parameter name="FillMCGen" type="int">1 </parameter>
+  <!--fill clouds for MC particles created during simulation-->
+  <parameter name="FillMCSim" type="int">0 </parameter>
+  <!--fill clouds for ReconstructedParticles-->
+  <parameter name="FillReconstructedParticles" type="int">1 </parameter>
+  <!--fill clouds for SimCalorimeter hits-->
+  <parameter name="FillSimCaloHit" type="int">0 </parameter>
+  <!--fill clouds for tracks-->
+  <parameter name="FillTracks" type="int">1 </parameter>
+  <!--energy cut for filling clouds for SimCalorimeter hits-->
+  <parameter name="SimECut" type="float">0.0001 </parameter>
+  <!--Polar angle cut, given in rad. Particles with a smaller polar angle will be treated as 'lost in the beam pipe'-->
+  <parameter name="ThetaCut" type="float">0.1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+
+
+<processor name="MyAbsCalibr" type="AbsCalibr">
+ <!-- Calorimeter Abslute Energy Calibration-->
+  <!--Calorimeter coeffs-->
+  <parameter name="Coeff" type="FloatVec">33.0235 93.5682 21.1963  </parameter>
+  <!--Calorimeter cuts-->
+  <parameter name="Cuts" type="FloatVec">8.5e-05 8.5e-05 0.0004375  </parameter>
+  <!--Number of layers in zone-->
+  <parameter name="NLayer" type="IntVec">30 10 40  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyAdd4MomCovMatrixCharged" type="Add4MomCovMatrixCharged">
+ <!--Set the convariance matrix in (P,E) for all charged pfos in PandoraPFOs Collection-->
+  <!--Name of the PandoraPFOs collection-->
+  <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyAddClusterProperties" type="AddClusterProperties">
+ <!--AddClusterProperties does whatever it does ...-->
+  <!--Name of the Clusters input collection-->
+  <parameter name="ClusterCollection" type="string" lcioInType="Cluster">PandoraClusters </parameter>
+  <!--Name of the input PFO collection-->
+  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyAnalyseSidEdxProcessor" type="AnalyseSidEdxProcessor">
+ <!--AnalyseSidEdxProcessor reads Si tracker dEdx data from the .slcio file and stores them in a root file for analysis.-->
+  <!--Name of the LCRelation collection-->
+  <parameter name="LinkCollectionName" type="string" lcioInType="LCRelation">TrackMCTruthLink </parameter>
+  <!--Name of output root file-->
+  <parameter name="RootFilename" type="string">SiTracker_dEdx.root </parameter>
+  <!--Name of the input Track collection-->
+  <parameter name="TrackCollectionName" type="string" lcioInType="Track">SiTracks </parameter>
+  <!--Tracker hit collections that will be analysed-->
+  <parameter name="TrkHitCollections" type="StringVec">ITrackerHits ITrackerEndcapHits OTrackerHits OTrackerEndcapHits VXDTrackerHits VXDEndcapTrackerHits  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyBruteForceEcalGapFiller" type="BruteForceEcalGapFiller">
+ <!--makes a collection of ECAL gap hits-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">layer </parameter>
+  <!--name of the part of the cellID that holds the module-->
+  <parameter name="CellIDModuleString" type="string">module </parameter>
+  <!--name of the part of the cellID that holds the stave-->
+  <parameter name="CellIDStaveString" type="string">stave </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--size of gap across module boundaries (from edge to edge of cells, in mm ; accuracy < cell size)-->
+  <parameter name="expectedInterModuleDistance" type="float">7 </parameter>
+  <!--input simcalhit Collection Name-->
+  <parameter name="inputHitCollection" type="string" lcioInType="CalorimeterHit"> </parameter>
+  <!--factor applied to calculated energy of inter-module gap hits-->
+  <parameter name="interModuleCorrectionFactor" type="float">0.35 </parameter>
+  <!--nonlin factor f: E_corr = interModuleCorrectionFactor*(1/f)*log(1 + f*E_calc)-->
+  <parameter name="interModuleNonlinearFactor" type="float">1 </parameter>
+  <!--factor applied to calculated energy of intra-module gap hits-->
+  <parameter name="intraModuleCorrectionFactor" type="float">1 </parameter>
+  <!--nonlin factor f: E_corr = intraModuleCorrectionFactor*(1/f)*log(1 + f*E_calc)-->
+  <parameter name="intraModuleNonlinearFactor" type="float">1 </parameter>
+  <!--output calorimeterhit Collection Name-->
+  <parameter name="outputHitCollection" type="string" lcioOutType="CalorimeterHit"> </parameter>
+</processor>
+
+ <processor name="MyCCDDigitizer" type="CCDDigitizer">
+ <!--CCDDigitizer should create VTX TrackerHits from SimTrackerHits-->
+  <!--BField in Tesla-->
+  <parameter name="BField" type="double">4 </parameter>
+  <!--Background Hits per Layer-->
+  <parameter name="BackgroundHitsPerLayer" type="FloatVec">34400 23900 9600 5500 3100  </parameter>
+  <!--BiasVoltage in V-->
+  <parameter name="BiasVolt" type="double">10 </parameter>
+  <!--Name of the SimTrackerHit collection-->
+  <parameter name="CollectionName" type="string" lcioInType="SimTrackerHit">vxd01_VXD </parameter>
+  <!--Cut on delta-ray energy (MeV)-->
+  <parameter name="CutOnDeltaRays" type="double">0.03 </parameter>
+  <!--Debug option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Electric Field in V/cm-->
+  <parameter name="ElectricField" type="double">10000 </parameter>
+  <!--Apply Electronic Effects-->
+  <parameter name="ElectronicEffects" type="int">1 </parameter>
+  <!--electronic noise in electrons-->
+  <parameter name="ElectronicNoise" type="double">100 </parameter>
+  <!--Electrons per keV-->
+  <parameter name="ElectronsPerKeV" type="double">270.3 </parameter>
+  <!--Energy Loss keV/mm-->
+  <parameter name="EnergyLoss" type="double">280 </parameter>
+  <!--Generate Background-->
+  <parameter name="GenerateBackground" type="int">0 </parameter>
+  <!--Name of the output TrackerHit collection-->
+  <parameter name="OutputCollectionName" type="string" lcioOutType="TrackerHit">VTXTrackerHits </parameter>
+  <!--Pixel Size X-->
+  <parameter name="PixelSizeX" type="double">0.02 </parameter>
+  <!--Pixel Size Y-->
+  <parameter name="PixelSizeY" type="double">0.02 </parameter>
+  <!--Apply Poisson smearing of electrons collected on pixels-->
+  <parameter name="PoissonSmearing" type="int">1 </parameter>
+  <!--Name of the output VTX trackerhit relation collection-->
+  <parameter name="RelationColName" type="string" lcioOutType="LCRelation">VTXRelation </parameter>
+  <!--maximum number of electrons, which can be stroed in a pixel-->
+  <parameter name="Saturation" type="double">10000 </parameter>
+  <!--Segment Length-->
+  <parameter name="SegmentLength" type="double">0.003 </parameter>
+  <!--Temperatur in Kelvin-->
+  <parameter name="Temperatur" type="double">250 </parameter>
+  <!--Cell Threshold in electrons-->
+  <parameter name="Threshold" type="double">200 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Thickness of depleted zone-->
+  <parameter name="depletedDepth" type="double">0.01 </parameter>
+  <!--diffcoeff in depleted zone in cm^2*S^-1-->
+  <parameter name="diffusioncoefficient" type="double">34 </parameter>
+  <!--size of cluster in reconstruction-->
+  <parameter name="framesize" type="int">2 </parameter>
+  <!--electrons mobility in depleted zoneat low elcectric fields, in  cm^2*V^-1*S^-1-->
+  <parameter name="mu" type="double">1400 </parameter>
+  <!--reconstruction method-->
+  <parameter name="reconstructmethod" type="int">1 </parameter>
+  <!--Thickness of undepleted zone-->
+  <parameter name="undepletedDepth" type="double">0.01 </parameter>
+</processor>
+
+ <processor name="MyCLICDstChecker" type="CLICDstChecker">
+ <!--Prints out information in DST in a useful format-->
+  <!--Activate debugging?-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Input PFO Collection-->
+  <parameter name="InputPfoCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFANewPFOs </parameter>
+  <!--Input MC particle collection-->
+  <parameter name="McParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed </parameter>
+  <!--Monitoring-->
+  <parameter name="Monitoring" type="int">1 </parameter>
+  <!--Input PFO to MC particle relation Collection-->
+  <parameter name="PfoToMcRelationCollection" type="string">RecoMCTruthLink </parameter>
+  <!--Show background pfo information-->
+  <parameter name="ShowBackground" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCLICPfoSelector" type="CLICPfoSelector">
+ <!--Selects Pfos from full PFO list using timing cuts-->
+  <!--ChargedPfoLooseTimingCut-->
+  <parameter name="ChargedPfoLooseTimingCut" type="float">3 </parameter>
+  <!--ChargedPfoNegativeLooseTimingCut-->
+  <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-1 </parameter>
+  <!--ChargedPfoNegativeTightTimingCut-->
+  <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-0.5 </parameter>
+  <!--ChargedPfoPtCut-->
+  <parameter name="ChargedPfoPtCut" type="float">0 </parameter>
+  <!--ChargedPfoPtCutForLooseTiming-->
+  <parameter name="ChargedPfoPtCutForLooseTiming" type="float">4 </parameter>
+  <!--ChargedPfoTightTimingCut-->
+  <parameter name="ChargedPfoTightTimingCut" type="float">1.5 </parameter>
+  <!--CheckKaonCorrection-->
+  <parameter name="CheckKaonCorrection" type="int">0 </parameter>
+  <!--CheckProtonCorrection-->
+  <parameter name="CheckProtonCorrection" type="int">0 </parameter>
+  <!--ClusterLessPfoTrackTimeCut-->
+  <parameter name="ClusterLessPfoTrackTimeCut" type="float">10 </parameter>
+  <!--CorrectHitTimesForTimeOfFlight-->
+  <parameter name="CorrectHitTimesForTimeOfFlight" type="int">0 </parameter>
+  <!--DisplayRejectedPfos-->
+  <parameter name="DisplayRejectedPfos" type="int">0 </parameter>
+  <!--DisplaySelectedPfos-->
+  <parameter name="DisplaySelectedPfos" type="int">0 </parameter>
+  <!--FarForwardCosTheta-->
+  <parameter name="FarForwardCosTheta" type="float">0.975 </parameter>
+  <!--ForwardCosThetaForHighEnergyNeutralHadrons-->
+  <parameter name="ForwardCosThetaForHighEnergyNeutralHadrons" type="float">0.95 </parameter>
+  <!--ForwardHighEnergyNeutralHadronsEnergy-->
+  <parameter name="ForwardHighEnergyNeutralHadronsEnergy" type="float">10 </parameter>
+  <!--HCalBarrelLooseTimingCut-->
+  <parameter name="HCalBarrelLooseTimingCut" type="float">20 </parameter>
+  <!--HCalBarrelTightTimingCut-->
+  <parameter name="HCalBarrelTightTimingCut" type="float">10 </parameter>
+  <!--HCalEndCapTimingFactor-->
+  <parameter name="HCalEndCapTimingFactor" type="float">1 </parameter>
+  <!--Input PFO Collection-->
+  <parameter name="InputPfoCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFANewPFOs </parameter>
+  <!--KeepKShorts-->
+  <parameter name="KeepKShorts" type="int">1 </parameter>
+  <!--MaxMomentumForClusterLessPfos-->
+  <parameter name="MaxMomentumForClusterLessPfos" type="float">2 </parameter>
+  <!--MinECalHitsForTiming-->
+  <parameter name="MinECalHitsForTiming" type="int">5 </parameter>
+  <!--MinHCalEndCapHitsForTiming-->
+  <parameter name="MinHCalEndCapHitsForTiming" type="int">5 </parameter>
+  <!--MinMomentumForClusterLessPfos-->
+  <parameter name="MinMomentumForClusterLessPfos" type="float">0.5 </parameter>
+  <!--MinPtForClusterLessPfos-->
+  <parameter name="MinPtForClusterLessPfos" type="float">0.5 </parameter>
+  <!--MinimumEnergyForNeutronTiming-->
+  <parameter name="MinimumEnergyForNeutronTiming" type="float">1 </parameter>
+  <!--Monitoring-->
+  <parameter name="Monitoring" type="int">0 </parameter>
+  <!--MonitoringPfoEnergyToDisplay-->
+  <parameter name="MonitoringPfoEnergyToDisplay" type="float">1 </parameter>
+  <!--NeutralFarForwardLooseTimingCut-->
+  <parameter name="NeutralFarForwardLooseTimingCut" type="float">2 </parameter>
+  <!--NeutralFarForwardTightTimingCut-->
+  <parameter name="NeutralFarForwardTightTimingCut" type="float">1 </parameter>
+  <!--NeutralHadronBarrelPtCutForLooseTiming-->
+  <parameter name="NeutralHadronBarrelPtCutForLooseTiming" type="float">3.5 </parameter>
+  <!--NeutralHadronLooseTimingCut-->
+  <parameter name="NeutralHadronLooseTimingCut" type="float">2.5 </parameter>
+  <!--NeutralHadronPtCut-->
+  <parameter name="NeutralHadronPtCut" type="float">0 </parameter>
+  <!--NeutralHadronPtCutForLooseTiming-->
+  <parameter name="NeutralHadronPtCutForLooseTiming" type="float">8 </parameter>
+  <!--NeutralHadronTightTimingCut-->
+  <parameter name="NeutralHadronTightTimingCut" type="float">1.5 </parameter>
+  <!--PhotonFarForwardLooseTimingCut-->
+  <parameter name="PhotonFarForwardLooseTimingCut" type="float">2 </parameter>
+  <!--PhotonFarForwardTightTimingCut-->
+  <parameter name="PhotonFarForwardTightTimingCut" type="float">1 </parameter>
+  <!--PhotonLooseTimingCut-->
+  <parameter name="PhotonLooseTimingCut" type="float">2 </parameter>
+  <!--PhotonPtCut-->
+  <parameter name="PhotonPtCut" type="float">0 </parameter>
+  <!--PhotonPtCutForLooseTiming-->
+  <parameter name="PhotonPtCutForLooseTiming" type="float">4 </parameter>
+  <!--PhotonTightTimingCut-->
+  <parameter name="PhotonTightTimingCut" type="float">1 </parameter>
+  <!--PtCutForTightTiming-->
+  <parameter name="PtCutForTightTiming" type="float">0.75 </parameter>
+  <!--Selected pfo collection name-->
+  <parameter name="SelectedPfoCollection" type="string" lcioOutType="ReconstructedParticle">SelectedPandoraPFANewPFOs </parameter>
+  <!--UseClusterLessPfos-->
+  <parameter name="UseClusterLessPfos" type="int">1 </parameter>
+  <!--UseNeutronTiming-->
+  <parameter name="UseNeutronTiming" type="int">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCLICPfoSelectorAnalysis" type="CLICPfoSelectorAnalysis">
+ <!--CLICPfoSelectorAnalysis produces a tree and scatter plots using PFO variables defined in the CLICPfoSelector.-->
+  <!--Boolean factor to decide if perform the analysis on all PFOs-->
+  <parameter name="AnalyzeAll" type="bool">true </parameter>
+  <!--Boolean factor to decide if perform the analysis on charged PFOs-->
+  <parameter name="AnalyzeChargedPfos" type="bool">true </parameter>
+  <!--Boolean factor to decide if perform the analysis on neutral hadrons-->
+  <parameter name="AnalyzeNeutralHadrons" type="bool">true </parameter>
+  <!--Boolean factor to decide if perform the analysis on only on PFOs belonging to the overlay-->
+  <parameter name="AnalyzeOverlay" type="bool">true </parameter>
+  <!--Boolean factor to decide if perform the analysis on photons-->
+  <parameter name="AnalyzePhotons" type="bool">true </parameter>
+  <!--Boolean factor to decide if perform the analysis only on PFOs belonging to the signal-->
+  <parameter name="AnalyzeSignal" type="bool">true </parameter>
+  <!--Name of the ClusterMCTruthLink input collection-->
+  <parameter name="ClusterMCTruthLink" type="string" lcioInType="LCRelation">ClusterMCTruthLink </parameter>
+  <!--Cut on the PFO cosTheta to define central/forward region-->
+  <parameter name="CosThetaCut" type="float">0.975 </parameter>
+  <!--ForwardCosThetaForHighEnergyNeutralHadrons-->
+  <parameter name="ForwardCosThetaForHighEnergyNeutralHadrons" type="float">0.95 </parameter>
+  <!--ForwardHighEnergyNeutralHadronsEnergy-->
+  <parameter name="ForwardHighEnergyNeutralHadronsEnergy" type="float">10 </parameter>
+  <!--Name of the MCPhysicsParticle input collection-->
+  <parameter name="MCPhysicsParticleCollectionName" type="string" lcioInType="MCParticle">MCPhysicsParticles </parameter>
+  <!--Maximum energy (needed for the energy histos)-->
+  <parameter name="MaxEnergy" type="float">500 </parameter>
+  <!--Min number of Ecal hits to use clusterTime info from Ecal (for neutral and charged hadrons only)-->
+  <parameter name="MinECalHitsForHadrons" type="int">5 </parameter>
+  <!--Minimum energy (needed for the energy histos)-->
+  <parameter name="MinEnergy" type="float">0 </parameter>
+  <!--Min number of Hcal Endcap hits to use clusterTime info from Hcal Endcap (for neutral and charged hadrons only)-->
+  <parameter name="MinHcalEndcapHitsForHadrons" type="int">5 </parameter>
+  <!--Name of the PFO collection-->
+  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the RecoMCTruthLink input collection-->
+  <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--Name of the SiTracksMCTruthLink input collection-->
+  <parameter name="SiTracksMCTruthLink" type="string" lcioInType="LCRelation">SiTracksMCTruthLink </parameter>
+  <!--Name of output tree-->
+  <parameter name="TreeName" type="string">PfoTree </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+
+ <processor name="MyClusterCheater5_3" type="ClusterCheater5_3">
+ <!--Creates true clusters...-->
+  <!--Calorimeter Collection Names-->
+  <parameter name="CaloCollections" type="StringVec" lcioInType="CalorimeterHit">ECAL HCAL  </parameter>
+  <!--Not to connect hist from  backscatter-->
+  <parameter name="CutBackscatter" type="int">1 </parameter>
+  <!--Calorimeter Collection Names-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--Minimal number of hits in cluster-->
+  <parameter name="MinHitsInCluster" type="int">0 </parameter>
+  <!--SimCaloHit to CaloHit Relations Collection Name-->
+  <parameter name="RelCollection" type="string" lcioInType="LCRelation">RelationCaloHit </parameter>
+  <!--Collection of True Clusters-->
+  <parameter name="TrueClusterCollection" type="string" lcioOutType="Cluster">TrueClusters </parameter>
+  <!--Relation Collection Cluster to MCP-->
+  <parameter name="TrueClusterToMCPCollection" type="string" lcioOutType="LCRelation">TrueClusterToMCP </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyComputeShowerShapesProcessor" type="ComputeShowerShapesProcessor">
+ <!--Cluster Shower Profile extraction using Fitting-->
+  <!--Cluster collection name-->
+  <parameter name="ClusterCollectionName" type="string">PandoraClusters </parameter>
+  <!--Moliere radius of Absorbers-->
+  <parameter name="MoliereRadius_Ecal" type="float">9 </parameter>
+  <!--Moliere radius of Absorbers-->
+  <parameter name="MoliereRadius_Hcal" type="float">17.19 </parameter>
+  <!--PFO collection name-->
+  <parameter name="PFOCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--RadiationLength of Absorbers-->
+  <parameter name="RadiationLength_Ecal" type="float">3.5 </parameter>
+  <!--RadiationLength of Absorbers-->
+  <parameter name="RadiationLength_Hcal" type="float">17.57 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCompute_dEdxProcessor" type="Compute_dEdxProcessor">
+ <!-- description not set by author -->
+  <!--parameters for angular correction-->
+  <parameter name="AngularCorrectionParameters" type="FloatVec">0.635762 -0.0573237  </parameter>
+  <!--Fractional error of dEdx in the TPC-->
+  <parameter name="EnergyLossErrorTPC" type="float">0.054 </parameter>
+  <!--LDC track collection name-->
+  <parameter name="LDCTrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+  <!--Lower truncation fraction, default: 0.08 (8%)-->
+  <parameter name="LowerTruncationFraction" type="float">0.08 </parameter>
+  <!--parameters for number of hits correction-->
+  <parameter name="NumberofHitsCorrectionParameters" type="float">1.468 </parameter>
+  <!--If set, an AIDA root file will be generated with Bethe-Bloch histograms (dE/dx over momentum) for each dx strategy (default: false).-->
+  <parameter name="StrategyCompHist" type="bool">false </parameter>
+  <!--File names of the generated dx strategy comparison histograms (if chosen). The respective strategy number and '.png' is added.-->
+  <parameter name="StrategyCompHistFiles" type="string">dEdx_Histo_Strategy </parameter>
+  <!--If set, the Bethe-Bloch histograms will have a sqrt(nHits) weighting (default: false).-->
+  <parameter name="StrategyCompHistWeight" type="bool">false </parameter>
+  <!--Upper truncation fraction, default: 0.3 (30%)-->
+  <parameter name="UpperTruncationFraction" type="float">0.3 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--If set, the calculated dEdx value will be attached to its corresponding track (default: true).-->
+  <parameter name="Write_dEdx" type="bool">true </parameter>
+  <!--scaling exponents of the dE/dx error for path length and number of hits, respectively-->
+  <parameter name="dEdxErrorScalingExponents" type="FloatVec">-0.34 -0.45  </parameter>
+  <!--ID of the track length calculation: 1 - hit-to-hit distance; 2 - hit-to-hit path length of projected hits; 3 - path over hit row-->
+  <parameter name="dxStrategy" type="int">1 </parameter>
+  <!--Flag for dEdx Smearing-->
+  <parameter name="isSmearing" type="bool">false </parameter>
+  <!--Smearing factor for dEdx smearing-->
+  <parameter name="smearingFactor" type="float">0.035 </parameter>
+</processor>
+
+ <processor name="MyConditionsProcessor" type="ConditionsProcessor">
+ <!--ConditionsProcessor provides access to conditions data  transparently from LCIO files or a databases, using LCCD-->
+  <!--Initialization of a conditions database handler-->
+  <!--parameter name="DBCondHandler" type="StringVec">conditionsName /lccd/myfolder HEAD  </parameter-->
+  <!--Initialization of a conditions db file handler-->
+  <!--parameter name="DBFileHandler" type="StringVec">conditionsName conditions.slcio collectionName  </parameter-->
+  <!--Initialization string for conditions database-->
+  <parameter name="DBInit" type="string">localhost:lccd_test:calvin:hobbes </parameter>
+  <!--Initialization of a data file handler-->
+  <!--parameter name="DataFileHandler" type="StringVec">conditionsName  </parameter-->
+  <!--Initialization of a simple conditions file handler-->
+  <!--parameter name="SimpleFileHandler" type="StringVec">conditionsName conditions.slcio collectionName  </parameter-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyConvertToMIPScale" type="ConvertToMIPScale">
+ <!--transforms the energy amplitude of each calorimeter hit passing the cut into the MIP scale-->
+  <!--Cut in MIPs on the amplitudes in the ECAL collection-->
+  <parameter name="CutECAL" type="float">0 </parameter>
+  <!--Cut in MIPs on the amplitudes in the HCAL collection-->
+  <parameter name="CutHCAL" type="float">0 </parameter>
+  <!--ECAL Input Collection Name-->
+  <parameter name="ECALInputCollectionName" type="string" lcioInType="CalorimeterHit">ECAL </parameter>
+  <!--ECAL Output Collection Name, stores calorimeter hits with amplitudes in MIP energy scale-->
+  <parameter name="ECALOutputCollectionName" type="string" lcioOutType="CalorimeterHit">ECAL_MIP </parameter>
+  <!--HCAL Input Collection Name-->
+  <parameter name="HCALInputCollectionName" type="string" lcioInType="CalorimeterHit">HCAL </parameter>
+  <!--HCAL Output Collection Name, stores calorimeter hits with amplitudes in MIP energy scale-->
+  <parameter name="HCALOutputCollectionName" type="string" lcioOutType="CalorimeterHit">HCAL_MIP </parameter>
+  <!--Coefficients for the MIP calibration in the ECAL in GeV/MIP-->
+  <parameter name="MIPCoeffEcal" type="FloatVec">1 1  </parameter>
+  <!--Coefficients for the MIP calibration in the HCAL in GeV/MIP-->
+  <parameter name="MIPCoeffHcal" type="FloatVec">1  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCreatePDFProcessor" type="CreatePDFProcessor">
+ <!-- description not set by author -->
+  <!--Input collection of Reconstrcuted Particle-->
+  <parameter name="MCTruthLinkCollection" type="string" lcioInType="ReconstructedParticle">RecoMCTruthLink </parameter>
+  <!--Input collection of Reconstrcuted Particle-->
+  <parameter name="OutputPDFFilename" type="string" lcioInType="ReconstructedParticle">pdf_standard_v01.root </parameter>
+  <!--Input collection of Reconstrcuted Particle-->
+  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--dEdx Error factor-->
+  <parameter name="dEdxErrorFactor" type="float">7.55 </parameter>
+  <!--dEdx Normalization-->
+  <parameter name="dEdxNormalization" type="float">1.35e-07 </parameter>
+  <!--dEdx Parameters for electron-->
+  <parameter name="dEdxParameter_electron" type="FloatVec">-0.00240638 0.710337 0.287718 -1.71591 0  </parameter>
+  <!--dEdx Parameters for Kaon-->
+  <parameter name="dEdxParameter_kaon" type="FloatVec">0.0796117 4133.35 1.13577e+06 0.180555 -0.000315083  </parameter>
+  <!--dEdx Parameters for muon-->
+  <parameter name="dEdxParameter_muon" type="FloatVec">0.0811408 0.992207 758509 -0.170167 0.00046367  </parameter>
+  <!--dEdx Parameters for pion-->
+  <parameter name="dEdxParameter_pion" type="FloatVec">0.0810756 -1.45051e+06 -30984.3 0.284056 0.000338131  </parameter>
+  <!--dEdx Parameters for proton-->
+  <parameter name="dEdxParameter_proton" type="FloatVec">0.0778772 44930 91377.8 0.150088 -0.000664184  </parameter>
+</processor>
+
+ <processor name="MyCreatePDFs" type="CreatePDFs">
+ <!--Creates from a gauge sample pdf files for a likelihood based particle identification-->
+  <!--Name of output file for charged particles-->
+  <parameter name="ChargedPDFfilename" type="string">pdf.txt </parameter>
+  <!--Run numbers where a new charged category sample starts -->
+  <parameter name="ChargedRunStart" type="IntVec"> </parameter>
+  <!--Name of the MC Particle collection-->
+  <parameter name="MCParticleCollection" type="string">MCParticle </parameter>
+  <!--Name of MC to Tracks Relation collection-->
+  <parameter name="MCTracksRelCollection" type="string">LDCTracksMCP </parameter>
+  <!--Name of output file for neutral particles-->
+  <parameter name="NeutralPDFfilename" type="string">npdf.txt </parameter>
+  <!--Run numbers where a new neutral category sample starts -->
+  <parameter name="NeutralRunStart" type="IntVec"> </parameter>
+  <!--PIDs of the particles, that should be here-->
+  <parameter name="PIDCollection" type="IntVec"> </parameter>
+  <!--number of pids per category-->
+  <parameter name="PIDnumbers" type="IntVec"> </parameter>
+  <!--Name of a reconstructed Particle collection containing PFOs like Wolf, PandoraPFA, ...-->
+  <parameter name="RecoParticleCollection" type="string">RecoParticles </parameter>
+  <!--Name of relation collection-->
+  <parameter name="RelCollection" type="string">RelationCaloHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyCutOnCosThetaQQbar" type="CutOnCosThetaQQbar">
+ <!--The output condition of this processor is false as long as the |cos(theta)| > cutCosTheta and true otherwise.-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--cut on |cos(theta)|-->
+  <parameter name="cutCosTheta" type="double">1 </parameter>
+</processor>
+
+ <processor name="MyCutOnGEANT4Bug" type="CutOnGEANT4Bug">
+ <!--The output condition of this processor is true as long as no track has more than a factor of k more energy deposited in the calorimeter as its energy given by momentum and mass. This should cut out events where GEANT4 produces additional energy depositions. If at least one such a track is found the return value is false. Only tracks with an energy larger than eMin are taken into account.-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="calibrCoeffECAL" type="FloatVec">33.0235 93.5682  </parameter>
+  <!--Calibration coefficients for HCAL-->
+  <parameter name="calibrCoeffHCAL" type="FloatVec">21.1963  </parameter>
+  <!--name of the LC Relation collection between Calorimeterhits and SimCalorimeterhits-->
+  <parameter name="colNameRelationCaloHitToSimCaloHit" type="string">RelationCaloHit </parameter>
+  <!--name of the LC Relation collection between Tracks and MC particles-->
+  <parameter name="colNameRelationTrackToMCP" type="string">TrueTrackToMCP </parameter>
+  <!--name of the Track collection-->
+  <parameter name="colNameTracks" type="string">Tracks </parameter>
+  <!--minimal energy of tracks taken into account (in GeV)-->
+  <parameter name="eMin" type="double">5 </parameter>
+  <!--if the track has more than k times its MC energy deposited the return value is set to false-->
+  <parameter name="k" type="double">1.75 </parameter>
+</processor>
+
+ <processor name="MyDistilledPFOCreator" type="DistilledPFOCreator">
+ <!-- description not set by author -->
+  <!--Input Particle Collection Name1 -->
+  <parameter name="InputParticleCollectionName1" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Input Particle Collection Name2 -->
+  <parameter name="InputParticleCollectionName2" type="string" lcioInType="ReconstructedParticle">GammaGammaParticles </parameter>
+  <!--Output Particle Collection Name -->
+  <parameter name="OutputParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">DistilledPFOs </parameter>
+  <!--Print certain messages-->
+  <parameter name="Printing" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyDrawMCParticles" type="DrawMCParticles">
+ <!--DrawMCParticles draws the MC Particle prediction w/o calorimeters in the ced display-->
+  <!--Energy Cut in GeV-->
+  <parameter name="EnergyCut" type="double">0.01 </parameter>
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCCollectionName" type="string">MCParticle </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Wait for Keyboard before proceed-->
+  <parameter name="WaitForKeyboard" type="int">1 </parameter>
+  <!--Radius of the innermost detector component (VTX) in cylindrical coordinates-->
+  <parameter name="rIn" type="double">15.5 </parameter>
+  <!--z coordinate of the innermost detector component (VTX) in cylindrical coordinates-->
+  <parameter name="zIn" type="double">50 </parameter>
+</processor>
+
+ <processor name="MyEMShowerFinder" type="EMShowerFinder">
+ <!--a photon finder processor based on the KIT and KITutil 'classes and fuctions'-->
+  <!--To do the cleaning on hits or not -->
+  <parameter name="Cleaning" type="string">YES </parameter>
+  <!--Cosine of the angle for merging -->
+  <parameter name="Coscut" type="double">0.95 </parameter>
+  <!--limits the amount of information written to std out (0 - none, 9 - maximal information)-->
+  <parameter name="DebugLevel" type="int">0 </parameter>
+  <!--Square of distance cut for merging -->
+  <parameter name="Distcut" type="double">35 </parameter>
+  <!--draw objects on CED-->
+  <parameter name="DrawOnCED" type="int">0 </parameter>
+  <!--Levels for central loop in MIP -->
+  <parameter name="Levels" type="FloatVec">0.1 1.5 2.5 4 6 9 16 26 41 65  </parameter>
+  <!--Minimal Number of hits for ground level cluster -->
+  <parameter name="MinHit0" type="int">4 </parameter>
+  <!--Minimal Number of hits for i-th level cluster -->
+  <parameter name="MinHitSplit" type="int">2 </parameter>
+  <!--Number of levels for central loop -->
+  <parameter name="NumberOfLevels" type="int">10 </parameter>
+  <!--Fluctuation suprresion cut-->
+  <parameter name="Rcut" type="double">0.4 </parameter>
+  <!--At which number of neighbors to put the threshold, condition is < so you need to put N+1 -->
+  <parameter name="TopologicalCut" type="int">5 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--ECAL Collection Name-->
+  <parameter name="colNameECAL" type="string">ECAL </parameter>
+  <!--Name of the collection of EM shower candidates-->
+  <parameter name="collectionNameOfEMShowerCandidates" type="string">EMShowerCandidates </parameter>
+  <!--cut on energy deviation of em shower candidates from estimated energy ( abs( (Ecluster - Eestimated)/Eestimated ) < cut )-->
+  <parameter name="energyDeviationCut" type="double">0.25 </parameter>
+  <!--cut on the probability density to assign hits to shower cores-->
+  <parameter name="probabilityDensityCut" type="double">0.001 </parameter>
+</processor>
+
+ <processor name="MyEvaluateTauFinder" type="EvaluateTauFinder">
+ <!--EvaluateTauFinder checks performance of TauFinder and writes output to root file.-->
+  <!--Name of the Signal output file -->
+  <parameter name="FileName_Signal" type="string">Signal.root </parameter>
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCCollectionName" type="string" lcioInType="MCParticle">MCParticlesSkimmed </parameter>
+  <!--Name of the MC Truth PFA collection-->
+  <parameter name="RECOMCTRUTHCollectionName" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--Name of the link between tau and pfos-->
+  <parameter name="TauLinkCollectionName" type="string" lcioInType="LCRelation">TauRecLink_PFO </parameter>
+  <!--Collection of Tau Candidates-->
+  <parameter name="TauRecCollection" type="string" lcioInType="ReconstructedParticle">TauRec_PFO </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyEventSelector" type="EventSelector">
+ <!--EventSelector returns true if given event was specified in EventList-->
+  <!--event list - pairs of Eventnumber RunNumber-->
+  <parameter name="EventList" type="IntVec"> </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyFPCCDClustering" type="FPCCDClustering">
+ <!--FPCCDClustering icteats TrackerHits from FPCCDPixelHits-->
+  <!--Clusters with RPhiWidth >= this value are discarded. minus value makes cut on the layer inactive -->
+  <parameter name="ClusterRejection_1stCut_RPhiWidth" type="IntVec">10 10 6 6 6 6  </parameter>
+  <!--Clusters with ZWidth >= this value are discarded. minus value makes cut on the layer inactive-->
+  <parameter name="ClusterRejection_1stCut_ZWidth" type="IntVec">15 15 8 8 8 8  </parameter>
+  <!--If true, 1stCut is active. false makes this inactive. minus value makes cut on the layer inactive -->
+  <parameter name="ClusterRejection_1stCut_isActive" type="bool">false </parameter>
+  <!--Clusters with nPix >= this value are discarded. minus value makes cut on the layer inactive-->
+  <parameter name="ClusterRejection_1stCut_nPix" type="IntVec">20 20 15 15 15 15  </parameter>
+  <!--You can choose int[0,~7]. If a cluster with ZWidth <= this value, this is not discarded.-->
+  <parameter name="ClusterRejection_Kamai2ndCut_Save_minimum_Cluster_Z_Width_parameter" type="IntVec">4 4 2 2 2 2  </parameter>
+  <!--You can choose float[0,10]. less than 2 discards most of bad clusters, although some clusters are sacrified. minus value makes cut on the layer inactive-->
+  <parameter name="ClusterRejection_Kamai2ndCut_b_parameter" type="FloatVec">2 2 1 1 1 1  </parameter>
+  <!--true: active, false: inactive-->
+  <parameter name="ClusterRejection_Kamai2ndCut_isActive" type="bool">false </parameter>
+  <!--You can choose float[0,~900]. 0 discards most of bad clusters, although some clusters are sacrified. minus value makes cut on the layer inactive-->
+  <parameter name="ClusterRejection_Mori2ndCut_areaZ_parameter" type="FloatVec">90 90 280 280 600 600  </parameter>
+  <!--true: active, false: inactive-->
+  <parameter name="ClusterRejection_Mori2ndCut_isActive" type="bool">false </parameter>
+  <!--Debugging option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)-->
+  <parameter name="Each_FPCCD_pixelSize(mm)" type="FloatVec">0.005 0.005 0.01 0.01 0.01 0.01  </parameter>
+  <!--Electrons per keV-->
+  <parameter name="ElectronsPerKeV" type="double">276 </parameter>
+  <!--switch for digitization of energy deposit-->
+  <parameter name="EnergyDigitizatoin" type="int">1 </parameter>
+  <!--Pixel size of FPCCD (unit:mm) (default: 0.005)-->
+  <parameter name="FPCCD_PixelSize" type="float">0.005 </parameter>
+  <!--If false, Clustering doesn't make LCRelation.-->
+  <parameter name="MakeRelationOftrkhitsAndsimthits" type="bool">true </parameter>
+  <!--Number of Bits used for energy depsit-->
+  <parameter name="NumberOfBitsForEnergyDeposit" type="int">7 </parameter>
+  <!--Number of electron for 1 step-->
+  <parameter name="NumberOfElectronForStep" type="int">25 </parameter>
+  <!--Pixel Height(mm)-->
+  <parameter name="PixelHeight" type="float">0.015 </parameter>
+  <!--R-Phi Resolution in VTX-->
+  <parameter name="PointResolutionRPhi" type="float">0.00144 </parameter>
+  <!--Z Resolution in VTX-->
+  <parameter name="PointResolutionZ" type="float">0.00144 </parameter>
+  <!--Random noise option-->
+  <parameter name="RandomNoise" type="int">0 </parameter>
+  <!--Remove VTX Pixel Hits collection after processing-->
+  <parameter name="RemovePixelHitsCollection" type="bool">false </parameter>
+  <!--Name of TrackerHit SimTrackerHit relation collection-->
+  <parameter name="SimTrackerHitRelCollection" type="string" lcioOutType="LCRelation">VXDTrackerHitRelations </parameter>
+  <!--Cell Threshold in electrons-->
+  <parameter name="Threshold" type="double">200 </parameter>
+  <!--Name of the VTX SimTrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--Name of the vxd TrackerHit output collection-->
+  <parameter name="VTXHitCollection" type="string" lcioOutType="TrackerHit">VXDTrackerHits </parameter>
+  <!--Name of the VTX PixelHit collection-->
+  <parameter name="VTXPixelHitCollection" type="string" lcioInType="LCGenericObject">VTXPixelHits </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--gaussian sigma of number of electron of noise-->
+  <parameter name="noiseElectronSigma" type="double">50 </parameter>
+  <!--output root file name & path (default: ./positionReso.root)-->
+  <parameter name="outputRootFileName" type="string">./positionReso.root </parameter>
+  <!--On: reading file for allocation of position reso.-->
+  <parameter name="positionReso_ReadingFile" type="string">MarlinReco/v01-05/TrackDigi/FPCCDDigi/src/FPCCDClustering_ResoMap_MS_EL_ON_ver0.dat </parameter>
+  <!--true: reading file for allocation of position reso. false: rough allocation of position reso. -->
+  <parameter name="positionReso_ReadingFile_ON" type="bool">true </parameter>
+  <!--tree name which belongs to the above output root file name & path(default: tree)-->
+  <parameter name="treeName" type="string">t </parameter>
+</processor>
+
+ <processor name="MyFPCCDDigitizer" type="FPCCDDigitizer">
+ <!--FPCCDDigitizer should create FPCCD's VTXPixelHits from SimTrackerHits-->
+  <!--true make the Cut option active.-->
+  <parameter name="CutOption_mode" type="bool">false </parameter>
+  <!--phi From-->
+  <parameter name="CutOption_phi_From" type="double">0 </parameter>
+  <!--phi To-->
+  <parameter name="CutOption_phi_To" type="double">0 </parameter>
+  <!--from-->
+  <parameter name="CutOption_theta_From" type="double">0 </parameter>
+  <!--To-->
+  <parameter name="CutOption_theta_To" type="double">0 </parameter>
+  <!--Debugging option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)-->
+  <parameter name="Each_FPCCD_pixelSize(mm)" type="FloatVec">0.005 0.005 0.005 0.005 0.005 0.005  </parameter>
+  <!--false : normal mode, true : for computing Spatial Resolution.-->
+  <parameter name="EnergyLoss_almostOFF" type="bool">false </parameter>
+  <!--Pixel size of FPCCD (unit:mm) (default: 0.005)-->
+  <parameter name="FPCCD_pixelSize(mm)" type="float">0.005 </parameter>
+  <!--Transverse momentum criteria for helix approximation (MeV)-->
+  <parameter name="HelixTMomentumCriteria(MeV)" type="float">100 </parameter>
+  <!--If OccupancyStydyMode == 0, this becomes active. Then, true: digitize evt as signal. false: digitize as bkg. Then TrackerHit output from FPCCDClustering has a quality identifying signal hit or bkg hit. If you use FPCCDOverlayBX, I recommend to differentiate inputfile by this option.-->
+  <parameter name="HitQuality" type="bool">true </parameter>
+  <!--Mokka has encoded the ladder number in the cellID-->
+  <parameter name="Ladder_Number_encoded_in_cellID" type="bool">true </parameter>
+  <!--OccupancyStudyMode==1: We discreminate direct and backscatter.  0:NormalMode for tracking. Make sure HitQuality Option for discreminating signal and BG -->
+  <parameter name="OccupancyStudyMode" type="int">0 </parameter>
+  <!--Pixel Height(mm).-->
+  <parameter name="PixelHeight(mm)" type="float">0.015 </parameter>
+  <!--Name of the VTX SimTrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--Name of the VXD PixelHit output collection-->
+  <parameter name="VTXPixelHitCollection" type="string" lcioOutType="LCGenericObject">VTXPixelHits </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--1:SignalEvent 0:BGEvent for FPCCDOverlayBX process and linker in FPCCDClustering.-->
+  <parameter name="isSignalEvent_isBGEvent_forLinkerInClustering" type="int">1 </parameter>
+  <!--Modify SimTrackerHit into layer-->
+  <parameter name="modifySimTrackerHit" type="bool">true </parameter>
+  <!--ration of sigma of Landau distribution and path length-->
+  <parameter name="sigmaConstant" type="double">32000 </parameter>
+</processor>
+
+ <processor name="MyFox" type="Fox">
+ <!--Fox calculates Fox-Wolfram moments-->
+  <!--Numbers of the moments that are to be calculate 0-th is calculate by default-->
+  <parameter name="CalculateFoxWolframMoments" type="IntVec"> </parameter>
+  <!--Name of the ReconstructedParticle collection-->
+  <parameter name="NameOfReconstructedParticlesCollection" type="string" lcioInType="ReconstructedParticle">RecoParticles </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyG2CD" type="G2CD">
+ <!--Gaseous Calorimeter Digitizer: take 1mm Simulated Hits as input-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">40.91 81.81  </parameter>
+  <!--Chance of one boundary hit to create a multiple hit with boosted charge-->
+  <parameter name="ChanceOfKink" type="float">0 </parameter>
+  <!--Spactial Distribution of MIP charge X*Y;-->
+  <parameter name="ChargeSpatialDistribution" type="FloatVec">0.1 0.2 0.4 0.2 0.1  </parameter>
+  <!--Size of Digitized Cell (in mm)-->
+  <parameter name="DigiCellSize" type="int">10 </parameter>
+  <!--Name of Digitized ECAL Hit Collections-->
+  <parameter name="DigiECALCollection" type="StringVec">ECALBarrel ECALEndcap ECALOther  </parameter>
+  <!--Name of Digitized HCAL Hit Collections-->
+  <parameter name="DigiHCALCollection" type="StringVec">HCALBarrel HCALEndcap HCALOther  </parameter>
+  <!--Input ECAL Hits Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">EcalBarrelSiliconCollection EcalEndcapSiliconCollection EcalEndcapRingCollection  </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">HcalBarrelRegCollection HcalEndcapsCollection HcalEndcapRingsCollection  </parameter>
+  <!--Scale factor of Charge on boosted multiple hits-->
+  <parameter name="KinkHitChargeBoost" type="float">1 </parameter>
+  <!--Num of thiner Ecal layers-->
+  <parameter name="NumThinEcalLayer" type="int">20 </parameter>
+  <!--Polya: x^A*exp(-b*x) + c-->
+  <parameter name="PolyaParaA" type="float">0.7 </parameter>
+  <!--Polya: x^a*exp(-B*x) + c-->
+  <parameter name="PolyaParaB" type="float">0.045 </parameter>
+  <!--Polya: x^a*exp(-b*x) + C-->
+  <parameter name="PolyaParaC" type="float">0.03 </parameter>
+  <!--Global Position Shift For Overlay-->
+  <parameter name="PositionShiftID" type="IntVec">0 0 0  </parameter>
+  <!--Flag Parameter Setting (0 ~ self definition, 1 ~ MircoMegas, 2 ~ GRPC_PS, 3 ~ GRPC_SPS)-->
+  <parameter name="UsingDefaultDetector" type="int">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyGammaGammaCandidateFinder" type="GammaGammaCandidateFinder">
+ <!-- description not set by author -->
+  <!--Minimum fit probability-->
+  <parameter name="FitProbabilityCut" type="double">0.001 </parameter>
+  <!--Nominal Mass of Particle Decaying to Gamma Gamma (GeV)-->
+  <parameter name="GammaGammaResonanceMass" type="float">0.135 </parameter>
+  <!--Particle decaying to Gamma Gamma-->
+  <parameter name="GammaGammaResonanceName" type="string">Pi0 </parameter>
+  <!--Minimum Momentum Cut for Photon (GeV)-->
+  <parameter name="GammaMomentumCut" type="float">0.5 </parameter>
+  <!--Input Particle Collection Name -->
+  <parameter name="InputParticleCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Maximum difference between candidate mass and GammaGama Resonance mass (GeV)-->
+  <parameter name="MaxDeltaMgg" type="float">0.04 </parameter>
+  <!--Output Particle Collection Name -->
+  <parameter name="OutputParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">GammaGammaCandidates </parameter>
+  <!--Print certain messages-->
+  <parameter name="Printing" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--0 = OPALFitter, 1 = NewFitter, 2 = NewtonFitter-->
+  <parameter name="fitter" type="int">0 </parameter>
+</processor>
+
+ <processor name="MyGammaGammaCandidateTruthFilter" type="GammaGammaCandidateTruthFilter">
+ <!--GammaGammaCandidateTruthFilter does whatever it does ...-->
+  <!--Name of the gamma-gamma candidate input collection-->
+  <parameter name="GammaGammaCandidateCollection" type="string" lcioInType="ReconstructedParticle">GammaGammaCandidates </parameter>
+  <!--Particle decaying to Gamma Gamma-->
+  <parameter name="GammaGammaResonanceName" type="string">Pi0 </parameter>
+  <!--Name of the MCParticle input collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--true - reco relation collection-->
+  <parameter name="MCTruth2RecoLinkCollectionName" type="string" lcioInType="LCRelation">MCTruthRecoLink </parameter>
+  <!--Output Particle Collection Name -->
+  <parameter name="OutputParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">TrueGammaGammaMesons </parameter>
+  <!--Print certain messages-->
+  <parameter name="Printing" type="int">1 </parameter>
+  <!--reco - true relation collection-->
+  <parameter name="Reco2MCTruthLinkCollectionName" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyGammaGammaSolutionFinder" type="GammaGammaSolutionFinder">
+ <!-- description not set by author -->
+  <!--Gamma-Gamma Candidate Collection Names-->
+  <parameter name="GammaGammaCandidateCollections" type="StringVec" lcioInType="ReconstructedParticle">GammaGammaCandidatePi0s GammaGammaCandidateEtas GammaGammaCandidateEtaPrimes  </parameter>
+  <!--Maximum Number of Fewer GammaGammaParticles-->
+  <parameter name="LessThanMaximalCut" type="int">0 </parameter>
+  <!--Maximum Number of Explorable Combinations-->
+  <parameter name="MaxCombinationsCut" type="double">1e+08 </parameter>
+  <!--Output Particle Collection Name -->
+  <parameter name="OutputParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">GammaGammaSolutions </parameter>
+  <!--Print certain messages-->
+  <parameter name="Printing" type="int">1 </parameter>
+  <!--Solution Finding Algorithm-->
+  <parameter name="SolutionFindingAlgorithm" type="int">2 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyILDCaloDigi" type="ILDCaloDigi">
+ <!--Performs simple digitization of sim calo hits...-->
+  <!--calibration to convert ECAL deposited energy to MIPs-->
+  <parameter name="CalibECALMIP" type="float">0.0001 </parameter>
+  <!--calibration to convert HCAL deposited energy to MIPs-->
+  <parameter name="CalibHCALMIP" type="float">0.0001 </parameter>
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">40.91 81.81  </parameter>
+  <!--Calibration coefficients for Barrel HCAL-->
+  <parameter name="CalibrHCALBarrel" type="FloatVec">0  </parameter>
+  <!--Calibration coefficients for EndCap HCAL-->
+  <parameter name="CalibrHCALEndcap" type="FloatVec">0  </parameter>
+  <!--Calibration coefficients for Other (Ring) HCAL-->
+  <parameter name="CalibrHCALOther" type="FloatVec">0  </parameter>
+  <!--name of the part of the cellID that holds the index I-->
+  <parameter name="CellIDIndexIString" type="string">I </parameter>
+  <!--name of the part of the cellID that holds the index J-->
+  <parameter name="CellIDIndexJString" type="string">J </parameter>
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--name of the part of the cellID that holds the module-->
+  <parameter name="CellIDModuleString" type="string">M </parameter>
+  <!--name of the part of the cellID that holds the stave-->
+  <parameter name="CellIDStaveString" type="string">S-1 </parameter>
+  <!--ECAL BarrelTime Window maximum time in ns-->
+  <parameter name="ECALBarrelTimeWindowMax" type="float">100 </parameter>
+  <!--ECAL Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">EcalBarrelCollection EcalEndcapCollection EcalRingCollection  </parameter>
+  <!--Correct ECAL hit times for propagation: radial distance/c-->
+  <parameter name="ECALCorrectTimesForPropagation" type="int">0 </parameter>
+  <!--ECAL Minimum Delta Time in ns for resolving two hits-->
+  <parameter name="ECALDeltaTimeHitResolution" type="float">10 </parameter>
+  <!--Energy correction for ECAL endcap-->
+  <parameter name="ECALEndcapCorrectionFactor" type="float">1.025 </parameter>
+  <!--ECAL Endcap Time Window maximum time in ns-->
+  <parameter name="ECALEndcapTimeWindowMax" type="float">100 </parameter>
+  <!--Correct for ECAL gaps-->
+  <parameter name="ECALGapCorrection" type="int">1 </parameter>
+  <!--Factor applied to gap correction-->
+  <parameter name="ECALGapCorrectionFactor" type="float">1 </parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">20 100  </parameter>
+  <!--Factor applied to module gap correction-->
+  <parameter name="ECALModuleGapCorrectionFactor" type="float">0.5 </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection0" type="string" lcioOutType="CalorimeterHit">ECALBarrel </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection1" type="string" lcioOutType="CalorimeterHit">ECALEndcap </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection2" type="string" lcioOutType="CalorimeterHit">ECALOther </parameter>
+  <!--Use simple time window cut on hit times? If false: use original hit-time clustering algorithm. If true: use time window defined by ECALBarrelTimeWindowMin and ECALBarrelTimeWindowMax-->
+  <parameter name="ECALSimpleTimingCut" type="bool">true </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+  <!--Unit for ECAL Threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
+  <parameter name="ECALThresholdUnit" type="string">GeV </parameter>
+  <!--ECAL Time Resolution used to smear hit times-->
+  <parameter name="ECALTimeResolution" type="float">10 </parameter>
+  <!--ECAL Time Window minimum time in ns-->
+  <parameter name="ECALTimeWindowMin" type="float">-10 </parameter>
+  <!--ECAL total number of MPPC/SiPM pixels for implementation of saturation effect-->
+  <parameter name="ECAL_PPD_N_Pixels" type="int">10000 </parameter>
+  <!--ECAL fractional uncertainty of effective total number of MPPC/SiPM pixels-->
+  <parameter name="ECAL_PPD_N_Pixels_uncertainty" type="float">0.05 </parameter>
+  <!--# Photo-electrons per MIP (scintillator): used to poisson smear #PEs if >0-->
+  <parameter name="ECAL_PPD_PE_per_MIP" type="float">7 </parameter>
+  <!--apply realistic digitisation to ECAL hits? (0=none, 1=silicon, 2=scintillator)-->
+  <parameter name="ECAL_apply_realistic_digi" type="int">0 </parameter>
+  <!--ECAL random dead cell fraction (as a fraction: 0->1) -->
+  <parameter name="ECAL_deadCellRate" type="float">0 </parameter>
+  <!--store dead ECAL cells in memory? (WARNING: can take a lot of memory if used...) -->
+  <parameter name="ECAL_deadCell_memorise" type="bool">false </parameter>
+  <!--default ECAL layer configuration (used if not found in gear file)-->
+  <parameter name="ECAL_default_layerConfig" type="string">000000000000000 </parameter>
+  <!--typical electronics noise (ECAL, in MIP units)-->
+  <parameter name="ECAL_elec_noise_mips" type="float">0 </parameter>
+  <!--maximum of dynamic range for ECAL (in MIPs)-->
+  <parameter name="ECAL_maxDynamicRange_MIP" type="float">2500 </parameter>
+  <!--correlated ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="ECAL_miscalibration_correl" type="float">0 </parameter>
+  <!--uncorrelated ECAL random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="ECAL_miscalibration_uncorrel" type="float">0 </parameter>
+  <!--store oncorrelated ECAL miscalbrations in memory? (WARNING: can take a lot of memory if used...) -->
+  <parameter name="ECAL_miscalibration_uncorrel_memorise" type="bool">false </parameter>
+  <!--variation of mppc/sipm pixels capacitance in ECAL (as a fraction: 0.01=1%)-->
+  <parameter name="ECAL_pixel_spread" type="float">0.05 </parameter>
+  <!--length scale for absorbtion along scintillator strip (mm)-->
+  <parameter name="ECAL_strip_absorbtionLength" type="float">1e+06 </parameter>
+  <!--HCAL Time Window maximum time in ns-->
+  <parameter name="HCALBarrelTimeWindowMax" type="float">100 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">HcalBarrelRegCollection HcalEndcapRingsCollection HcalEndcapsCollection  </parameter>
+  <!--Correct HCAL hit times for propagation: radial distance/c-->
+  <parameter name="HCALCorrectTimesForPropagation" type="int">0 </parameter>
+  <!--HCAL Minimum Delta Time in ns for resolving two hits-->
+  <parameter name="HCALDeltaTimeHitResolution" type="float">10 </parameter>
+  <!--Energy correction for HCAL endcap-->
+  <parameter name="HCALEndcapCorrectionFactor" type="float">1.025 </parameter>
+  <!--HCAL Time Window maximum time in ns-->
+  <parameter name="HCALEndcapTimeWindowMax" type="float">100 </parameter>
+  <!--Correct for ECAL gaps-->
+  <parameter name="HCALGapCorrection" type="int">1 </parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--Factor applied to module gap correction-->
+  <parameter name="HCALModuleGapCorrectionFactor" type="float">0.5 </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection0" type="string" lcioOutType="CalorimeterHit">HCALBarrel </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection1" type="string" lcioOutType="CalorimeterHit">HCALEndcap </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection2" type="string" lcioOutType="CalorimeterHit">HCALOther </parameter>
+  <!--Use simple time window cut on hit times? If false: use original hit-time clustering algorithm. If true: use time window defined by HCALBarrelTimeWindowMin and HCALBarrelTimeWindowMax-->
+  <parameter name="HCALSimpleTimingCut" type="bool">true </parameter>
+  <!--Threshold for HCAL Hits in GeV-->
+  <parameter name="HCALThreshold" type="FloatVec">4e-05  </parameter>
+  <!--Unit for HCAL Threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
+  <parameter name="HCALThresholdUnit" type="string">GeV </parameter>
+  <!--HCAL Time Resolution used to smear hit times-->
+  <parameter name="HCALTimeResolution" type="float">10 </parameter>
+  <!--HCAL Time Window minimum time in ns-->
+  <parameter name="HCALTimeWindowMin" type="float">-10 </parameter>
+  <!--HCAL total number of MPPC/SiPM pixels for implementation of saturation effect-->
+  <parameter name="HCAL_PPD_N_Pixels" type="int">400 </parameter>
+  <!--HCAL fractional uncertainty of effective total number of MPPC/SiPM pixels-->
+  <parameter name="HCAL_PPD_N_Pixels_uncertainty" type="float">0.05 </parameter>
+  <!--# Photo-electrons per MIP (for AHCAL): used to poisson smear #PEs if >0-->
+  <parameter name="HCAL_PPD_PE_per_MIP" type="float">10 </parameter>
+  <!--apply realistic digitisation to HCAL hits? (0=none, 1=scintillator/SiPM)-->
+  <parameter name="HCAL_apply_realistic_digi" type="int">0 </parameter>
+  <!--HCAL random dead cell fraction (as a fraction: 0->1) -->
+  <parameter name="HCAL_deadCellRate" type="float">0 </parameter>
+  <!--store dead HCAL cells in memory? (WARNING: can take a lot of memory if used...) -->
+  <parameter name="HCAL_deadCell_memorise" type="bool">false </parameter>
+  <!--typical electronics noise (HCAL, in MIP units)-->
+  <parameter name="HCAL_elec_noise_mips" type="float">0 </parameter>
+  <!--maximum of dynamic range for HCAL (in MIPs)-->
+  <parameter name="HCAL_maxDynamicRange_MIP" type="float">200 </parameter>
+  <!--correlated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="HCAL_miscalibration_correl" type="float">0 </parameter>
+  <!--uncorrelated HCAL random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="HCAL_miscalibration_uncorrel" type="float">0 </parameter>
+  <!--store oncorrelated HCAL miscalbrations in memory? (WARNING: can take a lot of memory if used...) -->
+  <parameter name="HCAL_miscalibration_uncorrel_memorise" type="bool">false </parameter>
+  <!--variation of mppc/sipm pixels capacitance in HCAL (as a fraction: 0.01=1%)-->
+  <parameter name="HCAL_pixel_spread" type="float">0 </parameter>
+  <!--Hit times histograms-->
+  <parameter name="Histograms" type="int">0 </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--Ecal correction for theta dependency of calibration for MAPS-->
+  <parameter name="MapsEcalCorrection" type="int">0 </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
+  <!--default number of virtual cells (used if not found in gear file)-->
+  <parameter name="StripEcal_default_nVirtualCells" type="int">9 </parameter>
+  <!--Use ECAL hit times-->
+  <parameter name="UseEcalTiming" type="int">0 </parameter>
+  <!--Use HCAL hit times-->
+  <parameter name="UseHcalTiming" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--energy required to create e-h pair in silicon (in eV)-->
+  <parameter name="energyPerEHpair" type="float">3.6 </parameter>
+</processor>
+
+ <processor name="MyIsolatedLeptonFinderProcessor" type="IsolatedLeptonFinderProcessor">
+ <!--Isolated Lepton Finder Processor-->
+  <!--Cosine of the half-angle of the cone used in isolation criteria-->
+  <parameter name="CosConeAngle" type="float">0.98 </parameter>
+  <!--Half-angle (in degrees) of the cone used for lepton dressing with photons-->
+  <parameter name="DressPhotonConeAngle" type="float">1 </parameter>
+  <!--Electron ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="ElectronMaxEcalToHcalFraction" type="float">1 </parameter>
+  <!--Electron ID: Maximum energy deposit divided by momentum-->
+  <parameter name="ElectronMaxEnergyDepositByMomentum" type="float">1.4 </parameter>
+  <!--Electron ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="ElectronMinEcalToHcalFraction" type="float">0.9 </parameter>
+  <!--Electron ID: Minimum energy deposit divided by momentum-->
+  <parameter name="ElectronMinEnergyDepositByMomentum" type="float">0.7 </parameter>
+  <!--Maximum impact parameter in 3D-->
+  <parameter name="ImpactParameterMax3D" type="float">0.01 </parameter>
+  <!--Maximum impact parameter significance in 3D-->
+  <parameter name="ImpactParameterMax3DSignificance" type="float">1e+20 </parameter>
+  <!--Maximum d0 impact parameter-->
+  <parameter name="ImpactParameterMaxD0" type="float">1e+20 </parameter>
+  <!--Maximum d0 impact parameter significance-->
+  <parameter name="ImpactParameterMaxD0Significance" type="float">1e+20 </parameter>
+  <!--Maximum z0 impact parameter-->
+  <parameter name="ImpactParameterMaxZ0" type="float">1e+20 </parameter>
+  <!--Maximum z0 impact parameter significance-->
+  <parameter name="ImpactParameterMaxZ0Significance" type="float">1e+20 </parameter>
+  <!--Minimum impact parameter in 3D-->
+  <parameter name="ImpactParameterMin3D" type="float">0 </parameter>
+  <!--Minimum impact parameter significance in 3D-->
+  <parameter name="ImpactParameterMin3DSignificance" type="float">0 </parameter>
+  <!--Minimum d0 impact parameter-->
+  <parameter name="ImpactParameterMinD0" type="float">0 </parameter>
+  <!--Minimum d0 impact parameter significance-->
+  <parameter name="ImpactParameterMinD0Significance" type="float">0 </parameter>
+  <!--Minimum z0 impact parameter-->
+  <parameter name="ImpactParameterMinZ0" type="float">0 </parameter>
+  <!--Minimum z0 impact parameter significance-->
+  <parameter name="ImpactParameterMinZ0Significance" type="float">0 </parameter>
+  <!--Input collection of ReconstructedParticles-->
+  <parameter name="InputCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Maximum cone energy for isolation requirement-->
+  <parameter name="IsolationMaximumConeEnergy" type="float">1e+20 </parameter>
+  <!--Maximum track energy for isolation requirement-->
+  <parameter name="IsolationMaximumTrackEnergy" type="float">1e+20 </parameter>
+  <!--Minimum cone energy for isolation requirement-->
+  <parameter name="IsolationMinimumConeEnergy" type="float">0 </parameter>
+  <!--Minimum track energy for isolation requirement-->
+  <parameter name="IsolationMinimumTrackEnergy" type="float">15 </parameter>
+  <!--Polynomial cut (A) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutA" type="float">0 </parameter>
+  <!--Polynomial cut (B) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutB" type="float">20 </parameter>
+  <!--Polynomial cut (C) on track energy and cone energy: Econe^2 < A*Etrk^2+B*Etrk+C-->
+  <parameter name="IsolationPolynomialCutC" type="float">-300 </parameter>
+  <!--Input collection of jets for isolation-->
+  <parameter name="JetCollection" type="string" lcioInType="ReconstructedParticle">JetsForIsolation </parameter>
+  <!--Maximum Xt in jet-based isolation-->
+  <parameter name="JetIsolationVetoMaximumXt" type="float">0.25 </parameter>
+  <!--Maximum Z in jet-based isolation-->
+  <parameter name="JetIsolationVetoMaximumZ" type="float">0.6 </parameter>
+  <!--Minimum Xt in jet-based isolation-->
+  <parameter name="JetIsolationVetoMinimumXt" type="float">0 </parameter>
+  <!--Mininum Z in jet-based isolation-->
+  <parameter name="JetIsolationVetoMinimumZ" type="float">0 </parameter>
+  <!--Merge close-by electrons into higher energy lepton-->
+  <parameter name="MergeCloseElectrons" type="bool">false </parameter>
+  <!--Half-angle (in degrees) of the cone used for lepton merging-->
+  <parameter name="MergeLeptonConeAngle" type="float">2 </parameter>
+  <!--Muon ID: Maximum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="MuonMaxEcalToHcalFraction" type="float">0.4 </parameter>
+  <!--Muon ID: Maximum energy deposit divided by momentum-->
+  <parameter name="MuonMaxEnergyDepositByMomentum" type="float">0.3 </parameter>
+  <!--Muon ID: Minimum Ecal deposit divided by sum of Ecal and Hcal deposits-->
+  <parameter name="MuonMinEcalToHcalFraction" type="float">0 </parameter>
+  <!--Muon ID: Minimum energy deposit divided by momentum-->
+  <parameter name="MuonMinEnergyDepositByMomentum" type="float">0 </parameter>
+  <!--Output collection of isolated leptons-->
+  <parameter name="OutputCollectionIsolatedLeptons" type="string" lcioOutType="ReconstructedParticle">Isolep </parameter>
+  <!--Copy of input collection but without the isolated leptons-->
+  <parameter name="OutputCollectionWithoutIsolatedLepton" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+  <!--Dress leptons with close-by particles-->
+  <parameter name="UseDressedLeptons" type="bool">false </parameter>
+  <!--Use impact parameter cuts for consistency with primary/secondary track-->
+  <parameter name="UseImpactParameter" type="bool">true </parameter>
+  <!--Use impact parameter significance cuts for consistency with primary/secondary track-->
+  <parameter name="UseImpactParameterSignificance" type="bool">false </parameter>
+  <!--Use jet-based isolation-->
+  <parameter name="UseJetIsolation" type="bool">false </parameter>
+  <!--Use primitive particle ID based on calorimeter energy deposits-->
+  <parameter name="UsePID" type="bool">true </parameter>
+  <!--Use Pandora particle IDs for algorithm-->
+  <parameter name="UsePandoraIDs" type="bool">false </parameter>
+  <!--Use polynomial cuts on track and cone energy-->
+  <parameter name="UsePolynomialIsolation" type="bool">true </parameter>
+  <!--Use rectangular cuts on track and cone energy-->
+  <parameter name="UseRectangularIsolation" type="bool">true </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyIsolatedLeptonTaggingProcessor" type="IsolatedLeptonTaggingProcessor">
+ <!--IsolatedLeptonTaggingProcessor does whatever it does ...-->
+  <!--cosine of the larger cone-->
+  <parameter name="CosConeLarge" type="float">0.95 </parameter>
+  <!--cosine of the smaller cone-->
+  <parameter name="CosConeSmall" type="float">0.98 </parameter>
+  <!--Cut on the mva output of isolated electron selection-->
+  <parameter name="CutOnTheISOElectronMVA" type="float">0.5 </parameter>
+  <!--Cut on the mva output of isolated muon selection-->
+  <parameter name="CutOnTheISOMuonMVA" type="float">0.7 </parameter>
+  <!--Directory of Weights for the Isolated Electron MVA Classification-->
+  <parameter name="DirOfISOElectronWeights" type="string">isolated_electron_weights </parameter>
+  <!--Directory of Weights for the Isolated Muon MVA Classification-->
+  <parameter name="DirOfISOMuonWeights" type="string">isolated_muon_weights </parameter>
+  <!--Name of the PandoraPFOs collection-->
+  <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the Primary Vertex collection-->
+  <parameter name="InputPrimaryVertexCollection" type="string" lcioInType="Vertex">PrimaryVertex </parameter>
+  <!--flag to select one most like isolated lepton-->
+  <parameter name="IsSelectingOneIsoLep" type="bool">true </parameter>
+  <!--Maximum d0 significance for electron-->
+  <parameter name="MaxD0SigForElectron" type="float">50 </parameter>
+  <!--Maximum D0 significance for muon-->
+  <parameter name="MaxD0SigForMuon" type="float">5 </parameter>
+  <!--Maximum ratio of energy in calorimeters over momentum for electron-->
+  <parameter name="MaxEOverPForElectron" type="float">1.3 </parameter>
+  <!--Maximum ratio of energy in calorimeters over momentum for muon-->
+  <parameter name="MaxEOverPForMuon" type="float">0.3 </parameter>
+  <!--Maximum Z0 significance for electron-->
+  <parameter name="MaxZ0SigForElectron" type="float">5 </parameter>
+  <!--Maximum Z0 significance for muon-->
+  <parameter name="MaxZ0SigForMuon" type="float">5 </parameter>
+  <!--minimum ratio of energy in calorimeters over momentum for electron-->
+  <parameter name="MinEOverPForElectron" type="float">0.5 </parameter>
+  <!--minimum ratio of energy in ecal over energy in ecal+hcal-->
+  <parameter name="MinEecalOverTotEForElectron" type="float">0.9 </parameter>
+  <!--Minimum energy in yoke for electron-->
+  <parameter name="MinEyokeForMuon" type="float">1.2 </parameter>
+  <!--Minimum momentum for electron-->
+  <parameter name="MinPForElectron" type="float">5 </parameter>
+  <!--Minimum momentum for muon-->
+  <parameter name="MinPForMuon" type="float">5 </parameter>
+  <!--Name of collection with the selected isolated lepton-->
+  <parameter name="OutputIsoLeptonsCollection" type="string" lcioOutType="ReconstructedParticle">ISOLeptons </parameter>
+  <!--Name of the new PFOs collection without isolated lepton-->
+  <parameter name="OutputPFOsWithoutIsoLepCollection" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+  <!--use yoke for muon ID-->
+  <parameter name="UseYokeForMuonID" type="bool">false </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyJetPFOsProcessor" type="JetPFOsProcessor">
+ <!--JetPFOsProcessor does whatever it does ...-->
+  <!--Name of the input jet collection-->
+  <parameter name="InputJetCollection" type="string" lcioInType="ReconstructedParticle">JetsFromKt </parameter>
+  <!--Name of the output PFOs collection-->
+  <parameter name="OutputPFOsCollection" type="string" lcioOutType="ReconstructedParticle">PFOsFromKtJet </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyKIT" type="KIT">
+ <!--KIT does whatever it does ...-->
+  <!--To do the cleaning on hits or not -->
+  <parameter name="Cleaning" type="string">YES </parameter>
+  <!--Name of the Cluster Collection for Cores -->
+  <parameter name="Core_Collection" type="string">CORE </parameter>
+  <!--Cosine of the angle for merging -->
+  <parameter name="Coscut" type="double">0.95 </parameter>
+  <!--Square of distance cut for merging -->
+  <parameter name="Distcut" type="double">35 </parameter>
+  <!--Name of the CalorimeterHit Collection for ECAL -->
+  <parameter name="ECAL_Collection" type="string">ECAL </parameter>
+  <!--Levels for central loop in MIP -->
+  <parameter name="Levels" type="FloatVec">0.1 1.5 2.5 4 6 9 16 26 41 65  </parameter>
+  <!--Minimal Number of hits for ground level cluster -->
+  <parameter name="MinHit0" type="int">4 </parameter>
+  <!--Minimal Number of hits for i-th level cluster -->
+  <parameter name="MinHitSplit" type="int">2 </parameter>
+  <!--Number of levels for central loop -->
+  <parameter name="NumberOfLevels" type="int">10 </parameter>
+  <!--Fluctuation suprresion cut-->
+  <parameter name="Rcut" type="double">0.4 </parameter>
+  <!--At which number of neighbors to put the threshold, condition is < so you need to put N+1 -->
+  <parameter name="TopologicalCut" type="int">5 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyKinkFinder" type="KinkFinder">
+ <!--Kink Finder Processor : finds kinks, prongs and splits-->
+  <!--Cuts on Kink radius-->
+  <parameter name="CutOnRadius" type="float">100 </parameter>
+  <!--Debug level-->
+  <parameter name="DebugPrinting" type="int">0 </parameter>
+  <!--Cuts on kink mass for hyperon decay-->
+  <parameter name="HyperonDecayMassCut" type="float">0.15 </parameter>
+  <!--Cuts on lifetime for hyperon decay-->
+  <parameter name="HyperonTimeCut" type="float">6 </parameter>
+  <!--Cuts on kink mass for kaon decay-->
+  <parameter name="KaonDecayMassCut" type="float">0.075 </parameter>
+  <!--Cuts on kink distance of closest approach in SIT-->
+  <parameter name="KinkProjectionCutSIT" type="float">10 </parameter>
+  <!--Cuts on kink distance of closest approach in TPC-->
+  <parameter name="KinkProjectionCutTPC" type="float">20 </parameter>
+  <!--Name of output collection of kink reconstructed particles-->
+  <parameter name="KinkRecoParticleCollection" type="string" lcioOutType="ReconstructedParticle">KinkRecoParticles </parameter>
+  <!--Name of output collection of kink vertices-->
+  <parameter name="KinkVertexCollection" type="string" lcioOutType="Vertex">KinkVertices </parameter>
+  <!--Cuts on kink distance of closest approach in SIT-->
+  <parameter name="LooseProjectionCutSIT" type="float">10 </parameter>
+  <!--Cuts on Kink DeltaRxy for tracks in TPC-->
+  <parameter name="MaxDeltaTpcLayers" type="int">10 </parameter>
+  <!--Minimum Lambda Energy-->
+  <parameter name="MinELambda" type="float">2 </parameter>
+  <!--cuts on number of track hits-->
+  <parameter name="MinimumTrackHits" type="int">5 </parameter>
+  <!--Cuts on kink mass for pion decay-->
+  <parameter name="PionDecayMassCut" type="float">0.03 </parameter>
+  <!--Name of output collection of prong reconstructed particles-->
+  <parameter name="ProngRecoParticleCollection" type="string" lcioOutType="ReconstructedParticle">ProngRecoParticles </parameter>
+  <!--Name of output collection of prong vertices-->
+  <parameter name="ProngVertexCollection" type="string" lcioOutType="Vertex">ProngVertices </parameter>
+  <!--Cuts on kink mass for sigma decay-->
+  <parameter name="SigmaDecayMassCut" type="float">0.15 </parameter>
+  <!--Cuts on lifetime for sigma decay-->
+  <parameter name="SigmaTimeCut" type="float">6 </parameter>
+  <!--Name of output collection of split reconstructed particles-->
+  <parameter name="SplitRecoParticleCollection" type="string" lcioOutType="ReconstructedParticle">SplitRecoParticles </parameter>
+  <!--Maximum difference in deltaP for split tracks-->
+  <parameter name="SplitTrackMaxDeltaP" type="float">0.2 </parameter>
+  <!--Maximum fractional difference in deltaP for split tracks-->
+  <parameter name="SplitTrackMaxFracDeltaP" type="float">0.02 </parameter>
+  <!--Name of output collection of split vertices-->
+  <parameter name="SplitVertexCollection" type="string" lcioOutType="Vertex">SplitVertices </parameter>
+  <!--Tight Cut on kink distance of closest approach in TPC-->
+  <parameter name="TightKinkProjectionCutTPC" type="float">5 </parameter>
+  <!--Name of input collection of reconstructed particles-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track">LDCTracks </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Very Tight Cut on kink distance of closest approach in TPC-->
+  <parameter name="VeryTightKinkProjectionCutTPC" type="float">1 </parameter>
+</processor>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+ <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+  <!--drops the named collections from the event-->
+  <!--parameter name="DropCollectionNames" type="StringVec">TPCHits HCalHits  </parameter-->
+  <!--drops all collections of the given type from the event-->
+  <!--parameter name="DropCollectionTypes" type="StringVec">SimTrackerHit SimCalorimeterHit  </parameter-->
+  <!-- write complete objects in subset collections to the file (i.e. ignore subset flag)-->
+  <!--parameter name="FullSubsetCollections" type="StringVec">MCParticlesSkimmed  </parameter-->
+  <!--force keep of the named collections - overrules DropCollectionTypes (and DropCollectionNames)-->
+  <!--parameter name="KeepCollectionNames" type="StringVec">MyPreciousSimTrackerHits  </parameter-->
+  <!-- name of output file -->
+  <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
+  <!--write mode for output file:  WRITE_APPEND, WRITE_NEW or None-->
+  <parameter name="LCIOWriteMode" type="string">None </parameter>
+  <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
+  <!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyLDCCaloDigi" type="LDCCaloDigi">
+ <!--Performs simple digitization of sim calo hits...-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">40.91 81.81  </parameter>
+  <!--Calibration coefficients for HCAL-->
+  <parameter name="CalibrHCAL" type="FloatVec">34.8  </parameter>
+  <!--ECAL Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">EcalBarrelCollection EcalEndcapCollection EcalRingCollection  </parameter>
+  <!--Correct for ECAL gaps-->
+  <parameter name="ECALGapCorrection" type="int">1 </parameter>
+  <!--Factor applied to gap correction-->
+  <parameter name="ECALGapCorrectionFactor" type="float">1 </parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">20 100  </parameter>
+  <!--Factor applied to module gap correction-->
+  <parameter name="ECALModuleGapCorrectionFactor" type="float">0.5 </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection" type="string" lcioOutType="CalorimeterHit">ECAL </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+  <!--Energy correction for endcap-->
+  <parameter name="ECAlEndcapCorrectionFactor" type="float">1.025 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">HcalBarrelRegCollection HcalEndcapRingsCollection HcalEndcapsCollection  </parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection" type="string" lcioOutType="CalorimeterHit">HCAL </parameter>
+  <!--Threshold for HCAL Hits in GeV-->
+  <parameter name="HCALThreshold" type="float">0.00025 </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyLikelihoodPIDProcessor" type="LikelihoodPIDProcessor">
+ <!-- description not set by author -->
+  <!--cost matrix for risk based bayesian classifier-->
+  <parameter name="CostMatrix" type="FloatVec">0 1 1 1 1 1 0 9 1 1 1 1 0 1 1 1 1 30 0 1 1 1 1 10 0  </parameter>
+  <!--Boundaries for energy-->
+  <parameter name="EnergyBoundaries" type="FloatVec"> </parameter>
+  <!--rootfile of PDF-->
+  <parameter name="FilePDFName" type="string">pdf_ParticleID_ok.root </parameter>
+  <!--weight file for low momentum mu pi separation-->
+  <parameter name="FileWeightFormupiSeparationName" type="StringVec">TMVAClassification_BDTG_02GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_03GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_04GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_05GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_06GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_07GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_08GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_09GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_10GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_11GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_12GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_13GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_14GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_15GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_16GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_17GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_18GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_19GeVP_clusterinfo.weights.xml TMVAClassification_BDTG_20GeVP_clusterinfo.weights.xml  </parameter>
+  <!--Input collection of Reconstrcuted Particle-->
+  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--PID is based on Bayesian or Likelihood-->
+  <parameter name="UseBayesian" type="int">2 </parameter>
+  <!--MVA mu/pi separation should be used or not-->
+  <parameter name="UseLowMomentumMuPiSeparation" type="bool">true </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Angle Correction of dEdx value-->
+  <parameter name="dEdxAngleCorrection" type="int">0 </parameter>
+  <!--dEdx Error factor-->
+  <parameter name="dEdxErrorFactor" type="float">7.55 </parameter>
+  <!--dEdx Normalization-->
+  <parameter name="dEdxNormalization" type="float">1.35e-07 </parameter>
+  <!--dEdx Parameters for electron-->
+  <parameter name="dEdxParameter_electron" type="FloatVec">-0.00240638 0.710337 0.287718 -1.71591 0  </parameter>
+  <!--dEdx Parameters for Kaon-->
+  <parameter name="dEdxParameter_kaon" type="FloatVec">0.0796117 4133.35 1.13577e+06 0.180555 -0.000315083  </parameter>
+  <!--dEdx Parameters for muon-->
+  <parameter name="dEdxParameter_muon" type="FloatVec">0.0811408 0.992207 758509 -0.170167 0.00046367  </parameter>
+  <!--dEdx Parameters for pion-->
+  <parameter name="dEdxParameter_pion" type="FloatVec">0.0810756 -1.45051e+06 -30984.3 0.284056 0.000338131  </parameter>
+  <!--dEdx Parameters for proton-->
+  <parameter name="dEdxParameter_proton" type="FloatVec">0.0778772 44930 91377.8 0.150088 -0.000664184  </parameter>
+</processor>
+
+ <processor name="MyMCTruthJetEnergy" type="MCTruthJetEnergy">
+ <!--MCTruthJetEnergy calculates the MC truth jet energy of the MCParticles associated to the reconstructed particles in the jet-->
+  <!--Names of the Jet collections-->
+  <parameter name="JetCollectionNames" type="StringVec" lcioInType="ReconstructedParticle">FTSelected_2Jets FTSelected_3Jets FTSelected_4Jets FTSelected_5Jets FTSelected_6Jets  </parameter>
+  <!--Name of the ReconstructedParticle-MCParticle  relation collection-->
+  <parameter name="MCTruthRelationName" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyMemoryMonitor" type="MemoryMonitor">
+ <!--Simple processor to print out the memory consumption at defined intervals-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Print Event Number Every N Events-->
+  <parameter name="howOften" type="int">1 </parameter>
+</processor>
+
+ <processor name="MyMokkaCaloDigi" type="MokkaCaloDigi">
+ <!--Mokka digitizer...-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">31.3 83  </parameter>
+  <!--Calibration coefficients for HCAL-->
+  <parameter name="CalibrHCAL" type="FloatVec">27.3  </parameter>
+  <!--ECAL Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">SEcal01_EcalEndcap SEcal01_EcalBarrel  </parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">30 100  </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">0.0001 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">SHcal01_HcalBarrelEnd SHcal01_HcalBarrelReg SHcal01_HcalEndCaps  </parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--Threshold for HCAL Hits in GeV-->
+  <parameter name="HCALThreshold" type="float">0.0004 </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--name for the new collection of ECAL hits-->
+  <parameter name="NewECALCollName" type="string" lcioOutType="CalorimeterHit">ECAL </parameter>
+  <!--name for the new collection of HCAL hits-->
+  <parameter name="NewHCALCollName" type="string" lcioOutType="CalorimeterHit">HCAL </parameter>
+  <!--name for collection of relations between CalorimeterHits and SimCalorimeterHits-->
+  <parameter name="RelationCollName" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyMomentumCov" type="MomentumCov">
+ <!--MomentumCov calculate the covariance matrix in the momenta space.-->
+  <!--Name of the PandoraPFOs collection-->
+  <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the new PFOs collection with covariance matrix-->
+  <parameter name="OutputNewPFOsCollection" type="string" lcioOutType="ReconstructedParticle">Newpfos </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyNNClusterProcessor" type="NNClusterProcessor">
+ <!--NNClusterProcessor : simple nearest neighbour clustering-->
+  <!--Cut for distance between hits in mm-->
+  <parameter name="DistanceCut" type="float">40 </parameter>
+  <!--Cut for hit energy in GeV-->
+  <parameter name="EnergyCut" type="float">0 </parameter>
+  <!--Name of the input collections-->
+  <parameter name="HitCollections" type="StringVec" lcioInType="CalorimeterHit">ecal  </parameter>
+  <!--Name of the output collections-->
+  <parameter name="OutputCollection" type="string" lcioOutType="Cluster">NNClusters </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyNewLDCCaloDigi" type="NewLDCCaloDigi">
+ <!--Performs simple digitization of sim calo hits...-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">40.91 81.81  </parameter>
+  <!--Calibration coefficients for HCAL-->
+  <parameter name="CalibrHCAL" type="FloatVec">34.8  </parameter>
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--name of the part of the cellID that holds the module-->
+  <parameter name="CellIDModuleString" type="string">M </parameter>
+  <!--name of the part of the cellID that holds the stave-->
+  <parameter name="CellIDStaveString" type="string">S-1 </parameter>
+  <!--ECAL Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">EcalBarrelCollection EcalEndcapCollection EcalRingCollection  </parameter>
+  <!--Energy correction for ECAL endcap-->
+  <parameter name="ECALEndcapCorrectionFactor" type="float">1.025 </parameter>
+  <!--Correct for ECAL gaps-->
+  <parameter name="ECALGapCorrection" type="int">1 </parameter>
+  <!--Factor applied to gap correction-->
+  <parameter name="ECALGapCorrectionFactor" type="float">1 </parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">20 100  </parameter>
+  <!--Factor applied to module gap correction-->
+  <parameter name="ECALModuleGapCorrectionFactor" type="float">0.5 </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection0" type="string" lcioOutType="CalorimeterHit">ECALBarrel </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection1" type="string" lcioOutType="CalorimeterHit">ECALEndcap </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection2" type="string" lcioOutType="CalorimeterHit">ECALOther </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">HcalBarrelRegCollection HcalEndcapRingsCollection HcalEndcapsCollection  </parameter>
+  <!--Energy correction for HCAL endcap-->
+  <parameter name="HCALEndcapCorrectionFactor" type="float">1.025 </parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection0" type="string" lcioOutType="CalorimeterHit">HCALBarrel </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection1" type="string" lcioOutType="CalorimeterHit">HCALEndcap </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection2" type="string" lcioOutType="CalorimeterHit">HCALOther </parameter>
+  <!--Threshold for HCAL Hits in GeV-->
+  <parameter name="HCALThreshold" type="FloatVec">4e-05  </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyPFOID" type="PFOID">
+ <!--Performs particle identification-->
+  <!--Debugging?-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Boundary for energy binning-->
+  <parameter name="EnergyBoundaries" type="FloatVec">0 10 1e+07  </parameter>
+  <!--Name of files containing pdfs for charged particles (order of files must be consistent with parameter EnergyBoundaries!!)-->
+  <parameter name="FilePDFName" type="StringVec">pdf_charged_lt10.txt pdf_charged_ge10.txt  </parameter>
+  <!--Name of the PFO collection-->
+  <parameter name="RecoParticleCollection" type="string">RecoParticles </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Name of files containing pdfs for neutral particles (order of files must be consistent with parameter EnergyBoundaries!!)-->
+  <parameter name="neutralFilePDFName" type="StringVec">pdf_neutral_lt10.txt pdf_neutral_ge10.txt  </parameter>
+</processor>
+
+ <processor name="MyPGDBP" type="PGDBP">
+ <!--Physical and Geometrical Database (for Boojum at least)-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyPrepareRECParticles" type="PrepareRECParticles">
+ <!--PrepareRECParticles converts input to ReconstructedParticles and puts them into a new collection making sure all the information which is needed to run the TauFinder is provided. -->
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCCollectionName           " type="string" lcioInType="MCParticle">MCParticlesSkimmed </parameter>
+  <!--Name of the MC Truth ReconstructedParticle collection-->
+  <parameter name="MCRECLinkCollectionName" type="string" lcioOutType="LCRelation">MCRecLink </parameter>
+  <!--Collection of Rec Particles for TauFinder-->
+  <parameter name="RecCollection" type="string" lcioOutType="ReconstructedParticle">MCParticles_tau </parameter>
+  <!--Collection of Rec Particles for TauFinder-->
+  <parameter name="RecCollection_Tracks" type="string" lcioOutType="ReconstructedParticle">Tracks_tau </parameter>
+  <!--Name of the Track collection-->
+  <parameter name="TrackCollectionName" type="string" lcioInType="Track">LDCTracks </parameter>
+  <!--Name of the Track Truth ReconstructedParticle collection-->
+  <parameter name="TrackRECLinkCollectionName" type="string" lcioOutType="LCRelation">TracksRecLink </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Name of the output Collection of refilled information-->
+  <parameter name="outputColMC" type="string">MCParticles_tau </parameter>
+  <!--Name of the output Collection of refilled information-->
+  <parameter name="outputColTracks" type="string">Tracks_tau </parameter>
+</processor>
+
+ <processor name="MyQuarkJetPairing" type="QuarkJetPairing">
+ <!---->
+  <!--Input collection of jets-->
+  <parameter name="InputJetCollection" type="string" lcioInType="ReconstructedParticle">NewJets </parameter>
+  <!--Input collection of MCParticles-->
+  <parameter name="InputMCPCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyRealisticCaloDigiScinPpd" type="RealisticCaloDigiScinPpd">
+ <!--Performs digitization of sim calo hits...-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--average G4 deposited energy by MIP for calibration-->
+  <parameter name="calibration_mip" type="float">0.0001 </parameter>
+  <!--random dead cell fraction (as a fraction: 0->1) -->
+  <parameter name="deadCell_fraction" type="float">0 </parameter>
+  <!--store dead cells in memory? (i.e. use same dead cells in each event. WARNING: can take a lot of memory if used...) -->
+  <parameter name="deadCell_memorise" type="bool">false </parameter>
+  <!--typical electronics noise (in MIP units)-->
+  <parameter name="elec_noise_mip" type="float">0 </parameter>
+  <!--maximum of dynamic range of electronics (in MIPs)-->
+  <parameter name="elec_range_mip" type="float">2500 </parameter>
+  <!--input simcalhit Collection Names-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="SimCalorimeterHit">SimCalorimeterHits  </parameter>
+  <!--correlated random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="miscalibration_correl" type="float">0 </parameter>
+  <!--uncorrelated random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="miscalibration_uncorrel" type="float">0 </parameter>
+  <!--store oncorrelated miscalbrations in memory? (i.e. use same miscalibrations in each event. WARNING: can take a lot of memory if used...) -->
+  <parameter name="miscalibration_uncorrel_memorise" type="bool">false </parameter>
+  <!--output calorimeterhit Collection Names-->
+  <parameter name="outputHitCollections" type="StringVec"> </parameter>
+  <!--output hit relatiob Collection Names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+  <!--# Photo-electrons per MIP (scintillator): used to poisson smear #PEs if >0-->
+  <parameter name="ppd_mipPe" type="float">10 </parameter>
+  <!--total number of MPPC/SiPM pixels for implementation of saturation effect-->
+  <parameter name="ppd_npix" type="int">10000 </parameter>
+  <!--fractional uncertainty of effective total number of MPPC/SiPM pixels-->
+  <parameter name="ppd_npix_uncert" type="float">0.05 </parameter>
+  <!--variation of PPD pixel signal (as a fraction: 0.01=1%)-->
+  <parameter name="ppd_pix_spread" type="float">0.05 </parameter>
+  <!--Threshold for Hit-->
+  <parameter name="threshold" type="float">0.5 </parameter>
+  <!--Unit for threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
+  <parameter name="thresholdUnit" type="string">MIP </parameter>
+  <!--Correct hit times for propagation: radial distance/c-->
+  <parameter name="timingCorrectForPropagation" type="int">0 </parameter>
+  <!--Use hit times-->
+  <parameter name="timingCut" type="int">0 </parameter>
+  <!--Time Window maximum time in ns-->
+  <parameter name="timingWindowMax" type="float">100 </parameter>
+  <!--Time Window minimum time in ns-->
+  <parameter name="timingWindowMin" type="float">-10 </parameter>
+</processor>
+
+ <processor name="MyRealisticCaloDigiSilicon" type="RealisticCaloDigiSilicon">
+ <!--Digitization of silicon simcalo hits-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--average G4 deposited energy by MIP for calibration-->
+  <parameter name="calibration_mip" type="float">0.0001 </parameter>
+  <!--random dead cell fraction (as a fraction: 0->1) -->
+  <parameter name="deadCell_fraction" type="float">0 </parameter>
+  <!--store dead cells in memory? (i.e. use same dead cells in each event. WARNING: can take a lot of memory if used...) -->
+  <parameter name="deadCell_memorise" type="bool">false </parameter>
+  <!--typical electronics noise (in MIP units)-->
+  <parameter name="elec_noise_mip" type="float">0 </parameter>
+  <!--maximum of dynamic range of electronics (in MIPs)-->
+  <parameter name="elec_range_mip" type="float">2500 </parameter>
+  <!--input simcalhit Collection Names-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="SimCalorimeterHit">SimCalorimeterHits  </parameter>
+  <!--correlated random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="miscalibration_correl" type="float">0 </parameter>
+  <!--uncorrelated random gaussian miscalibration (as a fraction: 1.0 = 100%) -->
+  <parameter name="miscalibration_uncorrel" type="float">0 </parameter>
+  <!--store oncorrelated miscalbrations in memory? (i.e. use same miscalibrations in each event. WARNING: can take a lot of memory if used...) -->
+  <parameter name="miscalibration_uncorrel_memorise" type="bool">false </parameter>
+  <!--output calorimeterhit Collection Names-->
+  <parameter name="outputHitCollections" type="StringVec"> </parameter>
+  <!--output hit relatiob Collection Names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+  <!--energy required to create e-h pair in silicon (in eV)-->
+  <parameter name="silicon_pairEnergy" type="float">3.6 </parameter>
+  <!--Threshold for Hit-->
+  <parameter name="threshold" type="float">0.5 </parameter>
+  <!--Unit for threshold. Can be "GeV", "MIP" or "px". MIP and px need properly set calibration constants-->
+  <parameter name="thresholdUnit" type="string">MIP </parameter>
+  <!--Correct hit times for propagation: radial distance/c-->
+  <parameter name="timingCorrectForPropagation" type="int">0 </parameter>
+  <!--Use hit times-->
+  <parameter name="timingCut" type="int">0 </parameter>
+  <!--Time Window maximum time in ns-->
+  <parameter name="timingWindowMax" type="float">100 </parameter>
+  <!--Time Window minimum time in ns-->
+  <parameter name="timingWindowMin" type="float">-10 </parameter>
+</processor>
+
+ <processor name="MyRealisticCaloRecoScinPpd" type="RealisticCaloRecoScinPpd">
+ <!--Performs fist reconstruction of scintillator calo hits-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Calibration coefficients (MIP->shower GeV) of layers groups-->
+  <parameter name="calibration_factorsMipGev" type="FloatVec"> </parameter>
+  <!--grouping of calo layers-->
+  <parameter name="calibration_layergroups" type="IntVec"> </parameter>
+  <!--input hit collection names-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="CalorimeterHit"> </parameter>
+  <!--input relation collection names (digi<->sim), one per inputHitCollection-->
+  <parameter name="inputRelationCollections" type="StringVec" lcioInType="LCRelation"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputHitCollections" type="StringVec"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+  <!--# Photo-electrons per MIP (scintillator): used to poisson smear #PEs if >0-->
+  <parameter name="ppd_mipPe" type="float">10 </parameter>
+  <!--total number of MPPC/SiPM pixels for implementation of saturation effect-->
+  <parameter name="ppd_npix" type="int">10000 </parameter>
+</processor>
+
+ <processor name="MyRealisticCaloRecoSilicon" type="RealisticCaloRecoSilicon">
+ <!--Performs fist reconstruction of silicon ECAL hits-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Calibration coefficients (MIP->shower GeV) of layers groups-->
+  <parameter name="calibration_factorsMipGev" type="FloatVec"> </parameter>
+  <!--grouping of calo layers-->
+  <parameter name="calibration_layergroups" type="IntVec"> </parameter>
+  <!--input hit collection names-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="CalorimeterHit"> </parameter>
+  <!--input relation collection names (digi<->sim), one per inputHitCollection-->
+  <parameter name="inputRelationCollections" type="StringVec" lcioInType="LCRelation"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputHitCollections" type="StringVec"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+</processor>
+
+ <processor name="MyRecoMCTruthLinker" type="RecoMCTruthLinker">
+ <!--links RecontructedParticles to the MCParticle based on number of hits used-->
+  <!--energy cut for Brems that are kept-->
+  <parameter name="BremsstrahlungEnergyCut" type="float">1 </parameter>
+  <!--Name of the updated calo-hit MCTruthLink output collection - not created if empty()-->
+  <parameter name="CalohitMCTruthLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--Name of the Clusters input collection-->
+  <parameter name="ClusterCollection" type="string" lcioInType="Cluster">PandoraClusters </parameter>
+  <!--Name of the clusterMCTruthLink output collection - not created if empty()-->
+  <parameter name="ClusterMCTruthLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--true: All reco <-> true relations are given, with weight = 10000*calo weight+track weight (weights in permill). false: Only highest contributor linked,and only to tracks, not clusters if there are any tracks-->
+  <parameter name="FullRecoRelation" type="bool">false </parameter>
+  <!--Work-around Mokka bug in vertex-is-not-endpoint-of-parent flag (logic inverted)-->
+  <parameter name="InvertedNonDestructiveInteractionLogic" type="bool">false </parameter>
+  <!--PDG codes of particles of which the daughters will be kept in the skimmmed MCParticle collection-->
+  <parameter name="KeepDaughtersPDG" type="IntVec">22 111 310  </parameter>
+  <!--Name of the MCParticle input collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--Name of the skimmed MCParticle  output collection - not created if empty()-->
+  <parameter name="MCParticlesSkimmedName" type="string" lcioOutType="MCParticle"> </parameter>
+  <!--Name of the MCTruthClusterLink output collection-->
+  <parameter name="MCTruthClusterLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--Name of the MCTruthRecoLink output collection-->
+  <parameter name="MCTruthRecoLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--Name of the trackMCTruthLink output collection-->
+  <parameter name="MCTruthTrackLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--Name of the RecoMCTruthLink output collection - not created if empty()-->
+  <parameter name="RecoMCTruthLinkName" type="string" lcioOutType="LCRelation">RecoMCTruthLink </parameter>
+  <!--Name of the ReconstructedParticles input collection-->
+  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--save photons from Brems-->
+  <parameter name="SaveBremsstrahlungPhotons" type="bool">false </parameter>
+  <!--Names of the SimCaloHits input collections-->
+  <parameter name="SimCaloHitCollections" type="StringVec" lcioInType="SimCalorimeterHit">BeamCalCollection EcalBarrelSiliconCollection EcalBarrelSiliconPreShowerCollection EcalEndcapRingCollection EcalEndcapRingPreShowerCollection EcalEndcapSiliconCollection EcalEndcapSiliconPreShowerCollection HcalBarrelRegCollection HcalEndCapRingsCollection HcalEndCapsCollection LHcalCollection LumiCalCollection MuonBarrelCollection MuonEndCapCollection  </parameter>
+  <!--Name of the  lcrelation collections, that link the SimCalorimeterHit to CalorimeterHit-->
+  <parameter name="SimCalorimeterHitRelationNames" type="StringVec" lcioInType="LCRelation">RelationCaloHit RelationLcalHit RelationLHcalHit RelationBCalHit RelationMuonHit  </parameter>
+  <!--Names of the SimTrackerHits input collection-->
+  <parameter name="SimTrackerHitCollections" type="StringVec" lcioInType="SimTrackerHit">VXDCollection  SITCollection FTD_PIXELCollection FTD_STRIPCollection TPCCollection SETCollection  </parameter>
+  <!--Name of the Tracks input collection-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+  <!--Name of the trackMCTruthLink output collection - not created if empty()-->
+  <parameter name="TrackMCTruthLinkName" type="string" lcioOutType="LCRelation"> </parameter>
+  <!--Name of the lcrelation collections, that link the TrackerHits to their SimTrackerHits.-->
+  <parameter name="TrackerHitsRelInputCollections" type="StringVec" lcioInType="LCRelation">VXDTrackerHitRelations SITSpacePointRelations FTDPixelTrackerHitRelations FTDSpacePointRelations TPCTrackerHitRelations SETSpacePointRelations  </parameter>
+  <!--true: use relations for TrackerHits, false : use getRawHits -->
+  <parameter name="UseTrackerHitRelations" type="bool">true </parameter>
+  <!--If Using Particle Gun Ignore Gen Stat-->
+  <parameter name="UsingParticleGun" type="bool">false </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--energy cut for daughters that are kept from KeepDaughtersPDG-->
+  <parameter name="daughtersECutMeV" type="float">10 </parameter>
+</processor>
+
+ <processor name="MySelectEvents" type="SelectEvents">
+ <!--SelectEvent Processor selects certain events from input files-->
+  <!--First Event-->
+  <parameter name="FirstEvent" type="int">0 </parameter>
+  <!--Last Event-->
+  <parameter name="LastEvent" type="int">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySelectReconstructedParticle" type="SelectReconstructedParticle">
+ <!--SelectReconstructedParticle: Selects particles from all reconstructed particles to be used for the thrust finder-->
+  <!--Minimum momentum a particle has to have to be used for the thrust calculation-->
+  <parameter name="MinimumMomentum" type="float">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Collection of reconstructed particles to chose from-->
+  <parameter name="inputCollectionName" type="string" lcioInType="ReconstructedParticle">ReconstructedParticle </parameter>
+  <!--Collection of selected reconstructed particles-->
+  <parameter name="outputCollectionName" type="string" lcioOutType="ReconstructedParticle">SelectedReconstructedParticle </parameter>
+</processor>
+
+ <processor name="MySiTracker_dEdxProcessor" type="SiTracker_dEdxProcessor">
+ <!--SiTracker_dEdxProcessor calculates dE/dx for planar silicon trackers-->
+  <!--Shall we use the sensitive thicknesses from parameters?-->
+  <parameter name="CheatSensorThicknesses" type="bool">false </parameter>
+  <!--Sensor thicknesses to use instead of automatic values from DD4hep (if CheatSensorThicknesses==true).-->
+  <parameter name="SensorThicknessCheatValues" type="FloatVec">-1 -1 -1 -1 -1 -1  </parameter>
+  <!--Name of the input Track collection-->
+  <parameter name="TrackCollectionName" type="string" lcioInType="Track">SiTracks </parameter>
+  <!--Tracker hit collections that will be analysed-->
+  <parameter name="TrkHitCollections" type="StringVec">ITrackerHits ITrackerEndcapHits OTrackerHits OTrackerEndcapHits VXDTrackerHits VXDEndcapTrackerHits  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Type of estimator for dEdx.-->
+  <parameter name="dEdxEstimator" type="string">median </parameter>
+</processor>
+
+ <processor name="MySimDigital" type="SimDigital">
+ <!--This processor creates SDHCAL digitized CalorimeterHits from SDHCAL SimCalorimeterHits-->
+  <!--Parameter for angle correction-->
+  <parameter name="AngleCorrectionPower" type="float">0.4 </parameter>
+  <!--The type of the encoding, LCGEO or PROTO-->
+  <parameter name="CellIDEncodingStringType" type="string">LCGEO </parameter>
+  <!--Define the charge splitter method. Possible option : Erf , Exact-->
+  <parameter name="ChargeSplitterOption" type="string">Erf </parameter>
+  <!--d parameter for exact splitter-->
+  <parameter name="ChargeSplitterd" type="float">1 </parameter>
+  <!--Value of the constant term for efficiency correction if EffMapOption==Uniform-->
+  <parameter name="EffMapConstantValue" type="float">0.97 </parameter>
+  <!--Efficiency map file-->
+  <parameter name="EffMapFile" type="string"> </parameter>
+  <!--Step efficiency correction method : should be Uniform-->
+  <parameter name="EffMapOption" type="string">Uniform </parameter>
+  <!--Width of the RPC gas gap-->
+  <parameter name="GasGapWidth" type="float">1.2 </parameter>
+  <!--Cell size (mm) of HCAL, if it is equal or less than zero then the value is taken from dd4hep-->
+  <parameter name="HCALCellSize" type="float">0 </parameter>
+  <!--Threshold for HCAL Hits in pC-->
+  <parameter name="HCALThreshold" type="FloatVec">0.1  </parameter>
+  <!--if true, ensure that each hit will keep at least one step for digitisation independatly of filtering conditions (StepCellCenterMaxDistanceLayerDirection)-->
+  <parameter name="KeepAtLeastOneStep" type="bool">true </parameter>
+  <!--Parameter for angle correction-->
+  <parameter name="LinkSteps" type="bool">false </parameter>
+  <!--Parameter for the Polya distribution used to simulate the induced charge distribution : mean of the distribution-->
+  <parameter name="PolyaAverageCharge" type="float">1.6 </parameter>
+  <!--Polya map file-->
+  <parameter name="PolyaMapFile" type="string"> </parameter>
+  <!--Uniform polya or different polya per Asic-->
+  <parameter name="PolyaOption" type="string">Uniform </parameter>
+  <!--The seed of the polya function-->
+  <parameter name="PolyaRandomSeed" type="int">1 </parameter>
+  <!--Parameter for the Polya distribution used to simulate the induced charge distribution : related to the distribution width -->
+  <parameter name="PolyaWidthParameter" type="float">16.3 </parameter>
+  <!--distance in mm between two RPC pads : used if ChargeSplitterOption==Function or Erf-->
+  <parameter name="RPC_PadSeparation" type="float">0 </parameter>
+  <!--Charge spreader map file-->
+  <parameter name="SpreaderMapFile" type="string"> </parameter>
+  <!--Maximum distance (mm) between the Geant4 step position and the cell center, in the RPC width direction, to keep a step for digitization-->
+  <parameter name="StepCellCenterMaxDistanceLayerDirection" type="float">0.0005 </parameter>
+  <!--Step length cut-->
+  <parameter name="StepLengthCut" type="double">-1 </parameter>
+  <!--Minimum distance (mm) between 2 Geant4 steps, in the RPC plane, to keep the 2 steps-->
+  <parameter name="StepsMinDistanceRPCplaneDirection" type="float">0.5 </parameter>
+  <!--Time cut-->
+  <parameter name="TimeCut" type="double">1.79769e+308 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Replace analog hit energy by value given in CalibrHCAL according to thresholds given in HCALThreshold-->
+  <parameter name="doThresholds" type="bool">true </parameter>
+  <!--Weigth for the different Erf functions-->
+  <parameter name="erfWeigth" type="FloatVec">1  </parameter>
+  <!--Width values for the different Erf functions-->
+  <parameter name="erfWidth" type="FloatVec">2  </parameter>
+  <!--maximal distance (in mm) at which a step can induce charge using the 2D function defined with functionFormula or when using ChargeSplitterOption==Erf-->
+  <parameter name="functionRange" type="float">30 </parameter>
+  <!--Sim Calorimeter Hit Collections-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="SimCalorimeterHit">HcalBarrelCollection HcalEndCapRingsCollection HcalEndCapsCollection  </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputHitCollections" type="StringVec">HCALBarrelDigi HCALEndcapDigi HCALOtherDigi  </parameter>
+  <!--output hit relation Collection Names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+</processor>
+
+ <processor name="MySimDigitalLinkToParticles" type="SimDigitalLinkToParticles">
+ <!--This processor links calorimeter hits to MC particles-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Sim Calorimeter Hit Collections-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="CalorimeterHit"> </parameter>
+  <!--Collections of generic objects containing additional step informations-->
+  <parameter name="inputRelationCollections" type="StringVec" lcioInType="LCCollection"> </parameter>
+  <!--output hit relation Collection Names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+</processor>
+
+ <processor name="MySimDigitalToEnergy" type="SimDigitalToEnergy">
+ <!--This processor transforms the threshold value of digitized SDHCAL CalorimeterHits into energy-->
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--Threshold to Energy correspondace-->
+  <parameter name="EnergyCalibration" type="FloatVec">0.4  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Calibration coefficients (MIP->shower GeV) of layers groups-->
+  <parameter name="calibration_factorsMipGev" type="FloatVec"> </parameter>
+  <!--grouping of calo layers-->
+  <parameter name="calibration_layergroups" type="IntVec"> </parameter>
+  <!--input hit collection names-->
+  <parameter name="inputHitCollections" type="StringVec" lcioInType="CalorimeterHit"> </parameter>
+  <!--input relation collection names (digi<->sim), one per inputHitCollection-->
+  <parameter name="inputRelationCollections" type="StringVec" lcioInType="LCRelation"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputHitCollections" type="StringVec"> </parameter>
+  <!--output hit collection names-->
+  <parameter name="outputRelationCollections" type="StringVec"> </parameter>
+</processor>
+
+ <processor name="MySimpleCaloDigi" type="SimpleCaloDigi">
+ <!--Performs simple digitization of sim calo hits...-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">31.3 83  </parameter>
+  <!--Calibration coefficients for HCAL-->
+  <parameter name="CalibrHCAL" type="FloatVec">27.3  </parameter>
+  <!--ECAL Collection Names-->
+  <parameter name="ECALCollections" type="StringVec" lcioInType="SimCalorimeterHit">ecal02_EcalBarrel ecal02_EcalEndcap  </parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">30 100  </parameter>
+  <!--ECAL Collection of real Hits-->
+  <parameter name="ECALOutputCollection" type="string" lcioOutType="CalorimeterHit">ECAL </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">0.0001 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps  </parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--HCAL Collection of real Hits-->
+  <parameter name="HCALOutputCollection" type="string" lcioOutType="CalorimeterHit">HCAL </parameter>
+  <!--Threshold for HCAL Hits in GeV-->
+  <parameter name="HCALThreshold" type="float">0.0004 </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationCaloHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySimpleFCalDigi" type="SimpleFCalDigi">
+ <!--Performs simple digitization of SimCalorimeter hits in forward calorimeters ...-->
+  <!--Calibration coefficients for FCAL-->
+  <parameter name="CalibrFCAL" type="float">31 </parameter>
+  <!--ID of calorimeter: lcal, fcal, bcal-->
+  <parameter name="CaloID" type="string">fcal </parameter>
+  <!--subdetector layout: barrel, endcap, plug, ring-->
+  <parameter name="CaloLayout" type="string">endcap </parameter>
+  <!--type of calorimeter: em, had, muon-->
+  <parameter name="CaloType" type="string">had </parameter>
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--string defining cell encoding-->
+  <parameter name="DefaultEncoding" type="string">M:3,S-1:3,I:9,J:9,K-1:6 </parameter>
+  <!--Fcal Collection Names-->
+  <parameter name="FCALCollections" type="StringVec" lcioInType="SimCalorimeterHit">LcalCollection  </parameter>
+  <!--Fcal Collection of real Hits-->
+  <parameter name="FCALOutputCollection" type="string" lcioOutType="CalorimeterHit">FCAL </parameter>
+  <!--Threshold for Fcal Hits in GeV-->
+  <parameter name="FcalThreshold" type="float">0 </parameter>
+  <!--Fix the hit positions in LCal using the cellID (for DBD simulated samples)-->
+  <parameter name="FixLCalHits" type="bool">false </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationFcalHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySimpleFastMCProcessor" type="SimpleFastMCProcessor">
+ <!--SimpleFastMCProcessor creates ReconstrcutedParticles from MCParticles according to the resolution given in the steering file.-->
+  <!--Resolution of charged particles in polar angle range:  d(1/P)  th_min  th_max-->
+  <parameter name="ChargedResolution" type="FloatVec">5e-05 0 1.5708  </parameter>
+  <!--Name of the MCParticle input collection-->
+  <parameter name="InputCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--Name of the MCTruthMapping output collection-->
+  <parameter name="MCTruthMappingCollectionName" type="string" lcioOutType="LCRelation">MCTruthMapping </parameter>
+  <!--No reconstructed particles are produced for smaller momenta (in [GeV])-->
+  <parameter name="MomentumCut" type="float">0.001 </parameter>
+  <!--Resolution dE/E=A+B/sqrt(E/GeV) of neutral hadrons in polar angle range: A  B th_min  th_max-->
+  <parameter name="NeutralHadronResolution" type="FloatVec">0.04 0.5 0 1.5708  </parameter>
+  <!--Resolution dE/E=A+B/sqrt(E/GeV) of photons in polar angle range: A  B th_min  th_max-->
+  <parameter name="PhotonResolution" type="FloatVec">0.01 0.1 0 1.5708  </parameter>
+  <!--Name of the ReconstructedParticles output collection-->
+  <parameter name="RecoParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">ReconstructedParticles </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySimpleMuonDigi" type="SimpleMuonDigi">
+ <!--Performs simple digitization of sim muon hits...-->
+  <!--Calibration coefficients for MUON-->
+  <parameter name="CalibrMUON" type="float">120000 </parameter>
+  <!--name of the part of the cellID that holds the layer-->
+  <parameter name="CellIDLayerString" type="string">K-1 </parameter>
+  <!--Vector of Barrel layers to be kept. Layers start at 1!-->
+  <parameter name="KeepBarrelLayersVec" type="IntVec"> </parameter>
+  <!--Vector of Endcap layers to be kept. Layers start at 1!-->
+  <parameter name="KeepEndcapLayersVec" type="IntVec"> </parameter>
+  <!--Muon Collection Names-->
+  <parameter name="MUONCollections" type="StringVec" lcioInType="SimCalorimeterHit">yoke03_MuonBarrel yoke03_MuonEndCap yoke03_MuonPlug  </parameter>
+  <!--Muon Collection of real Hits-->
+  <parameter name="MUONOutputCollection" type="string" lcioOutType="CalorimeterHit">MUON </parameter>
+  <!--maximum hit energy for a MUON hit-->
+  <parameter name="MaxHitEnergyMUON" type="float">2 </parameter>
+  <!--Threshold for Muon Hits in GeV-->
+  <parameter name="MuonThreshold" type="float">0.025 </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string" lcioOutType="LCRelation">RelationMuonHit </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySimpleTimer" type="SimpleTimer">
+ <!--MARLIN Processor 'SimpleTimer', offers simple timer utilities-->
+  <!--Mode-->
+  <parameter name="Mode" type="int">0 </parameter>
+  <!--Seconds to Wait-->
+  <parameter name="SecondsToWait" type="int">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MySkipNEvents" type="SkipNEvents">
+ <!--The output condition of this processor is false for the first n LCEvents. Afterwards it is set to true.-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--number of LCEvents to skip-->
+  <parameter name="nSkip" type="int">0 </parameter>
+</processor>
+
+ <processor name="MySphere" type="Sphere">
+ <!--Sphere calculates eigenvalues of sphericity tensor-->
+  <!--Name of the ReconstructedParticle collection-->
+  <parameter name="CollectionName" type="string" lcioInType="ReconstructedParticle">RecontructedParticle </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--name of parameter to store the results -->
+  <parameter name="eigenvalues_parameter_name" type="string">sphericity_tensor_eigenvalues </parameter>
+  <!-- exponent in sphericity tensor use 2.0 for classical 1.0 for C,D-->
+  <parameter name="r_value" type="float">2 </parameter>
+</processor>
+
+ <processor name="MyStatusmonitor" type="Statusmonitor">
+ <!--Statusmonitor prints out information on running Marlin Job: Prints number of runs run and current number of the event. Counting is sequential and not the run or event ID.-->
+  <!--Print the event number every N events-->
+  <parameter name="HowOften" type="int">10000 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyStdHepReader" type="StdHepReader">
+ <!--Reads StdHep files as input and creates LCIO events with MCParticle collections. Make sure to not specify any LCIOInputFiles in the steering in order to read StdHep files.-->
+  <!--input file-->
+  <parameter name="StdHepFileName" type="string">input.stdhep </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTJjetsPFOAnalysisProcessor" type="TJjetsPFOAnalysisProcessor">
+ <!--TJjetsPFOAnalysisProcessor: Basically a copy-pasted version of the PFOAnalysis processor working on individual TrueJet jets-->
+  <!--Name of the  FinalColourNeutralLink output collection-->
+  <parameter name="FinalColourNeutralLink" type="string" lcioInType="LCRelation">FinalColourNeutralLink </parameter>
+  <!--Name of the FinalColourNeutralCollection output collection-->
+  <parameter name="FinalColourNeutrals" type="string" lcioInType="ReconstructedParticle">FinalColourNeutrals </parameter>
+  <!--Name of the  FinalElementonLink output collection-->
+  <parameter name="FinalElementonLink" type="string" lcioInType="LCRelation">FinalElementonLink </parameter>
+  <!--Name of the  InitialColourNeutralLink output collection-->
+  <parameter name="InitialColourNeutralLink" type="string" lcioInType="LCRelation">InitialColourNeutralLink </parameter>
+  <!--Name of the InitialColourNeutralCollection output collection-->
+  <parameter name="InitialColourNeutrals" type="string" lcioInType="ReconstructedParticle">InitialColourNeutrals </parameter>
+  <!--Name of the  InitialElementonLink output collection-->
+  <parameter name="InitialElementonLink" type="string" lcioInType="LCRelation">InitialElementonLink </parameter>
+  <!--Name of the PFOs collection-->
+  <parameter name="InputAllPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Flag to look for quarks with mother Z-->
+  <parameter name="LookForQuarksWithMotherZ" type="int">0 </parameter>
+  <!--Name of the MC particle collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--MC pfo selection neutron and proton low energy cut-off-->
+  <parameter name="MCPfoSelectionLowEnergyNPCutOff" type="float">1 </parameter>
+  <!--MC pfo selection momentum-->
+  <parameter name="MCPfoSelectionMomentum" type="float">0.01 </parameter>
+  <!--MC pfo selection radius-->
+  <parameter name="MCPfoSelectionRadius" type="float">500 </parameter>
+  <!--Name of the RecoMCTruthLink input collection-->
+  <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--Name of the output root file-->
+  <parameter name="RootFile" type="string">PFOAnalysis.root </parameter>
+  <!--Name of the TrueJetMCParticleLink output collection-->
+  <parameter name="TrueJetMCParticleLink" type="string" lcioInType="LCRelation">TrueJetMCParticleLink </parameter>
+  <!--Name of the TrueJetPFOLink output collection-->
+  <parameter name="TrueJetPFOLink" type="string" lcioInType="LCRelation">TrueJetPFOLink </parameter>
+  <!--Name of the TrueJetCollection output collection-->
+  <parameter name="TrueJets" type="string" lcioInType="ReconstructedParticle">TrueJets </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTOFEstimators" type="TOFEstimators">
+ <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
+  <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
+  <parameter name="MaxLayerNumber" type="int">100 </parameter>
+  <!--Name of the ReconstructedParticle collection-->
+  <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Assumed time resolution per hit in ps-->
+  <parameter name="TimeResolution" type="float">0 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTOFPlots" type="TOFPlots">
+ <!--TOFPlots creates plots related to potential time of flight measurements with the calorimter-->
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCPCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--Name of the ReconstructedParticle collection-->
+  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTPCDigiProcessor" type="TPCDigiProcessor">
+ <!--Produces TPC TrackerHit collection from SimTrackerHit collection, smeared in RPhi and Z. A search is made for adjacent hits on a pad row, if they are closer in z and r-phi than the steering parameters _doubleHitResRPhi (default value 2.0 mm) and _doubleHitResZ (default value 5.0 mm) they are considered to overlap. Clusters of hits smaller than _maxMerge (default value 3) are merged into a single tracker hit, with the position given as the average poision of the hits in phi and in z. Clusters which have _maxMerge hits or more are determined to be identifiable as multiple hits, and are not added to the tracker hit collection. This of course means that good hits caught up in a cluster of background hits will be lossed.-->
+  <!--R-Phi Diffusion Coefficent in TPC-->
+  <parameter name="DiffusionCoeffRPhi" type="float">0.025 </parameter>
+  <!--Z Diffusion Coefficent in TPC-->
+  <parameter name="DiffusionCoeffZ" type="float">0.08 </parameter>
+  <!--Do not encode the side in the cellID of the TrackerHit-->
+  <parameter name="DontEncodeSide" type="bool">true </parameter>
+  <!--Defines the minimum distance for two seperable hits in RPhi-->
+  <parameter name="DoubleHitResolutionRPhi" type="float">2 </parameter>
+  <!--Defines the minimum distance for two seperable hits in Z-->
+  <parameter name="DoubleHitResolutionZ" type="float">5 </parameter>
+  <!--Defines spatial slice in RP-->
+  <parameter name="HitSortingBinningRPhi" type="float">2 </parameter>
+  <!--Defines spatial slice in Z-->
+  <parameter name="HitSortingBinningZ" type="float">5 </parameter>
+  <!--Defines the maximum number of adjacent hits which can be merged-->
+  <parameter name="MaxClusterSizeForMerge" type="int">3 </parameter>
+  <!--Number of Effective electrons per pad in TPC-->
+  <parameter name="N_eff" type="int">22 </parameter>
+  <!--Pad Phi Resolution constant in TPC-->
+  <parameter name="PointResolutionPadPhi" type="float">0.9 </parameter>
+  <!--R-Phi Resolution constant in TPC-->
+  <parameter name="PointResolutionRPhi" type="float">0.05 </parameter>
+  <!--TPC Z Resolution Coefficent independent of diffusion-->
+  <parameter name="PointResolutionZ" type="float">0.4 </parameter>
+  <!--whether or not to use hits without proper cell ID (pad row)-->
+  <parameter name="RejectCellID0" type="int">1 </parameter>
+  <!--Name of TrackerHit SimTrackHit relation collection-->
+  <parameter name="SimTrkHitRelCollection" type="string" lcioOutType="LCRelation">TPCTrackerHitRelations </parameter>
+  <!--Name of the LowPt SimTrackerHit collection Produced by Mokka TPC Driver TPC0X-->
+  <parameter name="TPCLowPtCollectionName" type="string" lcioInType="SimTrackerHit">TPCLowPtCollection </parameter>
+  <!--Name of the default pad-row based SimTrackerHit collection-->
+  <parameter name="TPCPadRowHitCollectionName" type="string" lcioInType="SimTrackerHit">TPCCollection </parameter>
+  <!--Name of the additional space point collection which provides additional guide hits between pad row centers.-->
+  <parameter name="TPCSpacePointCollectionName" type="string" lcioInType="SimTrackerHit">TPCSpacePointCollection </parameter>
+  <!--Name of the Output TrackerHit collection-->
+  <parameter name="TPCTrackerHitsCol" type="string" lcioOutType="TrackerHit">TPCTrackerHits </parameter>
+  <!--Store the pointer to the SimTrackerHits in RawHits (deprecated) -->
+  <parameter name="UseRawHitsToStoreSimhitPointer" type="bool">false </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTaJetClustering" type="TaJetClustering">
+ <!--Tau Jet Finding-->
+  <!--Low energy tracks can be accepted as either charged and neutral if true-->
+  <parameter name="AcceptFlexibleLowEnergyTrack" type="int">1 </parameter>
+  <!--Maximum cosine angle for cone-->
+  <parameter name="ConeMaxCosAngle" type="double">1 </parameter>
+  <!--Energy fraction of cone compared to central-->
+  <parameter name="ConeMaxEnergyFrac" type="double">0.1 </parameter>
+  <!--Minimum cosine angle for cone-->
+  <parameter name="ConeMinCosAngle" type="double">0.9 </parameter>
+  <!--Reject 3-prong taus if including neutral energy more than this number in GeV-->
+  <parameter name="MaximumNeutralEnergyIn3Prong" type="double">1 </parameter>
+  <!--Minimum jet energy to be accepted as taus-->
+  <parameter name="MinimumJetEnergy" type="double">3 </parameter>
+  <!--Minimum track energy to be accepted as taus-->
+  <parameter name="MinimumTrackEnergy" type="double">2 </parameter>
+  <!--Minimum track energy to be counted-->
+  <parameter name="MinimumTrackEnergyAssoc" type="double">2 </parameter>
+  <!--Neither primary nor cone cut at all if true. Only clustering.-->
+  <parameter name="NoSelection" type="int">0 </parameter>
+  <!--Tau output collection-->
+  <parameter name="OutputTauCollection" type="string" lcioOutType="ReconstructedParticle">TaJets </parameter>
+  <!--PandoraPFA PFO collection-->
+  <parameter name="PFOCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Remained PFO collection-->
+  <parameter name="RemainPFOCollection" type="string" lcioOutType="ReconstructedParticle">RemainPFOs </parameter>
+  <!--Allowed cosine angle to be clustered-->
+  <parameter name="TauCosAngle" type="double">0.98 </parameter>
+  <!--Tau mass for tau clustering [GeV]-->
+  <parameter name="TauMass" type="double">2 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTauFinder" type="TauFinder">
+ <!--TauFinder writes tau candidates as ReconstructedParticles into collection. It runs on a collection of ReconstructedParticels, if you want  to run on MCParticles you have to convert them before hand (use e.g. PrepareRECParticles processor)-->
+  <!--Name of the Signal output file -->
+  <parameter name="FileName_Signal" type="string">Signal.root </parameter>
+  <!--Collection of PFOs-->
+  <parameter name="PFOCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFANewPFOs </parameter>
+  <!--Collection of Tau Candidates-->
+  <parameter name="TauRecCollection" type="string" lcioOutType="ReconstructedParticle">TauRec_PFO </parameter>
+  <!--Name of the Tau link to ReconstructedParticle collection-->
+  <parameter name="TauRecLinkCollectionName" type="string" lcioOutType="LCRelation">TauRecLink_PFO </parameter>
+  <!--Collection of Particles in Rest Group not in Tau Candidates-->
+  <parameter name="TauRecRestCollection" type="string" lcioOutType="ReconstructedParticle">TauRecRest_PFO </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Cut on cosT to suppress background-->
+  <parameter name="cosT_cut" type="float">0.99 </parameter>
+  <!--Upper limit on invariant mass of tau candidate-->
+  <parameter name="invariant_mass" type="float">2 </parameter>
+  <!--Outer isolation cone around search cone of tau jet in rad (relativ to cone angle)-->
+  <parameter name="isolationConeAngle" type="float">0.02 </parameter>
+  <!--Energy allowed within isolation cone region-->
+  <parameter name="isolationEnergy" type="float">5 </parameter>
+  <!--Cut on pt to suppress background-->
+  <parameter name="pt_cut" type="float">0.2 </parameter>
+  <!--Minimum tranverse momentum of tau seed-->
+  <parameter name="ptseed" type="float">5 </parameter>
+  <!--Opening angle of the search cone for tau jet in rad-->
+  <parameter name="searchConeAngle" type="float">0.05 </parameter>
+</processor>
+
+ <processor name="MyTestProcessor" type="TestProcessor">
+ <!--Simple processor to test the marlin application. Prints run and event number.-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyThrustReconstruction" type="ThrustReconstruction">
+ <!--Calculates thrust axis and thrust value of event using different algorithms-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Name of collection of reconstructed particles used for thrust reconstruction-->
+  <parameter name="inputCollectionName" type="string" lcioInType="ReconstructedParticle">SelectedReconstructedParticle </parameter>
+  <!--Type of thrust reconstruction algorithm to be used:
+#	1 : Tasso algorithm
+#	2 : JetSet algorithm-->
+  <parameter name="typeOfThrustFinder" type="int">2 </parameter>
+</processor>
+
+ <processor name="MyTrackToRecoParticleConverter" type="TrackToRecoParticleConverter">
+ <!--Processor to convert track collection into ReconstructedParticle collection-->
+  <!--Input track collection to convert-->
+  <parameter name="InputTrackCollection" type="string" lcioInType="Track">InputTracks </parameter>
+  <!--Ouptut collection-->
+  <parameter name="OutputPFOCollection" type="string" lcioOutType="ReconstructedParticle">ConvertedTrackAsPFO </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTrackZVertexGrouping" type="TrackZVertexGrouping">
+ <!--TrackZVertexGrouping: group tracks based on their Z0 significance-->
+  <!--Name of the Track input collection-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+  <!--Name of the ReconstructedParticle output collection-->
+  <parameter name="TrackGroupPFOs" type="string" lcioOutType="ReconstructedParticle">TrackGroupPFOs </parameter>
+  <!--Name of the Vertex output collection-->
+  <parameter name="TrackGroupVertices" type="string" lcioOutType="Vertex">TrackGroupVertices </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Cut for merging track groups in Z0 significance-->
+  <parameter name="Z0SignificanceCut" type="float">1.7 </parameter>
+</processor>
+
+ <processor name="MyTrueJet" type="TrueJet">
+ <!--TrueJet does whatever it does ...-->
+  <!--Name of the  FinalColourNeutralLink output collection-->
+  <parameter name="FinalColourNeutralLink" type="string" lcioOutType="LCRelation">FinalColourNeutralLink </parameter>
+  <!--Name of the FinalColourNeutralCollection output collection-->
+  <parameter name="FinalColourNeutrals" type="string" lcioOutType="ReconstructedParticle">FinalColourNeutrals </parameter>
+  <!--Name of the  FinalElementonLink output collection-->
+  <parameter name="FinalElementonLink" type="string" lcioOutType="LCRelation">FinalElementonLink </parameter>
+  <!--Name of the  InitialColourNeutralLink output collection-->
+  <parameter name="InitialColourNeutralLink" type="string" lcioOutType="LCRelation">InitialColourNeutralLink </parameter>
+  <!--Name of the InitialColourNeutralCollection output collection-->
+  <parameter name="InitialColourNeutrals" type="string" lcioOutType="ReconstructedParticle">InitialColourNeutrals </parameter>
+  <!--Name of the  InitialElementonLink output collection-->
+  <parameter name="InitialElementonLink" type="string" lcioOutType="LCRelation">InitialElementonLink </parameter>
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed </parameter>
+  <!--Name of the RecoMCTruthLink input collection-->
+  <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation">RecoMCTruthLink </parameter>
+  <!--Name of the ReconstructedParticles input collection-->
+  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the TrueJetMCParticleLink output collection-->
+  <parameter name="TrueJetMCParticleLink" type="string" lcioOutType="LCRelation">TrueJetMCParticleLink </parameter>
+  <!--Name of the TrueJetPFOLink output collection-->
+  <parameter name="TrueJetPFOLink" type="string" lcioOutType="LCRelation">TrueJetPFOLink </parameter>
+  <!--Name of the TrueJetCollection output collection-->
+  <parameter name="TrueJets" type="string" lcioOutType="ReconstructedParticle">TrueJets </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyTruthVertexFinder" type="TruthVertexFinder">
+ <!--TruthVertexFinder extructs a secondary vertex from generator collection.-->
+  <!--Name of the MCParticle collection-->
+  <parameter name="CollectionName" type="string" lcioInType="MCParticle">MCParticleSkimmed </parameter>
+  <!--PDGs of desired decays-->
+  <parameter name="DecayChainPDGs" type="IntVec"> </parameter>
+  <!--Name of the Vertex collection-->
+  <parameter name="OutputBStarName" type="string" lcioOutType="MCParticle">BStar </parameter>
+  <!--Name of the Vertex collection-->
+  <parameter name="OutputCollectionName" type="string" lcioOutType="Vertex">MCVertex </parameter>
+  <!--Name of the Prongs collection-->
+  <parameter name="OutputProngsName" type="string" lcioOutType="MCParticle">EGProngs </parameter>
+  <!--Name of the b-quark collection-->
+  <parameter name="QuarkCollectionName" type="string" lcioOutType="MCParticle">MCbquarks </parameter>
+  <!--ROOT File Name-->
+  <parameter name="ROOTFileName" type="string">GenVertexTest.root </parameter>
+  <!--Name of the Jet relation collection-->
+  <parameter name="RelCollectionName" type="string" lcioInType="ReconstructedParticle">RecoMCTruthLink </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--a parameter of accuracy in mm-->
+  <parameter name="a" type="float">0.005 </parameter>
+  <!--b parameter of accuracy in mm-->
+  <parameter name="b" type="float">0.01 </parameter>
+  <!--PDG of initial particle-->
+  <parameter name="initialQuarkPDG" type="int">5 </parameter>
+  <!--PDG of desired particle-->
+  <parameter name="tagPDG" type="int">6 </parameter>
+  <!--b parameter-->
+  <parameter name="writeBonly" type="int">1 </parameter>
+  <!--write ROOT file?-->
+  <parameter name="writeROOT" type="int">0 </parameter>
+</processor>
+
+ <processor name="MyV0Finder" type="V0Finder">
+ <!--V0 Finder Processor -->
+  <!--Cuts on V0 radius-->
+  <parameter name="CutOnRadius" type="float">5 </parameter>
+  <!--Cut on two track distance-->
+  <parameter name="CutOnTrkDistance" type="float">1.5 </parameter>
+  <!--Maximal deviation in mass for photon candidate-->
+  <parameter name="MassRangeGamma" type="float">0.01 </parameter>
+  <!--Maximal deviation in mass for K0S candidate-->
+  <parameter name="MassRangeK0S" type="float">0.01 </parameter>
+  <!--Maximal deviation in mass for Lamda0 candidate-->
+  <parameter name="MassRangeL0" type="float">0.008 </parameter>
+  <!--Minimum ratio of inner track hit radius to reconstructed vertex radius-->
+  <parameter name="MinimumTrackHitRatio" type="float">0.7 </parameter>
+  <!--Name of output collection of reconstructed particles-->
+  <parameter name="RecoParticleCollection" type="string" lcioOutType="ReconstructedParticle">V0RecoParticles </parameter>
+  <!--Minimum radius in xy plane for photon candidate-->
+  <parameter name="RxyCutGamma" type="float">10 </parameter>
+  <!--Minimum radius in xy plane for K0S candidate-->
+  <parameter name="RxyCutK0S" type="float">30 </parameter>
+  <!--Minimum radius in xy plane for Lambda0 candidate-->
+  <parameter name="RxyCutLambda" type="float">50 </parameter>
+  <!--Name of input collection of reconstructed particles-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track">LDCTracks </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Name of output collection of neutral vertices-->
+  <parameter name="VertexCollection" type="string" lcioOutType="Vertex">V0Vertices </parameter>
+</processor>
+
+ <processor name="MyVTXBgClusters" type="VTXBgClusters">
+ <!--VTXBgClusters should create VTX TrackerHits from SimTrackerHits-->
+  <!--Debugging option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--sensor modification option-->
+  <parameter name="Modif" type="int">0 </parameter>
+  <!--Momentum Cut For D Rays (MeV)-->
+  <parameter name="MomentumCutForDRays" type="float">10 </parameter>
+  <!--Remove D-rays ?-->
+  <parameter name="RemoveDrays" type="int">0 </parameter>
+  <!--Name of the VTX SimTrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyVTXDigiProcessor" type="VTXDigiProcessor">
+ <!--VTXDigiProcessor should create VTX TrackerHits from SimTrackerHits-->
+  <!--only SET hits from active layers are digitized (mimic stereo layers)-->
+  <parameter name="ActiveSETLayers" type="IntVec">1  </parameter>
+  <!--Debugging option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--hit efficiencies per VXD layer (default: 1.0)-->
+  <parameter name="HitEfficiencyPerLayer_VTX" type="FloatVec">1 1 1 1 1 1  </parameter>
+  <!--Momentum Cut For D Rays (MeV)-->
+  <parameter name="MomentumCutForDRays" type="float">10 </parameter>
+  <!--R-Phi Resolution in SET-->
+  <parameter name="PointResolutionRPhi_SET" type="float">0.01 </parameter>
+  <!--R-Phi Resolution in SIT-->
+  <parameter name="PointResolutionRPhi_SIT" type="float">0.01 </parameter>
+  <!--R-Phi Resolution in VTX-->
+  <parameter name="PointResolutionRPhi_VTX" type="float">0.004 </parameter>
+  <!--Z Resolution in SET-->
+  <parameter name="PointResolutionZ_SET" type="float">0.01 </parameter>
+  <!--Z Resolution in SIT-->
+  <parameter name="PointResolutionZ_SIT" type="float">0.01 </parameter>
+  <!--Z Resolution in VTX-->
+  <parameter name="PointResolutionZ_VTX" type="float">0.004 </parameter>
+  <!--Remove D-rays ?-->
+  <parameter name="RemoveDrays" type="int">0 </parameter>
+  <!--Name of the SET SimTrackerHit collection-->
+  <parameter name="SETCollectionName" type="string" lcioInType="SimTrackerHit">SETCollection </parameter>
+  <!--Name of the set TrackerHit output collection-->
+  <parameter name="SETHitCollection" type="string" lcioOutType="TrackerHit">SETTrackerHits </parameter>
+  <!--Name of the SIT SimTrackerHit collection-->
+  <parameter name="SITCollectionName" type="string" lcioInType="SimTrackerHit">SITCollection </parameter>
+  <!--Name of the sit TrackerHit output collection-->
+  <parameter name="SITHitCollection" type="string" lcioOutType="TrackerHit">SITTrackerHits </parameter>
+  <!--Points smeared along the ladders-->
+  <parameter name="SmearAlongLadders" type="int">1 </parameter>
+  <!--Name of the VTX SimTrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--Name of the vxd TrackerHit output collection-->
+  <parameter name="VTXHitCollection" type="string" lcioOutType="TrackerHit">VTXTrackerHits </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyVTXDigitizer" type="VTXDigitizer">
+ <!--VTXDigitizer should create VTX TrackerHits from SimTrackerHits-->
+  <!--Background Hits per Layer-->
+  <parameter name="BackgroundHitsPerLayer" type="FloatVec">34400 23900 9600 5500 3100  </parameter>
+  <!--Name of the SimTrackerHit collection-->
+  <parameter name="CollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--Cut on delta-ray energy (MeV)-->
+  <parameter name="CutOnDeltaRays" type="double">0.03 </parameter>
+  <!--Debug option-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Diffusion coefficient (in mm) for layer thickness-->
+  <parameter name="Diffusion" type="double">0.002 </parameter>
+  <!--Apply Electronic Effects-->
+  <parameter name="ElectronicEffects" type="int">1 </parameter>
+  <!--electronic noise in electrons-->
+  <parameter name="ElectronicNoise" type="double">100 </parameter>
+  <!--Electrons per keV-->
+  <parameter name="ElectronsPerKeV" type="double">270.3 </parameter>
+  <!--Energy Loss keV/mm-->
+  <parameter name="EnergyLoss" type="double">280 </parameter>
+  <!--Generate Background-->
+  <parameter name="GenerateBackground" type="int">0 </parameter>
+  <!--Name of the output TrackerHit collection-->
+  <parameter name="OutputCollectionName" type="string" lcioOutType="TrackerHit">VTXTrackerHits </parameter>
+  <!--Pixel Size X-->
+  <parameter name="PixelSizeX" type="double">0.025 </parameter>
+  <!--Pixel Size Y-->
+  <parameter name="PixelSizeY" type="double">0.025 </parameter>
+  <!--Apply Poisson smearing of electrons collected on pixels-->
+  <parameter name="PoissonSmearing" type="int">1 </parameter>
+  <!--Name of the output VTX trackerhit relation collection-->
+  <parameter name="RelationColName" type="string" lcioOutType="LCRelation">VTXRelation </parameter>
+  <!--Remove D-Ray Pixels-->
+  <parameter name="RemoveDRayPixels" type="int">1 </parameter>
+  <!--Segment Length-->
+  <parameter name="SegmentLength" type="double">0.005 </parameter>
+  <!--Store fired pixels-->
+  <parameter name="StoreFiredPixels" type="int">0 </parameter>
+  <!--Tangent of Lorentz Angle-->
+  <parameter name="TanLorentz" type="double">0.8 </parameter>
+  <!--Cell Threshold in electrons-->
+  <parameter name="Threshold" type="double">200 </parameter>
+  <!--Use Particle Momentum-->
+  <parameter name="UseMCPMomentum" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Width of cluster-->
+  <parameter name="WidthOfCluster" type="double">3 </parameter>
+</processor>
+
+ <processor name="MyVTXNoiseClusters" type="VTXNoiseClusters">
+ <!--VTXNoiseClusters adds SimTrackerHits with salt'n pepper noise clusters-->
+  <!--hit densities (hits/cm^2) per VXD layer-->
+  <parameter name="HitDensityPerLayer_VTX" type="FloatVec">0 0 0 0 0 0  </parameter>
+  <!--random seed - default 42-->
+  <parameter name="RandomSeed" type="int">42 </parameter>
+  <!--root file name and histogram names (one per layer)-->
+  <parameter name="RootHistograms" type="StringVec">sap2VXD05_1.root hst1 hst2 hst3 hst4 hst5 hst6  </parameter>
+  <!--Name of the VTX SimTrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="SimTrackerHit">VXDCollection </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyVTXNoiseHits" type="VTXNoiseHits">
+ <!--VTXNoiseHits should create VTX TrackerHits from SimTrackerHits-->
+  <!--hit densities (hits/cm^2) per VXD layer-->
+  <parameter name="HitDensityPerLayer_VTX" type="FloatVec">0 0 0 0 0  </parameter>
+  <!--R-Phi Resolution in VTX-->
+  <parameter name="PointResolutionRPhi_VTX" type="float">0.0027 </parameter>
+  <!--Z Resolution in VTX-->
+  <parameter name="PointResolutionZ_VTX" type="float">0.0027 </parameter>
+  <!--Name of the VTX TrackerHit collection-->
+  <parameter name="VTXCollectionName" type="string" lcioInType="TrackerHit">VTXTrackerHits </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyZFinder" type="ZFinder">
+ <!-- description not set by author -->
+  <!--Include photons with reconstructed Z-->
+  <parameter name="AddPhotons" type="int">1 </parameter>
+  <!--Allow possibilit of cluster not track used for electrons-->
+  <parameter name="CanUseClusterEnergyForElectrons" type="int">1 </parameter>
+  <!--Minimum cosine of track-photon angle-->
+  <parameter name="CosTrackGammaCut" type="float">0.999 </parameter>
+  <!--Cut on electron ECAL energy-->
+  <parameter name="ElectronEcalEnergyCut" type="float">10 </parameter>
+  <!--Cut on Electron E/p cut-->
+  <parameter name="ElectronEoverPCutHigh" type="float">1.3 </parameter>
+  <!--Cut on Electron E/p cut-->
+  <parameter name="ElectronEoverPCutLow" type="float">0.5 </parameter>
+  <!--Cut on Electron HCAL energy-->
+  <parameter name="ElectronHcalEnergyCut" type="float">10 </parameter>
+  <!--Momentum Cut for fermion from Z decay-->
+  <parameter name="FermionMomentumCut" type="float">10 </parameter>
+  <!--Input Particle Collection Name -->
+  <parameter name="InputParticleCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Maximum difference between candidate and Z mass-->
+  <parameter name="MaxDeltaMz" type="float">50 </parameter>
+  <!--Cut on muon ECAL energy-->
+  <parameter name="MuonEcalEnergyCut" type="float">2.5 </parameter>
+  <!--Cut on Muon HCAL energy-->
+  <parameter name="MuonHcalEnergyCut" type="float">10 </parameter>
+  <!--Cut on Muon HCAL energy (alt)-->
+  <parameter name="MuonHcalEnergyCut1" type="float">5 </parameter>
+  <!--Output Particle Collection Name -->
+  <parameter name="OutputParticleCollectionName" type="string" lcioOutType="ReconstructedParticle">eeX </parameter>
+  <!--Print certain messages-->
+  <parameter name="Printing" type="int">1 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--Z decay mode-->
+  <parameter name="ZDecay" type="string">ee </parameter>
+</processor>
+
+ <processor name="MyanaPix" type="anaPix">
+ <!--anaPix icteats TTree from FPCCDPixelHits-->
+  <!--Each ladder's Pixel size of FPCCD (unit:mm) (default:0.005)-->
+  <parameter name="Each_FPCCD_pixelSize(mm)" type="FloatVec">0.005 0.005 0.005 0.005 0.005 0.005  </parameter>
+  <!--Pixel size of FPCCD (unit:mm) (default: 0.005)-->
+  <parameter name="FPCCD_PixelSize" type="float">0.005 </parameter>
+  <!--Name of output ROOT file-->
+  <parameter name="OutputROOTfileName" type="string">./pixel.root </parameter>
+  <!--Name of the VTX PixelHit collection-->
+  <parameter name="VTXPixelHitCollection" type="string" lcioInType="LCGenericObject">VTXPixelHits </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyhybridRecoProcessor" type="hybridRecoProcessor">
+ <!--hybridRecoProcessor does whatever it does ...-->
+  <!--Name of the ECAL cell collections-->
+  <parameter name="ECALcollections_cells" type="StringVec" lcioInType="CalorimeterHit">ECALSiBarrel  </parameter>
+  <!--Name of the ECAL longitudinal strip collections-->
+  <parameter name="ECALcollections_longStrips" type="StringVec" lcioInType="CalorimeterHit">ECALScLongitudinalBarrel  </parameter>
+  <!--Name of the ECAL transverse strip collections-->
+  <parameter name="ECALcollections_tranStrips" type="StringVec" lcioInType="CalorimeterHit">ECALScTransverseBarrel  </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  <!--save root file with debugging histograms?-->
+  <parameter name="saveCheckRootHistograms" type="bool">false </parameter>
+  <!--save collection with strip interactions?-->
+  <parameter name="saveIntersectionCollection" type="bool">false </parameter>
+  <!--number of virtual cells per strip (used if info not found in gear file)-->
+  <parameter name="virtualCellsDefault" type="int">1 </parameter>
+</processor>
+
+
+</marlin>

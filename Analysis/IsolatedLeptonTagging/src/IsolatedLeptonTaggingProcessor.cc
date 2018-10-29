@@ -220,17 +220,32 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
 
   // -- get Primary Vertex collection --
   // primary vertex from VertexFinder (LCFIPlus)
-  LCCollection *colPVtx = evt->getCollection(_colPVtx);
-  Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
-  Double_t z_pvtx = pvtx->getPosition()[2];
+  LCCollection *colPVtx = nullptr;
+  try {
+    colPVtx = evt->getCollection(_colPVtx);
+    if(colPVtx->getNumberOfElements() == 0) {
+      std::cerr << "Vertex collection (" << _colPVtx << ") is empty !" << std::endl;
+      return;
+    }
+  }
+  catch(DataNotAvailableException &e) {
+    std::cerr << "No Vertex collection found (" << _colPVtx << ") !" << std::endl;
+    return;
+  }
   
+  Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
+  Double_t z_pvtx = pvtx->getPosition()[2];   
 
   // -- get PFO collection --
-  LCCollection *colPFO = evt->getCollection(_colPFOs);
-  if (!colPFO) {
-    std::cerr << "No PFO Collection Found!" << std::endl;
-    throw marlin::SkipEventException(this);
+  LCCollection *colPFO = nullptr;
+  try {
+    colPFO = evt->getCollection(_colPFOs);
   }
+  catch(DataNotAvailableException &e) {
+    std::cerr << "No PFO collection found (" << _colPFOs << ") !" << std::endl;
+    return;
+  }
+
   Int_t nPFOs = colPFO->getNumberOfElements();
   std::vector<lcio::ReconstructedParticle*> newPFOs;
   std::vector<lcio::ReconstructedParticle*> isoLeptons;

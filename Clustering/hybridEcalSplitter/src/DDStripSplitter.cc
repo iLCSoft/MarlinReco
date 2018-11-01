@@ -137,11 +137,11 @@ void DDStripSplitter::init() {
     for (int ieb=0; ieb<2; ieb++) {
       for (int is=0; is<10; is++) {
 	for (int im=0; im<10; im++) {
-	  TString name = ieb==0 ? "barrel" : "endcap";
-	  name+="_stave"; name+=is;
-	  name+="_module"; name+=im;
-	  h_cth_phi[ieb][is][im] = new TH2F(name+"_angle",name+"_angle",100,-1,1,100,-TMath::Pi(), TMath::Pi());
-	  h_XY[ieb][is][im] = new TH2F(name+"_xy",name+"_xy",100,-3000,3000,100,-3000,3000);
+	  TString hhname = ieb==0 ? "barrel" : "endcap";
+	  hhname+="_stave"; hhname+=is;
+	  hhname+="_module"; hhname+=im;
+	  h_cth_phi[ieb][is][im] = new TH2F(hhname+"_angle",hhname+"_angle",100,-1,1,100,-TMath::Pi(), TMath::Pi());
+	  h_XY[ieb][is][im] = new TH2F(hhname+"_xy",hhname+"_xy",100,-3000,3000,100,-3000,3000);
 	}
       }
     }
@@ -207,16 +207,12 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 
   if (_makePlots) {
     // first fill some simple MC histos
-    float phi=-999;
-    float theta=-999;
     try {
       LCCollection * col = evt->getCollection("MCParticle");
       if (col->getNumberOfElements()>0) {
 	MCParticle * mcp = dynamic_cast<MCParticle*>(col->getElementAt(0) );
 	TVector3 mom(mcp->getMomentum()[0], mcp->getMomentum()[1], mcp->getMomentum()[2]);
 	h_phiThetaMC->Fill(mom.Phi(), mom.Theta());
-	phi = mom.Phi();
-	theta = mom.Theta();
       }
     }
     catch(DataNotAvailableException &e) {};
@@ -230,7 +226,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 
   std::pair < TVector3, TVector3 > stripEnds;
   std::vector <std::string> * toSplit;
-  std::vector <std::string> * stripSplitter;
+  //  std::vector <std::string> * stripSplitter;
   int orientation;
 
   std::map < IMPL::LCCollectionVec*, std::string > outputcolls;
@@ -251,12 +247,12 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
     case 0:
       orientation = TRANSVERSE;
       toSplit = &_ecalCollectionsTranStrips;
-      stripSplitter = &_ecalCollectionsLongStrips;
+      //stripSplitter = &_ecalCollectionsLongStrips;
       break;
     case 1:
       orientation = LONGITUDINAL;
       toSplit = &_ecalCollectionsLongStrips;
-      stripSplitter = &_ecalCollectionsTranStrips;
+      //stripSplitter = &_ecalCollectionsTranStrips;
       break;
     default:
       streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;
@@ -271,14 +267,14 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	const std::string layerCodingString(col->getParameters().getStringVal(LCIO::CellIDEncoding));
 
 	// is this a barrel or endcap collection?
-	TString name = toSplit->at(i);
+	TString hhname = toSplit->at(i);
 	bool barrel(true);
-	if (name.Contains("Barrel") || name.Contains("barrel")) {
+	if (hhname.Contains("Barrel") || hhname.Contains("barrel")) {
 	  barrel = true;
-	} else if (name.Contains("Endcap") || name.Contains("endcap")) {
+	} else if (hhname.Contains("Endcap") || hhname.Contains("endcap")) {
 	  barrel = false;
 	} else {
-	  streamlog_out ( ERROR ) << "WARNING: cannot tell if collection is for barrel or endcap..." << name << endl;
+	  streamlog_out ( ERROR ) << "WARNING: cannot tell if collection is for barrel or endcap..." << hhname << endl;
 	}
 
 	// make new collections for split and unsplit strips

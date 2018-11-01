@@ -33,6 +33,9 @@ class DDStripSplitter : public Processor {
   virtual Processor*  newProcessor() { return new DDStripSplitter ; }
   
   DDStripSplitter() ;
+
+  DDStripSplitter( const DDStripSplitter& ) = delete;
+  DDStripSplitter& operator=(const DDStripSplitter&) = delete;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -110,9 +113,9 @@ class DDStripSplitter : public Processor {
 
   dd4hep::rec::LayeredCalorimeterData* _caloGeomData{};
 
-  std::string _cellIDLayerString;
-  std::string _cellIDModuleString;
-  std::string _cellIDStaveString;
+  std::string _cellIDLayerString{};
+  std::string _cellIDModuleString{};
+  std::string _cellIDStaveString{};
 
 };
 

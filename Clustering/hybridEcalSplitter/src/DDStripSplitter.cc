@@ -79,10 +79,6 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 			      _makePlots,
 			      false);
 
-  // not stored in the dd4hep geom
-  registerProcessorParameter( "cellSize0", "cellSize0 for Scint layers [mm]", _stripWidth, float(5.0) );
-  registerProcessorParameter( "cellSize1", "cellSize1 for Scint layers [mm]", _stripLength, float(45.0) );
-
   // code for layer info for cellID decoder
   registerProcessorParameter("CellIDLayerString" ,
                              "name of the part of the cellID that holds the layer" , 
@@ -187,7 +183,8 @@ void DDStripSplitter::setupGeometry() {
     assert(0);
   }
   _symmetry = _caloGeomData->inner_symmetry;
-  _cellSize = _caloGeomData->layers[0].cellSize0;
+  _stripLength = _caloGeomData->layers[0].cellSize0;
+  _stripWidth  = _caloGeomData->layers[0].cellSize1;
 
   if ( _stripLength<_stripWidth ) {
     float temp = _stripLength;

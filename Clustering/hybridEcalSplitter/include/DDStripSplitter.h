@@ -65,6 +65,12 @@ class DDStripSplitter : public Processor {
 
   std::vector <std::string> _ecalCollectionsTranStrips{};
   std::vector <std::string> _ecalCollectionsLongStrips{};
+  std::string _mcParticleCollectionName{};
+
+  // output collection names
+  std::string _stripIntersecCollName{};
+  std::string _transStripEndsCollName{};
+  std::string _longStripEndsCollName{};
 
   std::pair < TVector3, TVector3 > getStripEnds(CalorimeterHit* hit, int orientation, bool barrel);
   TVector3 stripIntersect(CalorimeterHit* hit0, TVector3 axis0, CalorimeterHit* hit1, TVector3 axis1);

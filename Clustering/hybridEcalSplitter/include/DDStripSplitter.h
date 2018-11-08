@@ -62,15 +62,14 @@ class DDStripSplitter : public Processor {
 
   /** Input collection name.
    */
-
-  std::vector <std::string> _ecalCollectionsTranStrips{};
-  std::vector <std::string> _ecalCollectionsLongStrips{};
+  std::vector <std::string> _ecalCollectionsEvenLayers{};
+  std::vector <std::string> _ecalCollectionsOddLayers{};
   std::string _mcParticleCollectionName{};
 
   // output collection names
   std::string _stripIntersecCollName{};
-  std::string _transStripEndsCollName{};
-  std::string _longStripEndsCollName{};
+  std::string _evenStripEndsCollName{};
+  std::string _oddStripEndsCollName{};
 
   std::pair < TVector3, TVector3 > getStripEnds(CalorimeterHit* hit, int orientation, bool barrel);
   TVector3 stripIntersect(CalorimeterHit* hit0, TVector3 axis0, CalorimeterHit* hit1, TVector3 axis1);
@@ -86,12 +85,12 @@ class DDStripSplitter : public Processor {
   float _cellSize{};
   int   _symmetry{};
   int   _nVirtual{};
-  int _ecalStrip_default_nVirt{};
+  int   _ecalStrip_default_nVirt{};
 
   bool _saveIntersections{};
   IMPL::LCCollectionVec* intersectionHits{};
-  IMPL::LCCollectionVec* stripEndsTransCol{};
-  IMPL::LCCollectionVec* stripEndsLongCol{};
+  IMPL::LCCollectionVec* stripEndsEvenCol{};
+  IMPL::LCCollectionVec* stripEndsOddCol{};
 
   TFile* _fout{};
   TH2F* h_phiModuleCheck{};
@@ -111,11 +110,11 @@ class DDStripSplitter : public Processor {
   TH2F* h_moduleY[2]{};
   TH2F* h_moduleZ[2]{};
 
-
   TH2F* h_cth_phi[2][10][10]{};
   TH2F* h_XY[2][10][10]{};
 
-  enum {TRANSVERSE, LONGITUDINAL};
+  int _evenIsTransverse{};
+  enum {TRANSVERSE=0, LONGITUDINAL};
 
   dd4hep::rec::LayeredCalorimeterData* _caloGeomData{};
 

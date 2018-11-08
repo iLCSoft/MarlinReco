@@ -48,22 +48,24 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
   // modify processor description
   _description = "DDStripSplitter applies SSA to a strip-based calorimeter ..." ;
 
-  std::vector <std::string> ecalCollectionsTranStrips;
-  ecalCollectionsTranStrips.push_back(std::string("ECALScTransverseBarrel"));
+  std::vector <std::string> ecalCollectionsEvenLayers;
+  ecalCollectionsEvenLayers.push_back(std::string("ECalBarrelScEvenCollectionRec"));
+  ecalCollectionsEvenLayers.push_back(std::string("ECalEndcapScEvenCollectionRec"));
   registerInputCollections( LCIO::CALORIMETERHIT,
-                            "ECALcollections_tranStrips",
-			    "Name of the ECAL transverse strip collections",
-			    _ecalCollectionsTranStrips,
-			    ecalCollectionsTranStrips);
+                            "ECALcollections_evenLayers",
+			    "Name of the ECAL collections in even layers",
+			    _ecalCollectionsEvenLayers,
+			    ecalCollectionsEvenLayers);
   
-  std::vector <std::string> ecalCollectionsLongStrips;
-  ecalCollectionsLongStrips.push_back(std::string("ECALScLongitudinalBarrel"));
+  std::vector <std::string> ecalCollectionsOddLayers;
+  ecalCollectionsOddLayers.push_back(std::string("ECalBarrelScOddCollectionRec"));
+  ecalCollectionsOddLayers.push_back(std::string("ECalEndcapScOddCollectionRec"));
   registerInputCollections( LCIO::CALORIMETERHIT,
-                            "ECALcollections_longStrips",
-			    "Name of the ECAL longitudinal strip collections",
-			    _ecalCollectionsLongStrips,
-			    ecalCollectionsLongStrips);
-
+                            "ECALcollections_oddLayers",
+			    "Name of the ECAL collections in odd layers",
+			    _ecalCollectionsOddLayers,
+			    ecalCollectionsOddLayers);
+  
   registerInputCollection( LCIO::MCPARTICLE,
                            "MCParticleCollection",
                            "name of MCParticle collection (used for some plots)",
@@ -75,15 +77,15 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 			      _stripIntersecCollName,
 			      std::string("stripIntersections") );
 
-  registerProcessorParameter( "transStripEndsCollName",
-			      "name of (optional) output collection containing ends of transverse strips",
-			      _transStripEndsCollName,
-			      std::string("stripEndsT") );
+  registerProcessorParameter( "evenStripEndsCollName",
+			      "name of (optional) output collection containing ends of strips in even layers",
+			      _evenStripEndsCollName,
+			      std::string("stripEndsEven") );
 
-  registerProcessorParameter( "longStripEndsCollName",
-                              "name of (optional) output collection containing ends of longitudinal strips",
-			      _longStripEndsCollName,
-                              std::string("stripEndsL") );
+  registerProcessorParameter( "oddStripEndsCollName",
+                              "name of (optional) output collection containing ends of strips in odd layers",
+			      _oddStripEndsCollName,
+                              std::string("stripEndsOdd") );
 
   registerProcessorParameter( "virtualCellsDefault",
 			      "number of virtual cells per strip (used if info not found in gear file)",
@@ -128,6 +130,7 @@ void DDStripSplitter::init() {
   _symmetry=-999;
   _cellSize=999;
   _nVirtual=999;
+  _evenIsTransverse=-1;
 
   if (_makePlots) { // define output root file and some histograms to put in it
     _fout = new TFile("hybridCheckHistos.root","recreate");
@@ -207,13 +210,36 @@ void DDStripSplitter::setupGeometry() {
   _stripLength = _caloGeomData->layers[0].cellSize0;
   _stripWidth  = _caloGeomData->layers[0].cellSize1;
 
+  // check that layer 1 is orthogonal to this one
+  float lay1_strSize0 = _caloGeomData->layers[1].cellSize0;
+  float lay1_strSize1 = _caloGeomData->layers[1].cellSize1;
+  if ( fabs(lay1_strSize0-_stripWidth)/_stripWidth > 0.05 || fabs(lay1_strSize1-_stripLength)/_stripLength > 0.05 ) {
+    cout << "doesn't look like a basic strip-based calo?? don't know how to deal with this geometry!" << endl;
+    for (size_t ilay = 0 ; ilay<_caloGeomData->layers.size(); ilay++ ) {
+      cout << "strip size in layer " << ilay << " : " << _caloGeomData->layers[ilay].cellSize0 << " " << _caloGeomData->layers[ilay].cellSize1 << endl;
+    }
+    assert(0);
+  }
+
+  _evenIsTransverse = 0;
   if ( _stripLength<_stripWidth ) {
+    _evenIsTransverse = 1;
     float temp = _stripLength;
     _stripLength=_stripWidth;
     _stripWidth=temp;
   }
   _nVirtual = int(_stripLength/_stripWidth);
   _stripAspectRatio = _stripLength/_stripWidth;
+
+  // convert from cm to mm (dd4hep units -> lcio units...)
+  _stripLength*=10;
+  _stripWidth*=10;
+
+  cout << "strip length, width = " << _stripLength << " " << _stripWidth << " mm " << endl;
+  if ( _stripAspectRatio < 2. ) {
+    cout << "this strip is very short: probably not worth using the strip splitter!" << endl;
+    assert(0);
+  }
 
   return;
 }
@@ -253,24 +279,36 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
     intersectionHits = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
     intersectionHits->setFlag(intersectionHits->getFlag()|( 1 << LCIO::RCHBIT_LONG)); // store position
 
-    stripEndsTransCol = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
-    stripEndsTransCol->setFlag(stripEndsTransCol->getFlag()|( 1 << LCIO::RCHBIT_LONG)); // store position
+    stripEndsEvenCol = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
+    stripEndsEvenCol->setFlag(stripEndsEvenCol->getFlag()|( 1 << LCIO::RCHBIT_LONG)); // store position
 
-    stripEndsLongCol = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
-    stripEndsLongCol->setFlag(stripEndsLongCol->getFlag()|( 1 << LCIO::RCHBIT_LONG)); // store position
+    stripEndsOddCol = new IMPL::LCCollectionVec( LCIO::CALORIMETERHIT );
+    stripEndsOddCol->setFlag(stripEndsOddCol->getFlag()|( 1 << LCIO::RCHBIT_LONG)); // store position
   }
 
-  for (int icol=0; icol<2; icol++) { // loop over longitudinal and transverse strip collections
+  for (int icol=0; icol<2; icol++) { // loop over strip collections in even and odd layers (assumed to have perpendicular orientations)
     switch (icol) {
     case 0:
-      orientation = TRANSVERSE;
-      toSplit = &_ecalCollectionsTranStrips;
-      //stripSplitter = &_ecalCollectionsLongStrips;
+      if ( _evenIsTransverse==1 ) {
+	orientation = TRANSVERSE;
+      } else if ( _evenIsTransverse==0 ) {
+	orientation = LONGITUDINAL;
+      } else {
+	cout << "ERROR: strip orientation undefined!!" << endl;
+	assert(0);
+      }
+      toSplit = &_ecalCollectionsEvenLayers;
       break;
     case 1:
-      orientation = LONGITUDINAL;
-      toSplit = &_ecalCollectionsLongStrips;
-      //stripSplitter = &_ecalCollectionsTranStrips;
+      if ( _evenIsTransverse==1 ) {
+	orientation = LONGITUDINAL;
+      } else if ( _evenIsTransverse==0 ) {
+	orientation = TRANSVERSE;
+      } else {
+	cout << "ERROR: strip orientation undefined!!" << endl;
+	assert(0);
+      }
+      toSplit = &_ecalCollectionsOddLayers;
       break;
     default:
       streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;
@@ -348,8 +386,8 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 
   if (_saveIntersections) {
     evt->addCollection(intersectionHits,_stripIntersecCollName);
-    evt->addCollection(stripEndsTransCol,_transStripEndsCollName);
-    evt->addCollection(stripEndsLongCol, _longStripEndsCollName);
+    evt->addCollection(stripEndsEvenCol,_evenStripEndsCollName);
+    evt->addCollection(stripEndsOddCol, _oddStripEndsCollName);
   }
 
   return;
@@ -401,8 +439,11 @@ std::vector <CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calo
     interhit->setPosition( ppp );
     interhit->setEnergy(0.03);
 
-    if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
-    else if (orientation==LONGITUDINAL) stripEndsLongCol->addElement(interhit);
+    if ( layer%2 == 0 ) stripEndsEvenCol->addElement(interhit);
+    else                stripEndsOddCol->addElement(interhit);
+
+    //if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
+    // else if (orientation==LONGITUDINAL) stripEndsLongCol->addElement(interhit);
 
     ppp[0] = stripEnds.second.X();
     ppp[1] = stripEnds.second.Y();
@@ -411,22 +452,22 @@ std::vector <CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calo
     interhit->setPosition( ppp );
     interhit->setEnergy(0.03);
 
-    if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
-    else if (orientation==LONGITUDINAL) stripEndsLongCol->addElement(interhit);
+    if ( layer%2 == 0 ) stripEndsEvenCol->addElement(interhit);
+    else                stripEndsOddCol->addElement(interhit);
+
+    //    if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
+    //    else if (orientation==LONGITUDINAL) stripEndsLongCol->addElement(interhit);
   }
 
   // decide which collections to use to split the strip
   int splitterOrientation;
   std::vector <std::string> * splitterCols;
-  if ( orientation==TRANSVERSE ) {
-    splitterOrientation = LONGITUDINAL;
-    splitterCols = &_ecalCollectionsLongStrips;
-  } else if ( orientation==LONGITUDINAL ) {
-    splitterOrientation = TRANSVERSE;
-    splitterCols = &_ecalCollectionsTranStrips;
+  if ( layer%2 == 0 ) {
+    splitterCols = &_ecalCollectionsOddLayers;
+    splitterOrientation = _evenIsTransverse ? LONGITUDINAL : TRANSVERSE ;
   } else {
-    streamlog_out ( DEBUG ) << "no need to split this orientation";
-    return newhits;
+    splitterCols = &_ecalCollectionsEvenLayers;
+    splitterOrientation = _evenIsTransverse ? TRANSVERSE : LONGITUDINAL ;
   }
 
   std::map <int, float> virtEnergy;

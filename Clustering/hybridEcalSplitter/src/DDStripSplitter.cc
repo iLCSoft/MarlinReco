@@ -64,6 +64,27 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 			    _ecalCollectionsLongStrips,
 			    ecalCollectionsLongStrips);
 
+  registerInputCollection( LCIO::MCPARTICLE,
+                           "MCParticleCollection",
+                           "name of MCParticle collection (used for some plots)",
+                           _mcParticleCollectionName,
+                           std::string("MCParticle") );
+
+  registerProcessorParameter( "stripIntersecCollName",
+			      "name of (optional) output collection containing strip intersections",
+			      _stripIntersecCollName,
+			      std::string("stripIntersections") );
+
+  registerProcessorParameter( "transStripEndsCollName",
+			      "name of (optional) output collection containing ends of transverse strips",
+			      _transStripEndsCollName,
+			      std::string("stripEndsT") );
+
+  registerProcessorParameter( "longStripEndsCollName",
+                              "name of (optional) output collection containing ends of longitudinal strips",
+			      _longStripEndsCollName,
+                              std::string("stripEndsL") );
+
   registerProcessorParameter( "virtualCellsDefault",
 			      "number of virtual cells per strip (used if info not found in gear file)",
 			      _ecalStrip_default_nVirt,
@@ -205,7 +226,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
   if (_makePlots) {
     // first fill some simple MC histos
     try {
-      LCCollection * col = evt->getCollection("MCParticle");
+      LCCollection * col = evt->getCollection(_mcParticleCollectionName);
       if (col->getNumberOfElements()>0) {
 	MCParticle * mcp = dynamic_cast<MCParticle*>(col->getElementAt(0) );
 	TVector3 mom(mcp->getMomentum()[0], mcp->getMomentum()[1], mcp->getMomentum()[2]);
@@ -326,9 +347,9 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
   }
 
   if (_saveIntersections) {
-    evt->addCollection(intersectionHits,"stripIntersections");
-    evt->addCollection(stripEndsTransCol,"stripEndsT");
-    evt->addCollection(stripEndsLongCol, "stripEndsL");
+    evt->addCollection(intersectionHits,_stripIntersecCollName);
+    evt->addCollection(stripEndsTransCol,_transStripEndsCollName);
+    evt->addCollection(stripEndsLongCol, _longStripEndsCollName);
   }
 
   return;

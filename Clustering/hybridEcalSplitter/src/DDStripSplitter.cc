@@ -29,8 +29,6 @@ using std::endl;
 #include "DD4hep/DetType.h"
 #include "DD4hep/Detector.h"
 
-
-
 #include <UTIL/CellIDDecoder.h>
 
 // ----- include for verbosity dependend logging ---------
@@ -38,6 +36,8 @@ using std::endl;
 
 // needed for uint
 #include <sys/types.h>
+
+#include "streamlog/streamlog.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -215,9 +215,9 @@ void DDStripSplitter::setupGeometry() {
   float lay1_strSize0 = _caloGeomData->layers[1].cellSize0;
   float lay1_strSize1 = _caloGeomData->layers[1].cellSize1;
   if ( fabs(lay1_strSize0-_stripWidth)/_stripWidth > 0.05 || fabs(lay1_strSize1-_stripLength)/_stripLength > 0.05 ) {
-    cout << "doesn't look like a basic strip-based calo?? don't know how to deal with this geometry!" << endl;
+    streamlog_out( ERROR ) << "doesn't look like a basic strip-based calo?? don't know how to deal with this geometry!" << endl;
     for (size_t ilay = 0 ; ilay<_caloGeomData->layers.size(); ilay++ ) {
-      cout << "strip size in layer " << ilay << " : " << _caloGeomData->layers[ilay].cellSize0 << " " << _caloGeomData->layers[ilay].cellSize1 << endl;
+      streamlog_out( MESSAGE ) << "strip size in layer " << ilay << " : " << _caloGeomData->layers[ilay].cellSize0 << " " << _caloGeomData->layers[ilay].cellSize1 << endl;
     }
     throw marlin::StopProcessingException(this);
   }
@@ -236,9 +236,9 @@ void DDStripSplitter::setupGeometry() {
   _stripLength*=10;
   _stripWidth*=10;
 
-  cout << "strip length, width = " << _stripLength << " " << _stripWidth << " mm " << endl;
+  streamlog_out( DEBUG ) << "strip length, width = " << _stripLength << " " << _stripWidth << " mm " << endl;
   if ( _stripAspectRatio < 2. ) {
-    cout << "this strip is very short: probably not worth using the strip splitter!" << endl;
+    streamlog_out( ERROR ) << "this strip is very short: probably not worth using the strip splitter!" << endl;
     throw marlin::StopProcessingException(this);
   }
 
@@ -295,7 +295,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
       } else if ( _evenIsTransverse==0 ) {
 	orientation = LONGITUDINAL;
       } else {
-	cout << "ERROR: strip orientation undefined!!" << endl;
+	streamlog_out( ERROR) << "strip orientation undefined!!" << endl;
 	throw marlin::StopProcessingException(this);
       }
       toSplit = &_ecalCollectionsEvenLayers;
@@ -306,13 +306,14 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
       } else if ( _evenIsTransverse==0 ) {
 	orientation = TRANSVERSE;
       } else {
-	cout << "ERROR: strip orientation undefined!!" << endl;
+	streamlog_out( ERROR ) << "strip orientation undefined!!" << endl;
 	throw marlin::StopProcessingException(this);
       }
       toSplit = &_ecalCollectionsOddLayers;
       break;
     default:
-      streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;
+      streamlog_out ( ERROR ) << "crazy stuff!!! abandoning event..." << endl;
+      throw marlin::StopProcessingException(this);
       return;
     }
 
@@ -331,7 +332,8 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	} else if (hhname.Contains("Endcap") || hhname.Contains("endcap")) {
 	  barrel = false;
 	} else {
-	  streamlog_out ( ERROR ) << "WARNING: cannot tell if collection is for barrel or endcap..." << hhname << endl;
+	  streamlog_out ( ERROR ) << "cannot tell if collection is for barrel or endcap..." << hhname << endl;
+	  throw marlin::StopProcessingException(this);
 	}
 
 	// make new collections for split and unsplit strips
@@ -353,6 +355,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	  CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
 	  if (!hit) {
 	    streamlog_out ( ERROR ) << "ERROR  null hit in collection " << toSplit->at(i).c_str() << " " << j << endl;
+	    throw marlin::StopProcessingException(this);
 	    continue;
 	  }
 	  // split the hits
@@ -493,6 +496,7 @@ std::vector <CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calo
 	  CalorimeterHit * hit2 = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
 	  if (!hit2) {
 	    streamlog_out ( ERROR ) << "ERROR  null hit2 in collection " <<  splitter->at(i).c_str() << " " << j << endl;
+	    throw marlin::StopProcessingException(this);
 	    continue;
 	  }
 	  
@@ -724,7 +728,10 @@ TVector3 DDStripSplitter::stripIntersect(CalorimeterHit* hit0, TVector3 axis0, C
     stripDir[i]*=1./stripDir[i].Mag();
   }
 
-  if (!isStrip[0]) streamlog_out ( ERROR ) << "ERROR from DDStripSplitter::stripIntersect, first hit should be a strip" << endl;
+  if (!isStrip[0]) {
+    streamlog_out ( ERROR ) << "ERROR from DDStripSplitter::stripIntersect, first hit should be a strip" << endl;
+    throw marlin::StopProcessingException(this);
+  }
 
   TVector3 p[2][2]; // ends of strips
   for (int j=0; j<2; j++) {

@@ -23,6 +23,7 @@ using std::endl;
 #include "TLorentzVector.h"
 
 #include <marlin/Global.h>
+#include <marlin/Exceptions.h>
 
 #include "DD4hep/DetectorSelector.h"
 #include "DD4hep/DetType.h"
@@ -197,14 +198,14 @@ void DDStripSplitter::setupGeometry() {
     for( unsigned i=0, N= theDetectors.size(); i<N ; ++i ){
       streamlog_out (ERROR) << theDetectors.at(i).name() << ", " ;
     }
-    assert(0);
+    throw marlin::StopProcessingException(this);
   }
 
   int ical=0;
   _caloGeomData = theDetectors.at(ical).extension<dd4hep::rec::LayeredCalorimeterData>();
   if ( ! _caloGeomData ) {
     streamlog_out ( WARNING ) << "could not get calorimeter geometry information!" << endl;
-    assert(0);
+    throw marlin::StopProcessingException(this);
   }
   _symmetry = _caloGeomData->inner_symmetry;
   _stripLength = _caloGeomData->layers[0].cellSize0;
@@ -218,7 +219,7 @@ void DDStripSplitter::setupGeometry() {
     for (size_t ilay = 0 ; ilay<_caloGeomData->layers.size(); ilay++ ) {
       cout << "strip size in layer " << ilay << " : " << _caloGeomData->layers[ilay].cellSize0 << " " << _caloGeomData->layers[ilay].cellSize1 << endl;
     }
-    assert(0);
+    throw marlin::StopProcessingException(this);
   }
 
   _evenIsTransverse = 0;
@@ -238,7 +239,7 @@ void DDStripSplitter::setupGeometry() {
   cout << "strip length, width = " << _stripLength << " " << _stripWidth << " mm " << endl;
   if ( _stripAspectRatio < 2. ) {
     cout << "this strip is very short: probably not worth using the strip splitter!" << endl;
-    assert(0);
+    throw marlin::StopProcessingException(this);
   }
 
   return;
@@ -295,7 +296,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	orientation = LONGITUDINAL;
       } else {
 	cout << "ERROR: strip orientation undefined!!" << endl;
-	assert(0);
+	throw marlin::StopProcessingException(this);
       }
       toSplit = &_ecalCollectionsEvenLayers;
       break;
@@ -306,7 +307,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	orientation = TRANSVERSE;
       } else {
 	cout << "ERROR: strip orientation undefined!!" << endl;
-	assert(0);
+	throw marlin::StopProcessingException(this);
       }
       toSplit = &_ecalCollectionsOddLayers;
       break;

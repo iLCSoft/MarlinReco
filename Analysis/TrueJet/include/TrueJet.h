@@ -101,6 +101,9 @@ private:
   void cluster();
   void string();
   void assign_jet(int jet1,int jet2,int cs);
+  void map_reco_to_mc(LCCollection* rcpcol);
+  MCParticle* find_highweight_mcpartner(ReconstructedParticle* rcp);
+  void split_weights( FloatVec &combined_weights, FloatVec &single_weights, std::string weight_name );
   void first_parton(int this_partic,int this_jet,int& first_partic,int& last_94_parent,int& nfsr,int& info,int& info2);
   int flavour(int k2) ;
   void fix94() ;
@@ -159,6 +162,9 @@ private:
     int jets_end[26][26]{};
     //singlet_four_p(5)
     //psum_four_p(5)
+    
+    typedef std::map<MCParticle*, ReconstructedParticleVec> MCRecoMap;
+    MCRecoMap mc_reco_map_all {};
 
 } ;
 

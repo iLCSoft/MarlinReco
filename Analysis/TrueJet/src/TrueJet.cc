@@ -153,6 +153,15 @@ void TrueJet::processEvent( LCEvent * event ) {
         streamlog_out(WARNING) <<  _MCParticleColllectionName  << " collection not available" << std::endl;
         mcpcol = NULL;
     }
+    LCCollection* rcpcol = NULL;
+    try{
+        rcpcol = evt->getCollection( _recoParticleCollectionName );
+    }
+    catch( lcio::DataNotAvailableException e )
+    {
+        streamlog_out(WARNING) <<  _recoParticleCollectionName  << " collection not available" << std::endl;
+        rcpcol = NULL;
+    }
     LCCollection* rmclcol = NULL;
     try{
         rmclcol = evt->getCollection( _recoMCTruthLink );
@@ -198,6 +207,7 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       isr() ;
 
+      this->map_reco_to_mc(rcpcol);
 
        //   nstr=COUNT( ( 92 == k(1:nlund,2) .AND. jet(1:nlund) == 0 ) )
        //   njet = 2*nstr+n_hard_lepton+2*nclu+nisr;
@@ -343,11 +353,9 @@ void TrueJet::processEvent( LCEvent * event ) {
             } else {
               truejet_truepart_Nav.addRelation(  true_jet, mcp_pyjets[i], ( jet[i]>0 ? k[i][1]%30 : 0.0 )) ;
             }
-            LCObjectVec recovec; 
-            recovec = reltrue->getRelatedFromObjects( mcp_pyjets[i]);
             //============================ 
-
-
+            
+            // WARNING: Potentially outdated comment!
             // (maybe this will be needed: If the current assumption that also MCPartiles created in
             //  simulation can in a consitent way be put into pyjets turns out to be wrong, then
             //  getPyjets should only load gen. stat. /= 0 particles, and then code below
@@ -359,57 +367,52 @@ void TrueJet::processEvent( LCEvent * event ) {
             //              }
             //            }
 
-            if ( recovec.size() > 0 ) { // if reconstructed
+            MCRecoMap::iterator it_rcmc_pair;
+            it_rcmc_pair = mc_reco_map_all.find(mcp_pyjets[i]);
+            
+            if (it_rcmc_pair != mc_reco_map_all.end()) { // if reconstructed
               double mom2[3] ;  
               double E,q ;
-
+    
                // true quanaties for this jet (all true seen)
               tmomS[0]+=p[i][1] ;
               tmomS[1]+=p[i][2] ;
               tmomS[2]+=p[i][3] ;
               tES+=p[i][4] ;
-
-              for ( unsigned ireco=0 ; ireco<recovec.size() ; ireco++ ) { //  reco-of-this-true loop
-
-                // add things of this reco-particle to the current jet:
-
+              
+              ReconstructedParticleVec rcps_to_mcp = it_rcmc_pair->second;
+              for (auto & reco_part: rcps_to_mcp) { // loop over reco_parts 
+                // add things of this reco-particle to the current jet: 
                 //*****************************
-                ReconstructedParticle* reco_part  = dynamic_cast<ReconstructedParticle*>(recovec[ireco]);
+                mom =  reco_part->getMomentum(); 
+                double psq=0.;
+                for ( int xyz=0 ; xyz<3 ; xyz++) {
+                mom2[xyz]=mom[xyz]+true_jet->getMomentum()[xyz] ;
+                psq+= mom2[xyz]*mom2[xyz];
+                }
 
-                if (truejet_pfo_Nav.getRelatedFromObjects(reco_part).size() == 0 ) { // only if not yet used
-                     
-                  mom =  reco_part->getMomentum(); 
-                  double psq=0.;
-                  for ( int xyz=0 ; xyz<3 ; xyz++) {
-                    mom2[xyz]=mom[xyz]+true_jet->getMomentum()[xyz] ;
-                    psq+= mom2[xyz]*mom2[xyz];
-  		  }
-  
-                  E =  reco_part->getEnergy()+true_jet->getEnergy();
-                  q =  reco_part->getCharge()+true_jet->getCharge();
-                  true_jet->setCharge(q); 
-  		  true_jet->setEnergy(E);
-                  true_jet->setMass(sqrt(E*E-psq)); 
-                  true_jet->setMomentum(mom2);
-  	          streamlog_out(DEBUG1) << " " << reco_part ;
-                  pid->setType(type[ijet]);
-  
-                  true_jet->addParticle(reco_part);
+                E =  reco_part->getEnergy()+true_jet->getEnergy();
+                q =  reco_part->getCharge()+true_jet->getCharge();
+                true_jet->setCharge(q); 
+                true_jet->setEnergy(E);
+                true_jet->setMass(sqrt(E*E-psq)); 
+                true_jet->setMomentum(mom2);
+                streamlog_out(DEBUG1) << " " << reco_part ;
+                pid->setType(type[ijet]);
 
-                  // add jet-to-reco (and v.v.) link (good to have both ways easily, reco-particle member of the
-                  // true jet object just gives jet->particle, not particle->jet!)
-  
-                  truejet_pfo_Nav.addRelation(  true_jet, reco_part , 1.0 );
-                  //============================ 
+                true_jet->addParticle(reco_part);
 
+                // add jet-to-reco (and v.v.) link (good to have both ways easily, reco-particle member of the
+                // true jet object just gives jet->particle, not particle->jet!)
 
-                } // end if not yet used
-                else{
-		  streamlog_out(DEBUG1) << " " << reco_part << " seen more than once ! " << std::endl;
-		}
-              } // end reco-of-this-true loop
+                truejet_pfo_Nav.addRelation(  true_jet, reco_part , 1.0 );
+                //============================
+              } // end loop over reco_parts 
+      	    } // end if reconstructed 
+            else {
+              streamlog_out(DEBUG1) << "  MCP " << mcp_pyjets[i] << " was not reconstructed." << std::endl;
+            }
 
-	    } // end if reconstructed
   	    streamlog_out(DEBUG1) << std::endl;
   
           } // end if jet[i]== ijet
@@ -1675,6 +1678,85 @@ void TrueJet::string()
   
    }
 }
+
+void TrueJet::map_reco_to_mc(LCCollection* rcpcol){
+  /** Finding a reconstructed level for the jets requires a unique assignement
+      of the reco particles. This is always an approximation since reco
+      particles often are made from multiple mc particles.
+  */
+  streamlog_out(DEBUG0) << "Creating map which assignes exactly one MCP to each RCP." << std::endl;
+  mc_reco_map_all = MCRecoMap(); // Empty map
+  int nRecoP = rcpcol->getNumberOfElements()  ;
+  for (int i_rcp=0; i_rcp<nRecoP; i_rcp++) {
+    ReconstructedParticle* rcp = dynamic_cast<ReconstructedParticle*>( rcpcol->getElementAt( i_rcp ) ) ;
+    
+    LCObjectVec mcp_vector; 
+    mcp_vector = reltrue->getRelatedToObjects( rcp );
+
+    MCParticle* mcp_highweight = this->find_highweight_mcpartner(rcp);
+    mc_reco_map_all[mcp_highweight].push_back(rcp);
+  }
+}
+
+MCParticle* TrueJet::find_highweight_mcpartner(ReconstructedParticle* rcp){
+  /** To assign each reco particle uniquely to one jet it must get a unique
+      assignement to one mc particle. 
+      Here use mc particle that constitutes "biggest part" of reco particle
+      (done using weights).
+      This is an intrinsic approximation in TrueJet since reco particles often
+      are made of multiple mc particles (from multiple jets).
+  */
+  streamlog_out(DEBUG0) << "Searching for MCP which is biggest part of RCP " << rcp << std::endl;
+  
+  LCObjectVec mcps_to_rcp   = reltrue->getRelatedToObjects( rcp );
+  FloatVec weights_from_rcp = reltrue->getRelatedToWeights( rcp );
+  FloatVec rcp_to_mcp_trk_weights, rcp_to_mcp_cal_weights;
+  this->split_weights( weights_from_rcp, rcp_to_mcp_trk_weights, "trck");
+  this->split_weights( weights_from_rcp, rcp_to_mcp_cal_weights, "calo");
+
+
+  // For particles reconstructed as charged use track weight, else calo weight
+  // TODO May need separate treatment for V0's (to be checked)
+  // -> are reconstructed as neutrals but have two tracks! (for now calo weight good enough approx.)
+  FloatVec considered_weights = rcp_to_mcp_cal_weights;
+  if ( rcp->getCharge() != 0 ) { considered_weights = rcp_to_mcp_trk_weights; } 
+  
+  float max_weight = 0;
+  MCParticle* mcp_highweight {};
+  for (unsigned int i_mc=0; i_mc<mcps_to_rcp.size(); i_mc++) {
+    streamlog_out(DEBUG1) << " weight trck: " << rcp_to_mcp_trk_weights[i_mc] << " weight calo: " << rcp_to_mcp_cal_weights[i_mc] << std::endl;
+    MCParticle* mcp = dynamic_cast<MCParticle*>(mcps_to_rcp[i_mc]);
+    if ( considered_weights[i_mc] > max_weight ) {
+      max_weight     = considered_weights[i_mc];
+      mcp_highweight = mcp;
+    }
+  }
+  streamlog_out(DEBUG1) << "Highest weight MCP for RCP " << rcp << " is: " << mcp_highweight << std::endl;
+  if ( nullptr == mcp_highweight ) {
+    streamlog_out(ERROR) << " ERROR: Didn't find MCP to RCP " << rcp << " ! " << std::endl;
+  }
+  
+  return mcp_highweight;
+}
+
+void TrueJet::split_weights( FloatVec &combined_weights, FloatVec &single_weights, std::string weight_name ) {
+  /** Both weights are stored in in one int, where first half of bits is first
+      weights and second half is second weight. 
+      -> Use binary operations to split them up.
+  */
+  for (unsigned int i=0; i<combined_weights.size(); i++) {
+    if ( weight_name == "trck" ) {
+      single_weights.push_back(double((int(combined_weights[i])%10000)/1000.));
+    }
+    else if ( weight_name == "calo" ) {
+      single_weights.push_back(double((int(combined_weights[i])/10000)/1000.));
+    } else {
+      streamlog_out(ERROR) << " ERROR: Asking for unknown weight type: " << weight_name << std::endl;
+      break;
+    }
+  }
+}
+
 void TrueJet::assign_jet(int jet1,int jet2,int fafp)
 {
  double dir_diff[4];

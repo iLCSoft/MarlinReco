@@ -6,6 +6,10 @@ https://agenda.linearcollider.org/event/6787/session/10/contribution/17/material
 
 ## any problem contact: tian@icepp.s.u-tokyo.ac.jp
 
+## new feature for supporting application without using impact parameters 01/09/2019
+for applications that don't want to use impact parameters, set the steering parameter "UseIP" to "false" and use the weight files trained in the same case; example steering file can be found in "example/isolep_woIP_woYoke.xml"
+
+
 ## change for new ILD samples 07/18/2018
 due to potential problem in muon reconstruction with associated hits in Yoke, added a option in processor which doesn't make use of energy deposited in Yoke. It has been tested that the performance without using Yoke for isolated muon tagging should be fine for most analyses. Before the potential problem resolved, it is recommended to use this new option (steered by "UseYokeForMuonID") with default value. The corresponding new weight file (only needed for muon) is also provided under dir "weights" (with tag "woYoke").
 

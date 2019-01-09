@@ -241,10 +241,8 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     std::cerr << "No Vertex collection found (" << _colPVtx << ") !" << std::endl;
     return;
   }
-  
   Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
-  Double_t z_pvtx = pvtx->getPosition()[2];   
-
+  Double_t z_pvtx = pvtx->getPosition()[2];
   // -- get PFO collection --
   LCCollection *colPFO = nullptr;
   try {

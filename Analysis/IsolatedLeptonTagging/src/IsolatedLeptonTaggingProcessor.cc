@@ -160,6 +160,11 @@ IsolatedLeptonTaggingProcessor::IsolatedLeptonTaggingProcessor() : Processor("Is
 			     "use yoke for muon ID"  ,
 			     _use_yoke_for_muon ,
 			     bool(false) ) ;
+
+  registerProcessorParameter("UseIP",
+			     "use impact parameters"  ,
+			     _use_ip ,
+			     bool(true) );
 }
 
 void IsolatedLeptonTaggingProcessor::init() { 
@@ -183,8 +188,10 @@ void IsolatedLeptonTaggingProcessor::init() {
       reader->AddVariable( "energyratio",     &_energyratio ); // energy ration of lep and large cone
       reader->AddVariable( "ratioecal",       &_ratioecal ); // ratio of energy in ecal over energy in ecal+hcal
       reader->AddVariable( "ratiototcal",     &_ratiototcal ); // ratio of energy in ecal+hcal over momentum
-      reader->AddVariable( "nsigd0",          &_nsigd0 ); // significance of d0
-      reader->AddVariable( "nsigz0",          &_nsigz0 ); // significance of z0
+      if (_use_ip) {
+	reader->AddVariable( "nsigd0",          &_nsigd0 ); // significance of d0
+	reader->AddVariable( "nsigz0",          &_nsigz0 ); // significance of z0
+      }
     }
     else { // muon
       reader->AddVariable( "coneec",          &_coneec );
@@ -193,8 +200,10 @@ void IsolatedLeptonTaggingProcessor::init() {
       reader->AddVariable( "coslarcon",       &_coslarcon );
       reader->AddVariable( "energyratio",     &_energyratio );
       if (_use_yoke_for_muon) reader->AddVariable( "yokeenergy",      &_yokeenergy ); // energy in yoke
-      reader->AddVariable( "nsigd0",          &_nsigd0 );
-      reader->AddVariable( "nsigz0",          &_nsigz0 );
+      if (_use_ip) {
+	reader->AddVariable( "nsigd0",          &_nsigd0 );
+	reader->AddVariable( "nsigz0",          &_nsigz0 );
+      }
       reader->AddVariable( "totalcalenergy",  &_totalcalenergy );
     }
     

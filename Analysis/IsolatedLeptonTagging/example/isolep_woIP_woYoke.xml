@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
+
+<!-- Loading shared library : /gpfs/fs01/ilc/tianjp/analysis/PostDBD/IsolatedLeptonTagging_svn/lib/libISOLepTagging.so.0.1.0 (libISOLepTagging.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinDD4hep/v00-01/lib/libMarlinDD4hep.so.0.1.0 (libMarlinDD4hep.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/tianjp/soft/HLRec/MarlinReco/lib/libMarlinReco.so.1.11.0 (libMarlinReco.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/PandoraAnalysis/v01-00-01/lib/libPandoraAnalysis.so.01.00.01 (libPandoraAnalysis.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinPandora/v02-00-00/lib/libMarlinPandora.so.02.00.00 (libMarlinPandora.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCFIVertex/v00-07/lib/libLCFIVertex.so.0.6.2 (libLCFIVertex.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/CEDViewer/v01-09/lib/libCEDViewer.so.1.9.0 (libCEDViewer.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Overlay/v00-14/lib/libOverlay.so.0.14.0 (libOverlay.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/FastJetClustering/v00-02/lib/libFastJetClustering.so.0.2.0 (libFastJetClustering.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinFastJet/v00-02/lib/libMarlinFastJet.so.0.2.0 (libMarlinFastJet.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCTuple/v01-04/lib/libLCTuple.so.1.4.0 (libLCTuple.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinKinfit/v00-01-05/lib/libMarlinKinfit.so.0.1.5 (libMarlinKinfit.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinTrkProcessors/v02-00/lib/libMarlinTrkProcessors.so.2.0.0 (libMarlinTrkProcessors.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/ILDPerformance/v00-01/lib/libILDPerformance.so.0.1.0 (libILDPerformance.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Clupatra/v00-11/lib/libClupatra.so.0.10.0 (libClupatra.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Physsim/v00-02/lib/libPhyssim.so.0.2.0 (libPhyssim.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/FCalClusterer/v00-01/lib/libFCalClusterer.so (libFCalClusterer.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCFIPlus/v00-05-03/lib/libLCFIPlus.so.0.5.3 (libLCFIPlus.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/ForwardTracking/v01-08/lib/libForwardTracking.so.1.8.0 (libForwardTracking.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinTPC/v01-00/lib/libMarlinTPC.so.1.0.0 (libMarlinTPC.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Garlic/v3.0.3/lib/libGarlic.so.3.0.3 (libGarlic.so)-->
+
+<!--##########################################
+    #                                        #
+    #     Example steering file for marlin   #
+    #                                        #
+    ##########################################-->
+
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+ <execute>
+   <processor name="MyAIDAProcessor"/>
+   <processor name="MyIsolatedLeptonTaggingProcessor"/>  
+   <processor name="MyLCIOOutputProcessor"/>  
+ </execute>
+
+ <global>
+   <parameter name="LCIOInputFiles">
+data_dbd_500/higgs_ffh/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.I106519.Pe2e2h.eL.pR-00001-DST.slcio
+   </parameter>
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="11" />  
+  <parameter name="SkipNEvents" value="0" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="GearXMLFile"> gear_ILD_o1_v05.xml </parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <parameter name="RandomSeed" value="1234567890" />
+  <!-- optionally limit the collections that are read from the input file: -->  
+  <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
+ </global>
+
+ <processor name="MyIsolatedLeptonTaggingProcessor" type="IsolatedLeptonTaggingProcessor">
+ <!--IsolatedLeptonTaggingProcessor does whatever it does ...-->
+  <!--cosine of the larger cone-->
+  <parameter name="CosConeLarge" type="float">0.95 </parameter>
+  <!--cosine of the smaller cone-->
+  <parameter name="CosConeSmall" type="float">0.98 </parameter>
+  <!--Cut on the mva output of isolated electron selection-->
+  <parameter name="CutOnTheISOElectronMVA" type="float">0.8 </parameter>
+  <!--Cut on the mva output of isolated muon selection-->
+  <parameter name="CutOnTheISOMuonMVA" type="float">0.8 </parameter>
+  <!--Directory of Weights for the Isolated Electron MVA Classification-->
+  <parameter name="DirOfISOElectronWeights" type="string">isolated_electron_weights_woIP </parameter>
+  <!--Directory of Weights for the Isolated Muon MVA Classification-->
+  <parameter name="DirOfISOMuonWeights" type="string">isolated_muon_weights_woIP_woYoke </parameter>
+  <!--Name of the PandoraPFOs collection-->
+  <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+  <!--Name of the Primary Vertex collection-->
+  <parameter name="InputPrimaryVertexCollection" type="string" lcioInType="ReconstructedParticle">PrimaryVertex </parameter>
+  <!--flag to select one most like isolated lepton-->
+  <parameter name="IsSelectingOneIsoLep" type="bool">true </parameter>
+  <!--Maximum d0 significance for electron-->
+  <parameter name="MaxD0SigForElectron" type="float">50 </parameter>
+  <!--Maximum D0 significance for muon-->
+  <parameter name="MaxD0SigForMuon" type="float">20 </parameter>
+  <!--Maximum ratio of energy in calorimeters over momentum for electron-->
+  <parameter name="MaxEOverPForElectron" type="float">1.3 </parameter>
+  <!--Maximum ratio of energy in calorimeters over momentum for muon-->
+  <parameter name="MaxEOverPForMuon" type="float">0.3 </parameter>
+  <!--Maximum Z0 significance for electron-->
+  <parameter name="MaxZ0SigForElectron" type="float">50 </parameter>
+  <!--Maximum Z0 significance for muon-->
+  <parameter name="MaxZ0SigForMuon" type="float">20 </parameter>
+  <!--minimum ratio of energy in calorimeters over momentum for electron-->
+  <parameter name="MinEOverPForElectron" type="float">0.5 </parameter>
+  <!--minimum ratio of energy in ecal over energy in ecal+hcal-->
+  <parameter name="MinEecalOverTotEForElectron" type="float">0.9 </parameter>
+  <!--Minimum momentum for electron-->
+  <parameter name="MinPForElectron" type="float">5 </parameter>
+  <!--Minimum momentum for muon-->
+  <parameter name="MinPForMuon" type="float">5 </parameter>
+  <!--Name of collection with the selected isolated lepton-->
+  <parameter name="OutputIsoLeptonsCollection" type="string" lcioOutType="ReconstructedParticle">ISOLeptons </parameter>
+  <!--Name of the new PFOs collection without isolated lepton-->
+  <parameter name="OutputPFOsWithoutIsoLepCollection" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+  <!--use yoke for muon ID-->
+  <parameter name="UseYokeForMuonID" type="bool">false </parameter>
+  <!--use impact parameters-->
+  <parameter name="UseIP" type="bool">false </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int">1 </parameter>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string">aida_file </parameter>
+  <!-- type of output file root (default) or xml )-->
+  <parameter name="FileType" type="string">root </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+ <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+  <!--drops the named collections from the event-->
+  <!--parameter name="DropCollectionNames" type="StringVec">TPCHits HCalHits  </parameter-->
+  <!--drops all collections of the given type from the event-->
+  <!--parameter name="DropCollectionTypes" type="StringVec">SimTrackerHit SimCalorimeterHit  </parameter-->
+  <!-- write complete objects in subset collections to the file (i.e. ignore subset flag)-->
+  <!--parameter name="FullSubsetCollections" type="StringVec">MCParticlesSkimmed  </parameter-->
+  <!--force keep of the named collections - overrules DropCollectionTypes (and DropCollectionNames)-->
+  <!--parameter name="KeepCollectionNames" type="StringVec">MyPreciousSimTrackerHits  </parameter-->
+  <!-- name of output file -->
+  <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
+  <!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
+  <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
+  <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
+  <!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+</marlin>

@@ -1,7 +1,6 @@
 #include "Use_TrueJet.h"
 #include <stdlib.h>
-#include <math.h>
-//#include <cmath>
+#include <cmath>
 #include <iostream>
 #include <iomanip>
 

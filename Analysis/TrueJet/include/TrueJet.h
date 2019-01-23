@@ -94,19 +94,18 @@ class TrueJet : public Processor {
  
 private:
 
-  void getPyjets(LCCollection* mcpcol ,
-                        MCParticleVec& mcp_pyjets)  ;
+  void getPyjets(LCCollection* mcpcol);
 
   void true_lepton();
   void cluster();
   void string();
-  void assign_jet(int jet1,int jet2,int cs);
+  void assign_jet(int jet1,int jet2,int this_fafp);
   void first_parton(int this_partic,int this_jet,int& first_partic,int& last_94_parent,int& nfsr,int& info,int& info2);
   int flavour(int k2) ;
   void fix94() ;
   void isr() ;
   void grouping() ;
-  void fix_top(int& first_line) ;
+  void fix_top();
   LCEvent * evt{};
   MCParticleVec  mcp_pyjets{};
 

@@ -297,126 +297,202 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       streamlog_out(DEBUG8) << "  Number of jets found : " << njet << std::endl;
 
+      double tmomS[25][3] ;
+      double tES[25];
+      int pid_type[25] ;
       for ( int ijet=1; ijet<=njet ; ijet++ ) { // jet-loop
-
-        
-        double tmomS[3] ;
-        double tES;
-
-        tES=0;
-        for ( int i=0 ; i<3 ; i++ ) {
-          tmomS[i]=0 ;
-        } 
-
-        //*****************************
         ReconstructedParticleImpl* true_jet = new ReconstructedParticleImpl;
-        ParticleIDImpl* pid = new ParticleIDImpl; 
-        pid->setPDG(k[elementon[ijet]][2]);
-        pid->setType(-type[ijet]);
-        true_jet->addParticleID(pid);
-        true_jet->ext<TJindex>()=ijet; 
+        tES[ijet]=0;
+        for ( int i=0 ; i<3 ; i++ ) {
+          tmomS[ijet][i]=0 ;
+        } 
+      
+        //*****************************
+        pid_type[ijet] = -type[ijet] ;
         //============================
 
-
+        jet_vec->addElement(true_jet);
+	
 	streamlog_out(DEBUG1) << std::endl;
 	streamlog_out(DEBUG1) << "  Following jet " << ijet <<   " ( "<< true_jet << ")" << std::endl;
         streamlog_out(DEBUG1) << " ============================= "  <<  std::endl;
         streamlog_out(DEBUG1) << " HEPEVT relation table with jet assignment and pfo(s), if any "  <<std::endl;
         streamlog_out(DEBUG1) << "       line    mcp          status    pdg       parent    first     last       jet     pfo(s)" << std::endl;
         streamlog_out(DEBUG1) << "                                                        daughter   daugther " << std::endl;
+      }
+      
+      ReconstructedParticleImpl* true_jet ;
+      int ijet ;
+      for ( int i=1 ; i<=nlund ; i++){ // pyjets loop
+        ijet =  abs(jet[i]);
+        if ( ijet > 0 ) {
 
-        for ( int i=1 ; i<=nlund ; i++){ // pyjets loop
-
-          if ( abs(jet[i]) == ijet ) {
+          true_jet = dynamic_cast<ReconstructedParticleImpl*>(jet_vec->getElementAt(ijet-1));
 
              // OK, add jet-to-true link
 
-	     streamlog_out(DEBUG1) << std::setw(10) << i << " ("  <<mcp_pyjets[i] << ")" << std::setw(10) <<  k[i][1]%30 << 
+	  streamlog_out(DEBUG1) << std::setw(10) << i << " ("  <<mcp_pyjets[i] << ")" << std::setw(10) <<  k[i][1]%30 << 
                  std::setw(10) <<  k[i][2] << std::setw(10) << k[i][3] << 
                  std::setw(10) <<  k[i][4] << std::setw(10) << k[i][5] << std::setw(10) << jet[i]  ;
 
 
-            //*****************************
-            if (  k[i][1] == 1 &&  k[i][2] == 22 && jet[k[i][3]] < 0   && k[k[i][3]][2] != 22 ) {
-                  // to be able to find FSRs, set weight to -ve for them
-              truejet_truepart_Nav.addRelation(  true_jet, mcp_pyjets[i], ( jet[i]>0 ? -(k[i][1])%30 : 0.0 )) ;
-            } else {
-              truejet_truepart_Nav.addRelation(  true_jet, mcp_pyjets[i], ( jet[i]>0 ? k[i][1]%30 : 0.0 )) ;
-            }
-            LCObjectVec recovec; 
-            recovec = reltrue->getRelatedFromObjects( mcp_pyjets[i]);
-            //============================ 
+          //*****************************
+          if (  k[i][1] == 1 &&  k[i][2] == 22 && jet[k[i][3]] < 0   && k[k[i][3]][2] != 22 ) {
+                // to be able to find FSRs, set weight to -ve for them
+            truejet_truepart_Nav.addRelation(  true_jet, mcp_pyjets[i], ( jet[i]>0 ? -(k[i][1])%30 : 0.0 )) ;
+          } else {
+            truejet_truepart_Nav.addRelation(  true_jet, mcp_pyjets[i], ( jet[i]>0 ? k[i][1]%30 : 0.0 )) ;
+          }
+          LCObjectVec recovec; 
+          recovec = reltrue->getRelatedFromObjects( mcp_pyjets[i]);
+          //============================ 
 
+          // (maybe this will be needed: If the current assumption that also MCPartiles created in
+          //  simulation can in a consitent way be put into pyjets turns out to be wrong, then
+          //  getPyjets should only load gen. stat. /= 0 particles, and then code below
+          //  would be needed to assign seen gen. stat. = 0 particles to jets based on their
+          //  gen. stat. /= 0 ancestor ?!)
+          //            if ( recovec.size() == 0 &&  k[i][1] == 1 ) { // not reconstructed stable particle
+          //              if ( abs(k[i][2]) != 12 &&  abs(k[i][2]) != 14 &&  abs(k[i][2]) != 16 ) { // not neutrino
+          //                //  mcp_pyjets[i].getDaughter ... etc . If any decendant is seen, make association
+          //              }
+          //            }
 
-            // (maybe this will be needed: If the current assumption that also MCPartiles created in
-            //  simulation can in a consitent way be put into pyjets turns out to be wrong, then
-            //  getPyjets should only load gen. stat. /= 0 particles, and then code below
-            //  would be needed to assign seen gen. stat. = 0 particles to jets based on their
-            //  gen. stat. /= 0 ancestor ?!)
-            //            if ( recovec.size() == 0 &&  k[i][1] == 1 ) { // not reconstructed stable particle
-            //              if ( abs(k[i][2]) != 12 &&  abs(k[i][2]) != 14 &&  abs(k[i][2]) != 16 ) { // not neutrino
-            //                //  mcp_pyjets[i].getDaughter ... etc . If any decendant is seen, make association
-            //              }
-            //            }
+          if ( recovec.size() > 0 ) { // if reconstructed
+            double mom2[3] ;  
+            double E,q ;
 
-            if ( recovec.size() > 0 ) { // if reconstructed
-              double mom2[3] ;  
-              double E,q ;
+             // true quanaties for this jet (all true seen)
+            tmomS[ijet][0]+=p[i][1] ;
+            tmomS[ijet][1]+=p[i][2] ;
+            tmomS[ijet][2]+=p[i][3] ;
+            tES[ijet]+=p[i][4] ;
 
-               // true quanaties for this jet (all true seen)
-              tmomS[0]+=p[i][1] ;
-              tmomS[1]+=p[i][2] ;
-              tmomS[2]+=p[i][3] ;
-              tES+=p[i][4] ;
+	    streamlog_out(DEBUG1) << " recovec size is " << recovec.size() ;
+            int last_winner = ijet ;
+            for ( unsigned ireco=0 ; ireco<recovec.size() ; ireco++ ) { //  reco-of-this-true loop
 
-              for ( unsigned ireco=0 ; ireco<recovec.size() ; ireco++ ) { //  reco-of-this-true loop
+              // add things of this reco-particle to the current jet:
 
-                // add things of this reco-particle to the current jet:
+              //*****************************
+              ReconstructedParticle* reco_part  = dynamic_cast<ReconstructedParticle*>(recovec[ireco]);
 
-                //*****************************
-                ReconstructedParticle* reco_part  = dynamic_cast<ReconstructedParticle*>(recovec[ireco]);
+              if (truejet_pfo_Nav.getRelatedFromObjects(reco_part).size() == 0 ) { // only if not yet used
+		streamlog_out(DEBUG3) << " recopart " << ireco ;
+		bool split_between_jets = false;
+	        int winner , wgt_trk[njet+1] , wgt_clu[njet+1] ;
+		winner=ijet;
+	        for ( int kkk=1 ; kkk <= njet ; kkk++ ) {
+		  wgt_trk[kkk] =0 ; wgt_clu[kkk] = 0 ;
+	        }	
+         	LCObjectVec recomctrues = reltrue->getRelatedToObjects(reco_part);
+                static FloatVec recomctrueweights;
+	        recomctrueweights = reltrue->getRelatedToWeights(reco_part);
+	        streamlog_out(DEBUG3) << "     mctrues of this reco " << recomctrues.size() << std::endl ;
+         	for ( int kkk=0 ; kkk<recomctrues.size() ; kkk++ ) {
+		  int jetoftrue ;
+		  MCParticle* an_mcp = dynamic_cast<MCParticle*>(recomctrues[kkk]);
+		  jetoftrue=jet[an_mcp->ext<MCPpyjet>()];
+	          if ( jetoftrue != ijet ) split_between_jets = true;
+		  wgt_trk[jetoftrue]+=int(recomctrueweights[kkk])%10000 ;
+		  wgt_clu[jetoftrue]+=int(recomctrueweights[kkk])/10000 ;
+		  streamlog_out(DEBUG1) << " weights : " << int(recomctrueweights[kkk]) << " " << int(recomctrueweights[kkk])%10000 
+					    << " " << int(recomctrueweights[kkk])/10000 << std::endl ;
+                }
+                if ( split_between_jets ) {
+		  double wgt_trk_max, wgt_clu_max ;
+	          int imax_trk, imax_clu;
 
-                if (truejet_pfo_Nav.getRelatedFromObjects(reco_part).size() == 0 ) { // only if not yet used
-                     
+         	  wgt_trk_max=0. ; wgt_clu_max=0. ; imax_trk = 0 ; imax_clu = 0;
+		  for ( int kkk=1 ; kkk <= njet ; kkk++ ) {
+		    streamlog_out(DEBUG3) << "     jetweights for " << kkk << " " << wgt_trk[kkk]  << " " <<  wgt_clu[kkk] ;
+		    if ( wgt_trk[kkk] > wgt_trk_max ) {
+	              imax_trk= kkk ; wgt_trk_max = wgt_trk[kkk] ;
+         	    }  
+		    if ( wgt_clu[kkk] > wgt_clu_max ) {
+		      imax_clu= kkk ; wgt_clu_max = wgt_clu[kkk] ;
+		    }  
+		  }
+		  streamlog_out(DEBUG3) << "    " << imax_clu << " " << imax_trk << " " <<  wgt_clu_max <<  " " <<  wgt_trk_max ;
+		  if ( imax_clu == imax_trk || wgt_trk_max >= 750 ) {
+		    winner = imax_trk;
+		  } else if ( wgt_trk_max == 0 ) {
+		    winner = imax_clu;
+		  } else {
+		    streamlog_out(DEBUG3) << " was ? " << imax_clu << " " << imax_trk << " " <<  wgt_clu_max <<  " " <<  wgt_trk_max << std::endl;
+		    for ( int kkk=1 ; kkk <= njet ; kkk++ ) {
+		      streamlog_out(DEBUG3) << " was    jetweights for " << kkk << " " << wgt_trk[kkk]  << " " <<  wgt_clu[kkk]  << std::endl;
+                    }
+                    // probably the cluster is somewhat more reliable in this case. Anyways, this happens very rarely (for 3 PFOs in 6400 4f_had...)
+                    if ( imax_clu > 0 ) {
+                      winner = imax_clu;
+                    } else {
+                      // ... as a last resort ...
+                      winner = imax_trk ;
+                    }
+                  }
+		}
+
+                if ( winner > 0 && winner != last_winner ) true_jet = dynamic_cast<ReconstructedParticleImpl*>(jet_vec->getElementAt(winner-1));
+
+		streamlog_out(DEBUG3) << " and the winner is " << winner << "  ( ijet is " << ijet << " ) " ;	  
+                if ( winner > 0 ) {
+                  last_winner = winner ;
                   mom =  reco_part->getMomentum(); 
                   double psq=0.;
                   for ( int xyz=0 ; xyz<3 ; xyz++) {
                     mom2[xyz]=mom[xyz]+true_jet->getMomentum()[xyz] ;
                     psq+= mom2[xyz]*mom2[xyz];
-  		  }
+                  }
   
                   E =  reco_part->getEnergy()+true_jet->getEnergy();
                   q =  reco_part->getCharge()+true_jet->getCharge();
                   true_jet->setCharge(q); 
-  		  true_jet->setEnergy(E);
+                  true_jet->setEnergy(E);
                   true_jet->setMass(sqrt(E*E-psq)); 
                   true_jet->setMomentum(mom2);
-  	          streamlog_out(DEBUG1) << " " << reco_part ;
-                  pid->setType(type[ijet]);
+        	  streamlog_out(DEBUG1) << " " << reco_part ;
+                  pid_type[winner] = type[winner] ;
+                  //ParticleIDImpl* pid = new ParticleIDImpl; 
+                  //pid->setType(type[ijet]);
   
                   true_jet->addParticle(reco_part);
 
-                  // add jet-to-reco (and v.v.) link (good to have both ways easily, reco-particle member of the
-                  // true jet object just gives jet->particle, not particle->jet!)
+                    // add jet-to-reco (and v.v.) link (good to have both ways easily, reco-particle member of the
+                    // true jet object just gives jet->particle, not particle->jet!)
   
                   truejet_pfo_Nav.addRelation(  true_jet, reco_part , 1.0 );
-                  //============================ 
+                    //============================ 
+	      
+                } else {
+                  streamlog_out(WARNING) << " reco particle " << ireco << " of pythia-particle " << i << " has weights = 0 to ALL MCPs ??? " << std::endl;
+                  streamlog_out(WARNING) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
+                }
+              } // end if not yet used
+              else{
+		streamlog_out(DEBUG1) << " " << reco_part << " seen more than once ! " << std::endl;
+              }
+            } // end reco-of-this-true loop
 
+	  } // end if reconstructed
+  	  streamlog_out(DEBUG1) << std::endl;
 
-                } // end if not yet used
-                else{
-		  streamlog_out(DEBUG1) << " " << reco_part << " seen more than once ! " << std::endl;
-		}
-              } // end reco-of-this-true loop
+        } // end if ijet > 0
 
-	    } // end if reconstructed
-  	    streamlog_out(DEBUG1) << std::endl;
-  
-          } // end if jet[i]== ijet
+      } // end pyjets loop
+      for ( int ijet=1; ijet<=njet ; ijet++ ) { // jet-loop
 
-        } // end pyjets loop
+        true_jet = dynamic_cast<ReconstructedParticleImpl*>(jet_vec->getElementAt(ijet-1));
+        ParticleIDImpl* pid = new ParticleIDImpl; 
+        pid->setPDG(k[elementon[ijet]][2]);
+        pid->setType(pid_type[ijet]);
+        true_jet->addParticleID(pid);
+        true_jet->ext<TJindex>()=ijet; 
+      }
 
-        jet_vec->addElement(true_jet);
+      for ( int ijet=1; ijet<=njet ; ijet++ ) { // jet-loop
+
+        true_jet = dynamic_cast<ReconstructedParticleImpl*>(jet_vec->getElementAt(ijet-1));
 
 
 
@@ -424,13 +500,13 @@ void TrueJet::processEvent( LCEvent * event ) {
         mom = true_jet->getMomentum(); 
 
 	streamlog_out(DEBUG5) << std::endl;
-	streamlog_out(DEBUG9) << " summary " << ijet << " " << type[ijet]%100 << " " << true_jet->getEnergy() << " " <<  tE[ijet]  << " " <<  tES << std::endl ;
+	streamlog_out(DEBUG9) << " summary " << ijet << " " << type[ijet]%100 << " " << true_jet->getEnergy() << " " <<  tE[ijet]  << " " <<  tES[ijet] << std::endl ;
 	streamlog_out(DEBUG5) << "  jet       " <<std::setw(4)<< ijet << " (seen)         p : " << mom[0] << " " << mom[1] << " "  << mom[2] 
                     << " " << " E " << true_jet->getEnergy()<< std::endl;
 	streamlog_out(DEBUG5) << "               "   <<      "  (true)         p : " << tmom[ijet][0] << " " << tmom[ijet][1] << " "  << tmom[ijet][2] 
                     << " " << " E " << tE[ijet] << std::endl;
-	streamlog_out(DEBUG5) << "               "   <<      "  (true of seen) p : " << tmomS[0] << " " << tmomS[1] << " "  << tmomS[2] 
-                    << " " << " E " << tES << std::endl;
+	streamlog_out(DEBUG5) << "               "   <<      "  (true of seen) p : " << tmomS[ijet][0] << " " << tmomS[ijet][1] << " "  << tmomS[ijet][2] 
+                    << " " << " E " << tES[ijet] << std::endl;
 	streamlog_out(DEBUG5) << "  ancestor 1" << std::setw(4)<<elementon[ijet]  << "                p : " << p[elementon[ijet]][1] << " " <<  p[elementon[ijet]][2] << " "  <<  p[elementon[ijet]][3] 
 	            << " " << " E " << p[elementon[ijet]][4]<< std::endl;
 	streamlog_out(DEBUG5) << "  ancestor 2" << std::setw(4)<<fafp_last[ijet] << "                p : " << p[fafp_last[ijet]][1] << " " <<  p[fafp_last[ijet]][2] << " "  <<  p[fafp_last[ijet]][3] 
@@ -446,11 +522,11 @@ void TrueJet::processEvent( LCEvent * event ) {
 
 	streamlog_out(DEBUG5) << std::endl;
 
-        str_E+= true_jet->getEnergy(); str_tE+= tE[ijet]; str_tES+= tES;
+        str_E+= true_jet->getEnergy(); str_tE+= tE[ijet]; str_tES+= tES[ijet];
         for ( int i=0 ; i<3 ; i++ ) {
           str_mom[i]+=mom[i];
           str_tmom[i]+=tmom[ijet][i];
-          str_tmomS[i]+=tmomS[i]; 
+          str_tmomS[i]+=tmomS[ijet][i]; 
         }
         if ( ijet%2 == 0 ) {
           streamlog_out(DEBUG6) << "      Mass of jet " << ijet-1 << " and " << ijet << std::endl;
@@ -939,7 +1015,6 @@ void TrueJet::processEvent( LCEvent * event ) {
       streamlog_out(DEBUG6) << std::endl;
 
     }  // endif( mcpcol != NULL &&  rmclcol != NULL)
-
 
 
     //*****************************

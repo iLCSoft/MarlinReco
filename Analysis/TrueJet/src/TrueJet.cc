@@ -424,6 +424,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         mom = true_jet->getMomentum(); 
 
 	streamlog_out(DEBUG5) << std::endl;
+	streamlog_out(DEBUG9) << " summary " << ijet << " " << type[ijet]%100 << " " << true_jet->getEnergy() << " " <<  tE[ijet]  << " " <<  tES << std::endl ;
 	streamlog_out(DEBUG5) << "  jet       " <<std::setw(4)<< ijet << " (seen)         p : " << mom[0] << " " << mom[1] << " "  << mom[2] 
                     << " " << " E " << true_jet->getEnergy()<< std::endl;
 	streamlog_out(DEBUG5) << "               "   <<      "  (true)         p : " << tmom[ijet][0] << " " << tmom[ijet][1] << " "  << tmom[ijet][2] 

@@ -173,8 +173,7 @@ void TrueJet::processEvent( LCEvent * event ) {
       //std::cout << " calling getPyjets"<< std::endl;
       mcp_pyjets.reserve(4000);
       //      MCParticleVec  mcp_pyjets;  mcp_pyjets.reserve(4000);
-      getPyjets(mcpcol ,
-                              mcp_pyjets );
+      getPyjets(mcpcol );
 
       //std::cout << " return from getPyjets"<< std::endl;
 	fix94();
@@ -287,7 +286,6 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       //============================
 
-      const double* mom ;  
       double str_tmom[3], str_mom[3], str_tmomS[3] , str_tE , str_E , str_tES; 
       str_tE=0; str_tES=0; str_E=0;
       for ( int i=0 ; i<3 ; i++ ) {
@@ -322,9 +320,8 @@ void TrueJet::processEvent( LCEvent * event ) {
       }
       
       ReconstructedParticleImpl* true_jet ;
-      int ijet ;
       for ( int i=1 ; i<=nlund ; i++){ // pyjets loop
-        ijet =  abs(jet[i]);
+        int ijet =  abs(jet[i]);
         if ( ijet > 0 ) {
 
           true_jet = dynamic_cast<ReconstructedParticleImpl*>(jet_vec->getElementAt(ijet-1));
@@ -380,7 +377,7 @@ void TrueJet::processEvent( LCEvent * event ) {
               if (truejet_pfo_Nav.getRelatedFromObjects(reco_part).size() == 0 ) { // only if not yet used
 		streamlog_out(DEBUG3) << " recopart " << ireco ;
 		bool split_between_jets = false;
-	        int winner , wgt_trk[njet+1] , wgt_clu[njet+1] ;
+	        int winner , wgt_trk[26] , wgt_clu[26] ;
 		winner=ijet;
 	        for ( int kkk=1 ; kkk <= njet ; kkk++ ) {
 		  wgt_trk[kkk] =0 ; wgt_clu[kkk] = 0 ;
@@ -389,7 +386,7 @@ void TrueJet::processEvent( LCEvent * event ) {
                 static FloatVec recomctrueweights;
 	        recomctrueweights = reltrue->getRelatedToWeights(reco_part);
 	        streamlog_out(DEBUG3) << "     mctrues of this reco " << recomctrues.size() << std::endl ;
-         	for ( int kkk=0 ; kkk<recomctrues.size() ; kkk++ ) {
+         	for ( unsigned kkk=0 ; kkk<recomctrues.size() ; kkk++ ) {
 		  int jetoftrue ;
 		  MCParticle* an_mcp = dynamic_cast<MCParticle*>(recomctrues[kkk]);
 		  jetoftrue=jet[an_mcp->ext<MCPpyjet>()];
@@ -438,7 +435,8 @@ void TrueJet::processEvent( LCEvent * event ) {
 		streamlog_out(DEBUG3) << " and the winner is " << winner << "  ( ijet is " << ijet << " ) " ;	  
                 if ( winner > 0 ) {
                   last_winner = winner ;
-                  mom =  reco_part->getMomentum(); 
+
+                  const double* mom =  reco_part->getMomentum(); 
                   double psq=0.;
                   for ( int xyz=0 ; xyz<3 ; xyz++) {
                     mom2[xyz]=mom[xyz]+true_jet->getMomentum()[xyz] ;
@@ -453,8 +451,6 @@ void TrueJet::processEvent( LCEvent * event ) {
                   true_jet->setMomentum(mom2);
         	  streamlog_out(DEBUG1) << " " << reco_part ;
                   pid_type[winner] = type[winner] ;
-                  //ParticleIDImpl* pid = new ParticleIDImpl; 
-                  //pid->setType(type[ijet]);
   
                   true_jet->addParticle(reco_part);
 
@@ -496,8 +492,7 @@ void TrueJet::processEvent( LCEvent * event ) {
 
 
 
-
-        mom = true_jet->getMomentum(); 
+        const double* mom = true_jet->getMomentum(); 
 
 	streamlog_out(DEBUG5) << std::endl;
 	streamlog_out(DEBUG9) << " summary " << ijet << " " << type[ijet]%100 << " " << true_jet->getEnergy() << " " <<  tE[ijet]  << " " <<  tES[ijet] << std::endl ;
@@ -939,7 +934,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         LCObjectVec jts;
         jts = InitialColourNeutral_Nav.getRelatedFromObjects(fafpi);
 
-        mom=fafpi->getMomentum();
+        const double* mom=fafpi->getMomentum();
 	streamlog_out(DEBUG6) << std::setw(7) << kk+1 << std::setw(12) << mom[0] << std::setw(12) <<  mom[1] << std::setw(12)  << mom[2] << 
                              std::setw(12)  <<fafpi->getEnergy() << std::setw(12) << fafpi->getMass() << 
                              std::setw(7)  << fafpi->getParticleIDs()[0]->getType() << "   " ;
@@ -989,7 +984,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         LCObjectVec jts;
         jts = FinalColourNeutral_Nav.getRelatedFromObjects(fafpf);
 
-        mom=fafpf->getMomentum();
+        const double* mom=fafpf->getMomentum();
 	streamlog_out(DEBUG6) << std::setw(7) << kk+1 << std::setw(12) << mom[0] << std::setw(12) <<  mom[1] << std::setw(12)  << mom[2] << 
                              std::setw(12)  <<fafpf->getEnergy() << std::setw(12) << fafpf->getMass() << 
                              std::setw(7)  << fafpf->getParticleIDs()[0]->getType()  << "   ";
@@ -1027,12 +1022,11 @@ void TrueJet::processEvent( LCEvent * event ) {
 
 
 
-void TrueJet::getPyjets(LCCollection* mcpcol ,
-                        MCParticleVec& mcp_pyjets)
+void TrueJet::getPyjets(LCCollection* mcpcol )
 {
   const double* ptemp;
 
-  int i=0;
+  int iii=0;
   int nMCP = mcpcol->getNumberOfElements()  ;
   //JL: added so that first_line is the same in all events!
   first_line=1;
@@ -1047,24 +1041,24 @@ void TrueJet::getPyjets(LCCollection* mcpcol ,
     //    of a given particle will be consecutive).
     // if (mcp->getGeneratorStatus() == 1 || mcp->getGeneratorStatus() == 2 ) {
 
-      i++; 
-      mcp_pyjets[i]=mcp;
-      mcp->ext<MCPpyjet>()=i;
+      iii++; 
+      mcp_pyjets[iii]=mcp;
+      mcp->ext<MCPpyjet>()=iii;
       ptemp=mcp->getMomentum();
-      p[i][1]=ptemp[0]; 
-      p[i][2]=ptemp[1]; 
-      p[i][3]=ptemp[2]; 
-      p[i][4]=mcp->getEnergy();
-      p[i][5]=mcp->getMass();
-      k[i][1]=mcp->getGeneratorStatus();
-      if ( k[i][1] == 2 ) {  k[i][1]=11 ;}
-      if ( k[i][1] == 3 ) {  k[i][1]=21 ;}
-      if (mcp->isOverlay() ) {  k[i][1]=k[i][1]+30 ; }
-      k[i][2]=mcp->getPDG();
+      p[iii][1]=ptemp[0]; 
+      p[iii][2]=ptemp[1]; 
+      p[iii][3]=ptemp[2]; 
+      p[iii][4]=mcp->getEnergy();
+      p[iii][5]=mcp->getMass();
+      k[iii][1]=mcp->getGeneratorStatus();
+      if ( k[iii][1] == 2 ) {  k[iii][1]=11 ;}
+      if ( k[iii][1] == 3 ) {  k[iii][1]=21 ;}
+      if (mcp->isOverlay() ) {  k[iii][1]=k[iii][1]+30 ; }
+      k[iii][2]=mcp->getPDG();
 
     //    }
   }
-  nlund=i;
+  nlund=iii;
 
   for (int j=1; j <= nlund ; j++ ) {
     k[j][3] = 0;
@@ -1751,7 +1745,7 @@ void TrueJet::string()
   
    }
 }
-void TrueJet::assign_jet(int jet1,int jet2,int fafp)
+void TrueJet::assign_jet(int jet1,int jet2,int this_fafp)
 {
  double dir_diff[4];
  int first_p1, first_p2;
@@ -1783,7 +1777,7 @@ void TrueJet::assign_jet(int jet1,int jet2,int fafp)
        p[elementon[jet2]][kk]/absp_2-  p[elementon[jet1]][kk]/absp_1;
   }
 
-   for (int kk=k[fafp][4]; kk<=k[fafp][5] ; kk++ ) {
+   for (int kk=k[this_fafp][4]; kk<=k[this_fafp][5] ; kk++ ) {
      double dot=0;
      for ( int jj=1 ; jj<=3 ; jj++ ) {
        dot+=dir_diff[jj]*p[kk][jj] ;
@@ -1805,7 +1799,7 @@ void TrueJet::assign_jet(int jet1,int jet2,int fafp)
    }
 
 }
-void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& last_94_parent,int& nfsr,int& info,int& info2)
+void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& last_94_parent,int& nfsr_here,int& info,int& info2)
 
 //   INTEGER, INTENT(IN)  :: this_partic
 //   INTEGER, INTENT(IN)  :: this_jet
@@ -1933,7 +1927,7 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
              //! assigned a +ve jet number
 
          jet[this_quark+1]=this_jet;
-         nfsr=nfsr+1;
+         nfsr_here=nfsr_here+1;
        }
      } 
      streamlog_out(DEBUG0) << "  end of while loop: this_quark = " << this_quark 
@@ -1953,7 +1947,7 @@ void TrueJet::first_parton(int this_partic,int this_jet,int& first_partic,int& l
        //! partic will go into boson_ancestor, parent of the last 94 into boson_last_94_parent.
 
      streamlog_out(DEBUG0) << "in while loop calling first_parton with: k[this_quark][3] = " << k[this_quark][3] << std::endl;
-     first_parton(k[this_quark][3],0 ,boson_ancestor, boson_last_94_parent, nfsr, istat,istat2);
+     first_parton(k[this_quark][3],0 ,boson_ancestor, boson_last_94_parent, nfsr_here, istat,istat2);
 
        //! the way this bottoms-out: second to last argument (istat in the call) is set to 0 if
        //! we didn't find a boson.. In that case ...
@@ -2245,7 +2239,7 @@ void TrueJet::fix94()
   int  Candidate_94s[4011];
 
   first_line=1;
-  fix_top(first_line) ;
+  fix_top() ;
   //  nodd=COUNT((K(first_line:nlund,1)==11 .AND. K(first_line:nlund,4)==0 .AND. K(first_line:nlund,2)/=21))
   //  odd_lines=PACK ( index,(K(first_line:nlund,1)==11 .AND. K(first_line:nlund,4)==0 .AND. K(first_line:nlund,2)/=21 )) 
   //  nCMshowers=COUNT((K(first_line:nlund,2)==94))
@@ -2396,7 +2390,7 @@ void TrueJet::fix94()
 
 }
 
-void TrueJet::fix_top(int& first_line)
+void TrueJet::fix_top()
 {
     int ipi;
     int this_fla[3];
@@ -2407,11 +2401,11 @@ void TrueJet::fix_top(int& first_line)
       //    IF ( ANY( abs(k(1:nlund,2)) == 6 ) ) THEN 
 
 
-    int kk=1 ; 
-    while ( abs(k[kk][2]) != 6 && kk <= nlund ) {
-      kk++ ;
+    int kkk=1 ; 
+    while ( abs(k[kkk][2]) != 6 && kkk <= nlund ) {
+      kkk++ ;
     }
-    first_top=kk;
+    first_top=kkk;
 
     if ( first_top < nlund ) {
       if ( (k[first_top][4] == k[first_top+1][4] &&  k[first_top][5] == k[first_top+1][5]) &&

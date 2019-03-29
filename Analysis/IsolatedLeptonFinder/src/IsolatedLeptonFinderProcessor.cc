@@ -423,6 +423,12 @@ ReconstructedParticleImpl* IsolatedLeptonFinderProcessor::CopyReconstructedParti
 	pfo->setParticleIDUsed(pfo_orig->getParticleIDUsed());
 	pfo->setGoodnessOfPID(pfo_orig->getGoodnessOfPID());
 	pfo->setStartVertex(pfo_orig->getStartVertex());
+	for(unsigned int i=0;i<pfo->getTracks().size();i++){
+	  pfo->addTrack(pfo_orig->getTracks()[i]);
+	}
+	for(unsigned int i=0;i<pfo->getClusters().size();i++){
+	  pfo->addCluster(pfo_orig->getClusters()[i]);
+	}
 	return pfo;
 }
 bool IsolatedLeptonFinderProcessor::IsCharged( ReconstructedParticle* pfo ) {

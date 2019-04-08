@@ -2,6 +2,7 @@
 #include "marlin/Global.h"
 #include "EVENT/LCCollection.h"
 #include "IMPL/LCCollectionVec.h"
+#include "UTIL/LCRelationNavigator.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 
 ReconstructedParticleImpl_CopyProcessor aReconstructedParticleImpl_CopyProcessor;
@@ -22,6 +23,11 @@ ReconstructedParticleImpl_CopyProcessor::ReconstructedParticleImpl_CopyProcessor
                _OutputColName,
                std::string("NewPandoraPFOs"));
 
+  registerOutputCollection(LCIO::LCRELATION,
+               "RelationCollection",
+               "Old to New Pandora PFOs Link",
+               _RelationColName,
+               std::string("Old2NewPandoraPFOsLink"));
 
   registerProcessorParameter("copyType",
                "Copy type.",
@@ -68,7 +74,7 @@ ReconstructedParticleImpl_CopyProcessor::ReconstructedParticleImpl_CopyProcessor
                _copyParticleIDUsed,
                bool(true));
 
-  registerProcessorParameter("copyGoodnesOfPID",
+  registerProcessorParameter("copyGoodnessOfPID",
                "Copy the goodness of the PID.",
                _copyGoodnessOfPID,
                bool(true));
@@ -105,7 +111,7 @@ void ReconstructedParticleImpl_CopyProcessor::init()
 
 void ReconstructedParticleImpl_CopyProcessor::processEvent( LCEvent * evt )
 {
-  LCCollection *incol{};
+  LCCollection *incol{}, *relcol{};
   int n_incol = 0;
 
   try
@@ -119,6 +125,7 @@ void ReconstructedParticleImpl_CopyProcessor::processEvent( LCEvent * evt )
   }
 
   LCCollectionVec* outcol = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
+  LCRelationNavigator relnav( LCIO::RECONSTRUCTEDPARTICLE , LCIO::RECONSTRUCTEDPARTICLE );
 
   for (int i=0; i<n_incol; ++i)
   {
@@ -149,9 +156,12 @@ void ReconstructedParticleImpl_CopyProcessor::processEvent( LCEvent * evt )
     if (_copyStartVertex) outpart->setStartVertex(inpart->getStartVertex());
 
     outcol->addElement(outpart);
+    relnav.addRelation(inpart,outpart,1);
   }
 
-  evt->addCollection(outcol, _OutputColName );
+  relcol = relnav.createLCCollection();
+  evt->addCollection(outcol,_OutputColName);
+  evt->addCollection(relcol,_RelationColName);
 
   _nEvt++;
 }

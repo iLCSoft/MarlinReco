@@ -10,11 +10,16 @@ using namespace marlin;
 /** ReconstructedParticleImpl_CopyProcessor <br>
  *
  * Copies an LCIOCollection of ReconstructedParticleImpl including copying each member attribute and each element of the member vectors.
- * Necessary input are the names of the input and output collections.
+ * In addition, an LCRelation is created, linking the original ReconstructedParticleImpl to their copies.
+ * This indirect accessibility allows for principal compatibility with existing LCRelations, like recoMCTruthLink.
+ * Necessary input are the names of the one input and two output collections.
+ *
  * For every member attribute or member vector there is a boolean optional parameter with which the copying of the respective element can be switched off by setting the parameter to *false*.
  * This way, certain Marlin processors, that only modify the ReconstructedParticleImpl can be selectively run again instead of running the whole processor chain from the creation of the ReconstructedParticleImpl again.
  * It was initially written to selectively re-run the LikelihoodPIDProcessor (part of HighLevelReco of MarlinStdReco) on existing DST-files after certain changes in the processor parameters were made post production.
  * If the input collection does not exist in an event, or does not contain any elements, an empty instance of the output collection is added to the event.
+ *
+ * To use pre-existing LCRelations, use that relation to access the old ReconstructedParticleImpl, and then use the LCRelation created by this processor to access the new one (or the other way around).
  *
  * @author U. Einhaus, DESY
  * @version $1$
@@ -53,6 +58,7 @@ class ReconstructedParticleImpl_CopyProcessor : public Processor {
 
   std::string _InputColName{};
   std::string _OutputColName{};
+  std::string _RelationColName{};
 
   bool _copyType = true;
   bool _copyMomentum = true;

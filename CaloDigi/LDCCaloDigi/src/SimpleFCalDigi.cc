@@ -139,6 +139,7 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   LCFlagImpl flag;
 
   flag.setBit(LCIO::CHBIT_LONG);
+  flag.setBit(LCIO::CHBIT_ID1);
 
   lcalcol->setFlag(flag.getFlag());
 

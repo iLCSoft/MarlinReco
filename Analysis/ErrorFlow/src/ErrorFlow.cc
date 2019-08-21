@@ -136,7 +136,7 @@ void ErrorFlow::init() {
 
 	// Create a ROOT file if enabled in the steering file
 	if ( p_storeTree ) {
-	   tree = new TTree("ErrorFlow", "Number of photons, charged and neutral hadrons in a jet");
+	   tree = std::make_shared<TTree>("ErrorFlow", "Number of photons, charged and neutral hadrons in a jet");
 	   // PFO count branches
 	   tree->Branch( "numPhotons" , &numPhotons, "numPhotons/I");
 	   tree->Branch( "numChargedPFOs" , &numChargedPFOs, "numChargedPFOs/I");
@@ -169,7 +169,7 @@ void ErrorFlow::init() {
  *  Description:  
  * =====================================================================================
  */
-void ErrorFlow::processRunHeader( LCRunHeader* run ) { 
+void ErrorFlow::processRunHeader( LCRunHeader* /*run*/ ) { 
 
     p_nRun++ ;
 
@@ -499,7 +499,7 @@ double ErrorFlow::getTotalMomentum ( const double * t_threeMomentum )
  *  Description:  
  * =====================================================================================
  */
-void ErrorFlow::check( LCEvent * evt ) { 
+void ErrorFlow::check( LCEvent * /*evt*/ ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 } /* -----  end of function ErrorFlow::check  ----- */
 

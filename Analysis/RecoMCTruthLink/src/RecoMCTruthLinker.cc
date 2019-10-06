@@ -419,7 +419,7 @@ void RecoMCTruthLinker::processEvent( LCEvent * evt ) {
     
     makeSkim(    mcpCol , ttrlcol,  ctrlcol , &skimVec );
     evt->addCollection(   skimVec , _mcParticlesSkimmedName ) ;
-    if( streamlog::out.write<streamlog::DEBUG5>() ){ linkPrinter (  skimVec , particleCol, ptrlcol,  trplcol ); }
+    if( streamlog_level(DEBUG5) ){ linkPrinter (  skimVec , particleCol, ptrlcol,  trplcol ); }
   }
 
   //If either collection has not been added to the event, we have to delete it now!

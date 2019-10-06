@@ -424,7 +424,7 @@ SimDigital::cellIDHitMap SimDigital::createPotentialOutputHits(LCCollection* col
 		std::sort(steps.begin(), steps.end(), sortStepWithCharge ) ;
 
 		streamlog_out( DEBUG ) << "sim hit at " << hit << std::endl ;
-		if (streamlog::out.write< DEBUG >() )
+		if (streamlog_level(DEBUG) )
 		{
 			for(std::vector<StepAndCharge>::iterator it=steps.begin(); it!=steps.end(); ++it)
 				streamlog_out( DEBUG ) << "step at : " << (*it).step << "\t with a charge of : " << (*it).charge << std::endl;

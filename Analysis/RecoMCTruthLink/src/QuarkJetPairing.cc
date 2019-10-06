@@ -296,13 +296,13 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
     counter_theta++;
   } 
 
-  message<DEBUG>( log() << "Counter_events: " << counter_events ) ; 
-  message<DEBUG>( log() << "Counter_energy: " << counter_energy ) ; 
-  message<DEBUG>( log() << "Counter_alpha: " << counter_alpha ) ; 
-  message<DEBUG>( log() << "Counter_theta: " << counter_theta ) ; 
+  streamlog_out(DEBUG) << "Counter_events: " << counter_events << std::endl ; 
+  streamlog_out(DEBUG) << "Counter_energy: " << counter_energy << std::endl ; 
+  streamlog_out(DEBUG) << "Counter_alpha: " << counter_alpha << std::endl ; 
+  streamlog_out(DEBUG) << "Counter_theta: " << counter_theta << std::endl ; 
       
   counter_jets = 0;
-  message<DEBUG>( log() << "Event: " << evt->getEventNumber() ) ;
+  streamlog_out(DEBUG) << "Event: " << evt->getEventNumber() << std::endl ;
    
  
 } 

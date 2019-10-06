@@ -245,7 +245,8 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
         clu->setIPhi(phi);
         clu->setDirectionError(&DirectionError[0]);
 
-        if ( streamlog::out.write<streamlog::DEBUG2>() ){
+	if( streamlog_level(DEBUG2) ) {
+	  //        if ( streamlog::out.write<streamlog::DEBUG2>() ){
           debuging(clucol,clu,cog,&cov[0][0],eval,eval_err,&evp[0][0],&evpe[0][0][0],&evc[0][0],np,sum_wgt,sum_wgtsqr,sum_wgt4);
         }
 

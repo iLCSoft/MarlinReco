@@ -1191,7 +1191,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
               streamlog_out(ERROR)  << " "<<  line94  << " " << k[parent1 ][2] << " " <<  k[parent2 ][2]  << " " <<
                                             k[kid1 ][2] << " " <<  k[kid2 ][2]  << std::endl;
               streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-              streamlog_out(ERROR) << std::endl ;  if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+              streamlog_out(ERROR) << std::endl ;  if( streamlog_level(ERROR) ){ evnb_print=1;}
               k[line94][3] = 0;
               k[parent1][4]= k[parent1][5]=0;
               p1w=1;
@@ -1206,14 +1206,14 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
                 streamlog_out(ERROR) << " "  <<  line94  << " " << k[parent1 ][2] << " " <<  k[parent2 ][2]  << " " <<
                                             k[kid1 ][2] << " " <<  k[kid2 ][2]  << std::endl;
                 streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(ERROR) << std::endl ; if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+                streamlog_out(ERROR) << std::endl ; if( streamlog_level(ERROR) ){ evnb_print=1;}
               } else {
                 streamlog_out(DEBUG3) << " parent 2 is wrong flavor-wise  " << std::endl;
                 streamlog_out(DEBUG3) << " "  <<  line94  << " " << parent1 << " " <<  parent2  << " " <<kid1 << " " <<  kid2  << std::endl;
                 streamlog_out(DEBUG3) << " "  <<  line94  << " " << k[parent1 ][2] << " " <<  k[parent2 ][2]  << " " <<
                                             k[kid1 ][2] << " " <<  k[kid2 ][2]  << std::endl;
                 streamlog_out(DEBUG3) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(DEBUG3) << std::endl ; if( streamlog::out.write<streamlog::DEBUG3>() ){ evnb_print=1;}
+                streamlog_out(DEBUG3) << std::endl ; if( streamlog_level(DEBUG3) ){ evnb_print=1;}
   
               }
               k[line94][6] = 0;
@@ -1225,7 +1225,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
               streamlog_out(DEBUG3) << " " <<  line94  << " " << k[parent1 ][2] << " " <<  k[parent2 ][2]  << " " <<
                                             k[kid1 ][2] << " " <<  k[kid2 ][2]  << std::endl;
               streamlog_out(DEBUG3) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-              streamlog_out(DEBUG3) << std::endl ; if( streamlog::out.write<streamlog::DEBUG3>() ){ evnb_print=1;} 
+              streamlog_out(DEBUG3) << std::endl ; if( streamlog_level(DEBUG3) ){ evnb_print=1;} 
               k[line94][6] = 0;
               k[parent2][4]= k[parent2][5]=0;
             }
@@ -1259,7 +1259,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
                 streamlog_out(ERROR)  << " " << k[kid1 ][2] << " " <<  dirdiff1[1]  << " " <<  dirdiff1[2]  << " " <<  dirdiff1[3]  << std::endl;
                 streamlog_out(ERROR)  << " " <<  sqrt( dirdiff1[1]* dirdiff1[1] + dirdiff1[2]* dirdiff1[2] + dirdiff1[3]* dirdiff1[3] ) <<  std::endl;
                 streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(ERROR) << std::endl ; if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+                streamlog_out(ERROR) << std::endl ; if( streamlog_level(ERROR) ){ evnb_print=1;}
                 k[line94][3] = 0;
                 k[parent1][4]= k[parent1][5]=0;
   
@@ -1271,7 +1271,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
                 streamlog_out(DEBUG3)  << " " << k[kid2 ][2] << " " <<  dirdiff2[1]  << " " <<  dirdiff2[2]  << " " <<  dirdiff2[3]  << std::endl;
                 streamlog_out(DEBUG3)  << " " <<  sqrt( dirdiff2[1]* dirdiff2[1] + dirdiff2[2]* dirdiff2[2] + dirdiff2[3]* dirdiff2[3] ) <<  std::endl;
                 streamlog_out(DEBUG3) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(DEBUG3) << std::endl ; if( streamlog::out.write<streamlog::DEBUG3>() ){ evnb_print=1;}
+                streamlog_out(DEBUG3) << std::endl ; if( streamlog_level(DEBUG3) ){ evnb_print=1;}
                 k[line94][6] = 0;
                 k[parent2][4]= k[parent2][5]=0;
               } else {
@@ -1292,7 +1292,7 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
                 streamlog_out(ERROR)  << " " << k[kid2 ][2] << " " <<  dirdiff1[1]  << " " <<  dirdiff1[2]  << " " <<  dirdiff1[3]  << std::endl;
                 streamlog_out(ERROR)  << " " <<  sqrt( dirdiff1[1]* dirdiff1[1] + dirdiff1[2]* dirdiff1[2] + dirdiff1[3]* dirdiff1[3] ) <<  std::endl;
                 streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(ERROR) << std::endl ; if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+                streamlog_out(ERROR) << std::endl ; if( streamlog_level(ERROR) ){ evnb_print=1;}
   
                 k[line94][3] = 0;
                 k[parent1][4]= k[parent1][5]=0;
@@ -1305,20 +1305,20 @@ void TrueJet::getPyjets(LCCollection* mcpcol )
                 streamlog_out(DEBUG3)  << " " << k[kid1 ][2] << " " <<  dirdiff2[1]  << " " <<  dirdiff2[2]  << " " <<  dirdiff2[3]  << std::endl;
                 streamlog_out(DEBUG3)  << " " <<  sqrt( dirdiff2[1]* dirdiff2[1] + dirdiff2[2]* dirdiff2[2] + dirdiff2[3]* dirdiff2[3] ) <<  std::endl;
                 streamlog_out(DEBUG3) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(DEBUG3) << std::endl ; if( streamlog::out.write<streamlog::DEBUG3>() ){ evnb_print=1;}
+                streamlog_out(DEBUG3) << std::endl ; if( streamlog_level(DEBUG3) ){ evnb_print=1;}
   
                 k[line94][6] = 0;
                 k[parent2][4]= k[parent2][5]=0;
               } else {
                 streamlog_out(ERROR) << " However, I can't find what exactly was wrong. " << std::endl ; 
                 streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-                streamlog_out(ERROR) << std::endl ; if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+                streamlog_out(ERROR) << std::endl ; if( streamlog_level(ERROR) ){ evnb_print=1;}
                 // all OK
               } 
             } else {
               streamlog_out(ERROR) << " How could I arrive here ??? "  << std::endl;
               streamlog_out(ERROR) << " Event: " << evt->getEventNumber() << ",   run:  " << evt->getRunNumber() << std::endl ; 
-              streamlog_out(ERROR) << std::endl ; if( streamlog::out.write<streamlog::ERROR>() ){ evnb_print=1;}
+              streamlog_out(ERROR) << std::endl ; if( streamlog_level(ERROR) ){ evnb_print=1;}
             }
           }
           if( evnb_print==0 ) {

@@ -86,6 +86,11 @@ BruteForceEcalGapFiller::BruteForceEcalGapFiller( )  : Processor( "BruteForceEca
 			     _intraModuleFactor,
 			     float (1.0) );
 
+  registerProcessorParameter("applyInterModuleCorrection",
+			     "apply correction for gaps between modules?",
+			     _applyInterModuleCor,
+			     bool(false) );
+
 }
 
 
@@ -144,7 +149,7 @@ void BruteForceEcalGapFiller::processEvent( LCEvent * evt ) {
       newcol->setFlag(_flag.getFlag());
 
       addIntraModuleGapHits(newcol); // gaps within a module
-      addInterModuleGapHits(newcol); // gaps between modules
+      if ( _applyInterModuleCor ) addInterModuleGapHits(newcol); // gaps between modules
 
       evt->addCollection( newcol, _outputHitCollection );
 

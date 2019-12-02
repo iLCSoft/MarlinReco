@@ -31,6 +31,9 @@ class BruteForceEcalGapFiller : public Processor {
   virtual void check( LCEvent * /*evt*/ ) {}
   virtual void end() ;
 
+  BruteForceEcalGapFiller(const BruteForceEcalGapFiller&) = delete;
+  BruteForceEcalGapFiller& operator=(const BruteForceEcalGapFiller&) = delete;
+
  protected:
 
   enum {MAXMODULE=10, MAXSTAVE=15, MAXLAYER=50};
@@ -43,6 +46,7 @@ class BruteForceEcalGapFiller : public Processor {
   std::string _cellIDModuleString{};
   std::string _cellIDStaveString{};
 
+  bool _applyInterModuleCor{};
 
   float _interModuleNonlinearFactor{};
   float _intraModuleNonlinearFactor{};

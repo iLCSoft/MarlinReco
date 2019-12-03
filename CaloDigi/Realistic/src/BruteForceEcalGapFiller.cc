@@ -89,7 +89,7 @@ BruteForceEcalGapFiller::BruteForceEcalGapFiller( )  : Processor( "BruteForceEca
   registerProcessorParameter("applyInterModuleCorrection",
 			     "apply correction for gaps between modules?",
 			     _applyInterModuleCor,
-			     bool(false) );
+			     bool(true) );
 
 }
 

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <math.h>
 #include <cassert>
+#include <streamlog/streamlog.h>
+
 
 float photonCorrector::photonEnergyCorrection( EVENT::ReconstructedParticle* rp ) {
   // first correct for gaps
@@ -23,7 +25,7 @@ float photonCorrector::gapCompensatedEnergy( EVENT::ReconstructedParticle* rp ) 
   float en = rp->getEnergy();
 
   if ( rp->getType() != 22 ) {  // check that it's a photon-like PFO
-    std::cout << "warning: gapCompensate designed only for photons! not applying correction" << std::endl;
+    streamlog_out (WARNING) << "gapCompensate designed only for photons! not applying correction" << std::endl;
   } else {
     float cosTheta = rp->getMomentum()[2]/sqrt( pow(rp->getMomentum()[0],2)+pow(rp->getMomentum()[1],2)+pow(rp->getMomentum()[2],2) );
     float phi = atan2( rp->getMomentum()[1], rp->getMomentum()[0] );

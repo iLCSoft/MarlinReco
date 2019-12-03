@@ -43,20 +43,16 @@ class photonCorrectionProcessor : public marlin::Processor {
   photonCorrector* _photonCorrector{};
 
   bool _modifyPFOenergies{};
-  bool _validationPlots{};
-  bool _interModGaps_haveBeenCorrectedAtHitLevel{};
+  int  _useCorrectorDefaultSet{};
 
-  std::string _validationPlotFilename{};
-  TFile* _fout{};
-  TH2F* _hEnSum[2][2];
+  bool _validationPlots{};
   float _nominalEnergy{};
 
   std::string _inputCollection{};
 
-  bool _useCorrectorDefaults{};
-
-  float _barrel_limit{};
-  float _endcap_limit{};
+  float _barrelendcap_limit_costh{};
+  float _assumed_boxsize{};
+  float _assumed_endZ{};
 
   float _energyLin_const{};
   float _energyLin_logen{};
@@ -88,9 +84,6 @@ class photonCorrectionProcessor : public marlin::Processor {
   float _endcap_gaus2_norm{};
   float _endcap_gaus2_mean{};
   float _endcap_gaus2_sigm{};
-
-  float _assumed_boxsize{};
-  float _assumed_endZ{};
 
 
 };

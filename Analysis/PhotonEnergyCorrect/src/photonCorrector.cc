@@ -4,9 +4,6 @@
 #include <math.h>
 #include <cassert>
 
-using std::cout;
-using std::endl;
-
 float photonCorrector::photonEnergyCorrection( EVENT::ReconstructedParticle* rp ) {
   // first correct for gaps
   float gapCorrEn = gapCompensatedEnergy( rp );
@@ -26,14 +23,14 @@ float photonCorrector::gapCompensatedEnergy( EVENT::ReconstructedParticle* rp ) 
   float en = rp->getEnergy();
 
   if ( rp->getType() != 22 ) {  // check that it's a photon-like PFO
-    cout << "warning: gapCompensate designed only for photons! not applying correction" << endl;
+    std::cout << "warning: gapCompensate designed only for photons! not applying correction" << std::endl;
   } else {
     float cosTheta = rp->getMomentum()[2]/sqrt( pow(rp->getMomentum()[0],2)+pow(rp->getMomentum()[1],2)+pow(rp->getMomentum()[2],2) );
     float phi = atan2( rp->getMomentum()[1], rp->getMomentum()[0] );
     gapcorrectionFactor*=gapCompensate_theta( en, cosTheta );
-    if ( fabs(cosTheta) < _barrel_limit ) { // barrel
+    if ( fabs(cosTheta) < _barrelendcap_costhlimit ) { // barrel
       gapcorrectionFactor*=gapCompensate_barrelPhi( en, phi );
-    } else if (  fabs(cosTheta) > _endcap_limit ) { // endcap
+    } else { // endcap
       float xAcross = getDistanceAcrossEndcapQuadrant( cosTheta, phi );
       gapcorrectionFactor*=gapCompensate_endcap( xAcross );
     }
@@ -63,7 +60,7 @@ float photonCorrector::gapCompensate_theta( float en, float costh ) {
   fitval += par_gaus1_norm*exp( -0.5*pow( (absCosTh-_costhCorr_gaus1_mean)/_costhCorr_gaus1_sigm , 2 ) );
   fitval += par_gaus2_norm*exp( -0.5*pow( (absCosTh-_costhCorr_gaus2_mean)/_costhCorr_gaus2_sigm , 2 ) );
   fitval += _costhCorr_gaus3_norm*exp( -0.5*pow( (absCosTh-_costhCorr_gaus3_mean)/_costhCorr_gaus3_sigm , 2 ) );
-  if ( absCosTh>_endcap_limit ) fitval*=_costhCorr_endcap_scale;
+  if ( absCosTh>_barrelendcap_costhlimit ) fitval*=_costhCorr_endcap_scale;
 
   return 1./fitval;
 }
@@ -81,7 +78,7 @@ float photonCorrector::gapCompensate_endcap( float xAcross ) {
 float photonCorrector::getDistanceAcrossEndcapQuadrant( float costh, float phi ) {
   // this calculates the distance across an endcap quadrant (ie perpendicular to slab direction),
   // from the inner edge of quadrant
-  assert( fabs(costh) > _endcap_limit );
+  assert( fabs(costh) > _barrelendcap_costhlimit );
   if ( costh<0 ) _assumed_endZ*=-1;
   float endX = _assumed_endZ*sin(acos(costh))* cos(phi);
   float endY = _assumed_endZ*sin(acos(costh))* sin(phi);
@@ -98,11 +95,11 @@ float photonCorrector::getDistanceAcrossEndcapQuadrant( float costh, float phi )
     else if ( endX > -_assumed_boxsize && endY < -_assumed_boxsize ) quad=2;
     else if ( endX < -_assumed_boxsize && endY <  _assumed_boxsize ) quad=3;
   }
-  float foldX(0);
+  //  float foldX(0);
   float foldY(0);
   if ( quad>=0 ) { // not center box
     float foldPhi = phi + quad*acos(-1)/2.;
-    foldX = fabs(_assumed_endZ)*sin(acos(costh))* cos(foldPhi); // this should flip the -ve side endcap...
+    // foldX = fabs(_assumed_endZ)*sin(acos(costh))* cos(foldPhi); // this should flip the -ve side endcap...
     foldY = _assumed_endZ*sin(acos(costh))* sin(foldPhi);
   }
   return foldY;

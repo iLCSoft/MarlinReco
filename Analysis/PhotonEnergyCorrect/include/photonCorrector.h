@@ -9,15 +9,13 @@ class photonCorrector {
   photonCorrector() {_initialized=false;}
   ~photonCorrector() {}
 
-  enum { set_std, set_noInterMod };
-
   void setDefaultValues(int defSet) {
-    if ( defSet == set_std ) {
+    if        ( defSet == 0 ) {
       setDefaultValues_interModBruteForceCorr();
-    } else if ( defSet == set_noInterMod ) {
+    } else if ( defSet == 1 ) {
       setDefaultValues_no_interModBruteForceCorr();
     } else {
-      std::cout << "photonCorrector: unknown default param set! giving up!" << std::endl;
+      std::cout << "photonCorrector: unknown default param set "<< defSet << " ; giving up!" << std::endl;
       assert(0);
     }
     return;
@@ -26,9 +24,6 @@ class photonCorrector {
   void setDefaultValues_interModBruteForceCorr() {
     // this one is for the case in which inter-module gaps are corrected by "brute force" at hit reco level
     // determined for ILD_l5_o1_v02 model
-
-    _barrel_limit=0.75;
-    _endcap_limit=0.8;
 
     _energyLin_const = 9.87661e-01;
     _energyLin_logen = 1.40676e-02;
@@ -64,17 +59,14 @@ class photonCorrector {
     _endcap_gaus2_sigm = 18.   ;
 
     // actual values not important, but should use same defs when determining the correction and applying it
-    _assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
-    _assumed_endZ = 2411.; // start of endcap in z
+    //_assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
+    //_assumed_endZ = 2411.; // start of endcap in z
   }
 
   void setDefaultValues_no_interModBruteForceCorr() {
 
     // this one is for the case in which inter-module gaps are not corrected by "brute force" at hit reco level
     // determined for ILD_l5_o1_v02 model
-
-    _barrel_limit=0.75;
-    _endcap_limit=0.8;
 
     _energyLin_const = 9.870e-01;
     _energyLin_logen = 1.426e-02;
@@ -110,8 +102,8 @@ class photonCorrector {
     _endcap_gaus2_sigm = 18.   ;
 
     // actual values not important, but should use same defs when determining the correction and applying it
-    _assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
-    _assumed_endZ = 2411.; // start of endcap in z
+    //    _assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
+    //    _assumed_endZ = 2411.; // start of endcap in z
   }
 
 
@@ -121,8 +113,7 @@ class photonCorrector {
 
 
   // parameter setters
-  void set_barrel_limit               ( float x ) { _barrel_limit               = x; }
-  void set_endcap_limit               ( float x ) { _endcap_limit               = x; }
+  void set_barrelendcap_limit         ( float x ) { _barrelendcap_costhlimit    = x; }
   void set_energyLin_const            ( float x ) { _energyLin_const            = x; }
   void set_energyLin_logen            ( float x ) { _energyLin_logen            = x; }
   void set_phiBarrelCorr_pos_const    ( float x ) { _phiBarrelCorr_pos_const    = x; }
@@ -166,8 +157,7 @@ class photonCorrector {
 
   // -------------------
 
-  float _barrel_limit{};
-  float _endcap_limit{};
+  float _barrelendcap_costhlimit{};
 
   float _energyLin_const{};
   float _energyLin_logen{};

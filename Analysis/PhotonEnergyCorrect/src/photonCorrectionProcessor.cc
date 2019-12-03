@@ -6,6 +6,17 @@
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 
+#include "DD4hep/DD4hepUnits.h" 
+#include "DD4hep/DetType.h"
+#include "DD4hep/DetectorSelector.h"
+#include "DDRec/DetectorData.h"
+
+#ifdef MARLIN_USE_AIDA
+#include <marlin/AIDAProcessor.h>
+#include <AIDA/AIDA.h>
+#endif
+
+
 using namespace lcio ;
 using namespace marlin ;
 using std::cout;
@@ -21,67 +32,86 @@ photonCorrectionProcessor::photonCorrectionProcessor() : Processor("photonCorrec
   registerProcessorParameter("inputCollection", "name of input PFO collection",
                              _inputCollection, std::string("PandoraPFOs") );
 
-  registerProcessorParameter("useCorrectorDefaults" , "use defaults correction paramteres (as defined in photonCorrector", 
-			     _useCorrectorDefaults, true );
-
-  registerProcessorParameter("interModGaps_haveBeenCorrectedAtHitLevel", 
-			     "have the inter-Module gaps already been corrected at this hit level? (affects default param set used)",
-			     _interModGaps_haveBeenCorrectedAtHitLevel, true);
-
-  registerProcessorParameter("barrel_limit"               , "_barrel_limit               parameter",  _barrel_limit                , float( -999. ) );
-  registerProcessorParameter("endcap_limit"		  , "_endcap_limit               parameter",  _endcap_limit                , float( -999. ) );
-  registerProcessorParameter("energyLin_const"	          , "_energyLin_const            parameter",  _energyLin_const             , float( -999. ) );
-  registerProcessorParameter("energyLin_logen"	          , "_energyLin_logen            parameter",  _energyLin_logen             , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_pos_const"    , "_phiBarrelCorr_pos_const    parameter",  _phiBarrelCorr_pos_const     , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_pos_logen"    , "_phiBarrelCorr_pos_logen    parameter",  _phiBarrelCorr_pos_logen     , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_depth"	  , "_phiBarrelCorr_depth        parameter",  _phiBarrelCorr_depth         , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_width1"	  , "_phiBarrelCorr_width1       parameter",  _phiBarrelCorr_width1        , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_width2"	  , "_phiBarrelCorr_width2       parameter",  _phiBarrelCorr_width2        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_norm_const" , "_costhCorr_gaus1_norm_const parameter",  _costhCorr_gaus1_norm_const  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_norm_logen" , "_costhCorr_gaus1_norm_logen parameter",  _costhCorr_gaus1_norm_logen  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_mean"	  , "_costhCorr_gaus1_mean       parameter",  _costhCorr_gaus1_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_sigm"	  , "_costhCorr_gaus1_sigm       parameter",  _costhCorr_gaus1_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_norm_const" , "_costhCorr_gaus2_norm_const parameter",  _costhCorr_gaus2_norm_const  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_norm_logen" , "_costhCorr_gaus2_norm_logen parameter",  _costhCorr_gaus2_norm_logen  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_mean"	  , "_costhCorr_gaus2_mean       parameter",  _costhCorr_gaus2_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_sigm"	  , "_costhCorr_gaus2_sigm       parameter",  _costhCorr_gaus2_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_norm"	  , "_costhCorr_gaus3_norm       parameter",  _costhCorr_gaus3_norm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_mean"	  , "_costhCorr_gaus3_mean       parameter",  _costhCorr_gaus3_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_sigm"	  , "_costhCorr_gaus3_sigm       parameter",  _costhCorr_gaus3_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_endcap_scale"	  , "_costhCorr_endcap_scale     parameter",  _costhCorr_endcap_scale      , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_norm"	  , "_endcap_gaus1_norm          parameter",  _endcap_gaus1_norm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_mean"	  , "_endcap_gaus1_mean          parameter",  _endcap_gaus1_mean           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_sigm"	  , "_endcap_gaus1_sigm          parameter",  _endcap_gaus1_sigm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_norm"	  , "_endcap_gaus2_norm          parameter",  _endcap_gaus2_norm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_mean"	  , "_endcap_gaus2_mean          parameter",  _endcap_gaus2_mean           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_sigm"	  , "_endcap_gaus2_sigm          parameter",  _endcap_gaus2_sigm           , float( -999. ) );
-  registerProcessorParameter("assumed_boxsize"	          , "_assumed_boxsize            parameter",  _assumed_boxsize             , float( -999. ) );
-  registerProcessorParameter("assumed_endZ"		  , "_assumed_endZ               parameter",  _assumed_endZ                , float( -999. ) );
-
   registerProcessorParameter("modifyPFOenergies", "apply the corrected energies to the PFOs", _modifyPFOenergies, true );
+
+  registerProcessorParameter("useCorrectorDefaultSet" , "use defaults correction parameters (<0: no ; >=0 : yes, as defined in photonCorrector)", 
+			     _useCorrectorDefaultSet, 1 );
+
+  registerProcessorParameter("energyLin_const"	          , "overall energy correction: constant term",  _energyLin_const             , float( -999. ) );
+  registerProcessorParameter("energyLin_logen"	          , "overall energy correction: log(e) coefficient",  _energyLin_logen             , float( -999. ) );
+
+  registerProcessorParameter("phiBarrelCorr_pos_const"    , "barrel phi correction: central position (constant)",     _phiBarrelCorr_pos_const     , float( -999. ) );
+  registerProcessorParameter("phiBarrelCorr_pos_logen"    , "barrel phi correction: central position (log(e) coeff)", _phiBarrelCorr_pos_logen     , float( -999. ) );
+  registerProcessorParameter("phiBarrelCorr_depth"	  , "barrel phi correction: gaussian depth",                  _phiBarrelCorr_depth         , float( -999. ) );
+  registerProcessorParameter("phiBarrelCorr_width1"	  , "barrel phi correction: gaussian width (left side)",      _phiBarrelCorr_width1        , float( -999. ) );
+  registerProcessorParameter("phiBarrelCorr_width2"	  , "barrel phi correction: gaussian width (right side)",     _phiBarrelCorr_width2        , float( -999. ) );
+
+  registerProcessorParameter("costhCorr_gaus1_norm_const" , "barrel cos(theta) correction: gaus1: norm (constant)",     _costhCorr_gaus1_norm_const  , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus1_norm_logen" , "barrel cos(theta) correction: gaus1: norm (log(e) coeff)", _costhCorr_gaus1_norm_logen  , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus1_mean"	  , "barrel cos(theta) correction: gaus1: mean",                _costhCorr_gaus1_mean        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus1_sigm"	  , "barrel cos(theta) correction: gaus1: sigma",               _costhCorr_gaus1_sigm        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus2_norm_const" , "barrel cos(theta) correction: gaus2: norm (constant)",     _costhCorr_gaus2_norm_const  , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus2_norm_logen" , "barrel cos(theta) correction: gaus2: norm (log(e) coeff)", _costhCorr_gaus2_norm_logen  , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus2_mean"	  , "barrel cos(theta) correction: gaus2: mean",                _costhCorr_gaus2_mean        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus2_sigm"	  , "barrel cos(theta) correction: gaus2: sigm",                _costhCorr_gaus2_sigm        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus3_norm"	  , "barrel cos(theta) correction: gaus3: norm (constant)",     _costhCorr_gaus3_norm        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus3_mean"	  , "barrel cos(theta) correction: gaus3: mean",                _costhCorr_gaus3_mean        , float( -999. ) );
+  registerProcessorParameter("costhCorr_gaus3_sigm"	  , "barrel cos(theta) correction: gaus3: sigm",                _costhCorr_gaus3_sigm        , float( -999. ) );
+  registerProcessorParameter("costhCorr_endcap_scale"	  , "extra correction factor for endcap",                       _costhCorr_endcap_scale      , float( -999. ) );
+  registerProcessorParameter("endcap_gaus1_norm"	  , "across endcap module correction: gaus1 norm",  _endcap_gaus1_norm           , float( -999. ) );
+  registerProcessorParameter("endcap_gaus1_mean"	  , "across endcap module correction: gaus1 mean",  _endcap_gaus1_mean           , float( -999. ) );
+  registerProcessorParameter("endcap_gaus1_sigm"	  , "across endcap module correction: gaus1 sigma", _endcap_gaus1_sigm           , float( -999. ) );
+  registerProcessorParameter("endcap_gaus2_norm"	  , "across endcap module correction: gaus2 norm",  _endcap_gaus2_norm           , float( -999. ) );
+  registerProcessorParameter("endcap_gaus2_mean"	  , "across endcap module correction: gaus2 mean",  _endcap_gaus2_mean           , float( -999. ) );
+  registerProcessorParameter("endcap_gaus2_sigm"	  , "across endcap module correction: gaus2 sigma", _endcap_gaus2_sigm           , float( -999. ) );
+
   registerProcessorParameter("validationPlots", "produce validation plots", _validationPlots, false );
-  registerProcessorParameter("validationPlotFilename", "file name for validation plots", _validationPlotFilename, std::string("photonCorrectionValidation.root") );
   registerProcessorParameter("nominalEnergy", "nominal photon energy (for validation plots)", _nominalEnergy, float(200) );
-  
-
-
 }
 
 
 void photonCorrectionProcessor::init() {
-  cout << "hello from photonCorrectionProcessor::init" << endl;
+  streamlog_out (MESSAGE) << "hello from photonCorrectionProcessor::init" << endl;
+
+  // first get some geometry information
+  dd4hep::Detector & mainDetector = dd4hep::Detector::getInstance();
+  // endcap ecal
+  unsigned int includeFlag = ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::ENDCAP | dd4hep::DetType::ELECTROMAGNETIC );
+  unsigned int excludeFlag = ( dd4hep::DetType::AUXILIARY | dd4hep::DetType::FORWARD );
+  const std::vector< dd4hep::DetElement>& endcapEcalDetectors = dd4hep::DetectorSelector(mainDetector).detectors(  includeFlag, excludeFlag );
+  if ( endcapEcalDetectors.size() == 1 ) {
+    _assumed_boxsize  = endcapEcalDetectors.at(0).extension<dd4hep::rec::LayeredCalorimeterData>()->extent[0]/dd4hep::mm; // r-min
+    _assumed_endZ     = endcapEcalDetectors.at(0).extension<dd4hep::rec::LayeredCalorimeterData>()->extent[2]/dd4hep::mm; // z-min 
+  } else {
+    streamlog_out (ERROR) << "did not find exactly one endcap ECAL! found " << endcapEcalDetectors.size() << "; refusing to continue!" << endl;
+    assert(0);
+  }
+
+  // barrel ecal
+  includeFlag = ( dd4hep::DetType::CALORIMETER | dd4hep::DetType::BARREL | dd4hep::DetType::ELECTROMAGNETIC );
+  excludeFlag = ( dd4hep::DetType::AUXILIARY | dd4hep::DetType::FORWARD );
+  const std::vector< dd4hep::DetElement>& barrelEcalDetectors = dd4hep::DetectorSelector(mainDetector).detectors(  includeFlag, excludeFlag );
+  if ( barrelEcalDetectors.size() == 1 ) {
+    float barrelLength = barrelEcalDetectors.at(0).extension<dd4hep::rec::LayeredCalorimeterData>()->extent[3]/dd4hep::mm; // z-max
+    float barrelInRad  = barrelEcalDetectors.at(0).extension<dd4hep::rec::LayeredCalorimeterData>()->extent[0]/dd4hep::mm; // r-min
+    _barrelendcap_limit_costh=barrelLength/sqrt( pow(barrelLength,2) + pow(barrelInRad,2) );
+  } else {
+    streamlog_out (ERROR) << "did not find exactly one barrel ECAL! found " << barrelEcalDetectors.size() << "; refusing to continue!" << endl;
+    assert(0);
+  }
+
+  streamlog_out (MESSAGE) << "*** ECAL endcap dimensions: minZ, minR, barrel/endcap transition " << 
+    _assumed_endZ << " , " << _assumed_boxsize << " , " << _barrelendcap_limit_costh << endl;
 
   _photonCorrector = new photonCorrector();
 
-  if ( _useCorrectorDefaults ) {
-    if ( _interModGaps_haveBeenCorrectedAtHitLevel ) {
-      _photonCorrector->setDefaultValues( photonCorrector::set_std );
-    } else {
-      _photonCorrector->setDefaultValues( photonCorrector::set_noInterMod );
-    }
+  _photonCorrector->set_barrelendcap_limit         ( _barrelendcap_limit_costh   );
+  _photonCorrector->set_assumed_boxsize            ( _assumed_boxsize            );
+  _photonCorrector->set_assumed_endZ               ( _assumed_endZ               );
+
+  if ( _useCorrectorDefaultSet>=0 ) {
+    _photonCorrector->setDefaultValues( _useCorrectorDefaultSet );
   } else {
-    _photonCorrector->set_barrel_limit               ( _barrel_limit               );
-    _photonCorrector->set_endcap_limit               ( _endcap_limit               );
     _photonCorrector->set_energyLin_const            ( _energyLin_const            );
     _photonCorrector->set_energyLin_logen            ( _energyLin_logen            );
     _photonCorrector->set_phiBarrelCorr_pos_const    ( _phiBarrelCorr_pos_const    );
@@ -107,27 +137,13 @@ void photonCorrectionProcessor::init() {
     _photonCorrector->set_endcap_gaus2_norm          ( _endcap_gaus2_norm          );
     _photonCorrector->set_endcap_gaus2_mean          ( _endcap_gaus2_mean          );
     _photonCorrector->set_endcap_gaus2_sigm          ( _endcap_gaus2_sigm          );
-    _photonCorrector->set_assumed_boxsize            ( _assumed_boxsize            );
-    _photonCorrector->set_assumed_endZ               ( _assumed_endZ               );
   }
-
-
-  if ( _validationPlots ) {
-    _fout = new TFile(_validationPlotFilename.c_str(), "recreate");
-    for (int i=0; i<2; i++) {
-      TString dd = i==0 ? "beforeCorr" : "afterCorr" ;
-      _hEnSum[0][i] = new TH2F("sumPfoEn_"+dd, "sumPfoEn_"+dd, 100, -1, 1, 500, _nominalEnergy/2., _nominalEnergy*1.5 );
-      _hEnSum[1][i] = new TH2F("sumGamEn_"+dd, "sumGamEn_"+dd, 100, -1, 1, 500, _nominalEnergy/2., _nominalEnergy*1.5 );
-    }
-  }
-
-
 
   return;
 }
 
 void photonCorrectionProcessor::processRunHeader( LCRunHeader* /* run */ ) {
-  cout << "hello from photonCorrectionProcessor::processRunHeader" << endl;
+  streamlog_out (MESSAGE) << "hello from photonCorrectionProcessor::processRunHeader" << endl;
 }
 
 void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
@@ -170,35 +186,41 @@ void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
     }
   } catch(DataNotAvailableException &e) {};
 
+
+#ifdef MARLIN_USE_AIDA
+
   if ( _validationPlots ) {
+    static AIDA::IHistogram2D* h_sumPfoE_orig ;
+    static AIDA::IHistogram2D* h_sumPfoE_corr ;
+    static AIDA::IHistogram2D* h_sumGamPfoE_orig ;
+    static AIDA::IHistogram2D* h_sumGamPfoE_corr ;
+    if ( isFirstEvent() ) {
+      h_sumPfoE_orig    =  AIDAProcessor::histogramFactory(this)->createHistogram2D( "sumPfoE_orig"   , "energy [GeV]", 200, -1, 1, 100, 0., 1.5*_nominalEnergy );
+      h_sumPfoE_corr    =  AIDAProcessor::histogramFactory(this)->createHistogram2D( "sumPfoE_corr"   , "energy [GeV]", 200, -1, 1, 100, 0., 1.5*_nominalEnergy );
+      h_sumGamPfoE_orig =  AIDAProcessor::histogramFactory(this)->createHistogram2D( "sumGamPfoE_orig", "energy [GeV]", 200, -1, 1, 100, 0., 1.5*_nominalEnergy );
+      h_sumGamPfoE_corr =  AIDAProcessor::histogramFactory(this)->createHistogram2D( "sumGamPfoE_corr", "energy [GeV]", 200, -1, 1, 100, 0., 1.5*_nominalEnergy );
+    }
 
     float costh = totomom[2]/sqrt( pow( totomom[0], 2 ) +
 				   pow( totomom[1], 2 ) +
 				   pow( totomom[2], 2 ) );
 
-    for (int i=0; i<2; i++) {
-      _hEnSum[0][i]->Fill( costh, totPfoEn[i] );
-      _hEnSum[1][i]->Fill( costh, totPfoGammaEn[i] );
-    }
+    h_sumPfoE_orig   ->fill( costh, totPfoEn[0] );
+    h_sumPfoE_corr   ->fill( costh, totPfoEn[1] );
+    h_sumGamPfoE_orig->fill( costh, totPfoGammaEn[0] );
+    h_sumGamPfoE_corr->fill( costh, totPfoGammaEn[1] );
   }
+
+#endif
 
   return;
 }
-
-
 
 void photonCorrectionProcessor::check( LCEvent * /* evt */ ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 void photonCorrectionProcessor::end(){
-  std::cout << "photonCorrectionProcessor::end()  " << name()
-            << std::endl ;
-
-  if ( _validationPlots ) {
-    _fout->Write();
-    _fout->Close();
-  }
-
+  streamlog_out (MESSAGE) << "photonCorrectionProcessor::end()  " << name() << std::endl ;
 }
 

@@ -34,36 +34,31 @@ photonCorrectionProcessor::photonCorrectionProcessor() : Processor("photonCorrec
 
   registerProcessorParameter("modifyPFOenergies", "apply the corrected energies to the PFOs", _modifyPFOenergies, true );
 
-  registerProcessorParameter("useCorrectorDefaultSet" , "use defaults correction parameters (<0: no ; >=0 : yes, as defined in photonCorrector)", 
-			     _useCorrectorDefaultSet, 1 );
-
-  registerProcessorParameter("energyLin_const"	          , "overall energy correction: constant term",  _energyLin_const             , float( -999. ) );
-  registerProcessorParameter("energyLin_logen"	          , "overall energy correction: log(e) coefficient",  _energyLin_logen             , float( -999. ) );
-
-  registerProcessorParameter("phiBarrelCorr_pos_const"    , "barrel phi correction: central position (constant)",     _phiBarrelCorr_pos_const     , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_pos_logen"    , "barrel phi correction: central position (log(e) coeff)", _phiBarrelCorr_pos_logen     , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_depth"	  , "barrel phi correction: gaussian depth",                  _phiBarrelCorr_depth         , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_width1"	  , "barrel phi correction: gaussian width (left side)",      _phiBarrelCorr_width1        , float( -999. ) );
-  registerProcessorParameter("phiBarrelCorr_width2"	  , "barrel phi correction: gaussian width (right side)",     _phiBarrelCorr_width2        , float( -999. ) );
-
-  registerProcessorParameter("costhCorr_gaus1_norm_const" , "barrel cos(theta) correction: gaus1: norm (constant)",     _costhCorr_gaus1_norm_const  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_norm_logen" , "barrel cos(theta) correction: gaus1: norm (log(e) coeff)", _costhCorr_gaus1_norm_logen  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_mean"	  , "barrel cos(theta) correction: gaus1: mean",                _costhCorr_gaus1_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus1_sigm"	  , "barrel cos(theta) correction: gaus1: sigma",               _costhCorr_gaus1_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_norm_const" , "barrel cos(theta) correction: gaus2: norm (constant)",     _costhCorr_gaus2_norm_const  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_norm_logen" , "barrel cos(theta) correction: gaus2: norm (log(e) coeff)", _costhCorr_gaus2_norm_logen  , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_mean"	  , "barrel cos(theta) correction: gaus2: mean",                _costhCorr_gaus2_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus2_sigm"	  , "barrel cos(theta) correction: gaus2: sigm",                _costhCorr_gaus2_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_norm"	  , "barrel cos(theta) correction: gaus3: norm (constant)",     _costhCorr_gaus3_norm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_mean"	  , "barrel cos(theta) correction: gaus3: mean",                _costhCorr_gaus3_mean        , float( -999. ) );
-  registerProcessorParameter("costhCorr_gaus3_sigm"	  , "barrel cos(theta) correction: gaus3: sigm",                _costhCorr_gaus3_sigm        , float( -999. ) );
-  registerProcessorParameter("costhCorr_endcap_scale"	  , "extra correction factor for endcap",                       _costhCorr_endcap_scale      , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_norm"	  , "across endcap module correction: gaus1 norm",  _endcap_gaus1_norm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_mean"	  , "across endcap module correction: gaus1 mean",  _endcap_gaus1_mean           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus1_sigm"	  , "across endcap module correction: gaus1 sigma", _endcap_gaus1_sigm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_norm"	  , "across endcap module correction: gaus2 norm",  _endcap_gaus2_norm           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_mean"	  , "across endcap module correction: gaus2 mean",  _endcap_gaus2_mean           , float( -999. ) );
-  registerProcessorParameter("endcap_gaus2_sigm"	  , "across endcap module correction: gaus2 sigma", _endcap_gaus2_sigm           , float( -999. ) );
+  registerProcessorParameter("energyLin_const"	          , "overall energy correction: constant term",                 _energyLin_const             , float(  9.870e-01) );
+  registerProcessorParameter("energyLin_logen"	          , "overall energy correction: log(e) coefficient",            _energyLin_logen             , float(  1.426e-02) );
+  registerProcessorParameter("phiBarrelCorr_pos_const"    , "barrel phi correction: central position (constant)",       _phiBarrelCorr_pos_const     , float( 0.412249  ) );
+  registerProcessorParameter("phiBarrelCorr_pos_logen"    , "barrel phi correction: central position (log(e) coeff)",   _phiBarrelCorr_pos_logen     , float( 0.0142289 ) );
+  registerProcessorParameter("phiBarrelCorr_depth"	  , "barrel phi correction: gaussian depth",                    _phiBarrelCorr_depth         , float( -0.0933687) );
+  registerProcessorParameter("phiBarrelCorr_width1"	  , "barrel phi correction: gaussian width (left side)",        _phiBarrelCorr_width1        , float(  0.01345  ) );
+  registerProcessorParameter("phiBarrelCorr_width2"	  , "barrel phi correction: gaussian width (right side)",       _phiBarrelCorr_width2        , float( 0.0408156 ) );
+  registerProcessorParameter("costhCorr_gaus1_norm_const" , "barrel cos(theta) correction: gaus1: norm (constant)",     _costhCorr_gaus1_norm_const  , float( -0.0900   ) );
+  registerProcessorParameter("costhCorr_gaus1_norm_logen" , "barrel cos(theta) correction: gaus1: norm (log(e) coeff)", _costhCorr_gaus1_norm_logen  , float( 0         ) );
+  registerProcessorParameter("costhCorr_gaus1_mean"	  , "barrel cos(theta) correction: gaus1: mean",                _costhCorr_gaus1_mean        , float( 0.235     ) );
+  registerProcessorParameter("costhCorr_gaus1_sigm"	  , "barrel cos(theta) correction: gaus1: sigma",               _costhCorr_gaus1_sigm        , float( 0.007256  ) );
+  registerProcessorParameter("costhCorr_gaus2_norm_const" , "barrel cos(theta) correction: gaus2: norm (constant)",     _costhCorr_gaus2_norm_const  , float( -0.0369648) );
+  registerProcessorParameter("costhCorr_gaus2_norm_logen" , "barrel cos(theta) correction: gaus2: norm (log(e) coeff)", _costhCorr_gaus2_norm_logen  , float( 0         ) );
+  registerProcessorParameter("costhCorr_gaus2_mean"	  , "barrel cos(theta) correction: gaus2: mean",                _costhCorr_gaus2_mean        , float( 0.588     ) );
+  registerProcessorParameter("costhCorr_gaus2_sigm"	  , "barrel cos(theta) correction: gaus2: sigm",                _costhCorr_gaus2_sigm        , float( 0.0121604 ) );
+  registerProcessorParameter("costhCorr_gaus3_norm"	  , "barrel cos(theta) correction: gaus3: norm (constant)",     _costhCorr_gaus3_norm        , float( -0.0422968) );
+  registerProcessorParameter("costhCorr_gaus3_mean"	  , "barrel cos(theta) correction: gaus3: mean",                _costhCorr_gaus3_mean        , float( 0.774     ) );
+  registerProcessorParameter("costhCorr_gaus3_sigm"	  , "barrel cos(theta) correction: gaus3: sigm",                _costhCorr_gaus3_sigm        , float( 0.009     ) );
+  registerProcessorParameter("costhCorr_endcap_scale"	  , "extra correction factor for endcap",                       _costhCorr_endcap_scale      , float( 1.002     ) );
+  registerProcessorParameter("endcap_gaus1_norm"	  , "across endcap module correction: gaus1 norm",              _endcap_gaus1_norm           , float( -0.025    ) );
+  registerProcessorParameter("endcap_gaus1_mean"	  , "across endcap module correction: gaus1 mean",              _endcap_gaus1_mean           , float( 855.      ) );
+  registerProcessorParameter("endcap_gaus1_sigm"	  , "across endcap module correction: gaus1 sigma",             _endcap_gaus1_sigm           , float( 23        ) );
+  registerProcessorParameter("endcap_gaus2_norm"	  , "across endcap module correction: gaus2 norm",              _endcap_gaus2_norm           , float( -0.07     ) );
+  registerProcessorParameter("endcap_gaus2_mean"	  , "across endcap module correction: gaus2 mean",              _endcap_gaus2_mean           , float( 1489.     ) );
+  registerProcessorParameter("endcap_gaus2_sigm"	  , "across endcap module correction: gaus2 sigma",             _endcap_gaus2_sigm           , float( 18.       ) );
 
   registerProcessorParameter("validationPlots", "produce validation plots", _validationPlots, false );
   registerProcessorParameter("nominalEnergy", "nominal photon energy (for validation plots)", _nominalEnergy, float(200) );
@@ -109,35 +104,31 @@ void photonCorrectionProcessor::init() {
   _photonCorrector->set_assumed_boxsize            ( _assumed_boxsize            );
   _photonCorrector->set_assumed_endZ               ( _assumed_endZ               );
 
-  if ( _useCorrectorDefaultSet>=0 ) {
-    _photonCorrector->setDefaultValues( _useCorrectorDefaultSet );
-  } else {
-    _photonCorrector->set_energyLin_const            ( _energyLin_const            );
-    _photonCorrector->set_energyLin_logen            ( _energyLin_logen            );
-    _photonCorrector->set_phiBarrelCorr_pos_const    ( _phiBarrelCorr_pos_const    );
-    _photonCorrector->set_phiBarrelCorr_pos_logen    ( _phiBarrelCorr_pos_logen    );
-    _photonCorrector->set_phiBarrelCorr_depth        ( _phiBarrelCorr_depth        );
-    _photonCorrector->set_phiBarrelCorr_width1       ( _phiBarrelCorr_width1       );
-    _photonCorrector->set_phiBarrelCorr_width2       ( _phiBarrelCorr_width2       );
-    _photonCorrector->set_costhCorr_gaus1_norm_const ( _costhCorr_gaus1_norm_const );
-    _photonCorrector->set_costhCorr_gaus1_norm_logen ( _costhCorr_gaus1_norm_logen );
-    _photonCorrector->set_costhCorr_gaus1_mean       ( _costhCorr_gaus1_mean       );
-    _photonCorrector->set_costhCorr_gaus1_sigm       ( _costhCorr_gaus1_sigm       );
-    _photonCorrector->set_costhCorr_gaus2_norm_const ( _costhCorr_gaus2_norm_const );
-    _photonCorrector->set_costhCorr_gaus2_norm_logen ( _costhCorr_gaus2_norm_logen );
-    _photonCorrector->set_costhCorr_gaus2_mean       ( _costhCorr_gaus2_mean       );
-    _photonCorrector->set_costhCorr_gaus2_sigm       ( _costhCorr_gaus2_sigm       );
-    _photonCorrector->set_costhCorr_gaus3_norm       ( _costhCorr_gaus3_norm       );
-    _photonCorrector->set_costhCorr_gaus3_mean       ( _costhCorr_gaus3_mean       );
-    _photonCorrector->set_costhCorr_gaus3_sigm       ( _costhCorr_gaus3_sigm       );
-    _photonCorrector->set_costhCorr_endcap_scale     ( _costhCorr_endcap_scale     );
-    _photonCorrector->set_endcap_gaus1_norm          ( _endcap_gaus1_norm          );
-    _photonCorrector->set_endcap_gaus1_mean          ( _endcap_gaus1_mean          );
-    _photonCorrector->set_endcap_gaus1_sigm          ( _endcap_gaus1_sigm          );
-    _photonCorrector->set_endcap_gaus2_norm          ( _endcap_gaus2_norm          );
-    _photonCorrector->set_endcap_gaus2_mean          ( _endcap_gaus2_mean          );
-    _photonCorrector->set_endcap_gaus2_sigm          ( _endcap_gaus2_sigm          );
-  }
+  _photonCorrector->set_energyLin_const            ( _energyLin_const            );
+  _photonCorrector->set_energyLin_logen            ( _energyLin_logen            );
+  _photonCorrector->set_phiBarrelCorr_pos_const    ( _phiBarrelCorr_pos_const    );
+  _photonCorrector->set_phiBarrelCorr_pos_logen    ( _phiBarrelCorr_pos_logen    );
+  _photonCorrector->set_phiBarrelCorr_depth        ( _phiBarrelCorr_depth        );
+  _photonCorrector->set_phiBarrelCorr_width1       ( _phiBarrelCorr_width1       );
+  _photonCorrector->set_phiBarrelCorr_width2       ( _phiBarrelCorr_width2       );
+  _photonCorrector->set_costhCorr_gaus1_norm_const ( _costhCorr_gaus1_norm_const );
+  _photonCorrector->set_costhCorr_gaus1_norm_logen ( _costhCorr_gaus1_norm_logen );
+  _photonCorrector->set_costhCorr_gaus1_mean       ( _costhCorr_gaus1_mean       );
+  _photonCorrector->set_costhCorr_gaus1_sigm       ( _costhCorr_gaus1_sigm       );
+  _photonCorrector->set_costhCorr_gaus2_norm_const ( _costhCorr_gaus2_norm_const );
+  _photonCorrector->set_costhCorr_gaus2_norm_logen ( _costhCorr_gaus2_norm_logen );
+  _photonCorrector->set_costhCorr_gaus2_mean       ( _costhCorr_gaus2_mean       );
+  _photonCorrector->set_costhCorr_gaus2_sigm       ( _costhCorr_gaus2_sigm       );
+  _photonCorrector->set_costhCorr_gaus3_norm       ( _costhCorr_gaus3_norm       );
+  _photonCorrector->set_costhCorr_gaus3_mean       ( _costhCorr_gaus3_mean       );
+  _photonCorrector->set_costhCorr_gaus3_sigm       ( _costhCorr_gaus3_sigm       );
+  _photonCorrector->set_costhCorr_endcap_scale     ( _costhCorr_endcap_scale     );
+  _photonCorrector->set_endcap_gaus1_norm          ( _endcap_gaus1_norm          );
+  _photonCorrector->set_endcap_gaus1_mean          ( _endcap_gaus1_mean          );
+  _photonCorrector->set_endcap_gaus1_sigm          ( _endcap_gaus1_sigm          );
+  _photonCorrector->set_endcap_gaus2_norm          ( _endcap_gaus2_norm          );
+  _photonCorrector->set_endcap_gaus2_mean          ( _endcap_gaus2_mean          );
+  _photonCorrector->set_endcap_gaus2_sigm          ( _endcap_gaus2_sigm          );
 
   return;
 }

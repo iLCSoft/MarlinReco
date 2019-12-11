@@ -43,7 +43,6 @@ class photonCorrectionProcessor : public marlin::Processor {
   photonCorrector* _photonCorrector{};
 
   bool _modifyPFOenergies{};
-  int  _useCorrectorDefaultSet{};
 
   bool _validationPlots{};
   float _nominalEnergy{};

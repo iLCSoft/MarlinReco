@@ -1,3 +1,65 @@
+# v01-26
+
+* 2019-12-11 Daniel Jeans ([PR#71](https://github.com/iLCSoft/MarlinReco/pull/71))
+  - remove hard-coded default correction; control everything from processor parameters.
+  - add getter and print functionality to PhotonCorrector class
+
+* 2019-12-03 Daniel Jeans ([PR#70](https://github.com/iLCSoft/MarlinReco/pull/70))
+  BruteForceEcalGapFiller makes new hits both within and between ECAL modules to estimate energy lost in cracks. In this update:
+  - allow switching off of correction in gaps between modules by processor parameter (in fact, set it off by default)
+  - Fix a couple of compiler warnings
+  - add photonCorrectionProcessor to correct photon PFO energies
+
+* 2019-10-06 Remi Ete ([PR#69](https://github.com/iLCSoft/MarlinReco/pull/69))
+  - Replaced raw usage of streamlog by pre-processor macros from streamlog package
+
+* 2019-09-03 beyerja ([PR#68](https://github.com/iLCSoft/MarlinReco/pull/68))
+  - Remove compiler warnings for ErrorFlow processor (default initialization in header, using shared_ptr instead of raw pointer).
+  - Add ErrorFlow processor to list of processors to be compiled by default in MarlinReco.
+
+* 2019-08-12 Ete Remi ([PR#67](https://github.com/iLCSoft/MarlinReco/pull/67))
+  - SimpleFcalDigi processor:
+      - Missing cellid 1 flag in fcal output collection, causing issues in the BeamCal reconstruction
+
+* 2019-04-08 Ete Remi ([PR#66](https://github.com/iLCSoft/MarlinReco/pull/66))
+  - ReconstructedParticleImpl_CopyProcessor:
+      - Added relation collection to link old PFOs to new PFOs
+
+* 2019-03-29 Matthias Artur Weber ([PR#65](https://github.com/iLCSoft/MarlinReco/pull/65))
+  - IsolatedLeptonFinder: save track and cluster information for isolated lepton candidates
+
+* 2019-01-30 Carl Mikael Berggren ([PR#64](https://github.com/iLCSoft/MarlinReco/pull/64))
+  - TrueJet: 
+    - Much improved assignment of PFOs to jets, and hence of seen jet energies
+    - Get rid of all -Wall warnings
+
+* 2019-01-16 Carl Mikael Berggren ([PR#63](https://github.com/iLCSoft/MarlinReco/pull/63))
+  - bug fix in TrueJet_Parser
+        - fix in TrueJet_Parser::final_cn, replace math.h by cmath in Use_TrueJet
+
+* 2019-01-15 Junping Tian ([PR#62](https://github.com/iLCSoft/MarlinReco/pull/62))
+  - added fix to IsolatedLeptonfinder
+       - added a new feature for supporting applications not using impact parameters
+       - added corresponding weight files trained for the new feature
+
+* 2018-12-19 Ulrich Einhaus ([PR#60](https://github.com/iLCSoft/MarlinReco/pull/60))
+  - Add ReconstructedParticleImpl_CopyProcessor
+
+* 2018-11-09 Daniel Jeans ([PR#59](https://github.com/iLCSoft/MarlinReco/pull/59))
+  - add new Marlin processor DDStripSplitter, which implements the Strip Splitting Algorithm for eg a scintillator strip ECAL.
+
+* 2018-10-29 Ete Remi ([PR#58](https://github.com/iLCSoft/MarlinReco/pull/58))
+  - IsolatedLeptonTaggingProcessor processor:
+     - Fixed processor logic when PFO or Vertex input collections don't exist or are empty
+
+* 2018-10-19 Erica Brondolin ([PR#57](https://github.com/iLCSoft/MarlinReco/pull/57))
+  - CLICPfoSelectorAnalysis: Fix entries of time vs pt
+
+* 2018-10-02 Frank Gaede ([PR#55](https://github.com/iLCSoft/MarlinReco/pull/55))
+  - add sub-package Analysis/GammaGammaHadronRemoval
+    - first processor *TrackZVertexGrouping* implementation of track grouping based on Z0 significance
+    - algorithm developed by S.Sasikumar, DESY
+
 # v01-25
 
 * 2018-07-05 Jakob Beyer ([PR#52](https://github.com/ilcsoft/MarlinReco/pull/52))

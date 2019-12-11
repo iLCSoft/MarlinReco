@@ -6,111 +6,41 @@
 
 class photonCorrector {
  public:
-  photonCorrector() {_initialized=false;}
+  photonCorrector() {
+    _barrelendcap_costhlimit    = 0.;
+    _energyLin_const            = 0.;
+    _energyLin_logen            = 0.;
+    _phiBarrelCorr_pos_const    = 0.;
+    _phiBarrelCorr_pos_logen    = 0.;
+    _phiBarrelCorr_depth        = 0.;
+    _phiBarrelCorr_width1       = 0.;
+    _phiBarrelCorr_width2       = 0.;
+    _costhCorr_gaus1_norm_const = 0.;
+    _costhCorr_gaus1_norm_logen = 0.;
+    _costhCorr_gaus1_mean       = 0.;
+    _costhCorr_gaus1_sigm       = 0.;
+    _costhCorr_gaus2_norm_const = 0.;
+    _costhCorr_gaus2_norm_logen = 0.;
+    _costhCorr_gaus2_mean       = 0.;
+    _costhCorr_gaus2_sigm       = 0.;
+    _costhCorr_gaus3_norm       = 0.;
+    _costhCorr_gaus3_mean       = 0.;
+    _costhCorr_gaus3_sigm       = 0.;
+    _costhCorr_endcap_scale     = 0.;
+    _endcap_gaus1_norm          = 0.;
+    _endcap_gaus1_mean          = 0.;
+    _endcap_gaus1_sigm          = 0.;
+    _endcap_gaus2_norm          = 0.;
+    _endcap_gaus2_mean          = 0.;
+    _endcap_gaus2_sigm          = 0.;
+    _assumed_boxsize            = 0.;
+    _assumed_endZ               = 0.;
+  }
   ~photonCorrector() {}
-
-  void setDefaultValues(int defSet) {
-    if        ( defSet == 0 ) {
-      setDefaultValues_interModBruteForceCorr();
-    } else if ( defSet == 1 ) {
-      setDefaultValues_no_interModBruteForceCorr();
-    } else {
-      std::cout << "photonCorrector: unknown default param set "<< defSet << " ; giving up!" << std::endl;
-      assert(0);
-    }
-    return;
-  }
-
-  void setDefaultValues_interModBruteForceCorr() {
-    // this one is for the case in which inter-module gaps are corrected by "brute force" at hit reco level
-    // determined for ILD_l5_o1_v02 model
-
-    _energyLin_const = 9.87661e-01;
-    _energyLin_logen = 1.40676e-02;
-
-    _phiBarrelCorr_pos_const = 0.411540;
-    _phiBarrelCorr_pos_logen = 0.0149989;
-    _phiBarrelCorr_depth     = -0.0923036;
-    _phiBarrelCorr_width1    =  0.014018;
-    _phiBarrelCorr_width2    = 0.039961;
-
-    _costhCorr_gaus1_norm_const = -7.97130e-02;
-    _costhCorr_gaus1_norm_logen = 5.85799e-02;
-    _costhCorr_gaus1_mean = 0.235;
-    _costhCorr_gaus1_sigm = 0.01;
-
-    _costhCorr_gaus2_norm_const = -3.52624e-02;
-    _costhCorr_gaus2_norm_logen = 3.07763e-02;
-    _costhCorr_gaus2_mean = 0.588;
-    _costhCorr_gaus2_sigm = 0.009;
-
-    _costhCorr_gaus3_norm = -0.0422968;
-    _costhCorr_gaus3_mean = 0.774;
-    _costhCorr_gaus3_sigm = 0.009;
-
-    _costhCorr_endcap_scale = 1.002;
-
-    _endcap_gaus1_norm = -0.025;
-    _endcap_gaus1_mean = 855.  ;
-    _endcap_gaus1_sigm = 23.   ;
-
-    _endcap_gaus2_norm = -0.07 ;
-    _endcap_gaus2_mean = 1489. ;
-    _endcap_gaus2_sigm = 18.   ;
-
-    // actual values not important, but should use same defs when determining the correction and applying it
-    //_assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
-    //_assumed_endZ = 2411.; // start of endcap in z
-  }
-
-  void setDefaultValues_no_interModBruteForceCorr() {
-
-    // this one is for the case in which inter-module gaps are not corrected by "brute force" at hit reco level
-    // determined for ILD_l5_o1_v02 model
-
-    _energyLin_const = 9.870e-01;
-    _energyLin_logen = 1.426e-02;
-
-    _phiBarrelCorr_pos_const = 0.412249;
-    _phiBarrelCorr_pos_logen = 0.0142289;
-    _phiBarrelCorr_depth     = -0.0933687;
-    _phiBarrelCorr_width1    =  0.01345;
-    _phiBarrelCorr_width2    = 0.0408156;
-
-    _costhCorr_gaus1_norm_const = -0.0900;
-    _costhCorr_gaus1_norm_logen = 0;
-    _costhCorr_gaus1_mean = 0.235;
-    _costhCorr_gaus1_sigm = 0.007256;
-
-    _costhCorr_gaus2_norm_const = -0.0369648;
-    _costhCorr_gaus2_norm_logen = 0;
-    _costhCorr_gaus2_mean = 0.588;
-    _costhCorr_gaus2_sigm = 0.0121604;
-
-    _costhCorr_gaus3_norm = -0.0422968;
-    _costhCorr_gaus3_mean = 0.774;
-    _costhCorr_gaus3_sigm = 0.009;
-
-    _costhCorr_endcap_scale = 1.002;
-
-    _endcap_gaus1_norm = -0.025;
-    _endcap_gaus1_mean = 855.  ;
-    _endcap_gaus1_sigm = 23.   ;
-
-    _endcap_gaus2_norm = -0.07 ;
-    _endcap_gaus2_mean = 1489. ;
-    _endcap_gaus2_sigm = 18.   ;
-
-    // actual values not important, but should use same defs when determining the correction and applying it
-    //    _assumed_boxsize=400; // size of inner endcap box (ECAL plug/ring)
-    //    _assumed_endZ = 2411.; // start of endcap in z
-  }
 
 
   // the main energy corrector
-  //  float correctEnergy( EVENT::ReconstructedParticle* rp );
   float photonEnergyCorrection( EVENT::ReconstructedParticle* rp );
-
 
   // parameter setters
   void set_barrelendcap_limit         ( float x ) { _barrelendcap_costhlimit    = x; }
@@ -142,10 +72,38 @@ class photonCorrector {
   void set_assumed_boxsize            ( float x ) { _assumed_boxsize            = x; }
   void set_assumed_endZ               ( float x ) { _assumed_endZ               = x; }
 
+  float get_barrelendcap_limit         ( ) { return _barrelendcap_costhlimit    ; }
+  float get_energyLin_const            ( ) { return _energyLin_const            ; }
+  float get_energyLin_logen            ( ) { return _energyLin_logen            ; }
+  float get_phiBarrelCorr_pos_const    ( ) { return _phiBarrelCorr_pos_const    ; }
+  float get_phiBarrelCorr_pos_logen    ( ) { return _phiBarrelCorr_pos_logen    ; }
+  float get_phiBarrelCorr_depth        ( ) { return _phiBarrelCorr_depth        ; }
+  float get_phiBarrelCorr_width1       ( ) { return _phiBarrelCorr_width1       ; }
+  float get_phiBarrelCorr_width2       ( ) { return _phiBarrelCorr_width2       ; }
+  float get_costhCorr_gaus1_norm_const ( ) { return _costhCorr_gaus1_norm_const ; }
+  float get_costhCorr_gaus1_norm_logen ( ) { return _costhCorr_gaus1_norm_logen ; }
+  float get_costhCorr_gaus1_mean       ( ) { return _costhCorr_gaus1_mean       ; }
+  float get_costhCorr_gaus1_sigm       ( ) { return _costhCorr_gaus1_sigm       ; }
+  float get_costhCorr_gaus2_norm_const ( ) { return _costhCorr_gaus2_norm_const ; }
+  float get_costhCorr_gaus2_norm_logen ( ) { return _costhCorr_gaus2_norm_logen ; }
+  float get_costhCorr_gaus2_mean       ( ) { return _costhCorr_gaus2_mean       ; }
+  float get_costhCorr_gaus2_sigm       ( ) { return _costhCorr_gaus2_sigm       ; }
+  float get_costhCorr_gaus3_norm       ( ) { return _costhCorr_gaus3_norm       ; }
+  float get_costhCorr_gaus3_mean       ( ) { return _costhCorr_gaus3_mean       ; }
+  float get_costhCorr_gaus3_sigm       ( ) { return _costhCorr_gaus3_sigm       ; }
+  float get_costhCorr_endcap_scale     ( ) { return _costhCorr_endcap_scale     ; }
+  float get_endcap_gaus1_norm          ( ) { return _endcap_gaus1_norm          ; }
+  float get_endcap_gaus1_mean          ( ) { return _endcap_gaus1_mean          ; }
+  float get_endcap_gaus1_sigm          ( ) { return _endcap_gaus1_sigm          ; }
+  float get_endcap_gaus2_norm          ( ) { return _endcap_gaus2_norm          ; }
+  float get_endcap_gaus2_mean          ( ) { return _endcap_gaus2_mean          ; }
+  float get_endcap_gaus2_sigm          ( ) { return _endcap_gaus2_sigm          ; }
+  float get_assumed_boxsize            ( ) { return _assumed_boxsize            ; }
+  float get_assumed_endZ               ( ) { return _assumed_endZ               ; }
+
+  void printParams();
 
  private:
-
-  bool _initialized{};
 
   float energyLinearise( float en );
   float gapCompensatedEnergy( EVENT::ReconstructedParticle* rp );

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <streamlog/streamlog.h>
 
+using std::endl;
 
 float photonCorrector::photonEnergyCorrection( EVENT::ReconstructedParticle* rp ) {
   // first correct for gaps
@@ -25,7 +26,7 @@ float photonCorrector::gapCompensatedEnergy( EVENT::ReconstructedParticle* rp ) 
   float en = rp->getEnergy();
 
   if ( rp->getType() != 22 ) {  // check that it's a photon-like PFO
-    streamlog_out (WARNING) << "gapCompensate designed only for photons! not applying correction" << std::endl;
+    streamlog_out (WARNING) << "gapCompensate designed only for photons! not applying correction" << endl;
   } else {
     float cosTheta = rp->getMomentum()[2]/sqrt( pow(rp->getMomentum()[0],2)+pow(rp->getMomentum()[1],2)+pow(rp->getMomentum()[2],2) );
     float phi = atan2( rp->getMomentum()[1], rp->getMomentum()[0] );
@@ -114,3 +115,38 @@ float photonCorrector::getBarrelFoldedPhi( float phi) {
   return foldedPhi;
 }
 
+void photonCorrector::printParams() {
+
+  streamlog_out (MESSAGE) << "photonCorrector::printParams" << endl;
+  streamlog_out (MESSAGE) << "barrelendcap_limit          " << get_barrelendcap_limit         () << endl;
+  streamlog_out (MESSAGE) << "energyLin_const             " << get_energyLin_const            () << endl;
+  streamlog_out (MESSAGE) << "energyLin_logen             " << get_energyLin_logen            () << endl;
+  streamlog_out (MESSAGE) << "phiBarrelCorr_pos_const     " << get_phiBarrelCorr_pos_const    () << endl;
+  streamlog_out (MESSAGE) << "phiBarrelCorr_pos_logen     " << get_phiBarrelCorr_pos_logen    () << endl;
+  streamlog_out (MESSAGE) << "phiBarrelCorr_depth         " << get_phiBarrelCorr_depth        () << endl;
+  streamlog_out (MESSAGE) << "phiBarrelCorr_width1        " << get_phiBarrelCorr_width1       () << endl;
+  streamlog_out (MESSAGE) << "phiBarrelCorr_width2        " << get_phiBarrelCorr_width2       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus1_norm_const  " << get_costhCorr_gaus1_norm_const () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus1_norm_logen  " << get_costhCorr_gaus1_norm_logen () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus1_mean        " << get_costhCorr_gaus1_mean       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus1_sigm        " << get_costhCorr_gaus1_sigm       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus2_norm_const  " << get_costhCorr_gaus2_norm_const () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus2_norm_logen  " << get_costhCorr_gaus2_norm_logen () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus2_mean        " << get_costhCorr_gaus2_mean       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus2_sigm        " << get_costhCorr_gaus2_sigm       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus3_norm        " << get_costhCorr_gaus3_norm       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus3_mean        " << get_costhCorr_gaus3_mean       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_gaus3_sigm        " << get_costhCorr_gaus3_sigm       () << endl;
+  streamlog_out (MESSAGE) << "costhCorr_endcap_scale      " << get_costhCorr_endcap_scale     () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus1_norm           " << get_endcap_gaus1_norm          () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus1_mean           " << get_endcap_gaus1_mean          () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus1_sigm           " << get_endcap_gaus1_sigm          () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus2_norm           " << get_endcap_gaus2_norm          () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus2_mean           " << get_endcap_gaus2_mean          () << endl;
+  streamlog_out (MESSAGE) << "endcap_gaus2_sigm           " << get_endcap_gaus2_sigm          () << endl;
+  streamlog_out (MESSAGE) << "assumed_boxsize             " << get_assumed_boxsize            () << endl;
+  streamlog_out (MESSAGE) << "assumed_endZ                " << get_assumed_endZ               () << endl;
+
+  return;
+
+}

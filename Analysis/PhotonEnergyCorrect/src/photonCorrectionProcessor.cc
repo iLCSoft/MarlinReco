@@ -167,8 +167,15 @@ void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
 	  totPfoGammaEn[1]+=correctedEnergy;
 	}
 
-	if (_modifyPFOenergies) pfo->setEnergy( correctedEnergy );
-
+	if (_modifyPFOenergies) {
+	  float origEn = pfo->getEnergy();
+	  pfo->setEnergy( correctedEnergy );
+	  float corMomentum[3];
+	  for (int i=0; i<3; i++) {
+	    corMomentum[i]=pfo->getMomentum()[i] * correctedEnergy/origEn;
+	  }
+	  pfo->setMomentum( corMomentum );
+	}
 
       } else {
 	totPfoEn[0]+=pfo->getEnergy();

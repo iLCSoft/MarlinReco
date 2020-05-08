@@ -8,12 +8,11 @@
 using std::endl;
 
 float photonCorrector::photonEnergyCorrection( EVENT::ReconstructedParticle* rp ) {
-  // first correct for gaps
+  // first correct the energy for gaps
   float gapCorrEn = gapCompensatedEnergy( rp );
-  // then correct for non-linearity
+  // then correct for overall non-linearity
   return energyLinearise( gapCorrEn );
 }
-
 
 float photonCorrector::energyLinearise( float en ) {
   float logen = log10(en);
@@ -22,6 +21,7 @@ float photonCorrector::energyLinearise( float en ) {
 }
 
 float photonCorrector::gapCompensatedEnergy( EVENT::ReconstructedParticle* rp ) {
+  // returns corrected energy for the input PFO
   float gapcorrectionFactor(1.0);
   float en = rp->getEnergy();
 
@@ -42,7 +42,7 @@ float photonCorrector::gapCompensatedEnergy( EVENT::ReconstructedParticle* rp ) 
 }
 
 float photonCorrector::gapCompensate_barrelPhi( float en, float phi ) {
-  // correcion for phi gaps in barrel [new, from 2019/11/20]
+  // correction for phi gaps in barrel
   float logen = log10(en);
   float foldphi = getBarrelFoldedPhi(phi);
   float par_gap_pos = _phiBarrelCorr_pos_const + _phiBarrelCorr_pos_logen*logen;
@@ -54,6 +54,7 @@ float photonCorrector::gapCompensate_barrelPhi( float en, float phi ) {
 
 
 float photonCorrector::gapCompensate_theta( float en, float costh ) {
+  // correct for gaps in theta
   float logen = log10(en);
   float absCosTh = fabs(costh);
   float par_gaus1_norm = _costhCorr_gaus1_norm_const + _costhCorr_gaus1_norm_logen*logen;
@@ -69,11 +70,10 @@ float photonCorrector::gapCompensate_theta( float en, float costh ) {
 }
 
 float photonCorrector::gapCompensate_endcap( float xAcross ) {
-
+  // compensate energy for cracks in endcap. xAcross is the local coord across the endcap quadrant
   float fitval = 1.;
   fitval += _endcap_gaus1_norm*exp( -0.5*pow( (xAcross-_endcap_gaus1_mean)/_endcap_gaus1_sigm , 2 ) );
   fitval += _endcap_gaus2_norm*exp( -0.5*pow( (xAcross-_endcap_gaus2_mean)/_endcap_gaus2_sigm , 2 ) );
-
   return 1./fitval;
 }
 
@@ -98,22 +98,122 @@ float photonCorrector::getDistanceAcrossEndcapQuadrant( float costh, float phi )
     else if ( endX > -_assumed_boxsize && endY < -_assumed_boxsize ) quad=2;
     else if ( endX < -_assumed_boxsize && endY <  _assumed_boxsize ) quad=3;
   }
-  //  float foldX(0);
   float foldY(0);
-  if ( quad>=0 ) { // not center box
+  if ( quad>=0 ) { // not in the center box
     float foldPhi = phi + quad*acos(-1)/2.;
-    // foldX = fabs(_assumed_endZ)*sin(acos(costh))* cos(foldPhi); // this should flip the -ve side endcap...
     foldY = _assumed_endZ*sin(acos(costh))* sin(foldPhi);
   }
   return foldY;
 }
 
 float photonCorrector::getBarrelFoldedPhi( float phi) {
+  // fold the barrel phi into a single octant
   if ( phi<0 ) phi+=2*acos(-1);
   int sector = phi/(acos(-1)/4);
   float foldedPhi = phi - sector*acos(-1)/4.;
   return foldedPhi;
 }
+
+void photonCorrector::photonDirectionCorrection( EVENT::ReconstructedParticle* rp , float& cor_theta, float& cor_phi ) {
+  // returns corrected direction (theta, phi) of photon PFOs
+  float origEn = rp->getEnergy();
+  float p(0);
+  for (int i=0; i<3; i++) {
+    p+=pow(rp->getMomentum()[i],2);
+  }
+  p=sqrt(p);
+  float origCosth=rp->getMomentum()[2]/p;
+  float origTheta=acos(origCosth);
+  float origPhi=atan2(rp->getMomentum()[1],rp->getMomentum()[0]);
+  cor_theta = getCorrectedTheta ( origEn, origTheta );
+  cor_phi   = getCorrectedPhi   ( origEn, origCosth, origPhi );
+  return;
+}
+
+
+float photonCorrector::getBarrelCorrectedPhi( float en, float phi ) {
+  // phi dorection corrention in the barrel
+  float logen=log10(en);
+  float phifold=getBarrelFoldedPhi( phi );
+  float par[8]={0};
+
+  //    # energy dependence of function parameters
+  par[0]=_phiBias_barrel_p0_1 + _phiBias_barrel_p0_2/(1. + exp( _phiBias_barrel_p0_3*( logen + _phiBias_barrel_p0_4 ) ) );
+  par[1]=_phiBias_barrel_p1_1 + logen*_phiBias_barrel_p1_2;
+  if (par[1]<0.) par[1]=0.;
+  par[2]=_phiBias_barrel_p2_1 + _phiBias_barrel_p2_2*logen;
+  par[3]=_phiBias_barrel_p3_1;
+  par[4]=_phiBias_barrel_p4_1;
+  par[5]=_phiBias_barrel_p5_1 + logen*_phiBias_barrel_p5_2 + pow( logen, 2)*_phiBias_barrel_p5_3;
+  par[6]=_phiBias_barrel_p6_1 + logen*_phiBias_barrel_p6_2 ;
+  par[7]=_phiBias_barrel_p7_1 + logen*_phiBias_barrel_p7_2 + pow( logen, 2)*_phiBias_barrel_p7_3;
+
+  // # and the function
+  float y = par[0]; // # constant
+  y = y + par[1]*exp( -0.5*pow( (phifold-par[2])/par[3] , 2 ) ); // # gaussian
+  y = y + par[4]*sin(4*phifold); // # sinusoidal
+  y = y + par[5]*sin(8*phifold);
+  y = y + par[6]*sin(12*phifold);
+  y = y + par[7]*sin(16*phifold);
+  return phi - y;
+}
+
+float photonCorrector::getCorrectedPhi      ( float en, float costh, float phi ) {
+  float corPhi(phi);
+  if ( fabs(costh) < _barrelendcap_costhlimit ) {
+    corPhi=getBarrelCorrectedPhi( en, phi );
+  }
+  return corPhi;
+}
+
+float photonCorrector::getBarrelCorrectedTheta( float en, float theta ) {
+  // correct theta in the barrel
+  float costh = cos(theta);
+  float newtheta(theta);
+  if (abs(costh)<_barrelendcap_costhlimit) {
+    float logen=log10(en);
+    float par[2]={0};
+    // energy dependence of function parameters
+    par[0] = _thetaBias_barrel_p0_1 + logen*_thetaBias_barrel_p0_2;
+    par[1] = _thetaBias_barrel_p1_1 + logen*_thetaBias_barrel_p1_2;
+
+    // and the function
+    float y = par[0]*costh + par[1]*( 4*pow(costh,3) -3*costh );
+    newtheta = theta - y;
+  }
+  return newtheta;
+}
+
+float photonCorrector::getEndcapCorrectedTheta( float en, float theta ) {
+  // correct theta in the endcap
+  float logen=log10(en);
+  float foldTheta = theta;
+  if ( theta>acos(-1)/2. ) {
+    foldTheta = acos(-1.) - theta;
+  }
+  float par[3]={0};
+  par[0]= _thetaBias_endcap_p0_1 + _thetaBias_endcap_p0_2*logen;
+  par[1]= _thetaBias_endcap_p1_1 + _thetaBias_endcap_p1_2*logen;
+  par[2]= _thetaBias_endcap_p2_1 + _thetaBias_endcap_p2_2*logen;
+  float cor = par[0] + par[1]*foldTheta + par[2]*pow(foldTheta,2.);
+  if (theta>acos(-1)/2.) {
+    cor *= -1;
+  }
+  return theta-cor;
+}
+
+float photonCorrector::getCorrectedTheta      ( float en, float theta ) {
+  // returns corrected theta 
+  float corTheta(theta);
+  float abscth= fabs(cos(theta));
+  if (abscth < _barrelendcap_costhlimit - 0.05 ) { // don't correct overlap region for now
+    corTheta = getBarrelCorrectedTheta( en, theta );
+  } else if ( abscth > _barrelendcap_costhlimit && abscth < cos(atan(_assumed_boxsize/_assumed_endZ)) ) {
+    corTheta = getEndcapCorrectedTheta( en, theta );
+  }
+  return corTheta;
+}
+
 
 void photonCorrector::printParams() {
 
@@ -146,6 +246,38 @@ void photonCorrector::printParams() {
   streamlog_out (MESSAGE) << "endcap_gaus2_sigm           " << get_endcap_gaus2_sigm          () << endl;
   streamlog_out (MESSAGE) << "assumed_boxsize             " << get_assumed_boxsize            () << endl;
   streamlog_out (MESSAGE) << "assumed_endZ                " << get_assumed_endZ               () << endl;
+
+  streamlog_out (MESSAGE) << "phiBias_barrel_p0_1         " << get_phiBias_barrel_p0_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p0_2         " << get_phiBias_barrel_p0_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p0_3         " << get_phiBias_barrel_p0_3   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p0_4         " << get_phiBias_barrel_p0_4   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p1_1         " << get_phiBias_barrel_p1_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p1_2         " << get_phiBias_barrel_p1_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p2_1         " << get_phiBias_barrel_p2_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p2_2         " << get_phiBias_barrel_p2_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p3_1         " << get_phiBias_barrel_p3_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p4_1         " << get_phiBias_barrel_p4_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p5_1         " << get_phiBias_barrel_p5_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p5_2         " << get_phiBias_barrel_p5_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p5_3         " << get_phiBias_barrel_p5_3   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p6_1         " << get_phiBias_barrel_p6_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p6_2         " << get_phiBias_barrel_p6_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p7_1         " << get_phiBias_barrel_p7_1   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p7_2         " << get_phiBias_barrel_p7_2   () << endl;
+  streamlog_out (MESSAGE) << "phiBias_barrel_p7_3         " << get_phiBias_barrel_p7_3   () << endl;
+
+  streamlog_out (MESSAGE) << "thetaBias_barrel_p0_1       " << get_thetaBias_barrel_p0_1 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_barrel_p0_2       " << get_thetaBias_barrel_p0_2 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_barrel_p1_1       " << get_thetaBias_barrel_p1_1 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_barrel_p1_2       " << get_thetaBias_barrel_p1_2 () << endl;
+
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p0_1       " << get_thetaBias_endcap_p0_1 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p0_2       " << get_thetaBias_endcap_p0_2 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p1_1       " << get_thetaBias_endcap_p1_1 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p1_2       " << get_thetaBias_endcap_p1_2 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p2_1       " << get_thetaBias_endcap_p2_1 () << endl;
+  streamlog_out (MESSAGE) << "thetaBias_endcap_p2_2       " << get_thetaBias_endcap_p2_2 () << endl;
+
 
   return;
 

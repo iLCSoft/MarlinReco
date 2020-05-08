@@ -43,6 +43,7 @@ class photonCorrectionProcessor : public marlin::Processor {
   photonCorrector* _photonCorrector{};
 
   bool _modifyPFOenergies{};
+  bool _modifyPFOdirections{};
 
   bool _validationPlots{};
   float _nominalEnergy{};
@@ -83,6 +84,38 @@ class photonCorrectionProcessor : public marlin::Processor {
   float _endcap_gaus2_norm{};
   float _endcap_gaus2_mean{};
   float _endcap_gaus2_sigm{};
+
+
+  float _phiBias_barrel_p0_1  {};
+  float _phiBias_barrel_p0_2  {};
+  float _phiBias_barrel_p0_3  {};
+  float _phiBias_barrel_p0_4  {};
+  float _phiBias_barrel_p1_1  {};
+  float _phiBias_barrel_p1_2  {};
+  float _phiBias_barrel_p2_1  {};
+  float _phiBias_barrel_p2_2  {};
+  float _phiBias_barrel_p3_1  {};
+  float _phiBias_barrel_p4_1  {};
+  float _phiBias_barrel_p5_1  {};
+  float _phiBias_barrel_p5_2  {};
+  float _phiBias_barrel_p5_3  {};
+  float _phiBias_barrel_p6_1  {};
+  float _phiBias_barrel_p6_2  {};
+  float _phiBias_barrel_p7_1  {};
+  float _phiBias_barrel_p7_2  {};
+  float _phiBias_barrel_p7_3  {};
+
+  float _thetaBias_barrel_p0_1{};
+  float _thetaBias_barrel_p0_2{};
+  float _thetaBias_barrel_p1_1{};
+  float _thetaBias_barrel_p1_2{};
+
+  float _thetaBias_endcap_p0_1{};
+  float _thetaBias_endcap_p0_2{};
+  float _thetaBias_endcap_p1_1{};
+  float _thetaBias_endcap_p1_2{};
+  float _thetaBias_endcap_p2_1{};
+  float _thetaBias_endcap_p2_2{};
 
 
 };

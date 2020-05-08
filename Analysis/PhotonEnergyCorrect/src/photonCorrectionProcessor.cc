@@ -32,7 +32,8 @@ photonCorrectionProcessor::photonCorrectionProcessor() : Processor("photonCorrec
   registerProcessorParameter("inputCollection", "name of input PFO collection",
                              _inputCollection, std::string("PandoraPFOs") );
 
-  registerProcessorParameter("modifyPFOenergies", "apply the corrected energies to the PFOs", _modifyPFOenergies, true );
+  registerProcessorParameter("modifyPFOenergies" , "apply the corrected energies to the PFOs", _modifyPFOenergies, true );
+  registerProcessorParameter("modifyPFOdirection", "apply the corrected direction to the PFOs", _modifyPFOdirections, true );
 
   registerProcessorParameter("energyLin_const"	          , "overall energy correction: constant term",                 _energyLin_const             , float(  9.870e-01) );
   registerProcessorParameter("energyLin_logen"	          , "overall energy correction: log(e) coefficient",            _energyLin_logen             , float(  1.426e-02) );
@@ -59,6 +60,37 @@ photonCorrectionProcessor::photonCorrectionProcessor() : Processor("photonCorrec
   registerProcessorParameter("endcap_gaus2_norm"	  , "across endcap module correction: gaus2 norm",              _endcap_gaus2_norm           , float( -0.07     ) );
   registerProcessorParameter("endcap_gaus2_mean"	  , "across endcap module correction: gaus2 mean",              _endcap_gaus2_mean           , float( 1489.     ) );
   registerProcessorParameter("endcap_gaus2_sigm"	  , "across endcap module correction: gaus2 sigma",             _endcap_gaus2_sigm           , float( 18.       ) );
+
+  registerProcessorParameter("phiBias_barrel_p0_1"  , "phiBias barrel_par0_1",   _phiBias_barrel_p0_1   , float( 2.36517e-05  ) );
+  registerProcessorParameter("phiBias_barrel_p0_2"  , "phiBias barrel_par0_2",   _phiBias_barrel_p0_2   , float(  1.32090e-04 ) );
+  registerProcessorParameter("phiBias_barrel_p0_3"  , "phiBias barrel_par0_3",   _phiBias_barrel_p0_3   , float( -3.86883e+00 ) );
+  registerProcessorParameter("phiBias_barrel_p0_4"  , "phiBias barrel_par0_4",   _phiBias_barrel_p0_4   , float( -1.67809e-01 ) );
+  registerProcessorParameter("phiBias_barrel_p1_1"  , "phiBias barrel_par1_1",   _phiBias_barrel_p1_1   , float( 2.28614e-05 ) );
+  registerProcessorParameter("phiBias_barrel_p1_2"  , "phiBias barrel_par1_2",   _phiBias_barrel_p1_2   , float( 6.03495e-05 ) );
+  registerProcessorParameter("phiBias_barrel_p2_1"  , "phiBias barrel_par2_1",   _phiBias_barrel_p2_1   , float( 0.419 ) );
+  registerProcessorParameter("phiBias_barrel_p2_2"  , "phiBias barrel_par2_2",   _phiBias_barrel_p2_2   , float( 0.00728 ) );
+  registerProcessorParameter("phiBias_barrel_p3_1"  , "phiBias barrel_par3_1",   _phiBias_barrel_p3_1   , float( 0.025 ) );
+  registerProcessorParameter("phiBias_barrel_p4_1"  , "phiBias barrel_par4_1",   _phiBias_barrel_p4_1   , float( 0.00 ) );
+  registerProcessorParameter("phiBias_barrel_p5_1"  , "phiBias barrel_par5_1",   _phiBias_barrel_p5_1   , float( 2.86667e-05 ) );
+  registerProcessorParameter("phiBias_barrel_p5_2"  , "phiBias barrel_par5_2",   _phiBias_barrel_p5_2   , float( 2.49371e-05 ) );
+  registerProcessorParameter("phiBias_barrel_p5_3"  , "phiBias barrel_par5_3",   _phiBias_barrel_p5_3   , float( -7.71684e-06 ) );
+  registerProcessorParameter("phiBias_barrel_p6_1"  , "phiBias barrel_par6_1",   _phiBias_barrel_p6_1   , float( -1.48118e-05 ) );
+  registerProcessorParameter("phiBias_barrel_p6_2"  , "phiBias barrel_par6_2",   _phiBias_barrel_p6_2   , float( -5.63786e-06 ) );
+  registerProcessorParameter("phiBias_barrel_p7_1"  , "phiBias barrel_par7_1",   _phiBias_barrel_p7_1   , float( -9.38376e-06 ) );
+  registerProcessorParameter("phiBias_barrel_p7_2"  , "phiBias barrel_par7_2",   _phiBias_barrel_p7_2   , float( -4.96296e-06 ) );
+  registerProcessorParameter("phiBias_barrel_p7_3"  , "phiBias barrel_par7_3",   _phiBias_barrel_p7_3   , float( 2.91262e-06 ) );
+
+  registerProcessorParameter("thetaBias_barrel_p0_1", "thetaBias barrel_par0_1", _thetaBias_barrel_p0_1 , float( -0.000166568  ) );
+  registerProcessorParameter("thetaBias_barrel_p0_2", "thetaBias barrel_par0_2", _thetaBias_barrel_p0_2 , float( -7.119e-05 ) );
+  registerProcessorParameter("thetaBias_barrel_p1_1", "thetaBias barrel_par1_1", _thetaBias_barrel_p1_1 , float( 0.000223618 ) );
+  registerProcessorParameter("thetaBias_barrel_p1_2", "thetaBias barrel_par1_2", _thetaBias_barrel_p1_2 , float( -3.95915e-05 ) );
+
+  registerProcessorParameter("thetaBias_endcap_p0_1", "thetaBias endcap_par0_1", _thetaBias_endcap_p0_1 , float( 0.000129478 ) );
+  registerProcessorParameter("thetaBias_endcap_p0_2", "thetaBias endcap_par0_2", _thetaBias_endcap_p0_2 , float( -3.73863e-05 ) );
+  registerProcessorParameter("thetaBias_endcap_p1_1", "thetaBias endcap_par1_1", _thetaBias_endcap_p1_1 , float( -0.000847783 ) );
+  registerProcessorParameter("thetaBias_endcap_p1_2", "thetaBias endcap_par1_2", _thetaBias_endcap_p1_2 , float( 0.000153646 ) );
+  registerProcessorParameter("thetaBias_endcap_p2_1", "thetaBias endcap_par2_1", _thetaBias_endcap_p2_1 , float( 0.000806605 ) );
+  registerProcessorParameter("thetaBias_endcap_p2_2", "thetaBias endcap_par2_2", _thetaBias_endcap_p2_2 , float( -0.000132608 ) );
 
   registerProcessorParameter("validationPlots", "produce validation plots", _validationPlots, false );
   registerProcessorParameter("nominalEnergy", "nominal photon energy (for validation plots)", _nominalEnergy, float(200) );
@@ -130,6 +162,36 @@ void photonCorrectionProcessor::init() {
   _photonCorrector->set_endcap_gaus2_mean          ( _endcap_gaus2_mean          );
   _photonCorrector->set_endcap_gaus2_sigm          ( _endcap_gaus2_sigm          );
 
+  _photonCorrector->set_phiBias_barrel_p0_1        (_phiBias_barrel_p0_1  );
+  _photonCorrector->set_phiBias_barrel_p0_2        (_phiBias_barrel_p0_2  );
+  _photonCorrector->set_phiBias_barrel_p0_3        (_phiBias_barrel_p0_3  );
+  _photonCorrector->set_phiBias_barrel_p0_4        (_phiBias_barrel_p0_4  );
+  _photonCorrector->set_phiBias_barrel_p1_1        (_phiBias_barrel_p1_1  );
+  _photonCorrector->set_phiBias_barrel_p1_2        (_phiBias_barrel_p1_2  );
+  _photonCorrector->set_phiBias_barrel_p2_1        (_phiBias_barrel_p2_1  );
+  _photonCorrector->set_phiBias_barrel_p2_2        (_phiBias_barrel_p2_2  );
+  _photonCorrector->set_phiBias_barrel_p3_1        (_phiBias_barrel_p3_1  );
+  _photonCorrector->set_phiBias_barrel_p4_1        (_phiBias_barrel_p4_1  );
+  _photonCorrector->set_phiBias_barrel_p5_1        (_phiBias_barrel_p5_1  );
+  _photonCorrector->set_phiBias_barrel_p5_2        (_phiBias_barrel_p5_2  );
+  _photonCorrector->set_phiBias_barrel_p5_3        (_phiBias_barrel_p5_3  );
+  _photonCorrector->set_phiBias_barrel_p6_1        (_phiBias_barrel_p6_1  );
+  _photonCorrector->set_phiBias_barrel_p6_2        (_phiBias_barrel_p6_2  );
+  _photonCorrector->set_phiBias_barrel_p7_1        (_phiBias_barrel_p7_1  );
+  _photonCorrector->set_phiBias_barrel_p7_2        (_phiBias_barrel_p7_2  );
+  _photonCorrector->set_phiBias_barrel_p7_3        (_phiBias_barrel_p7_3  );
+  _photonCorrector->set_thetaBias_barrel_p0_1      (_thetaBias_barrel_p0_1);
+  _photonCorrector->set_thetaBias_barrel_p0_2      (_thetaBias_barrel_p0_2);
+  _photonCorrector->set_thetaBias_barrel_p1_1      (_thetaBias_barrel_p1_1);
+  _photonCorrector->set_thetaBias_barrel_p1_2      (_thetaBias_barrel_p1_2);
+  _photonCorrector->set_thetaBias_endcap_p0_1      (_thetaBias_endcap_p0_1);
+  _photonCorrector->set_thetaBias_endcap_p0_2      (_thetaBias_endcap_p0_2);
+  _photonCorrector->set_thetaBias_endcap_p1_1      (_thetaBias_endcap_p1_1);
+  _photonCorrector->set_thetaBias_endcap_p1_2      (_thetaBias_endcap_p1_2);
+  _photonCorrector->set_thetaBias_endcap_p2_1      (_thetaBias_endcap_p2_1);
+  _photonCorrector->set_thetaBias_endcap_p2_2      (_thetaBias_endcap_p2_2);
+
+
   return;
 }
 
@@ -158,23 +220,41 @@ void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
 
       if ( pfo->getType() == 22 ) {
 
+	float origEn = pfo->getEnergy();
+	float origMom(0);
+	for (int i=0; i<3; i++) {
+	  origMom+=pow(pfo->getMomentum()[i],2);
+	}
+	origMom=sqrt(origMom);
+	float origTheta = acos( pfo->getMomentum()[2]/origMom);
+	float origPhi = atan2( pfo->getMomentum()[1], pfo->getMomentum()[0] );
+
 	float correctedEnergy = _photonCorrector->photonEnergyCorrection( pfo );
+
+	float correctedMom = origMom*correctedEnergy/origEn; // just scale. in principle should be same as energy for massless photon PFO
+
+	float correctedTheta, correctedPhi;
+	_photonCorrector->photonDirectionCorrection( pfo , correctedTheta, correctedPhi );
+
+	// these are the properties we will set for the PFO
+	float newEnergy = _modifyPFOenergies ? correctedEnergy : origEn;
+	float newMom    = _modifyPFOenergies ? correctedMom : origMom;
+	float newTheta  = _modifyPFOdirections ? correctedTheta : origTheta;
+	float newPhi    = _modifyPFOdirections ? correctedPhi : origPhi;
+
+	float newMomentum[3];
+	newMomentum[0] = newMom*sin(newTheta)*cos(newPhi);
+	newMomentum[1] = newMom*sin(newTheta)*sin(newPhi);
+	newMomentum[2] = newMom*cos(newTheta);
+
+	pfo->setEnergy( newEnergy );
+	pfo->setMomentum( newMomentum );
 
 	if ( _validationPlots ) {
 	  totPfoEn     [0]+=pfo->getEnergy();
 	  totPfoGammaEn[0]+=pfo->getEnergy();
 	  totPfoEn     [1]+=correctedEnergy;
 	  totPfoGammaEn[1]+=correctedEnergy;
-	}
-
-	if (_modifyPFOenergies) {
-	  float origEn = pfo->getEnergy();
-	  pfo->setEnergy( correctedEnergy );
-	  float corMomentum[3];
-	  for (int i=0; i<3; i++) {
-	    corMomentum[i]=pfo->getMomentum()[i] * correctedEnergy/origEn;
-	  }
-	  pfo->setMomentum( corMomentum );
 	}
 
       } else {

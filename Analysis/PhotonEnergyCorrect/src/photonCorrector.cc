@@ -7,6 +7,114 @@
 
 using std::endl;
 
+
+void photonCorrector::set_energyCorr_linearise ( std::vector <float> pars ) {
+  if ( pars.size() != 2 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for energyCorr_linearise ! expecting 2 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _energyLin_const = pars[0];
+    _energyLin_logen = pars[1];
+  }
+  return;
+}
+void photonCorrector::set_energyCorr_barrelPhi ( std::vector <float> pars ) {
+  if ( pars.size() != 5 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for energyCorr_barrelPhi ! expecting 5 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _phiBarrelCorr_pos_const    = pars[0];
+    _phiBarrelCorr_pos_logen    = pars[1];
+    _phiBarrelCorr_depth        = pars[2];
+    _phiBarrelCorr_width1       = pars[3];
+    _phiBarrelCorr_width2       = pars[4];
+  }
+}
+void photonCorrector::set_energyCorr_costheta  ( std::vector <float> pars ) {
+  if ( pars.size() != 12 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for energyCorr_costheta ! expecting 12 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _costhCorr_gaus1_norm_const = pars[0];
+    _costhCorr_gaus1_norm_logen = pars[1];
+    _costhCorr_gaus1_mean       = pars[2];
+    _costhCorr_gaus1_sigm       = pars[3];
+    _costhCorr_gaus2_norm_const = pars[4];
+    _costhCorr_gaus2_norm_logen = pars[5];
+    _costhCorr_gaus2_mean       = pars[6];
+    _costhCorr_gaus2_sigm       = pars[7];
+    _costhCorr_gaus3_norm       = pars[8];
+    _costhCorr_gaus3_mean       = pars[9];
+    _costhCorr_gaus3_sigm       = pars[10];
+    _costhCorr_endcap_scale     = pars[11];
+  }
+}
+void photonCorrector::set_energyCorr_endcap    ( std::vector <float> pars ) {
+  if ( pars.size() != 6 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for energyCorr_endcap ! expecting 6, got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _endcap_gaus1_norm          = pars[0];
+    _endcap_gaus1_mean          = pars[1];
+    _endcap_gaus1_sigm          = pars[2];
+    _endcap_gaus2_norm          = pars[3];
+    _endcap_gaus2_mean          = pars[4];
+    _endcap_gaus2_sigm          = pars[5];
+  }
+}
+void photonCorrector::set_phiCorr_barrel       ( std::vector <float> pars ) {
+  if ( pars.size() != 18 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for phiCorr_barrel ! expecting 18 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _phiBias_barrel_p0_1 = pars[0];
+    _phiBias_barrel_p0_2 = pars[1];
+    _phiBias_barrel_p0_3 = pars[2];
+    _phiBias_barrel_p0_4 = pars[3];
+    _phiBias_barrel_p1_1 = pars[4];
+    _phiBias_barrel_p1_2 = pars[5];
+    _phiBias_barrel_p2_1 = pars[6];
+    _phiBias_barrel_p2_2 = pars[7];
+    _phiBias_barrel_p3_1 = pars[8];
+    _phiBias_barrel_p4_1 = pars[9];
+    _phiBias_barrel_p5_1 = pars[10];
+    _phiBias_barrel_p5_2 = pars[11];
+    _phiBias_barrel_p5_3 = pars[12];
+    _phiBias_barrel_p6_1 = pars[13];
+    _phiBias_barrel_p6_2 = pars[14];
+    _phiBias_barrel_p7_1 = pars[15];
+    _phiBias_barrel_p7_2 = pars[16];
+    _phiBias_barrel_p7_3 = pars[17];
+  }
+}
+
+void photonCorrector::set_thetaCorr_barrel     ( std::vector <float> pars ) {
+  if ( pars.size() != 4 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for thetaCorr_barrel ! expecting 4 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _thetaBias_barrel_p0_1 = pars[0];
+    _thetaBias_barrel_p0_2 = pars[1];
+    _thetaBias_barrel_p1_1 = pars[2];
+    _thetaBias_barrel_p1_2 = pars[3];
+  }
+}
+
+void photonCorrector::set_thetaCorr_endcap     ( std::vector <float> pars ) {
+  if ( pars.size() != 6 ) {
+    streamlog_out (ERROR) << "Wrong number of parameters for thetaCorr_endcap ! expecting 6 got " << pars.size() << std::endl;
+    assert(0);
+  } else {
+    _thetaBias_endcap_p0_1 = pars[0];
+    _thetaBias_endcap_p0_2 = pars[1];
+    _thetaBias_endcap_p1_1 = pars[2];
+    _thetaBias_endcap_p1_2 = pars[3];
+    _thetaBias_endcap_p2_1 = pars[4];
+    _thetaBias_endcap_p2_2 = pars[5];
+  }
+}
+
+
 float photonCorrector::photonEnergyCorrection( EVENT::ReconstructedParticle* rp ) {
   // first correct the energy for gaps
   float gapCorrEn = gapCompensatedEnergy( rp );
@@ -176,7 +284,6 @@ float photonCorrector::getBarrelCorrectedTheta( float en, float theta ) {
     // energy dependence of function parameters
     par[0] = _thetaBias_barrel_p0_1 + logen*_thetaBias_barrel_p0_2;
     par[1] = _thetaBias_barrel_p1_1 + logen*_thetaBias_barrel_p1_2;
-
     // and the function
     float y = par[0]*costh + par[1]*( 4*pow(costh,3) -3*costh );
     newtheta = theta - y;

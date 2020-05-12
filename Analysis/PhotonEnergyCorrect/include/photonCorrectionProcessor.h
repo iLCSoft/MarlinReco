@@ -54,69 +54,13 @@ class photonCorrectionProcessor : public marlin::Processor {
   float _assumed_boxsize{};
   float _assumed_endZ{};
 
-  float _energyLin_const{};
-  float _energyLin_logen{};
-
-  float _phiBarrelCorr_pos_const{};
-  float _phiBarrelCorr_pos_logen{};
-  float _phiBarrelCorr_depth{};
-  float _phiBarrelCorr_width1{};
-  float _phiBarrelCorr_width2{};
-
-  float _costhCorr_gaus1_norm_const{};
-  float _costhCorr_gaus1_norm_logen{};
-  float _costhCorr_gaus1_mean{};
-  float _costhCorr_gaus1_sigm{};
-
-  float _costhCorr_gaus2_norm_const{};
-  float _costhCorr_gaus2_norm_logen{};
-  float _costhCorr_gaus2_mean{};
-  float _costhCorr_gaus2_sigm{};
-
-  float _costhCorr_gaus3_norm{};
-  float _costhCorr_gaus3_mean{};
-  float _costhCorr_gaus3_sigm{};
-  float _costhCorr_endcap_scale{};
-
-  float _endcap_gaus1_norm{};
-  float _endcap_gaus1_mean{};
-  float _endcap_gaus1_sigm{};
-  float _endcap_gaus2_norm{};
-  float _endcap_gaus2_mean{};
-  float _endcap_gaus2_sigm{};
-
-
-  float _phiBias_barrel_p0_1  {};
-  float _phiBias_barrel_p0_2  {};
-  float _phiBias_barrel_p0_3  {};
-  float _phiBias_barrel_p0_4  {};
-  float _phiBias_barrel_p1_1  {};
-  float _phiBias_barrel_p1_2  {};
-  float _phiBias_barrel_p2_1  {};
-  float _phiBias_barrel_p2_2  {};
-  float _phiBias_barrel_p3_1  {};
-  float _phiBias_barrel_p4_1  {};
-  float _phiBias_barrel_p5_1  {};
-  float _phiBias_barrel_p5_2  {};
-  float _phiBias_barrel_p5_3  {};
-  float _phiBias_barrel_p6_1  {};
-  float _phiBias_barrel_p6_2  {};
-  float _phiBias_barrel_p7_1  {};
-  float _phiBias_barrel_p7_2  {};
-  float _phiBias_barrel_p7_3  {};
-
-  float _thetaBias_barrel_p0_1{};
-  float _thetaBias_barrel_p0_2{};
-  float _thetaBias_barrel_p1_1{};
-  float _thetaBias_barrel_p1_2{};
-
-  float _thetaBias_endcap_p0_1{};
-  float _thetaBias_endcap_p0_2{};
-  float _thetaBias_endcap_p1_1{};
-  float _thetaBias_endcap_p1_2{};
-  float _thetaBias_endcap_p2_1{};
-  float _thetaBias_endcap_p2_2{};
-
+  std::vector <float> _energyCorr_linearise{};
+  std::vector <float> _energyCorr_barrelPhi{};
+  std::vector <float> _energyCorr_costheta{};
+  std::vector <float> _energyCorr_endcap{};
+  std::vector <float> _phiCorr_barrel{};
+  std::vector <float> _thetaCorr_barrel{};
+  std::vector <float> _thetaCorr_endcap{};
 
 };
 

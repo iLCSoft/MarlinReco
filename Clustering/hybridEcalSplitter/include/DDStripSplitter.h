@@ -4,16 +4,13 @@
 #include "lcio.h"
 #include <string>
 
-#include "TTree.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
 #include "TVector3.h"
 #include <vector>
 #include <cmath>
 #include "UTIL/CellIDDecoder.h"
 #include "EVENT/CalorimeterHit.h"
 #include "IMPL/LCCollectionVec.h"
+#include <IMPL/LCFlagImpl.h>
 
 #include "DDRec/DetectorData.h"
 
@@ -62,14 +59,23 @@ class DDStripSplitter : public Processor {
 
   /** Input collection name.
    */
-  std::vector <std::string> _ecalCollectionsEvenLayers{};
-  std::vector <std::string> _ecalCollectionsOddLayers{};
   std::string _mcParticleCollectionName{};
+
+  std::string _ecalCollectionEvenLayers{};
+  std::string _ecalCollectionOddLayers{};
+
+  std::string _inputRelationsColEven{};
+  std::string _inputRelationsColOdd{};
 
   // output collection names
   std::string _stripIntersecCollName{};
   std::string _evenStripEndsCollName{};
   std::string _oddStripEndsCollName{};
+
+  std::string _splitEcalCollection{};
+  std::string _unsplitEcalCollection{};
+
+  std::string _splitEcalRelCol{};
 
   std::pair < TVector3, TVector3 > getStripEnds(CalorimeterHit* hit, int orientation, bool barrel);
   TVector3 stripIntersect(CalorimeterHit* hit0, TVector3 axis0, CalorimeterHit* hit1, TVector3 axis1);
@@ -78,7 +84,6 @@ class DDStripSplitter : public Processor {
   CellIDDecoder<CalorimeterHit>* _decoder{}; 
   CellIDDecoder<CalorimeterHit>* _decoder2{}; 
 
-  bool  _makePlots{};
   float _stripLength{};
   float _stripWidth{};
   float _stripAspectRatio{};
@@ -86,38 +91,19 @@ class DDStripSplitter : public Processor {
   int   _symmetry{};
   int   _nVirtual{};
   int   _ecalStrip_default_nVirt{};
+  bool _isBarrel{};
 
   bool _saveIntersections{};
   IMPL::LCCollectionVec* intersectionHits{};
   IMPL::LCCollectionVec* stripEndsEvenCol{};
   IMPL::LCCollectionVec* stripEndsOddCol{};
 
-  TFile* _fout{};
-  TH2F* h_phiModuleCheck{};
-  TH2F* h_phiThetaMC{};
-
-  TH1F* h_stripDist_intercept{};
-  TH1F* h_stripDist_nointercept{};
-
-  TH2F* h_stavemodule[2]{};
-  TH1F* h_layer[2]{};
-
-  TH2F* h_staveX[2]{};
-  TH2F* h_staveY[2]{};
-  TH2F* h_staveZ[2]{};
-
-  TH2F* h_moduleX[2]{};
-  TH2F* h_moduleY[2]{};
-  TH2F* h_moduleZ[2]{};
-
-  TH2F* h_cth_phi[2][10][10]{};
-  TH2F* h_XY[2][10][10]{};
-
   int _evenIsTransverse{};
   enum {TRANSVERSE=0, LONGITUDINAL};
 
   dd4hep::rec::LayeredCalorimeterData* _caloGeomData{};
 
+  LCFlagImpl _flag_rel{};
   std::string _cellIDLayerString{};
   std::string _cellIDModuleString{};
   std::string _cellIDStaveString{};

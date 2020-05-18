@@ -49,29 +49,29 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
   _description = "DDStripSplitter applies SSA to a strip-based calorimeter ..." ;
 
   registerInputCollection( LCIO::CALORIMETERHIT,
-			   "ECALcollection_evenLayers",
-			   "Name of the ECAL collection in even layers",
-			   _ecalCollectionEvenLayers,
-			   std::string("ECalBarrelScEvenCollectionRec") );
-  
+                           "ECALcollection_evenLayers",
+                           "Name of the ECAL collection in even layers",
+                           _ecalCollectionEvenLayers,
+                           std::string("ECalBarrelScEvenCollectionRec") );
+
   registerInputCollection( LCIO::CALORIMETERHIT,
-			   "ECALcollection_oddLayers",
-			   "Name of the ECAL collection in odd layers",
-			   _ecalCollectionOddLayers,
-			   std::string("ECalBarrelScOddCollectionRec") );
+                           "ECALcollection_oddLayers",
+                           "Name of the ECAL collection in odd layers",
+                           _ecalCollectionOddLayers,
+                           std::string("ECalBarrelScOddCollectionRec") );
 
   registerInputCollection( LCIO::LCRELATION,
-			   "LCRelations_evenLayers",
-			   "name of the relation collection for even layer hits",
-			   _inputRelationsColEven,
-			   std::string("ECalBarrelScHitsEvenRecRelations") );
-  
+                           "LCRelations_evenLayers",
+                           "name of the relation collection for even layer hits",
+                           _inputRelationsColEven,
+                           std::string("ECalBarrelScHitsEvenRecRelations") );
+
   registerInputCollection( LCIO::LCRELATION,
-			   "LCRelations_oddLayers",
-			   "name of the relation collection for odd layer hits",
-			   _inputRelationsColOdd,
-			   std::string("ECalBarrelScHitsOddRecRelations") );
-  
+                           "LCRelations_oddLayers",
+                           "name of the relation collection for odd layer hits",
+                           _inputRelationsColOdd,
+                           std::string("ECalBarrelScHitsOddRecRelations") );
+
   registerInputCollection( LCIO::MCPARTICLE,
                            "MCParticleCollection",
                            "name of MCParticle collection (used for some plots)",
@@ -80,63 +80,63 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 
   registerProcessorParameter( "splitEcalCollection",
                               "name of output collection containing split hits",
-			      _splitEcalCollection,
+                              _splitEcalCollection,
                               std::string("ECalBarrelSplitCollection") );
 
   registerProcessorParameter( "unsplitEcalCollection",
                               "name of output collection containing unsplit hits",
-			      _unsplitEcalCollection,
+                              _unsplitEcalCollection,
                               std::string("ECalBarrelUnSplitCollection") );
 
   registerProcessorParameter( "splitEcalRelCol",
                               "name of relation collection for split hits",
-			      _splitEcalRelCol,
+                              _splitEcalRelCol,
                               std::string("ECalBarrelSplitRelations") );
 
   registerProcessorParameter( "stripIntersecCollName",
-			      "name of (optional) output collection containing strip intersections",
-			      _stripIntersecCollName,
-			      std::string("stripIntersections") );
+                              "name of (optional) output collection containing strip intersections",
+                              _stripIntersecCollName,
+                              std::string("stripIntersections") );
 
   registerProcessorParameter( "evenStripEndsCollName",
-			      "name of (optional) output collection containing ends of strips in even layers",
-			      _evenStripEndsCollName,
-			      std::string("stripEndsEven") );
+                              "name of (optional) output collection containing ends of strips in even layers",
+                              _evenStripEndsCollName,
+                              std::string("stripEndsEven") );
 
   registerProcessorParameter( "oddStripEndsCollName",
                               "name of (optional) output collection containing ends of strips in odd layers",
-			      _oddStripEndsCollName,
+                              _oddStripEndsCollName,
                               std::string("stripEndsOdd") );
 
   registerProcessorParameter( "virtualCellsDefault",
-			      "number of virtual cells per strip (used if info not found in gear file)",
-			      _ecalStrip_default_nVirt,
-			      int(1) );
+                              "number of virtual cells per strip (used if info not found in gear file)",
+                              _ecalStrip_default_nVirt,
+                              int(1) );
 
   registerProcessorParameter( "saveIntersectionCollection",
-			      "save collection with strip interactions?",
-			      _saveIntersections,
-			      false);
+                              "save collection with strip interactions?",
+                              _saveIntersections,
+                              false);
 
   registerProcessorParameter( "isBarrelHits",
-			      "are hits in these collections in the barrel (true) or endcap (false) ?",
-			      _isBarrel,
-			      true);
-  
+                              "are hits in these collections in the barrel (true) or endcap (false) ?",
+                              _isBarrel,
+                              true);
+
   // code for layer info for cellID decoder
   registerProcessorParameter("CellIDLayerString" ,
-                             "name of the part of the cellID that holds the layer" , 
-                             _cellIDLayerString , 
+                             "name of the part of the cellID that holds the layer" ,
+                             _cellIDLayerString ,
                              std::string("layer")
                              );
   registerProcessorParameter("CellIDModuleString" ,
-                             "name of the part of the cellID that holds the module" , 
-                             _cellIDModuleString , 
+                             "name of the part of the cellID that holds the module" ,
+                             _cellIDModuleString ,
                              std::string("module")
                              );
   registerProcessorParameter("CellIDStaveString" ,
-                             "name of the part of the cellID that holds the stave" , 
-                             _cellIDStaveString , 
+                             "name of the part of the cellID that holds the stave" ,
+                             _cellIDStaveString ,
                              std::string("stave")
                              );
 
@@ -144,7 +144,7 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 }
 
 
-void DDStripSplitter::init() { 
+void DDStripSplitter::init() {
 
   _symmetry=-999;
   _cellSize=999;
@@ -155,8 +155,8 @@ void DDStripSplitter::init() {
   return;
 }
 
-void DDStripSplitter::processRunHeader( LCRunHeader*  /*run*/) { 
-   return;
+void DDStripSplitter::processRunHeader( LCRunHeader*  /*run*/) {
+  return;
 }
 
 
@@ -177,12 +177,12 @@ void DDStripSplitter::setupGeometry() {
   dd4hep::Detector & lcdd = dd4hep::Detector::getInstance();
   const std::vector< dd4hep::DetElement>& theDetectors = dd4hep::DetectorSelector(lcdd).detectors(  includeFlag, excludeFlag ) ;
   streamlog_out( DEBUG2 ) << " getExtension :  includeFlag: " << dd4hep::DetType( includeFlag ) << " excludeFlag: " << dd4hep::DetType( excludeFlag )
-			  << "  found : " << theDetectors.size() << "  - first det: " << theDetectors.at(0).name() << std::endl ;
+                          << "  found : " << theDetectors.size() << "  - first det: " << theDetectors.at(0).name() << std::endl ;
 
   if( theDetectors.size()  != 1 ){
     std::stringstream es ;
     streamlog_out (ERROR) << " getExtension: selection is not unique (or empty)  includeFlag: " << dd4hep::DetType( includeFlag ) << " excludeFlag: " << dd4hep::DetType( excludeFlag )
-			  << " --- found detectors : " ;
+                          << " --- found detectors : " ;
     for( unsigned i=0, N= theDetectors.size(); i<N ; ++i ){
       streamlog_out (ERROR) << theDetectors.at(i).name() << ", " ;
     }
@@ -234,12 +234,12 @@ void DDStripSplitter::setupGeometry() {
 }
 
 
-void DDStripSplitter::processEvent( LCEvent * evt ) { 
+void DDStripSplitter::processEvent( LCEvent * evt ) {
 
   if (_symmetry<0) setupGeometry();
 
   if ( _stripAspectRatio<2.0 ) {
-    streamlog_out ( WARNING ) << " -- not a long enough strip, not worth splitting -- length, width, aspect ratio: " << 
+    streamlog_out ( WARNING ) << " -- not a long enough strip, not worth splitting -- length, width, aspect ratio: " <<
       _stripLength << " " << _stripWidth << " " << _stripAspectRatio << ", doing nothing" << endl;
     return;
   }
@@ -276,24 +276,24 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
     switch (icol) {
     case 0:
       if ( _evenIsTransverse==1 ) {
-	orientation = TRANSVERSE;
+        orientation = TRANSVERSE;
       } else if ( _evenIsTransverse==0 ) {
-	orientation = LONGITUDINAL;
+        orientation = LONGITUDINAL;
       } else {
-	streamlog_out( ERROR) << "strip orientation undefined!!" << endl;
-	throw marlin::StopProcessingException(this);
+        streamlog_out( ERROR) << "strip orientation undefined!!" << endl;
+        throw marlin::StopProcessingException(this);
       }
       toSplit = _ecalCollectionEvenLayers;
       toSplitRel = _inputRelationsColEven;
       break;
     case 1:
       if ( _evenIsTransverse==1 ) {
-	orientation = LONGITUDINAL;
+        orientation = LONGITUDINAL;
       } else if ( _evenIsTransverse==0 ) {
-	orientation = TRANSVERSE;
+        orientation = TRANSVERSE;
       } else {
-	streamlog_out( ERROR ) << "strip orientation undefined!!" << endl;
-	throw marlin::StopProcessingException(this);
+        streamlog_out( ERROR ) << "strip orientation undefined!!" << endl;
+        throw marlin::StopProcessingException(this);
       }
       toSplit = _ecalCollectionOddLayers;
       toSplitRel = _inputRelationsColOdd;
@@ -320,34 +320,34 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
       // get the cellid decoder for this collection
       CellIDDecoder<CalorimeterHit> id( col ) ;
       _decoder = &id;
-	
+
       // loop over the collection's hits
       int nelem = col->getNumberOfElements();
       for (int j=0; j < nelem; ++j) {
-	CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
-	if (!hit) {
-	  streamlog_out ( ERROR ) << "ERROR  null hit in collection " << toSplit.c_str() << " " << j << endl;
-	  throw marlin::StopProcessingException(this);
-	  continue;
-	}
-	// split the hits
-	std::vector <CalorimeterHit*> splitHits = getVirtualHits(evt, hit, orientation, _isBarrel); // assume the first one (should be only one)
+        CalorimeterHit * hit = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
+        if (!hit) {
+          streamlog_out ( ERROR ) << "ERROR  null hit in collection " << toSplit.c_str() << " " << j << endl;
+          throw marlin::StopProcessingException(this);
+          continue;
+        }
+        // split the hits
+        std::vector <CalorimeterHit*> splitHits = getVirtualHits(evt, hit, orientation, _isBarrel); // assume the first one (should be only one)
 
-	// find the corresponding simhit (for the relations)
-	SimCalorimeterHit* simhit =  (SimCalorimeterHit*) navi.getRelatedToObjects(hit)[0];
+        // find the corresponding simhit (for the relations)
+        SimCalorimeterHit* simhit =  (SimCalorimeterHit*) navi.getRelatedToObjects(hit)[0];
 
-	// add (new) hits to collections
-	if (splitHits.size()==0) { // not split, add original hit
-	  unSplitStripHits->addElement(hit);
+        // add (new) hits to collections
+        if (splitHits.size()==0) { // not split, add original hit
+          unSplitStripHits->addElement(hit);
           splitRelCol->addElement( new LCRelationImpl(hit,simhit,1.0) );
-	} else { // split was split, add the virtual hits
-	  for (uint hh=0; hh<splitHits.size(); hh++) {
-	    splitStripHits->addElement(splitHits[hh]);
-	    // weight = fraction of orig hit which is in this split hit <---- to be discussed!!!!! DJ
-	    float weight = splitHits[hh]->getEnergy() / hit->getEnergy(); 
-	    splitRelCol->addElement( new LCRelationImpl(splitHits[hh],simhit,weight) );
-	  }
-	}
+        } else { // split was split, add the virtual hits
+          for (uint hh=0; hh<splitHits.size(); hh++) {
+            splitStripHits->addElement(splitHits[hh]);
+            // weight = fraction of orig hit which is in this split hit <---- to be discussed!!!!! DJ
+            float weight = splitHits[hh]->getEnergy() / hit->getEnergy();
+            splitRelCol->addElement( new LCRelationImpl(splitHits[hh],simhit,weight) );
+          }
+        }
       } // loop over hits in collection
     } catch(DataNotAvailableException &e) {};
   } // long/trans loop
@@ -384,7 +384,7 @@ std::vector <CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calo
   std::pair < TVector3, TVector3 > stripEnds = getStripEnds(hit, orientation, barrel);
   TVector3 stripDir = stripEnds.first - stripEnds.second;
 
-  if (_saveIntersections) { 
+  if (_saveIntersections) {
     // make new collection with a hit at each end of a strip
     //   for debugging purposes
     float ppp[3];
@@ -436,99 +436,99 @@ std::vector <CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calo
       int nelem = col->getNumberOfElements();
 
       for (int j=0; j < nelem; ++j) {
-	CalorimeterHit * hit2 = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
-	if (!hit2) {
-	  streamlog_out ( ERROR ) << "ERROR  null hit2 in collection " <<  splitterCol << " " << j << endl;
-	  throw marlin::StopProcessingException(this);
-	  continue;
-	}
-	int layer2  = (*_decoder)(hit2)[_cellIDLayerString];
-	int module2 = (*_decoder)(hit2)[_cellIDModuleString];
-	int stave2  = (*_decoder)(hit2)[_cellIDStaveString];
-	
-	int dlayer = abs(layer2-layer);
-	int dstave = abs(stave2-stave);
-	int dmodule = abs(module2-module);
+        CalorimeterHit * hit2 = dynamic_cast<CalorimeterHit*>(col->getElementAt(j) );
+        if (!hit2) {
+          streamlog_out ( ERROR ) << "ERROR  null hit2 in collection " <<  splitterCol << " " << j << endl;
+          throw marlin::StopProcessingException(this);
+          continue;
+        }
+        int layer2  = (*_decoder)(hit2)[_cellIDLayerString];
+        int module2 = (*_decoder)(hit2)[_cellIDModuleString];
+        int stave2  = (*_decoder)(hit2)[_cellIDStaveString];
 
-	// are the two hits close enough to look at further?
+        int dlayer = abs(layer2-layer);
+        int dstave = abs(stave2-stave);
+        int dmodule = abs(module2-module);
 
-	// if hits in same module and same stave, require that only one layer difference
-	if (dmodule==0 && dstave==0 && dlayer>1) continue;
+        // are the two hits close enough to look at further?
 
-	if (barrel) {
-	  dstave = min( dstave, _symmetry-dstave);
-	  if ( dstave==0 && dmodule>1 ) continue; // allow same stave and +- 1 module
-	  if ( dmodule==0 && dstave>1 ) continue; // or same module +- 1 stave
-	  if ( dstave==0 && dlayer>1) continue;   // if in same stave, require dlayer==1
-	} else { // endcap
-	  dstave = min( dstave, 4-dstave);
-	  if (dmodule!=0) continue; // different endcap
-	  if (dstave>1) continue;   // more than 1 stave (=quarter endcap) apart
-	  if (dlayer>1) continue;   // more than 1 layer apart
-	}
+        // if hits in same module and same stave, require that only one layer difference
+        if (dmodule==0 && dstave==0 && dlayer>1) continue;
 
-	// simple distance check for remaining hit pairs
-	float dist = sqrt( pow(hit2->getPosition()[0] - hit->getPosition()[0], 2) + 
-			   pow(hit2->getPosition()[1] - hit->getPosition()[1], 2) + 
-			   pow(hit2->getPosition()[2] - hit->getPosition()[2], 2) );
-	
-	if (dist>2*_stripLength) continue;
+        if (barrel) {
+          dstave = min( dstave, _symmetry-dstave);
+          if ( dstave==0 && dmodule>1 ) continue; // allow same stave and +- 1 module
+          if ( dmodule==0 && dstave>1 ) continue; // or same module +- 1 stave
+          if ( dstave==0 && dlayer>1) continue;   // if in same stave, require dlayer==1
+        } else { // endcap
+          dstave = min( dstave, 4-dstave);
+          if (dmodule!=0) continue; // different endcap
+          if (dstave>1) continue;   // more than 1 stave (=quarter endcap) apart
+          if (dlayer>1) continue;   // more than 1 layer apart
+        }
 
-	// for remaining hits, check if they overlap
-	TVector3 stripDir2(0,0,0);
-	if (jj==0) { //strip
-	  std::pair < TVector3, TVector3 > stripEnds2 = getStripEnds(hit2, splitterOrientation, barrel);
-	  stripDir2 = stripEnds2.first - stripEnds2.second;
-	} // leave 0 for cell
-	
-	  // check if strips intersect
-	TVector3 intercept = stripIntersect(hit, stripDir, hit2, stripDir2);
-	if (intercept.Mag()>0) { // intercept found, calculate in which virtual cell
-	  nSplitters++;
-	  float frac(-1);
-	  for (int ii=0; ii<3; ii++) {
-	    float dx = stripEnds.second[ii] - stripEnds.first[ii];
-	    if (fabs(dx)>0.1) {
-	      frac = (intercept[ii]-stripEnds.first[ii])/dx;
-	      break;
-	    }
-	  }
+        // simple distance check for remaining hit pairs
+        float dist = sqrt( pow(hit2->getPosition()[0] - hit->getPosition()[0], 2) +
+                           pow(hit2->getPosition()[1] - hit->getPosition()[1], 2) +
+                           pow(hit2->getPosition()[2] - hit->getPosition()[2], 2) );
 
-	  if (frac>=0.0 && frac<=1.0) {
-	    int segment = int(frac*_nVirtual);
-	    if (segment>=0 && segment<_nVirtual) {
-	      if (virtEnergy.find(segment)!=virtEnergy.end()) {
-		virtEnergy[segment] += hit2->getEnergy();
-	      } else {
-		virtEnergy[segment] = hit2->getEnergy();
-	      }
-	      
-	      if (_saveIntersections) {
-		CalorimeterHitImpl* interhit = new CalorimeterHitImpl();
-		float pos[3];
-		pos[0] = intercept.X();
-		pos[1] = intercept.Y();
-		pos[2] = intercept.Z();
-		interhit->setPosition( pos );
-		interhit->setEnergy(0.1);
-		intersectionHits->addElement(interhit);
-	      }
-	      
-	    } else {
-	      streamlog_out ( WARNING ) << "strange segment " << segment << " frac = " << frac << " nvirt = " << _nVirtual << endl;
-	    }
-	  } else {
-	    streamlog_out ( WARNING ) << "strange frac " << frac << endl;
-	  }
-	  
-	}
+        if (dist>2*_stripLength) continue;
+
+        // for remaining hits, check if they overlap
+        TVector3 stripDir2(0,0,0);
+        if (jj==0) { //strip
+          std::pair < TVector3, TVector3 > stripEnds2 = getStripEnds(hit2, splitterOrientation, barrel);
+          stripDir2 = stripEnds2.first - stripEnds2.second;
+        } // leave 0 for cell
+
+          // check if strips intersect
+        TVector3 intercept = stripIntersect(hit, stripDir, hit2, stripDir2);
+        if (intercept.Mag()>0) { // intercept found, calculate in which virtual cell
+          nSplitters++;
+          float frac(-1);
+          for (int ii=0; ii<3; ii++) {
+            float dx = stripEnds.second[ii] - stripEnds.first[ii];
+            if (fabs(dx)>0.1) {
+              frac = (intercept[ii]-stripEnds.first[ii])/dx;
+              break;
+            }
+          }
+
+          if (frac>=0.0 && frac<=1.0) {
+            int segment = int(frac*_nVirtual);
+            if (segment>=0 && segment<_nVirtual) {
+              if (virtEnergy.find(segment)!=virtEnergy.end()) {
+                virtEnergy[segment] += hit2->getEnergy();
+              } else {
+                virtEnergy[segment] = hit2->getEnergy();
+              }
+
+              if (_saveIntersections) {
+                CalorimeterHitImpl* interhit = new CalorimeterHitImpl();
+                float pos[3];
+                pos[0] = intercept.X();
+                pos[1] = intercept.Y();
+                pos[2] = intercept.Z();
+                interhit->setPosition( pos );
+                interhit->setEnergy(0.1);
+                intersectionHits->addElement(interhit);
+              }
+
+            } else {
+              streamlog_out ( WARNING ) << "strange segment " << segment << " frac = " << frac << " nvirt = " << _nVirtual << endl;
+            }
+          } else {
+            streamlog_out ( WARNING ) << "strange frac " << frac << endl;
+          }
+
+        }
       }
     } catch(DataNotAvailableException &e) {};
   }
 
 
   // now create the virtual cells, and assign energy
-  std::map <int, float>::iterator it;  
+  std::map <int, float>::iterator it;
   float totenergy(0);
   for (it=virtEnergy.begin(); it!=virtEnergy.end(); it++) {
     totenergy+=it->second;
@@ -612,7 +612,7 @@ std::pair < TVector3, TVector3 > DDStripSplitter::getStripEnds(CalorimeterHit* h
 }
 
 
-void DDStripSplitter::check( LCEvent *  /*evt*/ ) { 
+void DDStripSplitter::check( LCEvent *  /*evt*/ ) {
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
@@ -687,7 +687,7 @@ TVector3 DDStripSplitter::stripIntersect(CalorimeterHit* hit0, TVector3 axis0, C
   // point on line [0]
   TVector3 point(p[0][0]+p[0][1]); point*=0.5;
 
-  // calculate the projected positions of ends of [1] on 
+  // calculate the projected positions of ends of [1] on
   //    the plane which contains "point" with normal "normal"
   TVector3 qPrime[2];
   for (int i=0; i<2; i++) {
@@ -699,7 +699,7 @@ TVector3 DDStripSplitter::stripIntersect(CalorimeterHit* hit0, TVector3 axis0, C
   TVector3 a(p[0][1]-p[0][0]);
   TVector3 b(qPrime[1]-qPrime[0]);
   TVector3 c(qPrime[0]-p[0][0]);
-  
+
   float factor = (c.Cross(b)).Dot(a.Cross(b))/((a.Cross(b)).Mag2());
 
   TVector3 x = p[0][0] + a*factor;
@@ -711,7 +711,7 @@ TVector3 DDStripSplitter::stripIntersect(CalorimeterHit* hit0, TVector3 axis0, C
       float d0 = ii==0 ? x[j]-p[0][0][j] : x[j]-qPrime[0][j];
       float d1 = ii==0 ? x[j]-p[0][1][j] : x[j]-qPrime[1][j];
       if (d0*d1>1e-10) {
-	intersect = false;
+        intersect = false;
       }
     }
   }

@@ -119,7 +119,7 @@ DDStripSplitter::DDStripSplitter() : Processor("DDStripSplitter") {
 			      false);
 
   registerProcessorParameter( "isBarrelHits",
-			      "are hits in these collections in the barrel (1) or endcap (0) ?",
+			      "are hits in these collections in the barrel (true) or endcap (false) ?",
 			      _isBarrel,
 			      true);
   
@@ -272,7 +272,6 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
   splitRelCol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
   splitRelCol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
-
   for (int icol=0; icol<2; icol++) { // loop over strip collections in even and odd layers (assumed to have perpendicular orientations)
     switch (icol) {
     case 0:
@@ -305,14 +304,12 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
       return;
     }
 
-
     try {
       LCCollection * col = evt->getCollection( toSplit.c_str() );
       if (!col) continue;
 
       LCCollection * colrel = evt->getCollection( toSplitRel.c_str() );
       if (!colrel) continue;
-
       LCRelationNavigator navi(colrel);
 
       const std::string layerCodingString(col->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -352,11 +349,8 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
 	  }
 	}
       } // loop over hits in collection
-
     } catch(DataNotAvailableException &e) {};
   } // long/trans loop
-
-  std::map < IMPL::LCCollectionVec*, std::string >::iterator ii;
 
   // add the new collections to the event
   evt->addCollection( splitStripHits, _splitEcalCollection );

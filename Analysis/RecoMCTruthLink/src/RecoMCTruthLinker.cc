@@ -697,9 +697,15 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         LCObjectVec caloHits  = _navMergedCaloHitRel->getRelatedFromObjects(simHit);
         if (   caloHits.size() == 0 ) { continue ;}
         if (   caloHits.size() != 1 ) { streamlog_out( DEBUG9 ) << " Sim hit with nore than one calo hit ? " << std::endl; }
-        CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
-        double calib_factor = caloHit->getEnergy()/simHit->getEnergy();
 
+        CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
+
+	// for split hits, need to get calib factor over sum of all rec hits (DJ)
+	double allRecoEn(0);
+	for ( size_t jk=0; jk<caloHits.size(); jk++) {
+	  allRecoEn+= ((CalorimeterHit*) caloHits[jk])->getEnergy();
+	}
+	double calib_factor = allRecoEn/simHit->getEnergy();
 
 	streamlog_out( DEBUG4 ) << std::endl;
 	streamlog_out( DEBUG4 ) << "  ================= " << std::endl;
@@ -738,7 +744,7 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
             continue;
 	  }
 
-          double e  = simHit->getEnergyCont( k ) * calib_factor ;
+          double e  = simHit->getEnergyCont( k ) * calib_factor;
 
           streamlog_out( DEBUG3 ) <<"      initial true contributor "<< k << " id " << mcp->id() 
                                   <<" (with E = " << mcp->getEnergy() << " and pdg " << mcp->getPDG() << " ) e hit: " << e <<std::endl;
@@ -1088,7 +1094,10 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
 	  //	already_known:          
 
           simHitMapEnergy[ mcp ] += e ;
-          chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
+	  //          chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
+	  for ( size_t jk=0; jk<caloHits.size(); jk++) {
+	    chitTruthRelNav.addRelation(  caloHits[jk] , mcp , e*( (CalorimeterHit*) caloHits[jk])->getEnergy()/allRecoEn ) ;
+	  }
 
         } // mc-contributon-to-simHit loop
       }
@@ -1166,14 +1175,16 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         
         SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>( *objIt ) ; // ... and a sim hit ....
         
-        double calib_factor = hit->getEnergy()/simHit->getEnergy();
+	double calib_factor = hit->getEnergy()/simHit->getEnergy(); // In this place, this defn of calib_factor is still appropriate for split hits (DJ)
+
         streamlog_out( DEBUG3 ) <<"     simhit = "<< simHit->id() << " has " << simHit->getNMCContributions() 
                                 << " contributors " << std::endl;
+
         nsimhit++;
         for(int j=0;j<simHit->getNMCContributions() ;j++){
           
           MCParticle* mcp = simHit->getParticleCont( j ) ;
-          double e  = simHit->getEnergyCont( j ) * calib_factor;
+          double e  = simHit->getEnergyCont( j ) * calib_factor ;
           streamlog_out( DEBUG3 ) <<"     true contributor = "<< mcp->id() << " e: " << e 
                                   <<" mapped to " <<remap_as_you_go.find(mcp)->second->id() << std::endl;
           if ( mcp == 0 ) {
@@ -1446,7 +1457,6 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
     
     float totwgt =0.0;
     for (int iii=0 ; iii<ifound ; iii++ ) {
-
       float  weight = (MCPes[iii]/eTot)*(clu->getEnergy()-ecalohitsum_unknown)/clu->getEnergy();
       mcpEnergyTot[ theMCPs[iii] ] +=   weight*clu->getEnergy();
       
@@ -1475,7 +1485,6 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         
       }
       
-
       
       clusterTruthRelNav.addRelation(   clu , theMCPs[iii] , weight ) ;
       // The reverse map. Differs in what the weight means: here it means:

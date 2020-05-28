@@ -343,8 +343,7 @@ void DDStripSplitter::processEvent( LCEvent * evt ) {
         } else { // split was split, add the virtual hits
           for (uint hh=0; hh<splitHits.size(); hh++) {
             splitStripHits->addElement(splitHits[hh]);
-            // weight = fraction of orig hit which is in this split hit <---- to be discussed!!!!! DJ
-            float weight = splitHits[hh]->getEnergy() / hit->getEnergy();
+            float weight = 1.;
             splitRelCol->addElement( new LCRelationImpl(splitHits[hh],simhit,weight) );
           }
         }

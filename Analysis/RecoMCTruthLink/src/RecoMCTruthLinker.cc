@@ -2192,24 +2192,24 @@ void RecoMCTruthLinker::mergeTrackerHitRelations(LCEvent * evt){
  
       StringVec stringKeys ;
       col->getParameters().getStringKeys( stringKeys ) ;
-      for(unsigned i=0; i< stringKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< stringKeys.size() ; ii++ ){
         StringVec vals ;
-        col->getParameters().getStringVals(  stringKeys[i] , vals ) ;
-        _mergedTrackerHitRelCol->parameters().setValues(  stringKeys[i] , vals ) ;   
+        col->getParameters().getStringVals(  stringKeys[ii] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  stringKeys[ii] , vals ) ;   
       }
       StringVec intKeys ;
       col->getParameters().getIntKeys( intKeys ) ;
-      for(unsigned i=0; i< intKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< intKeys.size() ; ii++ ){
         IntVec vals ;
-        col->getParameters().getIntVals(  intKeys[i] , vals ) ;
-        _mergedTrackerHitRelCol->parameters().setValues(  intKeys[i] , vals ) ;   
+        col->getParameters().getIntVals(  intKeys[ii] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  intKeys[ii] , vals ) ;   
       }
       StringVec floatKeys ;
       col->getParameters().getFloatKeys( floatKeys ) ;
-      for(unsigned i=0; i< floatKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< floatKeys.size() ; ii++ ){
         FloatVec vals ;
-        col->getParameters().getFloatVals(  floatKeys[i] , vals ) ;
-        _mergedTrackerHitRelCol->parameters().setValues(  floatKeys[i] , vals ) ;   
+        col->getParameters().getFloatVals(  floatKeys[ii] , vals ) ;
+        _mergedTrackerHitRelCol->parameters().setValues(  floatKeys[ii] , vals ) ;   
       }
 
       
@@ -2278,24 +2278,24 @@ void RecoMCTruthLinker::mergeCaloHitRelations(LCEvent * evt){
  
       StringVec stringKeys ;
       col->getParameters().getStringKeys( stringKeys ) ;
-      for(unsigned i=0; i< stringKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< stringKeys.size() ; ii++ ){
         StringVec vals ;
-        col->getParameters().getStringVals(  stringKeys[i] , vals ) ;
-        _mergedCaloHitRelCol->parameters().setValues(  stringKeys[i] , vals ) ;   
+        col->getParameters().getStringVals(  stringKeys[ii] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  stringKeys[ii] , vals ) ;   
       }
       StringVec intKeys ;
       col->getParameters().getIntKeys( intKeys ) ;
-      for(unsigned i=0; i< intKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< intKeys.size() ; ii++ ){
         IntVec vals ;
-        col->getParameters().getIntVals(  intKeys[i] , vals ) ;
-        _mergedCaloHitRelCol->parameters().setValues(  intKeys[i] , vals ) ;   
+        col->getParameters().getIntVals(  intKeys[ii] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  intKeys[ii] , vals ) ;   
       }
       StringVec floatKeys ;
       col->getParameters().getFloatKeys( floatKeys ) ;
-      for(unsigned i=0; i< floatKeys.size() ; i++ ){
+      for(unsigned ii=0; ii< floatKeys.size() ; ii++ ){
         FloatVec vals ;
-        col->getParameters().getFloatVals(  floatKeys[i] , vals ) ;
-        _mergedCaloHitRelCol->parameters().setValues(  floatKeys[i] , vals ) ;   
+        col->getParameters().getFloatVals(  floatKeys[ii] , vals ) ;
+        _mergedCaloHitRelCol->parameters().setValues(  floatKeys[ii] , vals ) ;   
       }
 
       

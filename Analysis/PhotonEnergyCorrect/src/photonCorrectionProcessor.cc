@@ -171,6 +171,12 @@ void photonCorrectionProcessor::processRunHeader( LCRunHeader* /* run */ ) {
 void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
   // adjust energy of all type==22 objects in the input collection
 
+
+  if ( ! _modifyPFOdirections && ! _modifyPFOenergies ) {
+    streamlog_out (DEBUG) << "not asked to modify any PFO properties: so doing nothing" << std::endl; 
+    return;
+  }
+
   // for validation plots: sum the pfo energies before and after correction
   float totPfoEn[2]={0};
   float totPfoGammaEn[2]={0};

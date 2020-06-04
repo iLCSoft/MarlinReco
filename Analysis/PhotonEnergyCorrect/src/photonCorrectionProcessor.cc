@@ -117,6 +117,8 @@ photonCorrectionProcessor::photonCorrectionProcessor() : Processor("photonCorrec
 void photonCorrectionProcessor::init() {
   streamlog_out (MESSAGE) << "hello from photonCorrectionProcessor::init" << endl;
 
+  printParameters();
+
   // first get some geometry information
   dd4hep::Detector & mainDetector = dd4hep::Detector::getInstance();
   // endcap ecal
@@ -221,6 +223,10 @@ void photonCorrectionProcessor::processEvent( LCEvent * evt ) {
 	newMomentum[0] = newMom*sin(newTheta)*cos(newPhi);
 	newMomentum[1] = newMom*sin(newTheta)*sin(newPhi);
 	newMomentum[2] = newMom*cos(newTheta);
+
+	streamlog_out (DEBUG) << "updating energy/momentum from " <<
+	  origEn << " / (" << pfo->getMomentum()[0] << " " << pfo->getMomentum()[1] << " " << pfo->getMomentum()[2] << ") to " <<
+	  newEnergy  << " / (" << newMomentum[0] << " " << newMomentum[1] << " " << newMomentum[2] << ")" << std::endl;
 
 	pfo->setEnergy( newEnergy );
 	pfo->setMomentum( newMomentum );

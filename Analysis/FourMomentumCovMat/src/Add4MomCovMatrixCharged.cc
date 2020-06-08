@@ -62,9 +62,34 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
         dynamic_cast<ReconstructedParticleImpl  *>(colPFO->getElementAt(i));
 
       FloatVec covarianceP(10, 0.0);
+      bool newcov = false;
       // Only for charged particles
       if (TMath::Abs(recPar->getCharge()) > 0.5) {
           getCovMatrixMomenta(recPar, covarianceP);
+          newcov = true;
+      }  
+      else if (TMath::Abs(p->getCharge())<0.001) {
+         EVENT::TrackVec tracks = recPar->getTracks();
+         int itype = recPar->getType();
+         // only treat 2-track PFOs which are photon, K0 or Lambda
+         if (tracks.size() == 2 && (itype == 22 || itype == 310 || itype == 3122)) {
+            for (int itrk=0; itrk < 2; itrk++) { 
+               Track *trk = tracks[i]; 
+               // FIXME: a version of getCovMatrixMomenta which directly takes a track would be great here,
+               // to avoid creation of a dummy PFO
+               ReconstructedParticleImpl *trackPFO = new ReconstructedParticleImpl;
+               trackPFO->addTrack(trk);
+               FloatVec covariancePtrk(10, 0.0);
+               // this function is in MarlinReco/Analysis/FourMomentumCovMat/src/algebraImplementation.cc
+               getCovMatrixMomenta(trackPFO, covariancePtrk);
+               for ( size_t j = 0; j < 10; j++) covarianceP[j] += covariancePtrk[j];
+               delete trackPFO;
+            }
+            // now covarianceP contains the combined covariance matrix (hopefully)
+            newcov = true;
+         }
+      } 
+      if (newcov) {
           try
               {
               
@@ -100,10 +125,6 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
         
   }
   
-  
-  
-  
-
   _nEvt++;
   
 }

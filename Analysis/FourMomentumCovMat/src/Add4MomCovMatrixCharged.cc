@@ -68,7 +68,7 @@ void Add4MomCovMatrixCharged::processEvent(LCEvent * evt) {
           getCovMatrixMomenta(recPar, covarianceP);
           newcov = true;
       }  
-      else if (TMath::Abs(p->getCharge())<0.001) {
+      else if (TMath::Abs(recPar->getCharge())<0.001) {
          EVENT::TrackVec tracks = recPar->getTracks();
          int itype = recPar->getType();
          // only treat 2-track PFOs which are photon, K0 or Lambda

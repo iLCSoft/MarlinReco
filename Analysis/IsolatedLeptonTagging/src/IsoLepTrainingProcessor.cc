@@ -39,7 +39,7 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace std;
 
-using namespace mylib;
+using namespace isolep;
 
 IsoLepTrainingProcessor aIsoLepTrainingProcessor ;
 

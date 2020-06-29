@@ -27,6 +27,37 @@ Int_t getMCSerial(MCParticle *mcPart, LCCollection *colMCP) {
   return -1;
 }
 
+  MCParticle *getMCParticle(ReconstructedParticle *recPart, LCCollection *colMCTL) {
+    Double_t weight;
+    Int_t nMCTL;
+    return getMCParticle(recPart,colMCTL,weight,nMCTL);
+  }
+
+  MCParticle *getMCParticle(ReconstructedParticle *recPart, LCCollection *colMCTL, Double_t &weight) {
+    Int_t nMCTL;
+    return getMCParticle(recPart,colMCTL,weight,nMCTL);
+  }
+  
+  MCParticle *getMCParticle(ReconstructedParticle *recPart, LCCollection *colMCTL, Double_t &weight, Int_t &nMCTL) {
+    // get the corresponding MC particle of one reconstructed particle using the MCTruthLinker information
+    MCParticle *mcLinkedParticle = NULL;
+    //    Int_t iLink = -1;
+    LCRelationNavigator *navMCTL = new LCRelationNavigator(colMCTL);
+    LCObjectVec vecMCTL = navMCTL->getRelatedToObjects(recPart);
+    FloatVec vecWgtMCTL = navMCTL->getRelatedToWeights(recPart);
+    weight = 0.;
+    nMCTL = vecMCTL.size();
+    for (Int_t i=0;i<nMCTL;i++) {
+      MCParticle *mcPart = dynamic_cast<MCParticle *>(vecMCTL[i]);
+      if (vecWgtMCTL[i] > weight) {   // find the linked particle with largest weight as the mc truth particle
+	weight = vecWgtMCTL[i];
+	mcLinkedParticle = mcPart;
+      }
+    }
+    delete navMCTL;
+    return mcLinkedParticle;
+  }
+
 Int_t getLinkedMCParticle(ReconstructedParticle *recPart, LCCollection *colMCTL, Double_t &weight, Int_t &nMCTL) {
   // get the corresponding MC particle of one reconstructed particle using the MCTruthLinker information
   //  MCParticle *mcLinkedParticle = NULL;
@@ -72,6 +103,78 @@ Int_t getOriginalPDG(MCParticle *mcPart, Bool_t iHiggs) {
   Int_t originalPDG = mcPart->getPDG();
   return originalPDG;
 }
+
+  Int_t getOriginalPDGForIsoLep(MCParticle *mcPart) {
+    // get the PDG of the original particle where the MCParticle comes from
+    //  Int_t nParents = mcPart->getNumberOfParents();
+    Int_t nParents = mcPart->getParents().size();
+    //    if (mcPart->isOverlay()) return -22;
+    Double_t charge = mcPart->getCharge();
+    while (nParents > 0) {
+      MCParticle *mother = mcPart->getParents()[0];
+      if (nParents > 1) {
+	for (Int_t i=0;i<nParents;i++) {
+	  MCParticle *temp = mcPart->getParents()[i];
+	  if (TMath::Abs(temp->getCharge() - charge) < 0.1) {
+	    mother = temp;
+	    break;
+	  }
+	}
+      }
+      mcPart = mother;
+      nParents = mother->getParents().size();
+      Int_t pdg = mcPart->getPDG();
+      if (abs(pdg) == 13 || abs(pdg) == 11 || abs(pdg) == 15) {
+	if (mcPart->getParents().size() > 0) {
+	  MCParticle *mmother = mcPart->getParents()[0];	
+	  Int_t mpdg = mmother->getPDG();
+	  if (abs(mpdg) == 11) {
+	    //	  std::cerr << "Mother is an electron!" << endl;
+	    break;
+	  }
+	}
+      }
+      else if (abs(pdg) == 24 || abs(pdg) == 23 || pdg == 25 || pdg == 21 || abs(pdg) == 15) {
+	break;
+      }
+      else if (abs(pdg) <= 6 && abs(pdg) >= 1) {
+	break;
+      }
+
+    }
+    //    if (mcPart->isOverlay()) return -22;
+    Int_t originalPDG = mcPart->getPDG();
+    return originalPDG;
+  }
+
+  Int_t getOriginalPDGForIsoLep(MCParticle *mcPart, LCCollection *colMC) {
+    // get the PDG of the original particle where the MCParticle comes from
+    Int_t nParents = mcPart->getParents().size();
+    Int_t serial = getMCSerial(mcPart,colMC);
+    if (mcPart->isOverlay()) return -22;
+    MCParticle *previous = mcPart;
+    while (nParents > 0 && serial > 11) {
+      Double_t charge = previous->getCharge();
+      MCParticle *mother = mcPart->getParents()[0];
+      if (nParents > 1) {
+	for (Int_t i=0;i<nParents;i++) {
+	  MCParticle *temp = mcPart->getParents()[i];
+	  if (TMath::Abs(temp->getCharge() - charge) < 0.1) {
+	    mother = temp;
+	    break;
+	  }
+	}
+      }
+      previous = mcPart;
+      mcPart = mother;
+      if (mcPart->isOverlay()) break;
+      nParents = mcPart->getParents().size();
+      serial = getMCSerial(mcPart,colMC);
+    }
+    if (mcPart->isOverlay()) return -22;
+    Int_t originalPDG = mcPart->getPDG();
+    return originalPDG;
+  }
 
 Int_t getOriginalSerial(MCParticle *mcPart, LCCollection *colMCP, Bool_t iHiggs) {
   // get the serial number of the original particle where the MCParticle comes from

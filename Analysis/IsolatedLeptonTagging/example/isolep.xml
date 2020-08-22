@@ -66,7 +66,7 @@ data_dbd_500/higgs_ffh/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.
   <!--Directory of Weights for the Isolated Electron MVA Classification-->
   <parameter name="DirOfISOElectronWeights" type="string">isolated_electron_weights </parameter>
   <!--Directory of Weights for the Isolated Muon MVA Classification-->
-  <parameter name="DirOfISOMuonWeights" type="string">isolated_muon_weights_woYoke </parameter>
+  <parameter name="DirOfISOMuonWeights" type="string">isolated_muon_weights </parameter>
   <!--Name of the PandoraPFOs collection-->
   <parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
   <!--Name of the Primary Vertex collection-->
@@ -100,7 +100,7 @@ data_dbd_500/higgs_ffh/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.
   <!--Name of the new PFOs collection without isolated lepton-->
   <parameter name="OutputPFOsWithoutIsoLepCollection" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
   <!--use yoke for muon ID-->
-  <parameter name="UseYokeForMuonID" type="bool">false </parameter>
+  <parameter name="UseYokeForMuonID" type="bool">true </parameter>
   <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
   <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
 </processor>

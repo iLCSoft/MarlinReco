@@ -159,7 +159,7 @@ IsolatedLeptonTaggingProcessor::IsolatedLeptonTaggingProcessor() : Processor("Is
   registerProcessorParameter("UseYokeForMuonID",
 			     "use yoke for muon ID"  ,
 			     _use_yoke_for_muon ,
-			     bool(false) ) ;
+			     bool(true) ) ;
 
   registerProcessorParameter("UseIP",
 			     "use impact parameters"  ,

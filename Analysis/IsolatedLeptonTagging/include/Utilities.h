@@ -47,6 +47,8 @@ namespace isolep{
   void getConeEnergy(ReconstructedParticle *recPart, LCCollection *colPFO, Double_t cosCone, Bool_t woFSR, Double_t coneEnergy[3], Double_t pFSR[4]);
   void getConeEnergy(ReconstructedParticle *recPart, LCCollection *colPFO, Double_t cosCone, Bool_t woFSR, Double_t coneEnergy[3], Double_t pFSR[4], 
 		     Double_t conCone2, Double_t pCone2[4], Int_t &nConePhoton);
+  void getConeEnergy(ReconstructedParticle *recPart, LCCollection *colPFO, Double_t cosCone,
+		     Double_t coneEnergy[3], Double_t cosCone2, Double_t pCone2[4]);
   TLorentzVector getFSRMomentum(ReconstructedParticle *recPart, LCCollection *colPFO);
   Int_t isSelectedByFastJet( ReconstructedParticle *pfo, LCCollection *colFastJet, Double_t &ratioEPartEJet, Double_t &ratioPTMJet);
   void doPhotonRecovery(ReconstructedParticle *electron, LCCollection *colPFO, ReconstructedParticleImpl *recoElectron, Double_t fCosFSRCut = 0.999);   

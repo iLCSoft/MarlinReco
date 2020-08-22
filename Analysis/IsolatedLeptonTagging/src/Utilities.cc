@@ -540,6 +540,40 @@ Double_t getConeEnergy(ReconstructedParticle *recPart, LCCollection *colPFO, Dou
   return coneEnergy;
 }
 
+void getConeEnergy(ReconstructedParticle *recPart, LCCollection *colPFO, Double_t cosCone,
+		   Double_t coneEnergy[3], Double_t cosCone2, Double_t pCone2[4]){
+  // get the cone energy of the particle
+  // add another larger cone
+  TLorentzVector lortzCon = TLorentzVector(0,  0,  0,  0);
+  Int_t nPFOs = colPFO->getNumberOfElements();
+  TVector3 momentum0 = TVector3(recPart->getMomentum());
+  for (Int_t i=0;i<nPFOs;i++) {
+    ReconstructedParticle *pfo = dynamic_cast<ReconstructedParticle*>(colPFO->getElementAt(i));
+    if (pfo == recPart) continue;
+    Double_t energy = pfo->getEnergy();
+    TVector3 momentum = TVector3(pfo->getMomentum());
+    Double_t charge = pfo->getCharge();
+    Double_t cosTheta = momentum0.Dot(momentum)/momentum0.Mag()/momentum.Mag();
+    if (cosTheta > cosCone) {
+      coneEnergy[0] += energy;
+      if (TMath::Abs(charge) < 0.5) {
+	coneEnergy[1] += energy;
+      }
+      else {
+	coneEnergy[2] += energy;
+      }
+    }
+    if (cosTheta > cosCone2) {
+      lortzCon += TLorentzVector(momentum,energy);
+    }
+  }
+  pCone2[0] = lortzCon.Px();
+  pCone2[1] = lortzCon.Py();
+  pCone2[2] = lortzCon.Pz();
+  pCone2[3] = lortzCon.E();
+  return;
+}
+  
 Double_t getInvariantMass(ReconstructedParticle *recPart1, ReconstructedParticle *recPart2) {
   // get the invariant mass of two particles
   TVector3 momentum1 = TVector3(recPart1->getMomentum());

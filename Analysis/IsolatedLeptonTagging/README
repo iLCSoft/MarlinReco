@@ -6,6 +6,10 @@ https://agenda.linearcollider.org/event/6787/session/10/contribution/17/material
 
 ## any problem contact: tian@icepp.s.u-tokyo.ac.jp
 
+
+## update on 08/23/2020
+added a new processor for finding isolated photon (author: S.Kawada & J.Tian). It is rightnow a simple cut based algorithm, but can be extended to MVA based algorithm in future.
+
 ## new feature for supporting application without using impact parameters 01/09/2019
 for applications that don't want to use impact parameters, set the steering parameter "UseIP" to "false" and use the weight files trained in the same case; example steering file can be found in "example/isolep_woIP_woYoke.xml"
 

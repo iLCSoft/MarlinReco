@@ -118,6 +118,7 @@ class ErrorFlow : public Processor
 
 	  // Confusion scale factor
 	  bool p_storeTree {};                        /* Enable/disable storing in a ROOT tree */
+	  bool p_useFullCovMatNeut {};                /* Enable/disable using full CovMat for neutral PFOs */
 
 	  // Counters for PFOs
       int numChargedPFOs {};                       /* Number of charged PFOs in a jet */

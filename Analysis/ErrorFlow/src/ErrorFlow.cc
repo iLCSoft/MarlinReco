@@ -117,6 +117,12 @@ ErrorFlow::ErrorFlow() : Processor("ErrorFlow") {
 		  p_storeTree,
 		  (bool) false );
 
+	registerProcessorParameter( "useFullCovMatforNeutrals" ,
+		  "whether use full CovMat for neutral PFOs or use only energy uncertainty",
+		  p_useFullCovMatNeut,
+		  (bool) true );
+
+
 } /* -----  end of function ErrorFlow::ErrorFlow  ----- */
 
 
@@ -239,26 +245,55 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 			// Add particle energy to the sum
 			eJetTotal += particlePtr->getEnergy();
 
-			// If it is a charged particle, add its covaricance matrix to jet cov matirix
-			if ( 0 != particlePtr->getCharge() ) {
-			   ++numChargedPFOs;
-			   eChargedPFOs += particlePtr->getEnergy();
-			   FloatVec particleCovMatrix = particlePtr->getCovMatrix();
-			   for ( size_t iElement = 0; iElement < 10; ++iElement) {
-				  jetCovMatrix[ iElement ] += particleCovMatrix [ iElement ];
-			   } // end for
-			} else {	// particle is not charged
-			   // check whether its a photon
-			   if ( 22 == particlePtr->getType() ) {
-				  ++numPhotons;
-				  ePhotons += particlePtr->getEnergy();
-				  jetCovMatrix[ 9 ] += getPhotonSigmaESqr( particlePtr->getEnergy() );
-			   } else {   // if not a photon, then it's a neutral hadron
-				  ++numNeutralPFOs;
-				  eNeutralPFOs += particlePtr->getEnergy();
-				  jetCovMatrix[ 9 ] += getNeuHadSigmaESqr( particlePtr->getEnergy() );
-			   } // end if-else
-			} // end if-else charged
+			if ( p_useFullCovMatNeut )
+			{
+				FloatVec particleCovMatrix = particlePtr->getCovMatrix();
+				for ( size_t iElement = 0; iElement < 10; ++iElement)
+				{
+					jetCovMatrix[ iElement ] += particleCovMatrix [ iElement ];
+				} // end for
+				if ( 0 != particlePtr->getCharge() )
+				{
+					++numChargedPFOs;
+					eChargedPFOs += particlePtr->getEnergy();
+				}
+				// particle is not charged
+				// check whether its a photon
+				else if ( 22 == particlePtr->getType() )
+				{
+					++numPhotons;
+					ePhotons += particlePtr->getEnergy();
+				}
+				else
+				{   // if not a photon, then it's a neutral hadron
+					++numNeutralPFOs;
+					eNeutralPFOs += particlePtr->getEnergy();
+				} // end if-else
+			}
+			else
+			{
+
+				// If it is a charged particle, add its covaricance matrix to jet cov matirix
+				if ( 0 != particlePtr->getCharge() ) {
+				   ++numChargedPFOs;
+				   eChargedPFOs += particlePtr->getEnergy();
+				   FloatVec particleCovMatrix = particlePtr->getCovMatrix();
+				   for ( size_t iElement = 0; iElement < 10; ++iElement) {
+					  jetCovMatrix[ iElement ] += particleCovMatrix [ iElement ];
+				   } // end for
+				} else {	// particle is not charged
+				   // check whether its a photon
+				   if ( 22 == particlePtr->getType() ) {
+					  ++numPhotons;
+					  ePhotons += particlePtr->getEnergy();
+					  jetCovMatrix[ 9 ] += getPhotonSigmaESqr( particlePtr->getEnergy() );
+				   } else {   // if not a photon, then it's a neutral hadron
+					  ++numNeutralPFOs;
+					  eNeutralPFOs += particlePtr->getEnergy();
+					  jetCovMatrix[ 9 ] += getNeuHadSigmaESqr( particlePtr->getEnergy() );
+				   } // end if-else
+				} // end if-else charged
+			}
 
 			 /* :TODO:03/28/2016 07:09:24 PM:: Double check everything in this procedure here */
 			// Compute error for semi-leptonic decays

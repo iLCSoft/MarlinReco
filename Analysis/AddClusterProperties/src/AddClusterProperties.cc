@@ -219,7 +219,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
           const FloatVec pec  = clu->getSubdetectorEnergies();
           float Eem = pec[ecal_index]+pec[lcal_index]+pec[bcal_index];
           float Ehad = pec[hcal_index]+pec[yoke_index]+pec[lhcal_index];
-          float Eerror=0.0;
+          Eerror=0.0;
           if ( Eem/E < 0.95 ) {
             Eerror=sqrt((0.6*sqrt(E))*(0.6*sqrt(E)) + (0.03*E)*(0.03*E));
           } else {
@@ -325,9 +325,9 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
             if ( kkk < 3 ) {
               for ( int lll=0 ; lll< 3 ; lll++) {
                 if ( lll == kkk ) {
-                  dp_drE[lll][kkk] = prefact*(dist*dist+cogv[kkk]*cogv[kkk]);
+                  dp_drE[lll][kkk] = prefact*(dist*dist-cogv[kkk]*cogv[kkk]);
                 } else {
-                  dp_drE[lll][kkk] = prefact*cogv[kkk]*cogv[lll];
+                  dp_drE[lll][kkk] = -prefact*cogv[kkk]*cogv[lll];
                 }
               }
             } else {

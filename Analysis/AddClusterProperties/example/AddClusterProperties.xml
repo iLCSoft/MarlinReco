@@ -26,7 +26,6 @@ a_RECO_file.slcio
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
   <parameter name="AllowToModifyEvent" value="true" />  
-  <parameter name="GearXMLFile"> gear.xml </parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG3  </parameter> 
   <parameter name="RandomSeed" value="1234567890" />
  </global>
@@ -73,7 +72,7 @@ a_RECO_file.slcio
        LCGenericObject
        TrackerHitPlane
     </parameter>
-    <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed2"/>
+    <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed"/>
     <parameter name="KeepCollectionNames" type="StringVec"> 
        MCParticlesSkimmed
        RecoMCTruthLink

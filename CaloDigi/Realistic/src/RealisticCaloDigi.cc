@@ -2,6 +2,7 @@
 #include "RealisticCaloDigi.h"
 
 #include <marlin/Global.h>
+#include <marlin/Exceptions.h>
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -14,9 +15,11 @@
 #include <string>
 #include <assert.h>
 #include <cmath>
+#include <set>
 
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Units/PhysicalConstants.h"
 
 #define RELATIONFROMTYPESTR "FromType"
 #define RELATIONTOTYPESTR "ToType"
@@ -24,6 +27,7 @@
 using namespace std;
 using namespace lcio ;
 using namespace marlin ;
+using namespace std::placeholders;
 
 RealisticCaloDigi::RealisticCaloDigi( ) : Processor( "RealisticCaloDigi" ) {
 
@@ -85,6 +89,27 @@ RealisticCaloDigi::RealisticCaloDigi( ) : Processor( "RealisticCaloDigi" ) {
                              "Time Window maximum time in ns" ,
                              _time_windowMax,
                              (float)+100.0);
+
+  registerProcessorParameter("integrationMethod" ,
+                             "Energy integration and time calculation method. Options: Standard, ROC" ,
+                             _integration_method,
+                             std::string("Standard"));
+                             
+  registerProcessorParameter("fastShaper" ,
+                             "Fast shaper value. Unit in ns" ,
+                             _fast_shaper,
+                             (float)0.f);
+                             
+  registerProcessorParameter("slowShaper" ,
+                             "Slow shaper value. Unit in ns" ,
+                             _slow_shaper,
+                             (float)0.f);
+                             
+  registerProcessorParameter("timingResolution" ,
+                             "Time resolution to apply (gaussian smearing). Unit in ns" ,
+                             _time_resol,
+                             (float)0);
+                             
 
   // additional digi effects
 
@@ -167,11 +192,34 @@ void RealisticCaloDigi::init() {
     _threshold_iunit=NPE;
   } else {
     streamlog_out(ERROR) << "could not identify threshold unit. Please use \"GeV\", \"MIP\" or \"px\"! Aborting." << std::endl;
-    assert(0);
+    marlin::StopProcessingException(this);
   }
-
+  
   // convert the threshold to the approriate units (i.e. MIP for silicon, NPE for scint)
   _threshold_value = convertEnergy( _threshold_value, _threshold_iunit );
+
+  // deal with timing calculations  
+  std::map<std::string, integr_function> integrations = {
+    {"Standard", std::bind(&RealisticCaloDigi::StandardIntegration, this, _1)},
+    {"ROC", std::bind(&RealisticCaloDigi::ROCIntegration, this, _1)}
+  };  
+  auto findIter = integrations.find( _integration_method ) ;
+  if(integrations.end() == findIter) {
+    streamlog_out(ERROR) << "Could not guess timing calculation method!" << std::endl;
+    streamlog_out(ERROR) << "Available are: Standard, ROC. Provided: " << _integration_method << std::endl;
+    streamlog_out(ERROR) << "Aborting..." << std::endl;
+    marlin::StopProcessingException(this);
+  }
+  _integr_function = findIter->second;
+  
+  // check if parameters are correctly set for the ROC integration
+  if("ROC" == _integration_method) {
+    if(!parameterSet("fastShaper") || !parameterSet("slowShaper")) {
+      streamlog_out(ERROR) << "Fast/slow shaper parameter(s) not set. Required for ROC integration!" << std::endl;
+      streamlog_out(ERROR) << "Aborting..." << std::endl;
+      marlin::StopProcessingException(this);
+    }
+  }
 
   _flag.setBit(LCIO::CHBIT_LONG);
   _flag.setBit(LCIO::RCHBIT_TIME); //store timing on output hits.
@@ -225,44 +273,39 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
       relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
       // loop over input hits
-      for (int j(0); j < numElements; ++j) {
+      for (int j=0; j < numElements; ++j) {
         SimCalorimeterHit * simhit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
 
-        // deal with timing aspects
-        std::vector < std::pair < float , float > > timeClusteredHits; // vector of (time, energy)
-        if(_time_apply){
-          timeClusteredHits = timingCuts( simhit );
-        } else { // just take full energy, assign to time 0
-          timeClusteredHits.push_back( std::pair < float , float > ( 0, simhit->getEnergy() ) );
+        // deal with energy integration and timing aspects
+        auto integrationResult = Integrate(simhit);
+        if( ! integrationResult.has_value() ) {
+          continue;
         }
+        float time      = integrationResult.value().first;
+        float energyDep = integrationResult.value().second;
+        // apply extra energy digitisation onto the energy
+        float energyDig = EnergyDigi(energyDep, simhit->getCellID0() , simhit->getCellID1() );
 
-        for ( size_t jj=0; jj<timeClusteredHits.size(); jj++) {
-          float time      = timeClusteredHits[jj].first;
-          float energyDep = timeClusteredHits[jj].second;
-          // apply extra energy digitisation onto the energy
-          float energyDig = EnergyDigi(energyDep, simhit->getCellID0() , simhit->getCellID1() );
+	      streamlog_out ( DEBUG0 ) << " hit " << j << " time: " << time << " eDep: " << energyDep << " eDigi: " << energyDig << " " << _threshold_value << endl;
 
-	  streamlog_out ( DEBUG0 ) << " hit " << jj << " time: " << time << " eDep: " << energyDep << " eDigi: " << energyDig << " " << _threshold_value << endl;
+        if (energyDig > _threshold_value) { // write out this hit
+          CalorimeterHitImpl* newhit = new CalorimeterHitImpl();
+          newhit->setCellID0( simhit->getCellID0() );
+          newhit->setCellID1( simhit->getCellID1() );
+          newhit->setTime( time );
+          newhit->setPosition( simhit->getPosition() );
+    	    newhit->setEnergy( energyDig );
+    	    int layer = idDecoder(simhit)[_cellIDLayerString];
+    	    newhit->setType( CHT( cht_type, cht_id, cht_lay, layer ) );
+          newhit->setRawHit( simhit );
+          newcol->addElement( newhit ); // add hit to output collection
 
-          if (energyDig > _threshold_value) { // write out this hit
-            CalorimeterHitImpl* newhit = new CalorimeterHitImpl();
-            newhit->setCellID0( simhit->getCellID0() );
-            newhit->setCellID1( simhit->getCellID1() );
-            newhit->setTime( time );
-            newhit->setPosition( simhit->getPosition() );
-	    newhit->setEnergy( energyDig );
-	    int layer = idDecoder(simhit)[_cellIDLayerString];
-	    newhit->setType( CHT( cht_type, cht_id, cht_lay, layer ) );
-            newhit->setRawHit( simhit );
-            newcol->addElement( newhit ); // add hit to output collection
+	        streamlog_out ( DEBUG1 ) << "orig/new hit energy: " << simhit->getEnergy() << " " << newhit->getEnergy() << endl;
 
-	    streamlog_out ( DEBUG1 ) << "orig/new hit energy: " << simhit->getEnergy() << " " << newhit->getEnergy() << endl;
+          LCRelationImpl *rel = new LCRelationImpl(newhit,simhit,1.0);
+          relcol->addElement( rel );
 
-            LCRelationImpl *rel = new LCRelationImpl(newhit,simhit,1.0);
-            relcol->addElement( rel );
-
-          } // theshold
-        } // time sliced hits
+        } // theshold
       } // input hits
 
       // add collection to event
@@ -281,54 +324,24 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
   return;
 }
 
+//------------------------------------------------------------------------------
 
-void RealisticCaloDigi::check( LCEvent *  /*evt*/ ) { }
+void RealisticCaloDigi::check( LCEvent *  /*evt*/ ) {
+  
+}
+
+//------------------------------------------------------------------------------
 
 void RealisticCaloDigi::end(){
 }
 
+//------------------------------------------------------------------------------
 
-std::vector < std::pair < float , float > > RealisticCaloDigi::timingCuts( const SimCalorimeterHit * hit ) {
-  // apply timing cuts on simhit contributions
-  //  outputs a vector of (time,energy) pairs
-  //  for now, only get one output hit per input hit, however we keep the possibility to have more
-
-  assert( _time_apply ); // we shouldn't end up here if we weren't asked to deal with timing
-
-  std::vector < std::pair < float , float > > timedhits;
-
-  float timeCorrection(0);
-  if ( _time_correctForPropagation ) { // time of flight from IP to this point
-    float r(0);
-    for (int i=0; i<3; i++) 
-      r+=pow(hit->getPosition()[i],2); 
-    timeCorrection = sqrt(r)/299.79; // [speed of light in mm/ns]
-  }
-
-  // this is Oskar's simple (and probably the most correct) method for treatment of timing
-  //  - collect energy in some predefined time window around collision time (possibly corrected for TOF)
-  //  - assign time of earliest contribution to hit
-  float energySum = 0;
-  float earliestTime=9999999;
-  for(int i = 0; i<hit->getNMCContributions(); i++){ // loop over all contributions
-    float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
-    float energyi = hit->getEnergyCont(i); //energy of current subhit
-    float relativetime = timei - timeCorrection; // wrt time of flight
-    if (relativetime>_time_windowMin && relativetime<_time_windowMax){
-      energySum += energyi;
-      if (relativetime<earliestTime){
-	earliestTime = relativetime; //use earliest hit time for simpletimingcut
-      }
-    }
-  }      
-
-  if(earliestTime > _time_windowMin && earliestTime < _time_windowMax){ //accept this hit
-    timedhits.push_back( std::pair <float, float > (earliestTime, energySum) );
-  }
-
-  return timedhits;
+RealisticCaloDigi::integr_res_opt RealisticCaloDigi::Integrate( const SimCalorimeterHit * hit ) const {
+  return _integr_function(hit);
 }
 
+//------------------------------------------------------------------------------
 
 float RealisticCaloDigi::EnergyDigi(float energy, int id0, int id1) {
   // some extra digi effects
@@ -390,6 +403,103 @@ float RealisticCaloDigi::EnergyDigi(float energy, int id0, int id1) {
   return e_out;
 }
 
+//------------------------------------------------------------------------------
 
+RealisticCaloDigi::integr_res_opt RealisticCaloDigi::StandardIntegration( const SimCalorimeterHit * hit ) const {
+  // apply timing cuts on simhit contributions
+  // outputs a (time,energy) pair
+  float timeCorrection(0);
+  if ( _time_correctForPropagation ) { // time of flight from IP to this point
+    float r(0);
+    for (int i=0; i<3; i++) 
+      r+=pow(hit->getPosition()[i],2); 
+    timeCorrection = sqrt(r)/CLHEP::c_light; // [speed of light in mm/ns]
+  }
+  // this is Oskar's simple (and probably the most correct) method for treatment of timing
+  //  - collect energy in some predefined time window around collision time (possibly corrected for TOF)
+  //  - assign time of earliest contribution to hit
+  float energySum = 0;
+  float earliestTime=std::numeric_limits<float>::max();
+  for(int i = 0; i<hit->getNMCContributions(); i++){ // loop over all contributions
+    float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
+    float energyi = hit->getEnergyCont(i); //energy of current subhit
+    float relativetime = timei - timeCorrection; // wrt time of flight
+    if (relativetime>_time_windowMin && relativetime<_time_windowMax){
+      energySum += energyi;
+      if (relativetime<earliestTime){
+	       earliestTime = relativetime; //use earliest hit time for simpletimingcut
+      }
+    }
+  }      
+  if(earliestTime > _time_windowMin && earliestTime < _time_windowMax){ //accept this hit
+    return integr_res{SmearTime(earliestTime), energySum};
+  }
+  return integr_res{0, hit->getEnergy()};
+}
 
+//------------------------------------------------------------------------------
+
+RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCalorimeterHit * hit ) const {
+  const unsigned int ncontrib = hit->getNMCContributions() ;
+  // Sort MC contribution by time
+  std::vector<EVENT::MCParticle*> mcconts{ncontrib, nullptr};
+  for(unsigned int i = 0; i<ncontrib; i++){
+    mcconts[i]=hit->getParticleCont(i);
+  }
+  std::sort(mcconts.begin(), mcconts.end(), [](auto lhs, auto rhs){
+    return (lhs->getTime() < rhs->getTime()); 
+  });
+  // Accumulate energy until threshold is reached.
+  // The first MC contriubtion after the threshold has been reached sets the hit time 
+  bool passThreshold = false;
+  float epar=0.f, hitTime=0.f;
+  unsigned int thresholdIndex=0;
+  // First determine the hit time (hitTime) and the initial hit index 
+  // at which we need to start the integration (thresholdIndex)
+  for(unsigned int i=0; i<ncontrib ; ++i) {
+    const auto timei = mcconts[i]->getTime();
+    thresholdIndex = i ;
+    epar = 0.f;
+    for(unsigned int j=i; j<ncontrib ; ++j) {
+      const auto timej = mcconts[j]->getTime();
+      if( (timej-timei) < _fast_shaper) {
+        epar += mcconts[j]->getEnergy();
+      }
+      else {
+        break;
+      }
+      if( epar > _threshold_value ) {
+        hitTime = timej;
+        passThreshold = true ;
+        break;
+      }
+    }
+    if(passThreshold) {
+      break;
+    }
+  }
+  // If we've found a hit above the threshold, accumulate the energy until
+  // until the maximum time given by the slow shaper
+  if(passThreshold) {
+    const float thresholdTime = mcconts[thresholdIndex]->getTime();
+    float energySum = 0.f ; 
+    for(unsigned int i=thresholdIndex ; i<ncontrib ; ++i) {
+      if( mcconts[i]->getTime() < thresholdTime + _slow_shaper) {
+        energySum += mcconts[i]->getEnergy();
+      }
+    }
+    hitTime = SmearTime(hitTime);
+    return integr_res{thresholdTime, energySum};
+  }
+  // else no hit dude !
+  else {
+    return std::nullopt;
+  }
+}
+
+//------------------------------------------------------------------------------
+
+float RealisticCaloDigi::SmearTime(float time) const{
+  return _time_resol>0.f ? time + CLHEP::RandGauss::shoot(0, _time_resol ) : time;
+}
 

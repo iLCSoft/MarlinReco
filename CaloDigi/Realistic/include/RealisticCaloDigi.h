@@ -7,6 +7,8 @@
 #include "lcio.h"
 #include <string>
 #include <vector>
+#include <functional>
+#include <optional>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -17,6 +19,7 @@ using namespace marlin ;
     this is virtual class, technology-blind
     technology-specific classes can inherit from this one
     D. Jeans 02/2016, rewrite of parts of ILDCaloDigi, DDCaloDigi
+    R. Ete 11/2020, rewrite of charge integration and extension of timing treatment
  */
 
 class RealisticCaloDigi : virtual public Processor {
@@ -37,9 +40,17 @@ class RealisticCaloDigi : virtual public Processor {
   
   // energy scales we know about
   enum { MIP, GEVDEP, NPE };
+  // integration result types
+  using integr_res = std::pair<float,float>;
+  using integr_res_opt = std::optional<integr_res>;
+  using integr_function = std::function<integr_res_opt(const EVENT::SimCalorimeterHit*)>;
 
   virtual float EnergyDigi(float energy, int id0, int id1);
-  virtual std::vector < std::pair < float , float > > timingCuts( const SimCalorimeterHit * hit );
+  virtual integr_res_opt Integrate( const SimCalorimeterHit * hit ) const;
+  
+  integr_res_opt StandardIntegration( const SimCalorimeterHit * hit ) const ;
+  integr_res_opt ROCIntegration( const SimCalorimeterHit * hit ) const ;
+  float SmearTime(float time) const;
 
   // virtual methods to be be overloaded in tech-specific derived classes
   virtual int   getMyUnit()=0;
@@ -55,7 +66,7 @@ class RealisticCaloDigi : virtual public Processor {
 
   // parameters for digitization effects
 
-
+  std::string _integration_method{}; // timing calculation method
   float _threshold_value{};         // hit energy threshold
   std::string _threshold_unit{};    // hit energy threshold unit
 
@@ -63,6 +74,9 @@ class RealisticCaloDigi : virtual public Processor {
   int   _time_correctForPropagation{}; // correct times for propagation?
   float _time_windowMin{};          // defn of timing window
   float _time_windowMax{};
+  float _fast_shaper{};             // fast shaper value. unit in ns
+  float _slow_shaper{};             // slow shaper value. unit in ns
+  float _time_resol{};              // time resolution (unit ns)
 
   float _calib_mip{};               // MIP calibration factor (most probable energy deposit by MIP in active material of one layer)
 
@@ -90,6 +104,7 @@ class RealisticCaloDigi : virtual public Processor {
 
   std::map < std::pair <int, int> , float > _cell_miscalibs{};
   std::map < std::pair <int, int> , bool  > _cell_dead{};
+  integr_function _integr_function{};
 
 } ;
 

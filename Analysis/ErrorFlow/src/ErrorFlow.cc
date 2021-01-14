@@ -107,6 +107,11 @@ ErrorFlow::ErrorFlow() : Processor("ErrorFlow") {
 		  p_semiLepCorrection,
 		  (bool) false );
 
+	registerProcessorParameter( "EnableConfusionTerm" ,
+		  "Enable/disable confusion term to be added to covariance matrix",
+		  p_confusionterm,
+		  (bool) true );
+
 	registerProcessorParameter( "SemiLepSigmaCorrectionFactor" ,
 		  "A correction factor to be multiplied by total lepton energy to get semi-leptonic uncertainty",
 		  p_semiLepSigmaCorrFactor,
@@ -335,7 +340,7 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 
 		 // Sum up all uncertainties to get total jet energy uncertainty
 		 jetCovMatrix[ 9 ] = jetCovMatrix[ 9 ]
-			+ absConfSquared * p_scaleConf * p_scaleConf 
+			+ ( p_confusionterm ? absConfSquared * p_scaleConf * p_scaleConf : 0.0 )
 			+ ( p_semiLepCorrection ? absSemiLepResSquared : 0.0 );
 
 		 // Fill the ROOT tree if enabled in the steering file

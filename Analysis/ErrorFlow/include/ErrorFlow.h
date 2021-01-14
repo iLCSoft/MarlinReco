@@ -105,6 +105,7 @@ class ErrorFlow : public Processor
 
 	  // Semi-leptonic correction
 	  bool p_semiLepCorrection {};                 /* Add semi-leptonic energy resolution to the covariance matrix */
+          bool p_confusionterm {};                 /* Add uncertainty due to confusion to the covariance matrix */
       double p_semiLepSigmaCorrFactor {};          /* A correction factor to be multiplied by total lepton energy to get semi-leptonic uncertainty */
 
 	  // Confusion scale factor

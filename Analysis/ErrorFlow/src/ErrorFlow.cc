@@ -117,6 +117,16 @@ ErrorFlow::ErrorFlow() : Processor("ErrorFlow") {
 		  p_semiLepSigmaCorrFactor,
 		  (double) 0.57 );
 
+	registerProcessorParameter( "CovMatFactorPhotons" ,
+		  "A correction factor to be multiplied to angular uncertainties of photons",
+		  p_CovMatFactorPhotons,
+		  (double) 1.0 );
+
+	registerProcessorParameter( "CovMatFactorNeutralHadrons" ,
+		  "A correction factor to be multiplied to angular uncertainties of Neutral Hadrons",
+		  p_CovMatFactorNeutralHadrons,
+		  (double) 1.0 );
+
 	registerProcessorParameter( "SotreInTree" ,
 		  "Enable/disable storing computed qunatities in a ROOT tree",
 		  p_storeTree,
@@ -249,18 +259,16 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 
 			// Add particle energy to the sum
 			eJetTotal += particlePtr->getEnergy();
+			double scaleFactor = 1.0;
 
 			if ( p_useFullCovMatNeut )
 			{
 				FloatVec particleCovMatrix = particlePtr->getCovMatrix();
-				for ( size_t iElement = 0; iElement < 10; ++iElement)
-				{
-					jetCovMatrix[ iElement ] += particleCovMatrix [ iElement ];
-				} // end for
 				if ( 0 != particlePtr->getCharge() )
 				{
 					++numChargedPFOs;
 					eChargedPFOs += particlePtr->getEnergy();
+					scaleFactor = 1.0;
 				}
 				// particle is not charged
 				// check whether its a photon
@@ -268,12 +276,27 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 				{
 					++numPhotons;
 					ePhotons += particlePtr->getEnergy();
+					scaleFactor = p_CovMatFactorPhotons;
 				}
 				else
 				{   // if not a photon, then it's a neutral hadron
 					++numNeutralPFOs;
 					eNeutralPFOs += particlePtr->getEnergy();
+					scaleFactor = p_CovMatFactorNeutralHadrons;
 				} // end if-else
+				for ( size_t iElement = 0; iElement < 9; ++iElement)
+				{ // for all CovMat elements except energy error ( CovMat(9) := sigma_E^2 )
+					if ( iElement < 6 )
+					{ // for elements not involving E ( sigma_px^2 , sigma_pxpy , sigma_py^2 , sigma_pxpz , sigma_pypz , sigma_pz^2 )
+						jetCovMatrix[ iElement ] += scaleFactor * scaleFactor * particleCovMatrix [ iElement ];
+					}
+					else
+					{ // for elements involving E ( sigma_pxE , sigma_pyE , sigma_pzE )
+						jetCovMatrix[ iElement ] += scaleFactor * particleCovMatrix [ iElement ];
+					}
+				} // end for
+				// for energy error ( CovMat(9) := sigma_E^2 )
+				jetCovMatrix[ 9 ] += particleCovMatrix [ 9 ];
 			}
 			else
 			{

@@ -256,6 +256,7 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 			// Set a pointer to the i-th PFO
 			ReconstructedParticle *particlePtr = jetPFOs[ iPFO ];
 			LCObjectVec vecMCTL = navMCTL->getRelatedToObjects( particlePtr );
+			int nTrackspfo = (particlePtr->getTracks()).size();
 
 			// Add particle energy to the sum
 			eJetTotal += particlePtr->getEnergy();
@@ -264,7 +265,7 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 			if ( p_useFullCovMatNeut )
 			{
 				FloatVec particleCovMatrix = particlePtr->getCovMatrix();
-				if ( 0 != particlePtr->getCharge() )
+				if ( 0 != nTrackspfo )
 				{
 					++numChargedPFOs;
 					eChargedPFOs += particlePtr->getEnergy();
@@ -302,7 +303,7 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 			{
 
 				// If it is a charged particle, add its covaricance matrix to jet cov matirix
-				if ( 0 != particlePtr->getCharge() ) {
+				if ( 0 != nTrackspfo ) {
 				   ++numChargedPFOs;
 				   eChargedPFOs += particlePtr->getEnergy();
 				   FloatVec particleCovMatrix = particlePtr->getCovMatrix();

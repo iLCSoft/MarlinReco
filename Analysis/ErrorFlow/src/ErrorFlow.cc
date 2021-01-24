@@ -28,6 +28,7 @@
 #include <IMPL/ReconstructedParticleImpl.h> 
 #include <UTIL/LCRelationNavigator.h>
 #include <EVENT/MCParticle.h>
+#include "TVector3.h"
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -110,6 +111,11 @@ ErrorFlow::ErrorFlow() : Processor("ErrorFlow") {
 	registerProcessorParameter( "EnableConfusionTerm" ,
 		  "Enable/disable confusion term to be added to covariance matrix",
 		  p_confusionterm,
+		  (bool) true );
+
+	registerProcessorParameter( "PropagateConfusion2Mom" ,
+		  "Enable/disable Propagating uncertainty due to confusion to the Momentum components",
+		  p_propagateConfusiontoMomentumComp,
 		  (bool) true );
 
 	registerProcessorParameter( "SemiLepSigmaCorrectionFactor" ,
@@ -242,6 +248,22 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 
 		 // Set a pointer to the i-th jet in the collection
 		 ReconstructedParticleImpl *jetPtr = dynamic_cast<ReconstructedParticleImpl*>( col->getElementAt( iJet ) );
+		 TVector3 jet3Momentum( jetPtr->getMomentum()[0] , jetPtr->getMomentum()[1] , jetPtr->getMomentum()[2] );
+		 double jetMom = jet3Momentum.Mag();
+		 double jetEnergy = jetPtr->getEnergy();
+		 float jetTheta = jet3Momentum.Theta();
+		 float jetPhi = jet3Momentum.Phi();
+		 std::vector< float > jetCovMatrixConf( 10, 0.0 );
+		 jetCovMatrixConf[ 0 ] = pow( sin( jetTheta ) , 2 ) * pow( cos( jetPhi ) , 2 );
+		 jetCovMatrixConf[ 1 ] = pow( sin( jetTheta ) , 2 ) * sin( jetPhi ) * cos( jetPhi );
+		 jetCovMatrixConf[ 2 ] = pow( sin( jetTheta ) , 2 ) * pow( sin( jetPhi ) , 2 );
+		 jetCovMatrixConf[ 3 ] = sin( jetTheta ) * cos( jetTheta ) * cos( jetPhi );
+		 jetCovMatrixConf[ 4 ] = sin( jetTheta ) * cos( jetTheta ) * sin( jetPhi );
+		 jetCovMatrixConf[ 5 ] = pow( cos( jetTheta ) , 2 );
+		 jetCovMatrixConf[ 6 ] = ( jetMom / jetEnergy ) * sin( jetTheta ) * cos( jetPhi );
+		 jetCovMatrixConf[ 7 ] = ( jetMom / jetEnergy ) * sin( jetTheta ) * sin( jetPhi );
+		 jetCovMatrixConf[ 8 ] = ( jetMom / jetEnergy ) * cos( jetTheta );
+		 jetCovMatrixConf[ 9 ] = pow( jetMom , 2 ) / pow( jetEnergy , 2 );
 		 
 		 // Get PFOs in the jet and number of them
 		 ReconstructedParticleVec jetPFOs  = jetPtr->getParticles();
@@ -363,9 +385,20 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 							    * eLeptonsTotal * eLeptonsTotal;
 
 		 // Sum up all uncertainties to get total jet energy uncertainty
-		 jetCovMatrix[ 9 ] = jetCovMatrix[ 9 ]
-			+ ( p_confusionterm ? absConfSquared * p_scaleConf * p_scaleConf : 0.0 )
-			+ ( p_semiLepCorrection ? absSemiLepResSquared : 0.0 );
+		 if ( p_propagateConfusiontoMomentumComp )
+		 {
+			for ( int iElement = 0 ; iElement < 10 ; ++iElement )
+			{
+				jetCovMatrix[ iElement ] = jetCovMatrix[ iElement ]
+					+ ( pow( jetEnergy , 2 ) * absConfSquared * p_scaleConf * p_scaleConf / pow( jetMom , 2 ) ) * jetCovMatrixConf[ iElement ];
+			}
+		 }
+		 else
+		 {
+			 jetCovMatrix[ 9 ] = jetCovMatrix[ 9 ]
+				+ ( p_confusionterm ? absConfSquared * p_scaleConf * p_scaleConf : 0.0 )
+				+ ( p_semiLepCorrection ? absSemiLepResSquared : 0.0 );
+		}
 
 		 // Fill the ROOT tree if enabled in the steering file
 		 if ( p_storeTree ) {

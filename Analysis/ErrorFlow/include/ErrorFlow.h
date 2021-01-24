@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  ErroFlow.h
+ *       Filename:  ErrorFlow.h
  *
  *    Description:  The ErrorFlow processor computes jet-specific energy uncertainty
  *					by summing up the uncertainty of individual particles clustered
@@ -107,6 +107,7 @@ class ErrorFlow : public Processor
 		// Semi-leptonic correction
 		bool p_semiLepCorrection {};                 /* Add semi-leptonic energy resolution to the covariance matrix */
 		bool p_confusionterm {};                 /* Add uncertainty due to confusion to the covariance matrix */
+		bool p_propagateConfusiontoMomentumComp {};  /* Propagate uncertainty due to confusion to the Momentum components */
 		double p_semiLepSigmaCorrFactor {};          /* A correction factor to be multiplied by total lepton energy to get semi-leptonic uncertainty */
 		double p_CovMatFactorPhotons {};          /* A correction factor to be multiplied to angular uncertainties of photons */
 		double p_CovMatFactorNeutralHadrons {};          /* A correction factor to be multiplied to angular uncertainties of Neutral Hadrons */

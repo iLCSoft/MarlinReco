@@ -13,90 +13,87 @@
 
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <constants>
-  <!-- define constants here - use in steering file as ${ConstantName} --> 
+  <!-- define constants here - use in steering file as ${ConstantName} -->
   <constant name="DetectorModel" value="ILD_l5_o1_v02" />
  </constants>
 
  <execute>
-  <!--processor name="MyEventSelector"/--> 
-  <!--if condition="MyEventSelector"-->    
+  <!--processor name="MyEventSelector"/-->
+  <!--if condition="MyEventSelector"-->
+  <processor name="InitDD4hep" />
    <processor name="MyAIDAProcessor"/>
-   <processor name="TOFEstimators0ps"/>  
-   <processor name="TOFEstimators10ps"/>  
-   <processor name="TOFEstimators50ps"/>  
-   <XXXprocessor name="MyLCIOOutputProcessor"/>  
-  <!--/if-->                                 
+   <processor name="TOFEstimators0psOld"/>
+   <processor name="TOFEstimators0psNew"/>
+   <!-- <processor name="TOFEstimators10ps"/>
+   <processor name="TOFEstimators50ps"/> -->
+   <XXXprocessor name="MyLCIOOutputProcessor"/>
+  <!--/if-->
  </execute>
 
  <global>
   <parameter name="LCIOInputFiles"> simjob.slcio </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="5001" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="AllowToModifyEvent" value="false" />  
-  <parameter name="GearXMLFile"></parameter>  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG  </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="5001" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="AllowToModifyEvent" value="false" />
+  <parameter name="GearXMLFile"></parameter>
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
-  <!-- optionally limit the collections that are read from the input file: -->  
+  <!-- optionally limit the collections that are read from the input file: -->
   <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
  </global>
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">
- <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
-  <!-- compression of output file 0: false >0: true (default) -->
-  <parameter name="Compress" type="int">1 </parameter>
-  <!-- filename without extension-->
-  <parameter name="FileName" type="string">tof_estimators </parameter>
-  <!-- type of output file root (default) or xml )-->
-  <parameter name="FileType" type="string">root </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+    <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+    <!-- compression of output file 0: false >0: true (default) -->
+    <parameter name="Compress" type="int">1 </parameter>
+    <!-- filename without extension-->
+    <parameter name="FileName" type="string">tof_estimators </parameter>
+    <!-- type of output file root (default) or xml )-->
+    <parameter name="FileType" type="string">root </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
 </processor>
 
 
- <processor name="TOFEstimators0ps" type="TOFEstimators">
- <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
-  <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
-  <parameter name="MaxLayerNumber" type="int">10 </parameter>
-  <!--Name of the ReconstructedParticle collection-->
-  <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
-  <!--Assumed time resolution per hit in ps-->
-  <parameter name="TimeResolution" type="float">0 </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+ <processor name="TOFEstimators0psOld" type="TOFEstimators">
+     <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
+      <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
+      <parameter name="MaxLayerNumber" type="int">10 </parameter>
+      <!--Name of the ReconstructedParticle collection-->
+      <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+      <!--Assumed time resolution per hit in ps-->
+      <parameter name="TimeResolution" type="float">0 </parameter>
+      <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+      <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+
+      <!--Assumed time resolution per hit in ps-->
+      <parameter name="ProcessorVersion" type="string">old</parameter>
 </processor>
+
+
+<processor name="TOFEstimators0psNew" type="TOFEstimators">
+     <parameter name="MaxLayerNumber" type="int">10 </parameter>
+     <parameter name="TimeResolution" type="float">0 </parameter>
+     <parameter name="ProcessorVersion" type="string">new</parameter>
+</processor>
+
  <processor name="TOFEstimators10ps" type="TOFEstimators">
- <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
-  <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
-  <parameter name="MaxLayerNumber" type="int">10 </parameter>
-  <!--Name of the ReconstructedParticle collection-->
-  <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
-  <!--Assumed time resolution per hit in ps-->
-  <parameter name="TimeResolution" type="float">10. </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+    <parameter name="MaxLayerNumber" type="int">10 </parameter>
+    <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+    <parameter name="TimeResolution" type="float">10. </parameter>
 </processor>
+
  <processor name="TOFEstimators50ps" type="TOFEstimators">
- <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
-  <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
-  <parameter name="MaxLayerNumber" type="int">10 </parameter>
-  <!--Name of the ReconstructedParticle collection-->
-  <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
-  <!--Assumed time resolution per hit in ps-->
-  <parameter name="TimeResolution" type="float">50 </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+    <parameter name="MaxLayerNumber" type="int">10 </parameter>
+    <parameter name="ReconstructedParticleCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+    <parameter name="TimeResolution" type="float">50 </parameter>
 </processor>
 
  <processor name="MyTOFPlots" type="TOFPlots">
- <!--TOFPlots creates plots related to potential time of flight measurements with the calorimter-->
-  <!--Name of the MCParticle collection-->
-  <parameter name="MCPCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
-  <!--Name of the ReconstructedParticle collection-->
-  <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+    <parameter name="MCPCollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
+    <parameter name="PFOCollectionName" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
 </processor>
 
 
@@ -120,6 +117,13 @@
   <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
 </processor>
 
+
+<processor name="InitDD4hep" type="InitializeDD4hep">
+    <!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
+    <parameter name="DD4hepXMLFile" type="string">
+        /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02/lcgeo/v00-16-06/ILD/compact/${DetectorModel}/${DetectorModel}.xml
+    </parameter>
+</processor>
 
 
 </marlin>

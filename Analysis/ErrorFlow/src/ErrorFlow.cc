@@ -385,7 +385,7 @@ void ErrorFlow::processEvent( LCEvent * evt ) {
 							    * eLeptonsTotal * eLeptonsTotal;
 
 		 // Sum up all uncertainties to get total jet energy uncertainty
-		 if ( p_propagateConfusiontoMomentumComp )
+		 if ( p_confusionterm && p_propagateConfusiontoMomentumComp )
 		 {
 			for ( int iElement = 0 ; iElement < 10 ; ++iElement )
 			{

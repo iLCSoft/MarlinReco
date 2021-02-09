@@ -4,12 +4,12 @@
  *       Filename:  ErrorFlow.h
  *
  *    Description:  The ErrorFlow processor computes jet-specific energy uncertainty
- *									by summing up the uncertainty of individual particles clustered
- *									in a jet object. 
- *									The processor updates the covariance matrix of the jet object with
- *									the computed energy uncertainty and creates a ROOT tree with
- *									breanches for PFO multiplicities and various terms contributing to
- *									the total jet energy uncertainty.
+ *		    by summing up the uncertainty of individual particles clustered
+ *		    in a jet object. 
+ *		    The processor updates the covariance matrix of the jet object with
+ *		    the computed energy uncertainty and creates a ROOT tree with
+ *		    breanches for PFO multiplicities and various terms contributing to
+ *		    the total jet energy uncertainty.
  *
  *        Version:  1.0
  *        Created:  08/20/2015 03:22:32 PM

@@ -53,9 +53,9 @@ class RealisticCaloDigi : virtual public Processor {
   float SmearTime(float time) const;
 
   // virtual methods to be be overloaded in tech-specific derived classes
-  virtual int   getMyUnit()=0;
-  virtual float digitiseDetectorEnergy(float energy) = 0 ;
-  virtual float convertEnergy( float energy, int inScale ) = 0; // convert energy from input to output scale
+  virtual int   getMyUnit() const = 0 ;
+  virtual float digitiseDetectorEnergy(float energy) const = 0 ;
+  virtual float convertEnergy( float energy, int inScale ) const = 0; // convert energy from input to output scale
 
   // general parameters
 

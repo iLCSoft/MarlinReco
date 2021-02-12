@@ -18,9 +18,9 @@ class RealisticCaloDigiScinPpd : public RealisticCaloDigi {
   RealisticCaloDigiScinPpd() ;
 
  protected:
-  int getMyUnit() {return NPE;}
-  float digitiseDetectorEnergy(float energy); // apply scin+PPD specific effects
-  float convertEnergy( float energy, int inputUnit ); // convert energy from input to output scale
+  int getMyUnit() const {return NPE;}
+  float digitiseDetectorEnergy(float energy) const ; // apply scin+PPD specific effects
+  float convertEnergy( float energy, int inputUnit ) const; // convert energy from input to output scale
 
   float _PPD_pe_per_mip{};         // # photoelectrons/MIP for PPD
   int   _PPD_n_pixels{};           // # pixels in PPD

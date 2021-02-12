@@ -18,9 +18,9 @@ class RealisticCaloDigiSilicon : public RealisticCaloDigi {
   RealisticCaloDigiSilicon() ;
 
  protected:
-  int getMyUnit() {return MIP;}
-  float convertEnergy( float energy, int inputUnit ); // convert energy from input to output (MIP) scale 
-  float digitiseDetectorEnergy(float energy);         // apply silicon-specific realistic digitisation
+  int getMyUnit() const {return MIP;}
+  float convertEnergy( float energy, int inputUnit )const; // convert energy from input to output (MIP) scale 
+  float digitiseDetectorEnergy(float energy)const;         // apply silicon-specific realistic digitisation
   float _ehEnergy{};                                    // energy to create e-h pair in silicon
 } ;
 

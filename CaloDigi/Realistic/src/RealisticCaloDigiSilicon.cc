@@ -26,7 +26,7 @@ RealisticCaloDigiSilicon::RealisticCaloDigiSilicon() : RealisticCaloDigi::Proces
                              (float)3.6);
 }
 
-float RealisticCaloDigiSilicon::convertEnergy( float energy, int inUnit ) { // convert energy from input to output scale (MIP)
+float RealisticCaloDigiSilicon::convertEnergy( float energy, int inUnit ) const { // convert energy from input to output scale (MIP)
   // converts input energy to MIP scale
   if      ( inUnit==MIP ) return energy;
   else if ( inUnit==GEVDEP ) return energy/_calib_mip;
@@ -35,7 +35,7 @@ float RealisticCaloDigiSilicon::convertEnergy( float energy, int inUnit ) { // c
 }
 
 
-float RealisticCaloDigiSilicon::digitiseDetectorEnergy(float energy) {
+float RealisticCaloDigiSilicon::digitiseDetectorEnergy(float energy) const {
   // applies extra digitisation to silicon hits
   //  input energy in deposited GeV
   //  output is MIP scale

@@ -47,7 +47,7 @@ RealisticCaloDigiScinPpd::RealisticCaloDigiScinPpd() : RealisticCaloDigi::Proces
 }
 
 
-float RealisticCaloDigiScinPpd::convertEnergy( float energy, int inUnit ) { // convert energy from input to output scale (NPE)
+float RealisticCaloDigiScinPpd::convertEnergy( float energy, int inUnit ) const { // convert energy from input to output scale (NPE)
   if      ( inUnit==NPE ) return energy;
   else if ( inUnit==MIP ) return _PPD_pe_per_mip*energy;
   else if ( inUnit==GEVDEP ) return _PPD_pe_per_mip*energy/_calib_mip;
@@ -55,7 +55,7 @@ float RealisticCaloDigiScinPpd::convertEnergy( float energy, int inUnit ) { // c
   assert (0);
 }
 
-float RealisticCaloDigiScinPpd::digitiseDetectorEnergy(float energy) {
+float RealisticCaloDigiScinPpd::digitiseDetectorEnergy(float energy) const {
   // input energy in deposited GeV
   // output in npe
   float npe = energy*_PPD_pe_per_mip/_calib_mip; // convert to pe scale

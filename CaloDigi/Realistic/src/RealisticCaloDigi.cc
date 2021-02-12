@@ -10,6 +10,7 @@
 #include <CalorimeterHitType.h>
 #include <EVENT/LCParameters.h>
 #include <UTIL/CellIDDecoder.h>
+#include <marlin/ProcessorEventSeeder.h>
 
 #include <iostream>
 #include <string>
@@ -17,6 +18,7 @@
 #include <cmath>
 #include <set>
 
+#include "CLHEP/Random/Random.h"
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Units/PhysicalConstants.h"
@@ -28,6 +30,11 @@ using namespace std;
 using namespace lcio ;
 using namespace marlin ;
 using namespace std::placeholders;
+
+struct MCC {
+  float energy {0.f};
+  float time {0.f};
+};
 
 RealisticCaloDigi::RealisticCaloDigi( ) : Processor( "RealisticCaloDigi" ) {
 
@@ -226,7 +233,7 @@ void RealisticCaloDigi::init() {
 
   _flag_rel.setBit(LCIO::LCREL_WEIGHTED); // for the hit relations
 
-
+  marlin::Global::EVENTSEEDER->registerProcessor(this);
   return;
 }
 
@@ -236,7 +243,7 @@ void RealisticCaloDigi::processRunHeader( LCRunHeader*  /*run*/) {
 
 void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 
-  // create the output collections
+  CLHEP::HepRandom::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
 
   // decide on this event's correlated miscalibration
   if ( _misCalib_correl>0 ) _event_correl_miscalib = CLHEP::RandGauss::shoot( 1.0, _misCalib_correl );
@@ -285,8 +292,6 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
         float energyDep = integrationResult.value().second;
         // apply extra energy digitisation onto the energy
         float energyDig = EnergyDigi(energyDep, simhit->getCellID0() , simhit->getCellID1() );
-
-	      streamlog_out ( DEBUG0 ) << " hit " << j << " time: " << time << " eDep: " << energyDep << " eDigi: " << energyDig << " " << _threshold_value << endl;
 
         if (energyDig > _threshold_value) { // write out this hit
           CalorimeterHitImpl* newhit = new CalorimeterHitImpl();
@@ -442,12 +447,13 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::StandardIntegration( const 
 RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCalorimeterHit * hit ) const {
   const unsigned int ncontrib = hit->getNMCContributions() ;
   // Sort MC contribution by time
-  std::vector<EVENT::MCParticle*> mcconts{ncontrib, nullptr};
+  std::vector<MCC> mcconts{ncontrib};
   for(unsigned int i = 0; i<ncontrib; i++){
-    mcconts[i]=hit->getParticleCont(i);
+    mcconts[i].energy = hit->getEnergyCont(i);
+    mcconts[i].time = hit->getTimeCont(i);
   }
   std::sort(mcconts.begin(), mcconts.end(), [](auto lhs, auto rhs){
-    return (lhs->getTime() < rhs->getTime()); 
+    return (lhs.time < rhs.time);
   });
   // Accumulate energy until threshold is reached.
   // The first MC contriubtion after the threshold has been reached sets the hit time 
@@ -457,18 +463,18 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCa
   // First determine the hit time (hitTime) and the initial hit index 
   // at which we need to start the integration (thresholdIndex)
   for(unsigned int i=0; i<ncontrib ; ++i) {
-    const auto timei = mcconts[i]->getTime();
+    const auto timei = mcconts[i].time;
     thresholdIndex = i ;
     epar = 0.f;
     for(unsigned int j=i; j<ncontrib ; ++j) {
-      const auto timej = mcconts[j]->getTime();
+      const auto timej = mcconts[j].time;
       if( (timej-timei) < _fast_shaper) {
-        epar += mcconts[j]->getEnergy();
+        epar += mcconts[j].energy;
       }
       else {
         break;
       }
-      if( epar > _threshold_value ) {
+      if( convertEnergy(epar, GEVDEP) > _threshold_value ) {
         hitTime = timej;
         passThreshold = true ;
         break;
@@ -481,11 +487,11 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCa
   // If we've found a hit above the threshold, accumulate the energy until
   // until the maximum time given by the slow shaper
   if(passThreshold) {
-    const float thresholdTime = mcconts[thresholdIndex]->getTime();
+    const float thresholdTime = mcconts[thresholdIndex].time;
     float energySum = 0.f ; 
     for(unsigned int i=thresholdIndex ; i<ncontrib ; ++i) {
-      if( mcconts[i]->getTime() < thresholdTime + _slow_shaper) {
-        energySum += mcconts[i]->getEnergy();
+      if( mcconts[i].time < thresholdTime + _slow_shaper) {
+        energySum += mcconts[i].energy;
       }
     }
     hitTime = SmearTime(hitTime);

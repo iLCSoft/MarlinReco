@@ -20,6 +20,8 @@
 using namespace lcio ;
 using namespace marlin ;
 
+struct MCPseen : LCIntExtension<MCPseen> {} ;
+
 
   TrueJet_Parser::TrueJet_Parser() {
    
@@ -64,34 +66,33 @@ double TrueJet_Parser::Etrue(int ijet) {
   return E;
 }
 double TrueJet_Parser::Mtrue(int ijet) {
-  const double* p4 = p4true(ijet);
+  const double* p_4 = p4true(ijet);
   double psqr=0;
   for (int kk=1 ; kk<=3 ; kk++ ) {
-     psqr+=p4[kk]*p4[kk];
+     psqr+=p_4[kk]*p_4[kk];
   }
-  double M=sqrt(p4[0]*p4[0]-psqr);
+  double M=sqrt(p_4[0]*p_4[0]-psqr);
   return M ;
 }
 const double* TrueJet_Parser::ptrue(int ijet) {
   static FloatVec www ;
   LCObjectVec mcpvec = reltjmcp->getRelatedToObjects( jets->at(ijet) );
   www =  reltjmcp->getRelatedToWeights( jets->at(ijet));
-  //double* p=0; 
   p3[0]=0.; p3[1]=0.; p3[2]=0.; 
   for ( unsigned kk=0 ; kk<mcpvec.size() ; kk++ ) {
     MCParticle* mcp  = dynamic_cast<MCParticle*>(mcpvec[kk]);
     if ( _COUNT_FSR ) {
       if (  abs(www[kk]) == 1.0) {
         const double* mom = mcp->getMomentum();
-        for (int kk=0 ; kk<3 ; kk++ ) {
-          p3[kk]+=mom[kk];
+        for (int jj=0 ; jj<3 ; jj++ ) {
+          p3[jj]+=mom[jj];
         }
       }
     } else {
       if (  www[kk] == 1.0) {
         const double* mom = mcp->getMomentum();
-        for (int kk=0 ; kk<3 ; kk++ ) {
-          p3[kk]+=mom[kk];
+        for (int jj=0 ; jj<3 ; jj++ ) {
+          p3[jj]+=mom[jj];
         }
       }
     }
@@ -100,7 +101,6 @@ const double* TrueJet_Parser::ptrue(int ijet) {
 }
 
 const double* TrueJet_Parser::p4true(int ijet) {
-  // double* p4=0; 
   const double* mom = ptrue(ijet);
   for (int kk=1 ; kk<=3 ; kk++ ) {
      p4[kk]=mom[kk-1];
@@ -108,6 +108,16 @@ const double* TrueJet_Parser::p4true(int ijet) {
   p4[0]=Etrue(ijet);
   return p4 ;
 }
+
+const MCParticleVec& TrueJet_Parser::true_partics(int ijet) {
+  mcpartvec->clear();
+  MCParticleVec* jetmcps=mcpartvec;
+  LCObjectVec jetmcpsx = reltjmcp->getRelatedToObjects( jets->at(ijet) );
+  for ( unsigned iii=0 ; iii < jetmcpsx.size() ; iii++ ) {
+    jetmcps->push_back(dynamic_cast<MCParticle*>(jetmcpsx[iii]));
+  }
+  return *jetmcps;
+}  
 
 const double* TrueJet_Parser::pquark(int ijet) {
   if (final_elementon(ijet) != NULL ) {
@@ -119,7 +129,6 @@ const double* TrueJet_Parser::pquark(int ijet) {
 }
 
 const double* TrueJet_Parser::p4quark(int ijet) {
-  //  double* p4; 
   const double* mom = pquark(ijet);
   for (int kk=1 ; kk<=3 ; kk++ ) {
      p4[kk]=mom[kk-1];
@@ -147,19 +156,27 @@ double TrueJet_Parser::Etrueseen(int ijet) {
   for ( unsigned kk=0 ; kk<mcpvec.size() ; kk++ ) {
     MCParticle* mcp  = dynamic_cast<MCParticle*>(mcpvec[kk]);
     LCObjectVec recovec = reltrue_tj->getRelatedFromObjects( mcp);
-   if ( recovec.size() > 0 ) { // if reconstructed
-      E+=mcp->getEnergy();
+    if ( recovec.size() > 0 ) { // if reconstructed
+      if ( mcp->getParents().size() == 0 || ! ( mcp->getParents()[0]->ext<MCPseen>() == 1) ) {  // if ancestor not already counted
+        E+=mcp->getEnergy();
+      }
+      mcp->ext<MCPseen>() = 1 ;
+    } else {
+      if (  mcp->getParents().size() > 0 && mcp->getParents()[0]->ext<MCPseen>() == 1 ) {   // if parent of particles seen, 
+                                                                                            // consider the particle itself as seen as seen
+        mcp->ext<MCPseen>() = 1 ; 
+      }
     }
   }
   return E;
 }
 double TrueJet_Parser::Mtrueseen(int ijet) {
-  const double* p4 = p4trueseen(ijet);
+  const double* p_4 = p4trueseen(ijet);
   double psqr=0;
   for (int kk=1 ; kk<=3 ; kk++ ) {
-     psqr+=p4[kk]*p4[kk];
+     psqr+=p_4[kk]*p_4[kk];
   }
-  double M=sqrt(p4[0]*p4[0]-psqr);
+  double M=sqrt(p_4[0]*p_4[0]-psqr);
   return M ;
 }
 const double* TrueJet_Parser::ptrueseen(int ijet) {
@@ -176,15 +193,22 @@ const double* TrueJet_Parser::ptrueseen(int ijet) {
     reltrue_tj = new LCRelationNavigator( rmclcol );
   }  
   LCObjectVec mcpvec = reltjmcp->getRelatedToObjects( jets->at(ijet) );
-  //double* p=0; 
   p3[0]=0 ; p3[1]=0 ; p3[2]=0 ; 
   for ( unsigned kk=0 ; kk<mcpvec.size() ; kk++ ) {
     MCParticle* mcp  = dynamic_cast<MCParticle*>(mcpvec[kk]);
     LCObjectVec recovec = reltrue_tj->getRelatedFromObjects( mcp);
     if ( recovec.size() > 0 ) { // if reconstructed
-      const double* mom = mcp->getMomentum();
-      for (int kk=0 ; kk<3 ; kk++ ) {
-        p3[kk]+=mom[kk];
+      if ( mcp->getParents().size() == 0 || ! ( mcp->getParents()[0]->ext<MCPseen>() == 1 ) ) {  // if ancestor not already counted
+        const double* mom = mcp->getMomentum();
+        for (int jj=0 ; jj<3 ; jj++ ) {
+          p3[jj]+=mom[jj];
+        }
+      }
+      mcp->ext<MCPseen>() = 1 ;
+    } else {
+      if (  mcp->getParents().size() > 0 && mcp->getParents()[0]->ext<MCPseen>() == 1 ) {   // if parent of particles seen, 
+                                                                                            // consider the particle itself as seen as seen
+        mcp->ext<MCPseen>() = 1 ; 
       }
     }
   }
@@ -192,7 +216,6 @@ const double* TrueJet_Parser::ptrueseen(int ijet) {
 }
 
 const double* TrueJet_Parser::p4trueseen(int ijet) {
-  //double* p4=0; 
   const double* mom = ptrueseen(ijet);
   for (int kk=1 ; kk<=3 ; kk++ ) {
      p4[kk]=mom[kk-1];
@@ -291,7 +314,67 @@ const IntVec& TrueJet_Parser::initial_siblings( int ijet ){
   return *sibl;
   //
 
+}
+
+int TrueJet_Parser::mcpjet( MCParticle* mcp) {
+   LCObjectVec jetvec = reltjmcp->getRelatedFromObjects( mcp );
+   if (jetvec.size() > 0 ) {
+     return  jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0])) ;
+   } else {
+     return -1000 ;
+   }
 } 
+
+int TrueJet_Parser::mcpicn( MCParticle* mcp) {
+   LCObjectVec jetvec = reltjmcp->getRelatedFromObjects( mcp );
+   if (jetvec.size() > 0 ) {
+     return  final_cn(jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0]))) ;
+   } else {
+     return -1000 ;
+   }
+
+} 
+
+int TrueJet_Parser::mcpfcn( MCParticle* mcp) {
+   LCObjectVec jetvec = reltjmcp->getRelatedFromObjects( mcp );
+   if (jetvec.size() > 0 ) {
+     return initial_cn( jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0]))) ;
+   } else {
+     return -1000 ;
+   }
+
+} 
+
+int TrueJet_Parser::recojet( ReconstructedParticle* reco) {
+   LCObjectVec jetvec = reltjreco->getRelatedFromObjects( reco );
+   if (jetvec.size() > 0 ) {
+     return  jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0])) ;
+   } else {
+     return -1000 ;
+   }
+
+} 
+
+int TrueJet_Parser::recoicn( ReconstructedParticle* reco) {
+   LCObjectVec jetvec = reltjreco->getRelatedFromObjects( reco );
+   if (jetvec.size() > 0 ) {
+     return  final_cn(jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0]))) ;
+   } else {
+     return -1000 ;
+   }
+
+} 
+
+int TrueJet_Parser::recofcn( ReconstructedParticle* reco) {
+   LCObjectVec jetvec = reltjreco->getRelatedFromObjects( reco );
+   if (jetvec.size() > 0 ) {
+     return initial_cn( jetindex( dynamic_cast<ReconstructedParticle*>(jetvec[0]))) ;
+   } else {
+     return -1000 ;
+   }
+
+} 
+
 int TrueJet_Parser::final_cn( int ijet ) {
    LCObjectVec fcnvec = relfcn->getRelatedToObjects( jets->at(ijet) );
    int fcn ;
@@ -367,7 +450,6 @@ const IntVec&  TrueJet_Parser::type_icn_comps(int iicn) {
 
 
 const double* TrueJet_Parser::p4_icn(int iicn) { 
-  //double* p4=0; 
   const double* mom = p_icn(iicn);
    for (int kk=1 ; kk<=3 ; kk++ ) {
      p4[kk]=mom[kk-1];
@@ -398,7 +480,6 @@ const IntVec&  TrueJet_Parser::type_fcn_comps(int ifcn) {
 
 
 const double* TrueJet_Parser::p4_fcn(int ifcn) { 
-  //double* p4=0; 
   const double* mom = p_fcn(ifcn);
    for (int kk=1 ; kk<=3 ; kk++ ) {
      p4[kk]=mom[kk-1];
@@ -466,6 +547,7 @@ void TrueJet_Parser::getall( LCEvent * event ) {
      // get TrueJets
     try{
       tjcol = evt->getCollection( _trueJetCollectionName);
+      if (  tjcol->getNumberOfElements() == 0 ) { return ; }
     }
     catch( lcio::DataNotAvailableException e )
     {

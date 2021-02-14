@@ -18,14 +18,13 @@
  <global>
 
 <parameter name="LCIOInputFiles">
-/afs/desy.de/group/flc/pool/analysis/rv01-16-p05_500.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.I250006.P4f_ww_h.eL.pR-00001-DST.slcio
+inputdst
 </parameter>
   <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="10" />  
-  <parameter name="SkipNEvents" value="" />  
+  <parameter name="MaxRecordNumber" value="1000" />  
+  <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile"> gear_ild.xml </parameter>  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG5 </parameter> 
+  <!-- parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG4</parameter--> 
  </global>
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">
@@ -42,7 +41,12 @@
 
 
  <processor name="mytruejet" type="TrueJet">
- <!-- These are the defaults, probably exactly what you need.
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">
+DEBUG9
+  </parameter> 
+
+
+<!-- These are the defaults, probably exactly what you need.
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed</parameter>
   <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
   <parameter name="RecoMCTruthLinkName" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
@@ -57,13 +61,25 @@
   <parameter name="InitialElementonLink" type="string" lcioOutType="LCRelation">InitialElementonLink</parameter>
   <parameter name="InitialColourNeutralLink" type="string" lcioOutType="LCRelation">InitialColourNeutralLink</parameter>
   <parameter name="InitialColourNeutralLink" type="string" lcioOutType="LCRelation">InitialColourNeutralLink</parameter>
+   <parameter name="Whizard1" type="bool">0</parameter>
   -->
+
+<!-- these two might need to be switched on depending on input (IDR samples require both, input generator
+     samples require the first one) -->
+
+<!--
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle</parameter>
+ -->
+<!--
+   <parameter name="Whizard1" type="bool">1</parameter>  
+-->
 
 
 </processor>
 
 
 <processor name="myuse_truejet" type="Use_TrueJet">
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG5</parameter> 
  <!-- Using the defaults above, only your "own" parameters are needed 
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed</parameter>
   <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>

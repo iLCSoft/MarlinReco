@@ -11,7 +11,7 @@
 #include <random>
 #include <functional>
 #include <memory>
-using std::string, std::vector, std::endl;
+#include <limits>
 
 #include <gsl/gsl_rng.h>
 
@@ -19,13 +19,11 @@ using std::string, std::vector, std::endl;
 #include <EVENT/Cluster.h>
 
 #include "DDRec/Vector3D.h"
-using dd4hep::rec::Vector3D;
 
 using namespace lcio ;
 using namespace marlin ;
 
 #include "TH2F.h"
-// class TH2F ;
 
 /** Compute estimators for the time of flight from the CalorimeterHits in Clusters.
  *  The estimators are stored in a PID object with the name of the processor.
@@ -79,7 +77,7 @@ class TOFEstimators : public Processor {
     */
     virtual void end() ;
 
-    Vector3D getMomAtCalo(const Track*);
+    dd4hep::rec::Vector3D getMomAtCalo(const Track*);
     double getFlightLength(const Track*);
     double getTOFClosest(const Track*, const Cluster*);
     double getTOFFastest(const Track*, const Cluster*);
@@ -90,18 +88,21 @@ class TOFEstimators : public Processor {
 
     /** Input collection name with ReconstructedParticles (PFOs).
     */
-    string _colNamePFO{};
+    std::string _colNamePFO{};
 
-    string _procVersion{};
+    std::string _procVersion{};
     int _maxLayerNum{};
+    double _cylRadiusCut{};
     float _resolution{};
-    vector<string> _TOFNames{};
+    std::vector<std::string> _TOFNames{};
 
     gsl_rng* _rng = nullptr;
-    vector<TH2F*> _h{};
+    std::vector<TH2F*> _h{};
 
-    std::default_random_engine _generator{};
+    std::mt19937 _generator{};
     std::normal_distribution<double> _smearing{};
+
+    double _bField[3];
 };
 
 #endif

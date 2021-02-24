@@ -17,11 +17,11 @@
 using EVENT::LCCollection, EVENT::ReconstructedParticle;
 
 #include "DD4hep/Detector.h"
-using dd4hep::Detector;
 #include "DD4hep/DD4hepUnits.h"
 
 #include "TGraphErrors.h"
 #include "TF1.h"
+#include "TMath.h"
 
 #include "HelixClass.h"
 #include "marlinutil/CalorimeterHitType.h"
@@ -47,7 +47,8 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace TOFUtils ;
 
-#define SPEED_OF_LIGHT 299.792458
+// Speed of light in mm/ns = 299.79246
+#define SPEED_OF_LIGHT TMath::C()/1.e6
 
 
 TOFEstimators aTOFEstimators ;
@@ -57,38 +58,63 @@ TOFEstimators::TOFEstimators() : Processor("TOFEstimators") {
     _description = "TOFEstimators compute some estimators for the time of flight from calorimeter hits" ;
 
     // register steering parameters: name, description, class-variable, default value
-    registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE, "ReconstructedParticleCollection", "Name of the ReconstructedParticle collection", _colNamePFO , string("PandoraPFOs") );
-    registerProcessorParameter( "MaxLayerNumber", "Use only calorimeter hits up to MaxLayerNumber in TOF estimators", _maxLayerNum, int(100) );
-    registerProcessorParameter( "TimeResolution", "Assumed time resolution per hit in ps", _resolution, float(0.) );
-    registerProcessorParameter( "ProcessorVersion", "Legacy or new TOFEstimator", _procVersion, string("old") );
+    registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+                            "ReconstructedParticleCollection",
+                            "Name of the ReconstructedParticle collection",
+                            _colNamePFO,
+                            std::string("PandoraPFOs") );
+
+    registerProcessorParameter( "MaxLayerNumber",
+                            "Use only calorimeter hits up to MaxLayerNumber in TOF estimators",
+                            _maxLayerNum,
+                            int(100) );
+
+    registerProcessorParameter( "CylRadius",
+                            "Cut-off hits further away from the shower core than this raduius for TOF calculation",
+                            _cylRadiusCut,
+                            double(5.) );
+
+
+    registerProcessorParameter( "TimeResolution",
+                            "Assumed time resolution per hit in ps",
+                            _resolution,
+                            float(0.) );
+
+    registerProcessorParameter( "ProcessorVersion",
+                            "Legacy or new TOFEstimator",
+                            _procVersion,
+                            std::string("idr") );
 }
 
 
 void TOFEstimators::init() {
     Global::EVENTSEEDER->registerProcessor(this);
-    if ( _procVersion == "old" ){
+    if ( _procVersion == "idr" ){
         // initialize gsl random generator
         _rng = gsl_rng_alloc(gsl_rng_ranlxs2);
         _TOFNames = {"TOFFirstHit", "TOFClosestHits", "TOFClosestHitsError", "TOFFlightLength",  "TOFLastTrkHit" , "TOFLastTrkHitFlightLength"};
     }
-    else if (_procVersion == "new"){
+    else if (_procVersion == "dev"){
         _smearing.param( std::normal_distribution<double>::param_type(0., _resolution/1000.) );
         _TOFNames = {"TOFClosest", "TOFFastest", "TOFCylFit", "TOFClosestFit", "FlightLength", "MomAtCalo"};
+
+        const auto& detector = dd4hep::Detector::getInstance();
+        detector.field().magneticField({0., 0., 0.}, _bField);
     }
-    else { throw string("Invalid ProcessorVersion parameter passed!!!\n Viable options are: old (default), new"); }
+    else { throw std::string("Invalid ProcessorVersion parameter passed!!!\n Viable options are: idr (default), dev"); }
 }
 
 
 void TOFEstimators::processEvent( LCEvent * evt ) {
 
-    if ( _procVersion == "old" ){
+    if ( _procVersion == "idr" ){
         // use the global Marlin random seed for this processor
         gsl_rng_set( _rng, Global::EVENTSEEDER->getSeed(this) ) ;
 
-        streamlog_out(DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << endl;
+        streamlog_out(DEBUG ) << "seed set to " << Global::EVENTSEEDER->getSeed(this) << std::endl;
 
         streamlog_out(DEBUG2) << "   process event: " << evt->getEventNumber()
-        		<< "   in run:  " << evt->getRunNumber() << endl ;
+        		<< "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
         // get the PFO collection from the event if it exists
@@ -99,13 +125,13 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
         }
         catch(lcio::Exception&){
         streamlog_out( DEBUG6 ) << " collection " << _colNamePFO
-        		    << " not found in event - nothing to do ... " << endl ;
+        		    << " not found in event - nothing to do ... " << std::endl ;
         }
 
         if( colPFO->getTypeName() != LCIO::RECONSTRUCTEDPARTICLE ) {
 
         streamlog_out( ERROR ) << " collection " << _colNamePFO
-        		   << " not of type LCIO::RECONSTRUCTEDPARTICLE " << endl ;
+        		   << " not of type LCIO::RECONSTRUCTEDPARTICLE " << std::endl ;
 
         colPFO = nullptr ;
         }
@@ -129,26 +155,19 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
           if(  pfo->getClusters().size() != 1 ){
 
-        streamlog_out( DEBUG1 ) << " ignore particle w/ cluster number other than one:  " <<  *pfo << endl ;
+        streamlog_out( DEBUG1 ) << " ignore particle w/ cluster number other than one:  " <<  *pfo << std::endl ;
         continue ;
           }
 
-          if( fabs( pfo->getCharge() ) < 0.1  && pfo->getTracks().size() == 0  ) {
-
-        isCharged = false ;
-          }
-
+          if( fabs( pfo->getCharge() ) < 0.1  && pfo->getTracks().size() == 0  ) {;}
           else if ( fabs( pfo->getCharge() ) > 0.1  && pfo->getTracks().size() == 1  ) {
-
-        isCharged = true ;
-
-          } else {
-
-        streamlog_out( DEBUG1 ) << " ignore particle w/ track number other than zero or one:  " <<  *pfo << endl ;
-        continue ;
+              isCharged = true ;}
+          else {
+            streamlog_out( DEBUG1 ) << " ignore particle w/ track number other than zero or one:  " <<  *pfo << std::endl ;
+            continue ;
           }
 
-          streamlog_out( DEBUG1 ) << " --- compute TOF estimators for particle : " << *pfo << endl ;
+          streamlog_out( DEBUG1 ) << " --- compute TOF estimators for particle : " << *pfo << std::endl ;
 
 
 
@@ -207,15 +226,15 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
           if( layerMap.empty() ) {
 
-        streamlog_out( DEBUG1 ) << " --- not suitable Ecal hits found for particle " << endl ;
+        streamlog_out( DEBUG1 ) << " --- not suitable Ecal hits found for particle " << std::endl ;
         continue ;
           }
 
-          // streamlog_out( DEBUG ) << " --- map with hits per layer : " << endl ;
+          // streamlog_out( DEBUG ) << " --- map with hits per layer : " << std::endl ;
           // for( auto m : layerMap ){
-          // 	streamlog_out( DEBUG ) << "  ----- layer " << m.first << " : " << endl ;
+          // 	streamlog_out( DEBUG ) << "  ----- layer " << m.first << " : " << std::endl ;
           // 	for( auto ch : m.second )
-          // 	  streamlog_out( DEBUG ) << "            " << caloTypeStr( ch->lcioHit ) << endl ;
+          // 	  streamlog_out( DEBUG ) << "            " << caloTypeStr( ch->lcioHit ) << std::endl ;
           // }
 
 
@@ -257,14 +276,14 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
         if( lastTrackerHit->getTime() > 1e-3 ) {
           dd4hep::rec::Vector3D rpLH = tslh->getReferencePoint() ;
           dd4hep::rec::Vector3D lhp = lastTrackerHit->getPosition()  ;
-          streamlog_out( DEBUG3 ) << " *************** referenece point calo     : " << refPoint << endl ;
-          streamlog_out( DEBUG3 ) << " *************** referenece point last hit : " << rpLH << endl ;
-          streamlog_out( DEBUG3 ) << " *************** poistion         last hit : " << lhp << endl ;
-          streamlog_out( DEBUG3 ) << "   distance hit-trkstate: " << (rpLH - lhp ).r() << " --  distance  calo/last hit ref points : " << (refPoint-rpLH).r() << endl ;
+          streamlog_out( DEBUG3 ) << " *************** referenece point calo     : " << refPoint << std::endl ;
+          streamlog_out( DEBUG3 ) << " *************** referenece point last hit : " << rpLH << std::endl ;
+          streamlog_out( DEBUG3 ) << " *************** poistion         last hit : " << lhp << std::endl ;
+          streamlog_out( DEBUG3 ) << "   distance hit-trkstate: " << (rpLH - lhp ).r() << " --  distance  calo/last hit ref points : " << (refPoint-rpLH).r() << std::endl ;
           streamlog_out( DEBUG3 ) << "   flight lengths:  " << flightLength << "  - " << flightLengthTrkHit << "  -- diff " << flightLength - flightLengthTrkHit <<
-            " time diff: " << (flightLength - flightLengthTrkHit) / 299.8 << endl ;
-          streamlog_out( DEBUG3 ) << " track state : " << *tslh << endl ;
-          streamlog_out( DEBUG3 ) << " last hit : " << *lastTrackerHit << endl ;
+            " time diff: " << (flightLength - flightLengthTrkHit) / 299.8 << std::endl ;
+          streamlog_out( DEBUG3 ) << " track state : " << *tslh << std::endl ;
+          streamlog_out( DEBUG3 ) << " last hit : " << *lastTrackerHit << std::endl ;
         }
         #endif
 
@@ -289,9 +308,9 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
           }
 
-          streamlog_out( DEBUG2 ) << " ----- use reference point for TOF : " << refPoint << endl ;
+          streamlog_out( DEBUG2 ) << " ----- use reference point for TOF : " << refPoint << std::endl ;
 
-          streamlog_out( DEBUG ) << " -----  calorimeter hits considered for estimators : " << endl ;
+          streamlog_out( DEBUG ) << " -----  calorimeter hits considered for estimators : " << std::endl ;
 
 
           // ------  loop again over hits and fill missing data
@@ -307,16 +326,16 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
         ch->distancefromStraightline = computeDistanceFromLine( calohit, refPoint, unitDir ) ;
 
         streamlog_out( DEBUG ) <<  "     ----- " << caloTypeStr( calohit )
-        		       <<  " --  " <<  ch->toString()   <<   endl ;
+        		       <<  " --  " <<  ch->toString()   <<   std::endl ;
           }
 
           // ---- now get hits that are closest to the extrapolated line
           CaloHitDataVec tofHits = findHitsClosestToLine( layerMap ) ;
 
 
-          streamlog_out( DEBUG )   <<  " ***** hits used for the TOF estimator : " << endl ;
+          streamlog_out( DEBUG )   <<  " ***** hits used for the TOF estimator : " << std::endl ;
           for( auto ch : tofHits ){
-        streamlog_out( DEBUG ) <<  "     ----- " << ch->toString() << endl ;
+        streamlog_out( DEBUG ) <<  "     ----- " << ch->toString() << std::endl ;
           }
 
           auto t_dt     = computeTOFEstimator( tofHits ) ;
@@ -325,8 +344,8 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
           float tof_fh = tofHits[0]->smearedTime - tofHits[0]->distanceFromReferencePoint / c_mm_per_ns ;
 
-          streamlog_out( DEBUG2 ) << "  #### tof ( first ) : " <<  tof_fh << " +/- " << 0 << endl ;
-          streamlog_out( DEBUG2 ) << "  #### tof ( straight line ) : " << t_dt.first << " +/- " << t_dt.second << endl ;
+          streamlog_out( DEBUG2 ) << "  #### tof ( first ) : " <<  tof_fh << " +/- " << 0 << std::endl ;
+          streamlog_out( DEBUG2 ) << "  #### tof ( straight line ) : " << t_dt.first << " +/- " << t_dt.second << std::endl ;
 
 
           float trkHitTime = ( lastTrackerHit ?   lastTrackerHit->getTime()   : 0.  ) ;
@@ -345,7 +364,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
         }
     }
-    else if (_procVersion == "new"){
+    else if (_procVersion == "dev"){
         _generator.seed( Global::EVENTSEEDER->getSeed(this) );
 
         LCCollection* colPFO = evt->getCollection(_colNamePFO);
@@ -370,7 +389,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
             float tofCylFit = getTOFCylFit(track, cluster);
             float tofClosestFit = getTOFClosestFit(track, cluster);
 
-            const vector <float> results{tofClosest, tofFastest, tofCylFit, tofClosestFit, flightLength, momAtCalo};
+            const std::vector <float> results{tofClosest, tofFastest, tofCylFit, tofClosestFit, flightLength, momAtCalo};
             handler.setParticleID(pfo , 0, 0, 0., algoID, results);
         }
     }
@@ -378,8 +397,8 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
 
 void TOFEstimators::check( LCEvent *evt) {
-    if( _procVersion == "old"){
-      streamlog_out( DEBUG ) << " --- check called ! " << endl ;
+    if( _procVersion == "idr"){
+      streamlog_out( DEBUG ) << " --- check called ! " << std::endl ;
 
 
       // create some histograms with beta vs momentum for charged particles
@@ -387,7 +406,7 @@ void TOFEstimators::check( LCEvent *evt) {
       if( isFirstEvent() ){
 
         // this creates a directory for this processor ....
-        AIDAProcessor::histogramFactory( this ) ;
+        AIDAProcessor::tree( this ) ;
 
         _h.resize(5) ;
         int nBins = 100 ;
@@ -426,7 +445,7 @@ void TOFEstimators::check( LCEvent *evt) {
 
           const FloatVec& tofParams = tofPID.getParameters() ;
 
-          streamlog_out( DEBUG ) << " ****  found TOF parameters for pfo w/ size " << tofParams.size() << endl ;
+          streamlog_out( DEBUG ) << " ****  found TOF parameters for pfo w/ size " << tofParams.size() << std::endl ;
 
           if( !tofParams.empty() ){
 
@@ -461,10 +480,12 @@ void TOFEstimators::check( LCEvent *evt) {
 }
 
 
-void TOFEstimators::end(){ if( _procVersion == "old") gsl_rng_free( _rng ); }
+void TOFEstimators::end(){
+    if( _procVersion == "idr") gsl_rng_free( _rng );
+}
 
 
-Vector3D TOFEstimators::getMomAtCalo(const Track* track){
+dd4hep::rec::Vector3D TOFEstimators::getMomAtCalo(const Track* track){
     const TrackState* ts = track->getTrackState(TrackState::AtCalorimeter);
     double phi = ts->getPhi();
     double d0 = ts->getD0();
@@ -472,12 +493,8 @@ Vector3D TOFEstimators::getMomAtCalo(const Track* track){
     double omega = ts->getOmega();
     double tanL = ts->getTanLambda();
 
-    const Detector& detector = Detector::getInstance();
-    double bField[3];
-    detector.field().magneticField({0., 0., 0.}, bField);
-
     HelixClass helix;
-    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, bField[2]/dd4hep::tesla);
+    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, _bField[2]/dd4hep::tesla);
     return helix.getMomentum();
 }
 
@@ -496,16 +513,16 @@ double TOFEstimators::getFlightLength(const Track* track){
 
 double TOFEstimators::getTOFClosest(const Track* track, const Cluster* cluster){
     const TrackState* ts = track->getTrackState(TrackState::AtCalorimeter);
-    Vector3D trackAtCaloPos = ts->getReferencePoint();
+    dd4hep::rec::Vector3D trackAtCaloPos = ts->getReferencePoint();
 
-    double dToImpactMin = 99999.;
+    double dToImpactMin = std::numeric_limits<double>::max();
     double hitTime = 0.;
-    for (auto&& hit : cluster->getCalorimeterHits() ){
+    for (const auto& hit : cluster->getCalorimeterHits() ){
         CHT hitType( hit->getType() );
         bool isEcal = (hitType.caloID() == CHT::ecal);
         if (!isEcal) continue;
 
-        Vector3D hitPos = hit->getPosition() ;
+        dd4hep::rec::Vector3D hitPos = hit->getPosition() ;
         double dToImpact = (hitPos - trackAtCaloPos).r();
 
         if(dToImpact < dToImpactMin){
@@ -520,16 +537,16 @@ double TOFEstimators::getTOFClosest(const Track* track, const Cluster* cluster){
 
 double TOFEstimators::getTOFFastest(const Track* track, const Cluster* cluster){
     const TrackState* ts = track->getTrackState(TrackState::AtCalorimeter);
-    Vector3D trackAtCaloPos = ts->getReferencePoint();
+    dd4hep::rec::Vector3D trackAtCaloPos = ts->getReferencePoint();
 
     double dToImpactMin = 0.;
-    double hitTimeMin = 99999.;
-    for (auto&& hit : cluster->getCalorimeterHits() ){
+    double hitTimeMin = std::numeric_limits<double>::max();
+    for (const auto& hit : cluster->getCalorimeterHits() ){
         CHT hitType( hit->getType() );
         bool isEcal = (hitType.caloID() == CHT::ecal);
         if (!isEcal) continue;
 
-        Vector3D hitPos = hit->getPosition();
+        dd4hep::rec::Vector3D hitPos = hit->getPosition();
         double dToImpact = (hitPos - trackAtCaloPos).r();
         double hitTime = hit->getTime() + _smearing(_generator);
         if(hitTime < hitTimeMin){
@@ -543,21 +560,21 @@ double TOFEstimators::getTOFFastest(const Track* track, const Cluster* cluster){
 
 double TOFEstimators::getTOFCylFit(const Track* track, const Cluster* cluster){
     const TrackState* ts = track->getTrackState(TrackState::AtCalorimeter);
-    Vector3D trackAtCaloPos = ts->getReferencePoint();
-    Vector3D trackAtCaloMom = getMomAtCalo(track);
+    dd4hep::rec::Vector3D trackAtCaloPos = ts->getReferencePoint();
+    dd4hep::rec::Vector3D trackAtCaloMom = getMomAtCalo(track);
 
-    vector <double> x, xErr, y, yErr;
+    std::vector <double> x, xErr, y, yErr;
 
-    for (auto&& hit : cluster->getCalorimeterHits() ){
+    for (const auto& hit : cluster->getCalorimeterHits() ){
         CHT hitType( hit->getType() );
         bool isEcal = (hitType.caloID() == CHT::ecal);
         int layer = hitType.layer();
         if (!isEcal || layer >= _maxLayerNum) continue;
 
-        Vector3D hitPos = hit->getPosition();
+        dd4hep::rec::Vector3D hitPos = hit->getPosition();
         double dToLine = (hitPos - trackAtCaloPos).cross(trackAtCaloMom.unit()).r();
         // take only hits from 5 mm cylinders. 5 mm value was ibtain optimizing on photons
-        if (dToLine > 5.) continue;
+        if (dToLine > _cylRadiusCut) continue;
 
         x.push_back( (hitPos - trackAtCaloPos).r() );
         y.push_back( hit->getTime() + _smearing(_generator) );
@@ -576,23 +593,23 @@ double TOFEstimators::getTOFCylFit(const Track* track, const Cluster* cluster){
 
 double TOFEstimators::getTOFClosestFit(const Track* track, const Cluster* cluster){
     const TrackState* ts = track->getTrackState(TrackState::AtCalorimeter);
-    Vector3D trackAtCaloPos = ts->getReferencePoint();
-    Vector3D trackAtCaloMom = getMomAtCalo(track);
+    dd4hep::rec::Vector3D trackAtCaloPos = ts->getReferencePoint();
+    dd4hep::rec::Vector3D trackAtCaloMom = getMomAtCalo(track);
 
     std::map<int, double> dToImpact;
     std::map<int, double> hitTime;
     std::map<int, double> dToLineMin;
     for(int i=0; i<_maxLayerNum; ++i) dToImpact[i] = 0.;
     for(int i=0; i<_maxLayerNum; ++i) hitTime[i] = 0.;
-    for(int i=0; i<_maxLayerNum; ++i) dToLineMin[i] = 99999.;
+    for(int i=0; i<_maxLayerNum; ++i) dToLineMin[i] = std::numeric_limits<double>::max();
 
-    for (auto&& hit : cluster->getCalorimeterHits() ){
+    for (const auto& hit : cluster->getCalorimeterHits() ){
         CHT hitType( hit->getType() );
         bool isEcal = (hitType.caloID() == CHT::ecal);
         int layer = hitType.layer();
         if (!isEcal || layer >= _maxLayerNum) continue;
 
-        Vector3D hitPos = hit->getPosition();
+        dd4hep::rec::Vector3D hitPos = hit->getPosition();
         double dToLine = (hitPos - trackAtCaloPos).cross(trackAtCaloMom.unit()).r();
         if( dToLine < dToLineMin[layer] ){
             dToLineMin[layer] = dToLine;
@@ -601,7 +618,7 @@ double TOFEstimators::getTOFClosestFit(const Track* track, const Cluster* cluste
         }
     }
 
-    vector <double> x, xErr, y, yErr;
+    std::vector <double> x, xErr, y, yErr;
 
     for(int i=0; i<_maxLayerNum; ++i){
         if (hitTime[i] <= 0.) continue;

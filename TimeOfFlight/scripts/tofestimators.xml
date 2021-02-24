@@ -22,11 +22,11 @@
   <!--if condition="MyEventSelector"-->
   <processor name="InitDD4hep" />
    <processor name="MyAIDAProcessor"/>
-   <processor name="TOFEstimators0psOld"/>
-   <processor name="TOFEstimators0psNew"/>
+   <processor name="TOFEstimators0psIDR"/>
+   <processor name="TOFEstimators0psDEV"/>
    <!-- <processor name="TOFEstimators10ps"/>
    <processor name="TOFEstimators50ps"/> -->
-   <XXXprocessor name="MyLCIOOutputProcessor"/>
+   <processor name="MyLCIOOutputProcessor"/>
   <!--/if-->
  </execute>
 
@@ -36,7 +36,7 @@
   <parameter name="MaxRecordNumber" value="5001" />
   <parameter name="SkipNEvents" value="0" />
   <parameter name="SupressCheck" value="false" />
-  <parameter name="AllowToModifyEvent" value="false" />
+  <parameter name="AllowToModifyEvent" value="true" />
   <parameter name="GearXMLFile"></parameter>
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
@@ -57,7 +57,7 @@
 </processor>
 
 
- <processor name="TOFEstimators0psOld" type="TOFEstimators">
+ <processor name="TOFEstimators0psIDR" type="TOFEstimators">
      <!--TOFEstimators compute some estimators for the time of flight from calorimeter hits-->
       <!--Use only calorimeter hits up to MaxLayerNumber in TOF estimators-->
       <parameter name="MaxLayerNumber" type="int">10 </parameter>
@@ -69,14 +69,14 @@
       <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
 
       <!--Assumed time resolution per hit in ps-->
-      <parameter name="ProcessorVersion" type="string">old</parameter>
+      <parameter name="ProcessorVersion" type="string">idr</parameter>
 </processor>
 
 
-<processor name="TOFEstimators0psNew" type="TOFEstimators">
+<processor name="TOFEstimators0psDEV" type="TOFEstimators">
      <parameter name="MaxLayerNumber" type="int">10 </parameter>
      <parameter name="TimeResolution" type="float">0 </parameter>
-     <parameter name="ProcessorVersion" type="string">new</parameter>
+     <parameter name="ProcessorVersion" type="string">dev</parameter>
 </processor>
 
  <processor name="TOFEstimators10ps" type="TOFEstimators">

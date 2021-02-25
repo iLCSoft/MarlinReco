@@ -98,7 +98,7 @@ void TOFEstimators::init() {
         detector.field().magneticField({0., 0., 0.}, _bField);
     }
     else { 
-        throw EVENT::Exception(std::string("Invalid ProcessorVersion parameter passed: \'") + _procVersion + std::string("\'\n Viable options are idr (default), dev"); 
+        throw EVENT::Exception(std::string("Invalid ProcessorVersion parameter passed: \'") + _procVersion + std::string("\'\n Viable options are idr (default), dev")); 
     }
 }
 

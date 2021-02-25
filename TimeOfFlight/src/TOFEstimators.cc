@@ -97,7 +97,9 @@ void TOFEstimators::init() {
         const auto& detector = dd4hep::Detector::getInstance();
         detector.field().magneticField({0., 0., 0.}, _bField);
     }
-    else { throw std::string("Invalid ProcessorVersion parameter passed!!!\n Viable options are: idr (default), dev"); }
+    else { 
+        throw EVENT::Exception(std::string("Invalid ProcessorVersion parameter passed: \'") + _procVersion + std::string("\'\n Viable options are idr (default), dev"); 
+    }
 }
 
 

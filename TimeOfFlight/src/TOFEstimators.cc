@@ -21,7 +21,7 @@ using EVENT::LCCollection, EVENT::ReconstructedParticle;
 
 #include "TGraphErrors.h"
 #include "TF1.h"
-#include "TMath.h"
+#include "CLHEP/Units/PhysicalConstants.h"
 
 #include "HelixClass.h"
 #include "marlinutil/CalorimeterHitType.h"
@@ -46,10 +46,6 @@ using EVENT::LCCollection, EVENT::ReconstructedParticle;
 using namespace lcio ;
 using namespace marlin ;
 using namespace TOFUtils ;
-
-// Speed of light in mm/ns = 299.79246
-#define SPEED_OF_LIGHT TMath::C()/1.e6
-
 
 TOFEstimators aTOFEstimators ;
 
@@ -531,7 +527,7 @@ double TOFEstimators::getTOFClosest(const Track* track, const Cluster* cluster){
         }
     }
     hitTime += _smearing(_generator);
-    return hitTime - dToImpactMin / SPEED_OF_LIGHT;
+    return hitTime - dToImpactMin / CLHEP::c_light;
 }
 
 
@@ -554,7 +550,7 @@ double TOFEstimators::getTOFFastest(const Track* track, const Cluster* cluster){
             hitTimeMin = hitTime;
         }
     }
-    return hitTimeMin - dToImpactMin / SPEED_OF_LIGHT;
+    return hitTimeMin - dToImpactMin / CLHEP::c_light;
 }
 
 

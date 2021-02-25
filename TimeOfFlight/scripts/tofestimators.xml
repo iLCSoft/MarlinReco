@@ -36,7 +36,7 @@
   <parameter name="MaxRecordNumber" value="5001" />
   <parameter name="SkipNEvents" value="0" />
   <parameter name="SupressCheck" value="false" />
-  <parameter name="AllowToModifyEvent" value="true" />
+  <parameter name="AllowToModifyEvent" value="false" />
   <parameter name="GearXMLFile"></parameter>
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />

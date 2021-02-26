@@ -279,7 +279,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
           streamlog_out( DEBUG3 ) << " *************** poistion         last hit : " << lhp << std::endl ;
           streamlog_out( DEBUG3 ) << "   distance hit-trkstate: " << (rpLH - lhp ).r() << " --  distance  calo/last hit ref points : " << (refPoint-rpLH).r() << std::endl ;
           streamlog_out( DEBUG3 ) << "   flight lengths:  " << flightLength << "  - " << flightLengthTrkHit << "  -- diff " << flightLength - flightLengthTrkHit <<
-            " time diff: " << (flightLength - flightLengthTrkHit) / 299.8 << std::endl ;
+            " time diff: " << (flightLength - flightLengthTrkHit) / CLHEP::c_light << std::endl ;
           streamlog_out( DEBUG3 ) << " track state : " << *tslh << std::endl ;
           streamlog_out( DEBUG3 ) << " last hit : " << *lastTrackerHit << std::endl ;
         }
@@ -338,9 +338,7 @@ void TOFEstimators::processEvent( LCEvent * evt ) {
 
           auto t_dt     = computeTOFEstimator( tofHits ) ;
 
-          const static float c_mm_per_ns = 299.792458 ;
-
-          float tof_fh = tofHits[0]->smearedTime - tofHits[0]->distanceFromReferencePoint / c_mm_per_ns ;
+          float tof_fh = tofHits[0]->smearedTime - tofHits[0]->distanceFromReferencePoint / CLHEP::c_light ;
 
           streamlog_out( DEBUG2 ) << "  #### tof ( first ) : " <<  tof_fh << " +/- " << 0 << std::endl ;
           streamlog_out( DEBUG2 ) << "  #### tof ( straight line ) : " << t_dt.first << " +/- " << t_dt.second << std::endl ;
@@ -452,8 +450,8 @@ void TOFEstimators::check( LCEvent *evt) {
 
     	double length  =  tofParams[ tof_length  ] ;
 
-    	double beta_fh = ( length / tofParams[ tof_firsthit] ) / 299.8 ;
-    	double beta_ch = ( length / tofParams[ tof_closest ] ) / 299.8 ;
+    	double beta_fh = ( length / tofParams[ tof_firsthit] ) / CLHEP::c_light ;
+    	double beta_ch = ( length / tofParams[ tof_closest ] ) / CLHEP::c_light ;
 
 
     	if( abs( pfo->getCharge() )  > 0.5 ) {
@@ -466,7 +464,7 @@ void TOFEstimators::check( LCEvent *evt) {
 
     	if( tofParams[ tof_trk_len  ] > 1.e-3 ){ // if TOF from last tracker hit has been set
 
-    	  double beta    = ( tofParams[ tof_trk_len  ] / tofParams[ tof_trkhit  ] ) / 299.8 ;
+    	  double beta    = ( tofParams[ tof_trk_len  ] / tofParams[ tof_trkhit  ] ) / CLHEP::c_light ;
 
     	  _h[4]->Fill( momentum , beta );
     	}

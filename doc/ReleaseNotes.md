@@ -1,3 +1,78 @@
+# v01-29
+
+* 2021-02-26 Bohdan Dudar ([PR#88](https://github.com/iLCSoft/MarlinReco/pull/88))
+  - TOFEstimators processor: adding new algorithms to calculate the ToF, track length and momentum.
+    - New output parameters:
+      - TOFClosest --- based on the closest ECAL hit
+      - TOFFastest --- based on the fastest ECAL hit
+      - TOFCylFit --- extrapolated time from the ECAL hits within a cylinder of a shower core
+      - TOFClosestFit --- extrapolated time from the ECAL hits closest to the linear continuation of the track inside the ECAL
+      - FlightLength --- the helix track length based on the track parameters from the TrackState at the ECAL
+      - MomAtCal --- the momentum based on the track parameters from the TrackState at the ECAL
+    - New steering parameters:
+      - ProcessorVersion --- changes output between the idr version (before this patch) and the dev (after this patch). Default: idr
+      - CylRadius --- the radius within which to select hits for the TOFCylFit method. Default: 5 mm
+
+* 2021-02-22 Carl Mikael Berggren ([PR#89](https://github.com/iLCSoft/MarlinReco/pull/89))
+  Heavily reworked version of TrueJet
+  ===========================
+  
+  From the outside, little has changed:
+  New jet-type (6) for non-isr photon from the hard interaction.
+  Does not require recoparticles (nor recomctruthlink), so also works
+  on generator-output lcio-files.
+  Boolean steering flag to indicate Whizard1 (GDE) or Whizard2 (LCC) input
+  (false by default, i.e. input is Whizard2)
+  
+  Internally, heavily re-worked.
+  
+  - removed methods fix94 and fix_top
+  - New method (stdhep_reader_bug_workaround) called if _whiz1 is true  
+  - New method - photon - added to treat the new jet type 6 (M.E. photon).
+  - New boolean data-members _whiz1 (steering flag),  _higgs_to_glue_glue
+  and _top_event (the latter two set at run-time event by event)
+  - Handle the case if no reconstructed information (generator input). 
+  - In top events, define the initial colour-neutral as  the top 
+  - Default collectionnames changed to the mc2020 ones.
+  
+  Changes and enhancemts to TrueJet_Parser and Use_TrueJet to go with new TrueJet
+  =================================================================
+  
+  TrueJet_Parser.
+  
+  - added  MCPseen : LCIntExtension<MCPseen>, used to avoid
+  double counting of *true* particles (decay-in-flight ...) for true-of-seen.
+  
+  - New methods: mcpjet, mcpicn,mcpfcn, recojet, recoicn and recofcn to 
+  returns the  corresponding jet, icn or fcn number of MCPs or PFOs.
+  true_partics, to return the list of all mcps in a jet (reco_particle
+  already existed).
+  
+  Use_TrueJet:
+  
+  - Gracefully handle case with no recoMCTruthLink. 
+  
+  - Exercise the new methods in TrueJet_Parser.
+
+* 2021-02-10 Yasser Radkhorrami ([PR#85](https://github.com/iLCSoft/MarlinReco/pull/85))
+  Improved the `ErrorFlow` processor:
+  1.  An option added to enable/disable confusion term in the jet energy error
+  2. For scaling angular uncertainties of jets, CovMat of the jet is scaled by scaling factors (as processor parameters)
+  3. So far, charged PFOs used to be identified by charge, so the energy of neutral PFOs with tracks was added to photons/neutral hadrons energy. Now, neutral PFOs are classified as charged PFO, since the energy and momentum are obtained from tracks.
+  4. An option added to propagate confusion term to **all** covariance matrix elements.
+  
+  - New processor parameters:
+        -   "EnableConfusionTerm", "Enable/disable confusion term to be added to covariance matrix"
+        -   "CovMatFactorPhotons", "A correction factor to be multiplied to angular uncertainties of photons"
+        -   "CovMatFactorNeutralHadrons", "A correction factor to be multiplied to angular uncertainties of Neutral Hadrons"
+        -   "PropagateConfusion2Mom", "Enable/disable Propagating uncertainty due to confusion to the Momentum components/All CovMat elements"
+
+* 2021-02-10 Yasser Radkhorrami ([PR#85](https://github.com/iLCSoft/MarlinReco/pull/85))
+  ...
+
+* 2021-02-01 tmadlener ([PR#86](https://github.com/iLCSoft/MarlinReco/pull/86))
+  - Migrate CI from travis to github actions
+
 # v01-28
 
 * 2020-09-02 Carl Mikael Berggren ([PR#81](https://github.com/iLCSoft/MarlinReco/pull/81))

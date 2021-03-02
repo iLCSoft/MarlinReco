@@ -299,9 +299,9 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
           newhit->setCellID1( simhit->getCellID1() );
           newhit->setTime( time );
           newhit->setPosition( simhit->getPosition() );
-    	    newhit->setEnergy( energyDig );
-    	    int layer = idDecoder(simhit)[_cellIDLayerString];
-    	    newhit->setType( CHT( cht_type, cht_id, cht_lay, layer ) );
+	        newhit->setEnergy( energyDig );
+	        int layer = idDecoder(simhit)[_cellIDLayerString];
+	        newhit->setType( CHT( cht_type, cht_id, cht_lay, layer ) );
           newhit->setRawHit( simhit );
           newcol->addElement( newhit ); // add hit to output collection
 
@@ -435,11 +435,11 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::StandardIntegration( const 
 	       earliestTime = relativetime; //use earliest hit time for simpletimingcut
       }
     }
-  }      
+  }
   if(earliestTime > _time_windowMin && earliestTime < _time_windowMax){ //accept this hit
     return integr_res{SmearTime(earliestTime), energySum};
   }
-  return integr_res{0, hit->getEnergy()};
+  return std::nullopt;
 }
 
 //------------------------------------------------------------------------------
@@ -495,7 +495,7 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCa
       }
     }
     hitTime = SmearTime(hitTime);
-    return integr_res{thresholdTime, energySum};
+    return integr_res{hitTime, energySum};
   }
   // else no hit dude !
   else {

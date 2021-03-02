@@ -484,10 +484,14 @@ RealisticCaloDigi::integr_res_opt RealisticCaloDigi::ROCIntegration( const SimCa
       break;
     }
   }
+  // check hit time 
+  const float thresholdTime = mcconts[thresholdIndex].time;
+  if( not (thresholdTime>_time_windowMin && thresholdTime<_time_windowMax) ) {
+    return std::nullopt;
+  }
   // If we've found a hit above the threshold, accumulate the energy until
   // until the maximum time given by the slow shaper
   if(passThreshold) {
-    const float thresholdTime = mcconts[thresholdIndex].time;
     float energySum = 0.f ; 
     for(unsigned int i=thresholdIndex ; i<ncontrib ; ++i) {
       if( mcconts[i].time < thresholdTime + _slow_shaper) {

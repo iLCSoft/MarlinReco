@@ -1,3 +1,14 @@
+# v01-30
+
+* 2021-03-03 Remi Ete ([PR#83](https://github.com/iLCSoft/MarlinReco/pull/83))
+  - RealisticCaloDigi: Added new option for energy/charge and time integration
+    - deal with slow/fast shaper of ROC chips and time estimate
+    - new processor parameters:
+       - **integrationMethod**: "Standard" for old implementation (default) or "ROC" emulating the behavior of ROC chip.
+       - **fastShaper**: fast shaper time, unit in ns. Only for ROC method
+       - **slowShaper**: slow shaper time, unit in ns. Only for ROC method
+       - **timingResolution**: optional time resolution gaussian smearing to apply, unit . Only apply is > 0. Default is 0 (no smearing)
+
 # v01-29
 
 * 2021-02-26 Bohdan Dudar ([PR#88](https://github.com/iLCSoft/MarlinReco/pull/88))

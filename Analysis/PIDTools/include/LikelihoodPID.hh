@@ -38,7 +38,7 @@ public:
   void CalculateDeltaPosition(float charge, TVector3 p, const float* calpos);
 
 private:
-  double get_Norm( double dedx, float hit,  double trkcos);
+  double get_Norm( double dedx);
   double BetheBloch( double x,  double mass,  double *pars);
   
   int Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);

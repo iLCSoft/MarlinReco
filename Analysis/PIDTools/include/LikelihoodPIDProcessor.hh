@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <marlin/Processor.h>
+#include <iostream>
+#include <cstring>
+#include <fstream>
+#include <signal.h>
 
 #include <EVENT/LCCollection.h>
 
@@ -31,6 +35,10 @@ private:
   std::string _inputPFOsCollection{};
   std::string _PDFName{};
   std::vector<std::string> _weightFileName{};
+ 
+  std::vector<std::string> _methodstorun{};
+  std::string _methodstorun_version{};
+
   EVENT::FloatVec _energyBoundary{};
   LCCollection* _pfoCol{};
   std::vector<int> _pdgTable{};
@@ -47,7 +55,7 @@ private:
   LowMomentumMuPiSeparationPID_BDTG *_mupiPID{};
 
   bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
-  int _UseBayes{},_UseCorr{};
+  int _UseBayes{};
   bool _UseMVA{};
   float _dEdxNormalization{}, _dEdxErrorFactor{};
 };

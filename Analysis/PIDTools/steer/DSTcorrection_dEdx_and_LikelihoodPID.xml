@@ -1,0 +1,97 @@
+<!-- 
+Example of steering file to correct the angular dependence of dEdx in
+2020 DST samples (and all generated with v02-02, v02-02-01..)
+It requires rewriting the track info  -> <parameter name="AllowToModifyEvent" value="true" />  
+
+Author: A. Irles 2021/04
+
+-->
+
+<marlin>
+
+ <constants>
+    <constant name="productionfolder" value="/cvmfs/ilc.desy.de/sw/ILDConfig/v02-02/StandardConfig/production" />
+  </constants>
+
+  <!--########  Execute  ######################################## -->
+  <execute>
+    <processor name="InitDD4hep"/>
+    <processor name="MyCorrect_Compute_dEdxProcessor"/>  
+    <processor name="MyLikelihoodPID" />
+    <processor name="DSTOutput"/>
+  </execute>
+
+  <!--########  Global  ######################################## -->
+  <global>
+    <parameter name="LCIOInputFiles">
+      /lustre/ific.uv.es/prj/ific/flc/mc-2020/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15161_0.slcio
+    </parameter>
+    <parameter name="AllowToModifyEvent" value="true" />  
+    <parameter name="MaxRecordNumber" value="0"/>  
+    <!--parameter name="GearXMLFile" value="GearOutput.xml"/-->
+    <parameter name="SkipNEvents" value="0"/>
+    <parameter name="SupressCheck" value="false"/>
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> SILENT </parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+    <processor name="InitDD4hep" type="InitializeDD4hep">
+    <parameter name="DD4hepXMLFile" type="string">
+      /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02/lcgeo/v00-16-06/ILD/compact/ILD_o1_v05/ILD_o1_v05.xml
+    </parameter>
+  </processor>
+
+
+  <processor name="DSTOutput" type="LCIOOutputProcessor">
+    <!--DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles-->
+    <parameter name="LCIOOutputFile" type="string" > out.slcio </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+  </processor>
+
+   <processor name="MyCorrect_Compute_dEdxProcessor" type="AngularCorrection_dEdxProcessor">
+    <!-- description not set by author -->
+    <!--parameter for new angular correction dedx= uncorrected_dedx  / f, with f= pol3(lambda)-->
+    <!-- Parameters for 2020 DST (and all generated with v02-02 and v02-02-01 -->
+    <parameter name="AngularCorrectionParameters" type="FloatVec"> 0.970205 0.0007506 4.41781e-8 5.8222e-8 </parameter>
+    <!--LDC track collection name-->
+    <parameter name="LDCTrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+    <!--parameters used in the outdated angular correction outdated_dedx= uncorrected_dedx / f, with f = 1. / ( 1.0+[1]*cos(theta)*cos(theta)/[0] )-->
+    <parameter name="Write_dEdx" type="bool">true </parameter>
+  </processor>
+
+  <!-- Post reconstruction related : PID, Vertexing, Particle finding, cluster topology -->
+  <processor name="MyLikelihoodPID" type="LikelihoodPIDProcessor">
+    <!--Performs particle identification-->
+    <!--Debugging?-->
+    <parameter name="Debug" type="int">0</parameter>
+    <!--Boundaries for energy binning-->
+    <parameter name="EnergyBoundaries" type="FloatVec">0 1.0e+07</parameter>
+    <!--Name of files containing pdfs for charged particles-->
+    <parameter name="FilePDFName" type="StringVec"> ${productionfolder}/HighLevelReco/PIDFiles/LikelihoodPID_Standard_l5_v01.root </parameter>
+    <!--Whether MVA low momentum mu/pi is used or not-->
+    <parameter name="UseLowMomentumMuPiSeparation" type="bool">true</parameter>
+    <!--The BDTG weights files for low momentum mu/pi separation-->
+    <parameter name="FileWeightFormupiSeparationName" type="StringVec">${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_02GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_03GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_04GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_05GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_06GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_07GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_08GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_09GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_10GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_11GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_12GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_13GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_14GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_15GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_16GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_17GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_18GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_19GeVP_clusterinfo.weights.xml ${productionfolder}/HighLevelReco/PIDFiles/LowMomMuPiSeparation/TMVAClassification_BDTG_l5_20GeVP_clusterinfo.weights.xml </parameter>
+    <!--dE/dx parameters for each particle-->
+    <!-- Parameters for 2020 DST (and all generated with v02-02 and v02-02-01 -->
+    <parameter name="dEdxParameter_electron" type="FloatVec"> -0.00232937 -3.88424e+13 -37881.1 -1.56837 0 </parameter>
+    <parameter name="dEdxParameter_muon" type="FloatVec"> 0.0717375 -16596.5 -4.84028e+07 0.356728 0.000371431 </parameter>
+    <parameter name="dEdxParameter_pion" type="FloatVec"> 0.0733683 51678.4 8.19644e+07 0.453505 0.000404984 </parameter>
+    <parameter name="dEdxParameter_kaon" type="FloatVec"> 0.0792784 3798.12 4.06952e+07 0.450671 0.00050169 </parameter>
+    <parameter name="dEdxParameter_proton" type="FloatVec"> 0.0770318 1053.24 4.95076e+06 0.281489 0.000168616 </parameter>
+    <!--dE/dx normalization-->
+    <parameter name="dEdxNormalization" type="float">1.350e-7</parameter>
+    <!--dE/dx error factor(7.55 for l5, 8.53 for s5)--> 
+    <parameter name="dEdxErrorFactor" type="float">7.55</parameter>
+    <!-- Method: Maximum Likelihood(0), Bayesian(1), or risk based Bayesian(2)-->
+    <parameter name="UseBayesian" type="int">2</parameter>
+    <!-- Cost Matrix for risk based Bayesian(2)-->
+    <parameter name="CostMatrix" type="FloatVec">1.0e-50 1.0 1.5 1.0 1.5 1.0 1.0e-50 3.0 1.0 1.0 1.0 1.0 1.0e-50 1.0 3.0 1.0 1.0 4.0 1.0e-50 2.0 1.0 1.0 5.0 1.0 1.0e-50</parameter>
+    <!--Version to be added to the name of the calculated methods-->
+    <parameter name="PIDMethodsToRun_version" type="string"> v2 </parameter>
+    <!--Name of the PFO collection-->
+    <parameter name="RecoParticleCollection" type="string"> PandoraPFOs </parameter>
+  </processor> 
+
+</marlin>

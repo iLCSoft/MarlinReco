@@ -55,7 +55,6 @@ LikelihoodPID::LikelihoodPID(double *pars){
   _usebayes=(int)pars[25];
   _dEdxnorm=(float)pars[26];
   _dEdxerrfact=pars[27];
-  _usecorr=(int)pars[28];
 
   //set mass
   emass=0.000510998;
@@ -90,7 +89,6 @@ LikelihoodPID::LikelihoodPID(string fname, double *pars, std::vector<float> cost
   _usebayes=(int)pars[25];
   _dEdxnorm=(float)pars[26];
   _dEdxerrfact=pars[27];
-  _usecorr=(int)pars[28];
 
   //set mass
   emass=0.000510998;
@@ -395,7 +393,7 @@ double LikelihoodPID::get_dEdxChi2(int parttype, TVector3 p, float hit, double d
   double trkcos=p.CosTheta();
 
   //get nomalized dEdx
-  double dEdx_Norm=get_Norm(dEdx, hit, trkcos);
+  double dEdx_Norm=get_Norm(dEdx);
 
   //get expected dE/dx
   double ExpdEdx=BetheBloch(p.Mag(),tmpmass,tmppar);
@@ -437,7 +435,7 @@ double LikelihoodPID::get_dEdxFactor(int parttype, TVector3 p, float hit, double
   double trkcos=p.CosTheta();
 
   //get nomalized dEdx
-  double dEdx_Norm=get_Norm(dEdx, hit, trkcos);
+  double dEdx_Norm=get_Norm(dEdx);
 
   //cout << "check " << emass << " " << tmpmass << " " << trkcos << " " << dEdx_Norm << " " << ExpdEdx << endl;
   double dEdx_Error = _dEdxerrfact * dEdx_Norm * hit/dEdx;    //change 20151218
@@ -458,26 +456,8 @@ double LikelihoodPID::get_dEdxDist(int parttype){
   return dedxdist;
 }
 
-double LikelihoodPID::get_Norm(double dedx, float hit, double trkcos){
-  //cal. hit dep.
-  double f1=1.0;   //1.0+TMath::Exp(-hit/1.468);   //already corrected
-  //cal. polar angle dep.
-  //double c=1.0/sqrt(1.0-trkcos*trkcos);
-  double f2=1.0;   //1.0/(1.0-0.08887*TMath::Log(c));    //already corrected
-
-  //For dEdx angle correction
-  if(_usecorr==1){
-    //make pdep
-    double ss = 1.0/sqrt(1.0-trkcos*trkcos);
-    f1=f1*(1.0-0.08887*std::log(ss)); 
-    //*(8.11120e-01+5.99762e-02*ss+1.11261e-01*ss*ss);
-    
-    double theta = std::cos(trkcos);
-    if(theta>3.141592/2.0) theta = 3.141592-theta;
-    f1 = f1*TMath::Power(theta,0.0703);
-  }
-
-  return dedx*f1*f2/_dEdxnorm;
+double LikelihoodPID::get_Norm(double dedx){
+  return dedx/_dEdxnorm;
 }
 
 double LikelihoodPID::BetheBloch(double x, double mass, double *pars){

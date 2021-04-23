@@ -1,3 +1,15 @@
+# v01-31
+* 2021-04-23 A. Irles ([Discussion](https://agenda.linearcollider.org/event/9197/))
+  - PIDTools: 
+  	- LikelihoodPID modified to be able to accept as arguments the name and type of method to run and store (allowing for versioning)
+  	- AngularCorrection_dEdxProcessor created to use with DST samples generated with v02-02 and v02-02-01. The dEdx is corrected for angular effects.
+  	- Compute_dEdxProcessor2021, modifictation of the default Compute_dEdxProcessor t
+  		- The angular correction is optional
+  		- The function of this correction is a pol3(lambda)
+  		- It is applied AFTER smearing
+	- Example steering files are added.
+
+
 # v01-30
 
 * 2021-03-03 Remi Ete ([PR#83](https://github.com/iLCSoft/MarlinReco/pull/83))

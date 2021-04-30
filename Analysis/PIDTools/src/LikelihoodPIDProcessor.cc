@@ -326,7 +326,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
       } else {
 	//several partivle IDs performed
 	//use just basic variables
-	if(_methodstorun.at(ialgo).compare("BasicVariablePID")==0) {
+	if(_methodstorun.at(ialgo) == "BasicVariablePID") {
 	  _myPID->setBasicFlg(true);
 	  _myPID->setdEdxFlg(false);
 	  _myPID->setShowerShapesFlg(false);

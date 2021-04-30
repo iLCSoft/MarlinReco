@@ -310,7 +310,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     Int_t parttype=-1;
 //////////////////////////////////////////////////////////////////////////////////
     for(int ialgo=0; ialgo<_methodstorun.size(); ialgo++) {
-      if(_methodstorun.at(ialgo).compare("LowMomID")==0) {
+      if(_methodstorun.at(ialgo) == "LowMomMuID") {
 	//Low momentum Muon identification 
 	// (from 0.2 GeV until 2 GeV)   
 	if(_UseMVA){

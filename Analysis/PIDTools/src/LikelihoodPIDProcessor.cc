@@ -271,8 +271,7 @@ void LikelihoodPIDProcessor::init() {
 	   ||  _methodstorun.at(i).compare("LikelihoodPID")==0 ) allnamecorrect=true;
       
       if(allnamecorrect==false) {
-	streamlog_out(ERROR) << " Check your method names.. "<<_methodstorun.at(i)<<"  is not in the list of valid methods: BasicVariablePID LowMomMuID ShowerShapesPID dEdxPID LikelihoodPID " <<std::endl;
-	raise(SIGSEGV);
+          throw EVENT::Exception(_methodstorun.at(i) + std::string(" is not in the list of valid methods: BasicVariablePID LowMomMuID ShowerShapesPID dEdxPID LikelihoodPID"));
       }
       allnamecorrect=false;
     }

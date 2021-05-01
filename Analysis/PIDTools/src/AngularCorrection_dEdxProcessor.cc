@@ -30,7 +30,6 @@
 #include "SimpleHelix.h"
 #include "HelixClass.h"
 
-#include "signal.h"
 
 #include "AngularCorrection_dEdxProcessor.hh"
 
@@ -129,5 +128,4 @@ void AngularCorrection_dEdxProcessor::check( LCEvent * ) {
 
 void AngularCorrection_dEdxProcessor::end() { 
 }
-
 

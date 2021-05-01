@@ -82,6 +82,7 @@ void AngularCorrection_dEdxProcessor::init() {
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
   // it's usually a good idea to
   printParameters();
+  if (!_writedEdx) throw EVENT::Exception("The AngularCorrection_dEdxProcessor cannot be used in a meaningful way with the Write_dEdx option set to false");
   
 }
 
@@ -91,12 +92,10 @@ void AngularCorrection_dEdxProcessor::processRunHeader( LCRunHeader* ) {
 void AngularCorrection_dEdxProcessor::processEvent( LCEvent * evt ) { 
 
   //fill values
-  if (_writedEdx)
-    {
-      _LDCCol = evt->getCollection( _LDCTrackCollection ) ;
-      int nTrkCand = _LDCCol->getNumberOfElements();
+  _LDCCol = evt->getCollection( _LDCTrackCollection ) ;
+  int nTrkCand = _LDCCol->getNumberOfElements();
       
-      for (int iTRK=0;iTRK<nTrkCand;++iTRK) {
+  for (int iTRK=0;iTRK<nTrkCand;++iTRK) {
 	
 	TrackImpl * trkCand = (TrackImpl*) _LDCCol->getElementAt( iTRK );
 	
@@ -115,12 +114,7 @@ void AngularCorrection_dEdxProcessor::processEvent( LCEvent * evt ) {
 	//fill values
 	trkCand->setdEdx(new_dedx);
 	trkCand->setdEdxError(dedx_error);
-      }
-    }   else 
-    {
-      streamlog_out(ERROR) << " Why do you use this processor and not re-write dEdx ?? Check your steering file." <<std::endl;
-      raise(SIGSEGV);
-    }
+    } 
 }
 
 void AngularCorrection_dEdxProcessor::check( LCEvent * ) { 

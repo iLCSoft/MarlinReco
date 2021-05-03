@@ -1,37 +1,11 @@
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <utility>
+#include "AngularCorrection_dEdxProcessor.hh"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <math.h>
 
-#include <marlin/Global.h>
-#include <marlin/Processor.h>
-#include <marlin/AIDAProcessor.h>
-
-#include <lcio.h>
-#include <EVENT/LCCollection.h>
-#include <EVENT/Track.h>
-#include <EVENT/TrackerHit.h>
-#include <IMPL/TrackImpl.h>
-
-#include <DD4hep/Detector.h>
-#include <DDRec/DetectorData.h>
-#include <DD4hep/DD4hepUnits.h>
-
-#include <UTIL/BitField64.h>
-#include "UTIL/LCTrackerConf.h"
-
-// MarlinUtil                                                                                                                                                                                             
-#include "LCGeometryTypes.h"
-#include "SimpleHelix.h"
-#include "HelixClass.h"
-
-
-#include "AngularCorrection_dEdxProcessor.hh"
+using namespace lcio;
+using namespace marlin;
 
 AngularCorrection_dEdxProcessor aAngularCorrection_dEdxProcessor ;
 
@@ -46,11 +20,6 @@ AngularCorrection_dEdxProcessor::AngularCorrection_dEdxProcessor()
 			  "LDC track collection name",
 			  _LDCTrackCollection,
 			  std::string("MarlinTrkTracks"));
-
-  registerProcessorParameter( "Write_dEdx",
-			      "If set, the calculated dEdx value will be rewritten in the its corresponding track (default: false).",
-			      _writedEdx,
-			      bool(false));
 
   std::vector<float> _newpar = {  0.970205,
 				  0.0007506,  
@@ -82,14 +51,13 @@ void AngularCorrection_dEdxProcessor::init() {
   streamlog_out(DEBUG) << "   init called  " << std::endl ;
   // it's usually a good idea to
   printParameters();
-  if (!_writedEdx) throw EVENT::Exception("The AngularCorrection_dEdxProcessor cannot be used in a meaningful way with the Write_dEdx option set to false");
-  
+   
 }
 
 void AngularCorrection_dEdxProcessor::processRunHeader( LCRunHeader* ) { 
 } 
 
-void AngularCorrection_dEdxProcessor::processEvent( LCEvent * evt ) { 
+void AngularCorrection_dEdxProcessor::modifyEvent( LCEvent * evt ) { 
 
   //fill values
   _LDCCol = evt->getCollection( _LDCTrackCollection ) ;
@@ -97,24 +65,24 @@ void AngularCorrection_dEdxProcessor::processEvent( LCEvent * evt ) {
       
   for (int iTRK=0;iTRK<nTrkCand;++iTRK) {
 	
-	TrackImpl * trkCand = (TrackImpl*) _LDCCol->getElementAt( iTRK );
+    TrackImpl * trkCand = (TrackImpl*) _LDCCol->getElementAt( iTRK );
 	
-	float dedx=trkCand->getdEdx();
-	float dedx_error=trkCand->getdEdxError();
-	float trklambda = trkCand->getTanLambda();
+    float dedx=trkCand->getdEdx();
+    float dedx_error=trkCand->getdEdxError();
+    float trklambda = trkCand->getTanLambda();
 
-	float lambda = fabs(atan(trklambda)*180./M_PI);
-	double  f3 = 1 / (_par[0] + _par[1] * lambda  + _par[2] * pow(lambda,2) + _par[3] * pow(lambda,3) );
+    float lambda = fabs(atan(trklambda)*180./M_PI);
+    double  f3 = 1 / (_par[0] + _par[1] * lambda  + _par[2] * pow(lambda,2) + _par[3] * pow(lambda,3) );
 	
-	double new_dedx = dedx*f3;
+    double new_dedx = dedx*f3;
 	
-	streamlog_out(DEBUG) << "Original dEdx: " <<dedx <<" Error: "<<dedx_error <<std::endl;
-	streamlog_out(DEBUG) << "NeW dEdx: " <<new_dedx <<" Error: "<<dedx_error <<std::endl;
+    streamlog_out(DEBUG) << "Original dEdx: " <<dedx <<" Error: "<<dedx_error <<std::endl;
+    streamlog_out(DEBUG) << "NeW dEdx: " <<new_dedx <<" Error: "<<dedx_error <<std::endl;
 	
-	//fill values
-	trkCand->setdEdx(new_dedx);
-	trkCand->setdEdxError(dedx_error);
-    } 
+    //fill values
+    trkCand->setdEdx(new_dedx);
+    trkCand->setdEdxError(dedx_error);
+  } 
 }
 
 void AngularCorrection_dEdxProcessor::check( LCEvent * ) { 

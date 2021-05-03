@@ -1,7 +1,6 @@
 <!-- 
 Example of steering file to correct the angular dependence of dEdx in
 2020 DST samples (and all generated with v02-02, v02-02-01..)
-It requires rewriting the track info  -> <parameter name="AllowToModifyEvent" value="true" />  
 
 Author: A. Irles 2021/04
 
@@ -26,7 +25,6 @@ Author: A. Irles 2021/04
     <parameter name="LCIOInputFiles">
       /lustre/ific.uv.es/prj/ific/flc/mc-2020/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15161_0.slcio
     </parameter>
-    <parameter name="AllowToModifyEvent" value="true" />  
     <parameter name="MaxRecordNumber" value="0"/>  
     <!--parameter name="GearXMLFile" value="GearOutput.xml"/-->
     <parameter name="SkipNEvents" value="0"/>
@@ -57,7 +55,6 @@ Author: A. Irles 2021/04
     <!--LDC track collection name-->
     <parameter name="LDCTrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
     <!--parameters used in the outdated angular correction outdated_dedx= uncorrected_dedx / f, with f = 1. / ( 1.0+[1]*cos(theta)*cos(theta)/[0] )-->
-    <parameter name="Write_dEdx" type="bool">true </parameter>
   </processor>
 
   <!-- Post reconstruction related : PID, Vertexing, Particle finding, cluster topology -->

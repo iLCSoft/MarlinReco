@@ -7,7 +7,6 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
-#include <signal.h>
 
 #include <EVENT/LCCollection.h>
 

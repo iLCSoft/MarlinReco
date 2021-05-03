@@ -271,8 +271,7 @@ void LikelihoodPIDProcessor::init() {
 	   ||  _methodstorun.at(i).compare("LikelihoodPID")==0 ) allnamecorrect=true;
       
       if(allnamecorrect==false) {
-	streamlog_out(ERROR) << " Check your method names.. "<<_methodstorun.at(i)<<"  is not in the list of valid methods: BasicVariablePID LowMomMuID ShowerShapesPID dEdxPID LikelihoodPID " <<std::endl;
-	raise(SIGSEGV);
+          throw EVENT::Exception(_methodstorun.at(i) + std::string(" is not in the list of valid methods: BasicVariablePID LowMomMuID ShowerShapesPID dEdxPID LikelihoodPID"));
       }
       allnamecorrect=false;
     }
@@ -310,7 +309,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     Int_t parttype=-1;
 //////////////////////////////////////////////////////////////////////////////////
     for(int ialgo=0; ialgo<_methodstorun.size(); ialgo++) {
-      if(_methodstorun.at(ialgo).compare("LowMomID")==0) {
+      if(_methodstorun.at(ialgo) == "LowMomMuID") {
 	//Low momentum Muon identification 
 	// (from 0.2 GeV until 2 GeV)   
 	if(_UseMVA){
@@ -326,7 +325,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
       } else {
 	//several partivle IDs performed
 	//use just basic variables
-	if(_methodstorun.at(ialgo).compare("BasicVariablePID")==0) {
+	if(_methodstorun.at(ialgo) == "BasicVariablePID") {
 	  _myPID->setBasicFlg(true);
 	  _myPID->setdEdxFlg(false);
 	  _myPID->setShowerShapesFlg(false);

@@ -1,3 +1,20 @@
+# v01-31
+
+* 2021-06-15 Thomas Madlener ([PR#92](https://github.com/iLCSoft/MarlinReco/pull/92))
+  - Move the `TrueJet_Parser` utility class to MarlinUtil
+    - Make it possible to use it outside of MarlinReco
+    - Keep example usage and README here in MarlinReco for better discoverability
+
+* 2021-05-07 A. Irles ([PR#91](https://github.com/iLCSoft/MarlinReco/pull/91))
+  - PIDTools: 
+    	- LikelihoodPID modified to be able to accept as arguments the name and type of method to run and store (allowing for versioning)
+    	- AngularCorrection_dEdxProcessor created to use with DST samples generated with v02-02 and v02-02-01. The dEdx is corrected for angular effects.
+    	- Compute_dEdxProcessor2021, modifictation of the default Compute_dEdxProcessor
+    		- The angular correction is optional
+    		- The function of this correction is a pol3(lambda)
+    		- It is applied AFTER smearing
+  	- Example steering files are added.
+
 # v01-30
 
 * 2021-03-03 Remi Ete ([PR#83](https://github.com/iLCSoft/MarlinReco/pull/83))

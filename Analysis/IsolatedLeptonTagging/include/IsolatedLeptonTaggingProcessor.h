@@ -44,6 +44,11 @@ class IsolatedLeptonTaggingProcessor : public marlin::Processor {
   
  protected:
 
+  /**
+   * Add the expected output collections
+   */
+  virtual void addOutputColls(LCEvent* evt, LCCollection* pfosWithoutIsoLepColl, LCCollection* isoLepColl);
+
   /** Input collection name.
    */
   std::string _colPFOs{};

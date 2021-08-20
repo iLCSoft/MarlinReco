@@ -25,6 +25,9 @@
 //local
 #include "Utilities.h"
 
+#include <memory>
+#include <algorithm>
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace std;
@@ -118,19 +121,15 @@ void IsolatedPhotonTaggingProcessor::processRunHeader( LCRunHeader*  /*run*/) {
 } 
 
 void IsolatedPhotonTaggingProcessor::processEvent( LCEvent * evt ) { 
-
+  auto pPFOsWithoutIsoPhotonCollection = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto pIsoPhotonCollection = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  pPFOsWithoutIsoPhotonCollection->setSubset(true);
+  pIsoPhotonCollection->setSubset(true);
     
   streamlog_out(DEBUG) << "Hello, Isolated Photon Tagging!" << endl;
 
   // -- get PFO collection --
-  LCCollection *colPFO = nullptr;
-  try {
-    colPFO = evt->getCollection(_colPFOs);
-  }
-  catch(DataNotAvailableException &e) {
-    std::cerr << "No PFO collection found (" << _colPFOs << ") !" << std::endl;
-    return;
-  }
+  LCCollection *colPFO = evt->getCollection(_colPFOs);
 
   Int_t nPFOs = colPFO->getNumberOfElements();
   std::vector<lcio::ReconstructedParticle*> newPFOs;
@@ -181,28 +180,21 @@ void IsolatedPhotonTaggingProcessor::processEvent( LCEvent * evt ) {
     }
   }
 
-  LCCollectionVec *pPFOsWithoutIsoPhotonCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  LCCollectionVec *pIsoPhotonCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  pPFOsWithoutIsoPhotonCollection->setSubset(true);
-  pIsoPhotonCollection->setSubset(true);
   // save the selected photon to a new collection
-  for (std::vector<lcio::ReconstructedParticle*>::const_iterator iObj=isoPhotons.begin();iObj<isoPhotons.end();++iObj) {
-    pIsoPhotonCollection->addElement(*iObj);
+  for (auto* obj : isoPhotons) {
+    pIsoPhotonCollection->addElement(obj);
   }
+
   // save other PFOs to a new collection
-  for (std::vector<lcio::ReconstructedParticle*>::const_iterator iObj=newPFOs.begin();iObj<newPFOs.end();++iObj) {
-    Bool_t isLep=kFALSE;
-    for (std::vector<lcio::ReconstructedParticle*>::const_iterator iLep=isoPhotons.begin();iLep<isoPhotons.end();++iLep) {
-      if ((*iObj) == (*iLep)) isLep = kTRUE;
+  for (auto * obj : newPFOs) {
+    if (std::find(isoPhotons.cbegin(), isoPhotons.cend(), obj) == isoPhotons.cend()) {
+      pPFOsWithoutIsoPhotonCollection->addElement(obj);
     }
-    if (!isLep) pPFOsWithoutIsoPhotonCollection->addElement(*iObj);
   }
 
   // add new collections
-  evt->addCollection(pPFOsWithoutIsoPhotonCollection,_colNewPFOs.c_str());
-  evt->addCollection(pIsoPhotonCollection,_colPhotons.c_str());
-
-
+  evt->addCollection(pPFOsWithoutIsoPhotonCollection.release(), _colNewPFOs.c_str());
+  evt->addCollection(pIsoPhotonCollection.release(), _colPhotons.c_str());
 }
 
 

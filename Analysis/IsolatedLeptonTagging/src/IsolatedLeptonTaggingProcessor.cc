@@ -13,6 +13,7 @@
 #include <EVENT/Track.h>
 #include <marlin/Exceptions.h>
 #include <EVENT/Vertex.h>
+#include <UTIL/LCIterator.h>
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -23,6 +24,9 @@
 #include "TMVA/Reader.h"
 //local
 #include "Utilities.h"
+
+#include <memory>
+#include <algorithm>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -224,34 +228,38 @@ void IsolatedLeptonTaggingProcessor::processRunHeader( LCRunHeader*  /*run*/) {
 
 void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) { 
 
-    
   streamlog_out(DEBUG) << "Hello, Isolated Lepton Tagging!" << endl;
 
-  // -- get Primary Vertex collection --
+  // Fill empty collections in case of problems
+  // unique_ptr to make sure cleanup happens even in case of problems
+  auto pPFOsWithoutIsoLepCollection = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto pIsoLepCollection = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  pPFOsWithoutIsoLepCollection->setSubset(true);
+  pIsoLepCollection->setSubset(true);
+
+
+  // -- get PFO collection --
+  LCCollection *colPFO = evt->getCollection(_colPFOs);
+  // Not catching here, since a missing PFO collection is definitely a problem
+
+  // get Primary Vertex collection --
   // primary vertex from VertexFinder (LCFIPlus)
-  LCCollection *colPVtx = nullptr;
-  try {
-    colPVtx = evt->getCollection(_colPVtx);
-    if(colPVtx->getNumberOfElements() == 0) {
-      std::cerr << "Vertex collection (" << _colPVtx << ") is empty !" << std::endl;
-      return;
+  LCCollection *colPVtx = evt->getCollection(_colPVtx);
+  if (colPVtx->getNumberOfElements() == 0) {
+    streamlog_out(DEBUG5) << "Vertex collection (" << _colPVtx << ") is empty!" << std::endl;
+    // Fill all elements from the input PFOs to the output PFOs. Since without
+    // PV the isolated lepton tagging cannot be done, there will also be no
+    // isolated leptons to be removed from this collection
+    auto collIter = lcio::LCIterator<lcio::ReconstructedParticle>(colPFO);
+    while (auto* obj = collIter.next()) {
+      pPFOsWithoutIsoLepCollection->addElement(obj);
     }
-  }
-  catch(DataNotAvailableException &e) {
-    std::cerr << "No Vertex collection found (" << _colPVtx << ") !" << std::endl;
+    addOutputColls(evt, pPFOsWithoutIsoLepCollection.release(), pIsoLepCollection.release());
     return;
   }
+
   Vertex *pvtx = dynamic_cast<Vertex*>(colPVtx->getElementAt(0));
   Double_t z_pvtx = pvtx->getPosition()[2];
-  // -- get PFO collection --
-  LCCollection *colPFO = nullptr;
-  try {
-    colPFO = evt->getCollection(_colPFOs);
-  }
-  catch(DataNotAvailableException &e) {
-    std::cerr << "No PFO collection found (" << _colPFOs << ") !" << std::endl;
-    return;
-  }
 
   Int_t nPFOs = colPFO->getNumberOfElements();
   std::vector<lcio::ReconstructedParticle*> newPFOs;
@@ -389,22 +397,20 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     }
   }
 
-  LCCollectionVec *pPFOsWithoutIsoLepCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  LCCollectionVec *pIsoLepCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-  pPFOsWithoutIsoLepCollection->setSubset(true);
-  pIsoLepCollection->setSubset(true);
+
   // save the selected lepton to a new collection
-  for (std::vector<lcio::ReconstructedParticle*>::const_iterator iObj=isoLeptons.begin();iObj<isoLeptons.end();++iObj) {
-    pIsoLepCollection->addElement(*iObj);
+  for (auto* obj : isoLeptons) {
+    pIsoLepCollection->addElement(obj);
   }
+
   // save other PFOs to a new collection
-  for (std::vector<lcio::ReconstructedParticle*>::const_iterator iObj=newPFOs.begin();iObj<newPFOs.end();++iObj) {
-    Bool_t isLep=kFALSE;
-    for (std::vector<lcio::ReconstructedParticle*>::const_iterator iLep=isoLeptons.begin();iLep<isoLeptons.end();++iLep) {
-      if ((*iObj) == (*iLep)) isLep = kTRUE;
+  for (auto* obj : newPFOs) {
+    // Only add the ones that are not isolated leptons
+    if (std::find(isoLeptons.cbegin(), isoLeptons.cend(), obj) == isoLeptons.cend()) {
+      pPFOsWithoutIsoLepCollection->addElement(obj);
     }
-    if (!isLep) pPFOsWithoutIsoLepCollection->addElement(*iObj);
   }
+
   // set the isolated lepton tagging as the collection parameter
   if (_is_one_isolep) {
     // save the largest one
@@ -417,11 +423,8 @@ void IsolatedLeptonTaggingProcessor::processEvent( LCEvent * evt ) {
     pIsoLepCollection->parameters().setValues( "ISOLepType", isoLepType );
 
   }
-  // add new collections
-  evt->addCollection(pPFOsWithoutIsoLepCollection,_colNewPFOs.c_str());
-  evt->addCollection(pIsoLepCollection,_colLeptons.c_str());
-
-
+  // add new collections (hand over ownership to LCEvent)
+  addOutputColls(evt, pPFOsWithoutIsoLepCollection.release(), pIsoLepCollection.release());
 }
 
 
@@ -436,4 +439,9 @@ void IsolatedLeptonTaggingProcessor::end(){
     delete *ireader;
   }
 
+}
+
+void IsolatedLeptonTaggingProcessor::addOutputColls(LCEvent* evt, LCCollection* pfosWithoutIsoLepColl, LCCollection* isoLepColl) {
+  evt->addCollection(pfosWithoutIsoLepColl, _colNewPFOs);
+  evt->addCollection(isoLepColl, _colLeptons);
 }

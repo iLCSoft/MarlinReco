@@ -183,8 +183,7 @@ bool compareEnergy( ReconstructedParticle * const &p1, ReconstructedParticle * c
 void TaJetClustering::processEvent( LCEvent * evt ) { 
 
   // obtain Reconstructed Particles
-  LCCollection* col = evt->getCollection( _pfoCollectionName );
-  if( !col ){ /*cout << "Failed to obtain PFO collection!" << endl;*/ return; }
+  LCCollection* col = evt->getCollection(_pfoCollectionName);
   int nPart = col->getNumberOfElements();
   
   // output collection
@@ -457,12 +456,12 @@ void TaJetClustering::processEvent( LCEvent * evt ) {
     pRemainCol->addElement(p);
   }
   evt->addCollection( pRemainCol, _remainCollectionName );
-  
+
   //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
-  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-		       << "   in run:  " << evt->getRunNumber() 
+  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber()
+		       << "   in run:  " << evt->getRunNumber()
 		       << std::endl ;
-  
+
   _nEvt ++ ;
 }
 

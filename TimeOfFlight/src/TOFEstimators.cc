@@ -97,8 +97,8 @@ void TOFEstimators::init() {
         const auto& detector = dd4hep::Detector::getInstance();
         detector.field().magneticField({0., 0., 0.}, _bField);
     }
-    else { 
-        throw EVENT::Exception(std::string("Invalid ProcessorVersion parameter passed: \'") + _procVersion + std::string("\'\n Viable options are idr (default), dev")); 
+    else {
+        throw EVENT::Exception(std::string("Invalid ProcessorVersion parameter passed: \'") + _procVersion + std::string("\'\n Viable options are idr (default), dev"));
     }
 }
 
@@ -497,13 +497,18 @@ dd4hep::rec::Vector3D TOFEstimators::getMomAtCalo(const Track* track){
 
 double TOFEstimators::getFlightLength(const Track* track){
     const TrackState* ts = track->getTrackState(TrackState::AtIP);
-    double phiIP = ts->getPhi();
+    double phiIp = ts->getPhi();
     ts = track->getTrackState(TrackState::AtCalorimeter);
     double phiCalo = ts->getPhi();
     double omegaCalo = ts->getOmega();
     double tanLCalo = ts->getTanLambda();
 
-    return abs((phiIP - phiCalo)/omegaCalo)*sqrt(1. + tanLCalo*tanLCalo);
+    double dPhi = std::abs(phiIp - phiCalo);
+
+    // if dPhi > PI assume phi is flipped
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
+
+    return dPhi/std::abs(omegaCalo)*std::sqrt(1. + tanLCalo*tanLCalo);
 }
 
 

@@ -195,9 +195,9 @@ void KinkFinder::init() {
   dd4hep::DetElement tpcDE = theDet.detector("TPC") ;
   const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>() ;
 
-  _tpcInnerR = tpc->rMinReadout; 
-  _tpcOuterR = tpc->rMaxReadout;
-  _tpcZmax   = tpc->driftLength;
+  _tpcInnerR = tpc->rMinReadout/dd4hep::mm;
+  _tpcOuterR = tpc->rMaxReadout/dd4hep::mm;
+  _tpcZmax   = tpc->driftLength/dd4hep::mm;
   _tpcMaxRow = tpc->maxRow;
 
 

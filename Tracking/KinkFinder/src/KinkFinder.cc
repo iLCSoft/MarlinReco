@@ -206,7 +206,7 @@ void KinkFinder::init() {
   _nLayersVTX=vtx->layers.size(); 
 
   for(int iL=0;iL<_nLayersVTX;iL++){
-    _rVTX.push_back( vtx->layers[iL].distanceSensitive );
+    _rVTX.push_back( vtx->layers[iL].distanceSensitive/dd4hep::mm );
   }
 
   dd4hep::DetElement sitDE = theDet.detector("SIT");
@@ -214,7 +214,7 @@ void KinkFinder::init() {
   _nLayersSIT=sit->layers.size(); 
 
   for(int iL=0;iL<_nLayersSIT;iL++){
-    _rSIT.push_back( sit->layers[iL].distanceSensitive );
+    _rSIT.push_back( sit->layers[iL].distanceSensitive/dd4hep::mm );
   }
 
 

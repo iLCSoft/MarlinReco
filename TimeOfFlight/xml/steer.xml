@@ -1,0 +1,43 @@
+<marlin>
+    <constants>
+    </constants>
+
+    <execute>
+        <processor name="InitDD4hep" />
+        <processor name="MyTofClosest0ps"/>
+        <processor name="MyLCIOOutputProcessor"/>
+    </execute>
+
+    <global>
+        <parameter name="LCIOInputFiles">
+            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001_209.d_rec_00015161_259.slcio
+        </parameter>
+        <parameter name="MaxRecordNumber" value="0" />
+        <parameter name="SkipNEvents" value="0" />
+        <parameter name="SupressCheck" value="false" />
+        <parameter name="AllowToModifyEvent" value="false" />
+        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">MESSAGE DEBUG0</parameter>
+        <parameter name="RandomSeed" value="1234567890" />
+    </global>
+
+    <processor name="InitDD4hep" type="InitializeDD4hep">
+        <parameter name="DD4hepXMLFile">
+            /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-02/lcgeo/v00-16-06/ILD/compact/ILD_l5_o1_v02/ILD_l5_o1_v02.xml
+        </parameter>
+    </processor>
+
+    <processor name="MyTofClosest0ps" type="TOFEstimators">
+        <parameter name="ExtrapolateToEcal">true</parameter>
+        <parameter name="TofMethod" options="closest,frankAvg,frankFit">closest</parameter>
+        <parameter name="TimeResolution">0</parameter>
+    </processor>
+
+
+    <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+        <parameter name="LCIOOutputFile">test.slcio</parameter>
+        <parameter name="LCIOWriteMode">WRITE_NEW</parameter>
+        <parameter name="DropCollectionNames">*</parameter>
+    </processor>
+
+
+</marlin>

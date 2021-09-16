@@ -9,25 +9,13 @@ based on the timing information stored in CalorimeterHits.
 
 ### TOFEstimators
 
+author: N.Weinhold (DESY, internship 2017)
 author: F.Gaede, DESY, 2018
-
-Compute various estimators for time of flight and add these to the 
+author: B.Dudar, DESY, 2021
+Compute various estimators for time of flight and add these to the
 ReconstrucedParticles as PIDParameters.
 
 
-### TOFPlots
+## Example steering file
 
-author: N.Weinhold (DESY, internship 2017)
-
-Computes various estimators for the time of flight from CalorimeterHits.
-Creates ROOT histograms for these parameters.
-
-
-## Examples
-
-See [./scripts/tofestimators.xml](./scripts/tofestimators.xml) for and example 
-steering file that computes TOF estimators for 0,10 and 50 ps single hit 
-time resolution.
-Use [./scripts/draw_tofestimators.C](./scripts/draw_tofestimators.C) to create 
-plots of beta vs. momentum for the diffefrent estimators.
-
+[./xml/steer.xml](./xml/steer.xml) is an example of a steering file that runs TOFEstimators processor. It computes momentum harmonic mean, time-of-flight and track length of the PandoraPFOs and stores this information inside PIDHandler. In the example time of flight calculated using closest Ecal hit assuming perfect time resolution. Then new slcio file "test.slcio" produced with LCIOOutputProcessor processor.

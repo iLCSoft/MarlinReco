@@ -38,14 +38,14 @@ using IMPL::TrackImpl;
 using IMPL::TrackStateImpl;
 using CLHEP::RandGauss;
 
-bool TOFUtils::sortByRho(TrackerHit* a, TrackerHit* b){
+bool TOFUtils::sortByRho(EVENT::TrackerHit* a, EVENT::TrackerHit* b){
     Vector3D posA( a->getPosition() );
     Vector3D posB( b->getPosition() );
     return posA.rho() < posB.rho();
 }
 
 
-TrackStateImpl TOFUtils::getTrackStateAtHit(IMarlinTrack* marlinTrk, TrackerHit* hit){
+IMPL::TrackStateImpl TOFUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit){
     TrackStateImpl ts;
     double chi2Dummy;
     int ndfDummy;
@@ -54,7 +54,7 @@ TrackStateImpl TOFUtils::getTrackStateAtHit(IMarlinTrack* marlinTrk, TrackerHit*
 }
 
 
-Vector3D TOFUtils::getHelixMomAtTrackState(const TrackState& ts, double bField){
+dd4hep::rec::Vector3D TOFUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
     double phi = ts.getPhi();
     double d0 = ts.getD0();
     double z0 = ts.getZ0();
@@ -67,7 +67,7 @@ Vector3D TOFUtils::getHelixMomAtTrackState(const TrackState& ts, double bField){
 }
 
 
-double TOFUtils::getHelixArcLength(const TrackState& ts1, const TrackState& ts2){
+double TOFUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double omega = ts1.getOmega();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
@@ -78,7 +78,7 @@ double TOFUtils::getHelixArcLength(const TrackState& ts1, const TrackState& ts2)
 }
 
 
-double TOFUtils::getHelixLengthAlongZ(const TrackState& ts1, const TrackState& ts2){
+double TOFUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
@@ -86,7 +86,7 @@ double TOFUtils::getHelixLengthAlongZ(const TrackState& ts1, const TrackState& t
     return std::abs( (z2-z1)/tanL ) * std::sqrt( 1.+tanL*tanL );
 }
 
-double TOFUtils::getHelixNRevolutions(const TrackState& ts1, const TrackState& ts2){
+double TOFUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double omega = ts1.getOmega();
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
@@ -108,7 +108,7 @@ double TOFUtils::getTPCOuterR(){
 }
 
 
-TrackerHit* TOFUtils::getSETHit(Track* track, double tpcOuterR){
+EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
     vector<TrackerHit*> hits = track->getTrackerHits();
     TrackerHit* lastHit = hits.back();
 
@@ -118,7 +118,7 @@ TrackerHit* TOFUtils::getSETHit(Track* track, double tpcOuterR){
 }
 
 
-vector<CalorimeterHit*> TOFUtils::selectFrankEcalHits( Cluster* cluster, Track* track, int maxEcalLayer, double bField ){
+std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluster* cluster, EVENT::Track* track, int maxEcalLayer, double bField ){
     vector<CalorimeterHit*> selectedHits;
 
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
@@ -148,7 +148,7 @@ vector<CalorimeterHit*> TOFUtils::selectFrankEcalHits( Cluster* cluster, Track* 
 }
 
 
-vector<Track*> TOFUtils::getSubTracks(Track* track){
+std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
     vector<Track*> subTracks;
     subTracks.push_back(track);
 
@@ -171,7 +171,7 @@ vector<Track*> TOFUtils::getSubTracks(Track* track){
 }
 
 
-vector<TrackStateImpl> TOFUtils::getTrackStatesPerHit(vector<Track*> tracks, IMarlinTrkSystem* trkSystem, bool extrapolateToEcal, double bField){
+std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, bool extrapolateToEcal, double bField){
     vector<TrackStateImpl> trackStatesPerHit;
     int nTracks = tracks.size();
     for(int i=0; i<nTracks; ++i){
@@ -250,7 +250,7 @@ vector<TrackStateImpl> TOFUtils::getTrackStatesPerHit(vector<Track*> tracks, IMa
 }
 
 
-double TOFUtils::getTofClosest( Cluster* cluster, Track* track, double timeResolution){
+double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, double timeResolution){
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
@@ -273,7 +273,7 @@ double TOFUtils::getTofClosest( Cluster* cluster, Track* track, double timeResol
 }
 
 
-double TOFUtils::getTofFrankAvg( vector<CalorimeterHit*> selectedHits, Track* track, double timeResolution){
+double TOFUtils::getTofFrankAvg( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
@@ -290,7 +290,7 @@ double TOFUtils::getTofFrankAvg( vector<CalorimeterHit*> selectedHits, Track* tr
 }
 
 
-double TOFUtils::getTofFrankFit( vector<CalorimeterHit*> selectedHits, Track* track, double timeResolution){
+double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 

@@ -85,7 +85,7 @@ void TOFEstimators::init(){
 }
 
 
-void TOFEstimators::processEvent(LCEvent * evt){
+void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
     streamlog_out(MESSAGE)<<"******Event****** "<<_nEvent<<std::endl;

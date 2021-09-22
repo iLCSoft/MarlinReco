@@ -1,116 +1,101 @@
 #ifndef TOFEstimators_h
 #define TOFEstimators_h 1
 
+/**
+\author F. Gaede, DESY, April 2018
+\author B. Dudar, DESY, September 2021
+*/
+
 #include <string>
 #include <vector>
 #include "marlin/Processor.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
-/**
- * @section DESCRIPTION
- * Compute time of flight (ToF) from the CalorimeterHits in the ECAL Cluster.
- * The ToFs are stored in a PID object with the name of the processor attached
- * to the PandoraPFOs.
- * Steering parameters:
- *  MaxLayerNumber  - Estimate ToF using only MaxLayerNumber first layers in the ECAL
- *  ReconstructedParticleCollection - input collection (usually PandoraPFOs)
- *  TimeResolution  - assumed single Calorimeter hit time resolution in ps
- *  CylRadius - radius within which hits are accepted for the fit. Relevant only
-                for new TOFCylFit algorithm. Default 5 mm
- *  ProcessorVersion - controls output of the processor between idr
- *                (interim design report) and dev (current development) versions
- * Output for ProcessorVersion = "idr"
- *  The following parameters are stored with the IDR ProcessorVersion:
- *   TOFFirstHit         -  ToF of the CalorimeterHit closest to track entry
- *                          point to the ECAL corrected with the distance
- *                          between cell center and entry point assuming
- *                          speed of light propagation
- *   TOFClosestHits      -  ToF estimated as the average of corrected
- *                          CalorimeterHit times from hits that are closest to
- *                          the linear prolongation of the trajectory line
- *                          of the track in MaxLayerNumber first layers
- *   TOFClosestHitsError -  error of the TOFClosestHits
- *   TOFFlightLength     -  Track length of the helix between IP and ECAL entrance
- *                          assuming IP at (0, 0, 0) and ECAL entry point is
- *                          obtained from Kalman filter by extrapolation.
- *                          Omega/lambda track parameters are taken from IP hit
- *                          and assumed to be constant along the track.
- *                          Results are reasonable for delta phi < 2pi
- *                          meaning not more than one curl.
- *   TOFLastTrkHit       -  (unsmeared) time of last tracker hit (in the SET)
- *   TOFLastTrkHitFlightLength - track length similar to the TOFFlightLength
- *                               but to the SET hit
- * Notes:
- *  For charged particles the TrackState at the calorimeter is used as reference point and for the
- *  extrapolation into the calorimeter. For neutral particles the position of the first hit (the one closest to the IP)
- *  is used and a straight flight path from the IP is taken for the extrapolation.
- *  The hit time is corrected for the flight time from the reference assuming speed of light.
- *
- * Output for ProcessorVersion = "dev"
- *  The following parameters are stored with the IDR ProcessorVersion:
- *   TOFClosest         -  ToF of the CalorimeterHit closest to track entry
- *                          point to the ECAL corrected with the distance
- *                          between cell center and entry point assuming
- *                          speed of light propagation
- *   TOFFastest         -  ToF of the CalorimeterHit arrived fastest corrected
- *                          with the distance between cell center and entry
- *                          point assuming speed of light propagation
- *   TOFCylFit          -  ToF estimated from extrapolation from a fit of the
- *                            hit times vs distance to to the track entry point
- *                            to the ECAL at distance = 0
- *   TOFClosestFit    -  ToF estimated with a fit as TOFCylFit but from hits
- *                            that are closest to the linear prolongation of the
- *                            trajectory line of the track in MaxLayerNumber first layers
- *   FlightLength       -  Track length of the helix between IP and ECAL entrance
- *                          assuming IP at (0, 0, 0) and ECAL entry point is
- *                          obtained from Kalman filter by extrapolation.
- *                          Omega/lambda track parameters are taken from the
- *                            closest track hit to the ECAL and assumed to be
- *                            constant along the track.
- *                          Results are reasonable for delta phi < 2pi
- *                          meaning not more than one curl.
- *   MomAtCalo - momentum of the track estimated from the track curvature near
- *                 ECAL entry point.
- * Notes:
- * FlightLength shows less bias in mass than TOFFlightLength
- * MomAtCalo shows less bias in mass than taking momentum from IP as in IDR
- * Every method in both idr and dev considers only Ecal hits.
- * Methods work only for charged PFOs with ONE associated track and ONE associated cluster
- * Therefore neutral PFOs and PFOs with multiple tracks/clusters are ignored
- *
- *  See ../scripts/tofestimators.xml for example steering file.
- *
- * @file
- * @author F.Gaede, DESY, April 2018
- * @author B.Dudar, DESY, September 2021
- */
-
 class TOFEstimators : public marlin::Processor {
     public:
+        /**
+        Copy constructor is removed to avoid W-effc++ warnings.
+        */
         TOFEstimators(const TOFEstimators&) = delete;
+
+        /**
+        Copy operator is removed to avoid W-effc++ warnings.
+        */
         TOFEstimators& operator=(const TOFEstimators&) = delete;
 
+        /**
+        Method required by the Marlin to register processor in the global scope.
+        */
         marlin::Processor* newProcessor() { return new TOFEstimators; }
+
+        /**
+        Default constructor.
+        Defines steering parameters from the xml steering file.
+        */
         TOFEstimators();
+
+        /** Called at the begin of the job before anything is read.
+        Extracts geometry details and initializes Kalman Filter System.
+        */
         void init();
+
+        /** Called for every event - the working horse.
+        Calculates momentum, track length and time of flight and
+        writes them into PIDHandler of the input collection object
+        */
         void processEvent(EVENT::LCEvent* evt);
+
     private:
+        /** Steering parameter: name of the input collection of ReconstructedParticles to analyse.
+        Usually PandoraPFOs
+        */
         std::string _pfoCollectionName{};
+
+        /**  Steering parameter: an option to indicate whether to do the calculations.
+        to the last tracker hit or extrapolate to the ECal surface.
+        */
         bool _extrapolateToEcal{};
+
+        /**  Steering parameter: name of the method to calculate time of flight based on the ECal hits.
+        If _extrapolateToEcal == false then ignored
+        */
         std::string _tofMethod{};
+
+        /** Steering parameter: Assumed time resolution of the detector elements in ps.
+        In case _extrapolateToEcal == false, then smearing applied for both SET strips.
+        In case _extrapolateToEcal == true, then smearing applied for every ECal hit.
+        */
         double _timeResolution{};
+
+        /** Steering parameter: Number of inner ECal layers to consider for TOF methods.
+        In case _extrapolateToEcal == true and (_tofMethod == "frankAvg" or _tofMethod == "frankFit").
+        This parameter indicates how many ECal layers these tof Methods will consider to estimate TOF.
+        */
         int _maxEcalLayer{};
 
 
+        /** Number of the current event.
+        */
         int _nEvent{};
-        /** vector of names of output PID object parameters which are written as output
+
+        /** Names of the output parameters written to the PIDHandler.
+        These parameters are: momentumHM, trackLength and timeOfFlight
         */
         std::vector<std::string> _outputParNames{};
 
-        // MarlinTrk v02-00 release notes:
-        // USERS SHOULD NO LONGER DELETE THE IMarlinTrkSystem POINTER IN THEIR CODE
+
+        /** Kalman Filter System for refitting.
+        Release notes of MarlinTrk v02-00:
+        USERS SHOULD NO LONGER DELETE THE IMarlinTrkSystem POINTER IN THEIR CODE
+        */
         MarlinTrk::IMarlinTrkSystem* _trkSystem = nullptr;
+
+        /** B_{z} at the origin in Tesla.
+        */
         double _bField{};
+
+        /** TPC outer radius in mm.
+        */
         double _tpcOuterR{};
 };
 

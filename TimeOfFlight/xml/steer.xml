@@ -3,40 +3,90 @@
     </constants>
 
     <execute>
+        <!-- InitDD4hep must be called first. TOFEstimators is dependent on InitDD4hep processor -->
         <processor name="InitDD4hep" />
+
+        <!-- Run TofEstimator processors as an example -->
         <processor name="MyTofClosest0ps"/>
+        <processor name="MyTofSET10ps"/>
+        <processor name="MyTofFrankAvg50ps"/>
+
+        <!-- Write the new slcio file -->
         <processor name="MyLCIOOutputProcessor"/>
     </execute>
 
     <global>
-        <parameter name="LCIOInputFiles">
+        <parameter name="LCIOInputFiles" type="StringVec">
             /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001_209.d_rec_00015161_259.slcio
         </parameter>
-        <parameter name="MaxRecordNumber" value="0" />
-        <parameter name="SkipNEvents" value="0" />
-        <parameter name="SupressCheck" value="false" />
-        <parameter name="AllowToModifyEvent" value="false" />
-        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">MESSAGE DEBUG0</parameter>
-        <parameter name="RandomSeed" value="1234567890" />
+
+        <!-- 0 means read all events -->
+        <parameter name="MaxRecordNumber" type="int">2</parameter>
+        <parameter name="SkipNEvents" type="int">0</parameter>
+        <parameter name="SupressCheck" type="bool">false</parameter>
+        <parameter name="AllowToModifyEvent" type="bool">false</parameter>
+        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT" type="string">MESSAGE</parameter>
+        <parameter name="RandomSeed" type="int">1234567890</parameter>
     </global>
 
     <processor name="InitDD4hep" type="InitializeDD4hep">
-        <parameter name="DD4hepXMLFile">
+        <parameter name="DD4hepXMLFile" type="string">
             /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-02/lcgeo/v00-16-06/ILD/compact/ILD_l5_o1_v02/ILD_l5_o1_v02.xml
         </parameter>
     </processor>
 
     <processor name="MyTofClosest0ps" type="TOFEstimators">
-        <parameter name="ExtrapolateToEcal">true</parameter>
-        <parameter name="TofMethod" options="closest,frankAvg,frankFit">closest</parameter>
-        <parameter name="TimeResolution">0</parameter>
+        <!-- here we explicitly define ALL steering parameters just for an example-->
+        <parameter name="ReconstructedParticleCollection" type="string" default="PandoraPFOs">
+            PandoraPFOs
+        </parameter>
+        <parameter name="ExtrapolateToEcal" type="bool" default="true">
+            true
+        </parameter>
+        <parameter name="TofMethod" options="closest, frankAvg, frankFit" type="string" default="closest">
+            closest
+        </parameter>
+        <parameter name="TimeResolution" type="double" default="0">
+            0
+        </parameter>
+        <parameter name="MaxEcalLayer" type="int" default="10">
+            10
+        </parameter>
+    </processor>
+
+    <processor name="MyTofSET10ps" type="TOFEstimators">
+        <!-- in this case TofMethod and MaxEcalLayer parameters are unused as ExtrapolateToEcal==false-->
+        <parameter name="ExtrapolateToEcal" type="bool" default="true">
+            false
+        </parameter>
+        <!-- time resolution of each SET strip in ps -->
+        <parameter name="TimeResolution" type="double" default="0">
+            10
+        </parameter>
+    </processor>
+
+    <processor name="MyTofFrankAvg50ps" type="TOFEstimators">
+        <parameter name="TofMethod" options="closest, frankAvg, frankFit" type="string" default="closest">
+            frankAvg
+        </parameter>
+        <!-- time resolution of each ECal hit in ps -->
+        <parameter name="TimeResolution" type="double" default="0">
+            49.999
+        </parameter>
     </processor>
 
 
     <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
-        <parameter name="LCIOOutputFile">test.slcio</parameter>
+        <!-- creates new slcio file with PandoraPFOs collections that contain our results in PIDHandlers -->
+        <!-- keep only PandoraPFOs collection -->
+        <parameter name="DropCollectionTypes" type="StringVec">
+            MCParticle SimTrackerHit SimCalorimeterHit TrackerHit TrackerHitPlane CalorimeterHit LCRelation Track LCFloatVec
+        </parameter>
+        <parameter name="KeepCollectionNames" type="StringVec">
+            PandoraPFOs
+        </parameter>
+        <parameter name="LCIOOutputFile">output.slcio</parameter>
         <parameter name="LCIOWriteMode">WRITE_NEW</parameter>
-        <parameter name="DropCollectionNames">*</parameter>
     </processor>
 
 

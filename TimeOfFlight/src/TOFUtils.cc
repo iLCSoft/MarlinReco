@@ -254,6 +254,7 @@ double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, do
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
+
     double hitTime = numeric_limits<double>::max();
     double closestDistance = numeric_limits<double>::max();
     for( auto hit : cluster->getCalorimeterHits() ){
@@ -268,6 +269,7 @@ double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, do
             hitTime = hit->getTime();
         }
     }
+    if ( hitTime == numeric_limits<double>::max() ) return 0.;
 
     return RandGauss::shoot(hitTime, timeResolution) - closestDistance/CLHEP::c_light;
 }

@@ -130,6 +130,8 @@ namespace TOFUtils{
     Returns time measured by the closest ECal hit to the extrapolated track position at the ECal surface.
 
     \f$ \mathrm{TOF} = t_{\mathrm{closest}} - \frac{\left| \vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{closest}} \right|}{c} \f$
+
+    If no ECal hits are found returns `0.0`.
     */
     double getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, double timeResolution);
 
@@ -138,6 +140,8 @@ namespace TOFUtils{
     the extrapolated track position at the ECal surface assuming speed of flight is the speed of light.
 
     \f$ \mathrm{TOF} = \frac{1}{\mathrm{MaxEcalLayer}}\sum_{i}^{\mathrm{MaxEcalLayer}} \left( t_{i} - \frac{\left|\vec{r}_{\mathrm{track}} - \vec{r}_{i} \right|}{c} \right) \f$
+
+    If no ECal hits are found within selectedHits, then returns `0.0`.
     */
     double getTofFrankAvg( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 
@@ -147,6 +151,9 @@ namespace TOFUtils{
     function of the distance to the extrapolated track position at the ECal surface.
 
     \f$ \mathrm{TOF}=f(|\vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{hit}} |=0) \f$
+
+    If no ECal hits are found within selectedHits, then returns `0.0`.
+    If *only one* ECal hit is found, which is not enough to perform the linear fit, then returns the same as getTofClosest() and getTofFrankAvg().
     */
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 

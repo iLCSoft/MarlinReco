@@ -2,7 +2,7 @@
 #define TOFEstimators_h 1
 
 /**
-Marlin processor than calculates output parameters.
+Marlin processor that calculates output parameters.
 \author F. Gaede, DESY, April 2018
 \author B. Dudar, DESY, September 2021
 */

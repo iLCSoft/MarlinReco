@@ -8,11 +8,15 @@ In case reader uses dark theme on the github and finds hard to read the formulas
 
 # Requirements
 
+TOFEstimators is currently working with only simple cases of particle flow objects.<br>
+The analyzed *ReconstructedParticle* object must have **exactly one** associated `Track` and **exactly one** associated `Cluster`.<br>
+In other cases it still produces PIDHandler, but with `0.0` for every output parameter.
+
+The input sclio file must contain a lot of various tracker and calorimeter hit collections.<br>
+Thus, input slcio file can be e.g. *REC* format, but **cannot** be *DST* or *mini-DST* format.
+
 TOFEstimators is dependent on InitDD4hep processor to extract detector geometry details. <br>
 Make sure to run InitDD4hep before this processor is executed.
-
-In addition, input sclio file must contain a lot of various tracker and calorimeter hit collections.<br>
-Thus, input slcio file can be e.g. *REC* format, but **cannot** be *DST* or *mini-DST* format.
 
 # Steering parameters
 
@@ -36,12 +40,17 @@ There are five steering parameters:
   If *ExtrapolateToEcal* is set to `true` then it defines how to use ECal hits to calculate the time-of-flight at the ECal surface.
 
   - `"closest"` uses the closest ECal hit to the extrapolated track position at the ECal surface.<br>
-  Time-of-flight is defined as: <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF} = t_{\mathrm{closest}} - \frac{\left| \vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{closest}} \right|}{c}">
+  Time-of-flight is defined as: <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF} = t_{\mathrm{closest}} - \frac{\left| \vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{closest}} \right|}{c}"> <br>
+  If no ECal hits are found returns `0.0`.
 
   - `"frankAvg"` Select the closest ECal hit to the linearly extrapolated track line inside the ECal in each of the first *MaxEcalLayer* ECal layers. Define time-of-flight as an average of their time corrected for the distance to the track position at the ECal surface assuming speed of flight is the speed of light.
-  <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF} = \frac{1}{\mathrm{MaxEcalLayer}}\sum_{i}^{\mathrm{MaxEcalLayer}} \left( t_{i} - \frac{\left|\vec{r}_{\mathrm{track}} - \vec{r}_{i} \right|}{c} \right)">
+  <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF} = \frac{1}{\mathrm{MaxEcalLayer}}\sum_{i}^{\mathrm{MaxEcalLayer}} \left( t_{i} - \frac{\left|\vec{r}_{\mathrm{track}} - \vec{r}_{i} \right|}{c} \right)"> <br>
+  If no ECal hits are found returns `0.0`.
 
-  - `"frankFit"` Select the closest ECal hit to the linearly extrapolated track line inside the ECal in each of the first *MaxEcalLayer* ECal layers. Use linear fit of the hits time as a function of the distance to the track position at the ECal surface <img src="https://render.githubusercontent.com/render/math?math=t=f(|\vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{hit}} |)"> to define time-of-flight as an extrapolated time at the extrapolated track position at the ECal surface <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF}=f(|\vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{hit}} |=0)">
+
+  - `"frankFit"` Select the closest ECal hit to the linearly extrapolated track line inside the ECal in each of the first *MaxEcalLayer* ECal layers. Use linear fit of the hits time as a function of the distance to the track position at the ECal surface <img src="https://render.githubusercontent.com/render/math?math=t=f(|\vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{hit}} |)"> to define time-of-flight as an extrapolated time at the extrapolated track position at the ECal surface <img src="https://render.githubusercontent.com/render/math?math=\mathrm{TOF}=f(|\vec{r}_{\mathrm{track}} - \vec{r}_{\mathrm{hit}} |=0)"> <br>
+  If no ECal hits are found returns `0.0`.<br>
+  If only one ECal hit is found, which is not enough to perform the linear fit, then returns the same as *closest* and *frankAvg*.
 
   for more illustrative explanations of the methods above see slides 10, 12, 13 from the following [LCWS2021 talk]((https://indico.cern.ch/event/995633/contributions/4259659/attachments/2209010/3738157/Bohdan_TOF_LCWS2021.pdf)).
 

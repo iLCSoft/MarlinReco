@@ -2,6 +2,7 @@
 #define TOFEstimators_h 1
 
 /**
+Marlin processor than calculates output parameters.
 \author F. Gaede, DESY, April 2018
 \author B. Dudar, DESY, September 2021
 */
@@ -14,12 +15,16 @@
 class TOFEstimators : public marlin::Processor {
     public:
         /**
-        Copy constructor is removed to avoid W-effc++ warnings.
+        Copy constructor .
+        We remove it to avoid W-effc++ warnings.
+        Copying objects with pointer members is a bad idea.
         */
         TOFEstimators(const TOFEstimators&) = delete;
 
         /**
-        Copy operator is removed to avoid W-effc++ warnings.
+        Copy assignment operator.
+        We remove it to avoid W-effc++ warnings.
+        Copying objects with pointer members is a bad idea.
         */
         TOFEstimators& operator=(const TOFEstimators&) = delete;
 
@@ -30,7 +35,7 @@ class TOFEstimators : public marlin::Processor {
 
         /**
         Default constructor.
-        Defines steering parameters from the xml steering file.
+        Registers steering parameters from the xml steering file.
         */
         TOFEstimators();
 
@@ -41,60 +46,52 @@ class TOFEstimators : public marlin::Processor {
 
         /** Called for every event - the working horse.
         Calculates momentum, track length and time of flight and
-        writes them into PIDHandler of the input collection object
+        writes them into PIDHandler of the input collection object.
         */
         void processEvent(EVENT::LCEvent* evt);
 
     private:
-        /** Steering parameter: name of the input collection of ReconstructedParticles to analyse.
-        Usually PandoraPFOs
+        /** Stores ReconstructedParticleCollection steering parameter.
         */
         std::string _pfoCollectionName{};
 
-        /**  Steering parameter: an option to indicate whether to do the calculations.
-        to the last tracker hit or extrapolate to the ECal surface.
+        /** Stores ExtrapolateToEcal steering parameter.
         */
         bool _extrapolateToEcal{};
 
-        /**  Steering parameter: name of the method to calculate time of flight based on the ECal hits.
-        If _extrapolateToEcal == false then ignored
+        /** Stores TofMethod steering parameter.
         */
         std::string _tofMethod{};
 
-        /** Steering parameter: Assumed time resolution of the detector elements in ps.
-        In case _extrapolateToEcal == false, then smearing applied for both SET strips.
-        In case _extrapolateToEcal == true, then smearing applied for every ECal hit.
+        /** Stores TimeResolution steering parameter.
         */
         double _timeResolution{};
 
-        /** Steering parameter: Number of inner ECal layers to consider for TOF methods.
-        In case _extrapolateToEcal == true and (_tofMethod == "frankAvg" or _tofMethod == "frankFit").
-        This parameter indicates how many ECal layers these tof Methods will consider to estimate TOF.
+        /** Stores MaxEcalLayer steering parameter.
         */
         int _maxEcalLayer{};
 
-
-        /** Number of the current event.
+        /** Stores current event number.
         */
         int _nEvent{};
 
-        /** Names of the output parameters written to the PIDHandler.
-        These parameters are: momentumHM, trackLength and timeOfFlight
+        /** Stores names of the output parameters.
+        These are "momentumHM", "trackLength" and "timeOfFlight".
         */
         std::vector<std::string> _outputParNames{};
 
 
-        /** Kalman Filter System for refitting.
-        Release notes of MarlinTrk v02-00:
-        USERS SHOULD NO LONGER DELETE THE IMarlinTrkSystem POINTER IN THEIR CODE
+        /** Kalman Filter System.
+        \note Release notes of MarlinTrk v02-00:
+        \note users should no longer delete the IMarlinTrkSystem pointer in their code
         */
         MarlinTrk::IMarlinTrkSystem* _trkSystem = nullptr;
 
-        /** B_{z} at the origin in Tesla.
+        /** Stores z component of the magnetic field at the origin in Tesla.
         */
         double _bField{};
 
-        /** TPC outer radius in mm.
+        /** Stores outer TPC radius in mm.
         */
         double _tpcOuterR{};
 };

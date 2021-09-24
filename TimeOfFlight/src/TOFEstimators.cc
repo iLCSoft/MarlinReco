@@ -1,6 +1,8 @@
 #include "TOFEstimators.h"
 #include "TOFUtils.h"
 
+#include <chrono>
+
 #include "EVENT/LCCollection.h"
 #include "UTIL/PIDHandler.h"
 
@@ -86,6 +88,7 @@ void TOFEstimators::init(){
 
 
 void TOFEstimators::processEvent(EVENT::LCEvent * evt){
+    auto startTime = std::chrono::steady_clock::now();
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
     streamlog_out(MESSAGE)<<"******Event****** "<<_nEvent<<std::endl;
@@ -180,8 +183,12 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
                 }
             }
         }
-
         vector<float> results{float(harmonicMom), float(trackLength), float(timeOfFlight)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
+
     }
+    auto timeNow = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration = timeNow - startTime;
+    streamlog_out(MESSAGE)<<"Time spent (sec): "<<duration.count()<<std::endl;
+    debugPrint();
 }

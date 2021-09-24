@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 
+#include "marlin/VerbosityLevels.h"
 #include "marlinutil/CalorimeterHitType.h"
 #include "HelixClass.h"
 #include "DD4hep/Detector.h"
@@ -242,6 +243,7 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
             trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtLastHit)) ) );
             if (extrapolateToEcal) trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtCalorimeter) ) ) );
         }
+        delete marlinTrk;
     }
     // one can maybe use hits of refittedTrack, which includes hits that failed in the fit
     // code would look cleaner, but using hits failed in fit probably would have worse performance..
@@ -321,4 +323,42 @@ double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHit
     TGraphErrors gr(nHits, &x[0], &y[0], &xErr[0], &yErr[0]);
     gr.Fit("pol1", "Q");
     return gr.GetFunction("pol1")->GetParameter(0);
+}
+
+
+void TOFUtils::debugPrint(){
+
+    auto parseLine = [](char* line){
+        // This assumes that a digit will be found and the line ends in " Kb".
+        int i = strlen(line);
+        const char* p = line;
+        while (*p <'0' || *p > '9') p++;
+        line[i-3] = '\0';
+        i = atoi(p);
+        return i;
+    };
+
+    auto getValue = [&parseLine](std::string memType="VmSize:"){
+        //Note: this value is in KB!
+        int memTypeIdx;
+        if(memType == "VmSize:") memTypeIdx = 7;
+        if(memType == "VmRSS:") memTypeIdx = 6;
+
+        FILE* file = fopen("/proc/self/status", "r");
+        int result = -1;
+        char line[128];
+
+        while (fgets(line, 128, file) != NULL){
+            if (strncmp(line, memType.c_str(), memTypeIdx) == 0){
+                result = parseLine(line);
+                break;
+            }
+        }
+        fclose(file);
+        return result;
+    };
+
+    streamlog_out(MESSAGE)<<"*************Performcance info*************"<<std::endl;
+    streamlog_out(MESSAGE)<<"Using VM (kB): "<<getValue("VmSize:")<<std::endl;
+    streamlog_out(MESSAGE)<<"Using RAM (kB): "<<getValue("VmRSS:")<<std::endl;
 }

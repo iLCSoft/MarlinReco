@@ -158,6 +158,8 @@ namespace TOFUtils{
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 
 
+    void debugPrint();
+
 }
 
 

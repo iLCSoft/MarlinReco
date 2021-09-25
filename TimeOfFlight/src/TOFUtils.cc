@@ -189,13 +189,13 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
         covMatrix[9]  = 1e+06; //sigma_z0^2
         covMatrix[14] = 100.; //sigma_tanl^2
         double maxChi2PerHit = 100.;
-        IMarlinTrack* marlinTrk = trkSystem->createTrack();
+        std::unique_ptr<IMarlinTrack> marlinTrk( trkSystem->createTrack() );
         TrackImpl refittedTrack;
 
         //Need to initialize trackState at last hit
         TrackStateImpl preFit = *track->getTrackState(TrackState::AtLastHit);
         preFit.setCovMatrix( covMatrix );
-        int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk, hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
+        int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
         if (errorFit != 0) continue;
 
         vector< pair<TrackerHit*, double> > hitsInFit;
@@ -208,7 +208,7 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
 
             //add hits in increasing rho for the FIRST subTrack!!!!!
             for( int j=nHitsInFit-1; j>=0; --j ){
-                TrackStateImpl ts = getTrackStateAtHit(marlinTrk, hitsInFit[j].first);
+                TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
                 trackStatesPerHit.push_back(ts);
             }
         }
@@ -222,14 +222,14 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
             if ( (innerHit - prevHit).r() < (outerHit - prevHit).r() ){
                 for( int j=nHitsInFit-1; j>=0; --j ){
                     //iterate in increasing rho
-                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk, hitsInFit[j].first);
+                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
                     trackStatesPerHit.push_back(ts);
                 }
             }
             else{
                 for( int j=0; j<nHitsInFit; ++j ){
                     //iterate in decreasing rho
-                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk, hitsInFit[j].first);
+                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
                     trackStatesPerHit.push_back(ts);
                 }
             }
@@ -243,7 +243,6 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
             trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtLastHit)) ) );
             if (extrapolateToEcal) trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtCalorimeter) ) ) );
         }
-        delete marlinTrk;
     }
     // one can maybe use hits of refittedTrack, which includes hits that failed in the fit
     // code would look cleaner, but using hits failed in fit probably would have worse performance..

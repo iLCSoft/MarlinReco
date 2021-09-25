@@ -21,7 +21,7 @@
         </parameter>
 
         <!-- 0 means read all events -->
-        <parameter name="MaxRecordNumber" type="int">400</parameter>
+        <parameter name="MaxRecordNumber" type="int">0</parameter>
         <parameter name="SkipNEvents" type="int">0</parameter>
         <parameter name="SupressCheck" type="bool">false</parameter>
         <parameter name="AllowToModifyEvent" type="bool">false</parameter>

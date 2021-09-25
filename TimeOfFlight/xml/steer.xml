@@ -8,8 +8,9 @@
 
         <!-- Run TofEstimator processors as an example -->
         <processor name="MyTofClosest0ps"/>
-        <!-- <processor name="MyTofSET10ps"/>
-        <processor name="MyTofFrankAvg50ps"/> -->
+        <processor name="MyTofSET10ps"/>
+        <processor name="MyTofFrankAvg50ps"/>
+        <processor name="MyTofFrankFit100ps"/>
 
         <!-- Write the new slcio file -->
         <processor name="MyLCIOOutputProcessor"/>
@@ -53,7 +54,7 @@
             10
         </parameter>
         <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT" type="string">
-            DEBUG6
+            MESSAGE
         </parameter>
     </processor>
 
@@ -78,6 +79,15 @@
         </parameter>
     </processor>
 
+    <processor name="MyTofFrankFit100ps" type="TOFEstimators">
+        <parameter name="TofMethod" options="closest, frankAvg, frankFit" type="string" default="closest">
+            frankFit
+        </parameter>
+        <!-- time resolution of each ECal hit in ps -->
+        <parameter name="TimeResolution" type="double" default="0">
+            100
+        </parameter>
+    </processor>
 
     <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
         <!-- creates new slcio file with PandoraPFOs collections that contain our results in PIDHandlers -->

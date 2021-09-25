@@ -112,8 +112,8 @@ double TOFUtils::getTPCOuterR(){
 EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
     vector<TrackerHit*> hits = track->getTrackerHits();
     TrackerHit* lastHit = hits.back();
-
     Vector3D pos (lastHit->getPosition());
+
     if ( pos.rho() > tpcOuterR ) return lastHit;
     return nullptr;
 }
@@ -128,7 +128,7 @@ std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluste
 
     for (int l=0; l<maxEcalLayer; ++l){
         // find the closest hit to the linearly extrapolated track inside ecal for each layer
-        // this is probably not the most efficient way to loop over all hits "maxEcalLayer" times
+        // OPTIMIZE: this is probably not the most efficient way to loop over ALL hits "maxEcalLayer" times
         CalorimeterHit* selectedHit = nullptr;
         double closestDistanceToLine = numeric_limits<double>::max();
         for ( auto hit : cluster->getCalorimeterHits() ){
@@ -160,11 +160,14 @@ std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
     int nSubTrack0Hits = track->getTracks()[0]->getTrackerHits().size();
     int nSubTrack1Hits = track->getTracks()[1]->getTrackerHits().size();
 
+    //OPTIMIZE: this is not reliable, but seems no other way is possible.
+    //Read documentation in the header file for details.
     int startIdx;
     if( std::abs(nTPCHits - nSubTrack0Hits) <= 1  ) startIdx = 1;
     else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
     else{
         // this shouldn't happen in princinple at all...
+        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
         return subTracks;
     }
     for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
@@ -178,7 +181,7 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
     for(int i=0; i<nTracks; ++i){
         Track* track = tracks[i];
         vector <TrackerHit*> hits = track->getTrackerHits();
-        sort(hits.begin(), hits.end(), sortByRho);
+        std::sort(hits.begin(), hits.end(), sortByRho);
 
         // setup initial dummy covariance matrix
         vector<float> covMatrix(15);
@@ -239,14 +242,14 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
             // SET hit is not present in hitsInFit as it is composite hit from strips
             // Add ts at the SET hit manualy which fitter returns with reffited track
             // If LastHit != SET hit, then we duplicate previous track state at last TPC hit
-            // isn't pretty, but shouldn't affect track length
+            // isn't pretty, but shouldn't affect the track length
             trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtLastHit)) ) );
             if (extrapolateToEcal) trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtCalorimeter) ) ) );
         }
     }
-    // one can maybe use hits of refittedTrack, which includes hits that failed in the fit
-    // code would look cleaner, but using hits failed in fit probably would have worse performance..
-    // needs to be checked
+    // one can maybe use hits of refittedTrack, but they include also hits that had failed in the fit
+    // code would look cleaner, but using hits that are failed in fit probably would have worse performance..
+    // needs to be checked.
     return trackStatesPerHit;
 }
 
@@ -254,7 +257,6 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
 double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, double timeResolution){
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
-
 
     double hitTime = numeric_limits<double>::max();
     double closestDistance = numeric_limits<double>::max();
@@ -270,8 +272,8 @@ double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, do
             hitTime = hit->getTime();
         }
     }
-    if ( hitTime == numeric_limits<double>::max() ) return 0.;
 
+    if ( hitTime == numeric_limits<double>::max() ) return 0.;
     return RandGauss::shoot(hitTime, timeResolution) - closestDistance/CLHEP::c_light;
 }
 
@@ -315,7 +317,7 @@ double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHit
         y.push_back(time);
         xErr.push_back(0.);
         yErr.push_back(0.3);
-        //setting this to 0 is not good for the fit.. So I put random 300ps...
+        //OPTIMIZE: setting this to 0 is not good for the fit.. So I put random 300ps...
         //Changing this doesn't seem to affect results, although one may want to check it more carefully
     }
 

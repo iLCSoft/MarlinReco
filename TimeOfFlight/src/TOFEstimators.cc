@@ -69,10 +69,16 @@ TOFEstimators::TOFEstimators() : marlin::Processor("TOFEstimators") {
                             "Time of flight is calculated using Ecal hits only up to MaxLayer",
                             _maxEcalLayer,
                             int(10) );
+
 }
 
 
 void TOFEstimators::init(){
+
+    if(_tofMethod != "closest" && _tofMethod != "frankAvg" && _tofMethod != "frankFit"){
+        throw EVENT::Exception( "Invalid steering parameter for TofMethod is passed: " + _tofMethod + "\n Available options are: closest, frankAvg, frankFit" );
+    }
+
     marlin::Global::EVENTSEEDER->registerProcessor(this);
 
     _outputParNames = {"momentumHM", "trackLength", "timeOfFlight"};
@@ -88,15 +94,30 @@ void TOFEstimators::init(){
 
 
 void TOFEstimators::processEvent(EVENT::LCEvent * evt){
-    auto startTime = std::chrono::steady_clock::now();
-
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
-    streamlog_out(DEBUG7)<<"************Event************ "<<_nEvent<<std::endl;
+    streamlog_out(MESSAGE)<<"************Event************ "<<_nEvent<<std::endl;
+    auto startTime = std::chrono::steady_clock::now();
 
+    LCCollection* pfos = nullptr;
+    try{
+        pfos = evt->getCollection(_pfoCollectionName);
+    }
+    catch(lcio::DataNotAvailableException& e){
+        streamlog_out(WARNING)<<"Input collection: "<<_pfoCollectionName<<" is not found - skipping event "<<_nEvent<<std::endl;
+        return;
+    }
 
-    LCCollection* pfos = evt->getCollection(_pfoCollectionName);
-    LCRelationNavigator navigatorSET = LCRelationNavigator( evt->getCollection("SETSpacePointRelations") );
+    LCCollection* setRelations = nullptr;
+    try{
+        setRelations = evt->getCollection("SETSpacePointRelations");
+    }
+    catch(lcio::DataNotAvailableException& e){
+        streamlog_out(WARNING)<<"Collection: SETSpacePointRelations is not found - skipping event "<<_nEvent<<std::endl;
+        return;
+    }
+    
+    LCRelationNavigator navigatorSET = LCRelationNavigator( setRelations );
 
     PIDHandler pidHandler( pfos );
     int algoID = pidHandler.addAlgorithm( name(), _outputParNames );
@@ -127,6 +148,7 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         double harmonicMom = 0.;
         int nTrackStates = trackStates.size();
         for( int j=1; j < nTrackStates; ++j ){
+            //for the last hit we check which track length formula to use
             if (j == nTrackStates - 1){
                 double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
                 if( nTurns > 0.5 ){
@@ -146,13 +168,11 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         }
         harmonicMom = std::sqrt(trackLength/harmonicMom);
 
-
         //////////////////////////////////////
         // This part calculates Time of flight
         //////////////////////////////////////
         double timeOfFlight = 0.;
         if( _extrapolateToEcal ){
-            // if we extrapolate to the calorimeter check TOF method steering parameter
             if (_tofMethod == "closest"){
                 timeOfFlight = getTofClosest(cluster, track, _timeResolution/1000.);
             }
@@ -164,23 +184,31 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
                 vector<CalorimeterHit*> frankHits = selectFrankEcalHits(cluster, track, _maxEcalLayer, _bField);
                 timeOfFlight = getTofFrankFit(frankHits, track, _timeResolution/1000.);
             }
-            else{
-                //wrong parameter silly!
-            }
         }
         else{
             //define tof as average time between two SET strips
-            //if no SET hits found, tof=0
+            //if no SET hits found, tof alreasy is 0, just skip
             TrackerHit* hitSET = getSETHit(track, _tpcOuterR);
             if ( hitSET != nullptr ){
                 const vector<LCObject*>& simHitsSET = navigatorSET.getRelatedToObjects( hitSET );
-                if ( simHitsSET.size() == 2 ){
-                    //it should be 2 always.. but just to be safe
+                if ( simHitsSET.size() >= 2 ){
+                    //It must be always 2, but just in case...
+                    if (simHitsSET.size() > 2) streamlog_out(WARNING)<<"Found more than two SET strip hits! Writing TOF as an average of the first two elements in the array."<<std::endl;
+
                     SimTrackerHit* simHitSETFront = static_cast <SimTrackerHit*>( simHitsSET[0] );
                     SimTrackerHit* simHitSETBack = static_cast <SimTrackerHit*>( simHitsSET[1] );
                     double timeFront = RandGauss::shoot( simHitSETFront->getTime(), _timeResolution/1000. );
                     double timeBack = RandGauss::shoot( simHitSETBack->getTime(), _timeResolution/1000. );
                         timeOfFlight = (timeFront + timeBack)/2.;
+                }
+                else if (simHitsSET.size() == 1){
+                    streamlog_out(WARNING)<<"Found only one SET strip hit! Writing TOF from a single strip."<<std::endl;
+                    SimTrackerHit* simHitSET = static_cast <SimTrackerHit*>( simHitsSET[0] );
+                    timeOfFlight = RandGauss::shoot( simHitSET->getTime(), _timeResolution/1000. );
+                }
+                else{
+                    // this probably never happens...
+                    streamlog_out(WARNING)<<"Found NO simHits associated with the found SET hit! Writing TOF as 0."<<std::endl;
                 }
             }
         }
@@ -190,8 +218,8 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         streamlog_out(DEBUG6)<<"momentum: "<< float(harmonicMom)<<" Gev"<<std::endl;
         streamlog_out(DEBUG6)<<"track length: "<< float(trackLength)<<" mm"<<std::endl;
         streamlog_out(DEBUG6)<<"time-of-flight: "<< float(timeOfFlight)<<" ns"<<std::endl;
-
     }
+
     auto endTime = std::chrono::steady_clock::now();
     std::chrono::duration<double> duration = endTime - startTime;
     streamlog_out(DEBUG7)<<"Time spent (sec): "<<duration.count()<<std::endl;

@@ -89,9 +89,10 @@ void TOFEstimators::init(){
 
 void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     auto startTime = std::chrono::steady_clock::now();
+
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
-    streamlog_out(MESSAGE)<<"******Event****** "<<_nEvent<<std::endl;
+    streamlog_out(DEBUG7)<<"************Event************ "<<_nEvent<<std::endl;
 
 
     LCCollection* pfos = evt->getCollection(_pfoCollectionName);
@@ -185,10 +186,14 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         }
         vector<float> results{float(harmonicMom), float(trackLength), float(timeOfFlight)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
+        streamlog_out(DEBUG6)<<"*****PFO***** "<< i+1<<std::endl;
+        streamlog_out(DEBUG6)<<"momentum: "<< float(harmonicMom)<<" Gev"<<std::endl;
+        streamlog_out(DEBUG6)<<"track length: "<< float(trackLength)<<" mm"<<std::endl;
+        streamlog_out(DEBUG6)<<"time-of-flight: "<< float(timeOfFlight)<<" ns"<<std::endl;
 
     }
-    auto timeNow = std::chrono::steady_clock::now();
-    std::chrono::duration<double> duration = timeNow - startTime;
-    streamlog_out(MESSAGE)<<"Time spent (sec): "<<duration.count()<<std::endl;
+    auto endTime = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration = endTime - startTime;
+    streamlog_out(DEBUG7)<<"Time spent (sec): "<<duration.count()<<std::endl;
     debugPrint();
 }

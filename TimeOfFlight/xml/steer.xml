@@ -52,6 +52,9 @@
         <parameter name="MaxEcalLayer" type="int" default="10">
             10
         </parameter>
+        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT" type="string">
+            DEBUG6
+        </parameter>
     </processor>
 
     <processor name="MyTofSET10ps" type="TOFEstimators">

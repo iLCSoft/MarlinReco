@@ -357,7 +357,6 @@ void TOFUtils::debugPrint(){
         return result;
     };
 
-    streamlog_out(MESSAGE)<<"*************Performcance info*************"<<std::endl;
-    streamlog_out(MESSAGE)<<"Using VM (kB): "<<getValue("VmSize:")<<std::endl;
-    streamlog_out(MESSAGE)<<"Using RAM (kB): "<<getValue("VmRSS:")<<std::endl;
+    streamlog_out(DEBUG7)<<"Using VM (MB): "<<getValue("VmSize:")/1000.<<std::endl;
+    streamlog_out(DEBUG7)<<"Using RAM (MB): "<<getValue("VmRSS:")/1000.<<std::endl;
 }

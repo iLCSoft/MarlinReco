@@ -157,7 +157,9 @@ namespace TOFUtils{
     */
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 
-
+    /** Print debug info.
+    Prints a time spent per event, current usage of the virtual memory (VM) and resident set size (RSS).
+    */
     void debugPrint();
 
 }

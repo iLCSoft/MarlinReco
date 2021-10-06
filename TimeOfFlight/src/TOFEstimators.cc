@@ -84,6 +84,8 @@ void TOFEstimators::init(){
     _outputParNames = {"momentumHM", "trackLength", "timeOfFlight"};
     _bField = MarlinUtil::getBzAtOrigin();
     _tpcOuterR = getTPCOuterR();
+    // internally we use time resolution in nanoseconds
+    _timeResolution = _timeResolution/1000.;
 
     _trkSystem = MarlinTrk::Factory::createMarlinTrkSystem("DDKalTest", nullptr, "");
     _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS, true);
@@ -99,23 +101,8 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     streamlog_out(MESSAGE)<<"************Event************ "<<_nEvent<<std::endl;
     auto startTime = std::chrono::steady_clock::now();
 
-    LCCollection* pfos = nullptr;
-    try{
-        pfos = evt->getCollection(_pfoCollectionName);
-    }
-    catch(lcio::DataNotAvailableException& e){
-        streamlog_out(WARNING)<<"Input collection: "<<_pfoCollectionName<<" is not found - skipping event "<<_nEvent<<std::endl;
-        return;
-    }
-
-    LCCollection* setRelations = nullptr;
-    try{
-        setRelations = evt->getCollection("SETSpacePointRelations");
-    }
-    catch(lcio::DataNotAvailableException& e){
-        streamlog_out(WARNING)<<"Collection: SETSpacePointRelations is not found - skipping event "<<_nEvent<<std::endl;
-        return;
-    }
+    LCCollection* pfos = evt->getCollection(_pfoCollectionName);
+    LCCollection* setRelations = evt->getCollection("SETSpacePointRelations");
     
     LCRelationNavigator navigatorSET = LCRelationNavigator( setRelations );
 
@@ -148,20 +135,13 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         double harmonicMom = 0.;
         int nTrackStates = trackStates.size();
         for( int j=1; j < nTrackStates; ++j ){
-            //for the last hit we check which track length formula to use
-            if (j == nTrackStates - 1){
-                double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
-                if( nTurns > 0.5 ){
-                    // we cannot calculate arc length for more than pi revolution. Use formula with only z
-                    double arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
-                    Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
-                    trackLength += arcLength;
-                    harmonicMom += arcLength/mom.r2();
-                    continue;
-                }
-            }
+            //we check which track length formula to use
+            double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
+            double arcLength;
+            // we cannot calculate arc length for more than pi revolution. Use formula with only z
+            if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
+            else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
 
-            double arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
             Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
             trackLength += arcLength;
             harmonicMom += arcLength/mom.r2();
@@ -174,19 +154,19 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         double timeOfFlight = 0.;
         if( _extrapolateToEcal ){
             if (_tofMethod == "closest"){
-                timeOfFlight = getTofClosest(cluster, track, _timeResolution/1000.);
+                timeOfFlight = getTofClosest(cluster, track, _timeResolution);
             }
             else if (_tofMethod == "frankAvg"){
                 vector<CalorimeterHit*> frankHits = selectFrankEcalHits(cluster, track, _maxEcalLayer, _bField);
-                timeOfFlight = getTofFrankAvg(frankHits, track, _timeResolution/1000.);
+                timeOfFlight = getTofFrankAvg(frankHits, track, _timeResolution);
             }
             else if (_tofMethod == "frankFit"){
                 vector<CalorimeterHit*> frankHits = selectFrankEcalHits(cluster, track, _maxEcalLayer, _bField);
-                timeOfFlight = getTofFrankFit(frankHits, track, _timeResolution/1000.);
+                timeOfFlight = getTofFrankFit(frankHits, track, _timeResolution);
             }
         }
         else{
-            //define tof as average time between two SET strips
+            //define tof as an average time between two SET strips
             //if no SET hits found, tof alreasy is 0, just skip
             TrackerHit* hitSET = getSETHit(track, _tpcOuterR);
             if ( hitSET != nullptr ){
@@ -197,14 +177,14 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
 
                     SimTrackerHit* simHitSETFront = static_cast <SimTrackerHit*>( simHitsSET[0] );
                     SimTrackerHit* simHitSETBack = static_cast <SimTrackerHit*>( simHitsSET[1] );
-                    double timeFront = RandGauss::shoot( simHitSETFront->getTime(), _timeResolution/1000. );
-                    double timeBack = RandGauss::shoot( simHitSETBack->getTime(), _timeResolution/1000. );
+                    double timeFront = RandGauss::shoot(simHitSETFront->getTime(), _timeResolution);
+                    double timeBack = RandGauss::shoot(simHitSETBack->getTime(), _timeResolution);
                         timeOfFlight = (timeFront + timeBack)/2.;
                 }
                 else if (simHitsSET.size() == 1){
                     streamlog_out(WARNING)<<"Found only one SET strip hit! Writing TOF from a single strip."<<std::endl;
-                    SimTrackerHit* simHitSET = static_cast <SimTrackerHit*>( simHitsSET[0] );
-                    timeOfFlight = RandGauss::shoot( simHitSET->getTime(), _timeResolution/1000. );
+                    SimTrackerHit* simHitSET = static_cast <SimTrackerHit*>(simHitsSET[0]);
+                    timeOfFlight = RandGauss::shoot(simHitSET->getTime(), _timeResolution);
                 }
                 else{
                     // this probably never happens...

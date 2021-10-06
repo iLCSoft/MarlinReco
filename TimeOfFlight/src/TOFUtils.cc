@@ -120,31 +120,28 @@ EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
 
 
 std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluster* cluster, EVENT::Track* track, int maxEcalLayer, double bField ){
-    vector<CalorimeterHit*> selectedHits;
-
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
     Vector3D trackMomAtEcal = TOFUtils::getHelixMomAtTrackState(*tsEcal, bField);
 
-    for (int l=0; l<maxEcalLayer; ++l){
-        // find the closest hit to the linearly extrapolated track inside ecal for each layer
-        // OPTIMIZE: this is probably not the most efficient way to loop over ALL hits "maxEcalLayer" times
-        CalorimeterHit* selectedHit = nullptr;
-        double closestDistanceToLine = numeric_limits<double>::max();
-        for ( auto hit : cluster->getCalorimeterHits() ){
-            CHT hitType( hit->getType() );
-            bool isECALHit = ( hitType.caloID() == CHT::ecal );
-            if ( (!isECALHit) || ( int( hitType.layer() ) != l) ) continue;
+    vector<CalorimeterHit*> selectedHits(maxEcalLayer, nullptr);
+    vector<double> minDistances(maxEcalLayer, numeric_limits<double>::max());
 
-            Vector3D hitPos( hit->getPosition() );
-            double dToLine = (hitPos - trackPosAtEcal).cross(trackMomAtEcal.unit()).r();
-            if (dToLine < closestDistanceToLine){
-                closestDistanceToLine = dToLine;
-                selectedHit = hit;
-            }
+    for ( auto hit : cluster->getCalorimeterHits() ){
+        CHT hitType( hit->getType() );
+        bool isECALHit = ( hitType.caloID() == CHT::ecal );
+        int layer = hitType.layer();
+        if ( (!isECALHit) || ( layer >= maxEcalLayer) ) continue;
+
+        Vector3D hitPos( hit->getPosition() );
+        double dToLine = (hitPos - trackPosAtEcal).cross(trackMomAtEcal.unit()).r();
+        if ( dToLine < minDistances[layer] ){
+            minDistances[layer] = dToLine;
+            selectedHits[layer] = hit;
         }
-        if ( selectedHit != nullptr ) selectedHits.push_back(selectedHit);
     }
+    selectedHits.erase( std::remove_if( selectedHits.begin(), selectedHits.end(), [](CalorimeterHit* h) { return h == nullptr; } ), selectedHits.end() );
+
     return selectedHits;
 }
 
@@ -167,7 +164,7 @@ std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
     else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
     else{
         // this shouldn't happen in princinple at all...
-        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
+        streamlog_out(ERROR)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
         return subTracks;
     }
     for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
@@ -308,20 +305,16 @@ double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHit
         return RandGauss::shoot(selectedHits[0]->getTime(), timeResolution) - dToTrack/CLHEP::c_light;
     }
 
-    vector <double> x, y, xErr, yErr;
+    vector <double> x, y;
     for ( auto hit : selectedHits ){
         Vector3D hitPos( hit->getPosition() );
         double dToTrack = (hitPos - trackPosAtEcal).r();
         x.push_back(dToTrack);
         double time = RandGauss::shoot(hit->getTime(), timeResolution);
         y.push_back(time);
-        xErr.push_back(0.);
-        yErr.push_back(0.3);
-        //OPTIMIZE: setting this to 0 is not good for the fit.. So I put random 300ps...
-        //Changing this doesn't seem to affect results, although one may want to check it more carefully
     }
 
-    TGraphErrors gr(nHits, &x[0], &y[0], &xErr[0], &yErr[0]);
+    TGraph gr(nHits, x.data(), y.data());
     gr.Fit("pol1", "Q");
     return gr.GetFunction("pol1")->GetParameter(0);
 }

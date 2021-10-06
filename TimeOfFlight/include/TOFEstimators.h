@@ -1,17 +1,17 @@
 #ifndef TOFEstimators_h
 #define TOFEstimators_h 1
 
-/**
-Marlin processor that calculates output parameters.
-\author F. Gaede, DESY, April 2018
-\author B. Dudar, DESY, September 2021
-*/
-
 #include <string>
 #include <vector>
 #include "marlin/Processor.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
+
+/**
+Marlin processor that calculates output parameters.
+\author F. Gaede, DESY, April 2018
+\author B. Dudar, DESY, September 2021
+*/
 class TOFEstimators : public marlin::Processor {
     public:
         /**

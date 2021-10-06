@@ -1,13 +1,6 @@
 #ifndef TOFUtils_h
 #define TOFUtils_h 1
 
-/**
- * Utility functions that are used by the TOFEstimators processor.
- *
- * \author F. Gaede, DESY, 2018
- * \author B. Dudar, DESY, 2021
- */
-
 #include <vector>
 #include "EVENT/ReconstructedParticle.h"
 #include "IMPL/TrackStateImpl.h"
@@ -15,6 +8,12 @@
 #include "MarlinTrk/IMarlinTrack.h"
 #include "DDRec/Vector3D.h"
 
+/**
+ * Utility functions that are used by the TOFEstimators processor.
+ *
+ * \author F. Gaede, DESY, 2018
+ * \author B. Dudar, DESY, 2021
+*/
 namespace TOFUtils{
 
     /** Comparator function by radius for tracker hits.

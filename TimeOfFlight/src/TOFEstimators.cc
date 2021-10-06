@@ -138,7 +138,7 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
             //we check which track length formula to use
             double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
             double arcLength;
-            // we cannot calculate arc length for more than pi revolution. Use formula with only z
+            // we cannot calculate arc length for more than pi revolution using delta phi. Use formula with only z
             if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
             else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
 

@@ -10,7 +10,6 @@
         <processor name="MyTofClosest0ps"/>
         <processor name="MyTofSET10ps"/>
         <processor name="MyTofFrankAvg50ps"/>
-        <processor name="MyTofFrankFit100ps"/>
 
         <!-- Write the new slcio file -->
         <processor name="MyLCIOOutputProcessor"/>
@@ -76,16 +75,6 @@
         <!-- time resolution of each ECal hit in ps -->
         <parameter name="TimeResolution" type="double" default="0">
             49.999
-        </parameter>
-    </processor>
-
-    <processor name="MyTofFrankFit100ps" type="TOFEstimators">
-        <parameter name="TofMethod" options="closest, frankAvg, frankFit" type="string" default="closest">
-            frankFit
-        </parameter>
-        <!-- time resolution of each ECal hit in ps -->
-        <parameter name="TimeResolution" type="double" default="0">
-            100
         </parameter>
     </processor>
 

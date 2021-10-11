@@ -14,16 +14,14 @@ Marlin processor that calculates harmonic mean momentum, track length and time-o
 class TOFEstimators : public marlin::Processor {
     public:
         /**
-        Copy constructor .
+        Copy constructor.
         We remove it to avoid W-effc++ warnings.
-        Copying objects with pointer members is a bad idea.
         */
         TOFEstimators(const TOFEstimators&) = delete;
 
         /**
         Copy assignment operator.
         We remove it to avoid W-effc++ warnings.
-        Copying objects with pointer members is a bad idea.
         */
         TOFEstimators& operator=(const TOFEstimators&) = delete;
 

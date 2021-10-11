@@ -187,7 +187,7 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
                     timeOfFlight = RandGauss::shoot(simHitSET->getTime(), _timeResolution);
                 }
                 else{
-                    // this probably never happens...
+                    // this happens very rarily (0.1%). When >1 simHits associated with a single strip none simHits are written by the DDSpacePointBuilder.
                     streamlog_out(WARNING)<<"Found NO simHits associated with the found SET hit! Writing TOF as 0."<<std::endl;
                 }
             }

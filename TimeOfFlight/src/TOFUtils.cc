@@ -157,14 +157,14 @@ std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
     int nSubTrack0Hits = track->getTracks()[0]->getTrackerHits().size();
     int nSubTrack1Hits = track->getTracks()[1]->getTrackerHits().size();
 
-    //OPTIMIZE: this is not reliable, but seems no other way is possible.
+    //OPTIMIZE: this is not reliable, but I don't see any other way at the moment.
     //Read documentation in the header file for details.
     int startIdx;
     if( std::abs(nTPCHits - nSubTrack0Hits) <= 1  ) startIdx = 1;
     else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
     else{
-        // this shouldn't happen in princinple at all...
-        streamlog_out(ERROR)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
+        //FIXME: This happens very rarily (0.01%) for unknown reasons, so we just, skip adding subTracks...
+        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
         return subTracks;
     }
     for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
@@ -317,41 +317,4 @@ double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHit
     TGraph gr(nHits, x.data(), y.data());
     gr.Fit("pol1", "Q");
     return gr.GetFunction("pol1")->GetParameter(0);
-}
-
-
-void TOFUtils::debugPrint(){
-
-    auto parseLine = [](char* line){
-        // This assumes that a digit will be found and the line ends in " Kb".
-        int i = strlen(line);
-        const char* p = line;
-        while (*p <'0' || *p > '9') p++;
-        line[i-3] = '\0';
-        i = atoi(p);
-        return i;
-    };
-
-    auto getValue = [&parseLine](std::string memType="VmSize:"){
-        //Note: this value is in KB!
-        int memTypeIdx;
-        if(memType == "VmSize:") memTypeIdx = 7;
-        if(memType == "VmRSS:") memTypeIdx = 6;
-
-        FILE* file = fopen("/proc/self/status", "r");
-        int result = -1;
-        char line[128];
-
-        while (fgets(line, 128, file) != NULL){
-            if (strncmp(line, memType.c_str(), memTypeIdx) == 0){
-                result = parseLine(line);
-                break;
-            }
-        }
-        fclose(file);
-        return result;
-    };
-
-    streamlog_out(DEBUG7)<<"Using VM (MB): "<<getValue("VmSize:")/1000.<<std::endl;
-    streamlog_out(DEBUG7)<<"Using RAM (MB): "<<getValue("VmRSS:")/1000.<<std::endl;
 }

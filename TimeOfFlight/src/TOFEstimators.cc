@@ -203,5 +203,4 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     auto endTime = std::chrono::steady_clock::now();
     std::chrono::duration<double> duration = endTime - startTime;
     streamlog_out(DEBUG7)<<"Time spent (sec): "<<duration.count()<<std::endl;
-    debugPrint();
 }

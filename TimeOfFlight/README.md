@@ -158,7 +158,7 @@ Here is the pseudocode example on how one could extract PIDHandler parameters of
         int tofParIdx = pidHandler.getParameterIndex(algorithmID, "timeOfFlight");
 
 
-        for(int i=0; i < pfos.getNumberOfElements(); ++i){
+        for(int i=0; i < pfos->getNumberOfElements(); ++i){
             ReconstructedParticle* pfo = static_cast <ReconstructedParticle*> ( pfos->getElementAt(i) );
 
             const ParticleID& pfoID = pidHandler.getParticleID(pfo, algorithmID);

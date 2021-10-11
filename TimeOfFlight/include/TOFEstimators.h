@@ -6,9 +6,8 @@
 #include "marlin/Processor.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
-
 /**
-Marlin processor that calculates output parameters.
+Marlin processor that calculates harmonic mean momentum, track length and time-of-flight for charged particles.
 \author F. Gaede, DESY, April 2018
 \author B. Dudar, DESY, September 2021
 */

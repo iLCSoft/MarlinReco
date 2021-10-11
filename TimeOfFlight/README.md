@@ -23,11 +23,11 @@ Make sure to run InitDD4hep before this processor is executed.
 
 This processor has five steering parameters:
 
-+ "ReconstructedParticleCollection" | default: "PandoraPFOs"<br>
++ ReconstructedParticleCollection | default: "PandoraPFOs"<br>
   Collection of `ReconstructedParticle` objects to analyze.<br>
   The final results will be written in the PIDHandler inside this collection.
 
-+ "ExtrapolateToEcal" | default: true<br>
++ ExtrapolateToEcal | default: true<br>
   If `true` the track length is calculated to the extrapolated track position at the ECal surface. Time-of-flight then calculated using ECal hits via one of the methods chosen in *TofMethod* steering parameter.
 
   If `false` the track length is calculated to the last tracker hit. Time-of-flight then calculated using the last tracker hit. Which is SET hit for the barrel region and *undefined* for the endcap region.<br>

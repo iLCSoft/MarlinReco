@@ -67,7 +67,9 @@ using namespace marlin ;
 class VTXDigiProcessor : public Processor {
   
  public:
-  
+  VTXDigiProcessor(const VTXDigiProcessor&) = delete;
+  VTXDigiProcessor& operator=(const VTXDigiProcessor&) = delete;
+
   virtual Processor*  newProcessor() { return new VTXDigiProcessor ; }
   
   
@@ -127,6 +129,3 @@ class VTXDigiProcessor : public Processor {
 } ;
 
 #endif
-
-
-

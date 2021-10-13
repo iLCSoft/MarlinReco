@@ -29,6 +29,8 @@ namespace TTbarAnalysis
 		//
 			MCOperator (EVENT::LCCollection * col, EVENT::LCCollection * rel);
 			virtual ~MCOperator () {};
+            MCOperator(const MCOperator&) = delete;
+            MCOperator& operator=(const MCOperator&) = delete;
 		//
 		//	Methods
 		//

@@ -48,6 +48,8 @@ class VXDGeometry ;
 class VTXNoiseClusters : public  Processor, public EventModifier{
   
  public:
+  VTXNoiseClusters(const VTXNoiseClusters&) = delete;
+  VTXNoiseClusters& operator=(const VTXNoiseClusters&) = delete;
   
   virtual Processor*  newProcessor() { return new VTXNoiseClusters ; }
   
@@ -107,6 +109,3 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
 
 #endif
 //#endif // USE_ROOT
-
-
-

@@ -29,6 +29,8 @@ class FPCCDData;
 class anaPix : public marlin::Processor {
   
  public:
+  anaPix(const anaPix&) = delete;
+  anaPix& operator=(const anaPix&) = delete;
   
   virtual Processor*  newProcessor() { return new anaPix ; }
   

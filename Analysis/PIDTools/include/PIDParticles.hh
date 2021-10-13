@@ -30,6 +30,9 @@ namespace PIDParticles
 
 class PIDParticle_base {
 public:
+
+  PIDParticle_base& operator=(const PIDParticle_base&) = delete;
+
   PIDParticle_base (const char *name, int _pdg, double _mass, const double* BBpars) :
     pdg(_pdg), mass(_mass), _name(name)
   {

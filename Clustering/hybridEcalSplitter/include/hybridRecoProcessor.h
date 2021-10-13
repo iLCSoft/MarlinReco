@@ -41,6 +41,9 @@ class hybridRecoProcessor : public Processor {
   
  public:
   
+  hybridRecoProcessor(const hybridRecoProcessor&) = delete;
+  hybridRecoProcessor& operator=(const hybridRecoProcessor&) = delete;
+
   virtual Processor*  newProcessor() { return new hybridRecoProcessor ; }
   
   hybridRecoProcessor() ;
@@ -124,6 +127,3 @@ class hybridRecoProcessor : public Processor {
 
 
 #endif
-
-
-

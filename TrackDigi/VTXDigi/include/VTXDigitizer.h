@@ -123,7 +123,9 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
 class VTXDigitizer : public Processor {
   
  public:
-  
+  VTXDigitizer(const VTXDigitizer&) = delete;
+  VTXDigitizer& operator=(const VTXDigitizer&) = delete;
+
   virtual Processor*  newProcessor() { return new VTXDigitizer ; }
   
   
@@ -297,6 +299,3 @@ class VTXDigitizer : public Processor {
 } ;
 
 #endif
-
-
-

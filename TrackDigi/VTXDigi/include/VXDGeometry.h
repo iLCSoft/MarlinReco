@@ -49,7 +49,10 @@ typedef std::vector< VXDLayer >  VXDLayers ;
 class VXDGeometry  {
   
 public:
-  
+
+  VXDGeometry(const VXDGeometry&) = delete;
+  VXDGeometry& operator=(const VXDGeometry&) = delete;  
+
   VXDGeometry(gear::GearMgr* gearMgr) ;
 
   
@@ -93,6 +96,3 @@ protected:
 } ;
 
 #endif
-
-
-

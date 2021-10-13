@@ -69,6 +69,9 @@ class LDCCaloDigi : public Processor {
   
  public:
   
+  LDCCaloDigi(const LDCCaloDigi&) = delete;
+  LDCCaloDigi& operator=(const LDCCaloDigi&) = delete;
+
   virtual Processor*  newProcessor() { return new LDCCaloDigi ; }
   
   
@@ -129,6 +132,3 @@ class LDCCaloDigi : public Processor {
 } ;
 
 #endif
-
-
-

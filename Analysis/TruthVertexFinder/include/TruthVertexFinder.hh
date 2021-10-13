@@ -50,6 +50,9 @@ namespace TTbarAnalysis
 	  
 	 public:
 	  
+      TruthVertexFinder(const TruthVertexFinder&) = delete;
+      TruthVertexFinder& operator=(const TruthVertexFinder&) = delete;
+
 	  virtual Processor*  newProcessor() { return new TruthVertexFinder ; }
 	  
 	  
@@ -190,6 +193,3 @@ namespace TTbarAnalysis
 	} ;
 } /* TTbarAnalysis */
 #endif
-
-
-

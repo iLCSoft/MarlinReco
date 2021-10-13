@@ -18,6 +18,10 @@ class LowMomentumMuPiSeparationPID_BDTG;
 
 class LikelihoodPIDProcessor : public Processor{
 public:
+
+  LikelihoodPIDProcessor(const LikelihoodPIDProcessor&) = delete;
+  LikelihoodPIDProcessor& operator=(const LikelihoodPIDProcessor&) = delete;
+
   virtual Processor*  newProcessor() { return new LikelihoodPIDProcessor ; }
   LikelihoodPIDProcessor();
   virtual void init() ;

@@ -44,6 +44,9 @@ class VXDGeometry ;
 class VTXBgClusters : public Processor {
   
  public:
+
+  VTXBgClusters(const VTXBgClusters&) = delete;
+  VTXBgClusters& operator=(const VTXBgClusters&) = delete;
   
   virtual Processor*  newProcessor() { return new VTXBgClusters ; }
   
@@ -106,6 +109,3 @@ class VTXBgClusters : public Processor {
 } ;
 
 #endif
-
-
-

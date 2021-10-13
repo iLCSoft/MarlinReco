@@ -38,6 +38,9 @@ class MCTruthJetEnergy : public Processor {
   
  public:
   
+  MCTruthJetEnergy(const MCTruthJetEnergy&) = delete;
+  MCTruthJetEnergy& operator=(const MCTruthJetEnergy&) = delete;
+
   virtual Processor*  newProcessor() { return new MCTruthJetEnergy ; }
   
   
@@ -87,6 +90,3 @@ class MCTruthJetEnergy : public Processor {
 } ;
 
 #endif
-
-
-

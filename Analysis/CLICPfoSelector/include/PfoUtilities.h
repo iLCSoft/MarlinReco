@@ -47,7 +47,7 @@ namespace PfoUtil {
 
   typedef std::vector<EVENT::ReconstructedParticle*> PfoList;
 
-  static bool PfoSortFunction(EVENT::ReconstructedParticle* lhs, EVENT::ReconstructedParticle* rhs) {
+  inline bool PfoSortFunction(EVENT::ReconstructedParticle* lhs, EVENT::ReconstructedParticle* rhs) {
     //  true if lhs goes before
 
     const float             lhs_energy       = lhs->getEnergy();

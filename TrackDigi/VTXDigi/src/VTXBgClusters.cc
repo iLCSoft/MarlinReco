@@ -145,8 +145,8 @@ void VTXBgClusters::processEvent( LCEvent * evt ) {
 
       float totMomentum = 0;
       if (_removeDRays) { // check if hit originates from delta-electron 
-        for (int i=0;i<3;++i) 
-          totMomentum+=SimTHit->getMomentum()[i]*SimTHit->getMomentum()[i];
+        for (int j=0;j<3;++j) 
+          totMomentum+=SimTHit->getMomentum()[j]*SimTHit->getMomentum()[j];
         totMomentum = sqrt(totMomentum);
         if (totMomentum < _momCut)
           accept = 0;
@@ -417,4 +417,3 @@ void VTXBgClusters::end(){
                            << " processed " << _nEvt << " events in " << _nRun << " runs "
                            << std::endl ;
 }
-

@@ -473,8 +473,8 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
        nfirst_vertices++;     
        if(_printing>6)std::cout << std::setw(2) << i << " " << std::setw(2) << fvec[i].ivertex << " " 
                                 << std::setw(2) << fvec[i].nedges << " " << fvec[i].febits << "  { "; 
-       for (std::list<int>::iterator it=fvec[i].fvelist.begin(); it!=fvec[i].fvelist.end(); ++it){
-           if(_printing>6)std::cout << std::setw(2) << *it << " ";
+       for (std::list<int>::iterator iter=fvec[i].fvelist.begin(); iter!=fvec[i].fvelist.end(); ++iter){
+           if(_printing>6)std::cout << std::setw(2) << *iter << " ";
        } 
        if(_printing>6)std::cout << "}" << std::endl;
    }
@@ -556,9 +556,9 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
            std::vector<int> tmp;
            if(fvec[d[i]].nedges>1){    // Only do this for those first vertices with more than one edge
 // Iterate over the elements of the list associated with first vertex d[i]
-              for (std::list<int>::iterator it=fvec[d[i]].fvelist.begin(); it!=fvec[d[i]].fvelist.end(); ++it){
+              for (std::list<int>::iterator iter=fvec[d[i]].fvelist.begin(); iter!=fvec[d[i]].fvelist.end(); ++iter){
 //                std::cout << std::setw(2) << *it << " ";
-                  tmp.push_back(*it);
+                  tmp.push_back(*iter);
               }
 //            std::cout << std::endl;
               array.push_back(tmp);
@@ -587,9 +587,9 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
 
 // Check to see how many vertices are used in this edge set
        ored_vbits = evec[c[0]].vbits;
-       for (unsigned int i=1; i<r; ++i){
-            ored_vbits = (ored_vbits | evec[c[i]].vbits);
-            if(ored_vbits.count()!=2*(i+1))break;
+       for (unsigned int j=1; j<r; ++j){
+            ored_vbits = (ored_vbits | evec[c[j]].vbits);
+            if(ored_vbits.count()!=2*(j+1))break;
        }
        size_t nused = ored_vbits.count();
 
@@ -602,17 +602,17 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
           int npi0 = 0;
           int neta = 0;
           int netap = 0;
-          for (unsigned int i=0; i<r; ++i){
+          for (unsigned int j=0; j<r; ++j){
 /*              std::cout << "Assigned edge details" << std::endl;
               std::cout << std::setw(2) << c[i] << " " << evec[c[i]].vbits << " " << std::setw(2) << evec[c[i]].u << " " 
                         << std::setw(2) << evec[c[i]].v << " " << evec[c[i]].pdgid
                         << std::fixed << std::setw(10) << std::setprecision(5) << evec[c[i]].w << " " 
                         << std::fixed << std::setw(10) << std::setprecision(6) << evec[c[i]].edge_pvalue << std::endl;   */
-              ebits.flip(c[i]);                 // Set appropriate bit in the bitset for edge c[i]
-              wsum += evec[c[i]].w;
-              if(evec[c[i]].pdgid==111)npi0++;
-              if(evec[c[i]].pdgid==221)neta++;
-              if(evec[c[i]].pdgid==331)netap++;
+              ebits.flip(c[j]);                 // Set appropriate bit in the bitset for edge c[i]
+              wsum += evec[c[j]].w;
+              if(evec[c[j]].pdgid==111)npi0++;
+              if(evec[c[j]].pdgid==221)neta++;
+              if(evec[c[j]].pdgid==331)netap++;
           }
 // Store the CandidateSolution for later perusal
           svec.push_back(CandidateSolution());
@@ -775,4 +775,3 @@ bool GammaGammaSolutionFinder::PfoProbabilitySortFunction(ReconstructedParticle*
    return (lhs_particleType<rhs_particleType);                                          // Favor lower valued types (pi0s cf etas cf eta's)
 
 }
-

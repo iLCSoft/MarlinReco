@@ -295,7 +295,7 @@ double Balance(LCEvent * evt){
   int idpdg;
   const double* mom;
   float enr;
-  double mass;
+  // double mass;
   LCCollection* mcpCol = evt->getCollection("MCParticle" ) ;  
 //-----------------------------------------------------------------------
 // Calculate balance at IP taking into account everything
@@ -361,7 +361,7 @@ double Balance(LCEvent * evt){
     idpdg = imc-> getPDG (); 
     mom = imc-> getMomentum (); 
     enr = imc-> getEnergy (); 
-    mass = imc-> getMass (); 
+    // mass = imc-> getMass (); 
     if( imc-> getGeneratorStatus() == 1) { // stable particles only   
       px = mom[0]; 
       py = mom[1]; 

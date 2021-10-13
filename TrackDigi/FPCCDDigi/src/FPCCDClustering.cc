@@ -914,7 +914,7 @@ void FPCCDClustering::makeTrackerHitVec(FPCCDData* pHitData, LCCollection* STHco
 
 
 
-void FPCCDClustering::makeTrackerHit(LCCollection* STHcol, int layer, int ladder, FPCCDClusterVec_t &clusterVec, std::multimap< std::pair<int,int>, SimTrackerHit*> relMap, LCCollectionVec* relCol, LCCollectionVec* trkHitVec )
+void FPCCDClustering::makeTrackerHit(LCCollection* STHcol, int layer, int ladder, FPCCDClusterVec_t &clusterVec, std::multimap< std::pair<int,int>, SimTrackerHit*> /*relMap*/, LCCollectionVec* relCol, LCCollectionVec* trkHitVec )
 {
   //trkHitVec and relCol is yet void data. 
   //This Version is different from default version at the point of last area of this function scope.

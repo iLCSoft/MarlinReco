@@ -225,7 +225,8 @@ void NewLDCCaloDigi::init() {
   _nEvt = 0;
 
   //fg: need to set default encoding in for reading old files...
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+  //CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
+  // dudarboh: does nothing anymore, default encoding spedified in the constructor
 
   // Calorimeter geometry from GEAR
   const gear::CalorimeterParameters& pEcalBarrel = Global::GEAR->getEcalBarrelParameters();
@@ -641,4 +642,3 @@ void NewLDCCaloDigi::fillECALGaps( ) {
   return;
 
 }
-

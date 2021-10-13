@@ -264,8 +264,8 @@ void GammaGammaCandidateFinder::FindGammaGammaCandidates(LCCollectionVec * recpa
              std::cout << "Fit probability = " << fit_probability << std::endl;
              std::cout << "Covariance matrix dimension " << cov_dim << std::endl;
              if(cov_dim==6){
-                for (unsigned int i=0; i<6*6; i++){
-                    std::cout << "Covariance matrix element " << i << " " << cov[i] << std::endl;                   
+                for (unsigned int k=0; k<6*6; k++){
+                    std::cout << "Covariance matrix element " << k << " " << cov[k] << std::endl;                   
                 }
              }
           }

@@ -215,20 +215,20 @@ namespace TTbarAnalysis
 	}
 
 
-	double * MathOperator::castIntToDouble(int * array)
-	{
-		int size = (sizeof(array)/sizeof(*array));
-		if (size < 1) 
-		{
-			return NULL;
-		}
-		double * arrPoint1 = new double[size];
-		for (int i = 0; i < size; i++) 
-		{
-			arrPoint1[i] = array[i];
-		}
-		return arrPoint1;
-	}
+	// double * MathOperator::castIntToDouble(int * array)
+	// {
+	// 	int size = (sizeof(array)/sizeof(*array));
+	// 	if (size < 1) 
+	// 	{
+	// 		return NULL;
+	// 	}
+	// 	double * arrPoint1 = new double[size];
+	// 	for (int i = 0; i < size; i++) 
+	// 	{
+	// 		arrPoint1[i] = array[i];
+	// 	}
+	// 	return arrPoint1;
+	// }
 	vector< vector< int > * > * MathOperator::GetMagicNumbers()
 	{
 		vector< vector< int > * > * result = new vector< vector< int > * >();

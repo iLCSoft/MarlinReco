@@ -59,23 +59,20 @@ class IsoLepTrainingProcessor : public marlin::Processor {
 
   /** Input collection name.
    */
-  std::string _colMCP ;
-  std::string _colMCTL ;
-  std::string _colPFOs ;
-  std::string _colPVtx ;  
+  std::string _colMCP{} ;
+  std::string _colMCTL{} ;
+  std::string _colPFOs{} ;
+  std::string _colPVtx{} ;  
 
-  bool   _mcdebug;
+  bool   _mcdebug{};
 
-  bool _is_lep_tune;
-  bool _is_for_sig;
+  bool _is_lep_tune{};
+  bool _is_for_sig{};
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{} ;
+  int _nEvt{} ;
 
-  int _iso_lep_type;
+  int _iso_lep_type{};
 } ;
 
 #endif
-
-
-

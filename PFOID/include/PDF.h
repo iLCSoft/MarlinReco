@@ -18,6 +18,8 @@ private:
 public:
   VObject *VO{};
   
+  PDF(const PDF&) = delete;
+  PDF& operator=(const PDF&) = delete;
   // constructor: creates arrays
   PDF(std::string PDFname, int NoOfCats, std::string* CatNames, int NoOfHists, int NoOfVar, std::string *VarNames);
   PDF(std::string Filename);                // overloaded constructor: creates arrays, fills from file

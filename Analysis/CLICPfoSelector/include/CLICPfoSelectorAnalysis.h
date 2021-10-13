@@ -43,6 +43,10 @@ using namespace std;
 
 class CLICPfoSelectorAnalysis : public Processor {
 public:
+
+  CLICPfoSelectorAnalysis(const CLICPfoSelectorAnalysis&) = delete;
+  CLICPfoSelectorAnalysis& operator=(const CLICPfoSelectorAnalysis&) = delete;
+
   virtual Processor* newProcessor() { return new CLICPfoSelectorAnalysis; }
 
   CLICPfoSelectorAnalysis();

@@ -110,6 +110,9 @@ class RecoMCTruthLinker : public marlin::Processor {
 
 public:
   
+  RecoMCTruthLinker(const RecoMCTruthLinker&) = delete;
+  RecoMCTruthLinker& operator=(const RecoMCTruthLinker&) = delete;
+
   virtual Processor*  newProcessor() { return new RecoMCTruthLinker ; }
   
   

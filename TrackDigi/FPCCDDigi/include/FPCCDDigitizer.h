@@ -73,7 +73,9 @@ typedef struct {
 class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
 
  public:
-  
+  FPCCDDigitizer(const FPCCDDigitizer&) = delete;
+  FPCCDDigitizer& operator=(const FPCCDDigitizer&) = delete;
+
   virtual Processor*  newProcessor() { return new FPCCDDigitizer ; }
   
   

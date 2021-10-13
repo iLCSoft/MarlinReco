@@ -31,6 +31,9 @@ class ThrustReconstruction : public Processor {
   
 public:
   
+  ThrustReconstruction(const ThrustReconstruction&) = delete;
+  ThrustReconstruction& operator=(const ThrustReconstruction&) = delete;
+
   virtual Processor* newProcessor() { return new ThrustReconstruction;}
   
   

@@ -76,6 +76,9 @@ class ILDCaloDigi : public Processor {
   
  public:
   
+  ILDCaloDigi(const ILDCaloDigi&) = delete;
+  ILDCaloDigi& operator=(const ILDCaloDigi&) = delete;
+
   virtual Processor*  newProcessor() { return new ILDCaloDigi ; }
   
   
@@ -301,6 +304,3 @@ class ILDCaloDigi : public Processor {
 } ;
 
 #endif
-
-
-

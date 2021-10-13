@@ -68,6 +68,8 @@ typedef std::vector<FPCCDCluster_t*> FPCCDClusterVec_t;
 class FPCCDClustering : public marlin::Processor, public marlin::EventModifier {
   
  public:
+  FPCCDClustering(const FPCCDClustering&) = delete;
+  FPCCDClustering& operator=(const FPCCDClustering&) = delete;
   
   virtual Processor*  newProcessor() { return new FPCCDClustering ; }
   

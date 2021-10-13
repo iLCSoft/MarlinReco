@@ -11,6 +11,10 @@
 
 class LikelihoodPID{
 public:
+
+  LikelihoodPID(const LikelihoodPID&) = delete;
+  LikelihoodPID& operator=(const LikelihoodPID&) = delete;
+
   LikelihoodPID(){};
   LikelihoodPID(std::string fname, double *pars, std::vector<float> cost);
   LikelihoodPID(double *pars);

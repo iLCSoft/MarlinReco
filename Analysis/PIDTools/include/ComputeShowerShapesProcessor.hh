@@ -11,6 +11,10 @@ using namespace marlin ;
 
 class ComputeShowerShapesProcessor : public Processor{
 public:
+
+  ComputeShowerShapesProcessor(const ComputeShowerShapesProcessor&) = delete;
+  ComputeShowerShapesProcessor& operator=(const ComputeShowerShapesProcessor&) = delete;
+
   virtual Processor*  newProcessor() { return new ComputeShowerShapesProcessor ; }
   ComputeShowerShapesProcessor();
   virtual void init( LCEvent * evt ) ;

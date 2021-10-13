@@ -90,6 +90,8 @@ class PDFs;
 class PFOID : public Processor {
 
  public:
+  PFOID(const PFOID&) = delete;
+  PFOID& operator=(const PFOID&) = delete;
 
   virtual Processor* newProcessor() { return new PFOID ; }
 
@@ -151,5 +153,3 @@ class PFOID : public Processor {
 };
 
 #endif
-
-

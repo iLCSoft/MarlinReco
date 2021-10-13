@@ -73,6 +73,9 @@ class MokkaCaloDigi : public Processor {
   
  public:
   
+  MokkaCaloDigi(const MokkaCaloDigi&) = delete;
+  MokkaCaloDigi& operator=(const MokkaCaloDigi&) = delete;
+
   virtual Processor*  newProcessor() { return new MokkaCaloDigi ; }
   
   
@@ -158,6 +161,3 @@ class MokkaCaloDigi : public Processor {
 } ;
 
 #endif
-
-
-

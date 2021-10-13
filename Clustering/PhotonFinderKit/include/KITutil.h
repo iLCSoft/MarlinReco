@@ -36,6 +36,8 @@ class Superhit2
 {
  public:
 
+  Superhit2(const Superhit2&) = delete;
+  Superhit2& operator=(const Superhit2&) = delete;
   /**
    *  Constructor , needs absolute MIP energy (calibrated ) , and pointer to 
    *  calorimeter hit
@@ -359,6 +361,3 @@ inline double Dot2(double* X1,double* X2);
 void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv,vector<Tmpcl2*>& clout);
 
 #endif
-
-
-

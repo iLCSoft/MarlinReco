@@ -27,6 +27,8 @@ class PDF;
 class CreatePDFs : public Processor {
 
  public:
+  CreatePDFs(const CreatePDFs&) = delete;
+  CreatePDFs& operator=(const CreatePDFs&) = delete;
 
   virtual Processor* newProcessor() { return new CreatePDFs ; }
 
@@ -84,5 +86,3 @@ class CreatePDFs : public Processor {
 };
 
 #endif
-
-

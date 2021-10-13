@@ -25,6 +25,8 @@ namespace TTbarAnalysis
 		//
 			VertexMCOperator (EVENT::LCCollection * rel);
 			virtual ~VertexMCOperator () {};
+            VertexMCOperator(const VertexMCOperator&) = delete;
+            VertexMCOperator& operator=(const VertexMCOperator&) = delete;
 		//
 		//	Methods
 		//

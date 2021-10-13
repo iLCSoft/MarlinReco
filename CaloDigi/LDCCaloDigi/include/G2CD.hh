@@ -21,6 +21,9 @@ class G2CD  : public marlin::Processor
 {
 	public:
 
+    G2CD(const G2CD&) = delete;
+    G2CD& operator=(const G2CD&) = delete;
+
 	Processor*  newProcessor() { return new G2CD ; }
 
 	G2CD();
@@ -71,5 +74,3 @@ class G2CD  : public marlin::Processor
 };
 
 #endif
-
-

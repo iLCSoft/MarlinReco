@@ -10,6 +10,8 @@ private:
   double *varValues{};          // array of values of variables
 
 public:
+  VObject(const VObject&) = delete;
+  VObject& operator=(const VObject&) = delete;
   VObject(int NoOfVars) ;      // constructor : creates arrays, takes number of variables
   ~VObject() ;                 // destructor  : deletes arrays
 

@@ -12,6 +12,10 @@
 
 class LowMomentumMuPiSeparationPID_BDTG{
 public:
+
+  LowMomentumMuPiSeparationPID_BDTG(const LowMomentumMuPiSeparationPID_BDTG&) = delete;
+  LowMomentumMuPiSeparationPID_BDTG& operator=(const LowMomentumMuPiSeparationPID_BDTG&) = delete;
+
   LowMomentumMuPiSeparationPID_BDTG(std::vector< std::string > fname);
   
   ~LowMomentumMuPiSeparationPID_BDTG();

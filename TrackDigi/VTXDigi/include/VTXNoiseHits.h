@@ -37,7 +37,9 @@ using namespace marlin ;
 class VTXNoiseHits : public Processor {
   
  public:
-  
+  VTXNoiseHits(const VTXNoiseHits&) = delete;
+  VTXNoiseHits& operator=(const VTXNoiseHits&) = delete; 
+ 
   virtual Processor*  newProcessor() { return new VTXNoiseHits ; }
   
   
@@ -81,6 +83,3 @@ class VTXNoiseHits : public Processor {
 } ;
 
 #endif
-
-
-

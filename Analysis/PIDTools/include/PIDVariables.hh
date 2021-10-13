@@ -40,6 +40,10 @@ using EVENT::FloatVec;
 
 class PIDVariable_base {
 public:
+
+  PIDVariable_base(const PIDVariable_base&) = delete;
+  PIDVariable_base& operator=(const PIDVariable_base&) = delete;
+
   PIDVariable_base(const char*name, const char *description, const char *unit) :
     _value(0.), _name(name), _description(description), _unit(unit)
     {};
@@ -148,6 +152,8 @@ public:
 class PID_dEdxChi2: public PIDVariable_base
 {
 public:
+
+  PID_dEdxChi2& operator=(const PID_dEdxChi2&) = delete;
   PID_dEdxChi2(const PID_dEdxChi2&);
   PID_dEdxChi2(const PIDParticles::PIDParticle_base* hypothesis, const float dEdx_MIP=1.35e-7);
   ~PID_dEdxChi2();
@@ -162,6 +168,8 @@ public:
 class PID_dEdxLogChi2: public PIDVariable_base
 {
 public:
+
+  PID_dEdxLogChi2& operator=(const PID_dEdxLogChi2&) = delete;
   PID_dEdxLogChi2(const PID_dEdxLogChi2&);
   PID_dEdxLogChi2(const PIDParticles::PIDParticle_base* hypothesis, const float dEdx_MIP=1.35e-7);
   ~PID_dEdxLogChi2();

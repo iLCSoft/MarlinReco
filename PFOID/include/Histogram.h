@@ -21,6 +21,8 @@ private:
   double vol{};               // volume of one bin  // vol*norm = correct norm
 
 public:
+  Histogram(const Histogram&) = delete;
+  Histogram& operator=(const Histogram&) = delete;
   Histogram(std::string HistName, int Dimension);          // creates arrays
   Histogram(std::string HistName, int Dimension, std::string *VarName, double *StartVal, double *BinWidth, int *NoOfBins);          // creates arrays
   ~Histogram();                                            // deletes arrays

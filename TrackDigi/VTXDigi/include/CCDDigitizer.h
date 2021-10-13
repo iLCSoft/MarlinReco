@@ -83,6 +83,9 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
 class CCDDigitizer : public Processor {
   
  public:
+
+  CCDDigitizer(const CCDDigitizer&) = delete;
+  CCDDigitizer& operator=(const CCDDigitizer&) = delete;
   
   virtual Processor*  newProcessor() { return new CCDDigitizer ; }
   
@@ -274,4 +277,3 @@ class CCDDigitizer : public Processor {
 
 
 #endif
-

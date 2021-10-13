@@ -138,7 +138,7 @@ public:
   float GetMVAout() const { return _mva; }
   float GetQ() const { return _q; }
   float GetSigAbove() const { return _sigAbove; }
-  const float GetMVAcut() const { return _mvaCut; }
+  float GetMVAcut() const { return _mvaCut; }
 
 
   void AddMVAVariable( const TString& name, Float_t* ptr)

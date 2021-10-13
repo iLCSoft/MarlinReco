@@ -1036,7 +1036,7 @@ int LikelihoodPID::Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::Clu
   return okflg;  
 }
 
-const double LikelihoodPID::getValue(int type, int valtype, double value){
+double LikelihoodPID::getValue(int type, int valtype, double value){
 
   /*int nbins=pdf[type][valtype]->GetNbinsX();
   double interval=pdf[type][valtype]->GetBinWidth(1);

@@ -262,7 +262,7 @@ void LikelihoodPIDProcessor::init() {
 
   //CHECK that init settings are correct
   bool allnamecorrect=false;
-  for(int i=0; i<_methodstorun.size(); i++) {
+  for(size_t i=0; i<_methodstorun.size(); i++) {
     {
       if(  _methodstorun.at(i).compare("dEdxPID")==0 
 	   ||  _methodstorun.at(i).compare("LowMomMuID")==0 
@@ -289,7 +289,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
   PIDHandler pidh(_pfoCol);   //BasicPID
 
   int algoID[10]; 
-  for(int i=0; i<_methodstorun.size(); i++) {
+  for(size_t i=0; i<_methodstorun.size(); i++) {
     if(_methodstorun.at(i).compare("dEdxPID")==0) algoID[i] = pidh.addAlgorithm(_methodstorun.at(i)+_methodstorun_version,_dEdxNames);
     else algoID[i] = pidh.addAlgorithm(_methodstorun.at(i)+_methodstorun_version, _particleNames);
   }
@@ -308,7 +308,7 @@ void LikelihoodPIDProcessor::processEvent( LCEvent * evt ) {
     
     Int_t parttype=-1;
 //////////////////////////////////////////////////////////////////////////////////
-    for(int ialgo=0; ialgo<_methodstorun.size(); ialgo++) {
+    for(size_t ialgo=0; ialgo<_methodstorun.size(); ialgo++) {
       if(_methodstorun.at(ialgo) == "LowMomMuID") {
 	//Low momentum Muon identification 
 	// (from 0.2 GeV until 2 GeV)   

@@ -167,7 +167,7 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
   float tscpy = ts->getReferencePoint()[1] ;
   float tscpz = ts->getReferencePoint()[2] ;
   
-  for(int iclu=0; iclu < cluvec.size(); iclu++){
+  for(size_t iclu=0; iclu < cluvec.size(); iclu++){
       
       float Eclu=0;
       if(cluvec[iclu]->getEnergy() > Eclu){
@@ -189,7 +189,7 @@ Int_t LowMomentumMuPiSeparationPID_BDTG::MuPiSeparation(TLorentzVector pp, EVENT
           }
       }
   }
-  for(int iclu=0; iclu < cluvec.size(); iclu++){
+  for(size_t iclu=0; iclu < cluvec.size(); iclu++){
       for( unsigned jhit=0; jhit < nch ; ++jhit ) {
           
           Rhits_clu=sqrt(pow(chpox[jhit]-clpox,2)+pow(chpoy[jhit]-clpoy,2));
@@ -335,6 +335,3 @@ bool LowMomentumMuPiSeparationPID_BDTG::isValid(){
 LowMomentumMuPiSeparationPID_BDTG::~LowMomentumMuPiSeparationPID_BDTG(){
     delete reader;
 }
-
-
-

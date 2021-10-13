@@ -344,7 +344,7 @@ void IsoLepTrainingProcessor::processEvent( LCEvent * evt ) {
     //    Int_t mcserial = getMCSerial(recPart,colMCTL,colMC);
     //    Int_t isOrigLep = mcserial==serialLepMC? 1:0;
     Int_t isOrigLep = 0;
-    for (Int_t j=0;j<serialLepMCv.size();j++) {
+    for (size_t j=0;j<serialLepMCv.size();j++) {
       if (mcserial == serialLepMCv[j]) {
 	isOrigLep = 1;
 	break;

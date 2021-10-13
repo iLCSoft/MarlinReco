@@ -98,12 +98,6 @@ SimpleFCalDigi::SimpleFCalDigi() : Processor("SimpleFCalDigi") {
 			     std::string("endcap")
 			     );
 
-  registerProcessorParameter("DefaultEncoding" ,
-			     "string defining cell encoding" , 
-			     _defaultEncoding , 
-			     std::string("M:3,S-1:3,I:9,J:9,K-1:6")
-			     );
-
 }
 
 void SimpleFCalDigi::init() {

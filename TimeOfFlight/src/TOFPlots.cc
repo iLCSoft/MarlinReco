@@ -289,8 +289,8 @@ void TOFPlots::processEvent( LCEvent * evt ) {
   LCCollection* colMCP=0 ;
   LCCollection* colPFO=0 ;
     
-  try{ colMCP = evt->getCollection( _colNameMCP ) ; } catch(lcio::Exception){}
-  try{ colPFO = evt->getCollection( _colNamePFO ) ; } catch(lcio::Exception){}
+  try{ colMCP = evt->getCollection( _colNameMCP ) ; } catch(lcio::Exception&){}
+  try{ colPFO = evt->getCollection( _colNamePFO ) ; } catch(lcio::Exception&){}
 
 
   if( colMCP != NULL ){

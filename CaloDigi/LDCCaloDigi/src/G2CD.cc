@@ -427,7 +427,7 @@ void G2CD::processEvent( LCEvent * evtP )
 
 					evtP->addCollection(ecalcol,_outputEcalCollections[k0].c_str());
 
-				}catch(lcio::DataNotAvailableException zero) { }
+				}catch(lcio::DataNotAvailableException& zero) { }
 			}
 
 
@@ -618,12 +618,12 @@ void G2CD::processEvent( LCEvent * evtP )
 					evtP->addCollection(hcalcol,_outputHcalCollections[i].c_str());
 					IDtoDigiHit.clear();
 				}
-				catch (lcio::DataNotAvailableException zero) { }
+				catch (lcio::DataNotAvailableException& zero) { }
 			}
 
 			evtP->addCollection(relcol, "CaloToSimuCaloLink");
 		}
-		catch (lcio::DataNotAvailableException zero) { }
+		catch (lcio::DataNotAvailableException& zero) { }
 	}
 }
 

@@ -186,7 +186,7 @@ void CLICPfoSelectorAnalysis::processEvent(LCEvent* evt) {
   LCCollection* physicsParticleCollection = NULL;
   try {
     physicsParticleCollection = evt->getCollection(m_inputPhysicsParticleCollection);
-  } catch (lcio::DataNotAvailableException e) {
+  } catch (lcio::DataNotAvailableException& e) {
     streamlog_out(WARNING) << m_inputPhysicsParticleCollection << " collection not available" << std::endl;
     physicsParticleCollection = NULL;
   }
@@ -200,7 +200,7 @@ void CLICPfoSelectorAnalysis::processEvent(LCEvent* evt) {
   LCCollection* rmclcol = NULL;
   try {
     rmclcol = evt->getCollection(m_recoMCTruthLink);
-  } catch (lcio::DataNotAvailableException e) {
+  } catch (lcio::DataNotAvailableException& e) {
     streamlog_out(WARNING) << m_recoMCTruthLink << " collection not available" << std::endl;
     rmclcol = NULL;
   }
@@ -212,7 +212,7 @@ void CLICPfoSelectorAnalysis::processEvent(LCEvent* evt) {
   LCCollection* rtrkclcol = NULL;
   try {
     rtrkclcol = evt->getCollection(m_SiTracksMCTruthLink);
-  } catch (lcio::DataNotAvailableException e) {
+  } catch (lcio::DataNotAvailableException& e) {
     streamlog_out(WARNING) << m_SiTracksMCTruthLink << " collection not available" << std::endl;
     rtrkclcol = NULL;
   }
@@ -224,7 +224,7 @@ void CLICPfoSelectorAnalysis::processEvent(LCEvent* evt) {
   LCCollection* rclulcol = NULL;
   try {
     rclulcol = evt->getCollection(m_ClusterMCTruthLink);
-  } catch (lcio::DataNotAvailableException e) {
+  } catch (lcio::DataNotAvailableException& e) {
     streamlog_out(WARNING) << m_ClusterMCTruthLink << " collection not available" << std::endl;
     rclulcol = NULL;
   }

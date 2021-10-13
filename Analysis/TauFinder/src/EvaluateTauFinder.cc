@@ -142,25 +142,25 @@ void EvaluateTauFinder::processEvent( LCEvent * evt )
   LCCollection *colTauRecLink;
   try {
     colMC = evt->getCollection( _colNameMC ) ;
-  } catch (Exception e) {
+} catch (Exception& e) {
     colMC = 0;
   }
   
   try {
     colTau = evt->getCollection( _incol ) ;
-  } catch (Exception e) {
+} catch (Exception& e) {
     colTau = 0;
   }
   
   try {
     colMCTruth = evt->getCollection( _colNameMCTruth ) ;
-  } catch (Exception e) {
+} catch (Exception& e) {
     colMCTruth = 0;
   }
  
   try {
     colTauRecLink = evt->getCollection( _colNameTauRecLink ) ;
-  } catch (Exception e) {
+} catch (Exception& e) {
     colTauRecLink = 0;
   }
   
@@ -582,5 +582,3 @@ void EvaluateTauFinder::end(){
   delete rootfile;
   // rootfile->Close();
 }
-
-

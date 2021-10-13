@@ -144,7 +144,7 @@ void TrackZVertexGrouping::processEvent( LCEvent * evt ) {
   try{
     colTrk = evt->getCollection( _colNameTracks ) ;
   }
-  catch(lcio::Exception){
+  catch(lcio::Exception&){
     streamlog_out( DEBUG6 ) << " collection " << _colNameTracks
 			    << " not found in event - nothing to do ... " << std::endl ;
   }
@@ -325,4 +325,3 @@ void TrackZVertexGrouping::end(){
 
 
 //*******************************************************************************************************
-

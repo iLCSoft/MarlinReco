@@ -117,7 +117,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
 	  if ( subDetectorNames[kkk] == "bcal"  )   { bcal_index  = kkk ;  }
         }
     }
-    catch( lcio::DataNotAvailableException e )
+    catch( lcio::DataNotAvailableException& e )
     {
         streamlog_out(WARNING) <<  _clusterCollectionName   << " collection not available" << std::endl;
         clucol = NULL;
@@ -262,7 +262,7 @@ void AddClusterProperties::processEvent( LCEvent * evt ) {
     try{
       pfocol = evt->getCollection( _PFOName );
     }
-    catch( lcio::DataNotAvailableException e )
+    catch( lcio::DataNotAvailableException& e )
     {
         streamlog_out(WARNING) << _PFOName    << " collection not available" << std::endl;
         pfocol = NULL;
@@ -507,4 +507,3 @@ void AddClusterProperties::end(){
     // 	    << std::endl ;
 
 }
-

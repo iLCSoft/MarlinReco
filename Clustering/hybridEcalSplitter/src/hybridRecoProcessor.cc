@@ -165,7 +165,7 @@ void hybridRecoProcessor::setupGeometry() {
     // first try to get from ECAL barrel section of gear file (it's here for "latest" Mokka versions)
     nMokkaVirtualCells = pEcalBarrel.getIntVal("Ecal_Sc_number_of_virtual_cells");
     streamlog_out (MESSAGE) << "taking number of Mokka virtual cells from calo section of gear file: " << nMokkaVirtualCells << endl;
-  } catch(gear::UnknownParameterException &e) {
+  } catch(gear::UnknownParameterException &e1) {
     try {
       // otherwise look in the mokka parameters section
       std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
@@ -175,7 +175,7 @@ void hybridRecoProcessor::setupGeometry() {
 	assert(0);
       }
       streamlog_out (MESSAGE) << "taking number of Mokka virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << nMokkaVirtualCells << endl;
-    } catch(gear::UnknownParameterException &e) {
+    } catch(gear::UnknownParameterException &e2) {
       // if still not found, use default from processor parameter
       nMokkaVirtualCells = _ecalStrip_default_nVirt;
       streamlog_out (WARNING) << "taking number of Mokka virtual cells from steering file (not found in gear file): " << nMokkaVirtualCells << endl;

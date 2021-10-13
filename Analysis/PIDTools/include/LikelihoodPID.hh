@@ -48,7 +48,7 @@ private:
   int Class_electron(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
   int Class_muon(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
   int Class_hadron(TLorentzVector pp, EVENT::Track* trk, EVENT::ClusterVec& cluvec);
-  const  double getValue(int type, int valtype,  double value);
+  double getValue(int type, int valtype,  double value);
   double getPenalty(int ptype, int hypothesis,  double p);
   
   double par[5][5]{};

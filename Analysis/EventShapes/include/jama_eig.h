@@ -18,7 +18,7 @@ class Eigenvalue
  private:
 
    /** Row and column dimension (square matrix).  */
-   int n{};
+   int _n{};
    int issymmetric{}; /* boolean*/
    float d[3]{};
    float e[3]{};
@@ -33,13 +33,13 @@ class Eigenvalue
    //  Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
    //  Fortran subroutine in EISPACK.
 
-      for (int j = 0; j < n; j++) {
-         d[j] = V[n-1][j];
+      for (int j = 0; j < _n; j++) {
+         d[j] = V[_n-1][j];
       }
 
       // Householder reduction to tridiagonal form.
    
-      for (int i = n-1; i > 0; i--) {
+      for (int i = _n-1; i > 0; i--) {
    
          // Scale to avoid under/overflow.
    
@@ -111,8 +111,8 @@ class Eigenvalue
    
       // Accumulate transformations.
    
-      for (int i = 0; i < n-1; i++) {
-         V[n-1][i] = V[i][i];
+      for (int i = 0; i < _n-1; i++) {
+         V[_n-1][i] = V[i][i];
          V[i][i] = 1.0;
          float h = d[i+1];
          if (h != 0.0) {
@@ -133,11 +133,11 @@ class Eigenvalue
             V[k][i+1] = 0.0;
          }
       }
-      for (int j = 0; j < n; j++) {
-         d[j] = V[n-1][j];
-         V[n-1][j] = 0.0;
+      for (int j = 0; j < _n; j++) {
+         d[j] = V[_n-1][j];
+         V[_n-1][j] = 0.0;
       }
-      V[n-1][n-1] = 1.0;
+      V[_n-1][_n-1] = 1.0;
       e[0] = 0.0;
    } 
 
@@ -150,15 +150,15 @@ class Eigenvalue
    //  Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
    //  Fortran subroutine in EISPACK.
    
-      for (int i = 1; i < n; i++) {
+      for (int i = 1; i < _n; i++) {
          e[i-1] = e[i];
       }
-      e[n-1] = 0.0;
+      e[_n-1] = 0.0;
    
       float f = 0.0;
       float tst1 = 0.0;
       float eps = pow(2.0,-52.0);
-      for (int l = 0; l < n; l++) {
+      for (int l = 0; l < _n; l++) {
 
          // Find small subdiagonal element
    
@@ -166,7 +166,7 @@ class Eigenvalue
          int m = l;
 
         // Original while-loop from Java code
-         while (m < n) {
+         while (m < _n) {
             if (abs(e[m]) <= eps*tst1) {
                break;
             }
@@ -194,7 +194,7 @@ class Eigenvalue
                d[l+1] = e[l] * (p + r);
                float dl1 = d[l+1];
                float h = g - d[l];
-               for (int i = l+2; i < n; i++) {
+               for (int i = l+2; i < _n; i++) {
                   d[i] -= h;
                }
                f = f + h;
@@ -223,7 +223,7 @@ class Eigenvalue
    
                   // Accumulate transformation.
    
-                  for (int k = 0; k < n; k++) {
+                  for (int k = 0; k < _n; k++) {
                      h = V[k][i+1];
                      V[k][i+1] = s * V[k][i] + c * h;
                      V[k][i] = c * V[k][i] - s * h;
@@ -243,10 +243,10 @@ class Eigenvalue
      
       // Sort eigenvalues and corresponding vectors.
    
-      for (int i = 0; i < n-1; i++) {
+      for (int i = 0; i < _n-1; i++) {
          int k = i;
          float p = d[i];
-         for (int j = i+1; j < n; j++) {
+         for (int j = i+1; j < _n; j++) {
             if (d[j] < p) {
                k = j;
                p = d[j];
@@ -255,7 +255,7 @@ class Eigenvalue
          if (k != i) {
             d[k] = d[i];
             d[i] = p;
-            for (int j = 0; j < n; j++) {
+            for (int j = 0; j < _n; j++) {
                p = V[j][i];
                V[j][i] = V[j][k];
                V[j][k] = p;
@@ -274,7 +274,7 @@ class Eigenvalue
       //  Fortran subroutines in EISPACK.
    
       int low = 0;
-      int high = n-1;
+      int high = _n-1;
    
       for (int m = low+1; m <= high-1; m++) {
    
@@ -303,7 +303,7 @@ class Eigenvalue
             // Apply Householder similarity transformation
             // H = (I-u*u'/h)*H*(I-u*u')/h)
    
-            for (int j = m; j < n; j++) {
+            for (int j = m; j < _n; j++) {
                float f = 0.0;
                for (int i = high; i >= m; i--) {
                   f += ort[i]*H[i][j];
@@ -331,8 +331,8 @@ class Eigenvalue
    
       // Accumulate transformations (Algol's ortran).
 
-      for (int i = 0; i < n; i++) {
-         for (int j = 0; j < n; j++) {
+      for (int i = 0; i < _n; i++) {
+         for (int j = 0; j < _n; j++) {
             V[i][j] = (i == j ? 1.0 : 0.0);
          }
       }
@@ -362,17 +362,17 @@ class Eigenvalue
 
    float cdivr{}, cdivi{};
    void cdiv(float xr, float xi, float yr, float yi) {
-      float r,d;
+      float r,dd;
       if (abs(yr) > abs(yi)) {
          r = yi/yr;
-         d = yr + r*yi;
-         cdivr = (xr + r*xi)/d;
-         cdivi = (xi - r*xr)/d;
+         dd = yr + r*yi;
+         cdivr = (xr + r*xi)/dd;
+         cdivi = (xi - r*xr)/dd;
       } else {
          r = yr/yi;
-         d = yi + r*yr;
-         cdivr = (r*xr + xi)/d;
-         cdivi = (r*xi - xr)/d;
+         dd = yi + r*yr;
+         cdivr = (r*xr + xi)/dd;
+         cdivi = (r*xi - xr)/dd;
       }
    }
 
@@ -835,21 +835,21 @@ public:
    */
 
    Eigenvalue( float A[3][3]) {
-      n = 3;
+      _n = 3;
       issymmetric = 1;
 
-      for (int j = 0; (j < n) && issymmetric; j++) {
+      for (int j = 0; (j < _n) && issymmetric; j++) {
 	  d[j]=0.0;
           e[j]=0.0;
-         for (int i = 0; (i < n) && issymmetric; i++) {
+         for (int i = 0; (i < _n) && issymmetric; i++) {
             issymmetric = (A[i][j] == A[j][i]);
         
          }
       }
 
       if (issymmetric) {
-         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+         for (int i = 0; i < _n; i++) {
+            for (int j = 0; j < _n; j++) {
                V[i][j] = A[i][j];
             }
          }
@@ -863,8 +863,8 @@ public:
       } else {
         
          
-         for (int j = 0; j < n; j++) {
-            for (int i = 0; i < n; i++) {
+         for (int j = 0; j < _n; j++) {
+            for (int i = 0; i < _n; i++) {
                H[i][j] = A[i][j];
             }
          }
@@ -946,8 +946,8 @@ public:
 	
 */
    void getD (float D[3][3]) {
-      for (int i = 0; i < n; i++) {
-         for (int j = 0; j < n; j++) {
+      for (int i = 0; i < _n; i++) {
+         for (int j = 0; j < _n; j++) {
             D[i][j] = 0.0;
          }
          D[i][i] = d[i];

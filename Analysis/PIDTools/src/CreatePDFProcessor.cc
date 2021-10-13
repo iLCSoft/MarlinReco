@@ -455,10 +455,10 @@ void CreatePDFProcessor::processEvent( LCEvent * evt ) {
     //get deposit energy
     double ecal=0.0,hcal=0.0,mucal=0.0;
     if(cluvec.size()!=0){
-      for(unsigned int i=0;i<cluvec.size();i++){
-	ecal+=cluvec[i]->getSubdetectorEnergies()[0];
-	hcal+=cluvec[i]->getSubdetectorEnergies()[1];
-	mucal+=cluvec[i]->getSubdetectorEnergies()[2];
+      for(unsigned int j=0;j<cluvec.size();j++){
+	ecal+=cluvec[j]->getSubdetectorEnergies()[0];
+	hcal+=cluvec[j]->getSubdetectorEnergies()[1];
+	mucal+=cluvec[j]->getSubdetectorEnergies()[2];
       }
     }
     

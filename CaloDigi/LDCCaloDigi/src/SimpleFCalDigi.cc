@@ -106,7 +106,9 @@ void SimpleFCalDigi::init() {
 
   //fg: need to set default encoding in for reading old files...
   //CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding(_defaultEncoding.c_str()) ;
+  // dudarboh: does nothing anymore, default encoding spedified in the constructor
+  // CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding(_defaultEncoding.c_str()) ;
+
   if ( ! _caloID.compare("lcal")  && // true if it is false ... 
                  _fixLCalHits          ) {  
             // parametrs for fixing wrong cellID to xyz coding in LCal Mokka
@@ -147,14 +149,14 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   // * Reading Collections of FCAL Simulated Hits * 
   // 
   string initString;
-  for (unsigned int i(0); i < _fcalCollections.size(); ++i) {
+  for (unsigned int colIdx(0); colIdx < _fcalCollections.size(); ++colIdx) {
     try{
-      LCCollection * col = evt->getCollection( _fcalCollections[i].c_str() ) ;
+      LCCollection * col = evt->getCollection( _fcalCollections[colIdx].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
-      for (int j(0); j < numElements; ++j) {
-	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      for (int hitIdx(0); hitIdx < numElements; ++hitIdx) {
+	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( hitIdx ) ) ;
 	float energy = hit->getEnergy();
 
 	if (energy > _thresholdFcal) {

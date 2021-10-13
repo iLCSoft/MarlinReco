@@ -112,7 +112,7 @@ void MCTruthJetEnergy::processEvent( LCEvent * evt ) {
       jetcol = evt->getCollection( _jetcolNames[i] ) ;
     }
     
-    catch( lcio::DataNotAvailableException ){
+    catch( lcio::DataNotAvailableException& ){
       
       streamlog_out( WARNING ) << " collection " << _jetcolNames[i] << "  not found ! " << std::endl ;
       
@@ -232,7 +232,7 @@ void MCTruthJetEnergy::check( LCEvent * evt ) {
       jetcol = evt->getCollection( _jetcolNames[i] ) ;
     }
     
-    catch( lcio::DataNotAvailableException ){
+    catch( lcio::DataNotAvailableException& ){
       
       streamlog_out( WARNING ) << " collection " << _jetcolNames[i] << "  not found ! " << std::endl ;
       

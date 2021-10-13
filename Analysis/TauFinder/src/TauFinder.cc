@@ -157,7 +157,7 @@ void TauFinder::processEvent( LCEvent * evt )
 
   try {
     colRECO = evt->getCollection( _incol ) ;
-  } catch (Exception e) {
+} catch (Exception& e) {
     colRECO = 0;
   }
  
@@ -643,5 +643,3 @@ void TauFinder::end(){
  
 
 }
-
-

@@ -2073,7 +2073,7 @@ void RecoMCTruthLinker::check( LCEvent * evt ) {
   try{  
     mcpskCol = evt->getCollection( _mcParticlesSkimmedName ); 
   }
-  catch (DataNotAvailableException e){
+  catch (DataNotAvailableException& e){
     streamlog_out(DEBUG9) << "RecoMCTructh::Check(): MCParticleSkimmed collection \"" << _mcParticlesSkimmedName << "\" does not exist, skipping" << std::endl;
   }
   

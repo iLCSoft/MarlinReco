@@ -766,15 +766,15 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
     }
   }
   
-  // now process the LowPt collection
-  LCCollection* STHcolLowPt = 0 ;
-  try{
-    STHcolLowPt = evt->getCollection( _lowPtHitscolName ) ;
-  }
-  catch(DataNotAvailableException &e){
-  }
+    // now process the LowPt collection
+    LCCollection* STHcolLowPt = 0 ;
+    try{
+      STHcolLowPt = evt->getCollection( _lowPtHitscolName ) ;
+    }
+    catch(DataNotAvailableException &e){
+    }
   
-  if(STHcolLowPt!=NULL){
+    if(STHcolLowPt!=NULL){
     
     int n_sim_hitsLowPt = STHcolLowPt->getNumberOfElements()  ;
     

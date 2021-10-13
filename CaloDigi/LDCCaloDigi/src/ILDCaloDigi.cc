@@ -627,7 +627,7 @@ void ILDCaloDigi::init() {
     try {                                                             // first try to get from ECAL barrel section of gear file (it's here for "latest" Mokka versions)
       _strip_virt_cells=pEcalBarrel.getIntVal("Ecal_Sc_number_of_virtual_cells");
       streamlog_out (MESSAGE) << "taking number of virtual cells from calo section of gear file: " << _strip_virt_cells << endl;
-    } catch(gear::UnknownParameterException &e) {
+    } catch(gear::UnknownParameterException &e1) {
       try {                                                           // otherwise look in the mokka parameters section
         std::string nVirtualMokkaS = pMokka.getStringVal("Ecal_Sc_number_of_virtual_cells");
 
@@ -640,7 +640,7 @@ void ILDCaloDigi::init() {
         }
 
         streamlog_out (MESSAGE) << "taking number of virtual cells from Mokka section of gear file: " << nVirtualMokkaS << " " << _strip_virt_cells << endl;
-      } catch(gear::UnknownParameterException &e) {                  // if still not found, use default from processor parameter
+      } catch(gear::UnknownParameterException &e2) {                  // if still not found, use default from processor parameter
         _strip_virt_cells = _ecalStrip_default_nVirt;
         streamlog_out (WARNING) << "taking number of virtual cells from steering file (not found in gear file): " << _strip_virt_cells << endl;
       }
@@ -650,11 +650,11 @@ void ILDCaloDigi::init() {
     try {
       _ecalLayout = pEcalBarrel.getStringVal("Ecal_Barrel_Sc_Si_mix");
       streamlog_out (MESSAGE) << "taking layer layout from calo sections of gear file: " << _ecalLayout << endl;
-    } catch(gear::UnknownParameterException &e) {
+    } catch(gear::UnknownParameterException &e1) {
       try {
         _ecalLayout = pMokka.getStringVal("Ecal_Sc_Si_mix");
         streamlog_out (MESSAGE) << "taking layer layout from mokka section of gear file: " << _ecalLayout << endl;
-      } catch(gear::UnknownParameterException &e) {
+      } catch(gear::UnknownParameterException &e2) {
         _ecalLayout = _ecal_deafult_layer_config;
         streamlog_out (WARNING) << "taking layer layout from steering file (not found in gear file): " << _ecalLayout << endl;
       }

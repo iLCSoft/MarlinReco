@@ -206,11 +206,11 @@ void TrueJet::processEvent( LCEvent * event ) {
         fafp[kk]=0;
         nfsr[kk]=0 ;
       }
-      bool seen[4000];
+      bool seen[4001];
       for ( int kk=1 ; kk <= 4000 ; kk++ ) {
         jet[kk]=0;
         companion[kk] = 0;
-	seen[kk] = false;
+	    seen[kk] = false;
       }
 
         // the actual work happens in the following routines. They are each responible to 

@@ -112,7 +112,7 @@ void IsoLepTrainingProcessor::init() {
   
 }
 
-void IsoLepTrainingProcessor::processRunHeader( LCRunHeader* run) { 
+void IsoLepTrainingProcessor::processRunHeader( LCRunHeader* ) { 
 
   _nRun++ ;
 } 
@@ -518,7 +518,7 @@ void IsoLepTrainingProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void IsoLepTrainingProcessor::check( LCEvent * evt ) { 
+void IsoLepTrainingProcessor::check( LCEvent * ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

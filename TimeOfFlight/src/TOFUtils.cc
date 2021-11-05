@@ -2,145 +2,319 @@
 
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
-#include <lcio.h>
-#include <EVENT/LCCollection.h>
-#include <EVENT/ReconstructedParticle.h>
-#include <UTIL/BitField64.h>
-#include <UTIL/ILDConf.h>
-#include <UTIL/Operators.h>
-
+#include "marlin/VerbosityLevels.h"
 #include "marlinutil/CalorimeterHitType.h"
+#include "HelixClass.h"
+#include "DD4hep/Detector.h"
+#include "DD4hep/DD4hepUnits.h"
+#include "DDRec/DetectorData.h"
+#include "CLHEP/Random/Randomize.h"
+#include "CLHEP/Units/PhysicalConstants.h"
+#include "TGraphErrors.h"
+#include "TF1.h"
+#include "MarlinTrk/MarlinTrkUtils.h"
+#include "UTIL/LCRelationNavigator.h"
+#include "UTIL/ILDConf.h"
+#include "IMPL/TrackImpl.h"
+
+using std::vector;
+using std::numeric_limits;
+using std::pair;
+using EVENT::TrackerHit;
+using EVENT::Track;
+using EVENT::Cluster;
+using EVENT::CalorimeterHit;
+using EVENT::TrackState;
+using dd4hep::Detector;
+using dd4hep::DetElement;
+using dd4hep::rec::Vector3D;
+using dd4hep::rec::FixedPadSizeTPCData;
+using MarlinTrk::IMarlinTrack;
+using MarlinTrk::IMarlinTrkSystem;
+using UTIL::LCRelationNavigator;
+using UTIL::ILDDetID;
+using IMPL::TrackImpl;
+using IMPL::TrackStateImpl;
+using CLHEP::RandGauss;
+
+bool TOFUtils::sortByRho(EVENT::TrackerHit* a, EVENT::TrackerHit* b){
+    Vector3D posA( a->getPosition() );
+    Vector3D posB( b->getPosition() );
+    return posA.rho() < posB.rho();
+}
 
 
-namespace TOFUtils{
-
-  using namespace lcio ;
-
-
-  float computeFlightLength( EVENT::Track* trk){
-    
-    const TrackState* tsIP = trk->getTrackState( TrackState::AtIP ) ; 	
-    const TrackState* tscalo = trk->getTrackState( TrackState::AtCalorimeter ) ; 	
-    
-    float Phicalo = tscalo->getPhi() ;
-    float PhiIP = tsIP->getPhi() ;
-    
-    float Omega = tsIP->getOmega()  ;
-    float tanL = tsIP->getTanLambda() ;
-    
-    float length = (PhiIP-Phicalo)*(1/Omega) * sqrt( 1 + tanL * tanL ) ;
-
-    return length ;
-  }
-
-  float computeFlightLength(const TrackState* ts0,  const TrackState* ts1 ){
-    
-    float Phicalo = ts1->getPhi() ;
-    float PhiIP = ts0->getPhi() ;
-    
-    float Omega = ts0->getOmega()  ;
-    float tanL = ts0->getTanLambda() ;
-    
-    float length = (PhiIP-Phicalo)*(1/Omega) * sqrt( 1 + tanL * tanL ) ;
-
-    return length ;
-  }
+IMPL::TrackStateImpl TOFUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit){
+    TrackStateImpl ts;
+    double chi2Dummy;
+    int ndfDummy;
+    marlinTrk->getTrackState(hit, ts, chi2Dummy, ndfDummy);
+    return ts;
+}
 
 
-  int layer( EVENT::CalorimeterHit* h ) {
-    
-    return CHT( h->getType() ).layer() ;
-  }
-  
-  
-  /// helper function to check if this is an Ecal hit 
-  bool isEcal( EVENT::CalorimeterHit* h ) {
-    
-    return CHT( h->getType() ).caloID() == CHT::ecal ; 
-  } 
+dd4hep::rec::Vector3D TOFUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
+    double phi = ts.getPhi();
+    double d0 = ts.getD0();
+    double z0 = ts.getZ0();
+    double omega = ts.getOmega();
+    double tanL = ts.getTanLambda();
+
+    HelixClass helix;
+    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, bField);
+    return helix.getMomentum();
+}
 
 
-  std::string caloTypeStr(  EVENT::CalorimeterHit* h ) {
+double TOFUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double omega = ts1.getOmega();
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
+    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
 
-    std::stringstream s ;
-    s << CHT( h->getType() ) ;
-    return s.str() ;
-  }
-
-
-  std::string CaloHitData::toString(){
-
-    std::stringstream s ;
-    s << "  l= " << layer ;  
-    s << ", st= " << smearedTime ;
-    s << ", tr= " << timeResolution  ;
-    s << ", dIP=" << distanceFromIP  ;
-    s << ", dRP= " << distanceFromReferencePoint  ;
-    s << ", dSL= " << distancefromStraightline  ;
-//    EVENT::CalorimeterHit* lcioHit = nullptr ;
-
-    return s.str() ;
-  }
+    return std::sqrt( std::pow(dPhi/omega, 2) + std::pow(z2-z1, 2) );
+}
 
 
-  float computeDistanceFromLine( EVENT::CalorimeterHit* h, const dd4hep::rec::Vector3D& point,
-				 const dd4hep::rec::Vector3D& unitDir) {
+double TOFUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double tanL = ts1.getTanLambda();
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
 
-    dd4hep::rec::Vector3D pos( h->getPosition()[0], 
-			       h->getPosition()[1], 
-			       h->getPosition()[2] ) ;
-    
-    dd4hep::rec::Vector3D diff = pos - point ;
+    return std::abs( (z2-z1)/tanL ) * std::sqrt( 1.+tanL*tanL );
+}
 
-    
-    return diff.cross( unitDir ).r() ;
-    
-  }
- 
+double TOFUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double omega = ts1.getOmega();
+    double tanL = ts1.getTanLambda();
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
 
-  CaloHitDataVec findHitsClosestToLine( const CaloHitLayerMap& layerMap ){
-    
-    CaloHitDataVec hitVec ;
-    
-    for( auto m : layerMap ){
-      
-      const CaloHitDataVec& chv = m.second ;
-      
-      CaloHitData* closestHit =
-	*std::min_element( chv.begin() , chv.end () ,
-			   [](CaloHitData* c0, CaloHitData* c1 ){ return c0->distancefromStraightline < c1->distancefromStraightline  ; }
-	  ) ; 
+    // helix length projected on xy
+    double circHelix = std::abs( (z2-z1)/tanL );
+    double circFull = 2*M_PI/std::abs(omega);
 
-      hitVec.push_back( closestHit ) ;
+    return circHelix/circFull;
+}
+
+
+double TOFUtils::getTPCOuterR(){
+    auto& detector = Detector::getInstance();
+    DetElement tpcDet = detector.detector("TPC");
+    FixedPadSizeTPCData* tpc = tpcDet.extension <FixedPadSizeTPCData>();
+    return tpc->rMaxReadout/dd4hep::mm;
+}
+
+
+EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
+    vector<TrackerHit*> hits = track->getTrackerHits();
+    TrackerHit* lastHit = hits.back();
+    Vector3D pos (lastHit->getPosition());
+
+    if ( pos.rho() > tpcOuterR ) return lastHit;
+    return nullptr;
+}
+
+
+std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluster* cluster, EVENT::Track* track, int maxEcalLayer, double bField ){
+    const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
+    Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
+    Vector3D trackMomAtEcal = TOFUtils::getHelixMomAtTrackState(*tsEcal, bField);
+
+    vector<CalorimeterHit*> selectedHits(maxEcalLayer, nullptr);
+    vector<double> minDistances(maxEcalLayer, numeric_limits<double>::max());
+
+    for ( auto hit : cluster->getCalorimeterHits() ){
+        CHT hitType( hit->getType() );
+        bool isECALHit = ( hitType.caloID() == CHT::ecal );
+        int layer = hitType.layer();
+        if ( (!isECALHit) || ( layer >= maxEcalLayer) ) continue;
+
+        Vector3D hitPos( hit->getPosition() );
+        double dToLine = (hitPos - trackPosAtEcal).cross(trackMomAtEcal.unit()).r();
+        if ( dToLine < minDistances[layer] ){
+            minDistances[layer] = dToLine;
+            selectedHits[layer] = hit;
+        }
+    }
+    selectedHits.erase( std::remove_if( selectedHits.begin(), selectedHits.end(), [](CalorimeterHit* h) { return h == nullptr; } ), selectedHits.end() );
+
+    return selectedHits;
+}
+
+
+std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
+    vector<Track*> subTracks;
+    subTracks.push_back(track);
+
+    int nSubTracks = track->getTracks().size();
+    if (nSubTracks <= 1) return subTracks;
+
+    int nTPCHits = track->getSubdetectorHitNumbers()[(ILDDetID::TPC)*2-1];
+    int nSubTrack0Hits = track->getTracks()[0]->getTrackerHits().size();
+    int nSubTrack1Hits = track->getTracks()[1]->getTrackerHits().size();
+
+    //OPTIMIZE: this is not reliable, but I don't see any other way at the moment.
+    //Read documentation in the header file for details.
+    int startIdx;
+    if( std::abs(nTPCHits - nSubTrack0Hits) <= 1  ) startIdx = 1;
+    else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
+    else{
+        //FIXME: This happens very rarily (0.01%) for unknown reasons, so we just, skip adding subTracks...
+        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
+        return subTracks;
+    }
+    for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
+    return subTracks;
+}
+
+
+std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, bool extrapolateToEcal, double bField){
+    vector<TrackStateImpl> trackStatesPerHit;
+    int nTracks = tracks.size();
+    for(int i=0; i<nTracks; ++i){
+        Track* track = tracks[i];
+        vector <TrackerHit*> hits = track->getTrackerHits();
+        std::sort(hits.begin(), hits.end(), sortByRho);
+
+        // setup initial dummy covariance matrix
+        vector<float> covMatrix(15);
+        // initialize variances
+        covMatrix[0]  = 1e+06; //sigma_d0^2
+        covMatrix[2]  = 100.; //sigma_phi0^2
+        covMatrix[5]  = 0.00001; //sigma_omega^2
+        covMatrix[9]  = 1e+06; //sigma_z0^2
+        covMatrix[14] = 100.; //sigma_tanl^2
+        double maxChi2PerHit = 100.;
+        std::unique_ptr<IMarlinTrack> marlinTrk( trkSystem->createTrack() );
+        TrackImpl refittedTrack;
+
+        //Need to initialize trackState at last hit
+        TrackStateImpl preFit = *track->getTrackState(TrackState::AtLastHit);
+        preFit.setCovMatrix( covMatrix );
+        int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
+        if (errorFit != 0) continue;
+
+        vector< pair<TrackerHit*, double> > hitsInFit;
+        marlinTrk->getHitsInFit(hitsInFit);
+
+        int nHitsInFit = hitsInFit.size();
+        // if first subTrack
+        if (i == 0){
+            trackStatesPerHit.push_back(*(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtIP)) ));
+
+            //add hits in increasing rho for the FIRST subTrack!!!!!
+            for( int j=nHitsInFit-1; j>=0; --j ){
+                TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
+                trackStatesPerHit.push_back(ts);
+            }
+        }
+        else{
+            // check which hit is closer to the last hit of previous fit.
+            // and iterate starting from the closest
+            Vector3D innerHit ( hitsInFit.back().first->getPosition() );
+            Vector3D outerHit ( hitsInFit.front().first->getPosition() );
+            Vector3D prevHit ( trackStatesPerHit.back().getReferencePoint() );
+
+            if ( (innerHit - prevHit).r() < (outerHit - prevHit).r() ){
+                for( int j=nHitsInFit-1; j>=0; --j ){
+                    //iterate in increasing rho
+                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
+                    trackStatesPerHit.push_back(ts);
+                }
+            }
+            else{
+                for( int j=0; j<nHitsInFit; ++j ){
+                    //iterate in decreasing rho
+                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
+                    trackStatesPerHit.push_back(ts);
+                }
+            }
+        }
+        //if last subTrack
+        if (i == nTracks - 1){
+            // SET hit is not present in hitsInFit as it is composite hit from strips
+            // Add ts at the SET hit manualy which fitter returns with reffited track
+            // If LastHit != SET hit, then we duplicate previous track state at last TPC hit
+            // isn't pretty, but shouldn't affect the track length
+            trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtLastHit)) ) );
+            if (extrapolateToEcal) trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtCalorimeter) ) ) );
+        }
+    }
+    // one can maybe use hits of refittedTrack, but they include also hits that had failed in the fit
+    // code would look cleaner, but using hits that are failed in fit probably would have worse performance..
+    // needs to be checked.
+    return trackStatesPerHit;
+}
+
+
+double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, double timeResolution){
+    const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
+    Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
+
+    double hitTime = numeric_limits<double>::max();
+    double closestDistance = numeric_limits<double>::max();
+    for( auto hit : cluster->getCalorimeterHits() ){
+        CHT hitType( hit->getType() );
+        bool isECALHit = ( hitType.caloID() == CHT::ecal );
+        if (! isECALHit) continue;
+
+        Vector3D hitPos( hit->getPosition() );
+        double dToTrack = (hitPos - trackPosAtEcal).r();
+        if( dToTrack < closestDistance ){
+            closestDistance = dToTrack;
+            hitTime = hit->getTime();
+        }
     }
 
-    return hitVec ;
-  }
+    if ( hitTime == numeric_limits<double>::max() ) return 0.;
+    return RandGauss::shoot(hitTime, timeResolution) - closestDistance/CLHEP::c_light;
+}
 
 
-  std::pair<float,float> computeTOFEstimator( const CaloHitDataVec& chv ){
+double TOFUtils::getTofFrankAvg( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
+    const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
+    Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
-    const static float c_mm_per_ns = 299.792458 ;
+    int nHits = selectedHits.size();
+    if (nHits == 0) return 0.;
 
-    int   nHit = 0 ;
-    float mean = 0. ;
-    float meansq = 0. ;
-
-    for( auto ch : chv ){
-      float t = ch->smearedTime - ch->distanceFromReferencePoint / c_mm_per_ns ; 
-      mean   += t   ;
-      ++nHit ;
+    double tof = 0.;
+    for ( auto hit : selectedHits ){
+        Vector3D hitPos( hit->getPosition() );
+        double dToTrack = (hitPos - trackPosAtEcal).r();
+        tof += RandGauss::shoot(hit->getTime(), timeResolution) - dToTrack/CLHEP::c_light;
     }
-    mean /= nHit ;
+    return tof/nHits;
+}
 
-    for( auto ch : chv ){
-      float t = ch->smearedTime - ch->distanceFromReferencePoint / c_mm_per_ns ; 
-      meansq += ( t - mean ) * ( t - mean )   ;
+
+double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
+    const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
+    Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
+
+    int nHits = selectedHits.size();
+    if (nHits == 0) return 0.;
+    else if (nHits == 1){
+        //we can't fit 1 point, but lets return something reasonable
+        Vector3D hitPos( selectedHits[0]->getPosition() );
+        double dToTrack = (hitPos - trackPosAtEcal).r();
+        return RandGauss::shoot(selectedHits[0]->getTime(), timeResolution) - dToTrack/CLHEP::c_light;
     }
 
-    return std::make_pair( mean, std::sqrt(meansq/nHit ) );
-  }
+    vector <double> x, y;
+    for ( auto hit : selectedHits ){
+        Vector3D hitPos( hit->getPosition() );
+        double dToTrack = (hitPos - trackPosAtEcal).r();
+        x.push_back(dToTrack);
+        double time = RandGauss::shoot(hit->getTime(), timeResolution);
+        y.push_back(time);
+    }
 
-
-} //namespace
+    TGraph gr(nHits, x.data(), y.data());
+    gr.Fit("pol1", "Q");
+    return gr.GetFunction("pol1")->GetParameter(0);
+}

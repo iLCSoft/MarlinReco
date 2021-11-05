@@ -1,3 +1,37 @@
+# v01-32
+
+* 2021-11-05 Bohdan Dudar ([PR#96](https://github.com/iLCSoft/MarlinReco/pull/96))
+  - **Major upgrade of TOFEstimators with bug fixes and updates that are not backward compatible**
+    - Track length calculation is significantly improved by refitting the track and iterating over the track states on each tracker hit
+    - Fixed bugs with phi coordinate flip and wrong `abs()` instead of `std::abs()`
+    - Output in the PIDHandler is changed to the minimal set of required three parameters for the PID (momentum, track length, TOF)
+    - Input steering parameters adjusted
+    - Removed TOFPlots processor. General clean up of the files and the code
+    - Detailed documentation is added
+
+* 2021-11-04 Thomas Madlener ([PR#101](https://github.com/iLCSoft/MarlinReco/pull/101))
+  - Fix all warnings that are trivial to fix (i.e. where the fix is obvious without having to think about things). .
+    - Make all Processors that have pointer members have deleted copy c'tors and assignment operators.
+  - Fix a potential out ouf bounds access in `TrueJet`.
+  
+  **Thanks to Bohdan Dudar** (@dudarboh)
+
+* 2021-11-01 Thomas Madlener ([PR#94](https://github.com/iLCSoft/MarlinReco/pull/94))
+  - Make the IsolatedLeptonTagging processor always produce the expected output collections, even for empty input collections, i.e. if the inputs are empty:
+    - the `OutputPFOsWithoutIsoLepCollection` will simply have the same content as the `InputPandoraPFOsCollection`
+    -  the `OutputIsoLeptonsCollection` will be empty. 
+  - On the other hand actually missing input collections will now no longer be handled as these point to a real problem (e.g. typo in the collection name). Fixes #93
+
+* 2021-09-29 Frank Gaede ([PR#98](https://github.com/iLCSoft/MarlinReco/pull/98))
+  - apply the correct units for TPC parameters from DD4hep
+       - fixes #97
+  -  apply correct units for VXD and SIT layers
+       -   need cross check of efficiency for kink finding 
+       -  (how could this have worked before ?)
+
+* 2021-08-25 Andre Sailer ([PR#95](https://github.com/iLCSoft/MarlinReco/pull/95))
+  - CI: build against LCG_99python2 gcc8 and LCG_100 gcc10, clang11
+
 # v01-31
 
 * 2021-06-15 Thomas Madlener ([PR#92](https://github.com/iLCSoft/MarlinReco/pull/92))

@@ -196,45 +196,54 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
         TrackStateImpl preFit = *track->getTrackState(TrackState::AtLastHit);
         preFit.setCovMatrix( covMatrix );
         int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
+        //if fit fails, try also fit forward
+        if (errorFit != 0){
+            marlinTrk.reset( trkSystem->createTrack() );
+            errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::forward, &preFit, bField, maxChi2PerHit);
+        }
+        //if both directions fail, skip this subtrack
         if (errorFit != 0) continue;
 
+        //here hits are sorted by rho=(x^2+y^2) in the fit direction. forward - increasing rho, backward - decreasing rho
         vector< pair<TrackerHit*, double> > hitsInFit;
         marlinTrk->getHitsInFit(hitsInFit);
 
-        int nHitsInFit = hitsInFit.size();
-        // if first subTrack
-        if (i == 0){
-            trackStatesPerHit.push_back(*(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtIP)) ));
+        //Find track direction assuming it comes from the IP
+        bool loopForward = true;
+        double zFirst = std::abs( hitsInFit.front().first->getPosition()[2] );
+        double zLast = std::abs( hitsInFit.back().first->getPosition()[2] );
+        //FIXME: hardcoded TPC resolution. Use parameter from the detector geometry!
+        double tpcHitZResolution = 1.5; // mm
 
-            //add hits in increasing rho for the FIRST subTrack!!!!!
-            for( int j=nHitsInFit-1; j>=0; --j ){
+        // dz is large enough to understand track direction
+        if ( std::abs(zLast - zFirst) > 5. * tpcHitZResolution ){
+            if ( zLast < zFirst ) loopForward = false;
+        }
+        else{
+            // track is very perpendicular. Using z is unreliable with this z resolution. Use rho to define track direction
+            double rhoFirst = std::hypot( hitsInFit.front().first->getPosition()[0], hitsInFit.front().first->getPosition()[1] );
+            double rhoLast = std::hypot( hitsInFit.back().first->getPosition()[0], hitsInFit.back().first->getPosition()[1] );
+            if ( rhoLast < rhoFirst ) loopForward = false;
+        }
+
+        int nHitsInFit = hitsInFit.size();
+        // if first successfully fitted subTrack add IP track state
+        if ( trackStatesPerHit.empty() ) trackStatesPerHit.push_back(*(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtIP)) ));
+
+        // NOTE: although we use z to understand track direction, hits are still sorted by rho
+        if (loopForward){
+            for( int j=0; j<nHitsInFit; ++j ){
                 TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
                 trackStatesPerHit.push_back(ts);
             }
         }
         else{
-            // check which hit is closer to the last hit of previous fit.
-            // and iterate starting from the closest
-            Vector3D innerHit ( hitsInFit.back().first->getPosition() );
-            Vector3D outerHit ( hitsInFit.front().first->getPosition() );
-            Vector3D prevHit ( trackStatesPerHit.back().getReferencePoint() );
-
-            if ( (innerHit - prevHit).r() < (outerHit - prevHit).r() ){
-                for( int j=nHitsInFit-1; j>=0; --j ){
-                    //iterate in increasing rho
-                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
-                    trackStatesPerHit.push_back(ts);
-                }
-            }
-            else{
-                for( int j=0; j<nHitsInFit; ++j ){
-                    //iterate in decreasing rho
-                    TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
-                    trackStatesPerHit.push_back(ts);
-                }
-            }
+            for( int j=nHitsInFit-1; j>=0; --j ){
+                TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
+                trackStatesPerHit.push_back(ts);
+            }                
         }
-        //if last subTrack
+
         if (i == nTracks - 1){
             // SET hit is not present in hitsInFit as it is composite hit from strips
             // Add ts at the SET hit manualy which fitter returns with reffited track

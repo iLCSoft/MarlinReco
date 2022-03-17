@@ -198,32 +198,37 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
         int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
         //if fit fails, try also fit forward
         if (errorFit != 0){
+            streamlog_out(DEBUG8)<<"Fit backward fails! Trying to fit forward for "<<i+1<<" subTrack in this PFO!"<<std::endl;
+
             marlinTrk.reset( trkSystem->createTrack() );
             errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::forward, &preFit, bField, maxChi2PerHit);
         }
-        //if both directions fail, skip this subtrack
-        if (errorFit != 0) continue;
-
+        if (errorFit != 0){
+            streamlog_out(WARNING)<<"Fit fails in both directions. Skipping "<<i+1<<" subTrack in this PFO!"<<std::endl;
+            continue;
+        }
         //here hits are sorted by rho=(x^2+y^2) in the fit direction. forward - increasing rho, backward - decreasing rho
         vector< pair<TrackerHit*, double> > hitsInFit;
         marlinTrk->getHitsInFit(hitsInFit);
 
-        //Find track direction assuming it comes from the IP
+        //Find which way to loop over the array of hits. We need to loop in the direction of the track.
         bool loopForward = true;
         double zFirst = std::abs( hitsInFit.front().first->getPosition()[2] );
         double zLast = std::abs( hitsInFit.back().first->getPosition()[2] );
-        //FIXME: hardcoded TPC resolution. Use parameter from the detector geometry!
-        double tpcHitZResolution = 1.5; // mm
 
-        // dz is large enough to understand track direction
-        if ( std::abs(zLast - zFirst) > 5. * tpcHitZResolution ){
+        // OPTIMIZE: 10 mm is just a round number. With very small z difference it is more robust to use rho, to be sure z difference is not caused by tpc Z resolution or multiple scattering
+        if ( std::abs(zLast - zFirst) > 10. ){
             if ( zLast < zFirst ) loopForward = false;
+            streamlog_out(DEBUG8)<<"Using Z to define loop direction over subTrack hits."<<std::endl;
+            streamlog_out(DEBUG8)<<"subTrack "<<i+1<<" zFirst: "<<hitsInFit.front().first->getPosition()[2]<<" zLast: "<<hitsInFit.back().first->getPosition()[2]<<" loop forward: "<<loopForward<<std::endl;
         }
         else{
-            // track is very perpendicular. Using z is unreliable with this z resolution. Use rho to define track direction
             double rhoFirst = std::hypot( hitsInFit.front().first->getPosition()[0], hitsInFit.front().first->getPosition()[1] );
             double rhoLast = std::hypot( hitsInFit.back().first->getPosition()[0], hitsInFit.back().first->getPosition()[1] );
             if ( rhoLast < rhoFirst ) loopForward = false;
+            streamlog_out(DEBUG8)<<"Track is very perpendicular (dz < 10 mm). Using rho to define loop direction over subTrack hits."<<std::endl;
+            streamlog_out(DEBUG8)<<"subTrack "<<i+1<<" zFirst: "<<hitsInFit.front().first->getPosition()[2]<<" zLast: "<<hitsInFit.back().first->getPosition()[2]<<std::endl;
+            streamlog_out(DEBUG8)<<"subTrack "<<i+1<<" rhoFirst: "<<rhoFirst<<" rhoLast: "<<rhoLast<<" loop forward: "<<loopForward<<std::endl;
         }
 
         int nHitsInFit = hitsInFit.size();
@@ -241,7 +246,7 @@ std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVE
             for( int j=nHitsInFit-1; j>=0; --j ){
                 TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
                 trackStatesPerHit.push_back(ts);
-            }                
+            }
         }
 
         if (i == nTracks - 1){

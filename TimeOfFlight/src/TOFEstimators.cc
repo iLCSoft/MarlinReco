@@ -98,7 +98,7 @@ void TOFEstimators::init(){
 void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
-    streamlog_out(MESSAGE)<<"************Event************ "<<_nEvent<<std::endl;
+    streamlog_out(DEBUG9)<<std::endl<<"==========Event========== "<<_nEvent<<std::endl;
     auto startTime = std::chrono::steady_clock::now();
 
     LCCollection* pfos = evt->getCollection(_pfoCollectionName);
@@ -111,6 +111,7 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
 
 
     for (int i=0; i<pfos->getNumberOfElements(); ++i){
+        streamlog_out(DEBUG9)<<std::endl<<"Starting to analyze "<<i+1<<" PFO"<<std::endl;
         ReconstructedParticle* pfo = static_cast <ReconstructedParticle*> ( pfos->getElementAt(i) );
 
         int nClusters = pfo->getClusters().size();
@@ -194,13 +195,14 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         }
         vector<float> results{float(harmonicMom), float(trackLength), float(timeOfFlight)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
-        streamlog_out(DEBUG6)<<"*****PFO***** "<< i+1<<std::endl;
-        streamlog_out(DEBUG6)<<"momentum: "<< float(harmonicMom)<<" Gev"<<std::endl;
-        streamlog_out(DEBUG6)<<"track length: "<< float(trackLength)<<" mm"<<std::endl;
-        streamlog_out(DEBUG6)<<"time-of-flight: "<< float(timeOfFlight)<<" ns"<<std::endl;
+        streamlog_out(DEBUG9)<<"Final results for the "<<i+1<<" PFO"<<std::endl;
+        streamlog_out(DEBUG9)<<"momentum: "<< float(harmonicMom)<<" Gev"<<std::endl;
+        streamlog_out(DEBUG9)<<"track length: "<< float(trackLength)<<" mm"<<std::endl;
+        streamlog_out(DEBUG9)<<"time-of-flight: "<< float(timeOfFlight)<<" ns"<<std::endl;
+        streamlog_out(DEBUG9)<<std::endl<<std::endl;
     }
 
     auto endTime = std::chrono::steady_clock::now();
     std::chrono::duration<double> duration = endTime - startTime;
-    streamlog_out(DEBUG7)<<"Time spent (sec): "<<duration.count()<<std::endl;
+    streamlog_out(DEBUG9)<<"Time spent (sec): "<<duration.count()<<std::endl;
 }

@@ -1,5 +1,5 @@
-#ifndef TOFEstimators_h
-#define TOFEstimators_h 1
+#ifndef TrackLengthProcessor_h
+#define TrackLengthProcessor_h 1
 
 #include <string>
 #include <vector>
@@ -7,34 +7,31 @@
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
 /**
-Marlin processor that calculates harmonic mean momentum, track length and time-of-flight for charged particles.
-\author F. Gaede, DESY, April 2018
-\author B. Dudar, DESY, September 2021
+Marlin processor that calculates harmonic mean momentum and track length of the track.
+\author B. Dudar, DESY, 2022
 */
-class TOFEstimators : public marlin::Processor {
+class TrackLengthProcessor : public marlin::Processor {
     public:
         /**
         Copy constructor.
-        We remove it to avoid W-effc++ warnings.
         */
-        TOFEstimators(const TOFEstimators&) = delete;
+        TrackLengthProcessor(const TrackLengthProcessor&) = delete;
 
         /**
         Copy assignment operator.
-        We remove it to avoid W-effc++ warnings.
         */
-        TOFEstimators& operator=(const TOFEstimators&) = delete;
+        TrackLengthProcessor& operator=(const TrackLengthProcessor&) = delete;
 
         /**
         Method required by the Marlin to register processor in the global scope.
         */
-        marlin::Processor* newProcessor() { return new TOFEstimators; }
+        marlin::Processor* newProcessor() { return new TrackLengthProcessor; }
 
         /**
         Default constructor.
         Registers steering parameters from the xml steering file.
         */
-        TOFEstimators();
+        TrackLengthProcessor();
 
         /** Called at the begin of the job before anything is read.
         Extracts geometry details and initializes Kalman Filter System.
@@ -42,8 +39,7 @@ class TOFEstimators : public marlin::Processor {
         void init();
 
         /** Called for every event - the working horse.
-        Calculates momentum, track length and time of flight and
-        writes them into PIDHandler of the input collection object.
+        Calculates momentum and track length and writes them into PIDHandler of the input collection object.
         */
         void processEvent(EVENT::LCEvent* evt);
 
@@ -57,7 +53,7 @@ class TOFEstimators : public marlin::Processor {
         int _nEvent{};
 
         /** Stores names of the output parameters.
-        These are "momentumHM", "trackLength".
+        These are "trackLengthToSET", "trackLengthToEcal", "momentumHMToSET", "momentumHMToEcal".
         */
         std::vector<std::string> _outputParNames{};
 

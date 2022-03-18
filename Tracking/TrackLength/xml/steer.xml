@@ -1,0 +1,54 @@
+
+<marlin>
+    <constants>
+    </constants>
+
+
+    <execute>
+        <!-- InitDD4hep must be called first. TrackLengthProcessor is dependent on InitDD4hep processor -->
+        <processor name="InitDD4hep" />
+        <processor name="TrackLengthProcessor"/>
+        <!-- Write the new slcio file -->
+        <processor name="MyLCIOOutputProcessor"/>
+    </execute>
+
+
+    <global>
+        <parameter name="LCIOInputFiles" type="StringVec">
+            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001_209.d_rec_00015161_259.slcio
+        </parameter>
+        <!-- 0 means read all events -->
+        <parameter name="MaxRecordNumber" type="int">0</parameter>
+        <parameter name="SkipNEvents" type="int">0</parameter>
+        <parameter name="SupressCheck" type="bool">false</parameter>
+        <parameter name="AllowToModifyEvent" type="bool">false</parameter>
+        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT" type="string">MESSAGE</parameter>
+        <parameter name="RandomSeed" type="int">1234567890</parameter>
+    </global>
+
+
+    <processor name="InitDD4hep" type="InitializeDD4hep">
+        <parameter name="DD4hepXMLFile" type="string">
+            /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/lcgeo/v00-16-07/ILD/compact/ILD_l5_o1_v02/ILD_l5_o1_v02.xml
+        </parameter>
+    </processor>
+
+
+    <processor name="TrackLengthProcessor" type="TrackLengthProcessor">
+        <parameter name="ReconstructedParticleCollection" type="string" default="PandoraPFOs">PandoraPFOs</parameter>
+    </processor>
+
+
+    <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+        <!-- creates new slcio file with PandoraPFOs collections that contain our results in PIDHandlers -->
+        <!-- keep only PandoraPFOs collection -->
+        <parameter name="DropCollectionTypes" type="StringVec">
+            MCParticle SimTrackerHit SimCalorimeterHit TrackerHit TrackerHitPlane CalorimeterHit LCRelation Track LCFloatVec
+        </parameter>
+        <parameter name="KeepCollectionNames" type="StringVec">PandoraPFOs</parameter>
+        <parameter name="LCIOOutputFile">output.slcio</parameter>
+        <parameter name="LCIOWriteMode">WRITE_NEW</parameter>
+    </processor>
+
+
+</marlin>

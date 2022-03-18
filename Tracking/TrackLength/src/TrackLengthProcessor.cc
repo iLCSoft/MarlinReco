@@ -1,7 +1,5 @@
 #include "TrackLengthProcessor.h"
-#include "TOFUtils.h"
-
-#include <chrono>
+#include "TrackLengthUtils.h"
 
 #include "EVENT/LCCollection.h"
 #include "UTIL/PIDHandler.h"
@@ -12,10 +10,8 @@
 #include "marlinutil/GeometryUtil.h"
 #include "MarlinTrk/Factory.h"
 #include "EVENT/SimTrackerHit.h"
-#include "UTIL/LCRelationNavigator.h"
-#include "CLHEP/Random/Randomize.h"
 
-using namespace TOFUtils;
+using namespace TrackLengthUtils;
 using std::vector;
 using std::string;
 using EVENT::LCCollection;
@@ -23,12 +19,8 @@ using EVENT::ReconstructedParticle;
 using EVENT::TrackerHit;
 using EVENT::Track;
 using EVENT::SimTrackerHit;
-using EVENT::Cluster;
-using EVENT::CalorimeterHit;
 using EVENT::TrackState;
 using EVENT::LCObject;
-using UTIL::LCRelationNavigator;
-using CLHEP::RandGauss;
 using dd4hep::rec::Vector3D;
 
 TrackLengthProcessor aTrackLengthProcessor ;
@@ -49,7 +41,7 @@ TrackLengthProcessor::TrackLengthProcessor() : marlin::Processor("TrackLengthPro
 void TrackLengthProcessor::init(){
     marlin::Global::EVENTSEEDER->registerProcessor(this);
 
-    _outputParNames = {"trackLengthToEcal", "trackLengthToSET", "momentumHMToEcal", "momentumHMToSET"};
+    _outputParNames = {"trackLengthToSET", "trackLengthToEcal", "momentumHMToSET", "momentumHMToEcal"};
     _bField = MarlinUtil::getBzAtOrigin();
 
     _trkSystem = MarlinTrk::Factory::createMarlinTrkSystem("DDKalTest", nullptr, "");
@@ -61,7 +53,6 @@ void TrackLengthProcessor::init(){
 
 
 void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
-    RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
     streamlog_out(DEBUG9)<<std::endl<<"==========Event========== "<<_nEvent<<std::endl;
 
@@ -80,15 +71,13 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
 
         if( nClusters != 1 || nTracks != 1){
             // Analyze only simple pfos. Otherwise write dummy zeros
-            vector<float> results{0., 0., 0.};
+            vector<float> results{0., 0., 0., 0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;
         }
         Track* track = pfo->getTracks()[0];
-        Cluster* cluster = pfo->getClusters()[0];
 
         vector<Track*> subTracks = getSubTracks(track);
-        bool extrapolateToEcal = false;
         vector<TrackStateImpl> trackStates = getTrackStatesPerHit(subTracks, _trkSystem, _bField);
 
         double trackLengthToSET = 0.;
@@ -97,7 +86,7 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         double harmonicMomToEcal = 0.;
         int nTrackStates = trackStates.size();
         //exclude last track state at the ECal
-        for( int j=1; j < nTrackStates - 1; ++j ){
+        for( int j=1; j < nTrackStates-1; ++j ){
             //we check which track length formula to use
             double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
             double arcLength;
@@ -107,14 +96,13 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
 
             Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
             trackLengthToSET += arcLength;
+            trackLengthToEcal += arcLength;
             harmonicMomToSET += arcLength/mom.r2();
+            harmonicMomToEcal += arcLength/mom.r2();
         }
         harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
         
-        trackLengthToEcal = trackLengthToSET;
-        harmonicMomToEcal = harmonicMomToSET;
-
-        //calculate 1 more step from SET to the Ecal
+        //now calculate to the Ecal one more step
         double nTurns = getHelixNRevolutions( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
         double arcLength;
         if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
@@ -122,6 +110,7 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         Vector3D mom = getHelixMomAtTrackState( trackStates[nTrackStates - 2], _bField );
         trackLengthToEcal += arcLength;
         harmonicMomToEcal += arcLength/mom.r2();
+        harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);
 
 
         vector<float> results{float(trackLengthToSET), float(trackLengthToEcal), float(harmonicMomToSET), float(harmonicMomToEcal)};
@@ -129,8 +118,8 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         streamlog_out(DEBUG9)<<"Final results for the "<<i+1<<" PFO"<<std::endl;
         streamlog_out(DEBUG9)<<"Track length to the SET: "<< float(trackLengthToSET)<<" mm"<<std::endl;
         streamlog_out(DEBUG9)<<"Track length to the ECal: "<< float(trackLengthToEcal)<<" mm"<<std::endl;
-        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the SET: "<< float(harmonicMomToSET)<<" Gev"<<std::endl;
-        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the Ecal: "<< float(harmonicMomToEcal)<<" Gev"<<std::endl;
+        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the SET: "<< float(harmonicMomToSET)<<" GeV"<<std::endl;
+        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the Ecal: "<< float(harmonicMomToEcal)<<" GeV"<<std::endl;
         streamlog_out(DEBUG9)<<std::endl<<std::endl;
     }
 }

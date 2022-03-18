@@ -1,5 +1,5 @@
-#ifndef TOFUtils_h
-#define TOFUtils_h 1
+#ifndef TrackLengthUtils_h
+#define TrackLengthUtils_h 1
 
 #include <vector>
 #include "EVENT/ReconstructedParticle.h"
@@ -9,12 +9,11 @@
 #include "DDRec/Vector3D.h"
 
 /**
- * Utility functions that are used by the TOFEstimators processor.
+ * Utility functions that are used by the TrackLengthProcessor.
  *
- * \author F. Gaede, DESY, 2018
- * \author B. Dudar, DESY, 2021
+ * \author B. Dudar, DESY, 2022
 */
-namespace TOFUtils{
+namespace TrackLengthUtils{
 
     /** Comparator function by radius for tracker hits.
     Returns `true` if \f$ \rho_{a} < \rho_{b} \f$.
@@ -52,7 +51,7 @@ namespace TOFUtils{
     /** Get track length.
     Returns the track length between two track states estimated by the helix length formula:
 
-    \f$ \ell = \frac{\left |z_{i+1} - z_{i}\right |}{\tan{\lambda}} \sqrt{1 + \tan{\lambda}^{2} } \f$
+    \f$ \ell = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \sqrt{1 + \tan{\lambda}^{2} } \f$
 
     Note: The formula above works for any \f$ \Delta \varphi \f$.
 
@@ -66,7 +65,7 @@ namespace TOFUtils{
     Returns number of helix revolutions between two track states.
 
     The calculation is done with:
-    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{\tan{\lambda}} \bigg / (2 \pi \frac{1}{|\Omega|}) \f$
+    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \bigg / (2 \pi \frac{1}{|\Omega|}) \f$
     */
     double getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
@@ -102,7 +101,7 @@ namespace TOFUtils{
     Returns a vector of track states at the IP, track state for every tracker hit
     inside all provided subTracks as tracks argument and the track state at the ECal surface if extrapolateToEcal argument is set to true.
     */
-    std::vector<IMPL::TrackStateImpl> getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, bool extrapolateToEcal, double bField);
+    std::vector<IMPL::TrackStateImpl> getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
 }
 
 

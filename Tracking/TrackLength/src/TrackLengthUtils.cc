@@ -1,4 +1,4 @@
-#include "TOFUtils.h"
+#include "TrackLengthUtils.h"
 
 #include <cmath>
 #include <algorithm>
@@ -39,14 +39,14 @@ using IMPL::TrackImpl;
 using IMPL::TrackStateImpl;
 using CLHEP::RandGauss;
 
-bool TOFUtils::sortByRho(EVENT::TrackerHit* a, EVENT::TrackerHit* b){
+bool TrackLengthUtils::sortByRho(EVENT::TrackerHit* a, EVENT::TrackerHit* b){
     Vector3D posA( a->getPosition() );
     Vector3D posB( b->getPosition() );
     return posA.rho() < posB.rho();
 }
 
 
-IMPL::TrackStateImpl TOFUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit){
+IMPL::TrackStateImpl TrackLengthUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit){
     TrackStateImpl ts;
     double chi2Dummy;
     int ndfDummy;
@@ -55,7 +55,7 @@ IMPL::TrackStateImpl TOFUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrack* marli
 }
 
 
-dd4hep::rec::Vector3D TOFUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
+dd4hep::rec::Vector3D TrackLengthUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
     double phi = ts.getPhi();
     double d0 = ts.getD0();
     double z0 = ts.getZ0();
@@ -68,7 +68,7 @@ dd4hep::rec::Vector3D TOFUtils::getHelixMomAtTrackState(const EVENT::TrackState&
 }
 
 
-double TOFUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+double TrackLengthUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double omega = ts1.getOmega();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
@@ -79,7 +79,7 @@ double TOFUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::Tr
 }
 
 
-double TOFUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+double TrackLengthUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
@@ -88,7 +88,7 @@ double TOFUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT:
 }
 
 
-double TOFUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+double TrackLengthUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double omega = ts1.getOmega();
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
@@ -102,7 +102,7 @@ double TOFUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT:
 }
 
 
-std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
+std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
     vector<Track*> subTracks;
     subTracks.push_back(track);
 
@@ -128,7 +128,7 @@ std::vector<EVENT::Track*> TOFUtils::getSubTracks(EVENT::Track* track){
 }
 
 
-std::vector<IMPL::TrackStateImpl> TOFUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField){
+std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField){
     vector<TrackStateImpl> trackStatesPerHit;
     int nTracks = tracks.size();
     for(int i=0; i<nTracks; ++i){

@@ -157,6 +157,7 @@ ADD_MARLINRECO_PKG( ./TrackDigi/VTXDigi )
 ADD_MARLINRECO_PKG( ./TrackDigi/FPCCDDigi )
 ADD_MARLINRECO_PKG( ./Tracking/KinkFinder )
 ADD_MARLINRECO_PKG( ./Tracking/V0Finder )
+ADD_MARLINRECO_PKG( ./Tracking/TrackLength )
 ADD_MARLINRECO_PKG( ./Analysis/FourMomentumCovMat )
 ADD_MARLINRECO_PKG( ./PFOID )
 ADD_MARLINRECO_PKG( ./TimeOfFlight )
@@ -195,9 +196,7 @@ SET_SOURCE_FILES_PROPERTIES(
     "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/EMShowerFinder.cc"
     "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/KITutil.cc"
     "${PROJECT_SOURCE_DIR}/Clustering/PhotonFinderKit/src/KIT.cc"
-    "${PROJECT_SOURCE_DIR}/Pflow/TrackBasedPFlow/src/TrackBasedPFlow.cc"
     "${PROJECT_SOURCE_DIR}/Clustering/NNClustering/src/NNClusterProcessor.cc"
-    "${PROJECT_SOURCE_DIR}/Tracking/SiliconTracking/src/SiliconTracking.cc"
     "${PROJECT_SOURCE_DIR}/Tracking/KinkFinder/src/KinkFinder.cc"
     PROPERTIES COMPILE_FLAGS ""
 )

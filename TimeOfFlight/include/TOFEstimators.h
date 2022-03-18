@@ -4,24 +4,21 @@
 #include <string>
 #include <vector>
 #include "marlin/Processor.h"
-#include "MarlinTrk/IMarlinTrkSystem.h"
 
 /**
-Marlin processor that calculates harmonic mean momentum, track length and time-of-flight for charged particles.
+Marlin processor that calculates time-of-flight for charged particles.
 \author F. Gaede, DESY, April 2018
-\author B. Dudar, DESY, September 2021
+\author B. Dudar, DESY, 2022
 */
 class TOFEstimators : public marlin::Processor {
     public:
         /**
         Copy constructor.
-        We remove it to avoid W-effc++ warnings.
         */
         TOFEstimators(const TOFEstimators&) = delete;
 
         /**
         Copy assignment operator.
-        We remove it to avoid W-effc++ warnings.
         */
         TOFEstimators& operator=(const TOFEstimators&) = delete;
 
@@ -72,17 +69,9 @@ class TOFEstimators : public marlin::Processor {
         */
         int _nEvent{};
 
-        /** Stores names of the output parameters.
-        These are "momentumHM", "trackLength" and "timeOfFlight".
+        /** Stores names of the output parameter - "timeOfFlight".
         */
         std::vector<std::string> _outputParNames{};
-
-
-        /** Kalman Filter System.
-        \note Release notes of MarlinTrk v02-00:
-        \note users should no longer delete the IMarlinTrkSystem pointer in their code
-        */
-        MarlinTrk::IMarlinTrkSystem* _trkSystem = nullptr;
 
         /** Stores z component of the magnetic field at the origin in Tesla.
         */

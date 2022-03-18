@@ -1,8 +1,6 @@
 #include "TOFEstimators.h"
 #include "TOFUtils.h"
 
-#include <chrono>
-
 #include "EVENT/LCCollection.h"
 #include "UTIL/PIDHandler.h"
 
@@ -35,8 +33,7 @@ TOFEstimators aTOFEstimators ;
 
 
 TOFEstimators::TOFEstimators() : marlin::Processor("TOFEstimators") {
-    _description = "TOFEstimators processor computes momentum harmonic mean, track length \
-                    and time-of-flight of the chosen ReconstructedParticle to the \
+    _description = "TOFEstimators processor computes time-of-flight of the chosen ReconstructedParticle to the \
                     specified end point (SET hit or Ecal surface). To be used for a further particle ID";
 
     registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
@@ -81,17 +78,11 @@ void TOFEstimators::init(){
 
     marlin::Global::EVENTSEEDER->registerProcessor(this);
 
-    _outputParNames = {"momentumHM", "trackLength", "timeOfFlight"};
+    _outputParNames = {"timeOfFlight"};
     _bField = MarlinUtil::getBzAtOrigin();
     _tpcOuterR = getTPCOuterR();
     // internally we use time resolution in nanoseconds
     _timeResolution = _timeResolution/1000.;
-
-    _trkSystem = MarlinTrk::Factory::createMarlinTrkSystem("DDKalTest", nullptr, "");
-    _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS, true);
-    _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx, true);
-    _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing, true);
-    _trkSystem->init();
 }
 
 
@@ -99,7 +90,6 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     RandGauss::setTheSeed( marlin::Global::EVENTSEEDER->getSeed(this) );
     ++_nEvent;
     streamlog_out(DEBUG9)<<std::endl<<"==========Event========== "<<_nEvent<<std::endl;
-    auto startTime = std::chrono::steady_clock::now();
 
     LCCollection* pfos = evt->getCollection(_pfoCollectionName);
     LCCollection* setRelations = evt->getCollection("SETSpacePointRelations");
@@ -119,39 +109,13 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
 
         if( nClusters != 1 || nTracks != 1){
             // Analyze only simple pfos. Otherwise write dummy zeros
-            vector<float> results{0., 0., 0.};
+            vector<float> results{0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;
         }
         Track* track = pfo->getTracks()[0];
         Cluster* cluster = pfo->getClusters()[0];
 
-        ///////////////////////////////////////////////////////////////
-        // This part calculates track length and momentum harmonic mean
-        ///////////////////////////////////////////////////////////////
-        vector<Track*> subTracks = getSubTracks(track);
-        vector<TrackStateImpl> trackStates = getTrackStatesPerHit(subTracks, _trkSystem, _extrapolateToEcal, _bField);
-
-        double trackLength = 0.;
-        double harmonicMom = 0.;
-        int nTrackStates = trackStates.size();
-        for( int j=1; j < nTrackStates; ++j ){
-            //we check which track length formula to use
-            double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
-            double arcLength;
-            // we cannot calculate arc length for more than pi revolution using delta phi. Use formula with only z
-            if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
-            else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
-
-            Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
-            trackLength += arcLength;
-            harmonicMom += arcLength/mom.r2();
-        }
-        harmonicMom = std::sqrt(trackLength/harmonicMom);
-
-        //////////////////////////////////////
-        // This part calculates Time of flight
-        //////////////////////////////////////
         double timeOfFlight = 0.;
         if( _extrapolateToEcal ){
             if (_tofMethod == "closest"){
@@ -193,16 +157,10 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
                 }
             }
         }
-        vector<float> results{float(harmonicMom), float(trackLength), float(timeOfFlight)};
+        vector<float> results{float(timeOfFlight)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
         streamlog_out(DEBUG9)<<"Final results for the "<<i+1<<" PFO"<<std::endl;
-        streamlog_out(DEBUG9)<<"momentum: "<< float(harmonicMom)<<" Gev"<<std::endl;
-        streamlog_out(DEBUG9)<<"track length: "<< float(trackLength)<<" mm"<<std::endl;
         streamlog_out(DEBUG9)<<"time-of-flight: "<< float(timeOfFlight)<<" ns"<<std::endl;
         streamlog_out(DEBUG9)<<std::endl<<std::endl;
     }
-
-    auto endTime = std::chrono::steady_clock::now();
-    std::chrono::duration<double> duration = endTime - startTime;
-    streamlog_out(DEBUG9)<<"Time spent (sec): "<<duration.count()<<std::endl;
 }

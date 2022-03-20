@@ -196,6 +196,7 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::ve
             }
         }
 
+        // OPTIMIZE: if last subtrack fit fails in both directions we don't add track state at the ECal.
         if (i == nTracks - 1){
             // SET hit is not present in hitsInFit as it is composite hit from strips
             // Add ts at the SET hit manualy which fitter returns with reffited track

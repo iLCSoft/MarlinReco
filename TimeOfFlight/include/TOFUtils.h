@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "EVENT/ReconstructedParticle.h"
+#include "DDRec/Vector3D.h"
 
 /**
  * Utility functions that are used by the TOFEstimators processor.

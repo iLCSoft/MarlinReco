@@ -7,15 +7,11 @@
 #include "marlin/VerbosityLevels.h"
 #include "marlinutil/CalorimeterHitType.h"
 #include "HelixClass.h"
-#include "DD4hep/Detector.h"
-#include "DD4hep/DD4hepUnits.h"
-#include "DDRec/DetectorData.h"
 #include "CLHEP/Random/Randomize.h"
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "MarlinTrk/MarlinTrkUtils.h"
-#include "UTIL/LCRelationNavigator.h"
 #include "UTIL/ILDConf.h"
 #include "IMPL/TrackImpl.h"
 
@@ -24,16 +20,11 @@ using std::numeric_limits;
 using std::pair;
 using EVENT::TrackerHit;
 using EVENT::Track;
-using EVENT::Cluster;
 using EVENT::CalorimeterHit;
 using EVENT::TrackState;
-using dd4hep::Detector;
-using dd4hep::DetElement;
 using dd4hep::rec::Vector3D;
-using dd4hep::rec::FixedPadSizeTPCData;
 using MarlinTrk::IMarlinTrack;
 using MarlinTrk::IMarlinTrkSystem;
-using UTIL::LCRelationNavigator;
 using UTIL::ILDDetID;
 using IMPL::TrackImpl;
 using IMPL::TrackStateImpl;

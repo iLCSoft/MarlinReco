@@ -7,7 +7,7 @@
     <execute>
         <!-- InitDD4hep must be called first. TrackLengthProcessor is dependent on InitDD4hep processor -->
         <processor name="InitDD4hep" />
-        <processor name="TrackLengthProcessor"/>
+        <processor name="MyTrackLengthProcessor"/>
         <!-- Write the new slcio file -->
         <processor name="MyLCIOOutputProcessor"/>
     </execute>
@@ -34,7 +34,7 @@
     </processor>
 
 
-    <processor name="TrackLengthProcessor" type="TrackLengthProcessor">
+    <processor name="MyTrackLengthProcessor" type="TrackLengthProcessor">
         <parameter name="ReconstructedParticleCollection" type="string" default="PandoraPFOs">PandoraPFOs</parameter>
     </processor>
 

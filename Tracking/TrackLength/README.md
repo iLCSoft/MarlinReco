@@ -2,9 +2,9 @@
 
 TrackLength is the Marlin processor that calculates track length and square root of the harmonic mean of the squared momentum of charged particles.
 
-The detailed description of the source code is available in the [doxygen documentation](https://www.desy.de/~dudarboh/tof_doc/html/index.html). <br>
+The detailed description of the source code is available in the [doxygen documentation](https://www.desy.de/~dudarboh/track_length_doc/html/index.html). <br>
 
-If formulas are barely visible please switch to the light theme of the github or check the main page in the [doxygen documentation](https://www.desy.de/~dudarboh/tof_doc/html/index.html).
+If formulas are barely visible please switch to the light theme of the github or check the main page in the [doxygen documentation](https://www.desy.de/~dudarboh/track_length_doc/html/index.html).
 
 ## Requirements and limitations
 
@@ -47,24 +47,27 @@ This processor has four output parameters:
   In case <img src="https://render.githubusercontent.com/render/math?math=N_{\mathrm{turns}} < 0.5"> the track segment length is calculated between neighboring track states as:
   <img src="https://render.githubusercontent.com/render/math?math=\ell_{i} = \sqrt{\left( \frac{\varphi_{i %2B 1} - \varphi_{i}}{\Omega}\right)^2 %2B \left( z_{i %2B 1} - z_{i} \right)^2 }">.<br>
   In case <img src="https://render.githubusercontent.com/render/math?math=N_{\mathrm{turns}} > 0.5"> the track segment length is calculated between neighboring track states as:
-   <img src="https://render.githubusercontent.com/render/math?math=\ell_{\mathrm{last}} = \frac{\left |z_{i %2B 1} - z_{i}\right |}{\tan{\lambda}} \sqrt{1 %2B \tan^2{\lambda} }">.<br>
+   <img src="https://render.githubusercontent.com/render/math?math=\ell_{\mathrm{last}} = \frac{\left |z_{i %2B 1} - z_{i}\right |}{| \tan{\lambda} |} \sqrt{1 %2B \tan^2{\lambda} }">.<br>
 
   If helix has more than half revolution between two tracker states then we are unable to use the formula with phi angle, thus we use different formula that does not rely on the azimuthal angle but only on z coordinate and the dip of the helix. Later formula is less precise, so we use it only in these exception cases. More than half turn situation generally should not happen between TPC hits as neighboring TPC hits usually close to each other. But more than half turn often can happen between last TPC hit and the extrapolated track state at the ECal endcap. 
 
 
 ## Steering file example
 
-[./xml/steer.xml](./xml/steer.xml) is a steering file example that runs three TrackLength processor. It writes output parameters in the PIDHandlers of the **PandoraPFOs** collection which is then saved in the new *output.slcio* file using LCIOOutputProcessor.
+[./xml/steer.xml](./xml/steer.xml) is a steering file example that runs three TrackLength processor. It writes output parameters in the PIDHandlers of the **PandoraPFOs** collection which is then saved in the new **output.slcio** file using LCIOOutputProcessor.
 
 To run this example one needs to setup iLCSoft environment.
 If the reader has a NAF account he/she can setup iLCSoft environment with:<br>
-`source /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/init_ilcsoft.sh`
+
+    source /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/init_ilcsoft.sh
 
 and run the example steering file with:<br>
-`Marlin ./xml/steer.xml`
+
+    Marlin ./xml/steer.xml
 
 Then one can look at the output.sclio file with, e.g.:<br>
-`dumpevent output.slcio 1 | less`
+
+    dumpevent output.slcio 1 | less
 
 One can find output for PandoraPFOs which has new TrackLength algorithm attached...
 

@@ -69,17 +69,20 @@ This processor has single output parameter - time-of-flight.
 
 ## Steering file example
 
-[./xml/steer.xml](./xml/steer.xml) is a steering file example that runs three TOFEstimators processors: *MyTofClosest0ps*, *MyTofSET10ps* and *MyTofFrankAvg50ps*. They write output parameters in the PIDHandlers of the *PandoraPFOs* collection. Results are saved in the new *output.slcio* file using LCIOOutputProcessor.
+[./xml/steer.xml](./xml/steer.xml) is a steering file example that runs three TOFEstimators processors: MyTofClosest0ps, MyTofSET10ps and MyTofFrankAvg50ps. They write output parameters in the PIDHandlers of the **PandoraPFOs** collection. Results are saved in the new **output.slcio** file using LCIOOutputProcessor.
 
 To run this example one needs to setup iLCSoft environment.
 If the reader has a NAF account he/she can setup iLCSoft environment with:<br>
-`source /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/init_ilcsoft.sh`
+
+    source /cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/init_ilcsoft.sh
 
 and run the example steering file with:<br>
-`Marlin ./xml/steer.xml`
+
+    Marlin ./xml/steer.xml
 
 Then one can look at the output.sclio file with, e.g.:<br>
-`dumpevent output.slcio 1 | less`
+
+    dumpevent output.slcio 1 | less
 
 One can find output for PandoraPFOs which has new TOF algorithms attached...
 

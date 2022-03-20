@@ -134,7 +134,7 @@ Here is the code example how to do that:
 
             float momentum = getParameterFromPID(pfo, pidHandler, "MyTrackLengthProcessor", "momentumHMToEcal"); // in GeV
             float trackLength = getParameterFromPID(pfo, pidHandler, "MyTrackLengthProcessor", "trackLengthToEcal"); // in mm
-            float tof = getParameterFromPID(pfo, pidHandler, "MyTofClosest0ps", "TimeOfFlight"); // in ns
+            float tof = getParameterFromPID(pfo, pidHandler, "MyTofClosest0ps", "timeOfFlight"); // in ns
 
             //calculate mass in GeV using relativistic momentum formula
             double mass = momentum * std::sqrt( std::pow(tof*CLHEP::c_light/trackLength, 2) - 1 );

@@ -66,12 +66,12 @@
  * <a class="email" href="mailto:drasal@ipnp.troja.mff.cuni.cz"> Zbynek Drasal</a>,
  * Charles University, Prague.
  *
- *\namespace CLHEP   Namespace of Class Library in High Energy Physics
- *\namespace gear    Namespace of GEometry Api for Reconstruction
- *\namespace lcio    Namespace of Linear Collider InputOutput
- *\namespace marlin  Namespace of Modular Analysis and Reconstruction tool for LINear collider
- *\namespace std     Standard library namespace
- *\namespace sistrip SiStripDigi processor namespace
+ * CLHEP   Namespace of Class Library in High Energy Physics
+ * gear    Namespace of GEometry Api for Reconstruction
+ * lcio    Namespace of Linear Collider InputOutput
+ * marlin  Namespace of Modular Analysis and Reconstruction tool for LINear collider
+ * std     Standard library namespace
+ * sistrip SiStripDigi processor namespace
  */
 
 #ifndef SISTRIPDIGI_H

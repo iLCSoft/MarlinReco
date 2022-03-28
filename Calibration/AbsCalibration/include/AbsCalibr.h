@@ -10,6 +10,9 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace std ;
 
+namespace marlin {
+
+
 /**            === AbsCalibr ==== <br>
  *  Processor makes:<br>
  *
@@ -21,7 +24,6 @@ using namespace std ;
  *
  */
 
-namespace marlin {
   class AbsCalibr : public Processor {
   
   public:
@@ -53,6 +55,3 @@ namespace marlin {
   } ;
 } //namespace marlin
 #endif
-
-
-

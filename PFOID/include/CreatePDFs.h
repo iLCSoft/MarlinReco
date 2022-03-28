@@ -17,7 +17,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === CreatePDFs Processor === <br>
+/**
+\addtogroup PFOID PFOID
+@{
+
+\addtogroup CreatePDFs CreatePDFs
+@{
+CreatePDFs Processor.
+=== CreatePDFs Processor === <br>
  * written by Martin Ohlerich
  */
 
@@ -84,5 +91,6 @@ class CreatePDFs : public Processor {
 
 
 };
+/** @} @} */
 
 #endif

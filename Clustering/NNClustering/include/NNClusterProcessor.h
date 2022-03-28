@@ -10,8 +10,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** Example processor that does a simple nearest neighbour (NN) clustering on one or more CalorimeterHit 
- *  collections. It uses a simple euclididan distance cut.
+/**
+\addtogroup Clustering Clustering
+@{
+
+\addtogroup NNClusterProcessor NNClusterProcessor
+@{
+Example processor that does a simple nearest neighbour (NN) clustering on one or more CalorimeterHit collections.
+ * It uses a simple euclididan distance cut.
  * 
  * @param HitCollections    - Name of the input collection(s) (CalorimeterHit)
  * @param OutputCollection  - Name of the output collection (Cluster)
@@ -72,7 +78,6 @@ class NNClusterProcessor : public Processor {
 
 } ;
 
+/** @} @} */
+
 #endif
-
-
-

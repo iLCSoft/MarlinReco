@@ -5,6 +5,9 @@
 // ////////////////////////////////////////////////////////////////////// //
 
 /**
+\addtogroup SiStripDigi SiStripDigi
+@{
+
  *\mainpage notitle
  *
  *<br><br><h1>Digitization of Si Microstrip Detectors - Marlin Processors' Documentation</h1>
@@ -139,11 +142,15 @@ typedef       std::map< int, Signal *>             StripChargeMap;   // strip ID
 typedef       std::map< int, StripChargeMap *>     SensorStripMap;   // sensor ID, strip map
 typedef       std::map<SimTrackerHit *, float>     SimHitMap;        // hit, weight
 
-//! Marlin processor intended for detailed digitization of silicon strip sensors
+/**
+\addtogroup SiStripDigiProcessor SiStripDigiProcessor
+\ingroup SiStripDigi
+@{
+Marlin processor intended for detailed digitization of silicon strip sensors.
 //!
 //! @author Z. Drasal, Charles University, Prague
 //!
-
+*/
 class SiStripDigi : public marlin::Processor 
 {
 	public:
@@ -457,7 +464,9 @@ class SiStripDigi : public marlin::Processor
 		int    _nEvent;                 //!< Event number
 		
 }; // Class
+/** @} */
 
 } // Namespace
 
+/** @} */
 #endif // SISTRDIGI_H

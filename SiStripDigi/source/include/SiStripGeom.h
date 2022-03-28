@@ -15,6 +15,11 @@
 
 #include "UTIL/BitField64.h"
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip 
 {
 
@@ -310,5 +315,7 @@ class SiStripGeom
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // SISTRIPGEOM_H

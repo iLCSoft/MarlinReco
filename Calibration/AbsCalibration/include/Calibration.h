@@ -14,6 +14,11 @@
 #define CalibrationNFLOATVals 0 
 #define CalibrationNDOUBLEVals 4 // Energies
 
+/**
+\addtogroup Calibration Calibration
+@{
+*/
+
 class Calibration : public UTIL::LCFixedObject<CalibrationNINTVals,
   CalibrationNFLOATVals,CalibrationNDOUBLEVals> {
   
@@ -53,5 +58,6 @@ public:
     
 }; // class
 
+/** @} */
 
 #endif

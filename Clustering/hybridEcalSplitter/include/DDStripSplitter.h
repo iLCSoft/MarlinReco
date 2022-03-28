@@ -18,10 +18,15 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace std;
 
-/*
+/**
+\addtogroup Clustering Clustering
+@{
+
+\addtogroup DDStripSplitter DDStripSplitter
+@{
 implementation of Strip Splitting Algorithm, adapted for dd4hep based ILD models.
 D. Jeans, Nov 2018.
- */
+*/
 
 class DDStripSplitter : public Processor {
   
@@ -110,8 +115,6 @@ class DDStripSplitter : public Processor {
 
 };
 
+/** @} @} */
 
 #endif
-
-
-

@@ -5,6 +5,11 @@
 
 #include "RealisticCaloReco.h"
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+*/
+
 class SimDigitalToEnergy : public RealisticCaloReco
 {
 	public :
@@ -17,5 +22,6 @@ class SimDigitalToEnergy : public RealisticCaloReco
 
 		std::vector<float> _energyCoefficients{};
 } ;
+/** @} */
 
 #endif //SimDigitalToEnergy_h

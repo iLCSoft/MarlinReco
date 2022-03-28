@@ -6,8 +6,11 @@
 #include "VObject.h"
 #include <string>
 
+/**
+\addtogroup PFOID PFOID
+@{
+*/
 typedef std::vector<Category*> CatVec;
-
 class PDF{
 private:
   std::string pdfName{};         // name of the PDF object, e.g. charged particles
@@ -40,5 +43,5 @@ public:
 
 };
 
-
+/** @} */
 #endif

@@ -9,6 +9,13 @@
 class SimDigitalGeomCellId ;
 struct AsicKey ;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+*/
+
+
 class ChargeInducer
 {
 	public :
@@ -50,5 +57,7 @@ class AsicPolya : public UniformPolya
 
 		std::map<AsicKey , std::gamma_distribution<float> > polyaMap ;
 } ;
+
+/** @} */
 
 #endif //ChargeInducer_h

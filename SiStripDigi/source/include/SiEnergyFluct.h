@@ -43,6 +43,11 @@
 
 using namespace lcio ;
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 //!
@@ -138,5 +143,7 @@ private:
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // SIENERGYFLUCT_H

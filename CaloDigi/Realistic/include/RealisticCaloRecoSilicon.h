@@ -3,7 +3,14 @@
 
 #include "RealisticCaloReco.h"
 
-/** === RealisticCaloRecoSilicon Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup RealisticCaloRecoSilicon RealisticCaloRecoSilicon
+@{
+Realistic reconstruction of silicon calorimeter hits.
+=== RealisticCaloRecoSilicon Processor === <br>
     realistic reconstruction of silicon calorimeter hits
     D.Jeans 02/2016.
 
@@ -23,5 +30,7 @@ class RealisticCaloRecoSilicon : public RealisticCaloReco {
   virtual float reconstructEnergy(const CalorimeterHit* hit);
 
 } ;
+
+/** @} @}*/
 
 #endif 

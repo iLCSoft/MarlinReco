@@ -3,6 +3,11 @@
 
 #include <string>
 
+/**
+\addtogroup PFOID PFOID
+@{
+*/
+
 class VObject{
 private:
   int vn{};                     // variable number
@@ -31,5 +36,7 @@ public:
   std::string* GetNames() const;                   // returns all variable names in an array of size vn
 
 };
+
+/** @} */
 
 #endif

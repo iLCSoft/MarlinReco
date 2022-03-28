@@ -12,7 +12,14 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** === MokkaCaloDigi Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup MokkaCaloDigi MokkaCaloDigi
+@{
+ Calorimeter digitizer Processor for LCIO files produced by Mokka.
+=== MokkaCaloDigi Processor === <br>
  *  Calorimeter digitizer Processor for LCIO <br>
  *  files produced by Mokka. <br>
  *  Takes SimCalorimeterHit Collections and <br>
@@ -159,5 +166,7 @@ class MokkaCaloDigi : public Processor {
 
 
 } ;
+
+/** @} @}*/
 
 #endif

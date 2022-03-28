@@ -42,7 +42,14 @@ using namespace EVENT;
 
 
 
-/** Example processor for marlin. If compiled with MARLIN_USE_AIDA 
+/**
+\addtogroup Clustering Clustering
+@{
+
+\addtogroup KIT KIT
+@{
+Example processor for marlin.
+ * If compiled with MARLIN_USE_AIDA 
  *  it creates a histogram (cloud) of the MCParticle energies.
  */
 class KIT : public Processor {
@@ -97,7 +104,6 @@ class KIT : public Processor {
   double _Coscut{};
 } ;
 
+/** @} @} */
+
 #endif
-
-
-

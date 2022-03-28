@@ -19,7 +19,14 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** === RealisticCaloReco Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup RealisticCaloReco RealisticCaloReco
+@{
+Realistic reconstruction of calorimeter hits.
+=== RealisticCaloReco Processor === <br>
     realistic reconstruction of calorimeter hits
     e.g. apply sampling fraction correction
     virtual class, technology indenpendent
@@ -67,7 +74,6 @@ class RealisticCaloReco : virtual public Processor {
 
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

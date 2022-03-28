@@ -17,6 +17,15 @@ class TTree;
 
 // namespace CALICE {
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup G2CD G2CD
+@{
+
+*/
+
 class G2CD  : public marlin::Processor
 {
 	public:
@@ -72,5 +81,7 @@ class G2CD  : public marlin::Processor
 	std::string _fileName{};
 	std::ostream *_output{};
 };
+
+/** @} @}*/
 
 #endif

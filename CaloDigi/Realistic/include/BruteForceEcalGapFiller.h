@@ -17,6 +17,16 @@
 using namespace lcio ;
 using namespace marlin ;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup BruteForceEcalGapFiller BruteForceEcalGapFiller
+@{
+
+*/
+
+
 class BruteForceEcalGapFiller : public Processor {
 
  public:
@@ -70,5 +80,7 @@ class BruteForceEcalGapFiller : public Processor {
   void addInterModuleGapHits( LCCollectionVec* newcol );
  
 } ;
+
+/** @} @}*/
 
 #endif

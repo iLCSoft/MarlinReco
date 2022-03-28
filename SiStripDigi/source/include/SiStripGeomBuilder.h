@@ -26,6 +26,11 @@
 
 #include<string>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip
 {
 
@@ -41,5 +46,7 @@ class SiStripGeomBuilder
 };
 
 }
+
+/** @} */
 
 #endif

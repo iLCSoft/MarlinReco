@@ -7,6 +7,12 @@
 
 using namespace lcio;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+*/
+
 typedef std::vector<SimCalorimeterHit * > SimCalorimeterHitVec;
 
 class DigiHitExtended {
@@ -36,5 +42,7 @@ class DigiHitExtended {
     float _ampl{};
 
 };
+
+/** @}*/
 
 #endif

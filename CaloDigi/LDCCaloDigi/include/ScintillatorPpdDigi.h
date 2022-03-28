@@ -1,6 +1,12 @@
 #ifndef _ScintillatorPpdDigi_h_
 #define _ScintillatorPpdDigi_h_
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+*/
+
 class ScintillatorPpdDigi {
 
  public:
@@ -44,5 +50,7 @@ class ScintillatorPpdDigi {
   float _elecMaxDynRange_MIP{};
 
 };
+
+/** @} */
 
 #endif

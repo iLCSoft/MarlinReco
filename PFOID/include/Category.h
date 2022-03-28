@@ -7,6 +7,11 @@
 
 typedef std::vector<Histogram*> HistVec;
 
+/**
+\addtogroup PFOID PFOID
+@{
+*/
+
 class Category{            // Container for Histograms
 private:
   std::string catName{};    // name of the category, e.g. electrons, muons, pions
@@ -24,5 +29,6 @@ public:
 
 };
 
+/** @} */
 
 #endif

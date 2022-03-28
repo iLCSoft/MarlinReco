@@ -11,6 +11,11 @@
 #include <EVENT/MCParticle.h>
 #include <EVENT/SimTrackerHit.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 //! Digitization cluster class. One cluster represents a bunch of either
@@ -181,5 +186,7 @@ class DigiCluster {
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // DIGICLUSTER_H

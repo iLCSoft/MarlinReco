@@ -6,6 +6,11 @@
 #include <map>
 #include <EVENT/SimTrackerHit.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 // Typedefs
@@ -70,5 +75,8 @@ class Signal {
 }; // Class
 
 } // Namespace
+
+/** @} */
+
 
 #endif // SIGNAL_H

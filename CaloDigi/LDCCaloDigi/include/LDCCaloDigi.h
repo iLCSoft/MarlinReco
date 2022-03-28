@@ -13,7 +13,14 @@ using namespace marlin ;
 const int MAX_LAYERS = 200;
 const int MAX_STAVES =  16;
 
-/** === LDCCaloDigi Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup LDCCaloDigi LDCCaloDigi
+@{
+Simple calorimeter digitizer Processor.
+=== LDCCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
  *  Takes SimCalorimeterHit Collections and <br>
  *  produces CalorimeterHit Collections. <br>
@@ -130,5 +137,7 @@ class LDCCaloDigi : public Processor {
   float _barrelStaveDir[MAX_STAVES][2]{};
 
 } ;
+
+/** @} @}*/
 
 #endif

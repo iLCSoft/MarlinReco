@@ -13,7 +13,12 @@ using namespace std ;
 namespace marlin {
 
 
-/**            === AbsCalibr ==== <br>
+/** 
+
+\addtogroup Calibration Calibration
+@{
+Processor for absolute energy calibration.
+=== AbsCalibr ==== <br>
  *  Processor makes:<br>
  *
  *      Output file for Absolute Energy Calibration <br>
@@ -54,4 +59,8 @@ namespace marlin {
     vector<float> _cuts{};
   } ;
 } //namespace marlin
+
+/** @} */
+
+
 #endif

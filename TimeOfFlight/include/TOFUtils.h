@@ -6,6 +6,9 @@
 #include "DDRec/Vector3D.h"
 
 /**
+\addtogroup TimeOfFlight TimeOfFlight
+@{
+
  * Utility functions that are used by the TOFEstimators processor.
  *
  * \author F. Gaede, DESY, 2018
@@ -70,5 +73,6 @@ namespace TOFUtils{
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 
 }
+/** @} */
 
 #endif

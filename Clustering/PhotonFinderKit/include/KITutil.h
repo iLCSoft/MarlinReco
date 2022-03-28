@@ -26,6 +26,11 @@
 using namespace lcio;
 using namespace std;
 
+/**
+\addtogroup Clustering Clustering
+@{
+*/
+
 class Tmpcl2;
 /**
  *    Basic hit class for reconstruction, contains the calorimeter hit plus     
@@ -359,5 +364,7 @@ void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv);
 double D_cl_cl2(Tmpcl2* cl1,Tmpcl2* cl2) ;
 inline double Dot2(double* X1,double* X2);
 void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv,vector<Tmpcl2*>& clout);
+
+/** @} */
 
 #endif

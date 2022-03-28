@@ -7,6 +7,12 @@
 struct AsicKey ;
 class SimDigitalGeomCellId ;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+*/
+
 class EfficiencyManager
 {
 	public :
@@ -44,6 +50,6 @@ class AsicEfficiency : public UniformEfficiency
 
 } ;
 
-
+/** @} */
 
 #endif //EfficiencyManager_h

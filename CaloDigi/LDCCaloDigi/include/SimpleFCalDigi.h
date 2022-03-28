@@ -10,7 +10,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === SimpleFCalDigi Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup SimpleFCalDigi SimpleFCalDigi
+@{
+Simple calorimeter digitizer for the LCal Processor.
+=== SimpleFCalDigi Processor === <br>
  *  Simple calorimeter digitizer for the LCal Processor. <br>
  *  Converts SimCalorimeterHit collections to one 
  *  CalorimeterHit collection applying a threshold and an calibration constant...
@@ -69,7 +76,6 @@ class SimpleFCalDigi : public Processor {
  
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

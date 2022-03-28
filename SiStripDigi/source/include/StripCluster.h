@@ -6,6 +6,11 @@
 // Include CLHEP header files
 #include <CLHEP/Vector/ThreeVector.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 //! This class holds all information about strip clusters, where the strip
@@ -169,5 +174,7 @@ class StripCluster
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // STRIPCLUSTER_H

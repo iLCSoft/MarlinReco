@@ -9,6 +9,11 @@
 #include <IMPL/SimTrackerHitImpl.h>
 #include <EVENT/SimTrackerHit.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 //! Digitization hit inheritad from LCIO SimTrackerHitImpl, which naturally
@@ -148,5 +153,7 @@ class SimTrackerDigiHit : public IMPL::SimTrackerHitImpl {
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // SIMTRACKERDIGIHIT_H

@@ -33,6 +33,11 @@ class ITuple ;
 
 struct StepAndCharge ;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+*/
+
 struct PotentialSameTrackID
 {
 		PotentialSameTrackID(int _pdgStep , int _pdgParent)
@@ -179,5 +184,7 @@ class SimDigitalGeomCellIdPROTO : public SimDigitalGeomCellId
 
 		std::vector<std::string> _encodingString = { "K-1", "", "", "", "I", "J" } ;
 } ;
+
+/** @} */
 
 #endif //SimDigitalGeom_h

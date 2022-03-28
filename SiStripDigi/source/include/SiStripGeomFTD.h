@@ -19,7 +19,10 @@
 
 //class gear::FTDParameters;
 //class gear::FTDLayerLayout;
-
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
 namespace sistrip 
 {
 
@@ -190,5 +193,7 @@ class SiStripGeomFTD: public SiStripGeom
 }; // Class
 
 } // Namespace
+
+/** @} */
 
 #endif // SISTRIPGEOMFTD_H

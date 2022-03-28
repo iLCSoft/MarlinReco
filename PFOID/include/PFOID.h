@@ -17,7 +17,15 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === PFOID Processor === <br>
+/**
+\addtogroup PFOID PFOID
+@{
+
+\addtogroup PFOIDProcessor PFOIDProcessor
+@{
+Processor performs particle identification.
+
+=== PFOID Processor === <br>
  * Processor performs particle identification and discriminates between 
  * electrons, muons and charged hadrons in the case when calorimeter
  * cluster has an associated track and between photons and neutral hadrons 
@@ -151,5 +159,5 @@ class PFOID : public Processor {
   PDF *pdf{}, *npdf{};
 
 };
-
+/** @} @} */
 #endif

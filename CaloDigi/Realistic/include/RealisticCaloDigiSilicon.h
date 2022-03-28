@@ -6,7 +6,14 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** === RealisticCaloDigiSilicon Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup RealisticCaloDigiSilicon RealisticCaloDigiSilicon
+@{
+Realistic digitisation of silicon calorimeter hits.
+=== RealisticCaloDigiSilicon Processor === <br>
     realistic digitisation of silicon calorimeter hits
     D.Jeans 02/2016.
 */
@@ -24,7 +31,6 @@ class RealisticCaloDigiSilicon : public RealisticCaloDigi {
   float _ehEnergy{};                                    // energy to create e-h pair in silicon
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

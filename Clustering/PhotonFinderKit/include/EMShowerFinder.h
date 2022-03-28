@@ -29,6 +29,10 @@
 using namespace lcio ;
 using namespace marlin ;
 
+/**
+\addtogroup Clustering Clustering
+@{
+*/
 
 typedef struct {
 
@@ -48,7 +52,10 @@ struct isPartOfEMShowerCandidate : LCIntExtension<isPartOfEMShowerCandidate> {};
 
 
 /**
- *    Initial version of a processor to find electro-magnetic showers. It is based on the KIT package and takes only ECAL hits into account.
+\addtogroup EMShowerFinder EMShowerFinder
+@{
+Initial version of a processor to find electro-magnetic showers.
+ *    It is based on the KIT package and takes only ECAL hits into account.
  *    The output is a collection of clusters in which the electro-magnetic showers are stored. More docu will come soon.
  *    <br>
  *
@@ -97,5 +104,7 @@ class EMShowerFinder : public Processor {
   int _nEvt{};
 
 } ;
+
+/** @} @} */
 
 #endif

@@ -1,6 +1,11 @@
 #ifndef PHYSICALCONSTANTS_H
 #define PHYSICALCONSTANTS_H 1
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 //
@@ -75,5 +80,8 @@ namespace sistrip {
    static const double fine_str_const = 1./137.036;
 
 } // Namespace
+
+/** @} */
+
 
 #endif // PHYSICALCONSTANTS_H

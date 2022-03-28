@@ -46,8 +46,10 @@ class ITuple ;
 using namespace lcio ;
 using namespace marlin ;
 
-/** Digitization for the SDHcal - based on NewLDCCaloDigi. 
- *
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+ * Digitization for the SDHcal - based on NewLDCCaloDigi. 
  *  @author  G.Grenier, IPNL
  *  @author  R.Han, IPNL
  *	@author  A.Steen, IPNL
@@ -88,8 +90,12 @@ struct AsicKey
 		}
 } ;
 
+/**
+\addtogroup SimDigital SimDigital
+@{
+Digitization for the SDHcal - based on NewLDCCaloDigi. 
 
-
+*/
 class SimDigital : public Processor
 {
 	public:
@@ -194,5 +200,7 @@ class SimDigital : public Processor
 
 		std::string _encodingType  = "LCGEO" ;
 } ;
+
+/** @} @} */
 
 #endif

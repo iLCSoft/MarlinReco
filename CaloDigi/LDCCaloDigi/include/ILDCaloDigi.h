@@ -20,7 +20,14 @@ using namespace marlin ;
 const int MAX_LAYERS = 200;
 const int MAX_STAVES =  16;
 
-/** === ILDCaloDigi Processor === <br>
+/** 
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup ILDCaloDigi ILDCaloDigi
+@{
+Simple calorimeter digitizer Processor.
+=== ILDCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
  *  Takes SimCalorimeterHit Collections and <br>
  *  produces CalorimeterHit Collections. <br>
@@ -302,5 +309,7 @@ class ILDCaloDigi : public Processor {
   TH1F* fEcalRLayer21{};
 
 } ;
+
+/**@} @}*/
 
 #endif

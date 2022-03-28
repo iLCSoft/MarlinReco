@@ -20,7 +20,13 @@ using namespace marlin ;
 using namespace std;
 
 
-/**  Example processor for marlin.
+/** 
+\addtogroup Clustering Clustering
+@{
+
+\addtogroup hybridRecoProcessor hybridRecoProcessor
+@{
+Example processor for marlin.
  * 
  *  If compiled with MARLIN_USE_AIDA 
  *  it creates a histogram (cloud) of the MCParticle energies.
@@ -125,5 +131,6 @@ class hybridRecoProcessor : public Processor {
 
 };
 
+/** @} @} */
 
 #endif

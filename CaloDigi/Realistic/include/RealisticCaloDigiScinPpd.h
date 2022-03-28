@@ -6,7 +6,16 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** === RealisticCaloDigiScinPpd Processor === <br>
+
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup RealisticCaloDigiScinPpd RealisticCaloDigiScinPpd
+@{
+
+Realistic digitisation of scint+PPD (SiPM, MPPC) calorimeter hits.
+=== RealisticCaloDigiScinPpd Processor === <br>
     realistic digitisation of scint+PPD (SiPM, MPPC) calorimeter hits
     D.Jeans 02/2016.
 */
@@ -29,7 +38,6 @@ class RealisticCaloDigiScinPpd : public RealisticCaloDigi {
 
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

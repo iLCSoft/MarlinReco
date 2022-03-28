@@ -8,6 +8,11 @@
 // Include Marlin
 #include <streamlog/streamlog.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 #define MAXSTEPS   1000
@@ -531,5 +536,7 @@ double RunKutODESolver<T>::RKFMethod(double x_i, double w_i, double h, double dy
 }
 
 } // Namespace
+
+/** @} */
 
 #endif // RUNKUTODESOLVER_H

@@ -13,7 +13,16 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** === RealisticCaloDigi Processor === <br>
+
+
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup RealisticCaloDigi RealisticCaloDigi
+@{
+Realistic digitisation of calorimeter hits.
+=== RealisticCaloDigi Processor === <br>
     Digitisation of calorimeter hits
     e.g. timing, dead cells, miscalibrations
     this is virtual class, technology-blind
@@ -108,7 +117,6 @@ class RealisticCaloDigi : virtual public Processor {
 
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

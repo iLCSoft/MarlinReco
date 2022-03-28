@@ -1,3 +1,9 @@
+/**
+\addtogroup PFOID PFOID
+@{
+*/
+
+
 #define  NOVARS 16
 #define  VARIABLES {"EtoN_ecal","EtoN_hcal","ex","dmean","L1","EecalToEtot","Eecal","Ehcal","Edmean","Necal","Nhcal","L2","L3","EL1","EL2","EL3"}
 //#define  RANGES {100, 0.1, 0.0, 100, 0.1, 0.0, 100, 0.001, 0.0, 100, 100., 0., 40, 40., 0., 100, 1.0, 0.0, 100, 5., 0., 100, 5., 0., 100, 20., 3., 100, 100., 20., 100, 100., 20., 40, 40., 0., 40, 40., 0., 30, 30., 0., 30, 30., 0., 30, 30., 0.}
@@ -59,3 +65,5 @@
 
 
 // Later maybe with real interface
+
+/** @} */

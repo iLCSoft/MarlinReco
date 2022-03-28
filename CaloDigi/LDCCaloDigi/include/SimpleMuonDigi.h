@@ -13,7 +13,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === SimpleMuonDigi Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup SimpleMuonDigi SimpleMuonDigi
+@{
+Simple calorimeter digitizer for the muon detectors.
+=== SimpleMuonDigi Processor === <br>
  *  Simple calorimeter digitizer for the muon detectors.
  *  Converts SimCalorimeterHit collections to one 
  *  CalorimeterHit collection applying a threshold and an calibration constant...
@@ -65,7 +72,6 @@ class SimpleMuonDigi : public Processor {
 
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

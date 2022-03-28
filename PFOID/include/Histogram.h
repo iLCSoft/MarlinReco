@@ -4,6 +4,11 @@
 #include "VObject.h"
 #include <string>
 
+/**
+\addtogroup PFOID PFOID
+@{
+*/
+
 class Histogram{
 private:
   std::string histName{};     // name of the histogram
@@ -56,5 +61,6 @@ public:
                                        // of -1 on error and a message
   
 };
+/** @} */
 
 #endif

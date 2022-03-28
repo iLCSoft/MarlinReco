@@ -7,6 +7,11 @@
 // Include Marlin
 #include <streamlog/streamlog.h>
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 #define EPS_R       1E-4
@@ -189,5 +194,7 @@ double RombIntSolver<T>::TrapezRuleInt(int n)
 }
 
 } // Namespace
+
+/** @} */
 
 #endif // ROMBINTSOLVER_H

@@ -4,7 +4,13 @@
 #include <marlin/Processor.h>
 #include <IMPL/LCCollectionVec.h>
 
-//used for standalone SDHCAL Simulation
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+\addtogroup SimDigitalLinkToParticles SimDigitalLinkToParticles
+@{
+Used for standalone SDHCAL Simulation.
+*/
 
 class SimDigitalLinkToParticles : public marlin::Processor
 {
@@ -23,5 +29,6 @@ class SimDigitalLinkToParticles : public marlin::Processor
 		std::vector<std::string> _inputRelCollections{}; // input CalorimeterHit to SimCalorimeterHit relation collection
 		std::vector<std::string> _outputRelCollections{}; // output CalorimeterHit to MCParticle relation collection
 } ;
+/** @} @}*/
 
 #endif //SimDigitalLinkToParticles_h

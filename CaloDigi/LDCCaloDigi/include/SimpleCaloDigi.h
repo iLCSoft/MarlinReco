@@ -11,7 +11,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === SimpleCaloDigi Processor === <br>
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+\addtogroup SimpleCaloDigi SimpleCaloDigi
+@{
+Simple calorimeter digitizer Processor.
+=== SimpleCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
  *  Takes SimCalorimeterHit Collections and <br>
  *  produces CalorimeterHit Collections. <br>
@@ -113,7 +120,6 @@ class SimpleCaloDigi : public Processor {
 
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

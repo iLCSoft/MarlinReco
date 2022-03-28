@@ -41,6 +41,10 @@
 using namespace lcio;
 using namespace marlin;
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
 
 namespace sistrip {
 
@@ -52,10 +56,15 @@ typedef       std::vector< LCCollection *>        LCCollectionVec;
 typedef       std::vector< std::string >          StringVec;
 typedef       std::queue < std::string >          StringQue;
 
-//! Marlin processor intended for cluster finding - uses digitized data worked out with SiStripDigi
+/**
+\addtogroup SiStripClus SiStripClus
+\ingroup SiStripDigi
+@{
+Marlin processor intended for cluster finding - uses digitized data worked out with SiStripDigi.
 //!
 //! @author Z. Drasal, Charles University Prague
 //!
+*/
 
 class SiStripClus : public Processor
 {
@@ -195,7 +204,10 @@ class SiStripClus : public Processor
 		StripChargeMap & storeHitsAdjacents( StripChargeMap & clsStripsIn, 
 				It schmap, const It & endIt, StripChargeMap & cM);
 };
+/** @} */
 
 } // Namespace
+
+/** @} */
 
 #endif //SISTRIPCLUS_H

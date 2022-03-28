@@ -1,6 +1,11 @@
 #ifndef COLOURS_H
 #define COLOURS_H 1
 
+/**
+\addtogroup SiStripDigi SiStripDigi
+@{
+*/
+
 namespace sistrip {
 
 // If a terminal doesn't support any colors, comment following line
@@ -27,5 +32,7 @@ namespace sistrip {
 #endif
 
 } // Namespace
+
+/** @} */
 
 #endif // COLOURS_H

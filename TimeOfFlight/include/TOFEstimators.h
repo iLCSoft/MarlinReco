@@ -7,6 +7,13 @@
 
 /**
 Marlin processor that calculates time-of-flight for charged particles.
+\addtogroup TimeOfFlight TimeOfFlight
+@{
+
+\addtogroup TOFEstimators TOFEstimators
+@{
+Marlin processor that calculates harmonic mean momentum, track length and time-of-flight for charged particles.
+
 \author F. Gaede, DESY, April 2018
 \author B. Dudar, DESY, 2022
 */
@@ -82,4 +89,5 @@ class TOFEstimators : public marlin::Processor {
         double _tpcOuterR{};
 };
 
+/** @} @} */
 #endif

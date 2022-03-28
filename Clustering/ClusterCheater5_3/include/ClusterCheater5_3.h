@@ -13,7 +13,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** === Cluster Cheater 5_3 === <br>
+/**
+\addtogroup Clustering Clustering
+@{
+
+\addtogroup ClusterCheater5_3 ClusterCheater5_3
+@{
+This processor constructs true clusters.
+=== Cluster Cheater 5_3 === <br>
  *  This processor constructs true clusters.<br>
  *  All the hits are collected. <br>
  *  Uses gear to get inner radius and z of ecal. <br>
@@ -68,7 +75,6 @@ class ClusterCheater5_3 : public Processor {
  int _Nmin{};
 } ;
 
+/** @} @}*/
+
 #endif
-
-
-

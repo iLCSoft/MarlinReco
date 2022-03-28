@@ -8,6 +8,13 @@
 struct AsicKey ;
 class SimDigitalGeomCellId ;
 
+/**
+\addtogroup CaloDigi CaloDigi
+@{
+
+*/
+
+
 struct ChargeSpreaderParameters
 {
 		float cellSize = 10.f ;
@@ -90,5 +97,6 @@ class ExactSpreaderPerAsic : public ExactSpreader
 		std::map<AsicKey,float> dMap ;
 } ;
 
+/** @} */
 
 #endif //ChargeSpreader_h

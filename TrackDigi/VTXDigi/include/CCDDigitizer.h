@@ -49,6 +49,17 @@ Processor requires collection of simulated vertex tracker hits. If such a collec
 using namespace lcio ;
 using namespace marlin ;
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
+/**
+\addtogroup CCDDigitizer CCDDigitizer
+@{
+Digitizer for Simulated Hits in the Vertex Detector.
+*/
+
+
 struct IonisationPoint {
   double x;
   double y;
@@ -274,6 +285,6 @@ class CCDDigitizer : public Processor {
 
 };
 
-
+/** @} @} */
 
 #endif

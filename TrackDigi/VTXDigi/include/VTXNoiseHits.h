@@ -18,7 +18,13 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** ======= VTXNoiseHits ========== <br>
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+\addtogroup VTXNoiseHits VTXNoiseHits
+@{
+Adds random noise hits to collection of TrackerHits of the vertex detector.
+======= VTXNoiseHits ========== <br>
  * Adds random noise hits to collection of TrackerHits of the vertex detector.
  * The number of noise hits are given by the parameter HitDensityPerLayer (hits/cm^2).
  * The noise hits are created with a uniform distribution over the ladder
@@ -81,5 +87,5 @@ class VTXNoiseHits : public Processor {
 
 
 } ;
-
+/** @} @} */
 #endif

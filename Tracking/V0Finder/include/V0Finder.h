@@ -10,7 +10,13 @@
 using namespace lcio ;
 using namespace marlin ;
 
+/**
+\addtogroup Tracking Tracking
+@{
 
+\addtogroup V0Finder V0Finder
+@{
+V0Finder processor identify neutral vertices originating.
 /** V0Finder Processor <br>
  *  V0Finder processor identify neutral vertices originating <br>
  *  from photon conversions and decays of K0S and Lamda0 <br>
@@ -103,8 +109,6 @@ class V0Finder : public Processor {
   float _minTrackHitRatio{};
 
 } ;
+/** @} @}*/
 
 #endif
-
-
-

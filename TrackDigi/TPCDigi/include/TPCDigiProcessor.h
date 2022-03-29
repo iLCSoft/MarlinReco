@@ -69,8 +69,14 @@ using namespace AIDA ;
 #endif
 
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
 
-/** ====== TPCDigiProcessor ====== <br>
+\addtogroup TPCDigiProcessor TPCDigiProcessor
+@{
+Evolved version of TPCDigi that provides additional functionality to deal with background.
+ * ====== TPCDigiProcessor ====== <br>
  *
  * This Processor depends on Circle.h from MarlinUtil
  * 
@@ -274,6 +280,6 @@ protected:
 } ;
 
 
-
+/** @} @} */
 
 #endif

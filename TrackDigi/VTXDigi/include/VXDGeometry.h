@@ -9,6 +9,10 @@
 #include <gear/GearMgr.h>
 #include "CLHEP/Vector/TwoVector.h"
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
 /** Helper struct for VXD ladder geometry */
 struct VXDLadder{
   double phi{};   // phi of ladder - rotation araound z-axis
@@ -94,5 +98,5 @@ protected:
   VXDLayers  _vxdLayers{};
 
 } ;
-
+/** @} */
 #endif

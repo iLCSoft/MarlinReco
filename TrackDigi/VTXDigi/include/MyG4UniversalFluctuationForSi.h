@@ -49,6 +49,11 @@
 
 //#include "G4VEmFluctuationModel.hh"
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+*/
+
 class MyG4UniversalFluctuationForSi {
 public:
 
@@ -111,5 +116,5 @@ private:
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
-
+/** @} */
 #endif

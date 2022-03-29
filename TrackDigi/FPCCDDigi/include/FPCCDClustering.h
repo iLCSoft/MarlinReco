@@ -19,7 +19,14 @@
 #include <gear/GEAR.h>
 
 
-/** ======= FPCCDClustering ========== <br>
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
+\addtogroup FPCCDClustering FPCCDClustering
+@{
+Produces VXDTrackerHits collection from VTXPixelHits collections for FPCCD.
+======= FPCCDClustering ========== <br>
  *
  * Some modifications are done by mori.
  * 1. The utility for making LCRelation between TrackerHit and SimTrackerHit is set.
@@ -304,5 +311,5 @@ _tree->Branch("nlinks",&_link.nlink,"nlinks/I");
 
 
 } ;
-
+/** @}@} */
 #endif

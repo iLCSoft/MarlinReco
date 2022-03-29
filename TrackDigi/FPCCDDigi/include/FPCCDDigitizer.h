@@ -20,7 +20,15 @@
 #include <TFile.h>
 #include <TTree.h>
 
-/** ======= FPCCDDigitizer ========== <br>
+
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
+\addtogroup FPCCDDigitizer FPCCDDigitizer
+@{
+Produces VTXPixelHits collection from VXDCollection collections.
+ * ======= FPCCDDigitizer ========== <br>
  *
  * Some modifications are done.
  * 1. pixel size is changeable in each layer.
@@ -221,5 +229,5 @@ class FPCCDDigitizer : public marlin::Processor, public marlin::EventModifier {
   std::vector<GeoData_t> _geodata{};
 
 } ;
-
+/** @} @} */
 #endif

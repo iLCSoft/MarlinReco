@@ -24,8 +24,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 class VXDGeometry ;
+/**
+\addtogroup TrackDigi TrackDigi
+@{
 
-/** ======= VTXBgClusters ========== <br>
+\addtogroup VTXBgClusters VTXBgClusters
+@{
+Add Cluster parameters to VXD hits, according to projection of path length into the ladder.
+ * ======= VTXBgClusters ========== <br>
  * Add Cluster parameters to VXD hits, according to projection of path length into the ladder...
  * ...
  * 
@@ -107,5 +113,5 @@ class VTXBgClusters : public Processor {
 #endif
 
 } ;
-
+/** @} @} */
 #endif

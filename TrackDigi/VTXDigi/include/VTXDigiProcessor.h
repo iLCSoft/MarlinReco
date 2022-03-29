@@ -18,7 +18,14 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** ======= VTXDigiProcessor ========== <br>
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
+\addtogroup VTXDigiProcessor VTXDigiProcessor
+@{
+Produces SIT & VTX TrackerHit collection from SimTrackerHit collections.
+======= VTXDigiProcessor ========== <br>
  * Produces SIT & VTX TrackerHit collection from SimTrackerHit collections. <br> 
  * The positions of "digitized" TrackerHits are obtained by gaussian smearing positions
  * of SimTrackerHits in r-phi and z according to the specified point resolutions. 
@@ -127,5 +134,5 @@ class VTXDigiProcessor : public Processor {
 
 
 } ;
-
+/** @} @}*/
 #endif

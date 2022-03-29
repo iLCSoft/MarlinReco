@@ -17,6 +17,10 @@
 using namespace lcio ;
 using namespace marlin ;
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+*/
 struct IonisationPoint {
   double x{};
   double y{};
@@ -38,7 +42,10 @@ typedef std::vector<SignalPoint> SignalPointVec;
 typedef std::vector<TrackerHitImpl*> TrackerHitImplVec;
 typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
 
-/**  Digitizer for Simulated Hits in the Vertex Detector. <br>
+/**
+\addtogroup VTXDigitizer VTXDigitizer
+@{
+Digitizer for Simulated Hits in the Vertex Detector. <br>
  * Digitization follows the procedure adopted in the CMS software package. <br>
  * For each Simulated Tracker Hit the intersection points with <br>
  * the inner and outer boundaries of sensitive Si layer are calculated. <br>
@@ -297,5 +304,5 @@ class VTXDigitizer : public Processor {
 
 
 } ;
-
+/** @} @} */
 #endif

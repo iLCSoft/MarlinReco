@@ -13,18 +13,26 @@
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
 
-/** ======= anaPix ========== <br>
- * anaPix processor is a utility for studying pixel occupancy.
- * Original code is written by Daisuke Kamai.
- * Some modifications are done by Mori.
- * @author Tatsuya Mori, Tohoku University: 2014-02-10
- */
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+Track digidization.
 
 
 using namespace lcio;
 
 class FPCCDData;
 
+/**
+\addtogroup anaPix anaPix
+@{
+anaPix processor is a utility for studying pixel occupancy.
+======= anaPix ========== <br>
+ * anaPix processor is a utility for studying pixel occupancy.
+ * Original code is written by Daisuke Kamai.
+ * Some modifications are done by Mori.
+ * @author Tatsuya Mori, Tohoku University: 2014-02-10
+ */
 // =================================================================
 class anaPix : public marlin::Processor {
   
@@ -96,5 +104,5 @@ class anaPix : public marlin::Processor {
   std::vector<GeoData_t> _geodata{};
 
 } ;
-
+/** @} @} */
 #endif

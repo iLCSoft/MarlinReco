@@ -5,6 +5,11 @@
 #include "LCRTRelations.h"
 #include "gear/GEAR.h"
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+
+
 /** ======= VXDClusterParameters ========== <br>
  * Holds cluster parameters for a VXD hit - to be attached at runtime to the SimTrackerHit.
  * Cluster is defined by two  (principal component) axis and the corresponding extensions (eigenvalues).
@@ -63,8 +68,5 @@ protected:
 /** Allows to use VXDClusterParameters as runtime extension object.
  */
 struct ClusterParams: public lcio::LCOwnedExtension< ClusterParams, VXDClusterParameters >  {};
-
+/** @} */
 #endif
-
-
-

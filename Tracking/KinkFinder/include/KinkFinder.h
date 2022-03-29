@@ -11,7 +11,14 @@
 using namespace lcio ;
 using namespace marlin ;
 
-/** KinkFinder Processor <br>
+/**
+\addtogroup Tracking Tracking
+@{
+
+\addtogroup KinkFinder KinkFinder
+@{
+KinkFinder processor identifes kinked tracks originating.
+KinkFinder Processor <br>
  *  KinkFinder processor identifes kinked tracks originating <br>
  *  from charged particle decays e.g. kaons, sigmas.  <br>
  *  KinkFinder also identifies prongs 1 -> many track matches and  <br>
@@ -174,8 +181,5 @@ class KinkFinder : public Processor {
 
 
 } ;
-
+/** @} @}*/
 #endif
-
-
-

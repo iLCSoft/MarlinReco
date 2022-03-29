@@ -27,7 +27,13 @@ using namespace marlin ;
 class VXDGeometry ;
 
 
-/** ======= VTXNoiseClusters ========== <br>
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+\addtogroup VTXNoiseClusters VTXNoiseClusters
+@{
+Adds random noise hits to collection of SimTrackerHits of the vertex detector.
+======= VTXNoiseClusters ========== <br>
  * Adds random noise hits to collection of SimTrackerHits of the vertex detector.
  * The number of noise hits are given by the parameter HitDensityPerLayer (hits/cm^2).
  * The noise hits are created with a uniform distribution over the ladder
@@ -106,6 +112,6 @@ class VTXNoiseClusters : public  Processor, public EventModifier{
 #endif
 
 } ;
-
+/** @} @} */
 #endif
 //#endif // USE_ROOT

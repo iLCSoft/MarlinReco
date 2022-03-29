@@ -8,6 +8,11 @@
 
 using namespace std;
 
+/**
+\addtogroup TrackDigi TrackDigi
+@{
+*/
+
 class Voxel_tpc{
 
  public:
@@ -58,4 +63,5 @@ class Voxel_tpc{
   bool _isMerged{};
   bool _isClusterHit{};
 };
+/** @} */
 #endif

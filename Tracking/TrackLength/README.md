@@ -1,6 +1,7 @@
 ## Description
 
 TrackLength is the Marlin processor that calculates track length and square root of the harmonic mean of the squared momentum of charged particles.
+Previously has been a part of TOFEstimators processor.
 
 The detailed description of the source code is available in the [doxygen documentation](https://www.desy.de/~dudarboh/track_length_doc/html/index.html). <br>
 
@@ -97,7 +98,7 @@ One can find output for PandoraPFOs which has new TrackLength algorithm attached
 After you run **TOFEstimators** and **TrackLength** processors you might want to run you analysis processor to e.g. calculate the mass of particles using time-of-flight information.
 
 Here is the code example how to do that:
-
+```cpp
     float YourAmazingAnalysisProcessor::getParameterFromPID(ReconstructedParticle* pfo, PIDHandler& pidHandler, std::string algorithmName, std::string parameterName){
         int algorithmID = pidHandler.getAlgorithmID(algorithmName);
         const ParticleID& pfoPID = pidHandler.getParticleID(pfo, algorithmID);
@@ -121,6 +122,6 @@ Here is the code example how to do that:
             double mass = momentum * std::sqrt( std::pow(tof*CLHEP::c_light/trackLength, 2) - 1 );
         }
     }
-
+```
 ## Authors
 - B.Dudar, DESY, 2022<br>

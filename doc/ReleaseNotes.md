@@ -1,3 +1,10 @@
+# v01-32-01
+
+* 2022-03-18 Bohdan Dudar ([PR#103](https://github.com/iLCSoft/MarlinReco/pull/103))
+  - Try to fit subtrack forward if backward fit fails
+  - Fix seg. fault if the very first sub track fit fails in both directions
+  - Change behaviour of checking track direction. Now it is more robust and relies on z position of first and last hits.
+
 # v01-32
 
 * 2021-11-05 Bohdan Dudar ([PR#96](https://github.com/iLCSoft/MarlinReco/pull/96))

@@ -1,3 +1,9 @@
+# v01-33
+
+* 2022-04-19 Bohdan Dudar ([PR#104](https://github.com/iLCSoft/MarlinReco/pull/104))
+  - Migrated track length and  mean harmonic momentum code from `TOFEstimators` into separate `TrackLengthProcessor` to save CPU computing time. 
+  - **NOTE: If you have been using these processors outside of the standard reconstruction chain you will have to update your steering files** (see iLCSoft/ILDConfig#133 for the necessary changes)
+
 # v01-32-01
 
 * 2022-03-18 Bohdan Dudar ([PR#103](https://github.com/iLCSoft/MarlinReco/pull/103))

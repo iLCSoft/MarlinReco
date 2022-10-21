@@ -126,6 +126,7 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::ve
     for(int i=0; i<nTracks; ++i){
         Track* track = tracks[i];
         vector <TrackerHit*> hits = track->getTrackerHits();
+        streamlog_out(DEBUG8)<<"Subtrack "<<i+1<<" has "<<hits.size()<<" hits."<<std::endl;
         std::sort(hits.begin(), hits.end(), sortByRho);
 
         // setup initial dummy covariance matrix

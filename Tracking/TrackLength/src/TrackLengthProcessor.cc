@@ -85,6 +85,14 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         double trackLengthToEcal = 0.;
         double harmonicMomToEcal = 0.;
         int nTrackStates = trackStates.size();
+        streamlog_out(DEBUG9)<<"PFO has "<<nTrackStates<<" track states to calculate the length"<<std::endl;
+        if (nTrackStates <= 1){
+            streamlog_out(DEBUG9)<<" Not enough track states to calculate the track length. Writing zeros."<<std::endl;
+            vector<float> results{0., 0., 0., 0.};
+            pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
+            continue;
+        }
+
         //exclude last track state at the ECal
         for( int j=1; j < nTrackStates-1; ++j ){
             //we check which track length formula to use

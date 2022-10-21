@@ -122,6 +122,7 @@ std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
 std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField){
     vector<TrackStateImpl> trackStatesPerHit;
     int nTracks = tracks.size();
+    streamlog_out(DEBUG8)<<"PFO has "<<nTracks<<" subTracks."<<std::endl;
     for(int i=0; i<nTracks; ++i){
         Track* track = tracks[i];
         vector <TrackerHit*> hits = track->getTrackerHits();

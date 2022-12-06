@@ -1,3 +1,12 @@
+# v01-33-01
+
+* 2022-12-06 Thomas Madlener ([PR#107](https://github.com/ilcsoft/MarlinReco/pull/107))
+  - Remove no longer available CI workflow based on gcc8 since the underlying nightly builds are no longer available
+  - Update github actions to latest available versions
+
+* 2022-12-06 Bohdan Dudar ([PR#106](https://github.com/ilcsoft/MarlinReco/pull/106))
+  - Fix a seg. fault, in rare cases, when the track fit fails in both directions due to the lack of hits.
+
 # v01-33
 
 * 2022-04-19 Bohdan Dudar ([PR#104](https://github.com/iLCSoft/MarlinReco/pull/104))

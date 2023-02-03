@@ -15,6 +15,7 @@
 #include <EVENT/LCRelation.h>
 #include <UTIL/LCRelationNavigator.h>
 
+#include "marlinutil/MarlinUtil.h"
 #include "UTIL/LCTOOLS.h"
 #include <cstdio>
 
@@ -1776,7 +1777,8 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
           }
         }
       }
-      float wgt=int(c_wgt*1000)*10000 + int(t_wgt*1000) ;
+      //float wgt = int(c_wgt*1000)*10000 + int(t_wgt*1000) ;
+      float wgt = MarlinUtil::encodeTrackAndClusterWeights(t_wgt, c_wgt);
       truthParticleRelNav.addRelation(   mcp, msp  , wgt ) ;
       streamlog_out( DEBUG4 ) << "    True Particle " << mcp->id() << " ( pdg " << mcp->getPDG()  
 			      << " ) has weight " << c_wgt <<" / " << t_wgt << "( " << int(wgt) << " ) to particle "  
@@ -2445,6 +2447,3 @@ void RecoMCTruthLinker::linkPrinter (  LCCollection* mcpCol, LCCollection* parti
     }
   } 
 }
-
-
-

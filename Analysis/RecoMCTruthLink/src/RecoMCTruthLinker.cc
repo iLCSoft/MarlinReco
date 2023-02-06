@@ -1777,7 +1777,6 @@ void RecoMCTruthLinker::particleLinker(  LCCollection* mcpCol, LCCollection* par
           }
         }
       }
-      //float wgt = int(c_wgt*1000)*10000 + int(t_wgt*1000) ;
       float wgt = MarlinUtil::encodeTrackAndClusterWeights(t_wgt, c_wgt);
       truthParticleRelNav.addRelation(   mcp, msp  , wgt ) ;
       streamlog_out( DEBUG4 ) << "    True Particle " << mcp->id() << " ( pdg " << mcp->getPDG()  

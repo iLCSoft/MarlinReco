@@ -153,6 +153,7 @@ ADD_MARLINRECO_PKG( ./Analysis/TJjetsPFOAnalysisProcessor )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaHadronRemoval )
 ADD_MARLINRECO_PKG( ./Analysis/ErrorFlow )
 ADD_MARLINRECO_PKG( ./Analysis/PhotonEnergyCorrect )
+ADD_MARLINRECO_PKG( ./Analysis/LeptonID )
 
 ADD_MARLINRECO_PKG( ./Calibration/AbsCalibration )
 ADD_MARLINRECO_PKG( ./CaloDigi/LDCCaloDigi )

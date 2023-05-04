@@ -40,8 +40,12 @@ class CheatedMCOverlayRemoval : public Processor
 		virtual void processRunHeader();
 		virtual void processEvent( EVENT::LCEvent *pLCEvent );
 		virtual void check();
-		EVENT::MCParticle* getLinkedMCP( EVENT::ReconstructedParticle *recoParticle , LCRelationNavigator RecoMCParticleNav , LCRelationNavigator MCParticleRecoNav , bool getChargedMCP , bool getNeutralMCP , float &weightPFOtoMCP , float &weightMCPtoPFO );
-		EVENT::ReconstructedParticle* getLinkedPFO( EVENT::MCParticle *mcParticle , LCRelationNavigator RecoMCParticleNav , LCRelationNavigator MCParticleRecoNav , bool getChargedPFO , bool getNeutralPFO , float &weightPFOtoMCP , float &weightMCPtoPFO );
+		EVENT::MCParticle* getLinkedMCP(EVENT::ReconstructedParticle *recoParticle, 
+						const LCRelationNavigator& RecoMCParticleNav, const LCRelationNavigator& MCParticleRecoNav, 
+						float &weightPFOtoMCP, float &weightMCPtoPFO);
+		EVENT::ReconstructedParticle* getLinkedPFO(EVENT::MCParticle *mcParticle, 
+							   const LCRelationNavigator& RecoMCParticleNav, const LCRelationNavigator& MCParticleRecoNav, 
+							   float &weightPFOtoMCP, float &weightMCPtoPFO);
 		virtual void end();
 		void Clear();
 
@@ -61,6 +65,7 @@ class CheatedMCOverlayRemoval : public Processor
 		std::string                             _recoMCTruthLink{};
 		std::string                             _mcTruthRecoLink{};
 		std::string				_OutputPfoCollection{};
+		std::string                             _OutputOverlayCollection{};
 };
 
 #endif

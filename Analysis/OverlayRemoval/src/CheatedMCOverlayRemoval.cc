@@ -57,6 +57,12 @@ CheatedMCOverlayRemoval::CheatedMCOverlayRemoval() :
 				 _OutputPfoCollection,
 				 std::string("PFOsWithoutOverlay")
 				 );	
+	registerOutputCollection(LCIO::RECONSTRUCTEDPARTICLE,
+				 "OutputOverlayCollection",
+				 "Name of output Overlay collection",
+				 _OutputOverlayCollection,
+				 std::string("PFOsFromOverlay")
+				 );
 }
 
 void CheatedMCOverlayRemoval::init()
@@ -114,7 +120,7 @@ void CheatedMCOverlayRemoval::processEvent( LCEvent *pLCEvent )
 	if (mcp->isOverlay()) { 
 	  float weightPFOtoMCP = 0.0;
 	  float weightMCPtoPFO = 0.0;
-	  ReconstructedParticle* linkedPFO = getLinkedPFO( mcp , RecoMCParticleNav , MCParticleRecoNav , false , false , weightPFOtoMCP , weightMCPtoPFO );
+	  ReconstructedParticle* linkedPFO = getLinkedPFO(mcp, RecoMCParticleNav, MCParticleRecoNav, weightPFOtoMCP, weightMCPtoPFO);
 	  if ( linkedPFO == NULL ) {
 	    continue;
 	  }
@@ -128,28 +134,34 @@ void CheatedMCOverlayRemoval::processEvent( LCEvent *pLCEvent )
 	ReconstructedParticle* pfo = (ReconstructedParticle*) PFOs->getElementAt(i);
 	float weightPFOtoMCP = 0.0;
 	float weightMCPtoPFO = 0.0;
-	MCParticle* linkedMCP = getLinkedMCP( pfo, RecoMCParticleNav , MCParticleRecoNav , false , false , weightPFOtoMCP , weightMCPtoPFO );
+	MCParticle* linkedMCP = getLinkedMCP(pfo, RecoMCParticleNav, MCParticleRecoNav, weightPFOtoMCP, weightMCPtoPFO);
 	if ( linkedMCP != NULL ) {
-	  if (linkedMCP->isOverlay()) streamlog_out(DEBUG5) << "i = " << i << ": energy = " << pfo->getEnergy () << ", gen status = " << linkedMCP->getGeneratorStatus() << std::endl;
-	  if (linkedMCP->isOverlay()) continue;
-	}
+	  if (linkedMCP->isOverlay()) {
+	    streamlog_out(DEBUG5) << "i = " << i << ": energy = " << pfo->getEnergy () << ", gen status = " << linkedMCP->getGeneratorStatus() << std::endl;
+	    continue;
+	  }
 	OutputPfoCollection->addElement(pfo);
 	nKeptPFOs++;
       }
 
       streamlog_out(DEBUG5) << "In event " << m_nEvt << ": Kept PFOs = " << nKeptPFOs << " VS removed number of PFOs = " << nRemovedPFOs << " VS total number of PFOs = " << m_nAllPFOs << std::endl;
       pLCEvent->addCollection(OutputPfoCollection, _OutputPfoCollection.c_str() );
+      pLCEvent->addCollection(OutputOverlayCollection, _OutputOverlayCollection.c_str() );
       m_nEvt++ ;
     }
-  catch(...)
+  catch(lcio::DataNotAvailableException& e)
     {
       streamlog_out(WARNING) << "Check : Input collections not found in event " << m_nEvt << std::endl;
+      pLCEvent->addCollection(OutputPfoCollection, _OutputPfoCollection);
+      pLCEvent->addCollection(OutputOverlayCollection, _OutputOverlayCollection);
     }
   streamlog_out(DEBUG) << "nevt = " << m_nEvt << std::endl;
 }
 
 
-EVENT::MCParticle* CheatedMCOverlayRemoval::getLinkedMCP( EVENT::ReconstructedParticle *recoParticle , LCRelationNavigator RecoMCParticleNav , LCRelationNavigator MCParticleRecoNav , bool getChargedMCP , bool getNeutralMCP , float &weightPFOtoMCP , float &weightMCPtoPFO )
+EVENT::MCParticle* CheatedMCOverlayRemoval::getLinkedMCP(EVENT::ReconstructedParticle *recoParticle, 
+							 const LCRelationNavigator& RecoMCParticleNav, const LCRelationNavigator& MCParticleRecoNav, 
+							 float &weightPFOtoMCP, float &weightMCPtoPFO)
 {
   streamlog_out(DEBUG1) << "" << std::endl;
   streamlog_out(DEBUG1) << "Look for MCP linked to Reconstructed Particle:" << std::endl;
@@ -165,20 +177,10 @@ EVENT::MCParticle* CheatedMCOverlayRemoval::getLinkedMCP( EVENT::ReconstructedPa
   for ( unsigned int i_mcp = 0; i_mcp < MCPvec.size(); i_mcp++ )
     {
       double mcp_weight = 0.0;
-      double trackWeight = ( int( MCPweightvec.at( i_mcp ) ) % 10000 ) / 1000.0;
-      double clusterWeight = ( int( MCPweightvec.at( i_mcp ) ) / 10000 ) / 1000.0;
-      if ( getChargedMCP && !getNeutralMCP )
-	{
-	  mcp_weight = trackWeight;
-	}
-      else if ( getNeutralMCP && !getChargedMCP )
-	{
-	  mcp_weight = clusterWeight;
-	}
-      else
-	{
-	  mcp_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
-	}
+      double trackWeight = MarlinUtil::getTrackWeight( MCPweightvec.at( i_mcp ) );
+      double clusterWeight = MarlinUtil::getClusterWeight( MCPweightvec.at( i_mcp ) );
+      mcp_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
+
       MCParticle *testMCP = (MCParticle *) MCPvec.at( i_mcp );
       if ( mcp_weight > maxweightPFOtoMCP )//&& mcp_weight >= m_MinWeightTrackMCTruthLink )
 	{
@@ -196,20 +198,10 @@ EVENT::MCParticle* CheatedMCOverlayRemoval::getLinkedMCP( EVENT::ReconstructedPa
       for ( unsigned int i_pfo = 0; i_pfo < PFOvec.size(); i_pfo++ )
 	{
 	  double pfo_weight = 0.0;
-	  double trackWeight = ( int( PFOweightvec.at( i_pfo ) ) % 10000 ) / 1000.0;
-	  double clusterWeight = ( int( PFOweightvec.at( i_pfo ) ) / 10000 ) / 1000.0;
-	  if ( getChargedMCP && !getNeutralMCP )
-	    {
-	      pfo_weight = trackWeight;
-	    }
-	  else if ( getNeutralMCP && !getChargedMCP )
-	    {
-	      pfo_weight = clusterWeight;
-	    }
-	  else
-	    {
-	      pfo_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
-	    }
+	  double trackWeight = MarlinUtil::getTrackWeight( PFOweightvec.at( i_pfo ) );
+	  double clusterWeight = MarlinUtil::getClusterWeight( PFOweightvec.at( i_pfo ) );
+	  pfo_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
+
 	  streamlog_out(DEBUG0) << "Test Visible MCParticle linkWeight to PFO: " << PFOweightvec.at( i_pfo ) << " (Track: " << trackWeight << " , Cluster: " << clusterWeight << ")" << std::endl;
 	  ReconstructedParticle *testPFO = (ReconstructedParticle *) PFOvec.at( i_pfo );
 	  if ( pfo_weight > maxweightMCPtoPFO )//&& track_weight >= m_MinWeightTrackMCTruthLink )
@@ -243,7 +235,9 @@ EVENT::MCParticle* CheatedMCOverlayRemoval::getLinkedMCP( EVENT::ReconstructedPa
 
 }
 
-EVENT::ReconstructedParticle* CheatedMCOverlayRemoval::getLinkedPFO( EVENT::MCParticle *mcParticle , LCRelationNavigator RecoMCParticleNav , LCRelationNavigator MCParticleRecoNav , bool getChargedPFO , bool getNeutralPFO , float &weightPFOtoMCP , float &weightMCPtoPFO )
+EVENT::ReconstructedParticle* CheatedMCOverlayRemoval::getLinkedPFO(EVENT::MCParticle *mcParticle, 
+								    const LCRelationNavigator& RecoMCParticleNav, const LCRelationNavigator& MCParticleRecoNav, 
+								    float &weightPFOtoMCP, float &weightMCPtoPFO)
 {
   streamlog_out(DEBUG1) << "" << std::endl;
   streamlog_out(DEBUG1) << "Look for PFO linked to visible MCParticle:" << std::endl;
@@ -264,18 +258,8 @@ EVENT::ReconstructedParticle* CheatedMCOverlayRemoval::getLinkedPFO( EVENT::MCPa
       double pfo_weight = 0.0;
       double trackWeight = ( int( PFOweightvec.at( i_pfo ) ) % 10000 ) / 1000.0;
       double clusterWeight = ( int( PFOweightvec.at( i_pfo ) ) / 10000 ) / 1000.0;
-      if ( getChargedPFO && !getNeutralPFO )
-	{
-	  pfo_weight = trackWeight;
-	}
-      else if ( getNeutralPFO && !getChargedPFO )
-	{
-	  pfo_weight = clusterWeight;
-	}
-      else
-	{
-	  pfo_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
-	}
+      pfo_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
+
       streamlog_out(DEBUG0) << "Visible MCParticle linkWeight to PFO: " << PFOweightvec.at( i_pfo ) << " (Track: " << trackWeight << " , Cluster: " << clusterWeight << ")" << std::endl;
       ReconstructedParticle *testPFO = (ReconstructedParticle *) PFOvec.at( i_pfo );
       if ( pfo_weight > maxweightMCPtoPFO )//&& track_weight >= m_MinWeightTrackMCTruthLink )
@@ -311,18 +295,8 @@ EVENT::ReconstructedParticle* CheatedMCOverlayRemoval::getLinkedPFO( EVENT::MCPa
 	  double mcp_weight = 0.0;
 	  double trackWeight = ( int( MCPweightvec.at( i_mcp ) ) % 10000 ) / 1000.0;
 	  double clusterWeight = ( int( MCPweightvec.at( i_mcp ) ) / 10000 ) / 1000.0;
-	  if ( getChargedPFO && !getNeutralPFO )
-	    {
-	      mcp_weight = trackWeight;
-	    }
-	  else if ( getNeutralPFO && !getChargedPFO )
-	    {
-	      mcp_weight = clusterWeight;
-	    }
-	  else
-	    {
-	      mcp_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
-	    }
+	  mcp_weight = ( trackWeight > clusterWeight ? trackWeight : clusterWeight );
+
 	  MCParticle *testMCP = (MCParticle *) MCPvec.at( i_mcp );
 	  if ( mcp_weight > maxweightPFOtoMCP )//&& mcp_weight >= m_MinWeightTrackMCTruthLink )
 	    {

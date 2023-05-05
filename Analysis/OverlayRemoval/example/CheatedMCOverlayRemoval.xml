@@ -52,7 +52,8 @@
     <parameter name="MCParticleCollection" type="string"  lcioInType="MCParticle">MCParticlesSkimmed</parameter>
     <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
     <parameter name="MCTruthRecoLink" type="string" lcioInType="LCRelation"> MCTruthRecoLink </parameter>
-    <parameter name="OutputPfoCollection" type="string" lcioOutType="ReconstructedParticle">PFOsWithoutMCOverlay</parameter>
+    <parameter name="OutputPfoCollection" type="string" lcioOutType="ReconstructedParticle">PFOsWithoutMCOverlay</parameter>    
+    <parameter name="OutputOverlayCollection" type="string" lcioOutType="ReconstructedParticle"> PFOsFromOverlay </parameter>
     <parameter name="Verbosity" type="string">SILENT</parameter>
   </processor>
 

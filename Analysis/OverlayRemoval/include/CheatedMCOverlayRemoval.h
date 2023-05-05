@@ -51,10 +51,6 @@ class CheatedMCOverlayRemoval : public Processor
 
 	private:
 
-		typedef std::vector<int>		IntVector;
-		typedef std::vector<double>		DoubleVector;
-		typedef std::vector<float>		FloatVector;
-
 		int                                     m_nRun;
 		int                                     m_nEvt;
 		int                                     m_nAllPFOs;

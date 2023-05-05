@@ -53,13 +53,13 @@ CheatedMCOverlayRemoval::CheatedMCOverlayRemoval() :
 
 	registerOutputCollection(LCIO::RECONSTRUCTEDPARTICLE,
 				 "OutputPfoCollection",
-				 "Name of output PFO collection",
+				 "Name of output PFO collection with Overlay particles removed",
 				 _OutputPfoCollection,
 				 std::string("PFOsWithoutOverlay")
 				 );	
 	registerOutputCollection(LCIO::RECONSTRUCTEDPARTICLE,
 				 "OutputOverlayCollection",
-				 "Name of output Overlay collection",
+				 "Name of output PFO collection of the Overlay particles",
 				 _OutputOverlayCollection,
 				 std::string("PFOsFromOverlay")
 				 );
@@ -114,7 +114,7 @@ void CheatedMCOverlayRemoval::processEvent( LCEvent *pLCEvent )
       int nKeptPFOs = 0;
       int nRemovedPFOs = 0;
       
-      //Create new collection without PFOs from MCPs that are overlay
+      //Create new collection with PFOs from MCPs that are overlay
       for (int i=0; i<m_nMCPs; i++) {
 	MCParticle* mcp = (MCParticle*) MCPs->getElementAt(i);
 	if (mcp->isOverlay()) { 
@@ -129,7 +129,7 @@ void CheatedMCOverlayRemoval::processEvent( LCEvent *pLCEvent )
 	  nRemovedPFOs++;
 	}
       }
-
+      //Create new collection without PFOs from MCPs that are overlay
       for (int i=0; i<m_nAllPFOs; i++) {
 	ReconstructedParticle* pfo = (ReconstructedParticle*) PFOs->getElementAt(i);
 	float weightPFOtoMCP = 0.0;
@@ -140,10 +140,11 @@ void CheatedMCOverlayRemoval::processEvent( LCEvent *pLCEvent )
 	    streamlog_out(DEBUG5) << "i = " << i << ": energy = " << pfo->getEnergy () << ", gen status = " << linkedMCP->getGeneratorStatus() << std::endl;
 	    continue;
 	  }
+	}
 	OutputPfoCollection->addElement(pfo);
 	nKeptPFOs++;
       }
-
+      
       streamlog_out(DEBUG5) << "In event " << m_nEvt << ": Kept PFOs = " << nKeptPFOs << " VS removed number of PFOs = " << nRemovedPFOs << " VS total number of PFOs = " << m_nAllPFOs << std::endl;
       pLCEvent->addCollection(OutputPfoCollection, _OutputPfoCollection.c_str() );
       pLCEvent->addCollection(OutputOverlayCollection, _OutputOverlayCollection.c_str() );
@@ -267,22 +268,6 @@ EVENT::ReconstructedParticle* CheatedMCOverlayRemoval::getLinkedPFO(EVENT::MCPar
 	  maxweightMCPtoPFO = pfo_weight;
 	  iMCPtoPFOmax = i_pfo;
 	  streamlog_out(DEBUG0) << "PFO at index: " << testPFO->id() << " has TYPE: " << testPFO->getType() << " and MCParticle to PFO link weight is " << pfo_weight << std::endl;
-	}
-    }
-  if ( getChargedPFO && maxweightMCPtoPFO < 0.8 )
-    {
-      streamlog_out(DEBUG1) << "MCParticle has link weight lower than 0.8 ( " << maxweightMCPtoPFO << " ), looking for linked PFO in clusters" << std::endl;
-      for ( unsigned int i_pfo = 0; i_pfo < PFOvec.size(); i_pfo++ )
-	{
-	  double pfo_weight = ( int( PFOweightvec.at( i_pfo ) ) / 10000 ) / 1000.0;
-	  streamlog_out(DEBUG0) << "Visible MCParticle linkWeight to PFO: " << PFOweightvec.at( i_pfo ) << " (Track: " << ( int( PFOweightvec.at( i_pfo ) ) % 10000 ) / 1000.0 << " , Cluster: " << ( int( PFOweightvec.at( i_pfo ) ) / 10000 ) / 1000.0 << ")" << std::endl;
-	  ReconstructedParticle *testPFO = (ReconstructedParticle *) PFOvec.at( i_pfo );
-	  if ( pfo_weight > maxweightMCPtoPFO )//&& track_weight >= m_MinWeightTrackMCTruthLink )
-	    {
-	      maxweightMCPtoPFO = pfo_weight;
-	      iMCPtoPFOmax = i_pfo;
-	      streamlog_out(DEBUG0) << "PFO at index: " << testPFO->id() << " has TYPE: " << testPFO->getType() << " and MCParticle to PFO link weight is " << pfo_weight << std::endl;
-	    }
 	}
     }
   if ( iMCPtoPFOmax != -1 )

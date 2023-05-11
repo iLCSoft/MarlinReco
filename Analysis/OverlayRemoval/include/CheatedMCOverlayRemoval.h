@@ -12,6 +12,7 @@
 #include "IMPL/ParticleIDImpl.h"
 #include "UTIL/PIDHandler.h"
 #include "UTIL/LCRelationNavigator.h"
+#include "marlinutil/MarlinUtil.h"
 #include <string>
 #include <TFile.h>
 #include <TTree.h>

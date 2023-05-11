@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="us-ascii"?>
+
+<!--##########################################
+                                            
+         Example steering file for marlin running the CheatedMCOverlayRemoval
+         processor to identify MC particles that are overlay and removes the 
+	 corresponding PFOs from the collection and writing out a DST with 
+	 the skimmed down collection of PFOs. 
+                                            
+    ##########################################-->
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+  <execute>
+    <processor name="InitDD4hep" condition="" />
+    <processor name="MyAIDAProcessor" condition="" />
+    <processor name="myCheatedMCOverlayRemoval" />
+    <processor name="MyLCIOOutputProcessor"/>
+  </execute>
+
+  <global>
+    <parameter name="LCIOInputFiles"> 
+      a_RECO_file.slcio
+    </parameter>
+    <parameter name="MaxRecordNumber" value="10000"/>
+    <parameter name="SkipNEvents" value="0" />
+    <parameter name="SupressCheck" value="false" />
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG</parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+  <processor name="InitDD4hep" type="InitializeDD4hep">
+    <!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
+    <!--Name of the DD4hep compact xml file to load-->
+    <parameter name="DD4hepXMLFile" type="string">${CompactFile}</parameter>
+    <parameter name="Verbosity" type="string">SILENT </parameter>
+  </processor>
+
+  <processor name="MyAIDAProcessor" type="AIDAProcessor">
+    <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms,clouds and tuples. Needs to be the first ActiveProcessor-->
+    <!-- compression of output file 0: false >0: true (default) -->
+    <parameter name="Compress" type="int">1</parameter>
+    <!-- filename without extension-->
+    <parameter name="FileName" type="string">${OutputDirectory}/root/${OutputBaseName}_AIDA</parameter>
+    <!-- type of output file root (default) or xml )-->
+    <parameter name="FileType" type="string">root</parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+  </processor>
+
+  <processor name="myCheatedMCOverlayRemoval" type="CheatedMCOverlayRemoval">
+    <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
+    <parameter name="MCParticleCollection" type="string"  lcioInType="MCParticle">MCParticlesSkimmed</parameter>
+    <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
+    <parameter name="MCTruthRecoLink" type="string" lcioInType="LCRelation"> MCTruthRecoLink </parameter>
+    <parameter name="OutputPfoCollection" type="string" lcioOutType="ReconstructedParticle">PFOsWithoutMCOverlay</parameter>    
+    <parameter name="OutputOverlayCollection" type="string" lcioOutType="ReconstructedParticle"> PFOsFromOverlay </parameter>
+    <parameter name="Verbosity" type="string">SILENT</parameter>
+  </processor>
+
+  <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+    <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+    <!-- name of output file -->
+    <parameter name="LCIOOutputFile" type="string">a_DST_file.slcio</parameter>
+    <parameter name="LCIOWriteMode" type="string">WRITE_NEW</parameter>
+    <parameter name="Verbosity" type="string">DEBUG</parameter>
+  </processor>
+</marlin>

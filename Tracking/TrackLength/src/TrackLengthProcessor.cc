@@ -68,12 +68,9 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         streamlog_out(DEBUG9)<<std::endl<<"Starting to analyze "<<i+1<<" PFO"<<std::endl;
         ReconstructedParticle* pfo = static_cast <ReconstructedParticle*> ( pfos->getElementAt(i) );
 
-        int nClusters = pfo->getClusters().size();
-        int nTracks = pfo->getTracks().size();
-
-        if( nTracks == 0 ){
-            // Calculate track length only for particles with a track.
-            //Note: If pfo has more than one track attached, only the first track will be used. The results may be not accurate in such cases. 
+        if( pfo->getTracks().empty() ){
+            // Calculate track length only for particles with at least one track.
+            // Note: If the pfo has more than one track attached (e.g. kink, v0), only the first track will be used. The results may be not accurate in these cases. 
             vector<float> results{0., 0., 0., 0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;

@@ -78,8 +78,7 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         }
         Track* track = pfo->getTracks()[0];
 
-        vector<Track*> subTracks = getSubTracks(track);
-        vector<TrackStateImpl> trackStates = getTrackStatesPerHit(subTracks, _trkSystem, _bField);
+        vector<TrackStateImpl> trackStates = getTrackStates(pfo, _trkSystem, _bField);
 
         double trackLengthToSET = 0.;
         double harmonicMomToSET = 0.;

@@ -43,35 +43,15 @@ namespace TrackLengthUtils{
     /** Get all subtracks of the Track.
     Returns a vector of the subTracks of the main track that is passed as an argument.
 
-    The main purpose of this function is to capture all hits of the track.
-    This requires iteration over the subTracks as the main Track stores hits only
-    of the first half turn due to the our fit procedure.
-
-    The first subTrack in the returned vector is always main Track itself, which
-    containes VXD, SIT and TPC tracker hits for the first half turn.
-
-    Then additional subTracks are added which contain hits for additional track revolutions if such exist.
-
-    If nTPCHits \f$ \pm  1\f$ = nHits of SubTrack0 then assume subTrack0 stores TPC hits.
-    This would mean that VXD and SIT subTrack is not stored!
-    So we need skip *only first* subtrack: initial subTrack0 with TPC hits which we have anyhow added with the main Track
-    Else if nTPCHits \f$ \pm  1\f$ = nHits of SubTrack1 assume subTrack1 stores TPC hits
-    This would mean that subTrack0 stores VXD and SIT hits.
-    So we need to *skip both* subtracks VXD+SIT and 1st TPC half-turn subTracks which we have anyhow added with the main Track
-
-    Note: We consider deviations for \f$\pm 1\f$ hit may happen because of the
-    SET and only God knows what other reasons...
-
-    Note: This function is not guarantied to properly work 100% of times,
-    but I didn't find a better way to collect subTracks.
+    The main purpose of this function is to capture all hits of the track, not only the first curl which is stored with the main track.
     */
     std::vector<EVENT::Track*> getSubTracks(EVENT::Track* track);
 
     /** Get list of track states.
-    Returns a vector of track states at the IP, track state for every tracker hit
-    inside all provided subTracks as tracks argument and the track state at the ECal surface if extrapolateToEcal argument is set to true.
+    Returns a vector of track states at the IP, track state for every tracker hit of the pfo
+    and the track state at the ECal surface.
     */
-    std::vector<IMPL::TrackStateImpl> getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
+    std::vector<IMPL::TrackStateImpl> getTrackStates(EVENT::ReconstructedParticle* pfo, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
 }
 
 

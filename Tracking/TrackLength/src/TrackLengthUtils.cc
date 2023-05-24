@@ -45,20 +45,6 @@ IMPL::TrackStateImpl TrackLengthUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrac
     return ts;
 }
 
-
-dd4hep::rec::Vector3D TrackLengthUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
-    double phi = ts.getPhi();
-    double d0 = ts.getD0();
-    double z0 = ts.getZ0();
-    double omega = ts.getOmega();
-    double tanL = ts.getTanLambda();
-
-    HelixClass helix;
-    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, bField);
-    return helix.getMomentum();
-}
-
-
 double TrackLengthUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double omega = ts1.getOmega();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();

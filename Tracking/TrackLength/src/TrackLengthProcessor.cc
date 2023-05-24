@@ -10,6 +10,7 @@
 #include "marlinutil/GeometryUtil.h"
 #include "MarlinTrk/Factory.h"
 #include "EVENT/SimTrackerHit.h"
+#include "UTIL/TrackTools.h"
 
 using namespace TrackLengthUtils;
 using std::vector;
@@ -102,7 +103,8 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
             if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
             else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
 
-            Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
+            std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[j-1]), _bField);
+            Vector3D mom(momArr[0], momArr[1], momArr[2]);
             trackLengthToSET += arcLength;
             trackLengthToEcal += arcLength;
             harmonicMomToSET += arcLength/mom.r2();
@@ -115,7 +117,8 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         double arcLength;
         if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
         else arcLength = getHelixLengthAlongZ( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        Vector3D mom = getHelixMomAtTrackState( trackStates[nTrackStates - 2], _bField );
+        std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[nTrackStates - 2]), _bField );
+        Vector3D mom(momArr[0], momArr[1], momArr[2]);
         trackLengthToEcal += arcLength;
         harmonicMomToEcal += arcLength/mom.r2();
         harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);

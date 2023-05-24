@@ -101,21 +101,18 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
             std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[j-1]), _bField);
             Vector3D mom(momArr[0], momArr[1], momArr[2]);
             trackLengthToSET += arcLength;
-            trackLengthToEcal += arcLength;
             harmonicMomToSET += arcLength/mom.r2();
-            harmonicMomToEcal += arcLength/mom.r2();
         }
-        harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
         
         //now calculate to the Ecal one more step
         double arcLength = getHelixLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-
         std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[nTrackStates - 2]), _bField );
         Vector3D mom(momArr[0], momArr[1], momArr[2]);
-        trackLengthToEcal += arcLength;
-        harmonicMomToEcal += arcLength/mom.r2();
-        harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);
+        trackLengthToEcal = trackLengthToSET + arcLength;
+        harmonicMomToEcal = harmonicMomToSET + arcLength/mom.r2();
 
+        harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
+        harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);
 
         vector<float> results{float(trackLengthToSET), float(trackLengthToEcal), float(harmonicMomToSET), float(harmonicMomToEcal)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);

@@ -28,7 +28,7 @@ TrackLengthProcessor aTrackLengthProcessor ;
 
 
 TrackLengthProcessor::TrackLengthProcessor() : marlin::Processor("TrackLengthProcessor") {
-    _description = "TrackLengthProcessor computes track length and harmonic mean of the momentum square up to the SET hit and Ecal surface.\
+    _description = "TrackLengthProcessor computes track length and harmonic mean of the momentum square up to the last tracker hit and Ecal surface.\
                     It should give a relatively good approximation of the track length of any particle reaching the Ecal to use in the time-of-flight particle identification";
 
     registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
@@ -42,6 +42,7 @@ TrackLengthProcessor::TrackLengthProcessor() : marlin::Processor("TrackLengthPro
 void TrackLengthProcessor::init(){
     marlin::Global::EVENTSEEDER->registerProcessor(this);
 
+    //NOTE: although the name includes SET, it is actually last tracker hit and not necessarily SET.
     _outputParNames = {"trackLengthToSET", "trackLengthToEcal", "momentumHMToSET", "momentumHMToEcal"};
     _bField = MarlinUtil::getBzAtOrigin();
 
@@ -70,14 +71,13 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         int nClusters = pfo->getClusters().size();
         int nTracks = pfo->getTracks().size();
 
-        if( nClusters != 1 || nTracks != 1){
-            // Analyze only simple pfos. Otherwise write dummy zeros
+        if( nTracks == 0 ){
+            // Calculate track length only for particles with a track.
+            //Note: If pfo has more than one track attached, only the first track will be used. The results may be not accurate in such cases. 
             vector<float> results{0., 0., 0., 0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;
         }
-        Track* track = pfo->getTracks()[0];
-
         vector<TrackStateImpl> trackStates = getTrackStates(pfo, _trkSystem, _bField);
 
         double trackLengthToSET = 0.;
@@ -116,9 +116,9 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         vector<float> results{float(trackLengthToSET), float(trackLengthToEcal), float(harmonicMomToSET), float(harmonicMomToEcal)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
         streamlog_out(DEBUG9)<<"Final results for the "<<i+1<<" PFO"<<std::endl;
-        streamlog_out(DEBUG9)<<"Track length to the SET: "<< float(trackLengthToSET)<<" mm"<<std::endl;
+        streamlog_out(DEBUG9)<<"Track length to the last tracker hit: "<< float(trackLengthToSET)<<" mm"<<std::endl;
         streamlog_out(DEBUG9)<<"Track length to the ECal: "<< float(trackLengthToEcal)<<" mm"<<std::endl;
-        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the SET: "<< float(harmonicMomToSET)<<" GeV"<<std::endl;
+        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the last tracker hit: "<< float(harmonicMomToSET)<<" GeV"<<std::endl;
         streamlog_out(DEBUG9)<<"Harmonic mean momentum to the Ecal: "<< float(harmonicMomToEcal)<<" GeV"<<std::endl;
         streamlog_out(DEBUG9)<<std::endl<<std::endl;
     }

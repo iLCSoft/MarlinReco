@@ -56,26 +56,30 @@ double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVEN
 
 std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
     vector<Track*> subTracks;
+    // add track itself, which contains VXD+FTD+SIT+TPC hits of the first curl.
     subTracks.push_back(track);
 
     int nSubTracks = track->getTracks().size();
     if (nSubTracks <= 1) return subTracks;
 
-    int nTPCHits = track->getSubdetectorHitNumbers()[(ILDDetID::TPC)*2-1];
-    int nSubTrack0Hits = track->getTracks()[0]->getTrackerHits().size();
-    int nSubTrack1Hits = track->getTracks()[1]->getTrackerHits().size();
+    auto isTPCHit = [](TrackerHit* hit) -> bool {
+        UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+        encoder.setValue( hit->getCellID0() ) ;
+        int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
+        return subdet == UTIL::ILDDetID::TPC;
+    };
 
-    //OPTIMIZE: this is not reliable, but I don't see any other way at the moment.
-    //Read documentation in the header file for details.
-    int startIdx;
-    if( std::abs(nTPCHits - nSubTrack0Hits) <= 1  ) startIdx = 1;
-    else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
-    else{
-        //FIXME: This happens very rarily (0.01%) for unknown reasons, so we just, skip adding subTracks...
-        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
-        return subTracks;
+    int indexOfFirstTPCCurl = 0;
+    for(int i = 0; i < nSubTracks; ++i){
+        Track* subTrack = track->getTracks()[i];
+        auto hits = subTrack->getTrackerHits();
+        if ( std::find_if(hits.begin(), hits.end(), isTPCHit) != hits.end() ){
+            indexOfFirstTPCCurl = i;
+            break;
+        }
     }
-    for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
+
+    for(int j=indexOfFirstTPCCurl+1; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
     return subTracks;
 }
 

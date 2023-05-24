@@ -32,42 +32,12 @@ namespace TrackLengthUtils{
     IMPL::TrackStateImpl getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit);
 
 
-    /** Get track momentum at the track state.
-    Returns momentum Vector3D from the given track state.
-    */
-    dd4hep::rec::Vector3D getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField);
-
-
-    /** Get track length.
-    Returns the track length between two track states estimated by the helix length formula:
-
-    \f$ \ell = \sqrt{\left( \frac{\varphi_{i+1} - \varphi_{i}}{\Omega}\right)^{2} + \left( z_{i+1} - z_{i} \right)^{2} } \f$
-
-    Note: The formula above works only for the arcs with \f$ \Delta \varphi < \pi \f$.
-    */
-    double getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
-
-
     /** Get track length.
     Returns the track length between two track states estimated by the helix length formula:
 
     \f$ \ell = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \sqrt{1 + \tan{\lambda}^{2} } \f$
-
-    Note: The formula above works for any \f$ \Delta \varphi \f$.
-
-    However it is less precise than getHelixArcLength() due to the less precise \f$ \tan{\lambda} \f$.
-    Also helix formula implies constant momentum assumption which may show higher discrepancy for long tracks with low momentum.
     */
-    double getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
-
-
-    /** Get number of helix revolutions.
-    Returns number of helix revolutions between two track states.
-
-    The calculation is done with:
-    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \bigg / (2 \pi \frac{1}{|\Omega|}) \f$
-    */
-    double getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
+    double getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
 
     /** Get all subtracks of the Track.

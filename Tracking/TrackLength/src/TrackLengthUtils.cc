@@ -45,37 +45,12 @@ IMPL::TrackStateImpl TrackLengthUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrac
     return ts;
 }
 
-double TrackLengthUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    double omega = ts1.getOmega();
-    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
-    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
-    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
 
-    return std::sqrt( std::pow(dPhi/omega, 2) + std::pow(z2-z1, 2) );
-}
-
-
-double TrackLengthUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-
     return std::abs( (z2-z1)/tanL ) * std::sqrt( 1.+tanL*tanL );
-}
-
-
-double TrackLengthUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    double omega = ts1.getOmega();
-    double tanL = ts1.getTanLambda();
-    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
-    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-
-    // helix length projected on xy
-    double circHelix = std::abs( (z2-z1)/tanL );
-    double circFull = 2*M_PI/std::abs(omega);
-
-    return circHelix/circFull;
 }
 
 

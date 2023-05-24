@@ -96,12 +96,7 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
 
         //exclude last track state at the ECal
         for( int j=1; j < nTrackStates-1; ++j ){
-            //we check which track length formula to use
-            double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
-            double arcLength;
-            // we cannot calculate arc length for more than pi revolution using delta phi. Use formula with only z
-            if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
-            else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
+            double arcLength = getHelixLength( trackStates[j-1], trackStates[j] );
 
             std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[j-1]), _bField);
             Vector3D mom(momArr[0], momArr[1], momArr[2]);
@@ -113,10 +108,8 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
         
         //now calculate to the Ecal one more step
-        double nTurns = getHelixNRevolutions( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        double arcLength;
-        if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        else arcLength = getHelixLengthAlongZ( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
+        double arcLength = getHelixLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
+
         std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[nTrackStates - 2]), _bField );
         Vector3D mom(momArr[0], momArr[1], momArr[2]);
         trackLengthToEcal += arcLength;

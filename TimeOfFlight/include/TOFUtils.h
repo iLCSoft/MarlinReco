@@ -64,6 +64,12 @@ namespace TOFUtils{
     */
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
 
+    /** Get TrackState of the track at the Calorimeter surface. In case of multiple curls take the latest curl (closest to the calorimeter)
+    to get the extrapolated position.
+    */
+    const EVENT::TrackState* geTrackStateAtCalorimeter(EVENT::Track* track);
+
+
 }
 
 #endif

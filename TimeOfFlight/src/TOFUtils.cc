@@ -6,7 +6,7 @@
 
 #include "marlin/VerbosityLevels.h"
 #include "marlinutil/CalorimeterHitType.h"
-#include "HelixClass.h"
+#include "UTIL/TrackTools.h"
 #include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"
 #include "DDRec/DetectorData.h"
@@ -27,19 +27,6 @@ using dd4hep::DetElement;
 using dd4hep::rec::Vector3D;
 using dd4hep::rec::FixedPadSizeTPCData;
 using CLHEP::RandGauss;
-
-
-dd4hep::rec::Vector3D TOFUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
-    double phi = ts.getPhi();
-    double d0 = ts.getD0();
-    double z0 = ts.getZ0();
-    double omega = ts.getOmega();
-    double tanL = ts.getTanLambda();
-
-    HelixClass helix;
-    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, bField);
-    return helix.getMomentum();
-}
 
 
 double TOFUtils::getTPCOuterR(){
@@ -63,7 +50,8 @@ EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
 std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluster* cluster, EVENT::Track* track, int maxEcalLayer, double bField ){
     const TrackState* tsEcal = track->getTrackState(TrackState::AtCalorimeter);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
-    Vector3D trackMomAtEcal = TOFUtils::getHelixMomAtTrackState(*tsEcal, bField);
+    std::array<double, 3> momArr = UTIL::getTrackMomentum(tsEcal, bField);
+    Vector3D trackMomAtEcal(momArr[0], momArr[1], momArr[2]);
 
     vector<CalorimeterHit*> selectedHits(maxEcalLayer, nullptr);
     vector<double> minDistances(maxEcalLayer, numeric_limits<double>::max());

@@ -13,11 +13,6 @@
 */
 namespace TOFUtils{
 
-    /** Get track momentum at the track state.
-    Returns momentum Vector3D from the given track state.
-    */
-    dd4hep::rec::Vector3D getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField);
-
     /** Returns TPC outer radius from the DD4hep detector geometry.
     */
     double getTPCOuterR();

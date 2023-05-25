@@ -13,15 +13,9 @@
 */
 namespace TOFUtils{
 
-    /** Returns TPC outer radius from the DD4hep detector geometry.
+    /** Returns SET hit if exists.
     */
-    double getTPCOuterR();
-
-    /** Returns SET hit.
-    Checks the \f$ \rho = \sqrt{x^{2}+y^{2}} \f$ of the tracker hit.
-    If \f$ \rho > R_{\mathrm{TPC, outer}} \f$  then it is the SET hit.
-    */
-    EVENT::TrackerHit* getSETHit(EVENT::Track* track, double tpcOuterR);
+    EVENT::TrackerHit* getSETHit(EVENT::Track* track);
 
     /** Get a subset of the cluster calorimeter hits.
     Returns the subset of the cluster calorimeter hits which we call "Frank"

@@ -29,21 +29,16 @@ using dd4hep::rec::Vector3D;
 using dd4hep::rec::FixedPadSizeTPCData;
 using CLHEP::RandGauss;
 
-
-double TOFUtils::getTPCOuterR(){
-    auto& detector = Detector::getInstance();
-    DetElement tpcDet = detector.detector("TPC");
-    FixedPadSizeTPCData* tpc = tpcDet.extension <FixedPadSizeTPCData>();
-    return tpc->rMaxReadout/dd4hep::mm;
-}
-
-
-EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track, double tpcOuterR){
+EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track){
     vector<TrackerHit*> hits = track->getTrackerHits();
-    TrackerHit* lastHit = hits.back();
-    Vector3D pos (lastHit->getPosition());
-
-    if ( pos.rho() > tpcOuterR ) return lastHit;
+    auto isSETHit = [](TrackerHit* hit) -> bool {
+        UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+        encoder.setValue( hit->getCellID0() ) ;
+        int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
+        return subdet == UTIL::ILDDetID::SET;
+    };
+    auto it = std::find_if(hits.begin(), hits.end(), isSETHit);
+    if ( it != hits.end() ) return *it;
     return nullptr;
 }
 

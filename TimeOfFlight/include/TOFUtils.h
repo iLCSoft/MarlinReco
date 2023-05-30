@@ -61,7 +61,7 @@ namespace TOFUtils{
     /** Get TrackState of the track at the Calorimeter surface. In case of multiple curls take the latest curl (closest to the calorimeter)
     to get the extrapolated position.
     */
-    const EVENT::TrackState* geTrackStateAtCalorimeter(EVENT::Track* track);
+    const EVENT::TrackState* getTrackStateAtCalorimeter(EVENT::Track* track);
 
 
 }

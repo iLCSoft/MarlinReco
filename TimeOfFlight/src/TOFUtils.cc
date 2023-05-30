@@ -42,7 +42,7 @@ EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track){
     return nullptr;
 }
 
-const EVENT::TrackState* TOFUtils::geTrackStateAtCalorimeter(EVENT::Track* track){
+const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* track){
     UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
     auto isTPCHit = [&encoder](TrackerHit* hit) -> bool {
         encoder.setValue( hit->getCellID0() ) ;
@@ -73,7 +73,7 @@ const EVENT::TrackState* TOFUtils::geTrackStateAtCalorimeter(EVENT::Track* track
 
 
 std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluster* cluster, EVENT::Track* track, int maxEcalLayer, double bField ){
-    const TrackState* tsEcal = geTrackStateAtCalorimeter(track);
+    const TrackState* tsEcal = getTrackStateAtCalorimeter(track);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
     std::array<double, 3> momArr = UTIL::getTrackMomentum(tsEcal, bField);
     Vector3D trackMomAtEcal(momArr[0], momArr[1], momArr[2]);
@@ -101,7 +101,7 @@ std::vector<EVENT::CalorimeterHit*> TOFUtils::selectFrankEcalHits( EVENT::Cluste
 
 
 double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, double timeResolution){
-    const TrackState* tsEcal = geTrackStateAtCalorimeter(track);
+    const TrackState* tsEcal = getTrackStateAtCalorimeter(track);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
     double hitTime = numeric_limits<double>::max();
@@ -125,7 +125,7 @@ double TOFUtils::getTofClosest( EVENT::Cluster* cluster, EVENT::Track* track, do
 
 
 double TOFUtils::getTofFrankAvg( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
-    const TrackState* tsEcal = geTrackStateAtCalorimeter(track);
+    const TrackState* tsEcal = getTrackStateAtCalorimeter(track);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
     int nHits = selectedHits.size();
@@ -142,7 +142,7 @@ double TOFUtils::getTofFrankAvg( std::vector<EVENT::CalorimeterHit*> selectedHit
 
 
 double TOFUtils::getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution){
-    const TrackState* tsEcal = geTrackStateAtCalorimeter(track);
+    const TrackState* tsEcal = getTrackStateAtCalorimeter(track);
     Vector3D trackPosAtEcal ( tsEcal->getReferencePoint() );
 
     int nHits = selectedHits.size();

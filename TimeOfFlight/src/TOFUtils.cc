@@ -31,8 +31,8 @@ using CLHEP::RandGauss;
 
 EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track){
     vector<TrackerHit*> hits = track->getTrackerHits();
-    auto isSETHit = [](TrackerHit* hit) -> bool {
-        UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    auto isSETHit = [&encoder](TrackerHit* hit) -> bool {
         encoder.setValue( hit->getCellID0() ) ;
         int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
         return subdet == UTIL::ILDDetID::SET;
@@ -43,8 +43,8 @@ EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track){
 }
 
 const EVENT::TrackState* TOFUtils::geTrackStateAtCalorimeter(EVENT::Track* track){
-    auto isTPCHit = [](TrackerHit* hit) -> bool {
-        UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    auto isTPCHit = [&encoder](TrackerHit* hit) -> bool {
         encoder.setValue( hit->getCellID0() ) ;
         int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
         return subdet == UTIL::ILDDetID::TPC;

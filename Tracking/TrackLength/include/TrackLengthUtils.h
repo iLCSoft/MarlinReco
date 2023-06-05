@@ -35,9 +35,31 @@ namespace TrackLengthUtils{
     /** Get track length.
     Returns the track length between two track states estimated by the helix length formula:
 
-    \f$ \ell = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \sqrt{1 + \tan{\lambda}^{2} } \f$
+    \f$ \ell_{i} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda_{i}}| } \sqrt{1 + \tan{\lambda_{i}}^{2} } \f$
     */
     double getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
+
+
+    /** Get track length.
+    Returns the track length between two track states estimated by the helix length formula:
+
+    \f$ \ell_{i} = \sqrt{\frac{(\varphi_{i+1} - \varphi_{i})^{2}}{\Omega_{i}^{2}} + (z_{i+1} - z_{i})^2 } \f$
+
+    NOTE: This option is known to perform significantly worse than the default method.
+    It remains here as a reference only for testting/developement/debugging purposes.
+    */
+    double getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
+
+    /** Get track length.
+    Returns the track length between two track states estimated by the helix length formula:
+
+    \f$ \ell_{i} = \frac{\left| \varphi_{i+1} - \varphi_{i} \right|}{\left| \Omega_{i} \right|}\sqrt{ 1 + \tan{\lambda_{i}}^{2} } \f$
+
+    NOTE: This option is known to perform significantly worse than the default method and even option 1.
+    It remains here as a reference only for testting/developement/debugging purposes.
+    */
+    double getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
+
 
 
     /** Get all subtracks of the Track.
@@ -52,6 +74,14 @@ namespace TrackLengthUtils{
     and the track state at the ECal surface.
     */
     std::vector<IMPL::TrackStateImpl> getTrackStates(EVENT::ReconstructedParticle* pfo, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
+
+
+    /** Get number of helix revolutions.
+    Returns the number of helix revolutions/curls between two track states.
+    The calculation is done with:
+    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda_{i}}| } \bigg / (2 \pi \frac{1}{|\Omega_{i}|}) \f$
+    */
+    double getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 }
 
 

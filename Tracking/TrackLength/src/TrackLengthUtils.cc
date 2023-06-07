@@ -31,8 +31,7 @@ using IMPL::TrackStateImpl;
 using CLHEP::RandGauss;
 
 bool TrackLengthUtils::sortByRho(EVENT::TrackerHit* a, EVENT::TrackerHit* b){
-    Vector3D posA( a->getPosition() );
-    Vector3D posB( b->getPosition() );
+    Vector3D posA( a->getPosition() ), posB( b->getPosition() );
     return posA.rho() < posB.rho();
 }
 
@@ -46,86 +45,85 @@ IMPL::TrackStateImpl TrackLengthUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrac
 }
 
 
-dd4hep::rec::Vector3D TrackLengthUtils::getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField){
-    double phi = ts.getPhi();
-    double d0 = ts.getD0();
-    double z0 = ts.getZ0();
-    double omega = ts.getOmega();
-    double tanL = ts.getTanLambda();
-
-    HelixClass helix;
-    helix.Initialize_Canonical(phi, d0, z0, omega, tanL, bField);
-    return helix.getMomentum();
-}
-
-
-double TrackLengthUtils::getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    double omega = ts1.getOmega();
-    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
-    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
-    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
-
-    return std::sqrt( std::pow(dPhi/omega, 2) + std::pow(z2-z1, 2) );
-}
-
-
-double TrackLengthUtils::getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
     double tanL = ts1.getTanLambda();
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-
     return std::abs( (z2-z1)/tanL ) * std::sqrt( 1.+tanL*tanL );
 }
 
 
-double TrackLengthUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    double omega = ts1.getOmega();
-    double tanL = ts1.getTanLambda();
+double TrackLengthUtils::getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double omega = std::abs( ts1.getOmega() );
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
+    double dz = std::abs(z2 - z1);
+    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
+    // We are never sure whether the track indeed curled for more than pi
+    // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
+    // We always assume it was the crossing of the (-pi/+pi) and correct for this.
+    // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi < pi).
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
+    return std::sqrt(dPhi*dPhi/(omega*omega)+dz*dz);
+};
 
-    // helix length projected on xy
-    double circHelix = std::abs( (z2-z1)/tanL );
-    double circFull = 2*M_PI/std::abs(omega);
 
-    return circHelix/circFull;
-}
+double TrackLengthUtils::getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double omega = std::abs( ts1.getOmega() );
+    double tanL = std::abs( ts1.getTanLambda() );
+    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
+    // We are never sure whether the track indeed curled for more than pi
+    // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
+    // We always assume it was the crossing of the (-pi/+pi) and correct for this.
+    // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi < pi).
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
+    return dPhi/omega*std::sqrt(1+tanL*tanL);
+};
+
 
 
 std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
     vector<Track*> subTracks;
+    // add track itself, which contains VXD+FTD+SIT+TPC hits of the first curl.
     subTracks.push_back(track);
 
     int nSubTracks = track->getTracks().size();
     if (nSubTracks <= 1) return subTracks;
 
-    int nTPCHits = track->getSubdetectorHitNumbers()[(ILDDetID::TPC)*2-1];
-    int nSubTrack0Hits = track->getTracks()[0]->getTrackerHits().size();
-    int nSubTrack1Hits = track->getTracks()[1]->getTrackerHits().size();
+    UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    auto isTPCHit = [&encoder](TrackerHit* hit) -> bool {
+        encoder.setValue( hit->getCellID0() ) ;
+        int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
+        return subdet == UTIL::ILDDetID::TPC;
+    };
 
-    //OPTIMIZE: this is not reliable, but I don't see any other way at the moment.
-    //Read documentation in the header file for details.
-    int startIdx;
-    if( std::abs(nTPCHits - nSubTrack0Hits) <= 1  ) startIdx = 1;
-    else if ( std::abs(nTPCHits - nSubTrack1Hits) <= 1 ) startIdx = 2;
-    else{
-        //FIXME: This happens very rarily (0.01%) for unknown reasons, so we just, skip adding subTracks...
-        streamlog_out(WARNING)<<"Can't understand which subTrack is responsible for the first TPC hits! Skip adding subTracks."<<std::endl;
-        return subTracks;
+    int indexOfFirstTPCCurl = 0;
+    for(int i = 0; i < nSubTracks; ++i){
+        Track* subTrack = track->getTracks()[i];
+        auto hits = subTrack->getTrackerHits();
+        if ( std::find_if(hits.begin(), hits.end(), isTPCHit) != hits.end() ){
+            indexOfFirstTPCCurl = i;
+            break;
+        }
     }
-    for(int j=startIdx; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
+
+    for(int j=indexOfFirstTPCCurl+1; j < nSubTracks; ++j) subTracks.push_back( track->getTracks()[j] );
     return subTracks;
 }
 
 
-std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField){
-    vector<TrackStateImpl> trackStatesPerHit;
-    int nTracks = tracks.size();
-    streamlog_out(DEBUG8)<<"PFO has "<<nTracks<<" subTracks."<<std::endl;
-    for(int i=0; i<nTracks; ++i){
-        Track* track = tracks[i];
-        vector <TrackerHit*> hits = track->getTrackerHits();
+std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStates(EVENT::ReconstructedParticle* pfo, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField){
+    // Refit the track and extract track state at every tracker hit along the track
+    vector<TrackStateImpl> trackStates;
+    if ( pfo->getTracks().empty() ) return trackStates;
+    vector<Track*> subTracks = getSubTracks( pfo->getTracks()[0] );
+
+    TrackImpl lastGoodRefittedTrack;
+
+    streamlog_out(DEBUG8)<<"PFOs track has "<<subTracks.size()<<" subTracks."<<std::endl;
+    for(size_t i=0; i<subTracks.size(); ++i){
+        vector <TrackerHit*> hits = subTracks[i]->getTrackerHits();
+
         streamlog_out(DEBUG8)<<"Subtrack "<<i+1<<" has "<<hits.size()<<" hits."<<std::endl;
         std::sort(hits.begin(), hits.end(), sortByRho);
 
@@ -142,13 +140,12 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::ve
         TrackImpl refittedTrack;
 
         //Need to initialize trackState at last hit
-        TrackStateImpl preFit = *track->getTrackState(TrackState::AtLastHit);
+        TrackStateImpl preFit = *(subTracks[i]->getTrackState(TrackState::AtLastHit));
         preFit.setCovMatrix( covMatrix );
         int errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::backward, &preFit, bField, maxChi2PerHit);
         //if fit fails, try also fit forward
         if (errorFit != 0){
             streamlog_out(DEBUG8)<<"Fit backward fails! Trying to fit forward for "<<i+1<<" subTrack in this PFO!"<<std::endl;
-
             marlinTrk.reset( trkSystem->createTrack() );
             errorFit = MarlinTrk::createFinalisedLCIOTrack(marlinTrk.get(), hits, &refittedTrack, IMarlinTrack::forward, &preFit, bField, maxChi2PerHit);
         }
@@ -156,6 +153,8 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::ve
             streamlog_out(WARNING)<<"Fit fails in both directions. Skipping "<<i+1<<" subTrack in this PFO!"<<std::endl;
             continue;
         }
+        lastGoodRefittedTrack = refittedTrack;
+
         //here hits are sorted by rho=(x^2+y^2) in the fit direction. forward - increasing rho, backward - decreasing rho
         vector< pair<TrackerHit*, double> > hitsInFit;
         marlinTrk->getHitsInFit(hitsInFit);
@@ -182,34 +181,37 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStatesPerHit(std::ve
 
         int nHitsInFit = hitsInFit.size();
         // if first successfully fitted subTrack add IP track state
-        if ( trackStatesPerHit.empty() ) trackStatesPerHit.push_back(*(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtIP)) ));
+        if ( trackStates.empty() ) trackStates.push_back(*(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtIP)) ));
 
-        // NOTE: although we use z to understand track direction, hits are still sorted by rho
+        // NOTE: although we use z to understand subTrack's direction, subTrack's hits are still sorted by rho
         if (loopForward){
             for( int j=0; j<nHitsInFit; ++j ){
                 TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
-                trackStatesPerHit.push_back(ts);
+                trackStates.push_back(ts);
             }
         }
         else{
             for( int j=nHitsInFit-1; j>=0; --j ){
                 TrackStateImpl ts = getTrackStateAtHit(marlinTrk.get(), hitsInFit[j].first);
-                trackStatesPerHit.push_back(ts);
+                trackStates.push_back(ts);
             }
         }
-
-        // OPTIMIZE: if last subtrack fit fails in both directions we don't add track state at the ECal.
-        if (i == nTracks - 1){
-            // SET hit is not present in hitsInFit as it is composite hit from strips
-            // Add ts at the SET hit manualy which fitter returns with reffited track
-            // If LastHit != SET hit, then we duplicate previous track state at last TPC hit
-            // isn't pretty, but shouldn't affect the track length
-            trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtLastHit)) ) );
-            trackStatesPerHit.push_back( *(static_cast<const TrackStateImpl*> (refittedTrack.getTrackState(TrackState::AtCalorimeter) ) ) );
-        }
     }
-    // one can maybe use hits of refittedTrack, but they include also hits that had failed in the fit
-    // code would look cleaner, but using hits that are failed in fit probably would have worse performance..
-    // needs to be checked.
-    return trackStatesPerHit;
+
+    const TrackStateImpl* tsCalo = static_cast<const TrackStateImpl*> (lastGoodRefittedTrack.getTrackState(TrackState::AtCalorimeter) );
+    if ( pfo->getClusters().size() > 0 && tsCalo != nullptr ) trackStates.push_back( *(tsCalo) );
+    return trackStates;
+}
+
+
+double TrackLengthUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    double omega = std::abs( ts1.getOmega() );
+    double tanL = std::abs( ts1.getTanLambda() );
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
+    double dz = std::abs(z2 - z1);
+    // helix length projected on xy
+    double circHelix = dz/tanL;
+    double circFull = 2*M_PI/omega;
+    return circHelix/circFull;
 }

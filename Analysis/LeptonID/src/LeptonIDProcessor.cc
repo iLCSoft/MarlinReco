@@ -90,7 +90,7 @@ LeptonIDProcessor::LeptonIDProcessor() : Processor("LeptonIDProcessor"), _mvarea
     registerProcessorParameter("weightfile",
                                "path to the BDTG weightfile",
                                _weightfile,
-                               std::string("/afs/desy.de/user/r/reichenl/pool/everything/training-scripts/pid/PID_multi_jet_dEdx_800t_cm50r80/weights/PID_multi_jet_dEdx_800t_cm50r80_BDTG.weights.xml"));
+                               std::string("weights/PID_multi_jet_dEdx_800t_cm50r80_BDTG.weights.xml"));
 
     registerProcessorParameter("mvaname",
                                "Name given to the MVA method during training, e.g. BDTG.",

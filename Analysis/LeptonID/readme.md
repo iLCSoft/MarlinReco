@@ -16,3 +16,5 @@ The LeptonIDProcessor utilizes a multi-class BDT from [ROOT TMVA](https://root.c
 The BDT depends on a weight file that needs to be created first. For this, the processor offers the possibility to turn the BDT evaluation off and output a ROOT tree necessary for training. There is an additional [training script](training/PID_tmva_multi_jet_dEdx_50.py) to generate the weight file. Additionally, the training folder also contains [a Jupyter notebook](training/PID-var-comp.ipynb) that can be used to compare the distributions between the different classes for the variables in the training tree.
 
 The weight file produced during the training then needs to be set in the steering file for the processor. Furthermore, the list of variables used in the training must be set accurately in the steering file.
+
+The `xml` subfolder contains two example steering files for the two modes of the processor. The `weights` subfolder contains example weights, trained on b-jet PFOs from $H\to b\bar{b}$ decays.

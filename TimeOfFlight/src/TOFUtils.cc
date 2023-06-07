@@ -61,7 +61,7 @@ const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* trac
         }
     }
 
-    // Take the trackState at thhe calorimeter surface always from the latest curl
+    // Take the trackState at the calorimeter surface always from the latest curl
     // Track has only one curl
     if ( indexOfFirstTPCCurl == nSubTracks-1 ) return track->getTrackState( TrackState::AtCalorimeter );
     else{

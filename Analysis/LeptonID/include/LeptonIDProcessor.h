@@ -1,5 +1,5 @@
-#ifndef MyProcessor_h
-#define MyProcessor_h 1
+#ifndef LeptonIDProcessor_h
+#define LeptonIDProcessor_h 1
 
 #include <marlin/Processor.h>
 #include <marlin/EventModifier.h>

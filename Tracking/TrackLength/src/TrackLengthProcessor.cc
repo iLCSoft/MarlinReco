@@ -71,6 +71,7 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         if( pfo->getTracks().empty() ){
             // Calculate track length only for particles with at least one track.
             // Note: If the pfo has more than one track attached (e.g. kink, v0), only the first track will be used. The results may be not accurate in these cases. 
+            streamlog_out(DEBUG9)<<"PFO has no tracks. Writing zeros."<<std::endl;
             vector<float> results{0., 0., 0., 0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;

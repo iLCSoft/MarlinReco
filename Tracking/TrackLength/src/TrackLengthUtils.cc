@@ -90,8 +90,8 @@ std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
     int nSubTracks = track->getTracks().size();
     if (nSubTracks <= 1) return subTracks;
 
-    auto isTPCHit = [](TrackerHit* hit) -> bool {
-        UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;
+    auto isTPCHit = [&encoder](TrackerHit* hit) -> bool {
         encoder.setValue( hit->getCellID0() ) ;
         int subdet = encoder[ UTIL::LCTrackerCellID::subdet() ];
         return subdet == UTIL::ILDDetID::TPC;

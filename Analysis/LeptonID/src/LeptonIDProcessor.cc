@@ -336,10 +336,9 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
     }
 }
 
-void LeptonIDProcessor::check(LCEvent *evt)
+void LeptonIDProcessor::check(LCEvent *)
 {
     // nothing to check here - could be used to fill checkplots in reconstruction processor
-    (void) evt;
 }
 
 void LeptonIDProcessor::end()

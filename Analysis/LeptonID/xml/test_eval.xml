@@ -88,6 +88,6 @@ ples. Needs to be the first ActiveProcessor-->
    <parameter name="Verbosity" type="string">DEBUG </parameter>
    <parameter name="BuildTree" type="bool">false</parameter>
    <parameter name="EvalMVA" type="bool">true</parameter>
-   <parameter name="weightfile">/afs/desy.de/group/flc/pool/reichenl/cleanup/MarlinReco/Analysis/LeptonID/training/PID_multi_jet_dEdx_800t_3d_cm50r50/weights/PID_multi_jet_dEdx_800t_3d_cm50r50_BDTG.weights.xml</parameter>
+   <parameter name="weightfile">weights/PID_multi_jet_dEdx_800t_3d_cm50r50_BDTG.weights.xml</parameter>
 </processor>
 </marlin>

@@ -93,10 +93,10 @@ protected:
   bool _buildTree;
   bool _evalMVA;
 
-  int _MCTruthRecoCweightCut{};
-  int _MCTruthRecoTweightCut{};
-  int _RecoMCTruthCweightCut{};
-  int _RecoMCTruthTweightCut{};
+  float _MCTruthRecoCweightCut{};
+  float _MCTruthRecoTweightCut{};
+  float _RecoMCTruthCweightCut{};
+  float _RecoMCTruthTweightCut{};
 
   TTree* _tree;
   TMVA::Reader _mvareader;

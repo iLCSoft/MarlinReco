@@ -60,22 +60,22 @@ LeptonIDProcessor::LeptonIDProcessor() : Processor("LeptonIDProcessor"), _mvarea
     registerProcessorParameter("MCTruthRecoCweightCut",
                                "Cut used on MCTruthRecoCluster weight",
                                _MCTruthRecoCweightCut,
-                               int(500));
+                               0.5F);
 
     registerProcessorParameter("MCTruthRecoTweightCut",
                                "Cut used on MCTruthRecoTrack weight",
                                _MCTruthRecoTweightCut,
-                               int(500));
+                               0.5F);
 
     registerProcessorParameter("RecoMCTruthCweightCut",
                                "Cut used on RecoMCTruthCluster weight",
                                _RecoMCTruthCweightCut,
-                               int(800));
+                               0.8F);
 
     registerProcessorParameter("RecoMCTruthTweightCut",
                                "Cut used on RecoMCTruthTrack weight",
                                _RecoMCTruthTweightCut,
-                               int(500));
+                               0.5F);
 
     registerProcessorParameter("BuildTree",
                                "Decides if the Processor builds a TTree that can be used for MVA training",
@@ -258,27 +258,10 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
         }
 
         if (_buildTree) {
-            // TODO: maybe use PIDUtil getMCParticle instead
-            // get MC particle for pfo, check that it is consistent both with cluster *and* track
-            int RecoMC_cw = 0;
-            int RecoMC_tw = 0;
-            auto mcp_candidate = getRelated(p, *RecoMCTruthNavigator, RecoMC_cw, RecoMC_tw);
-            if (mcp_candidate == nullptr || RecoMC_cw < _RecoMCTruthCweightCut || RecoMC_tw < _RecoMCTruthTweightCut) {
-                // could not find suitable mc particle, skip
+            MCParticle* mcp = getMCParticle(p, *RecoMCTruthNavigator, *MCTruthRecoNavigator, _RecoMCTruthCweightCut, _RecoMCTruthTweightCut, _MCTruthRecoCweightCut, _MCTruthRecoTweightCut);
+            if (mcp == nullptr) {
                 continue;
             }
-
-            // reverse check if mc particle also had most of its contributions in our reco particle
-            int MCReco_cw = 0;
-            int MCReco_tw = 0;
-            auto reco_candidate = getRelated(mcp_candidate, *MCTruthRecoNavigator, MCReco_cw, MCReco_tw);
-            if (reco_candidate != p || MCReco_cw < _MCTruthRecoCweightCut || MCReco_tw < _MCTruthRecoTweightCut) {
-                // p got most of its track/cluster hits from mcp but mcp contributed stronger to other reco particles, skip
-                continue;
-            }
-
-            // now cast mcp_candidate to a real MCParticle to use it
-            auto mcp = dynamic_cast<MCParticle *>(mcp_candidate);
             _truePDG = mcp->getPDG();
 
             auto parent = getMCParent(mcp);

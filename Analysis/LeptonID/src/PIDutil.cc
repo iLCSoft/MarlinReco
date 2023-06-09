@@ -80,8 +80,7 @@ WeightedPoints3D getWeightedPoints3D(const Cluster *clu, const LCCollection *Pan
             yhits.push_back(pos[1]);
             zhits.push_back(pos[2]);
         }
-        auto res = WeightedPoints3D(int(n_hits), ehits.data(), xhits.data(), yhits.data(), zhits.data());
-        return res;
+        return WeightedPoints3D(int(n_hits), ehits.data(), xhits.data(), yhits.data(), zhits.data());
     } else {
         // we have a DST file and have to call the more complicated constructor and some stuff will be approximate
         auto *coga = clu->getPosition();

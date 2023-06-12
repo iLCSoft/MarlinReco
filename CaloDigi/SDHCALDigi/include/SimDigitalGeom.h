@@ -95,7 +95,7 @@ class SimDigitalGeomCellId
 
 		CHT::Layout _currentHCALCollectionCaloLayout = CHT::any ;
 
-		dd4hep::long64 _cellIDvalue = 0 ;
+		dd4hep::CellID _cellIDvalue = 0 ;
 		CellIDDecoder<SimCalorimeterHit> _decoder ;
 		CellIDEncoder<CalorimeterHitImpl> _encoder ;
 

@@ -210,12 +210,12 @@ void SimDigitalGeomCellIdLCGEO::processGeometry(SimCalorimeterHit* hit)
 
 	dd4hep::BitField64 idDecoder( _cellIDEncodingString ) ;
 
-	dd4hep::long64 id0 = hit->getCellID0() ;
-	dd4hep::long64 id1 = hit->getCellID1() ;
+	const dd4hep::CellID id0 = hit->getCellID0() ;
+	const dd4hep::CellID id1 = hit->getCellID1() ;
 
 	idDecoder.setValue( id0 , id1 ) ;
 
-	dd4hep::long64 id = idDecoder.getValue() ;
+	const dd4hep::CellID id = idDecoder.getValue() ;
 	dd4hep::Position pos_0 = idposConv.position( id ) ;
 
 #if 0

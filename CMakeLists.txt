@@ -1,7 +1,7 @@
 ########################################################
 # cmake file for building MarlinReco
 # @author Jan Engels, DESY
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6.2 FATAL_ERROR )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.12 FATAL_ERROR )
 ########################################################
 
 # fix for lcio: all c++ sources need to be compiled with -Wno-long-long

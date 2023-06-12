@@ -10,23 +10,10 @@
 
 std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator const& nav) {
   auto  weights = nav.getRelatedToWeights(p);
-  int   max_ci  = -1;
-  int   max_ti  = -1;
-  float max_cw  = 0;
-  float max_tw  = 0;
-  for (size_t i = 0; i < weights.size(); i++) {
-    float w  = weights[i];
-    float cw = MarlinUtil::getClusterWeight(w);
-    float tw = MarlinUtil::getTrackWeight(w);
-    if (cw > max_cw) {
-      max_cw = cw;
-      max_ci = i;
-    }
-    if (tw > max_tw) {
-      max_tw = tw;
-      max_ti = i;
-    }
-  }
+  size_t max_ci = UTIL::getMaxWeightIdx(weights, MarlinUtil::getClusterWeight);
+  size_t max_ti = UTIL::getMaxWeightIdx(weights, MarlinUtil::getTrackWeight);
+  float max_cw  = weights[max_ci];
+  float max_tw  = weights[max_ti];
   if (max_ci != max_ti) {
     // confusion, skip particle
     return std::make_tuple(nullptr, 0.0F, 0.0F);

@@ -245,13 +245,13 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
             continue;
         }
 
-        auto tracks = p->getTracks();
+       const auto& tracks = p->getTracks();
         int nTracks = tracks.size();
         if (nTracks != 1) {
             continue;
         }
 
-        auto clusters = p->getClusters();
+       const auto& clusters = p->getClusters();
         int nClusters = clusters.size();
         if (nClusters != 1) {
             continue;
@@ -278,7 +278,7 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
         _vars["seenCosTheta"] = P.CosTheta();
         _vars["seenE"] = p->getEnergy();
 
-        auto dEdxParameters = pidh.getParticleID(p, dEdxAlgId).getParameters();
+       const auto& dEdxParameters = pidh.getParticleID(p, dEdxAlgId).getParameters();
         if (dEdxParameters.size() > (size_t) dEdxDist_e_Id) {
             _vars["dEdxDist_e"] = dEdxParameters[dEdxDist_e_Id];
         }
@@ -287,7 +287,7 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
         getShowerShapes(cluster);
 
         // TODO: access subdetector energies by name as for the shapes
-        auto subEnergies = cluster->getSubdetectorEnergies();
+       const auto& subEnergies = cluster->getSubdetectorEnergies();
         if (subEnergies.size() >= 2) {
             _vars["seenEcalDep"] = subEnergies[0];
             _vars["seenHcalDep"] = subEnergies[1];
@@ -344,7 +344,7 @@ void LeptonIDProcessor::getClusterShapes(WeightedPoints3D &wgpt)
 
 void LeptonIDProcessor::getShowerShapes(Cluster *clu)
 {
-    auto shapes = clu->getShape();
+   const auto& shapes = clu->getShape();
     // TODO: make sure that the size is right
     // TODO: ideally access the shapes via their name, but that first needs a fix elsewhere...
     for (size_t i = 0; i <= 23; i++)

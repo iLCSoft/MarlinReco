@@ -9,7 +9,7 @@
 #include <EVENT/ReconstructedParticle.h>
 
 std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator const& nav) {
-  auto  weights = nav.getRelatedToWeights(p);
+  const auto&  weights = nav.getRelatedToWeights(p);
   size_t max_ci = UTIL::getMaxWeightIdx(weights, MarlinUtil::getClusterWeight);
   size_t max_ti = UTIL::getMaxWeightIdx(weights, MarlinUtil::getTrackWeight);
   float max_cw  = weights[max_ci];
@@ -29,7 +29,7 @@ std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator 
 }
 
 WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* PandoraClusters) {
-  auto   hits   = clu->getCalorimeterHits();
+  const auto&   hits   = clu->getCalorimeterHits();
   size_t n_hits = hits.size();
   if (n_hits > 0) {
     // we have a REC file and can use all details
@@ -51,7 +51,7 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
     auto*               coga = clu->getPosition();
     std::vector<double> cogv(coga, coga + 3);
 
-    auto shapes = clu->getShape();
+    const auto& shapes = clu->getShape();
 
     StringVec shape_keys;
     PandoraClusters->getParameters().getStringVals("ClusterShapeParameters", shape_keys);
@@ -92,7 +92,7 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
       }
     }
 
-    auto                dir_error = clu->getDirectionError();
+    const auto&                dir_error = clu->getDirectionError();
     std::vector<double> thphcov(dir_error.begin(), dir_error.end());
 
     return WeightedPoints3D(cogv, cov_fr_clu, thphcov, npoints, wgt_sum, wgt2_sum, wgt4_sum);
@@ -102,7 +102,7 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
 MCParticle* getMCParent(const MCParticle* mcp) {
   MCParticle* parent = nullptr;
 
-  auto parents = mcp->getParents();
+  const auto& parents = mcp->getParents();
   if (parents.size() > 0) {
     if (parents[0]->getPDG() != mcp->getPDG()) {
       parent = parents[0];

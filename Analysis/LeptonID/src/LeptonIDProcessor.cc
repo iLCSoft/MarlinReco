@@ -2,6 +2,7 @@
 #include "PIDutil.h"
 #include <iostream>
 #include <cmath>
+#include <optional>
 
 #include <EVENT/LCCollection.h>
 #include <EVENT/ReconstructedParticle.h>
@@ -219,13 +220,11 @@ void LeptonIDProcessor::modifyEvent(LCEvent *evt)
         return;
     }
 
-    //LCRelationNavigator RecoMCTruthNavigator(RecoMCTruthLink);
-    //LCRelationNavigator MCTruthRecoNavigator(MCTruthRecoLink);
-    std::unique_ptr<LCRelationNavigator> RecoMCTruthNavigator;
-    std::unique_ptr<LCRelationNavigator> MCTruthRecoNavigator;
+    std::optional<LCRelationNavigator> RecoMCTruthNavigator;
+    std::optional<LCRelationNavigator> MCTruthRecoNavigator;
     if (_buildTree) {
-        RecoMCTruthNavigator = std::make_unique<LCRelationNavigator>(RecoMCTruthLink);
-        MCTruthRecoNavigator = std::make_unique<LCRelationNavigator>(MCTruthRecoLink);
+        RecoMCTruthNavigator = LCRelationNavigator(RecoMCTruthLink);
+        MCTruthRecoNavigator = LCRelationNavigator(MCTruthRecoLink);
     }
 
     PIDHandler pidh(PandoraPFOs);

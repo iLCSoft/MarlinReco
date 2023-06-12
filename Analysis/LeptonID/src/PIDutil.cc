@@ -7,6 +7,7 @@
 #include <marlinutil/MarlinUtil.h>
 
 #include <EVENT/ReconstructedParticle.h>
+#include <UTIL/LCRelationNavigator.h>
 
 std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator const& nav) {
   const auto&  weights = nav.getRelatedToWeights(p);

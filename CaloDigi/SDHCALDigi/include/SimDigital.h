@@ -127,7 +127,7 @@ class SimDigital : public Processor
 				hitMemory& operator=(const hitMemory& other) = delete ;
 		} ;
 
-		typedef std::map<dd4hep::long64, hitMemory> cellIDHitMap ;
+		typedef std::map<dd4hep::CellID, hitMemory> cellIDHitMap ;
 
 
 		void processCollection(LCCollection* inputCol , LCCollectionVec*& outputCol , LCCollectionVec*& outputRelCol , CHT::Layout layout) ;
@@ -151,7 +151,7 @@ class SimDigital : public Processor
 
 		std::vector<double> _hitCharge = {};
 
-		std::map<dd4hep::long64 , std::vector<LCGenericObject*>> geneMap = {};
+		std::map<dd4hep::CellID , std::vector<LCGenericObject*>> geneMap = {};
 
 		float _cellSize = 0 ;
 		float _gasGapWidth = 1.2f ;

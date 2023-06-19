@@ -2,6 +2,8 @@
 #include "TOFUtils.h"
 
 #include "EVENT/LCCollection.h"
+#include "EVENT/TrackerHitPlane.h"
+
 #include "UTIL/PIDHandler.h"
 
 #include "marlin/Global.h"
@@ -10,7 +12,6 @@
 #include "marlinutil/GeometryUtil.h"
 #include "MarlinTrk/Factory.h"
 #include "EVENT/SimTrackerHit.h"
-#include "UTIL/LCRelationNavigator.h"
 #include "CLHEP/Random/Randomize.h"
 
 using namespace TOFUtils;
@@ -18,6 +19,7 @@ using std::vector;
 using std::string;
 using EVENT::LCCollection;
 using EVENT::ReconstructedParticle;
+using EVENT::TrackerHitPlane;
 using EVENT::TrackerHit;
 using EVENT::Track;
 using EVENT::SimTrackerHit;
@@ -25,7 +27,6 @@ using EVENT::Cluster;
 using EVENT::CalorimeterHit;
 using EVENT::TrackState;
 using EVENT::LCObject;
-using UTIL::LCRelationNavigator;
 using CLHEP::RandGauss;
 using dd4hep::rec::Vector3D;
 
@@ -91,10 +92,6 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
     streamlog_out(DEBUG9)<<std::endl<<"==========Event========== "<<_nEvent<<std::endl;
 
     LCCollection* pfos = evt->getCollection(_pfoCollectionName);
-    LCCollection* setRelations = evt->getCollection("SETSpacePointRelations");
-    
-    LCRelationNavigator navigatorSET = LCRelationNavigator( setRelations );
-
     PIDHandler pidHandler( pfos );
     int algoID = pidHandler.addAlgorithm( name(), _outputParNames );
 
@@ -133,26 +130,26 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
             //define tof as an average time between two SET strips
             //if no SET hits found, tof alreasy is 0, just skip
             TrackerHit* hitSET = getSETHit(track);
-            if ( hitSET != nullptr ){
-                const vector<LCObject*>& simHitsSET = navigatorSET.getRelatedToObjects( hitSET );
-                if ( simHitsSET.size() >= 2 ){
-                    //It must be always 2, but just in case...
-                    if (simHitsSET.size() > 2) streamlog_out(WARNING)<<"Found more than two SET strip hits! Writing TOF as an average of the first two elements in the array."<<std::endl;
 
-                    SimTrackerHit* simHitSETFront = static_cast <SimTrackerHit*>( simHitsSET[0] );
-                    SimTrackerHit* simHitSETBack = static_cast <SimTrackerHit*>( simHitsSET[1] );
-                    double timeFront = RandGauss::shoot(simHitSETFront->getTime(), _timeResolution);
-                    double timeBack = RandGauss::shoot(simHitSETBack->getTime(), _timeResolution);
-                        timeOfFlight = (timeFront + timeBack)/2.;
+            if ( hitSET != nullptr ){
+                const std::vector<LCObject*>& rawObjects = hitSET->getRawHits();
+                if ( rawObjects.empty() ){
+                    streamlog_out(WARNING)<<"Found no raw SET strip hits, but space point is built!? Writing TOF as 0."<<std::endl;
                 }
-                else if (simHitsSET.size() == 1){
-                    streamlog_out(WARNING)<<"Found only one SET strip hit! Writing TOF from a single strip."<<std::endl;
-                    SimTrackerHit* simHitSET = static_cast <SimTrackerHit*>(simHitsSET[0]);
-                    timeOfFlight = RandGauss::shoot(simHitSET->getTime(), _timeResolution);
+                else if( rawObjects.size() == 1 ){
+                    streamlog_out(WARNING)<<"Found only one SET strip hit, but space point is built!? Writing TOF from a single strip."<<std::endl;
+                    TrackerHitPlane* rawHit = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
+                    if ( rawHit != nullptr ) timeOfFlight = RandGauss::shoot(rawHit->getTime(), _timeResolution);
                 }
                 else{
-                    // this happens very rarily (0.1%). When >1 simHits associated with a single strip none simHits are written by the DDSpacePointBuilder.
-                    streamlog_out(WARNING)<<"Found NO simHits associated with the found SET hit! Writing TOF as 0."<<std::endl;
+                    if (rawObjects.size() > 2) streamlog_out(WARNING)<<"Found more than two SET strip hits! Writing TOF as an average of the first two elements."<<std::endl;
+                    TrackerHitPlane* rawHitFront = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
+                    TrackerHitPlane* rawHitBack = dynamic_cast <TrackerHitPlane*>(rawObjects[1]);
+                    if (rawHitFront != nullptr && rawHitBack != nullptr){
+                        double timeFront = RandGauss::shoot(rawHitFront->getTime(), _timeResolution);
+                        double timeBack = RandGauss::shoot(rawHitBack->getTime(), _timeResolution);
+                        timeOfFlight = (timeFront + timeBack)/2.;
+                    }
                 }
             }
         }

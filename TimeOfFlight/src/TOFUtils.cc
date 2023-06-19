@@ -38,8 +38,8 @@ EVENT::TrackerHit* TOFUtils::getSETHit(EVENT::Track* track){
         return subdet == UTIL::ILDDetID::SET;
     };
     auto it = std::find_if(hits.begin(), hits.end(), isSETHit);
-    if ( it != hits.end() ) return *it;
-    return nullptr;
+    if ( it == hits.end() ) return nullptr;
+    return *it;
 }
 
 const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* track){

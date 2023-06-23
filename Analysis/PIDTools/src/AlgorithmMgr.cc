@@ -41,8 +41,9 @@ namespace cpid
 
   void AlgorithmMgr::printAvailableAlgorithmTypes()
   {
-    std::cout << "available algorithms: " << std::endl;
-    for (const auto& [key, value] : _map) {std::cout << key << std::endl;}
+    std::cout << "Available input algorithms: " << std::endl;
+    for (const auto& [key, value] : _map) {sloM << " " << key << std::endl;}
+    sloM << "-------------------------" << std::endl;
   }
 
 }

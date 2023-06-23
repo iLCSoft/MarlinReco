@@ -8,6 +8,7 @@
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <EVENT/LCCollection.h>
 
+#define sloD streamlog_out(DEBUG)
 #define sloM streamlog_out(MESSAGE)
 #define sloE streamlog_out(ERROR)
 

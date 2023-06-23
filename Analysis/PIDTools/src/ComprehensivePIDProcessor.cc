@@ -5,8 +5,9 @@
 #include <IMPL/ReconstructedParticleImpl.h>
 #include <IMPL/MCParticleImpl.h>
 #include <InputAlgorithm.h>
-//#include <InputAlgorithm_TOF.h>
 #include <AlgorithmMgr.h>
+#include <TrainingModel.h>
+#include <ModelMgr.h>
 #include <UTIL/PIDHandler.h>
 
 #include <vector>
@@ -37,25 +38,41 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
            _RecoMCTruthLinkName,
            std::string("RecoMCTruthLink"));
 
-  registerProcessorParameter("operationMode",
-                 "Operation mode of processor; 1 = extract observables, 2 = apply PID to PFOs; default: 1.",
-                 _mode,
-                 int(1));
+  registerProcessorParameter("modeExtract",
+                 "Set true to extract the specified observables from the PFOs; if false you need to set the TTreeFileName instead; default: true.",
+                 _modeExtract,
+                 true);
 
-  registerProcessorParameter("mode2nBins",
-                 "Number of momentum bins in operation mode 2; default: 12.",
-                 _mode2nBins,
-                 int(12));
+  registerProcessorParameter("modeTrain",
+                 "Set true to internally train an MVA with the specified observables from the PFOs; default: false.",
+                 _modeTrain,
+                 false);
 
-  registerProcessorParameter("weightsfolder",
-                 "Folder were weights are or should be stored; default: ./dataset/weights.",
-                 _weightsfolder,
-                 std::string("./dataset/weights"));
+  registerProcessorParameter("modeInfer",
+                 "Set true to infer the trained MVA with the specified observables to the PFOs; if true you need to provide the weight files; default: false.",
+                 _modeInfer,
+                 false);
 
+  registerProcessorParameter("inputAlgoSpecs",
+                 "List of input algorithms; for each specify only type (name is then type) or type:name; default: {}",
+                 _inputAlgoSpecs,
+                 std::vector<std::string>());
+
+  registerProcessorParameter("trainModelSpecs",
+                 "List of training models; for each specify only type (name is then type) or type:name; default: {}",
+                 _trainModelSpecs,
+                 std::vector<std::string>());
+
+  registerProcessorParameter("trainingObservables",
+                 "List of observables that should be used for traning; if empty, all observables from the specified algorithms + momabs + lambda are used; default: {}",
+                 _trainingObservables,
+                 std::vector<std::string>());
+
+  std::vector<std::string> ref{std::string("Ref.txt")};
   registerProcessorParameter("reffile",
-                 "Reference file; default: Ref.txt.",
+                 "Reference file(s), if only one file but several training models are specified the reference files are auto-numbered; default: {Ref.txt}.",
                  _reffile,
-                 std::string("Ref.txt"));
+                 ref);
 
   std::vector<int> signalPDGs = {11,13,211,321,2122};
   registerProcessorParameter("signalPDGs",
@@ -68,22 +85,46 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  _backgroundPDGs,
                  std::vector<int>());
 
-  //std::vector<std::string > inputalgos{};
-  registerProcessorParameter("inputAlgoSpecs",
-                 "List of input algorithms; for each specify only type (name is then type) or type:name; default: {}",
-                 _inputAlgoSpecs,
-                 std::vector<std::string>());
 
-  registerOptionalParameter("inputAlgo1ParamsD",
-                 "Vector of doubles that are input parameters for InputAlgorithm 1; default: {}.",
-                 _inputAlgo1ParamsF,
-                 std::vector<float>());
+  registerProcessorParameter("momMin",
+                 "For training: minimum momentum cut / GeV; default: 1.",
+                 _momMin,
+                 float(1));
 
-  //std::vector<std::string> inputAlgo1ParamsS = {};
-  registerOptionalParameter("inputAlgo1ParamsS",
-                 "Vector of strings that are input parameters for InputAlgorithm 1; default: {}.",
-                 _inputAlgo1ParamsS,
-                 std::vector<std::string>());
+  registerProcessorParameter("momMax",
+                 "For training: maximum momentum cut / GeV; default: 100.",
+                 _momMax,
+                 float(100));
+
+  registerProcessorParameter("momLog",
+                 "For training: should the momentum bins be logarihtmic; default: true.",
+                 _momLog,
+                 true);
+
+  registerProcessorParameter("momNBins",
+                 "For training: number of momentum bins; default: 12.",
+                 _momNBins,
+                 int(12));
+
+  registerProcessorParameter("cutD0",
+                 "Tracks with a d0 larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 _cutD0,
+                 float(0));
+
+  registerProcessorParameter("cutZ0",
+                 "Tracks with a z0 larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 _cutZ0,
+                 float(0));
+
+  registerProcessorParameter("cutLamMin",
+                 "Tracks with an angle lambda (relative to the cathode) smaller than the given value will be ignored. Set to 0 to accept all particles.",
+                 _cutLamMin,
+                 float(0));
+
+  registerProcessorParameter("cutLamMax",
+                 "Tracks with an angle lambda (relative to the cathode) larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 _cutLamMax,
+                 float(0));
 
 }
 
@@ -91,23 +132,22 @@ void ComprehensivePIDProcessor::init() {
   // usually a good idea to
   printParameters();
 
+  if (_modeTrain && _modeInfer)
+  {
+    sloE << "I cannot train and infer in the same process!" << std::endl;
+    throw std::runtime_error("mode error");
+  }
+
   _nEvt = 0;
   _nPFO = 0;
 
-  _nAlgos = _inputAlgoSpecs.size();
-  if (_mode==1 && _nAlgos==0) {
-    streamlog_out(WARNING) << "No input algorithms given, will not do anything!" << std::endl;
-    return;
-  }
+  _nAlgos  = _inputAlgoSpecs.size();
+  _nModels = _trainModelSpecs.size();
 
-  AlgorithmMgr::instance()->printAvailableAlgorithmTypes();
-  sloM << "===================" << std::endl;
 
   AIDAProcessor::tree(this);
 
   _observablesTree = new TTree("observablesTree","Tree of all observable values");
-  _observablesTrees.push_back(_observablesTree);
-  _nObs = 0;
 
   _observablesNames.push_back("momabs");
   _observablesNames.push_back("lambda");
@@ -115,11 +155,26 @@ void ComprehensivePIDProcessor::init() {
   _observablesNames.push_back("z0");
   _observablesNames.push_back("PDG");
   _observablesNames.push_back("nTracks");
-  _nObs_base = 6;
+  _nObs_base = _observablesNames.size();
 
+  // set up momentum bins
+  _momBins.push_back(_momMin);
+  sloM << "momBins: " << _momBins[0];
+  for (int i=0; i<_momNBins; ++i)
+  {
+    if (_momLog) _momBins.push_back(pow( 10, log10(_momMin) + (log10(_momMax)-log10(_momMin))*(i+1)/(float)(_momNBins) ));
+    else _momBins.push_back(_momMin + (_momMax-_momMin)*(i+1)/(float)(_momNBins));
+    sloM << " " << _momBins[i+1];
+  }
+  sloM << std::endl << "-------------------------------------------------" << std::endl;
+
+  // prepare optional parameters of modules
   std::shared_ptr<StringParameters> pars = parameters();
   std::vector<float> inparF{};
   std::vector<std::string> inparS{};
+
+  // set up and initialise input algorithms
+  AlgorithmMgr::instance()->printAvailableAlgorithmTypes();
 
   for (int i=0; i<_nAlgos; ++i)
   {
@@ -147,7 +202,7 @@ void ComprehensivePIDProcessor::init() {
     pars->getFloatVals(sF,inparF);
     pars->getStringVals(sS,inparS);
 
-    std::vector<std::string> obsNames = _inputAlgorithms[i]->init(inparF,inparS);
+    std::vector<std::string> obsNames = _inputAlgorithms[i]->init(inparF, inparS);
     for (unsigned int j=0; j<obsNames.size(); ++j)
     {
       std::string s = _inputAlgoNames[i];
@@ -155,18 +210,126 @@ void ComprehensivePIDProcessor::init() {
       _observablesNames.push_back(s.append(obsNames[j]));
     }
 
-
-    sloM << "new algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() << "\n" <<  std::endl;
+    sloM << "New algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() << "\n" <<  std::endl;
   }
-  sloM << "inits done" << std::endl;
+
+  sloM << "Input algorithm inits done" << std::endl;
+  sloM << "-------------------------------------------------" << std::endl;
 
   _nObs = _observablesNames.size();
   _observablesValues.resize(_nObs,0);
 
-  for (int iObs=0; iObs<_nObs; ++iObs) RegisterBranchF(_observablesTrees, &(_observablesValues[iObs]), _observablesNames[iObs].c_str());
+  // set up and initialise training/inference models
+  ModelMgr::instance()->printAvailableModelTypes();
 
-  sloM << "branches done" << std::endl;
-  sloM << "===================" << std::endl;
+  if (_modeTrain || _modeInfer)
+  {
+    for (int i=0; i<_nModels; ++i)
+    {
+      std::size_t p = _trainModelSpecs[i].find(":");
+      if (p==std::string::npos)
+      {
+        _trainModelTypes.push_back(_trainModelSpecs[i]);
+        _trainModelNames.push_back(_trainModelSpecs[i]);
+      }
+      else
+      {
+        _trainModelTypes.push_back(_trainModelSpecs[i].substr(0,p));
+        _trainModelNames.push_back(_trainModelSpecs[i].substr(p+1));
+      }
+
+      _trainingModels.push_back(ModelMgr::instance()->createModel(_trainModelTypes[i]));
+      _trainingModels[i]->setName(_trainModelNames[i]);
+
+      sloM << "New model created: " << _trainingModels[i]->type() << ":" << _trainingModels[i]->name() << "\n" <<  std::endl;
+
+      if (_modeInfer)
+      {
+        _nMomBins.push_back(0);
+        std::vector<std::pair<float,float> > none{};
+        _weightFileBrackets.push_back(none);
+        std::vector<std::string> empty{};
+        _weightFiles.push_back(empty);
+        ReadReferenceFile(i);
+      }
+    }
+
+    if (_trainingObservables.size()==0)
+    {
+      _trainingObservables = _observablesNames;
+      _trainingObservables.erase(_trainingObservables.begin()+2,_trainingObservables.begin()+6);
+    }
+
+    sloM << "Training/inference observables: " << _trainingObservables.size() << " -";
+    for (unsigned int o=0; o<_trainingObservables.size(); ++o) {sloM << " " << _trainingObservables[o];}
+    sloM << std::endl << "Extracted observables: " << _observablesNames.size() << " -";
+    for (unsigned int o=0; o<_observablesNames.size(); ++o) {sloM << " " << _observablesNames[o];}
+    sloM << std::endl;
+
+    bool obs_ok = true;
+    if (_modeExtract)
+    {
+      obs_ok = CheckTrainingObservables(_trainingObservables, _observablesNames);
+      if (!obs_ok)
+      {
+        sloE << "Target training/inference observables not (completely) among extracted observables!" << std::endl;
+        throw std::runtime_error("oberservables error");
+      }
+    }
+    // todo: else: check if target obs are in root file
+
+    if (_modeInfer)
+    {
+       for (std::string tObs : _trainingObservables)
+        for (int p=0; p<_nObs; ++p)
+          if (tObs == _observablesNames[p]) _inferObsValues.push_back(&(_observablesValues[p]));
+    }
+
+    TrainingModelInterface tmi;
+    tmi.signalPDGs = _signalPDGs;
+    tmi.backgroundPDGs = _backgroundPDGs;
+    tmi.obsNames = _trainingObservables;
+    tmi.momBins = _momBins;
+
+    for (int i=0; i<_nModels; ++i)
+    {
+      inparF.clear();
+      inparS.clear();
+      std::string sF = _trainModelNames[i]; sF.append(".F");
+      std::string sS = _trainModelNames[i]; sS.append(".S");
+      pars->getFloatVals(sF,inparF);
+      pars->getStringVals(sS,inparS);
+
+      tmi.inparF = inparF;
+      tmi.inparS = inparS;
+
+      if (_modeTrain)
+      {
+        _weightFiles.push_back(_trainingModels[i]->initTraining(tmi));
+        CreateReferenceFile(i);
+      }
+
+      if (_modeInfer)
+      {
+        tmi.obsValues = _inferObsValues;
+        tmi.weightFiles = _weightFiles[i];
+        _trainingModels[i]->initInference(tmi);
+      }
+    }
+
+    sloM << "Model inits done" << std::endl;
+    sloM << "-------------------------------------------------" << std::endl;
+  }
+
+
+  for (int iObs=0; iObs<_nObs; ++iObs)
+  {
+    std::stringstream s; s << _observablesNames[iObs].c_str() << "/F";
+    _observablesTree-> Branch(_observablesNames[iObs].c_str(), &(_observablesValues[iObs]), s.str().c_str());
+  }
+
+  sloM << "Branches done" << std::endl;
+  sloM << "-------------------------------------------------" << std::endl;
 
   for (int i=0; i<_nReason; ++i) _nRejectedPFOs[i] = 0;
   _rejectedPFOs = new TH1D("rejectedPFOs","Number of rejected PFOs by reason",_nReason,.5,_nReason+.5);
@@ -187,40 +350,8 @@ void ComprehensivePIDProcessor::init() {
   _wrongMCPDG->GetXaxis()->SetBinLabel(5,"proton file");
   _wrongMCPDG->SetYTitle("abundance");
 
-  if (_mode==2)
-  {
-    _TReader = new TMVA::Reader( "!Color:!Silent" );
-
-    std::vector<std::string> obslist;
-    std::vector<std::string> lineV;
-    std::string line;
-    std::ifstream reffile (_reffile.c_str());
-    if (reffile.is_open())
-    {
-      getline(reffile,line);
-      boost::split(obslist, line, [](char c){return c == ' ';});
-
-      for (unsigned int o=0; o<obslist.size(); ++o)
-        for (int p=0; p<_nObs; ++p)
-          if (obslist[o] == _observablesNames[p]) _TReader->AddVariable(_observablesNames[p], &(_observablesValues[p]));
-
-      int i=0;
-      while (getline(reffile,line))
-      {
-        boost::split(lineV, line, [](char c){return c==' ';});
-        if (lineV.size()<=1) continue;
-        std::pair<float,float> mombracket(std::stof(lineV[0]),std::stof(lineV[1]));
-        _weightFiles.push_back(mombracket);
-        std::stringstream nm; nm << "MomBin_" << i;
-        _TReader->BookMVA(nm.str(), lineV[2]);
-        ++i;
-      }
-      reffile.close();
-      _mode2nBins = i;
-    }
-  }
-
 }
+
 
 void ComprehensivePIDProcessor::processRunHeader( LCRunHeader* ) {
   _nRun++ ;
@@ -250,25 +381,31 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
   LCRelationNavigator rel_pfo2mc(col_pfo2mc);
 
   PIDHandler pidh(col_pfo);
-  int algoID=0;
-  if (_mode==2)
+  std::vector<int> algoID{};
+  std::vector<int> allPDGs{};
+  if (_modeInfer)
   {
     std::vector<std::string> PDGness{};
-    for (unsigned int s=0; s<_signalPDGs.size(); ++s)
+    for (int pdg : _signalPDGs)
     {
-      std::stringstream ss; ss << _signalPDGs[s] << "-ness";
-      PDGness.push_back(ss.str());
+      std::stringstream pn; pn << pdg << "-ness";
+      PDGness.push_back(pn.str());
+      allPDGs.push_back(pdg);
     }
-    algoID = pidh.addAlgorithm("dEdx_RCD__Pandora", PDGness);
+    for (int pdg : _backgroundPDGs)
+    {
+      std::stringstream pn; pn << pdg << "-ness";
+      PDGness.push_back(pn.str());
+      allPDGs.push_back(pdg);
+    }
+    for (int m=0; m<_nModels; ++m) algoID.push_back(pidh.addAlgorithm(_trainModelNames[m], PDGness));
   }
 
   for (int i=0; i<n_pfo; ++i)
   {
-    //sloM << " i " << i << std::endl;
     ReconstructedParticleImpl* pfo = dynamic_cast<ReconstructedParticleImpl*>(col_pfo->getElementAt(i));
-    //sloM << " dc 1 done " << i << std::endl;
 
-    // get the true PDG
+    // get the true PDG  (same as in dEdxAnalyser)
     const LCObjectVec& mcparVec = rel_pfo2mc.getRelatedToObjects(pfo);
     const FloatVec& mcparWei = rel_pfo2mc.getRelatedToWeights(pfo);
     int MCPDG = 0;
@@ -277,7 +414,7 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
     for (unsigned k=0; k<mcparVec.size(); ++k)
     {
       MCParticleImpl* mcpar = dynamic_cast<MCParticleImpl*>(mcparVec[k]);
-      float mcparwei = mcparWei[k];
+      float mcparwei = (int(mcparWei[k])%10000)/1000.;
       if (mcparwei > bestwei)
       {
         MCPDG = mcpar->getPDG();
@@ -287,7 +424,7 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
     }
 
     if (bestk==-1) {++_nRejectedPFOs[0]; continue;}
-    if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end())
+    if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
     {
       ++_nRejectedPFOs[1];
       ++_nWrongMCPDG[_nEvt/100000];
@@ -319,97 +456,175 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
     _observablesValues[4]=_PDG;
     _observablesValues[5]=_nTracks;
 
-
     int iObs=_nObs_base;
 
-    for (int a=0; a<_nAlgos; ++a)
+
+    if (_modeExtract)
     {
-      //sloM << "using algorithm " << _inputAlgorithms[a]->type() << std::endl;
-      std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo);
-      for (unsigned int j=0; j<obs.size(); ++j)
+      for (int a=0; a<_nAlgos; ++a)
       {
-        _observablesValues[iObs] = obs[j].first;
-        ++iObs;
+        //sloM << "using algorithm " << _inputAlgorithms[a]->type() << std::endl;
+        std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo);
+        for (unsigned int j=0; j<obs.size(); ++j)
+        {
+          _observablesValues[iObs] = obs[j].first;
+          ++iObs;
+        }
       }
-    }
+      sloD << "observables extracted " << std::endl;
 
-    //sloM << "observables extracted " << std::endl;
-
-    if (_mode==1)
-    {
       _observablesTree->Fill();
-      //sloM << "trees filled" << std::endl;
+      sloD << "trees filled" << std::endl;
     }
 
-    if (_mode==2)
-    {
-      for (int j=0; j<_mode2nBins; ++j)
-      {
+//    for (unsigned int o=0; o<_observablesValues.size(); ++o) {sloM << " " << _observablesValues[o];}
+//    sloM << std::endl;
+//
+//    for (unsigned int p=0; p<_observablesValues.size(); ++p) {sloM << " " << &(_observablesValues[p]);}
+//    sloM << std::endl;
+//
+//    for (unsigned int p=0; p<_inferObsValues.size(); ++p) {sloM << " " << (_inferObsValues[p]);}
+//    sloM << std::endl;
+//
+//    for (unsigned int v=0; v<_inferObsValues.size(); ++v) {sloM << " " << *(_inferObsValues[v]);}
+//    sloM << std::endl;
 
-        if (_momabs<_weightFiles[j].first || _momabs>_weightFiles[j].second) continue;
-        std::stringstream nm; nm << "MomBin_" << j;
-        const std::vector<float> eval_out = _TReader->EvaluateMulticlass(nm.str());
+    if (_modeInfer)
+    {
+      for (int m=0; m<_nModels; ++m) for (int j=0; j<_nMomBins[m]; ++j)
+      {
+        if (_momabs<_weightFileBrackets[m][j].first || _momabs>_weightFileBrackets[m][j].second) continue;
+        const std::vector<float> eval_out = _trainingModels[m]->runInference(j);
+        sloD << " > inference was run" << std::endl;
 
         auto eval_max = max_element(eval_out.begin(),eval_out.end());
         int index = std::distance(eval_out.begin(), eval_max);
 
-//        int x = 0;
-//        if (index != 0)
-//        {
-//          sloM << x << " "; ++x;
-//          sloM << index << " ";
-//          sloM << _signalPDGs[index] << " == ";
-//            for (unsigned int e=0; e<eval_out.size(); ++e)
-//          {
-//            sloM << eval_out[e] << " ";
-//          }
-//          //sloM << eval_max << " ";
-//
-//          sloM << std::endl;
-//        }
-
-
-        pidh.setParticleID(pfo, 0, _signalPDGs[index], 0, algoID, eval_out);
+        pidh.setParticleID(pfo, 0, allPDGs[index], 0, algoID[m], eval_out);
         break;
       }
-      //else if (_momabs>1) {sloM << bin << " " << _momabs << std::endl;}
     }
-    //sloM << " ex done " << i << std::endl;
-    //sloM << _nEvt << " " << i << " " << obs1[0].first << " " << obs1[0].second << std::endl;
-    //sloM << _nEvt << " " << i << " " << obs2[0].first << " " << obs2[0].second << std::endl;
+
   }
 
   _nEvt++;
 
 }
 
-void ComprehensivePIDProcessor::check( LCEvent* evt ) {if (evt){}}
+void ComprehensivePIDProcessor::check( LCEvent* ) {}
 void ComprehensivePIDProcessor::end()
 {
+  sloM << "-------------------------------------------------" << std::endl << "end()" << std::endl;
   for (int i=0; i<_nReason; ++i) _rejectedPFOs->SetBinContent(i+1,_nRejectedPFOs[i]);
   for (int i=0; i<_nPart; ++i) _wrongMCPDG->SetBinContent(i+1,_nWrongMCPDG[i]);
+
+  if (_modeTrain)
+  {
+    sloM << "Begin training..." << std::endl << std::endl;
+    for (int i=0; i<_nModels; ++i) _trainingModels[i]->runTraining(_observablesTree);
+    sloM << "Training done" << std::endl << std::endl;
+  }
 
   sloM << "Numer of Events: " << _nEvt << "    Numer of PFOs: " << _nPFO << std::endl;
 }
 
-void ComprehensivePIDProcessor::RegisterBranchD(std::vector<TTree*>& treeVec, double* var, const char* name)
+
+bool ComprehensivePIDProcessor::CheckTrainingObservables(std::vector<std::string>& trainObs, std::vector<std::string>& compObs)
 {
-  std::stringstream s; s << name << "/D";
-  for (unsigned int i=0; i<treeVec.size(); ++i) treeVec[i]->Branch(name, var, s.str().c_str());
+  bool check_ok = true;
+  for (std::string tObs : trainObs)
+  {
+    bool found = false;
+    for (std::string cObs : compObs)
+      if (tObs == cObs) {found = true; break;}
+
+    if (!found) {check_ok = false; break;}
+  }
+  return check_ok;
 }
 
-void ComprehensivePIDProcessor::RegisterBranchF(std::vector<TTree*>& treeVec, float* var, const char* name)
+void ComprehensivePIDProcessor::CreateReferenceFile(int n)
 {
-  std::stringstream s; s << name << "/F";
-  for (unsigned int i=0; i<treeVec.size(); ++i) treeVec[i]->Branch(name, var, s.str().c_str());
+  sloM << "Creating reference file..." << std::endl;
+  std::string refname = ReferenceFile(n);
+  std::ofstream reffile;
+  reffile.open(refname);
+
+  for (std::string obs : _trainingObservables) {reffile << obs << " ";}
+  reffile << "\n";
+
+  for (int pdg : _signalPDGs) {reffile << pdg << " ";}
+  reffile << "| ";
+  for (int pdg : _backgroundPDGs) {reffile << pdg << " ";}
+  reffile << "\n\n";
+
+  for (int i=0; i<_momNBins; ++i) {reffile << _momBins[i] << " " << _momBins[i+1] << " " << _weightFiles[n][i] << "\n";}
+  reffile.close();
+  sloM << "Reference file " << refname << " created." << std::endl;
 }
 
-void ComprehensivePIDProcessor::RegisterBranchI(std::vector<TTree*>& treeVec, int* var, const char* name)
+void ComprehensivePIDProcessor::ReadReferenceFile(int n)
 {
-  std::stringstream s; s << name << "/I";
-  for (unsigned int i=0; i<treeVec.size(); ++i) treeVec[i]->Branch(name, var, s.str().c_str());
+  std::string refname = ReferenceFile(n);
+  std::vector<std::string> lineV;
+  std::string line;
+  std::ifstream reffile (refname);
+  if (reffile.is_open())
+  {
+    getline(reffile,line);
+    boost::split(lineV, line, [](char c){return c == ' ';});
+    if (lineV.back()=="") lineV.pop_back();
+    if (n==0) _trainingObservables = lineV;
+    if (n>0 and lineV.size()!=_trainingObservables.size())
+    {
+      sloE << "Number of target observables not consistent among reference files!" << std::endl;
+      throw std::runtime_error("oberservables error");
+    }
+    if (n>0 and not CheckTrainingObservables(_trainingObservables, lineV))
+    {
+      sloE << "Specified target observables not consistent among reference files!" << std::endl;
+      throw std::runtime_error("oberservables error");
+    }
+
+    getline(reffile,line);
+    if (n==0)
+    {
+      boost::split(lineV, line, [](char c){return c == ' ';});
+      for (std::string l : lineV)
+        if (l=="|") _SnB.push_back(0);
+        else if (l!="") _SnB.push_back(stoi(l));
+
+    }
+    // todo: make also SnB safe against incoherent reference files
+
+    while (getline(reffile,line))
+    {
+      boost::split(lineV, line, [](char c){return c==' ';});
+      if (lineV.size()<=1) continue;
+      std::pair<float,float> mombracket(std::stof(lineV[0]),std::stof(lineV[1]));
+      _weightFileBrackets[n].push_back(mombracket);
+      _weightFiles[n].push_back(lineV[2]);
+    }
+    reffile.close();
+    _nMomBins[n] = _weightFileBrackets[n].size();
+  }
+  else
+  {
+    sloE << "Reference file " << refname << " could not be opened!" << std::endl;
+    throw std::runtime_error("reffile error");
+  }
+  sloM << "Reference file successfully read." << std::endl;
 }
 
-
-
-
+std::string ComprehensivePIDProcessor::ReferenceFile(int n)
+{
+  std::string refname{};
+  if (_nModels > int(_reffile.size()))
+  {
+    refname = _reffile[0];
+    std::size_t p = refname.rfind(".");
+    refname.insert(p, std::string("_")+std::to_string(n));
+  }
+  else refname = _reffile[n];
+  return refname;
+}

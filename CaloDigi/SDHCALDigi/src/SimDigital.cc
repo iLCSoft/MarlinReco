@@ -444,7 +444,7 @@ SimDigital::cellIDHitMap SimDigital::createPotentialOutputHits(LCCollection* col
 			chargeSpreader->addCharge( itstep.charge , static_cast<float>(itstep.step.x()) , static_cast<float>(itstep.step.y()) , aGeomCellId ) ;
 
 
-		for ( const std::pair<ChargeSpreader::I_J_Coordinates,float>& it : chargeSpreader->getChargeMap() )
+		for ( const auto& it : chargeSpreader->getChargeMap() )
 		{
 			if (it.second >= 0)
 			{
@@ -453,7 +453,7 @@ SimDigital::cellIDHitMap SimDigital::createPotentialOutputHits(LCCollection* col
 				if (tmp == nullptr)
 					continue ;
 
-				dd4hep::long64 index = tmp->getCellID1() ;
+				dd4hep::CellID index = tmp->getCellID1() ;
 				index = index << 32 ;
 				index += tmp->getCellID0() ;
 

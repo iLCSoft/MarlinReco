@@ -80,7 +80,6 @@ void TOFEstimators::init(){
 
     _outputParNames = {"timeOfFlight"};
     _bField = MarlinUtil::getBzAtOrigin();
-    _tpcOuterR = getTPCOuterR();
     // internally we use time resolution in nanoseconds
     _timeResolution = _timeResolution/1000.;
 }
@@ -133,7 +132,7 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
         else{
             //define tof as an average time between two SET strips
             //if no SET hits found, tof alreasy is 0, just skip
-            TrackerHit* hitSET = getSETHit(track, _tpcOuterR);
+            TrackerHit* hitSET = getSETHit(track);
             if ( hitSET != nullptr ){
                 const vector<LCObject*>& simHitsSET = navigatorSET.getRelatedToObjects( hitSET );
                 if ( simHitsSET.size() >= 2 ){

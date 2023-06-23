@@ -10,6 +10,7 @@
 #include "marlinutil/GeometryUtil.h"
 #include "MarlinTrk/Factory.h"
 #include "EVENT/SimTrackerHit.h"
+#include "UTIL/TrackTools.h"
 
 using namespace TrackLengthUtils;
 using std::vector;
@@ -27,7 +28,7 @@ TrackLengthProcessor aTrackLengthProcessor ;
 
 
 TrackLengthProcessor::TrackLengthProcessor() : marlin::Processor("TrackLengthProcessor") {
-    _description = "TrackLengthProcessor computes track length and harmonic mean of the momentum square up to the SET hit and Ecal surface.\
+    _description = "TrackLengthProcessor computes track length and harmonic mean of the momentum square up to the last tracker hit and Ecal surface.\
                     It should give a relatively good approximation of the track length of any particle reaching the Ecal to use in the time-of-flight particle identification";
 
     registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
@@ -41,6 +42,7 @@ TrackLengthProcessor::TrackLengthProcessor() : marlin::Processor("TrackLengthPro
 void TrackLengthProcessor::init(){
     marlin::Global::EVENTSEEDER->registerProcessor(this);
 
+    //NOTE: although the name includes SET, it is actually last tracker hit and not necessarily SET.
     _outputParNames = {"trackLengthToSET", "trackLengthToEcal", "momentumHMToSET", "momentumHMToEcal"};
     _bField = MarlinUtil::getBzAtOrigin();
 
@@ -66,19 +68,15 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
         streamlog_out(DEBUG9)<<std::endl<<"Starting to analyze "<<i+1<<" PFO"<<std::endl;
         ReconstructedParticle* pfo = static_cast <ReconstructedParticle*> ( pfos->getElementAt(i) );
 
-        int nClusters = pfo->getClusters().size();
-        int nTracks = pfo->getTracks().size();
-
-        if( nClusters != 1 || nTracks != 1){
-            // Analyze only simple pfos. Otherwise write dummy zeros
+        if( pfo->getTracks().empty() ){
+            // Calculate track length only for particles with at least one track.
+            // Note: If the pfo has more than one track attached (e.g. kink, v0), only the first track will be used. The results may be not accurate in these cases. 
+            streamlog_out(DEBUG9) << "PFO has no tracks. Writing zeros." << std::endl;
             vector<float> results{0., 0., 0., 0.};
             pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
             continue;
         }
-        Track* track = pfo->getTracks()[0];
-
-        vector<Track*> subTracks = getSubTracks(track);
-        vector<TrackStateImpl> trackStates = getTrackStatesPerHit(subTracks, _trkSystem, _bField);
+        vector<TrackStateImpl> trackStates = getTrackStates(pfo, _trkSystem, _bField);
 
         double trackLengthToSET = 0.;
         double harmonicMomToSET = 0.;
@@ -95,38 +93,30 @@ void TrackLengthProcessor::processEvent(EVENT::LCEvent * evt){
 
         //exclude last track state at the ECal
         for( int j=1; j < nTrackStates-1; ++j ){
-            //we check which track length formula to use
-            double nTurns = getHelixNRevolutions( trackStates[j-1], trackStates[j] );
-            double arcLength;
-            // we cannot calculate arc length for more than pi revolution using delta phi. Use formula with only z
-            if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[j-1], trackStates[j] );
-            else arcLength = getHelixLengthAlongZ( trackStates[j-1], trackStates[j] );
+            double arcLength = getHelixLength( trackStates[j-1], trackStates[j] );
 
-            Vector3D mom = getHelixMomAtTrackState( trackStates[j-1], _bField );
+            std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[j-1]), _bField);
+            Vector3D mom(momArr[0], momArr[1], momArr[2]);
             trackLengthToSET += arcLength;
-            trackLengthToEcal += arcLength;
             harmonicMomToSET += arcLength/mom.r2();
-            harmonicMomToEcal += arcLength/mom.r2();
         }
-        harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
         
         //now calculate to the Ecal one more step
-        double nTurns = getHelixNRevolutions( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        double arcLength;
-        if ( nTurns <= 0.5 ) arcLength = getHelixArcLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        else arcLength = getHelixLengthAlongZ( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
-        Vector3D mom = getHelixMomAtTrackState( trackStates[nTrackStates - 2], _bField );
-        trackLengthToEcal += arcLength;
-        harmonicMomToEcal += arcLength/mom.r2();
-        harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);
+        double arcLength = getHelixLength( trackStates[nTrackStates - 2], trackStates[nTrackStates - 1] );
+        std::array<double, 3> momArr = UTIL::getTrackMomentum( &(trackStates[nTrackStates - 2]), _bField );
+        Vector3D mom(momArr[0], momArr[1], momArr[2]);
+        trackLengthToEcal = trackLengthToSET + arcLength;
+        harmonicMomToEcal = harmonicMomToSET + arcLength/mom.r2();
 
+        harmonicMomToSET = std::sqrt(trackLengthToSET/harmonicMomToSET);
+        harmonicMomToEcal = std::sqrt(trackLengthToEcal/harmonicMomToEcal);
 
         vector<float> results{float(trackLengthToSET), float(trackLengthToEcal), float(harmonicMomToSET), float(harmonicMomToEcal)};
         pidHandler.setParticleID(pfo , 0, 0, 0., algoID, results);
         streamlog_out(DEBUG9)<<"Final results for the "<<i+1<<" PFO"<<std::endl;
-        streamlog_out(DEBUG9)<<"Track length to the SET: "<< float(trackLengthToSET)<<" mm"<<std::endl;
+        streamlog_out(DEBUG9)<<"Track length to the last tracker hit: "<< float(trackLengthToSET)<<" mm"<<std::endl;
         streamlog_out(DEBUG9)<<"Track length to the ECal: "<< float(trackLengthToEcal)<<" mm"<<std::endl;
-        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the SET: "<< float(harmonicMomToSET)<<" GeV"<<std::endl;
+        streamlog_out(DEBUG9)<<"Harmonic mean momentum to the last tracker hit: "<< float(harmonicMomToSET)<<" GeV"<<std::endl;
         streamlog_out(DEBUG9)<<"Harmonic mean momentum to the Ecal: "<< float(harmonicMomToEcal)<<" GeV"<<std::endl;
         streamlog_out(DEBUG9)<<std::endl<<std::endl;
     }

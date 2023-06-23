@@ -32,76 +32,56 @@ namespace TrackLengthUtils{
     IMPL::TrackStateImpl getTrackStateAtHit(MarlinTrk::IMarlinTrack* marlinTrk, EVENT::TrackerHit* hit);
 
 
-    /** Get track momentum at the track state.
-    Returns momentum Vector3D from the given track state.
+    /** Get track length.
+    Returns the track length between two track states estimated by the helix length formula:
+
+    \f$ \ell_{i} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda_{i}}| } \sqrt{1 + \tan{\lambda_{i}}^{2} } \f$
     */
-    dd4hep::rec::Vector3D getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField);
+    double getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
 
     /** Get track length.
     Returns the track length between two track states estimated by the helix length formula:
 
-    \f$ \ell = \sqrt{\left( \frac{\varphi_{i+1} - \varphi_{i}}{\Omega}\right)^{2} + \left( z_{i+1} - z_{i} \right)^{2} } \f$
+    \f$ \ell_{i} = \sqrt{\frac{(\varphi_{i+1} - \varphi_{i})^{2}}{\Omega_{i}^{2}} + (z_{i+1} - z_{i})^2 } \f$
 
-    Note: The formula above works only for the arcs with \f$ \Delta \varphi < \pi \f$.
+    NOTE: This option is known to perform significantly worse than the default method.
+    It remains here as a reference only for testting/developement/debugging purposes.
     */
-    double getHelixArcLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
-
+    double getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
     /** Get track length.
     Returns the track length between two track states estimated by the helix length formula:
 
-    \f$ \ell = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \sqrt{1 + \tan{\lambda}^{2} } \f$
+    \f$ \ell_{i} = \frac{\left| \varphi_{i+1} - \varphi_{i} \right|}{\left| \Omega_{i} \right|}\sqrt{ 1 + \tan{\lambda_{i}}^{2} } \f$
 
-    Note: The formula above works for any \f$ \Delta \varphi \f$.
-
-    However it is less precise than getHelixArcLength() due to the less precise \f$ \tan{\lambda} \f$.
-    Also helix formula implies constant momentum assumption which may show higher discrepancy for long tracks with low momentum.
+    NOTE: This option is known to perform significantly worse than the default method and even option 1.
+    It remains here as a reference only for testting/developement/debugging purposes.
     */
-    double getHelixLengthAlongZ(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
+    double getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
-
-    /** Get number of helix revolutions.
-    Returns number of helix revolutions between two track states.
-
-    The calculation is done with:
-    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda}| } \bigg / (2 \pi \frac{1}{|\Omega|}) \f$
-    */
-    double getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 
 
     /** Get all subtracks of the Track.
     Returns a vector of the subTracks of the main track that is passed as an argument.
 
-    The main purpose of this function is to capture all hits of the track.
-    This requires iteration over the subTracks as the main Track stores hits only
-    of the first half turn due to the our fit procedure.
-
-    The first subTrack in the returned vector is always main Track itself, which
-    containes VXD, SIT and TPC tracker hits for the first half turn.
-
-    Then additional subTracks are added which contain hits for additional track revolutions if such exist.
-
-    If nTPCHits \f$ \pm  1\f$ = nHits of SubTrack0 then assume subTrack0 stores TPC hits.
-    This would mean that VXD and SIT subTrack is not stored!
-    So we need skip *only first* subtrack: initial subTrack0 with TPC hits which we have anyhow added with the main Track
-    Else if nTPCHits \f$ \pm  1\f$ = nHits of SubTrack1 assume subTrack1 stores TPC hits
-    This would mean that subTrack0 stores VXD and SIT hits.
-    So we need to *skip both* subtracks VXD+SIT and 1st TPC half-turn subTracks which we have anyhow added with the main Track
-
-    Note: We consider deviations for \f$\pm 1\f$ hit may happen because of the
-    SET and only God knows what other reasons...
-
-    Note: This function is not guarantied to properly work 100% of times,
-    but I didn't find a better way to collect subTracks.
+    The main purpose of this function is to capture all hits of the track, not only the first curl which is stored with the main track.
     */
     std::vector<EVENT::Track*> getSubTracks(EVENT::Track* track);
 
     /** Get list of track states.
-    Returns a vector of track states at the IP, track state for every tracker hit
-    inside all provided subTracks as tracks argument and the track state at the ECal surface if extrapolateToEcal argument is set to true.
+    Returns a vector of track states at the IP, track state for every tracker hit of the pfo
+    and the track state at the ECal surface.
     */
-    std::vector<IMPL::TrackStateImpl> getTrackStatesPerHit(std::vector<EVENT::Track*> tracks, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
+    std::vector<IMPL::TrackStateImpl> getTrackStates(EVENT::ReconstructedParticle* pfo, MarlinTrk::IMarlinTrkSystem* trkSystem, double bField);
+
+
+    /** Get number of helix revolutions.
+    Returns the number of helix revolutions/curls between two track states.
+    The calculation is done with:
+    \f$  N_{\mathrm{turns}} = \frac{\left |z_{i+1} - z_{i}\right |}{| \tan{\lambda_{i}}| } \bigg / (2 \pi \frac{1}{|\Omega_{i}|}) \f$
+    */
+    double getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2);
 }
 
 

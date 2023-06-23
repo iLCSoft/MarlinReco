@@ -76,10 +76,6 @@ class TOFEstimators : public marlin::Processor {
         /** Stores z component of the magnetic field at the origin in Tesla.
         */
         double _bField{};
-
-        /** Stores outer TPC radius in mm.
-        */
-        double _tpcOuterR{};
 };
 
 #endif

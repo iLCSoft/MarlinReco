@@ -13,20 +13,9 @@
 */
 namespace TOFUtils{
 
-    /** Get track momentum at the track state.
-    Returns momentum Vector3D from the given track state.
+    /** Returns SET hit if exists.
     */
-    dd4hep::rec::Vector3D getHelixMomAtTrackState(const EVENT::TrackState& ts, double bField);
-
-    /** Returns TPC outer radius from the DD4hep detector geometry.
-    */
-    double getTPCOuterR();
-
-    /** Returns SET hit.
-    Checks the \f$ \rho = \sqrt{x^{2}+y^{2}} \f$ of the tracker hit.
-    If \f$ \rho > R_{\mathrm{TPC, outer}} \f$  then it is the SET hit.
-    */
-    EVENT::TrackerHit* getSETHit(EVENT::Track* track, double tpcOuterR);
+    EVENT::TrackerHit* getSETHit(EVENT::Track* track);
 
     /** Get a subset of the cluster calorimeter hits.
     Returns the subset of the cluster calorimeter hits which we call "Frank"
@@ -68,6 +57,12 @@ namespace TOFUtils{
     If *only one* ECal hit is found, which is not enough to perform the linear fit, then returns the same as getTofClosest() and getTofFrankAvg().
     */
     double getTofFrankFit( std::vector<EVENT::CalorimeterHit*> selectedHits, EVENT::Track* track, double timeResolution);
+
+    /** Get TrackState of the track at the Calorimeter surface. In case of multiple curls take the latest curl (closest to the calorimeter)
+    to get the extrapolated position.
+    */
+    const EVENT::TrackState* getTrackStateAtCalorimeter(EVENT::Track* track);
+
 
 }
 

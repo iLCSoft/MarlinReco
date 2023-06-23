@@ -1,7 +1,7 @@
 ########################################################
 # cmake file for building MarlinReco
 # @author Jan Engels, DESY
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6.2 FATAL_ERROR )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.12 FATAL_ERROR )
 ########################################################
 
 # fix for lcio: all c++ sources need to be compiled with -Wno-long-long
@@ -61,9 +61,17 @@ ENDIF()
 
 SET( ROOT_DEFINITIONS "-DUSEROOT -DUSE_ROOT -DMARLIN_USE_ROOT" )
 
-FOREACH( pkg Marlin MarlinUtil MarlinKinfit MarlinTrk GSL AIDA ROOT )
+FOREACH( pkg Marlin MarlinUtil LCIO DD4hep MarlinKinfit MarlinTrk AIDA )
     IF( ${pkg}_FOUND )
-        INCLUDE_DIRECTORIES( SYSTEM ${${pkg}_INCLUDE_DIRS} )
+        INCLUDE_DIRECTORIES( BEFORE SYSTEM ${${pkg}_INCLUDE_DIRS} )
+        LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
+        ADD_DEFINITIONS( ${${pkg}_DEFINITIONS} )
+    ENDIF()
+ENDFOREACH()
+
+FOREACH (pkg GSL ROOT)
+    IF( ${pkg}_FOUND )
+        INCLUDE_DIRECTORIES( AFTER SYSTEM ${${pkg}_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
         ADD_DEFINITIONS( ${${pkg}_DEFINITIONS} )
     ENDIF()
@@ -145,6 +153,7 @@ ADD_MARLINRECO_PKG( ./Analysis/TJjetsPFOAnalysisProcessor )
 ADD_MARLINRECO_PKG( ./Analysis/GammaGammaHadronRemoval )
 ADD_MARLINRECO_PKG( ./Analysis/ErrorFlow )
 ADD_MARLINRECO_PKG( ./Analysis/PhotonEnergyCorrect )
+ADD_MARLINRECO_PKG( ./Analysis/LeptonID )
 
 ADD_MARLINRECO_PKG( ./Calibration/AbsCalibration )
 ADD_MARLINRECO_PKG( ./CaloDigi/LDCCaloDigi )

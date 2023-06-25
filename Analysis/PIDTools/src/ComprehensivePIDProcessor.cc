@@ -53,6 +53,11 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  _modeInfer,
                  false);
 
+  registerProcessorParameter("TTreeFileName",
+                 "Name of the file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input; default: TTreeFile.root",
+                 _TTreeFileName,
+                 std::string("TTreeFile.root"));
+
   registerProcessorParameter("inputAlgoSpecs",
                  "List of input algorithms; for each specify only type (name is then type) or type:name; default: {}",
                  _inputAlgoSpecs,
@@ -145,9 +150,22 @@ void ComprehensivePIDProcessor::init() {
   _nModels = _trainModelSpecs.size();
 
 
-  AIDAProcessor::tree(this);
-
-  _observablesTree = new TTree("observablesTree","Tree of all observable values");
+  //AIDAProcessor::tree(this);
+  if (_modeExtract)
+  {
+    if (_TTreeFileName!="")
+    {
+      _TTreeFile = new TFile(_TTreeFileName.c_str(), "RECREATE");
+      _TTreeFile->cd();
+    }
+    _observablesTree = new TTree("observablesTree","Tree of all observable values");
+  }
+  else
+  {
+    _TTreeFile = new TFile(_TTreeFileName.c_str());
+    _observablesTree = (TTree*)_TTreeFile->Get("observablesTree");
+    //_observablesTree->Print();
+  }
 
   _observablesNames.push_back("momabs");
   _observablesNames.push_back("lambda");
@@ -321,11 +339,14 @@ void ComprehensivePIDProcessor::init() {
     sloM << "-------------------------------------------------" << std::endl;
   }
 
-
-  for (int iObs=0; iObs<_nObs; ++iObs)
+  if (_modeExtract)
   {
-    std::stringstream s; s << _observablesNames[iObs].c_str() << "/F";
-    _observablesTree-> Branch(_observablesNames[iObs].c_str(), &(_observablesValues[iObs]), s.str().c_str());
+    for (int iObs=0; iObs<_nObs; ++iObs)
+    {
+      std::stringstream s; s << _observablesNames[iObs].c_str() << "/F";
+      _observablesTree-> Branch(_observablesNames[iObs].c_str(), &(_observablesValues[iObs]), s.str().c_str());
+    }
+    _observablesTree->Write();
   }
 
   sloM << "Branches done" << std::endl;
@@ -350,6 +371,20 @@ void ComprehensivePIDProcessor::init() {
   _wrongMCPDG->GetXaxis()->SetBinLabel(5,"proton file");
   _wrongMCPDG->SetYTitle("abundance");
 
+  int nSig = _signalPDGs.size();
+  _PDGCheck = new TH2I("PDGCheck", "PDG cross check PFO vs. MCTruth",nSig+1,-.5,nSig+.5,nSig+1,-.5,nSig+.5);
+  _PDGCheck->SetXTitle("MCTruth PDG");
+  _PDGCheck->SetYTitle("PFO PDG");
+  for (int i=0; i<nSig; i++)
+  {
+    std::stringstream s; s << _signalPDGs[i];
+    _PDGCheck->GetXaxis()->SetBinLabel(i+1,s.str().c_str());
+    _PDGCheck->GetYaxis()->SetBinLabel(i+1,s.str().c_str());
+  }
+  _PDGCheck->GetXaxis()->SetBinLabel(nSig+1,"other");
+  _PDGCheck->GetYaxis()->SetBinLabel(nSig+1,"other");
+
+  sloM << _PDGCheck->GetName() << std::endl;
 }
 
 
@@ -364,146 +399,140 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
 
   if (_nAlgos==0) return;
 
-  LCCollection *col_pfo{}, *col_pfo2mc{};
 
-  try
-    {
-      col_pfo = evt->getCollection( _PFOColName );
-      col_pfo2mc = evt->getCollection( _RecoMCTruthLinkName );
-    }
-    catch(DataNotAvailableException &e)
-    {
-      sloM << "Input PFO or RecoMCTruthLink collection not found - skipping event " << _nEvt << std::endl;
-      return;
-    }
-
-  int n_pfo = col_pfo->getNumberOfElements();
-  LCRelationNavigator rel_pfo2mc(col_pfo2mc);
-
-  PIDHandler pidh(col_pfo);
-  std::vector<int> algoID{};
-  std::vector<int> allPDGs{};
-  if (_modeInfer)
+  if (_modeExtract || _modeInfer)
   {
-    std::vector<std::string> PDGness{};
-    for (int pdg : _signalPDGs)
-    {
-      std::stringstream pn; pn << pdg << "-ness";
-      PDGness.push_back(pn.str());
-      allPDGs.push_back(pdg);
-    }
-    for (int pdg : _backgroundPDGs)
-    {
-      std::stringstream pn; pn << pdg << "-ness";
-      PDGness.push_back(pn.str());
-      allPDGs.push_back(pdg);
-    }
-    for (int m=0; m<_nModels; ++m) algoID.push_back(pidh.addAlgorithm(_trainModelNames[m], PDGness));
-  }
+    LCCollection *col_pfo{}, *col_pfo2mc{};
 
-  for (int i=0; i<n_pfo; ++i)
-  {
-    ReconstructedParticleImpl* pfo = dynamic_cast<ReconstructedParticleImpl*>(col_pfo->getElementAt(i));
-
-    // get the true PDG  (same as in dEdxAnalyser)
-    const LCObjectVec& mcparVec = rel_pfo2mc.getRelatedToObjects(pfo);
-    const FloatVec& mcparWei = rel_pfo2mc.getRelatedToWeights(pfo);
-    int MCPDG = 0;
-    float bestwei = 0;
-    int bestk = -1;
-    for (unsigned k=0; k<mcparVec.size(); ++k)
-    {
-      MCParticleImpl* mcpar = dynamic_cast<MCParticleImpl*>(mcparVec[k]);
-      float mcparwei = (int(mcparWei[k])%10000)/1000.;
-      if (mcparwei > bestwei)
+    try
       {
-        MCPDG = mcpar->getPDG();
-        bestwei = mcparwei;
-        bestk = k;
+        col_pfo = evt->getCollection( _PFOColName );
+        col_pfo2mc = evt->getCollection( _RecoMCTruthLinkName );
       }
-    }
-
-    if (bestk==-1) {++_nRejectedPFOs[0]; continue;}
-    if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
-    {
-      ++_nRejectedPFOs[1];
-      ++_nWrongMCPDG[_nEvt/100000];
-      continue;
-    }
-    if (pfo->getTracks().size()<1) {++_nRejectedPFOs[2]; continue;}
-    //if (pfo->getTracks().size()>1) {++_nRejectedPFOs[3]; continue;}
-    if (pfo->getTracks()[0]->getD0()>100) {++_nRejectedPFOs[4]; continue;}
-    if (pfo->getTracks()[0]->getZ0()>100) {++_nRejectedPFOs[5]; continue;}
-
-    ++_nPFO;
-
-    const double* mom = pfo->getMomentum();
-    _momabs = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
-
-    double tanl = mom[2]/sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
-    _lambda = fabs(atan(tanl)) *180/M_PI;
-
-    _d0 = pfo->getTracks()[0]->getD0();
-    _z0 = pfo->getTracks()[0]->getZ0();
-
-    _PDG = MCPDG;
-    _nTracks = pfo->getTracks().size();
-
-    _observablesValues[0]=_momabs;
-    _observablesValues[1]=_lambda;
-    _observablesValues[2]=_d0;
-    _observablesValues[3]=_z0;
-    _observablesValues[4]=_PDG;
-    _observablesValues[5]=_nTracks;
-
-    int iObs=_nObs_base;
-
-
-    if (_modeExtract)
-    {
-      for (int a=0; a<_nAlgos; ++a)
+      catch(DataNotAvailableException &e)
       {
-        //sloM << "using algorithm " << _inputAlgorithms[a]->type() << std::endl;
-        std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo);
-        for (unsigned int j=0; j<obs.size(); ++j)
-        {
-          _observablesValues[iObs] = obs[j].first;
-          ++iObs;
-        }
+        sloM << "Input PFO or RecoMCTruthLink collection not found - skipping event " << _nEvt << std::endl;
+        return;
       }
-      sloD << "observables extracted " << std::endl;
 
-      _observablesTree->Fill();
-      sloD << "trees filled" << std::endl;
-    }
+    int n_pfo = col_pfo->getNumberOfElements();
+    LCRelationNavigator rel_pfo2mc(col_pfo2mc);
 
-//    for (unsigned int o=0; o<_observablesValues.size(); ++o) {sloM << " " << _observablesValues[o];}
-//    sloM << std::endl;
-//
-//    for (unsigned int p=0; p<_observablesValues.size(); ++p) {sloM << " " << &(_observablesValues[p]);}
-//    sloM << std::endl;
-//
-//    for (unsigned int p=0; p<_inferObsValues.size(); ++p) {sloM << " " << (_inferObsValues[p]);}
-//    sloM << std::endl;
-//
-//    for (unsigned int v=0; v<_inferObsValues.size(); ++v) {sloM << " " << *(_inferObsValues[v]);}
-//    sloM << std::endl;
-
+    PIDHandler pidh(col_pfo);
+    std::vector<int> algoID{};
+    std::vector<int> allPDGs{};
     if (_modeInfer)
     {
-      for (int m=0; m<_nModels; ++m) for (int j=0; j<_nMomBins[m]; ++j)
+      std::vector<std::string> PDGness{};
+      for (int pdg : _signalPDGs)
       {
-        if (_momabs<_weightFileBrackets[m][j].first || _momabs>_weightFileBrackets[m][j].second) continue;
-        const std::vector<float> eval_out = _trainingModels[m]->runInference(j);
-        sloD << " > inference was run" << std::endl;
-
-        auto eval_max = max_element(eval_out.begin(),eval_out.end());
-        int index = std::distance(eval_out.begin(), eval_max);
-
-        pidh.setParticleID(pfo, 0, allPDGs[index], 0, algoID[m], eval_out);
-        break;
+        std::stringstream pn; pn << pdg << "-ness";
+        PDGness.push_back(pn.str());
+        allPDGs.push_back(pdg);
       }
+      for (int pdg : _backgroundPDGs)
+      {
+        std::stringstream pn; pn << pdg << "-ness";
+        PDGness.push_back(pn.str());
+        allPDGs.push_back(pdg);
+      }
+      for (int m=0; m<_nModels; ++m) algoID.push_back(pidh.addAlgorithm(_trainModelNames[m], PDGness));
     }
+
+    for (int i=0; i<n_pfo; ++i)
+    {
+      ReconstructedParticleImpl* pfo = dynamic_cast<ReconstructedParticleImpl*>(col_pfo->getElementAt(i));
+
+      // get the true PDG  (same as in dEdxAnalyser)
+      const LCObjectVec& mcparVec = rel_pfo2mc.getRelatedToObjects(pfo);
+      const FloatVec& mcparWei = rel_pfo2mc.getRelatedToWeights(pfo);
+      int MCPDG = 0;
+      float bestwei = 0;
+      int bestk = -1;
+      for (unsigned k=0; k<mcparVec.size(); ++k)
+      {
+        MCParticleImpl* mcpar = dynamic_cast<MCParticleImpl*>(mcparVec[k]);
+        float mcparwei = (int(mcparWei[k])%10000)/1000.;
+        if (mcparwei > bestwei)
+        {
+          MCPDG = mcpar->getPDG();
+          bestwei = mcparwei;
+          bestk = k;
+        }
+      }
+
+      if (bestk==-1) {++_nRejectedPFOs[0]; continue;}
+      if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
+      {
+        ++_nRejectedPFOs[1];
+        ++_nWrongMCPDG[_nEvt/100000];
+        continue;
+      }
+      if (pfo->getTracks().size()<1) {++_nRejectedPFOs[2]; continue;}
+      //if (pfo->getTracks().size()>1) {++_nRejectedPFOs[3]; continue;}
+      if (pfo->getTracks()[0]->getD0()>100) {++_nRejectedPFOs[4]; continue;}
+      if (pfo->getTracks()[0]->getZ0()>100) {++_nRejectedPFOs[5]; continue;}
+
+      ++_nPFO;
+
+      if (_modeExtract)
+      {
+
+        const double* mom = pfo->getMomentum();
+        _momabs = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
+
+        double tanl = mom[2]/sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
+        _lambda = fabs(atan(tanl)) *180/M_PI;
+
+        _d0 = pfo->getTracks()[0]->getD0();
+        _z0 = pfo->getTracks()[0]->getZ0();
+
+        _PDG = MCPDG;
+        _nTracks = pfo->getTracks().size();
+
+        _observablesValues[0]=_momabs;
+        _observablesValues[1]=_lambda;
+        _observablesValues[2]=_d0;
+        _observablesValues[3]=_z0;
+        _observablesValues[4]=_PDG;
+        _observablesValues[5]=_nTracks;
+
+        int iObs=_nObs_base;
+
+        for (int a=0; a<_nAlgos; ++a)
+        {
+          //sloM << "using algorithm " << _inputAlgorithms[a]->type() << std::endl;
+          std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo);
+          for (unsigned int j=0; j<obs.size(); ++j)
+          {
+            _observablesValues[iObs] = obs[j].first;
+            ++iObs;
+          }
+        }
+        sloD << "observables extracted " << std::endl;
+
+        _observablesTree->Fill();
+        sloD << "trees filled" << std::endl;
+      }
+
+      if (_modeInfer)
+      {
+        for (int m=0; m<_nModels; ++m) for (int j=0; j<_nMomBins[m]; ++j)
+        {
+          if (_momabs<_weightFileBrackets[m][j].first || _momabs>_weightFileBrackets[m][j].second) continue;
+          const std::vector<float> eval_out = _trainingModels[m]->runInference(j);
+          sloD << " > inference was run" << std::endl;
+
+          auto eval_max = max_element(eval_out.begin(),eval_out.end());
+          int index = std::distance(eval_out.begin(), eval_max);
+
+          pidh.setParticleID(pfo, 0, allPDGs[index], 0, algoID[m], eval_out);
+          for (int ipdg=0; ipdg<(int)_signalPDGs.size(); ++ipdg) if (_signalPDGs[ipdg]==abs(MCPDG)) _PDGCheck->Fill(ipdg, index);
+          //sloM << MCPDG << " " << index << " " << allPDGs[index] << " " << _PDGCheck->GetEntries() << std::endl;
+          break;
+        }
+      }
+    } // for pfos
 
   }
 
@@ -518,13 +547,34 @@ void ComprehensivePIDProcessor::end()
   for (int i=0; i<_nReason; ++i) _rejectedPFOs->SetBinContent(i+1,_nRejectedPFOs[i]);
   for (int i=0; i<_nPart; ++i) _wrongMCPDG->SetBinContent(i+1,_nWrongMCPDG[i]);
 
+  if (_modeExtract)
+  {
+    _TTreeFile->cd();
+    //_observablesTree->Print();
+    _observablesTree->Write();
+  }
+
   if (_modeTrain)
   {
     sloM << "Begin training..." << std::endl << std::endl;
+    _observablesTree->Print();
     for (int i=0; i<_nModels; ++i) _trainingModels[i]->runTraining(_observablesTree);
     sloM << "Training done" << std::endl << std::endl;
   }
 
+  TCanvas* can = new TCanvas;
+  //TImage* img = TImage::Create();
+  gStyle->SetPalette(kBird);
+  //can->SetGrid();
+  //can->SetLogx();
+  can->SetLogz();
+  can->SetGrid(0,0);
+  gStyle->SetOptStat(0);
+
+  sloM << _PDGCheck->GetName() << std::endl;
+  PlotTH2(can, _PDGCheck);
+
+  _TTreeFile->Close();
   sloM << "Numer of Events: " << _nEvt << "    Numer of PFOs: " << _nPFO << std::endl;
 }
 
@@ -627,4 +677,12 @@ std::string ComprehensivePIDProcessor::ReferenceFile(int n)
   }
   else refname = _reffile[n];
   return refname;
+}
+
+void ComprehensivePIDProcessor::PlotTH2(TCanvas* can, TH2* hist)
+{
+  hist->Draw("colz");
+  can->Update();
+  std::stringstream s; s << _plotFolder << "/" << hist->GetName() << _fileFormat;
+  can->Print(s.str().c_str());
 }

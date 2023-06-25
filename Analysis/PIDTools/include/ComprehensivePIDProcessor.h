@@ -9,11 +9,15 @@
 #include <TTree.h>
 #include <TFile.h>
 #include <TH1D.h>
+#include <TH2I.h>
+#include <TCanvas.h>
+//#include <TImage.h>
+#include <TStyle.h>
 #include <TMVA/Reader.h>
 
-#ifdef MARLIN_AIDA //AIDA
-#include <marlin/AIDAProcessor.h>
-#endif
+//#ifdef MARLIN_AIDA //AIDA
+//#include <marlin/AIDAProcessor.h>
+//#endif
 
 using namespace lcio;
 using namespace marlin;
@@ -44,6 +48,7 @@ public:
   void ReadReferenceFile(int n);
   std::string ReferenceFile(int n);
 
+  void PlotTH2(TCanvas* can, TH2* hist);
  
 private:
 
@@ -75,6 +80,8 @@ private:
 
   int _nEvt=0, _nRun=0;
   long long int _nPFO=0;
+
+  TFile* _TTreeFile{};
 
   std::vector<std::string> _inputAlgoTypes{};
   std::vector<std::string> _inputAlgoNames{};
@@ -113,6 +120,8 @@ private:
   double _nWrongMCPDG[_nPart];
   TH1D* _wrongMCPDG{};
 
+  std::string _plotFolder=".", _fileFormat=".png";
+  TH2I* _PDGCheck{};
 
 };
 

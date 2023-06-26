@@ -37,7 +37,7 @@ namespace cpid {
     return obsNames;
   }
 
-  std::vector<std::pair<float,float> > InputAlgorithm_TOF223::extractObservables( ReconstructedParticleImpl* pfo, LCCollection* col_pfo){
+  std::vector<std::pair<float,float> > InputAlgorithm_TOF223::extractObservables( ReconstructedParticleImpl* pfo, LCCollection* col_pfo, int){
 
     //sloM << " IA_TOF::exObs called " << std::endl;
 

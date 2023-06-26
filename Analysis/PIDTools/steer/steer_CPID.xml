@@ -1,0 +1,224 @@
+<!-- 
+  Top level Marlin steering file defining the ILD reconstruction chain.
+  
+  !! WARNING !! This file may have been generated from 'Marlin -n MarlinstdReco.xml'. 
+  In this case you will find that : 
+  - no <include ref="..."> element is present
+  - some values differ between the constants section and the actual values in the global section or the processor parameter (e.g the compact file).
+    In this case, please refer to values in the global section or the processor parameters and not the constants section ! 
+  
+  Mandatory parameters :
+    * global.LCIOInputFiles : The input lcio input file(s)
+    * constant.lcgeo_DIR : the lcgeo directory must point on the one sourced in your current ilcsoft
+  
+  Optional parameters :
+    * constant.DetectorModel : the detector model to use the pre-defined lcgeo_DIR as ${lcgeo_DIR}/ILD/compact/${DetectorModel}/${DetectorModel}.xml
+    * constant.RunOverlay250GeV (350, 500 or 1000 GeV) : whether to run the background overlay. If set to true, you must ensure that the overlay background files are correctly set 
+    * constant.PandoraSettingsFile : The pandora settings file to use
+    * constant.PidPDFFile : A single root file name for the PID likelihood processor
+    * constant.PidWeightFiles : A list (space separated) of XML files containing weights for low momentum pi/mu separation (from TMVA)
+
+  Author : Remi Ete, DESY
+-->
+
+
+<marlin>
+  <constants>
+    <!-- ***** Global constant for reconstruction ***** -->
+    <!-- The lcgeo directory where to look for the ILD model -->
+    <constant name="lcgeo_DIR" value="/cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/lcgeo/v00-16-07" />
+    <!-- ILD detector model -->
+    <constant name="DetectorModel" value="ILD_s5_o1_v02" />
+    <!-- The full compact file name -->
+    <constant name="CompactFile" value="${lcgeo_DIR}/ILD/compact/${DetectorModel}/${DetectorModel}.xml" />
+    <!-- location of ILDConfig production folder -->
+    <constant name="productionfolder" value="/cvmfs/ilc.desy.de/sw/ILDConfig/v02-02-03/StandardConfig/production" />
+    <!-- ILD calibration file -->
+    <constant name="CalibrationFile" value="${productionfolder}/Calibration/Calibration_${DetectorModel}.xml" />
+	<!-- location of input files -->
+    <constant name="inputfolder" value="/pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/dst-merged/250-SetA/2f_Z_hadronic/ILD_l5_o2_v02/v02-02-01/00015664/000" />
+    
+	
+  
+    <!-- Whether to run the overlay background -->
+    <!-- WARNING : By setting this value to true (or True), you must ensure that the overlay files are set in the processor parameters -->
+    <constant name="RunOverlay" value="false" />
+    <!-- The center of mass energy (unit GeV). Mainly used for background overlay -->
+    <constant name="CMSEnergy" value="250" />
+    <!-- The energy dependant parameters file to include -->
+    <constant name="EnergyParametersFile" value="${productionfolder}/Config/Parameters${CMSEnergy}GeV.xml" />
+    <!--Whether to run the BeamCal reconstruction-->
+    <constant name="RunBeamCalReco" value="true" />
+    <!--The BeamCal calibration constant, sim hit energy to calibrated calo hit energy-->
+    <constant name="BeamCalCalibrationFactor">79.6</constant>
+    
+    <!-- ***** Input files constants ***** -->    
+    <!-- Special Beamcal overlay background file -->
+    <!--constant name="BeamCalBackgroundFile" value="${productionfolder}/HighLevelReco/BeamCalBackground/BeamCal_bg_E500-TDR_ws.root" /-->
+
+    
+    <!-- Geometry model dependant calibration constants from external file -->
+    <include ref="${CalibrationFile}" />
+    
+    <!-- Energy dependant parameters -->
+    <include ref="${EnergyParametersFile}" />
+    
+    <!-- Output files constants -->
+    <constant name="OutputBaseName" value="CPIDOut" />
+    <constant name="AIDAFileName" value="${OutputBaseName}" />
+    <constant name="RECOutputFile" value="${OutputBaseName}.slcio" />
+    <constant name="DSTOutputFile" value="${OutputBaseName}_DST.slcio" />
+    <constant name="PfoOutputFile" value="${OutputBaseName}_PfoAnalysis.root" />
+  </constants>
+  
+  
+  <!-- ***** Execute section ***** -->
+  <execute>
+    <!-- Initialization processors -->
+    <processor name="InitDD4hep" />
+    <processor name="MyStatusmonitor" />
+    
+    <processor name="MyComprehensivePIDProcessor" />
+    
+    <!-- Output processors -->
+    <processor name="MyLCIOOutputProcessor" />
+    <!--processor name="DSTOutput" /-->
+  </execute>
+  
+  <!-- ***** Global section ***** -->
+  <global>
+    <parameter name="LCIOInputFiles">
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_0.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_1.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_2.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_3.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_4.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_5.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_6.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001.d_dstm_15664_7.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001.d_dstm_15664_8.slcio
+      ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001.d_dstm_15664_9.slcio
+
+    </parameter>
+    <parameter name="MaxRecordNumber" value="10000"/>
+    <parameter name="SkipNEvents" value="0"/>
+    <parameter name="SupressCheck" value="false"/>
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+    <parameter name="OutputSteeringFile" value="steer_CPID_parsed.xml"/>
+  </global>
+  
+  
+
+  <!-- Init processors : histograming, logging, geometry ... -->
+
+  <processor name="InitDD4hep" type="InitializeDD4hep">
+    <!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
+    <!--Name of the DD4hep compact xml file to load-->
+    <parameter name="DD4hepXMLFile" type="string"> ${CompactFile} </parameter>
+  </processor>
+  <processor name="MyStatusmonitor" type="Statusmonitor">
+    <!--Statusmonitor prints out information on running Marlin Job: Prints number of runs run and current number of the event. Counting is sequential and not the run or event ID.-->
+    <!--Print the event number every N events-->
+    <parameter name="HowOften" type="int"> 1000 </parameter>
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <!-- <parameter name="Verbosity" type="string">MESSAGE </parameter> -->
+  </processor>
+
+
+  <processor name="MyComprehensivePIDProcessor" type="ComprehensivePIDProcessor">
+
+    <parameter name="modeExtract" type="bool" value="true" />
+    <parameter name="modeTrain"   type="bool" value="true"/>
+    <parameter name="modeInfer"   type="bool" value="false"/>
+
+    <parameter name="PFOCollection" type="string" value="PandoraPFOs"/>
+    <parameter name="signalPDGs" type="FloatVec"  value="11 13 211 321"/>
+    <parameter name="backgroundPDGs" type="FloatVec"  value=""/>
+    <parameter name="momNBins" type="float" value="4"/>
+    <parameter name="momLog" type="bool" value="true"/>
+    <parameter name="reffile" type="string" value="Ref.4bins.txt"/>
+    
+    <parameter name="inputAlgoSpecs" type="StringVec">
+      dEdx_RCD:dEdx_RCD
+      TOF:TOF50
+      Pandora
+    </parameter>
+    
+    <!--parameter name="notUsed" type="StringVec">
+      dEdx
+      TOF:TOF0
+      TOF:TOF10
+      TOF:TOF50
+    </parameter-->
+
+    <parameter name="dEdx.F" type="FloatVec"  value="1 2 3"/>
+    <parameter name="dEdx.S" type="StringVec" value="a b c"/>
+    
+    <parameter name= "TOF0.S" type="StringVec" value="TOFEstimators0ps" />
+    <parameter name="TOF10.S" type="StringVec" value="TOFEstimators10ps"/>
+    <parameter name="TOF50.S" type="StringVec" value="TOFEstimators50ps"/>
+    
+    <parameter name="dEdx_RCD.F" type="FloatVec">
+      -1.28883368e-02   2.72959919e+01   1.10560871e+01 -1.74534200e+00  -9.84887586e-07
+       6.49143971e-02   1.55775592e+03   9.31848047e+08  2.32201725e-01   2.50492066e-04
+       6.54955215e-02   8.26239081e+04   1.92933904e+07  2.52743206e-01   2.26657525e-04
+       7.52235689e-02   1.59710415e+04   1.79625604e+06  3.15315795e-01   2.30414997e-04
+       7.92251260e-02   6.38129720e+04   3.82995071e+04  2.80793601e-01   7.14371743e-04
+    </parameter>
+
+    <parameter name="trainModelSpecs" type="StringVec">
+      TMVA_BDT_MC:TMVA_BDT_MC_4bins
+    </parameter>
+    <parameter name="trainingObservables" type="StringVec"> </parameter>
+
+    <parameter name="TMVA_BDT_MC_4bins.S" type="StringVec">
+      !V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=multiclass
+      SplitMode=Random:NormMode=NumEvents:!V
+      !H:!V:NTrees=100:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.50:nCuts=20:MaxDepth=3
+      dEdx_RCD_piDis>-900&&dEdx_RCD_kaDis>-900
+    </parameter>
+    
+  </processor>
+  
+
+  <!-- Write reconstruction output : REC, DST and PfoAnalysis -->
+  <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+    <!--   standard output: full reconstruction keep all collections -->
+    <parameter name="LCIOOutputFile" type="string" >
+      /nfs/dust/ilc/user/ueinhaus/work/CPID/v02-02-04/pika/CPIDOut.slcio
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+  </processor>
+  
+  <processor name="DSTOutput" type="LCIOOutputProcessor">
+    <!-- DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters, Vertices and  ReconstructedParticles -->
+    <parameter name="LCIOOutputFile" type="string" >
+      ${DSTOutputFile}
+    </parameter>
+    <parameter name="DropCollectionTypes" type="StringVec"> 
+      MCParticle 
+      SimTrackerHit 
+      SimCalorimeterHit
+      TrackerHit 
+      TrackerHitPlane 
+      CalorimeterHit 
+      LCRelation
+      Track 
+      LCFloatVec      
+    </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed"/>
+    <parameter name="KeepCollectionNames" type="StringVec"> 
+      MCParticlesSkimmed 
+      MarlinTrkTracks
+      MCTruthMarlinTrkTracksLink
+      MarlinTrkTracksMCTruthLink
+      RecoMCTruthLink
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+  </processor>
+
+  
+</marlin>

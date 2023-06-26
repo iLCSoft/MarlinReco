@@ -32,11 +32,11 @@ namespace cpid {
 
     virtual InputAlgorithm* newAlgorithm() = 0;
 
-    virtual const std::string & type() const {return _typeName;}
+    const std::string & type() const {return _typeName;}
 
-    virtual const std::string & name() const {return _algoName;}
+    const std::string & name() const {return _algoName;}
 
-    virtual void setName(std::string name) {_algoName = name;}
+    void setName(std::string name) {_algoName = name;}
 
     virtual std::vector<std::string> init(std::vector<float>, std::vector<std::string> );
 
@@ -51,7 +51,7 @@ namespace cpid {
     }
 
     // The work horse
-    virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col);
+    virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col, int PDG);
 
   protected:
 

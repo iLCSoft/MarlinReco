@@ -30,7 +30,7 @@ namespace cpid
 
       void registerModel(TrainingModel* model);
 
-      std::set< std::string > getAvailableModelTypes();
+      std::vector<std::string> getAvailableModelTypes();
 
       ModelMgr();
 
@@ -38,7 +38,7 @@ namespace cpid
 
       static ModelMgr* _me;
       std::map<const std::string, TrainingModel*> _map{};
-      std::list<TrainingModel*> _list{};
+      //std::list<TrainingModel*> _list{};
   };
 }
 

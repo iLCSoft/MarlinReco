@@ -22,6 +22,11 @@
 using namespace lcio;
 using namespace marlin;
 
+/* Comprehensive Particle Identification (CPID) Processor
+ *
+ * The CPIDProcessor gathers PID-related observables, trains a model to optimise PID determination and infers from the model to data.
+ *
+ */
 
 class ComprehensivePIDProcessor : public Processor{
 
@@ -41,7 +46,7 @@ public:
   virtual void end();
 
   // cross check if training observables are among the available extracted ones
-  bool CheckTrainingObservables(std::vector<std::string>& trainObs, std::vector<std::string>& compObs);
+  bool CheckTrainingObservables(const std::vector<std::string>& trainObs, const std::vector<std::string>& compObs);
 
   // standard creator and reader of training reference file; created after TrainingModel::initTrain, read before TrainingModel::initInfer
   void CreateReferenceFile(int n);
@@ -75,6 +80,7 @@ private:
 
   float _cutD0=0, _cutZ0=0;
   float _cutLamMin=0, _cutLamMax=0;
+  int _cutNTracksMin=0, _cutNTracksMax=0;
 
   // processor-wide variables
 
@@ -115,10 +121,6 @@ private:
   const static int _nReason = 6;
   double _nRejectedPFOs[_nReason];
   TH1D* _rejectedPFOs{};
-
-  const static int _nPart = 5;
-  double _nWrongMCPDG[_nPart];
-  TH1D* _wrongMCPDG{};
 
   std::string _plotFolder=".", _fileFormat=".png";
   TH2I* _PDGCheck{};

@@ -23,7 +23,7 @@ namespace cpid {
     virtual std::vector<std::string> init(std::vector<float> inparF, std::vector<std::string> inparS);
 
     // The work horse
-    virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col);
+    virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col, int PDG);
 
   private:
 

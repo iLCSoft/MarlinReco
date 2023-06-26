@@ -20,10 +20,11 @@ namespace cpid
         else _map[name] = algorithm;
   }
 
-  std::set<std::string> AlgorithmMgr::getAvailableAlgorithmTypes()
+  std::vector<std::string> AlgorithmMgr::getAvailableAlgorithmTypes()
   {
-    std::set<std::string> atypes;
-    for(std::map<const std::string, InputAlgorithm*>::iterator i=_map.begin() ; i!= _map.end() ; i++) atypes.insert(i->first);
+    std::vector<std::string> atypes{};
+    //for(std::map<const std::string, InputAlgorithm*>::iterator i=_map.begin() ; i!= _map.end() ; i++) atypes.insert(i->first);
+    for(const auto& [name, _] : _map) atypes.push_back(name);
     return atypes;
   }
 

@@ -28,7 +28,7 @@ namespace cpid {
     return obsNames;
   }
 
-  std::vector<std::pair<float,float> > InputAlgorithm_Pandora::extractObservables(ReconstructedParticleImpl* pfo, LCCollection* )
+  std::vector<std::pair<float,float> > InputAlgorithm_Pandora::extractObservables(ReconstructedParticleImpl* pfo, LCCollection* , int)
   {
     std::vector<std::pair<float,float> > obsValues;
 

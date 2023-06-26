@@ -24,7 +24,7 @@ namespace cpid {
 
   }
 
-  std::vector<std::pair<float,float> > InputAlgorithm::extractObservables( ReconstructedParticleImpl*, LCCollection*)
+  std::vector<std::pair<float,float> > InputAlgorithm::extractObservables( ReconstructedParticleImpl*, LCCollection*, int)
   {
     std::vector<std::pair<float,float> > obsValues{};
     std::cout << " IA::exObs called " << std::endl;

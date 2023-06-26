@@ -25,16 +25,23 @@ namespace cpid {
 
     print_init(inparF, inparS);
 
-    if (inparF.size()<25) {sloE << "InputAlgorithm dEdx_RCD received too few (<25) parameters for reference curves!" << std::endl;}
+    if (inparF.size()<25)
+    {
+      sloE << "InputAlgorithm dEdx_RCD received too few (<25) parameters for reference curves!" << std::endl;
+      throw std::runtime_error("parameters error");
+    }
 
     auto it = inparF.begin();
     for (int i=0; i<5; ++i) _RC_parameters.push_back(std::vector<double>(it+i*5,it+i*5+5));
+
+    if (inparF.size()>=26) _scaling = inparF[25];
+    else _scaling = 1;
 
     std::vector<std::string> obsNames{"elDis","muDis","piDis","kaDis","prDis"};
     return obsNames;
   }
 
-  std::vector<std::pair<float,float> > InputAlgorithm_dEdx_RCD::extractObservables(ReconstructedParticleImpl* pfo, LCCollection* )
+  std::vector<std::pair<float,float> > InputAlgorithm_dEdx_RCD::extractObservables(ReconstructedParticleImpl* pfo, LCCollection* , int PDG)
   {
     std::vector<std::pair<float,float> > obsValues;
     for (int i=0; i<5; ++i) obsValues.push_back(std::pair<float,float>{-1000,-1});
@@ -43,13 +50,23 @@ namespace cpid {
     double momabs = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
 
     double mass[] = {0.000510998, 0.105658, 0.139570, 0.493677, 0.938272};
+    int pdg[] = {11, 13, 211, 321, 2212};
+    int p = -1;
+    for (int i=0; i<5; ++i) if (pdg[i]==abs(PDG)) p = i;
 
     TrackVec tracks = pfo->getTracks();
     if (tracks.size() > 0)
     {
       Track* track = tracks[0];
       std::pair<float,float> dEdx {track->getdEdx(),track->getdEdxError()};
-      //sloM << dEdx.first << " " << dEdx.second << std::endl;
+      if (p>-1 && _scaling!=1)
+      {
+        double trueBB = BB_curve(mass[p], momabs, _RC_parameters[p]);
+        double diff = trueBB - dEdx.first;
+        dEdx.first = trueBB - _scaling*diff;
+        //sloM << p << " " << _scaling << " " << trueBB << " " << dEdx.first << std::endl;
+      }
+
       if (dEdx.first>0 && dEdx.second>0)
         for (int i=0; i<5; ++i)
         {
@@ -61,7 +78,7 @@ namespace cpid {
             ret.second = dEdx.second;
           }
           else
-          {sloM << "  " <<  mass[i] << " " << momabs << " " << BB << " " << dEdx.first << " " << dEdx.second << std::endl;}
+          {sloD << "  " <<  mass[i] << " " << momabs << " " << BB << " " << dEdx.first << " " << dEdx.second << std::endl;}
           obsValues[i]=ret;
         }
     }

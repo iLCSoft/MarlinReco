@@ -41,11 +41,11 @@ namespace cpid {
 
     virtual TrainingModel* newModel() = 0;
 
-    virtual const std::string & type() const {return _typeName;}
+    const std::string & type() const {return _typeName;}
 
-    virtual const std::string & name() const {return _modelName;}
+    const std::string & name() const {return _modelName;}
 
-    virtual void setName(std::string name) {_modelName = name;}
+    void setName(std::string name) {_modelName = name;}
 
 
     virtual std::vector<std::string> initTraining(TrainingModelInterface&);

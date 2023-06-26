@@ -24,7 +24,11 @@ namespace cpid {
     print_init(tmi.inparF, tmi.inparS);
     _weightsfolder = _modelName + std::string("/weights");
 
-    if (tmi.inparS.size()<4) {sloE << "TrainingModel TMVA_BDT_MC received too few (<4) string parameters for factory options!" << std::endl;}
+    if (tmi.inparS.size()<4)
+    {
+      sloE << "TrainingModel TMVA_BDT_MC received too few (<4) string parameters for factory options!" << std::endl;
+      throw std::runtime_error("parameters error");
+    }
     _facOpt = tmi.inparS[0];
     _facLod = tmi.inparS[1];
     _facMet = tmi.inparS[2];

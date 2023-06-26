@@ -112,24 +112,34 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  int(12));
 
   registerProcessorParameter("cutD0",
-                 "Tracks with a d0 larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 "PFOs whose first track have a d0 larger than the given value will be ignored; set to 0 to accept all particles; default: 0.",
                  _cutD0,
                  float(0));
 
   registerProcessorParameter("cutZ0",
-                 "Tracks with a z0 larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 "PFOs whose first track have a z0 larger than the given value will be ignored; set to 0 to accept all particles; default: 0.",
                  _cutZ0,
                  float(0));
 
   registerProcessorParameter("cutLamMin",
-                 "Tracks with an angle lambda (relative to the cathode) smaller than the given value will be ignored. Set to 0 to accept all particles.",
+                 "PFOs whose first track have an angle lambda (relative to the cathode) smaller than the given value will be ignored; set to 0 to accept all particles; default: 0.",
                  _cutLamMin,
                  float(0));
 
   registerProcessorParameter("cutLamMax",
-                 "Tracks with an angle lambda (relative to the cathode) larger than the given value will be ignored. Set to 0 to accept all particles.",
+                 "PFOs whose first track have an angle lambda (relative to the cathode) larger than the given value will be ignored; set to 0 to accept all particles; default: 0.",
                  _cutLamMax,
                  float(0));
+
+  registerProcessorParameter("cutNTracksMin",
+                 "PFOs with fewer tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 _cutNTracksMin,
+                 int(-1));
+
+  registerProcessorParameter("cutNTracksMax",
+                 "PFOs with more tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 _cutNTracksMax,
+                 int(-1));
 
 }
 
@@ -272,6 +282,7 @@ void ComprehensivePIDProcessor::init() {
       }
     }
 
+    // if training observables are not specified in the steering file use the extracted observables + momabs and lambda (without d0, z0, MCPDG and nTrack)
     if (_trainingObservables.size()==0)
     {
       _trainingObservables = _observablesNames;
@@ -356,20 +367,11 @@ void ComprehensivePIDProcessor::init() {
   _rejectedPFOs = new TH1D("rejectedPFOs","Number of rejected PFOs by reason",_nReason,.5,_nReason+.5);
   _rejectedPFOs->GetXaxis()->SetBinLabel(1,"no MCPDG found");
   _rejectedPFOs->GetXaxis()->SetBinLabel(2,"MCPDG not among signal PDGs");
-  _rejectedPFOs->GetXaxis()->SetBinLabel(3,"no track found");
-  _rejectedPFOs->GetXaxis()->SetBinLabel(4,"more than one track found");
+  _rejectedPFOs->GetXaxis()->SetBinLabel(3,"too few tracks");
+  _rejectedPFOs->GetXaxis()->SetBinLabel(4,"too many tracks");
   _rejectedPFOs->GetXaxis()->SetBinLabel(5,"too large d0");
   _rejectedPFOs->GetXaxis()->SetBinLabel(6,"too large z0");
   _rejectedPFOs->SetYTitle("abundance");
-
-  for (int i=0; i<_nPart; ++i) _nWrongMCPDG[i] = 0;
-  _wrongMCPDG = new TH1D("wrongMCPDG","Number of MCPDG by origin file",_nPart,.5,_nPart+.5);
-  _wrongMCPDG->GetXaxis()->SetBinLabel(1,"electron file");
-  _wrongMCPDG->GetXaxis()->SetBinLabel(2,"muon file");
-  _wrongMCPDG->GetXaxis()->SetBinLabel(3,"pion file");
-  _wrongMCPDG->GetXaxis()->SetBinLabel(4,"kaon file");
-  _wrongMCPDG->GetXaxis()->SetBinLabel(5,"proton file");
-  _wrongMCPDG->SetYTitle("abundance");
 
   int nSig = _signalPDGs.size();
   _PDGCheck = new TH2I("PDGCheck", "PDG cross check PFO vs. MCTruth",nSig+1,-.5,nSig+.5,nSig+1,-.5,nSig+.5);
@@ -452,7 +454,9 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
       for (unsigned k=0; k<mcparVec.size(); ++k)
       {
         MCParticleImpl* mcpar = dynamic_cast<MCParticleImpl*>(mcparVec[k]);
-        float mcparwei = (int(mcparWei[k])%10000)/1000.;
+        float trkwei = (int(mcparWei[k])%10000)/1000.;
+        float cluwei = (int(mcparWei[k])/10000)/1000.;
+        float mcparwei = trkwei>cluwei ? trkwei : cluwei;
         if (mcparwei > bestwei)
         {
           MCPDG = mcpar->getPDG();
@@ -461,48 +465,57 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
         }
       }
 
-      if (bestk==-1) {++_nRejectedPFOs[0]; continue;}
+      // apply and register cuts
+      if (bestk==-1)
+      {
+        ++_nRejectedPFOs[0];
+        for (unsigned k=0; k<mcparVec.size(); ++k) {sloD << mcparWei[k] << "|" << (int(mcparWei[k])%10000)/1000. << "  ";}
+        sloD << std::endl;
+        continue;
+      }
       if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
       {
         ++_nRejectedPFOs[1];
-        ++_nWrongMCPDG[_nEvt/100000];
         continue;
       }
-      if (pfo->getTracks().size()<1) {++_nRejectedPFOs[2]; continue;}
-      //if (pfo->getTracks().size()>1) {++_nRejectedPFOs[3]; continue;}
-      if (pfo->getTracks()[0]->getD0()>100) {++_nRejectedPFOs[4]; continue;}
-      if (pfo->getTracks()[0]->getZ0()>100) {++_nRejectedPFOs[5]; continue;}
+
+      int nTracks = pfo->getTracks().size();
+      if (_cutNTracksMin>-1 && nTracks<_cutNTracksMin) {++_nRejectedPFOs[2]; continue;}
+      if (_cutNTracksMax>-1 && nTracks>_cutNTracksMax) {++_nRejectedPFOs[3]; continue;}
+      if (nTracks>0)
+      {
+        if (_cutD0 && pfo->getTracks()[0]->getD0()>_cutD0) {++_nRejectedPFOs[4]; continue;}
+        if (_cutZ0 && pfo->getTracks()[0]->getZ0()>_cutZ0) {++_nRejectedPFOs[4]; continue;}
+      }
 
       ++_nPFO;
 
       if (_modeExtract)
       {
+        sloD << " extracting... " << std::endl;
 
         const double* mom = pfo->getMomentum();
         _momabs = sqrt(mom[0]*mom[0]+mom[1]*mom[1]+mom[2]*mom[2]);
+        _observablesValues[0] = _momabs;
 
         double tanl = mom[2]/sqrt(mom[0]*mom[0]+mom[1]*mom[1]);
-        _lambda = fabs(atan(tanl)) *180/M_PI;
+        _observablesValues[1] = fabs(atan(tanl)) *180/M_PI;
 
-        _d0 = pfo->getTracks()[0]->getD0();
-        _z0 = pfo->getTracks()[0]->getZ0();
+        if (nTracks>0)
+        {
+          _observablesValues[2] = pfo->getTracks()[0]->getD0();
+          _observablesValues[3] = pfo->getTracks()[0]->getZ0();
+        }
 
-        _PDG = MCPDG;
-        _nTracks = pfo->getTracks().size();
-
-        _observablesValues[0]=_momabs;
-        _observablesValues[1]=_lambda;
-        _observablesValues[2]=_d0;
-        _observablesValues[3]=_z0;
-        _observablesValues[4]=_PDG;
-        _observablesValues[5]=_nTracks;
+        _observablesValues[4] = MCPDG;
+        _observablesValues[5] = nTracks;
 
         int iObs=_nObs_base;
 
         for (int a=0; a<_nAlgos; ++a)
         {
           //sloM << "using algorithm " << _inputAlgorithms[a]->type() << std::endl;
-          std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo);
+          std::vector<std::pair<float,float> > obs = _inputAlgorithms[a]->extractObservables(pfo, col_pfo, MCPDG);
           for (unsigned int j=0; j<obs.size(); ++j)
           {
             _observablesValues[iObs] = obs[j].first;
@@ -517,11 +530,13 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
 
       if (_modeInfer)
       {
+        //sloD << "start inference" << std::endl;
         for (int m=0; m<_nModels; ++m) for (int j=0; j<_nMomBins[m]; ++j)
         {
+          //sloD << m << " " << j << std::endl;
           if (_momabs<_weightFileBrackets[m][j].first || _momabs>_weightFileBrackets[m][j].second) continue;
           const std::vector<float> eval_out = _trainingModels[m]->runInference(j);
-          sloD << " > inference was run" << std::endl;
+          //sloD << " > inference was run" << std::endl;
 
           auto eval_max = max_element(eval_out.begin(),eval_out.end());
           int index = std::distance(eval_out.begin(), eval_max);
@@ -544,8 +559,13 @@ void ComprehensivePIDProcessor::check( LCEvent* ) {}
 void ComprehensivePIDProcessor::end()
 {
   sloM << "-------------------------------------------------" << std::endl << "end()" << std::endl;
-  for (int i=0; i<_nReason; ++i) _rejectedPFOs->SetBinContent(i+1,_nRejectedPFOs[i]);
-  for (int i=0; i<_nPart; ++i) _wrongMCPDG->SetBinContent(i+1,_nWrongMCPDG[i]);
+  for (int i=0; i<_nReason; ++i)
+  {
+    _rejectedPFOs->SetBinContent(i+1,_nRejectedPFOs[i]);
+    sloM << _rejectedPFOs->GetXaxis()->GetBinLabel(i+1) << " " << _nRejectedPFOs[i] << "\n";
+  }
+  sloM << "PFOs passed: " << _nPFO << std::endl;
+
 
   if (_modeExtract)
   {
@@ -571,26 +591,30 @@ void ComprehensivePIDProcessor::end()
   can->SetGrid(0,0);
   gStyle->SetOptStat(0);
 
-  sloM << _PDGCheck->GetName() << std::endl;
+  //sloM << _PDGCheck->GetName() << std::endl;
   PlotTH2(can, _PDGCheck);
 
   _TTreeFile->Close();
   sloM << "Numer of Events: " << _nEvt << "    Numer of PFOs: " << _nPFO << std::endl;
+  sloM << "-------------------------------------------------" << std::endl;
 }
 
 
-bool ComprehensivePIDProcessor::CheckTrainingObservables(std::vector<std::string>& trainObs, std::vector<std::string>& compObs)
+bool ComprehensivePIDProcessor::CheckTrainingObservables(const std::vector<std::string>& trainObs, const std::vector<std::string>& compObs)
 {
-  bool check_ok = true;
-  for (std::string tObs : trainObs)
-  {
-    bool found = false;
-    for (std::string cObs : compObs)
-      if (tObs == cObs) {found = true; break;}
+//  bool check_ok = true;
+//  for (const std::string& tObs : trainObs)
+//  {
+//    bool found = false;
+//    for (const std::string& cObs : compObs)
+//      if (tObs == cObs) {found = true; break;}
+//
+//    if (!found) {check_ok = false; break;}
+//  }
+//  return check_ok;
 
-    if (!found) {check_ok = false; break;}
-  }
-  return check_ok;
+  for (const std::string& tObs : trainObs) if (std::find(compObs.begin(), compObs.end(), tObs) == compObs.end()) return false;
+  return true;
 }
 
 void ComprehensivePIDProcessor::CreateReferenceFile(int n)

@@ -1,6 +1,6 @@
 #include <InputAlgorithm_TOF.h>
 #include <UTIL/PIDHandler.h>
-
+#include <math.h>
 
 using namespace lcio;
 
@@ -37,7 +37,7 @@ namespace cpid {
     return obsNames;
   }
 
-  std::vector<std::pair<float,float> > InputAlgorithm_TOF::extractObservables( ReconstructedParticleImpl* pfo, LCCollection* col_pfo){
+  std::vector<std::pair<float,float> > InputAlgorithm_TOF::extractObservables( ReconstructedParticleImpl* pfo, LCCollection* col_pfo, int){
 
     //sloM << " IA_TOF::exObs called " << std::endl;
 
@@ -62,6 +62,7 @@ namespace cpid {
     {
       float TOFlength = TOFParams[TOFParaID_length];
       float TOFbeta_ch = (TOFlength/TOFParams[TOFParaID_closest]) / 299.8;
+      if (isnan(TOFbeta_ch) || isinf(TOFbeta_ch)) TOFbeta_ch = -1;
       obsValues.push_back(std::pair<float,float>{TOFbeta_ch, 0});
     }
     else

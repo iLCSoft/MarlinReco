@@ -30,7 +30,7 @@ namespace cpid
 
       void registerAlgorithm(InputAlgorithm* algorithm);
 
-      std::set< std::string > getAvailableAlgorithmTypes();
+      std::vector<std::string> getAvailableAlgorithmTypes();
 
       AlgorithmMgr();
 
@@ -38,7 +38,7 @@ namespace cpid
 
       static AlgorithmMgr* _me;
       std::map<const std::string, InputAlgorithm*> _map{};
-      std::list<InputAlgorithm*> _list{};
+      //std::list<InputAlgorithm*> _list{};
   };
 }
 

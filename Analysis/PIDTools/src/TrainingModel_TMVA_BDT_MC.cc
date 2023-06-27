@@ -34,6 +34,9 @@ namespace cpid {
     _facMet = tmi.inparS[2];
     _facCut = tmi.inparS[3];
 
+    if (tmi.inparF.size()>0) _nEvtMin4Train = tmi.inparF[0];
+    else _nEvtMin4Train = 10;
+
     struct stat meta;
     if (stat(_modelName.c_str(), &meta)) mkdir(_modelName.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
@@ -82,13 +85,22 @@ namespace cpid {
       TFile* outfile = TFile::Open(o.str().c_str(), "RECREATE");
       TMVA::Factory factory("TMVA", outfile, _facOpt);
 
+      bool cancel = false;
       for (int pdg : _tmi.signalPDGs)
       {
         std::stringstream sb; sb << "PDG == " << pdg << " || PDG == " << -pdg;
         TCut cutPDG = cutSig && sb.str().c_str();
         std::stringstream nm; nm << "PDG=" << pdg;
+
+        if (inTree->GetEntries(cutPDG) < _nEvtMin4Train)
+        {
+          sloE << _modelName << ": too few entries for BDT training! Only " << inTree->GetEntries(cutPDG) << " events in [" << m.str() << "], [PDG = +/- " << abs(pdg) << "]." << std::endl;
+          cancel = true;
+        }
         loader.AddTree(inTree, nm.str(), 1, cutPDG);
       }
+
+      if (cancel) {sloE << "Cancelling training!" << std::endl; return;}
 
       loader.PrepareTrainingAndTestTree("", _facLod);
       std::stringstream s; s << "BDT_MC_" << i;

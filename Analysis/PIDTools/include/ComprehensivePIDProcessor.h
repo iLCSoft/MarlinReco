@@ -119,7 +119,7 @@ private:
   float _PDG=0, _nTracks=0;
 
   const static int _nReason = 6;
-  double _nRejectedPFOs[_nReason];
+  unsigned int _nRejectedPFOs[_nReason];
   TH1D* _rejectedPFOs{};
 
   std::string _plotFolder=".", _fileFormat=".png";

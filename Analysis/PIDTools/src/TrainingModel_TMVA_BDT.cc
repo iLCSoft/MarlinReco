@@ -89,6 +89,19 @@ namespace cpid {
       }
       cutBkg = cutBkg && cutPDG;
 
+      bool cancel = false;
+      if (inTree->GetEntries(cutSig) < _nEvtMin4Train)
+      {
+        sloE << _modelName << ": too few entries for BDT training! Only " << inTree->GetEntries(cutSig) << " events in [" << m.str() << "] for signal PDGs." << std::endl;
+        cancel = true;
+      }
+      if (inTree->GetEntries(cutBkg) < _nEvtMin4Train)
+      {
+        sloE << _modelName << ": too few entries for BDT training! Only " << inTree->GetEntries(cutBkg) << " events in [" << m.str() << "] for background PDGs." << std::endl;
+        cancel = true;
+      }
+      if (cancel) {sloE << "Cancelling training!" << std::endl; return;}
+
       TMVA::DataLoader loader(_modelName.c_str());
       for (unsigned int v=0; v<_tmi.obsNames.size(); ++v) loader.AddVariable(_tmi.obsNames[v]);
       std::stringstream o; o << _modelName << "/TMVA_BDT_Out_" << i << ".root";

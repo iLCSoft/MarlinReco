@@ -20,12 +20,12 @@ namespace cpid {
 
     virtual InputAlgorithm* newAlgorithm() {return new InputAlgorithm_dEdx_RCD;}
 
-    virtual std::vector<std::string> init( std::vector<float> inparF, std::vector<std::string> inparS);
+    virtual std::vector<std::string> init(const std::vector<float>& inparF, const std::vector<std::string>& inparS);
 
     // The work horse
     virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col, int PDG);
 
-    double BB_curve(double mass, double mom, std::vector<double> pars);
+    double BB_curve(double mass, double mom, std::vector<double>& pars);
 
   private:
 

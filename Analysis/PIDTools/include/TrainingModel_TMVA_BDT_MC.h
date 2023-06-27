@@ -44,6 +44,7 @@ namespace cpid {
     std::string _facCut{};  // general cuts; in addition to momentum bins and sig/bkg PDG cuts
     TMVA::Reader* _TReader{};
 
+    int _nEvtMin4Train = 10;
   };
 
 } // end namespace cpid

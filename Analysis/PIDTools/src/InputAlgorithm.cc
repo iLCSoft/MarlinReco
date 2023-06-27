@@ -17,7 +17,7 @@ namespace cpid {
 
   }
 
-  std::vector<std::string> InputAlgorithm::init(std::vector<float>, std::vector<std::string>)
+  std::vector<std::string> InputAlgorithm::init(const std::vector<float>&, const std::vector<std::string>&)
   {
     std::vector<std::string> obsNames{};
     return obsNames;

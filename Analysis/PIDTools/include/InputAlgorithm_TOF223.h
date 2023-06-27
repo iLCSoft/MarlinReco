@@ -20,7 +20,7 @@ namespace cpid {
 
     virtual InputAlgorithm_TOF223*  newAlgorithm() {return new InputAlgorithm_TOF223;}
 
-    virtual std::vector<std::string> init(std::vector<float> inparF, std::vector<std::string> inparS);
+    virtual std::vector<std::string> init(const std::vector<float>& inparF, const std::vector<std::string>& inparS);
 
     // The work horse
     virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col, int PDG);

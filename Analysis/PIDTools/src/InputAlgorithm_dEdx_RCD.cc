@@ -10,24 +10,16 @@ namespace cpid {
 
   InputAlgorithm_dEdx_RCD::InputAlgorithm_dEdx_RCD(): InputAlgorithm("dEdx_RCD")
   {
-    _description = "Returns dE/dx value of PFO track";
+    _description = "Returns dE/dx distances to reference curves of PFO track";
   }
 
-  std::vector<std::string> InputAlgorithm_dEdx_RCD::init(std::vector<float> inparF, std::vector<std::string> inparS)
+  std::vector<std::string> InputAlgorithm_dEdx_RCD::init(const std::vector<float>& inparF, const std::vector<std::string>& inparS)
   {
-//    sloM << "InputAlgorithm_dEdx_RCD init float parameters: ";
-//    for (unsigned int i=0; i<inparF.size(); ++i) {sloM << inparF[i] << " ";}
-//    sloM << std::endl;
-//
-//    sloM << "InputAlgorithm_dEdx_RCD init string parameters: ";
-//    for (unsigned int i=0; i<inparS.size(); ++i) {sloM << inparS[i] << " ";}
-//    sloM << std::endl;
-
     print_init(inparF, inparS);
 
     if (inparF.size()<25)
     {
-      sloE << "InputAlgorithm dEdx_RCD received too few (<25) parameters for reference curves!" << std::endl;
+      sloE << _algoName << ": InputAlgorithm dEdx_RCD received too few (<25) parameters for reference curves!" << std::endl;
       throw std::runtime_error("parameters error");
     }
 
@@ -84,10 +76,9 @@ namespace cpid {
     }
 
     return obsValues;
-
   }
 
-  double InputAlgorithm_dEdx_RCD::BB_curve(double mass, double mom, std::vector<double> pars)
+  double InputAlgorithm_dEdx_RCD::BB_curve(double mass, double mom, std::vector<double>& pars)
   {
     if (pars.size()<5) return 0;
 

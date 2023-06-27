@@ -15,6 +15,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <TClass.h>
+#include <TCut.h>
 
 using namespace lcio;
 using namespace marlin;
@@ -206,6 +207,7 @@ void ComprehensivePIDProcessor::init() {
 
   for (int i=0; i<_nAlgos; ++i)
   {
+    // algorithms can be specified as type:name or just type (then name = type)
     std::size_t p = _inputAlgoSpecs[i].find(":");
     if (p==std::string::npos)
     {
@@ -225,8 +227,8 @@ void ComprehensivePIDProcessor::init() {
 
     inparF.clear();
     inparS.clear();
-    std::string sF = _inputAlgoNames[i]; sF.append(".F");
-    std::string sS = _inputAlgoNames[i]; sS.append(".S");
+    std::string sF = _inputAlgoNames[i] + ".F";
+    std::string sS = _inputAlgoNames[i] + ".S";
     pars->getFloatVals(sF,inparF);
     pars->getStringVals(sS,inparS);
 
@@ -254,6 +256,7 @@ void ComprehensivePIDProcessor::init() {
   {
     for (int i=0; i<_nModels; ++i)
     {
+      // models can be specified as type:name or just type (then name = type)
       std::size_t p = _trainModelSpecs[i].find(":");
       if (p==std::string::npos)
       {
@@ -322,15 +325,15 @@ void ComprehensivePIDProcessor::init() {
 
     for (int i=0; i<_nModels; ++i)
     {
-      inparF.clear();
-      inparS.clear();
-      std::string sF = _trainModelNames[i]; sF.append(".F");
-      std::string sS = _trainModelNames[i]; sS.append(".S");
-      pars->getFloatVals(sF,inparF);
-      pars->getStringVals(sS,inparS);
+      tmi.inparF.clear();
+      tmi.inparS.clear();
+      std::string sF = _trainModelNames[i] + ".F";
+      std::string sS = _trainModelNames[i] + ".S";
+      pars->getFloatVals (sF, tmi.inparF);
+      pars->getStringVals(sS, tmi.inparS);
 
-      tmi.inparF = inparF;
-      tmi.inparS = inparS;
+      //tmi.inparF = inparF;
+      //tmi.inparS = inparS;
 
       if (_modeTrain)
       {
@@ -578,21 +581,21 @@ void ComprehensivePIDProcessor::end()
   {
     sloM << "Begin training..." << std::endl << std::endl;
     _observablesTree->Print();
+
     for (int i=0; i<_nModels; ++i) _trainingModels[i]->runTraining(_observablesTree);
     sloM << "Training done" << std::endl << std::endl;
   }
 
-  TCanvas* can = new TCanvas;
-  //TImage* img = TImage::Create();
-  gStyle->SetPalette(kBird);
-  //can->SetGrid();
-  //can->SetLogx();
-  can->SetLogz();
-  can->SetGrid(0,0);
-  gStyle->SetOptStat(0);
+  if (_modeInfer)
+  {
+    TCanvas* can = new TCanvas;
+    gStyle->SetPalette(kBird);
+    can->SetLogz();
+    can->SetGrid(0,0);
+    gStyle->SetOptStat(0);
 
-  //sloM << _PDGCheck->GetName() << std::endl;
-  PlotTH2(can, _PDGCheck);
+    PlotTH2(can, _PDGCheck);
+  }
 
   _TTreeFile->Close();
   sloM << "Numer of Events: " << _nEvt << "    Numer of PFOs: " << _nPFO << std::endl;

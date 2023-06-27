@@ -12,16 +12,8 @@ namespace cpid {
     _description = "Returns dE/dx value of PFO track";
   }
 
-  std::vector<std::string> InputAlgorithm_Pandora::init(std::vector<float> inparF, std::vector<std::string> inparS)
+  std::vector<std::string> InputAlgorithm_Pandora::init(const std::vector<float>& inparF, const std::vector<std::string>& inparS)
   {
-//    sloM << "InputAlgorithm_dEdx init float parameters: ";
-//    for (unsigned int i=0; i<inparF.size(); ++i) {sloM << inparF[i] << " ";}
-//    sloM << std::endl;
-//
-//    sloM << "InputAlgorithm_dEdx init string parameters: ";
-//    for (unsigned int i=0; i<inparS.size(); ++i) {sloM << inparS[i] << " ";}
-//    sloM << std::endl;
-
     print_init(inparF, inparS);
 
     std::vector<std::string> obsNames{"PandoraPDG"};

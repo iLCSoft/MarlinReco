@@ -38,9 +38,9 @@ namespace cpid {
 
     void setName(std::string name) {_algoName = name;}
 
-    virtual std::vector<std::string> init(std::vector<float>, std::vector<std::string> );
+    virtual std::vector<std::string> init(const std::vector<float>&, const std::vector<std::string>&);
 
-    void print_init(std::vector<float> inparF, std::vector<std::string> inparS)
+    void print_init(const std::vector<float>& inparF, const std::vector<std::string>& inparS)
     {
       sloM << _algoName << " init float parameters: ";
       for (unsigned int i=0; i<inparF.size(); ++i) {sloM << inparF[i] << " ";}

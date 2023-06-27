@@ -13,24 +13,16 @@ namespace cpid {
     _description = "Returns TOF mass of PFO";
   }
 
-  std::vector<std::string> InputAlgorithm_TOF223::init(std::vector<float> inparF, std::vector<std::string> inparS){
-
-//    sloM << "InputAlgorithm_TOF223 init float parameters: ";
-//    for (unsigned int i=0; i<inparF.size(); ++i) {sloM << inparF[i] << " ";}
-//    sloM << std::endl;
-//
-//    sloM << "InputAlgorithm_TOF223 init string parameters: ";
-//    for (unsigned int i=0; i<inparS.size(); ++i) {sloM << inparS[i] << " ";}
-//    sloM << std::endl;
-
+  std::vector<std::string> InputAlgorithm_TOF223::init(const std::vector<float>& inparF, const std::vector<std::string>& inparS)
+  {
     print_init(inparF, inparS);
 
     if (inparS.size()>0)
       _TOFAlgoName = inparS[0];
     else
     {
-      sloE << "TOFAlgoName not specified in TOF::init!" << std::endl;
-      //_TOFAlgoName = inparS[0];
+      sloE << _algoName << ": too few (<1) string parameters! TOFAlgoName not specified in TOF::init." << std::endl;
+      throw std::runtime_error("parameters error");
     }
 
     std::vector<std::string> obsNames{"mass"};

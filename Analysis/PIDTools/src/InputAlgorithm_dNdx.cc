@@ -52,7 +52,7 @@ namespace cpid {
     catch (...)
     {
       if (inparF.size()>2) _bField = inparF[2];
-      else _bField = -3.5;
+      else _bField = 3.5;
     }
 
     if (!TPCfound)
@@ -85,7 +85,7 @@ namespace cpid {
 
     float masses[] = {0.000511, 0.10566, 0.13957, 0.49368, 0.93827};
     float mass = 0;
-    switch (mcpdg)
+    switch (abs(mcpdg))
     {
     case   11: mass = 0.000511; break;
     case   13: mass = 0.10566;  break;
@@ -111,6 +111,7 @@ namespace cpid {
       if (phi0<-1e+10)
       {
         //obsValues.push_back(std::pair<float,float>{-1,-1});
+        sloD << " dN/dx fail: computePointInTracker gave phi0 = " << phi0 << std::endl;
         return failDefault;
       }
       float phi1 = computePointInTracker(trkHelixC, ref, _outRad, _zLen);
@@ -137,14 +138,18 @@ namespace cpid {
       {
         double bgRef = mom/masses[i];
         float dNdxRef = nClusters(bgRef, _gas)/10. * _scaling;
-        std::pair<float,float> dNdxValue {(dNdx-dNdxRef), sqrt(nCl)/len};
+        std::pair<float,float> dNdxValue {dNdx-dNdxRef, sqrt(nCl)/len};
         if (nCl==0 || dNdxRef==0) dNdxValue.first = -1e+10;
-        sloD << " " << dNdx-dNdxRef;
+        sloD << " " << dNdxValue.first;
         obsValues.push_back(dNdxValue);
       }
       sloD << std::endl;
     }
-    else return failDefault;
+    else
+    {
+      sloD << " dN/dx fail: tracks.size() = " << tracks.size() << ", mass = " << mass << ", MCPDG = " << mcpdg << std::endl;
+      return failDefault;
+    }
 
     return obsValues;
   }

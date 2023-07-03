@@ -58,3 +58,5 @@ Other parameters:
      string vector, default: {Ref.txt}.
 - **_trainingObservables** - List of observables that should be used for traning. If empty, all observables from the specified algorithms + momabs + lambda are used.  
      string vector, default: {}
+
+For more parameters please see the steering file or the constructor!

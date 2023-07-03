@@ -19,6 +19,7 @@ namespace cpid
       virtual ~ModelMgr(){};
 
       // create new algorithm to be used in processor
+      // the caller takes ownership here - don't forget to delete!
       TrainingModel* createModel(const std::string& type);
 
       // get archetype algorithm from map

@@ -19,7 +19,7 @@ namespace cpid
       virtual ~AlgorithmMgr(){};
 
       // create new algorithm to be used in processor
-      //InputAlgorithmPtr createAlgorithm(const std::string& type);
+      // the caller takes ownership here - don't forget to delete!
       InputAlgorithm* createAlgorithm(const std::string& type);
 
       // get archetype algorithm from map

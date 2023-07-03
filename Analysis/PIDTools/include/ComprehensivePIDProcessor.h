@@ -173,7 +173,8 @@ private:
   TH1D* _rejectedPFOs{};
 
   std::string _plotFolder=".", _fileFormat=".png";
-  TH2I* _PDGCheck{};
+  std::vector<TH2I*> _PDGCheck{};
+  std::vector<std::vector<TH2I*> > _PDGChecks{};
 
 };
 

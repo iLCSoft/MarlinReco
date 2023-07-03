@@ -80,7 +80,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  _trainingObservables,
                  std::vector<std::string>());
 
-  std::vector<int> signalPDGs = {11,13,211,321,2122};
+  std::vector<int> signalPDGs = {11,13,211,321,2212};
   registerProcessorParameter("signalPDGs",
                  "Vector of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
                  _signalPDGs,
@@ -90,6 +90,16 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  "Vector of PDG numbers that are considered background; default: {}.",
                  _backgroundPDGs,
                  std::vector<int>());
+
+  registerProcessorParameter("plotFolder",
+                 "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; default: .  [current working directory]",
+                 _plotFolder,
+                 std::string("."));
+
+  registerProcessorParameter("fileFormat",
+                 "File format of the automatic confusion matrix plots of inference; default: .png",
+                 _fileFormat,
+                 std::string(".png"));
 
 
   registerProcessorParameter("momMin",
@@ -341,6 +351,40 @@ void ComprehensivePIDProcessor::init() {
         tmi.obsValues = _inferObsValues;
         tmi.weightFiles = _weightFiles[i];
         _trainingModels[i]->initInference(tmi);
+
+        int nSig = _signalPDGs.size();
+        std::stringstream h1; h1 << "PDGCheck_" << i;
+        std::stringstream h2; h2 << "PDG Confusion Matrix, " << _trainingModels[i]->name();
+        _PDGCheck.push_back(new TH2I(h1.str().c_str(), h2.str().c_str(),nSig,-.5,nSig-.5,nSig,-.5,nSig-.5));
+        _PDGCheck[i]->SetXTitle("MCTruth PDG");
+        _PDGCheck[i]->SetYTitle("PFO PDG");
+        for (int p=0; p<nSig; p++)
+        {
+          std::stringstream s; s << _signalPDGs[p];
+          _PDGCheck[i]->GetXaxis()->SetBinLabel(p+1,s.str().c_str());
+          _PDGCheck[i]->GetYaxis()->SetBinLabel(p+1,s.str().c_str());
+        }
+        //_PDGCheck->GetXaxis()->SetBinLabel(nSig+1,"other");
+        //_PDGCheck->GetYaxis()->SetBinLabel(nSig+1,"other");
+        sloD << _PDGCheck[i]->GetName() << std::endl;
+
+        std::vector<TH2I*> tempV{};
+        for (int m=0; m<_nMomBins[i]; ++m)
+        {
+          std::stringstream t1; t1 << "PDGCheck_" << i << "_" << m;
+          std::stringstream t2; t2 << "PDG Confusion Matrix, " << _trainingModels[i]->name() << ", " << _weightFileBrackets[i][m].first << "<p/GeV<" << _weightFileBrackets[i][m].second;
+          tempV.push_back(new TH2I(t1.str().c_str(), t2.str().c_str(),nSig,-.5,nSig-.5,nSig,-.5,nSig-.5));
+          tempV[m]->SetXTitle("MCTruth PDG");
+          tempV[m]->SetYTitle("PFO PDG");
+          for (int p=0; p<nSig; p++)
+          {
+            std::stringstream s; s << _signalPDGs[p];
+            tempV[m]->GetXaxis()->SetBinLabel(p+1,s.str().c_str());
+            tempV[m]->GetYaxis()->SetBinLabel(p+1,s.str().c_str());
+          }
+        }
+        _PDGChecks.push_back(tempV);
+        for (int m=0; m<_nMomBins[i]; ++m) {sloD << _PDGChecks[i][m]->GetName() << std::endl;}
       }
     }
 
@@ -371,20 +415,7 @@ void ComprehensivePIDProcessor::init() {
   _rejectedPFOs->GetXaxis()->SetBinLabel(6,"too large z0");
   _rejectedPFOs->SetYTitle("abundance");
 
-  int nSig = _signalPDGs.size();
-  _PDGCheck = new TH2I("PDGCheck", "PDG cross check PFO vs. MCTruth",nSig+1,-.5,nSig+.5,nSig+1,-.5,nSig+.5);
-  _PDGCheck->SetXTitle("MCTruth PDG");
-  _PDGCheck->SetYTitle("PFO PDG");
-  for (int i=0; i<nSig; i++)
-  {
-    std::stringstream s; s << _signalPDGs[i];
-    _PDGCheck->GetXaxis()->SetBinLabel(i+1,s.str().c_str());
-    _PDGCheck->GetYaxis()->SetBinLabel(i+1,s.str().c_str());
-  }
-  _PDGCheck->GetXaxis()->SetBinLabel(nSig+1,"other");
-  _PDGCheck->GetYaxis()->SetBinLabel(nSig+1,"other");
 
-  sloM << _PDGCheck->GetName() << std::endl;
 }
 
 
@@ -483,7 +514,7 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
       if (nTracks>0)
       {
         if (_cutD0 && pfo->getTracks()[0]->getD0()>_cutD0) {++_nRejectedPFOs[4]; continue;}
-        if (_cutZ0 && pfo->getTracks()[0]->getZ0()>_cutZ0) {++_nRejectedPFOs[4]; continue;}
+        if (_cutZ0 && pfo->getTracks()[0]->getZ0()>_cutZ0) {++_nRejectedPFOs[5]; continue;}
       }
 
       ++_nPFO;
@@ -528,19 +559,25 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
 
       if (_modeInfer)
       {
-        //sloD << "start inference" << std::endl;
+        sloD << "start inference" << std::endl;
         for (int m=0; m<_nModels; ++m) for (int j=0; j<_nMomBins[m]; ++j)
         {
-          //sloD << m << " " << j << std::endl;
           if (_momabs<_weightFileBrackets[m][j].first || _momabs>_weightFileBrackets[m][j].second) continue;
           const std::vector<float> eval_out = _trainingModels[m]->runInference(j);
-          //sloD << " > inference was run" << std::endl;
 
           auto eval_max = max_element(eval_out.begin(),eval_out.end());
           int index = std::distance(eval_out.begin(), eval_max);
 
+          for (unsigned int k=0; k<eval_out.size(); ++k) {sloD << " " << eval_out[k];}
+          sloD << " | " << index << " " << allPDGs[index] << " " << abs(MCPDG) << std::endl;
+
           pidh.setParticleID(pfo, 0, allPDGs[index], 0, algoID[m], eval_out);
-          for (int ipdg=0; ipdg<(int)_signalPDGs.size(); ++ipdg) if (_signalPDGs[ipdg]==abs(MCPDG)) _PDGCheck->Fill(ipdg, index);
+          for (int ipdg=0; ipdg<(int)_signalPDGs.size(); ++ipdg)
+            if (_signalPDGs[ipdg]==abs(MCPDG))
+            {
+              _PDGCheck[m]->Fill(ipdg, index);
+              _PDGChecks[m][j]->Fill(ipdg, index);
+            }
           //sloM << MCPDG << " " << index << " " << allPDGs[index] << " " << _PDGCheck->GetEntries() << std::endl;
           break;
         }
@@ -589,7 +626,12 @@ void ComprehensivePIDProcessor::end()
     can->SetGrid(0,0);
     gStyle->SetOptStat(0);
 
-    PlotTH2(can, _PDGCheck);
+    for (int m=0; m<_nModels; ++m)
+    {
+      PlotTH2(can, _PDGCheck[m]);
+      for (int j=0; j<_nMomBins[m]; ++j)
+        PlotTH2(can, _PDGChecks[m][j]);
+    }
   }
 
   _TTreeFile->Close();

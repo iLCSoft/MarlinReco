@@ -129,18 +129,31 @@
 
   <processor name="MyComprehensivePIDProcessor" type="ComprehensivePIDProcessor">
 
+    <parameter name="PFOCollection" type="string" value="PandoraPFOs"/>
+    <parameter name="RecoMCTruthLink" type="string" value="RecoMCTruthLink"/>
+    
     <parameter name="modeExtract" type="bool" value="true" />
     <parameter name="modeTrain"   type="bool" value="true"/>
     <parameter name="modeInfer"   type="bool" value="false"/>
 
-    <parameter name="PFOCollection" type="string" value="PandoraPFOs"/>
+    <parameter name="TTreeFileName" type="string" value="TTreeFile.root"/>
+    <parameter name="reffile" type="string" value="Ref.12bins.txt"/>
     <parameter name="signalPDGs" type="FloatVec"  value="11 13 211 321 2212"/>
     <parameter name="backgroundPDGs" type="FloatVec"  value=""/>
-    <parameter name="momNBins" type="float" value="12"/>
+    <parameter name="plotFolder" type="string" value="."/>
+    <parameter name="fileFormat" type="string" value=".png"/>
+    
+    <parameter name="momMin" type="float" value="1"/>
+    <parameter name="momMax" type="float" value="100"/>
     <parameter name="momLog" type="bool" value="true"/>
-    <parameter name="reffile" type="string" value="Ref.12bins.txt"/>
+    <parameter name="momNBins" type="float" value="12"/>
 
+    <parameter name="cutD0" type="float" value="0"/>
+    <parameter name="cutZ0" type="float" value="0"/>
+    <parameter name="cutLamMin" type="float" value="0"/>
+    <parameter name="cutLamMax" type="float" value="0"/>
     <parameter name="cutNTracksMin" type="int" value="1"/>
+    <parameter name="cutNTracksMax" type="int" value="-1"/>
     
     <parameter name="inputAlgoSpecs" type="StringVec">
       dEdx_RCD

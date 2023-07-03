@@ -137,14 +137,14 @@ void TOFEstimators::processEvent(EVENT::LCEvent * evt){
                     streamlog_out(WARNING)<<"Found no raw SET strip hits, but space point is built!? Writing TOF as 0."<<std::endl;
                 }
                 else if( rawObjects.size() == 1 ){
-                    streamlog_out(WARNING)<<"Found only one SET strip hit, but space point is built!? Writing TOF from a single strip."<<std::endl;
-                    TrackerHitPlane* rawHit = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
+                    streamlog_out(ERROR)<<"Found only one SET strip hit, but space point is built!? Writing TOF from a single strip."<<std::endl;
+                    auto* rawHit = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
                     if ( rawHit != nullptr ) timeOfFlight = RandGauss::shoot(rawHit->getTime(), _timeResolution);
                 }
                 else{
                     if (rawObjects.size() > 2) streamlog_out(WARNING)<<"Found more than two SET strip hits! Writing TOF as an average of the first two elements."<<std::endl;
-                    TrackerHitPlane* rawHitFront = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
-                    TrackerHitPlane* rawHitBack = dynamic_cast <TrackerHitPlane*>(rawObjects[1]);
+                    auto* rawHitFront = dynamic_cast <TrackerHitPlane*>(rawObjects[0]);
+                    auto* rawHitBack = dynamic_cast <TrackerHitPlane*>(rawObjects[1]);
                     if (rawHitFront != nullptr && rawHitBack != nullptr){
                         double timeFront = RandGauss::shoot(rawHitFront->getTime(), _timeResolution);
                         double timeBack = RandGauss::shoot(rawHitBack->getTime(), _timeResolution);

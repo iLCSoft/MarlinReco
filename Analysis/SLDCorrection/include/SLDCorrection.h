@@ -159,10 +159,6 @@ private:
 	int					m_nRunSum;
 	int					m_nEvtSum;
 	double					m_Bfield;
-	double					c;
-	double					mm2m;
-	double					eV2GeV;
-	double					eB;
 	bool					foundFlightDirection;
 	IntVector				m_SLDFlavour{}; //4: SLDecayOfCHadron, 5: SLDecayOfBHadron, 15: SLDecayOfTauLepton
 	IntVector				m_SLDType{}; //0: SLDecay with DownStream/UpStream semi-leptonic decay(s), 1: SLDecay without DownStream/UpStream semi-leptonic decay(s)

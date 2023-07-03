@@ -47,10 +47,6 @@ SLDCorrection::SLDCorrection() :
 	m_nRunSum(0),
 	m_nEvtSum(0),
 	m_Bfield(0.f),
-	c(0.),
-	mm2m(0.),
-	eV2GeV(0.),
-	eB(0.),
 	foundFlightDirection(true),
 	m_nSLDecayOfBHadron(0),
 	m_nSLDecayOfCHadron(0),
@@ -474,10 +470,6 @@ void SLDCorrection::init()
 
 	streamlog_out(DEBUG) << "	init called  " << std::endl;
 	m_Bfield = MarlinUtil::getBzAtOrigin();
-	c = 2.99792458e8;
-	mm2m = 1e-3;
-	eV2GeV = 1e-9;
-	eB = m_Bfield * c * mm2m * eV2GeV;
 	if ( !m_cheatPVAcharged ) m_cheatCharged4momentum = false;
 	if ( !m_cheatPVAneutral ) m_cheatNeutral4momentum = false;
 	printParameters();

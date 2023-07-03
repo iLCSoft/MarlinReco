@@ -19,6 +19,7 @@ namespace cpid
       virtual ~AlgorithmMgr(){};
 
       // create new algorithm to be used in processor
+      //InputAlgorithmPtr createAlgorithm(const std::string& type);
       InputAlgorithm* createAlgorithm(const std::string& type);
 
       // get archetype algorithm from map
@@ -38,7 +39,6 @@ namespace cpid
 
       static AlgorithmMgr* _me;
       std::map<const std::string, InputAlgorithm*> _map{};
-      //std::list<InputAlgorithm*> _list{};
   };
 }
 

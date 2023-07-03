@@ -29,7 +29,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
 
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
                "PFOCollection",
-               "Pandora PFOs",
+               "PFO input collection",
                _PFOColName,
                std::string("PandoraPFOs"));
 
@@ -55,23 +55,18 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  false);
 
   registerProcessorParameter("TTreeFileName",
-                 "Name of the file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input; default: TTreeFile.root",
+                 "Name of the root file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input; default: TTreeFile.root",
                  _TTreeFileName,
                  std::string("TTreeFile.root"));
 
   registerProcessorParameter("inputAlgoSpecs",
-                 "List of input algorithms; for each specify only type (name is then type) or type:name; default: {}",
+                 "List of input algorithms; for each specify type:name or only type (then name=type); default: {}",
                  _inputAlgoSpecs,
                  std::vector<std::string>());
 
   registerProcessorParameter("trainModelSpecs",
-                 "List of training models; for each specify only type (name is then type) or type:name; default: {}",
+                 "List of training models; for each specify type:name or only type (then name=type); default: {}",
                  _trainModelSpecs,
-                 std::vector<std::string>());
-
-  registerProcessorParameter("trainingObservables",
-                 "List of observables that should be used for traning; if empty, all observables from the specified algorithms + momabs + lambda are used; default: {}",
-                 _trainingObservables,
                  std::vector<std::string>());
 
   std::vector<std::string> ref{std::string("Ref.txt")};
@@ -80,6 +75,11 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  _reffile,
                  ref);
 
+  registerProcessorParameter("trainingObservables",
+                 "List of observables that should be used for traning; if empty, all observables from the specified algorithms + momabs + lambda are used; default: {}",
+                 _trainingObservables,
+                 std::vector<std::string>());
+
   std::vector<int> signalPDGs = {11,13,211,321,2122};
   registerProcessorParameter("signalPDGs",
                  "Vector of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
@@ -87,7 +87,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  signalPDGs);
 
   registerProcessorParameter("backgroundPDGs",
-                 "Vector of PDG numbers that are considered signal; default: {}.",
+                 "Vector of PDG numbers that are considered background; default: {}.",
                  _backgroundPDGs,
                  std::vector<int>());
 
@@ -161,7 +161,6 @@ void ComprehensivePIDProcessor::init() {
   _nModels = _trainModelSpecs.size();
 
 
-  //AIDAProcessor::tree(this);
   if (_modeExtract)
   {
     if (_TTreeFileName!="")
@@ -175,7 +174,6 @@ void ComprehensivePIDProcessor::init() {
   {
     _TTreeFile = new TFile(_TTreeFileName.c_str());
     _observablesTree = (TTree*)_TTreeFile->Get("observablesTree");
-    //_observablesTree->Print();
   }
 
   _observablesNames.push_back("momabs");
@@ -220,7 +218,7 @@ void ComprehensivePIDProcessor::init() {
       _inputAlgoNames.push_back(_inputAlgoSpecs[i].substr(p+1));
     }
 
-    //sloM << "creating new algorithm: " << _inputAlgoTypes[i] << ":" << _inputAlgoNames[i] << std::endl;
+    sloD << "creating new algorithm: " << _inputAlgoTypes[i] << ":" << _inputAlgoNames[i] << std::endl;
 
     _inputAlgorithms.push_back(AlgorithmMgr::instance()->createAlgorithm(_inputAlgoTypes[i]));
     _inputAlgorithms[i]->setName(_inputAlgoNames[i]);
@@ -331,9 +329,6 @@ void ComprehensivePIDProcessor::init() {
       std::string sS = _trainModelNames[i] + ".S";
       pars->getFloatVals (sF, tmi.inparF);
       pars->getStringVals(sS, tmi.inparS);
-
-      //tmi.inparF = inparF;
-      //tmi.inparS = inparS;
 
       if (_modeTrain)
       {
@@ -598,6 +593,10 @@ void ComprehensivePIDProcessor::end()
   }
 
   _TTreeFile->Close();
+
+  for (int i=0; i<_nAlgos;  ++i) delete _inputAlgorithms[i];
+  for (int i=0; i<_nModels; ++i) delete _trainingModels [i];
+
   sloM << "Numer of Events: " << _nEvt << "    Numer of PFOs: " << _nPFO << std::endl;
   sloM << "-------------------------------------------------" << std::endl;
 }
@@ -605,18 +604,10 @@ void ComprehensivePIDProcessor::end()
 
 bool ComprehensivePIDProcessor::CheckTrainingObservables(const std::vector<std::string>& trainObs, const std::vector<std::string>& compObs)
 {
-//  bool check_ok = true;
-//  for (const std::string& tObs : trainObs)
-//  {
-//    bool found = false;
-//    for (const std::string& cObs : compObs)
-//      if (tObs == cObs) {found = true; break;}
-//
-//    if (!found) {check_ok = false; break;}
-//  }
-//  return check_ok;
-
-  for (const std::string& tObs : trainObs) if (std::find(compObs.begin(), compObs.end(), tObs) == compObs.end()) return false;
+  for (const std::string& tObs : trainObs)
+  {
+    if (std::find(compObs.begin(), compObs.end(), tObs) == compObs.end()) return false;
+  }
   return true;
 }
 

@@ -15,8 +15,6 @@
 using namespace lcio;
 namespace cpid {
 
-//class LikelihoodPID;
-//class LowMomentumMuPiSeparationPID_BDTG;
 
   class InputAlgorithm {
 
@@ -60,6 +58,8 @@ namespace cpid {
     std::string _description{};
 
   };
+
+  using InputAlgorithmPtr = std::unique_ptr<InputAlgorithm>;
 
 } // end namespace cpid
 

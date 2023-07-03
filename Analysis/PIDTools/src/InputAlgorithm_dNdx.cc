@@ -129,17 +129,20 @@ namespace cpid {
       double bg  = mom/mass;
       float  mCl = nClusters(bg, _gas)/10. * _scaling * len;
       float  nCl = gRandom->PoissonD(mCl);
+      float dNdx = nCl/len;
 
-      sloD << mass << " " << mom << " " << bg << " | " << phi0 << " " << phi1 << " " << len << " | " << mCl << " " << nCl << std::endl;
+      sloD << mass << " " << mom << " " << bg << " | " << phi0 << " " << phi1 << " " << len << " | " << mCl << " " << nCl << " " << dNdx << std::endl;
 
       for (int i=0; i<5; ++i)
       {
         double bgRef = mom/masses[i];
-        float mClRef = nClusters(bgRef, _gas)/10. * _scaling * len;
-        std::pair<float,float> dNdxValue {(nCl-mClRef)/sqrt(nCl), sqrt(nCl)};
-        if (nCl==0 || mClRef==0) dNdxValue.first = -1e+10;
+        float dNdxRef = nClusters(bgRef, _gas)/10. * _scaling;
+        std::pair<float,float> dNdxValue {(dNdx-dNdxRef), sqrt(nCl)/len};
+        if (nCl==0 || dNdxRef==0) dNdxValue.first = -1e+10;
+        sloD << " " << dNdx-dNdxRef;
         obsValues.push_back(dNdxValue);
       }
+      sloD << std::endl;
     }
     else return failDefault;
 
@@ -176,8 +179,12 @@ namespace cpid {
     }
 
     float interp = 0.0;
-    TSpline3* sp3 = new TSpline3("sp3", bgs, nCl, n);
-    if (bg > bgs[0] && bg < bgs[n - 1]) interp = sp3->Eval(bg);
+    if (bg>1000) interp = nCl[17];
+    else
+    {
+      TSpline3* sp3 = new TSpline3("sp3", bgs, nCl, n);
+      if (bg > bgs[0] && bg < bgs[n - 1]) interp = sp3->Eval(bg);
+    }
     return interp;
   }
 

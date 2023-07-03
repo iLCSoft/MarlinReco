@@ -38,7 +38,6 @@ namespace cpid
 
       static ModelMgr* _me;
       std::map<const std::string, TrainingModel*> _map{};
-      //std::list<TrainingModel*> _list{};
   };
 }
 

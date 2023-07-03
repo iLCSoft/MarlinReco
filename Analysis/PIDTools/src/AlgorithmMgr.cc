@@ -23,15 +23,17 @@ namespace cpid
   std::vector<std::string> AlgorithmMgr::getAvailableAlgorithmTypes()
   {
     std::vector<std::string> atypes{};
-    //for(std::map<const std::string, InputAlgorithm*>::iterator i=_map.begin() ; i!= _map.end() ; i++) atypes.insert(i->first);
     for(const auto& [name, _] : _map) atypes.push_back(name);
     return atypes;
   }
 
+  //InputAlgorithmPtr AlgorithmMgr::createAlgorithm(const std::string& type)
   InputAlgorithm* AlgorithmMgr::createAlgorithm(const std::string& type)
   {
     InputAlgorithm* algorithm = getAlgorithm(type);
     InputAlgorithm* newAlgorithm = algorithm->newAlgorithm();
+//    InputAlgorithm* algorithm = getAlgorithm(type);
+//    InputAlgorithmPtr newAlgorithm = InputAlgorithmPtr(algorithm->newAlgorithm());
     return newAlgorithm;
   }
 

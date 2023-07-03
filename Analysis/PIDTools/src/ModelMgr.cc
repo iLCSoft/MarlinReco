@@ -23,7 +23,6 @@ namespace cpid
   std::vector<std::string> ModelMgr::getAvailableModelTypes()
   {
     std::vector<std::string> mtypes{};
-    //for(std::map<const std::string, TrainingModel*>::iterator i=_map.begin() ; i!= _map.end() ; i++) mtypes.insert(i->first);
     for(const auto& [name, _] : _map) mtypes.push_back(name);
     return mtypes;
   }

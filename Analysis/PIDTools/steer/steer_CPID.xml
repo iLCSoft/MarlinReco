@@ -28,7 +28,7 @@
     <!-- The lcgeo directory where to look for the ILD model -->
     <constant name="lcgeo_DIR" value="/cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/lcgeo/v00-16-07" />
     <!-- ILD detector model -->
-    <constant name="DetectorModel" value="ILD_s5_o1_v02" />
+    <constant name="DetectorModel" value="ILD_l5_o1_v02" />
     <!-- The full compact file name -->
     <constant name="CompactFile" value="${lcgeo_DIR}/ILD/compact/${DetectorModel}/${DetectorModel}.xml" />
     <!-- location of ILDConfig production folder -->
@@ -75,7 +75,7 @@
   <!-- ***** Execute section ***** -->
   <execute>
     <!-- Initialization processors -->
-    <processor name="InitDD4hep" />
+<!--     <processor name="InitDD4hep" /> -->
     <processor name="MyStatusmonitor" />
     
     <processor name="MyComprehensivePIDProcessor" />
@@ -88,6 +88,7 @@
   <!-- ***** Global section ***** -->
   <global>
     <parameter name="LCIOInputFiles">
+
       ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_0.slcio
       ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_1.slcio
       ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15664_2.slcio
@@ -100,7 +101,7 @@
       ${inputfolder}/rv02-02-01.sv02-02.mILD_l5_o2_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001.d_dstm_15664_9.slcio
 
     </parameter>
-    <parameter name="MaxRecordNumber" value="10000"/>
+    <parameter name="MaxRecordNumber" value="0"/>
     <parameter name="SkipNEvents" value="0"/>
     <parameter name="SupressCheck" value="false"/>
     <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter>
@@ -133,20 +134,26 @@
     <parameter name="modeInfer"   type="bool" value="false"/>
 
     <parameter name="PFOCollection" type="string" value="PandoraPFOs"/>
-    <parameter name="signalPDGs" type="FloatVec"  value="11 13 211 321"/>
+    <parameter name="signalPDGs" type="FloatVec"  value="11 13 211 321 2212"/>
     <parameter name="backgroundPDGs" type="FloatVec"  value=""/>
-    <parameter name="momNBins" type="float" value="4"/>
+    <parameter name="momNBins" type="float" value="12"/>
     <parameter name="momLog" type="bool" value="true"/>
-    <parameter name="reffile" type="string" value="Ref.4bins.txt"/>
+    <parameter name="reffile" type="string" value="Ref.12bins.txt"/>
+
+    <parameter name="cutNTracksMin" type="int" value="1"/>
     
     <parameter name="inputAlgoSpecs" type="StringVec">
-      dEdx_RCD:dEdx_RCD
+      dEdx_RCD
       TOF:TOF50
       Pandora
     </parameter>
     
     <!--parameter name="notUsed" type="StringVec">
+      dEdx_RCD:dEdx_RCD
+      TOF223:TOF50
+      Pandora
       dEdx
+      dNdx
       TOF:TOF0
       TOF:TOF10
       TOF:TOF50
@@ -165,14 +172,15 @@
        6.54955215e-02   8.26239081e+04   1.92933904e+07  2.52743206e-01   2.26657525e-04
        7.52235689e-02   1.59710415e+04   1.79625604e+06  3.15315795e-01   2.30414997e-04
        7.92251260e-02   6.38129720e+04   3.82995071e+04  2.80793601e-01   7.14371743e-04
+       1
     </parameter>
 
     <parameter name="trainModelSpecs" type="StringVec">
-      TMVA_BDT_MC:TMVA_BDT_MC_4bins
+      TMVA_BDT_MC:TMVA_BDT_MC_12bins
     </parameter>
     <parameter name="trainingObservables" type="StringVec"> </parameter>
 
-    <parameter name="TMVA_BDT_MC_4bins.S" type="StringVec">
+    <parameter name="TMVA_BDT_MC_12bins.S" type="StringVec">
       !V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=multiclass
       SplitMode=Random:NormMode=NumEvents:!V
       !H:!V:NTrees=100:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.50:nCuts=20:MaxDepth=3

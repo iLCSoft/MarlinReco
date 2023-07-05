@@ -49,27 +49,62 @@ public:
 	virtual void processRunHeader();
 	virtual void processEvent( EVENT::LCEvent *pLCEvent );
 
-	bool hasPrimarySLDecay( const MCP &parentHadron , int &chargedLeptonPDG ); //checks if a MCParticle (potentially a B-/C-Hadron) decays semi-leptonically) true: decays semi-leptonically, false: doesn't decay semi-leptonically
-	bool hasDownStreamSLDecay( const MCP &parentHadron ); //checks whether a B-/C-Hadron that decays semi-leptonically, has another semi-leptonic decay in its decay products or not, true: has another semi-leptonic decay, false: does not have any semi-leptonic decay in its decay products
-	bool hasUpStreamSLDecay( const MCP &parentHadron ); //checks  whether a B-/C-Hadron that decays semi-leptonically, has another semi-leptonic decay in its up-stream, true has a semi-leptonic decay in up-stream, false, does not have a semi-leptonic decay in up-stream
-	bool checkBHadronSLDecay( const MCP &SLDLepton ); // checks the flavour of the Hadron decays semi-leptonicall, if B-Hadron: true, if not: false
-	bool checkCHadronSLDecay( const MCP &SLDLepton ); // checks the flavour of the Hadron decays semi-leptonicall, if C-Hadron: true, if not: false
-	bool checkTauLeptonSLDecay( const MCP &SLDLepton ); // checks the flavour of the Hadron decays semi-leptonicall, if tau-lepton: true, if not: false
+	//	hasPrimarySLDecay checks if a MCParticle (potentially a B-/C-Hadron) decays semi-leptonically) true: decays semi-leptonically, false: doesn't decay semi-leptonically
+	bool hasPrimarySLDecay( const MCP &parentHadron , int &chargedLeptonPDG );
+
+	//	hasDownStreamSLDecay checks whether a B-/C-Hadron that decays semi-leptonically, has another semi-leptonic decay in its decay products or not, true: has another semi-leptonic decay, false: does not have any semi-leptonic decay in its decay products
+	bool hasDownStreamSLDecay( const MCP &parentHadron );
+
+	//	hasUpStreamSLDecay checks  whether a B-/C-Hadron that decays semi-leptonically, has another semi-leptonic decay in its up-stream, true has a semi-leptonic decay in up-stream, false, does not have a semi-leptonic decay in up-stream
+	bool hasUpStreamSLDecay( const MCP &parentHadron );
+
+	//	checkBHadronSLDecay checks the flavour of the Hadron decays semi-leptonicall, if B-Hadron: true, if not: false
+	bool checkBHadronSLDecay( const MCP &SLDLepton );
+
+	//	checkCHadronSLDecay checks the flavour of the Hadron decays semi-leptonicall, if C-Hadron: true, if not: false
+	bool checkCHadronSLDecay( const MCP &SLDLepton );
+
+	//	checkTauLeptonSLDecay checks the flavour of the Hadron decays semi-leptonicall, if tau-lepton: true, if not: false
+	bool checkTauLeptonSLDecay( const MCP &SLDLepton );
+
+	//	doSLDCorrection prepares all inputs for nu-correction and makes output LCIO elements (SLDVertex, associated RP of SLDVertex, solutions for neutrino as Reconstructed Particle, etc)
 	virtual void doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLepton , VertexVector& semiLeptonicVertices , PFOVector& semiLeptonicVertexRecoParticles , PFOVector& jetsOfSemiLeptonicDecays , PFOVectorVector& neutrinos , IntVector &sldStatus , IntVector &pvaStatus , IntVector &solutionSigns , MCPVector &trueNeutrinos );
-	void showTrueParameters( const MCP &SLDLepton ); // prepares all inputs for correction
-	TLorentzVector getNeutrinoFourMomentum( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign ); // corrects neutrino energy using rapidity-based approach
-	TLorentzVector getNeutrinoFourMomentumModified( TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign ); // corrects neutrino energy using rapidity-based approach (checks P_vis_nor, P_vis_par, flightDirection, etc to avoid math divergence)
-	TLorentzVector getNeutrinoFourMomentumStandardMethod( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign ); // corrects neutrino energy satndard (p,E) conservation method (highly affected by numeric precision!)
-	MCP getTrueNeutrino( const MCP &SLDLepton ); // gets true four-momentum of neutrino
-	void fillTrueRecoFourMomentum( const TLorentzVector &trueVisibleFourMomentumAtSLDVertex , const TLorentzVector &truePVATrueFourMomentum , const TLorentzVector &truePVARecoFourMomentum , const TLorentzVector &recoPVARecoFourMomentum , const TLorentzVector &visibleFourMomentum , const TLorentzVector &trueLeptonFourMomentum , const TLorentzVector &recoLeptonFourMomentum , const TLorentzVector &leptonFourMomentum , const TLorentzVector &truePVATrueChargedFourMomentum , const TLorentzVector &truePVARecoChargedFourMomentum , const TLorentzVector &recoSLDVertexChargedFourMomentum , const TLorentzVector &recoPVARecoChargedFourMomentum , const TLorentzVector &chargedFourMomentum , const TLorentzVector &truePVATrueNeutralFourMomentum , const TLorentzVector &truePVARecoNeutralFourMomentum , const TLorentzVector &recoPVARecoNeutralFourMomentum , const TLorentzVector &neutralFourMomentum , const TLorentzVector &trueNeutrinoFourMomentum , const TLorentzVector &recoNeutrinoFourMomentumClose , const TLorentzVector &trueHadronFourMomentum , const TLorentzVector &recoHadronFourMomentum , const TVector3 &trueFlightDirection , const TVector3 &recoFlightDirection , const TVector3 &flightDirection ); // makes performance evaluation variables stored in root tree
-	virtual void addNeutrinoCovarianceMatrix( const TLorentzVector &neutrinoFourMomentum , std::vector< float > &NuCovMat ); // Calculates Covariance matrix for each solution of neutrinos, based and energy and angular error
+
+	//	showTrueParameters prints true input for nu-correction
+	void showTrueParameters( const MCP &SLDLepton );
+
+	//	getNeutrinoFourMomentum corrects neutrino energy using rapidity-based approach
+	TLorentzVector getNeutrinoFourMomentum( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign );
+
+	//	getNeutrinoFourMomentumModified corrects neutrino energy using rapidity-based approach (checks P_vis_nor, P_vis_par, flightDirection, etc to avoid math divergence)
+	TLorentzVector getNeutrinoFourMomentumModified( TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign );
+
+	//	getNeutrinoFourMomentumStandardMethod corrects neutrino energy satndard (p,E) conservation method (highly affected by numeric precision!)
+	TLorentzVector getNeutrinoFourMomentumStandardMethod( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign );
+
+	//	getTrueNeutrinogets true four-momentum of neutrino
+	MCP getTrueNeutrino( const MCP &SLDLepton );
+
+	//	fillTrueRecoFourMomentummakes performance evaluation variables stored in root tree
+	void fillTrueRecoFourMomentum( const TLorentzVector &trueVisibleFourMomentumAtSLDVertex , const TLorentzVector &truePVATrueFourMomentum , const TLorentzVector &truePVARecoFourMomentum , const TLorentzVector &recoPVARecoFourMomentum , const TLorentzVector &visibleFourMomentum , const TLorentzVector &trueLeptonFourMomentum , const TLorentzVector &recoLeptonFourMomentum , const TLorentzVector &leptonFourMomentum , const TLorentzVector &truePVATrueChargedFourMomentum , const TLorentzVector &truePVARecoChargedFourMomentum , const TLorentzVector &recoSLDVertexChargedFourMomentum , const TLorentzVector &recoPVARecoChargedFourMomentum , const TLorentzVector &chargedFourMomentum , const TLorentzVector &truePVATrueNeutralFourMomentum , const TLorentzVector &truePVARecoNeutralFourMomentum , const TLorentzVector &recoPVARecoNeutralFourMomentum , const TLorentzVector &neutralFourMomentum , const TLorentzVector &trueNeutrinoFourMomentum , const TLorentzVector &recoNeutrinoFourMomentumClose , const TLorentzVector &trueHadronFourMomentum , const TLorentzVector &recoHadronFourMomentum , const TVector3 &trueFlightDirection , const TVector3 &recoFlightDirection , const TVector3 &flightDirection );
+
+	//	addNeutrinoCovarianceMatrix Calculates Covariance matrix for each solution of neutrinos, based and energy and angular error
+	virtual void addNeutrinoCovarianceMatrix( const TLorentzVector &neutrinoFourMomentum , std::vector< float > &NuCovMat );
+
 	virtual void evaluateInputCovMat( const TLorentzVector &trueVisibleFourMomentum , const TVector3 &trueFlightDirection , const TLorentzVector &trueNeutrinoFourMomentum , const TLorentzVector &visibleFourMomentum , const TVector3 &flightDirection , const TLorentzVector &recoNeutrinoFourMomentum , const FloatVector &CovMatDetector , const FloatVector &CovMatNeutrino );
+
 	virtual void plotHistograms( const TLorentzVector &trueFourMomentumNeutrino , const TLorentzVector &FourMomentumNuClose , const FloatVector &NeutrinoCovMat );
+
 	virtual void InitializeHistogram( TH1F *histogram , int scale , int color , int lineWidth , int markerSize , int markerStyle );
+
 	void investigateJetEnergyContent( const RecoParticle &assignedJet );
+
 	void checkSLDInput( const MCP &SLDHadron );
+
 	virtual void check( EVENT::LCEvent *pLCEvent );
+
 	virtual void end();
+
 	dd4hep::Detector& _theDetector = dd4hep::Detector::getInstance();
 
 private:

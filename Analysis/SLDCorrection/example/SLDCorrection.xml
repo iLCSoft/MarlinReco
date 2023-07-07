@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="us-ascii" ?>
+<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
+<!-- Loading shared library : /gpfs/fs01/ilc/tianjp/analysis/PostDBD/IsolatedLeptonTagging_svn/lib/libISOLepTagging.so.0.1.0 (libISOLepTagging.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinDD4hep/v00-01/lib/libMarlinDD4hep.so.0.1.0 (libMarlinDD4hep.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/tianjp/soft/HLRec/MarlinReco/lib/libMarlinReco.so.1.11.0 (libMarlinReco.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/PandoraAnalysis/v01-00-01/lib/libPandoraAnalysis.so.01.00.01 (libPandoraAnalysis.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinPandora/v02-00-00/lib/libMarlinPandora.so.02.00.00 (libMarlinPandora.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCFIVertex/v00-07/lib/libLCFIVertex.so.0.6.2 (libLCFIVertex.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/CEDViewer/v01-09/lib/libCEDViewer.so.1.9.0 (libCEDViewer.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Overlay/v00-14/lib/libOverlay.so.0.14.0 (libOverlay.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/FastJetClustering/v00-02/lib/libFastJetClustering.so.0.2.0 (libFastJetClustering.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinFastJet/v00-02/lib/libMarlinFastJet.so.0.2.0 (libMarlinFastJet.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCTuple/v01-04/lib/libLCTuple.so.1.4.0 (libLCTuple.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinKinfit/v00-01-05/lib/libMarlinKinfit.so.0.1.5 (libMarlinKinfit.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinTrkProcessors/v02-00/lib/libMarlinTrkProcessors.so.2.0.0 (libMarlinTrkProcessors.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/ILDPerformance/v00-01/lib/libILDPerformance.so.0.1.0 (libILDPerformance.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Clupatra/v00-11/lib/libClupatra.so.0.10.0 (libClupatra.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Physsim/v00-02/lib/libPhyssim.so.0.2.0 (libPhyssim.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/FCalClusterer/v00-01/lib/libFCalClusterer.so (libFCalClusterer.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/LCFIPlus/v00-05-03/lib/libLCFIPlus.so.0.5.3 (libLCFIPlus.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/ForwardTracking/v01-08/lib/libForwardTracking.so.1.8.0 (libForwardTracking.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/MarlinTPC/v01-00/lib/libMarlinTPC.so.1.0.0 (libMarlinTPC.so)-->
+<!-- Loading shared library : /gpfs/fs01/ilc/soft/ilcsoft/x86_64_gcc481/v01-17-07/Garlic/v3.0.3/lib/libGarlic.so.3.0.3 (libGarlic.so)-->
+<!--###########################################-->
+<!--#						#-->
+<!--#	 Example steering file for marlin	#-->
+<!--#						#-->
+<!--###########################################-->
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+	<constants>
+		<constant name="lcgeo_DIR" value="/cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/lcgeo/v00-16-07" />
+		<constant name="DetectorModel" value="ILD_l5_o1_v02" />
+		<constant name="CompactFile" value="${lcgeo_DIR}/ILD/compact/${DetectorModel}/${DetectorModel}.xml" />
+		<constant name="OutputDirectory" value="path_to_output_files" />
+		<constant name="createRootTree" value="true" />
+		<constant name="displayEvent" value="false" />
+		<constant name="OutputBaseName" value="SLDCorrection" />
+		<constant name="OutputBaseName_iter" value="0" />
+		<constant name="Verbosity" value="MESSAGE"/>
+		<constant name="MCparticleCollectionName" value="MCParticlesSkimmed"/>
+	</constants>
+
+	<execute>
+		<processor name="InitDD4hep" condition="" />
+		<processor name="MyIsolatedLeptonTaggingProcessor"/>
+		<processor name="MyFastJetProcessor"/>
+		<processor name="MySLDCorrection" condition="" />
+	</execute>
+
+	<global>
+		<parameter name="LCIOInputFiles">input_DTS.slcio</parameter>
+		<!-- limit the number of processed records (run+evt): -->
+		<parameter name="MaxRecordNumber" value="0" />
+		<parameter name="SkipNEvents" value="0" />
+		<parameter name="SupressCheck" value="false" />
+		<parameter name="GearXMLFile">/cvmfs/ilc.desy.de/sw/ILDConfig/v02-02-03/StandardConfig/production/Gear/gear_ILD_l5_v02.xml</parameter>
+		<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG1</parameter>
+		<parameter name="RandomSeed" value="1234567890" />
+		<parameter name="OutputSteeringFile" value="" />
+	</global>
+
+	<processor name="InitDD4hep" type="InitializeDD4hep">
+		<!--InitializeDD4hep reads a compact xml file and initializes the DD4hep::LCDD object-->
+		<!--Name of the DD4hep compact xml file to load-->
+		<parameter name="DD4hepXMLFile" type="string">${CompactFile}</parameter>
+	</processor>
+
+	<processor name="MyIsolatedLeptonTaggingProcessor" type="IsolatedLeptonTaggingProcessor">
+		<!--IsolatedLeptonTaggingProcessor does whatever it does ...-->
+		<!--cosine of the larger cone-->
+		<parameter name="CosConeLarge" type="float">0.95 </parameter>
+		<!--cosine of the smaller cone-->
+		<parameter name="CosConeSmall" type="float">0.98 </parameter>
+		<!--Cut on the mva output of isolated electron selection-->
+		<parameter name="CutOnTheISOElectronMVA" type="float">2.0 </parameter>
+		<!--Cut on the mva output of isolated muon selection-->
+		<parameter name="CutOnTheISOMuonMVA" type="float">0.7 </parameter>
+		<!--Directory of Weights for the Isolated Electron MVA Classification-->
+		<parameter name="DirOfISOElectronWeights" type="string">/cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/MarlinReco/v01-32/Analysis/IsolatedLeptonTagging/example/isolated_electron_weights </parameter>
+		<!--Directory of Weights for the Isolated Muon MVA Classification-->
+		<parameter name="DirOfISOMuonWeights" type="string">/cvmfs/ilc.desy.de/sw/x86_64_gcc82_centos7/v02-02-03/MarlinReco/v01-32/Analysis/IsolatedLeptonTagging/example/isolated_muon_weights_woYoke </parameter>
+		<!--Name of the PandoraPFOs collection-->
+		<parameter name="InputPandoraPFOsCollection" type="string" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
+		<!--Name of the Primary Vertex collection-->
+		<parameter name="InputPrimaryVertexCollection" type="string" lcioInType="ReconstructedParticle">PrimaryVertex </parameter>
+		<!--flag to select one most like isolated lepton-->
+		<parameter name="IsSelectingOneIsoLep" type="bool">false </parameter>
+		<!--Maximum d0 significance for electron-->
+		<parameter name="MaxD0SigForElectron" type="float">50 </parameter>
+		<!--Maximum D0 significance for muon-->
+		<parameter name="MaxD0SigForMuon" type="float">20 </parameter>
+		<!--Maximum ratio of energy in calorimeters over momentum for electron-->
+		<parameter name="MaxEOverPForElectron" type="float">1.3 </parameter>
+		<!--Maximum ratio of energy in calorimeters over momentum for muon-->
+		<parameter name="MaxEOverPForMuon" type="float">0.3 </parameter>
+		<!--Maximum Z0 significance for electron-->
+		<parameter name="MaxZ0SigForElectron" type="float">50 </parameter>
+		<!--Maximum Z0 significance for muon-->
+		<parameter name="MaxZ0SigForMuon" type="float">20 </parameter>
+		<!--minimum ratio of energy in calorimeters over momentum for electron-->
+		<parameter name="MinEOverPForElectron" type="float">0.5 </parameter>
+		<!--minimum ratio of energy in ecal over energy in ecal+hcal-->
+		<parameter name="MinEecalOverTotEForElectron" type="float">0.9 </parameter>
+		<!--Minimum energy in yoke for electron-->
+		<parameter name="MinEyokeForMuon" type="float">1.2 </parameter>
+		<!--Minimum momentum for electron-->
+		<parameter name="MinPForElectron" type="float">5 </parameter>
+		<!--Minimum momentum for muon-->
+		<parameter name="MinPForMuon" type="float">5 </parameter>
+		<!--Name of collection with the selected isolated lepton-->
+		<parameter name="OutputIsoLeptonsCollection" type="string" lcioOutType="ReconstructedParticle">IsolatedLeptons </parameter>
+		<!--Name of the new PFOs collection without isolated lepton-->
+		<parameter name="OutputPFOsWithoutIsoLepCollection" type="string" lcioOutType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+		<!--use yoke for muon ID-->
+		<parameter name="UseYokeForMuonID" type="bool">false </parameter>
+		<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+		<parameter name="Verbosity" type="string">${Verbosity} </parameter>
+	</processor>
+
+	<processor name="MyFastJetProcessor" type="FastJetProcessor">
+		<!--Using the FastJet library to identify jets-->
+		<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+		<parameter name="Verbosity" type="string">${Verbosity} </parameter>
+		<!--Selects the algorithm and its parameters. E.g. 'kt_algorithm 0.7' or 'ee_kt_algorithm'. For a full list of supported algorithms, see the logfile after execution.-->
+		<parameter name="algorithm" type="StringVec">ee_kt_algorithm</parameter>
+		<!--One of 'Inclusive <minPt>',_Nu 'InclusiveIterativeNJets <nrJets> <minE>', 'ExclusiveNJets <nrJets>', 'ExclusiveYCut <yCut>'. Note: not all modes are available for all algorithms.-->
+		<parameter name="clusteringMode" type="StringVec">ExclusiveNJets 2 </parameter>
+		<!--The identified jets-->
+		<parameter name="jetOut" type="string" lcioOutType="ReconstructedParticle">Durham_2Jets </parameter>
+		<!--a list of all reconstructed particles we are searching for jets in.-->
+		<parameter name="recParticleIn" type="string" lcioInType="ReconstructedParticle">PandoraPFOsWithoutIsoLep </parameter>
+		<!--a list of all reconstructed particles we are storing for jets in.-->
+		<parameter name="recParticleOut" type="string" lcioOutType="ReconstructedParticle">Durham_2JetsPFOs </parameter>
+		<!--The recombination scheme used when merging 2 particles. Usually there is no need to use anything else than 4-Vector addition: E_scheme-->
+		<parameter name="recombinationScheme" type="string">E_scheme </parameter>
+		<!--Store the list of particles that were clustered into jets in the recParticleOut collection-->
+		<parameter name="storeParticlesInJets" type="bool">true </parameter>
+		<!--Number of identified jets-->
+		<parameter name="findNrJets"> 2 </parameter>
+		<!--Prefix of identified jets-->
+		<parameter name="findNrJetsCollectionPrefix"> Jets_ </parameter>
+	</processor>
+
+	<processor name="MySLDCorrection" type="SLDCorrection">
+		<!--Name of the Input MCParticle Collection-->
+		<parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">${MCparticleCollectionName}</parameter>
+		<!--Name of the Input PFO Collection-->
+		<parameter name="PfoCollection" type="string" lcioInType="RECONSTRUCTEDPARTICLE">declusteredJetIsoleps</parameter>
+		<!--Name of the Input isolated lepton collection-->
+		<parameter name="isoLeptonsCollection" type="string" lcioInType="ReconstructedParticle">IsolatedLeptons </parameter>
+		<!--Name of the Input Jet Collection-->
+		<parameter name="JetCollection" type="string" lcioInType="RECONSTRUCTEDPARTICLE">Durham_2Jets</parameter>
+		<!--Name of Primary Vertex Collection-->
+		<parameter name="PrimaryVertex" type="string" lcioInType="VERTEX">PrimaryVertex</parameter>
+		<!--Name of Primary BuildUp Collection-->
+		<parameter name="BuildUpVertex" type="string" lcioInType="VERTEX">BuildUpVertex</parameter>
+		<!--Name of input RecoMCTruthLink Collection-->
+		<parameter name="RecoMCTruthLinkCollection" type="string" lcioInType="LCRelation">RecoMCTruthLink</parameter>
+		<!--Name of input MCTruthRecoLink Collection-->
+		<parameter name="MCTruthRecoLinkCollection" type="string" lcioInType="LCRelation">MCTruthRecoLink</parameter>
+		<!--Name of semi-leptonic Neutrino collection-->
+		<parameter name="SemiLeptonicDecayVertex" type="string" lcioOutType="VERTEX">SemiLeptonicDecayVertex</parameter>
+		<!--Name of semi-leptonic Neutrino collection-->
+		<parameter name="SemiLeptonicDecayVertexRP" type="string" lcioOutType="RECONSTRUCTEDPARTICLE">SemiLeptonicDecay_RP</parameter>
+		<!--Name of Reconstructed Neutrino collection-->
+		<parameter name="ReconstructedNeutrino" type="string" lcioOutType="RECONSTRUCTEDPARTICLE">recoNeutrinos</parameter>
+		<!--Name of the JetSemiLeptonicDecayLinkName output collection-->
+		<parameter name="JetSLDLinkName" type="string" lcioOutType="LCRelation">JetSLDLink</parameter>
+		<!--Name of the SemiLeptonicDecayJetLinkName output collection-->
+		<parameter name="SLDJetLinkName" type="string" lcioOutType="LCRelation">SLDJetLink</parameter>
+		<!--Name of the trueNeutrino-reconstructedNeutrino output Link collection-->
+		<parameter name="mcNurecoNuLinkName" type="string" lcioOutType="LCRelation">mcNurecoNuLink</parameter>
+		<!--Name of the trueNeutrino-reconstructedNeutrino output Link collection-->
+		<parameter name="recoNumcNuLinkName" type="string" lcioOutType="LCRelation">recoNumcNuLink</parameter>
+		<!--Name of the SemiLeptonicDecayNeutrinoLinkName output collection-->
+		<parameter name="NuSLDLinkName" type="string" lcioOutType="LCRelation">NuSLDLink</parameter>
+		<!--Name of the NeutrinoSemiLeptonicDecayLinkName output collection-->
+		<parameter name="SLDNuLinkName" type="string" lcioOutType="LCRelation">SLDNuLink</parameter>
+		<!--do correction for semi-leptonic decays of B-Hadrons? YES: true , NO: false-->
+        <parameter name="includeBSLD" type="bool">true</parameter>
+		<!--do correction for semi-leptonic decays of C-Hadrons? YES: true , NO: false-->
+        <parameter name="includeCSLD" type="bool">false</parameter>
+		<!--do correction for semi-leptonic decays of Tau-Leptons? YES: true , NO: false-->
+        <parameter name="includeTSLD" type="bool">false</parameter>
+		<!--Cheat semi-leptonic decays lepton from MCTruth-->
+        <parameter name="cheatSLDLeptons" type="bool">true</parameter>
+		<!--Cheat FourMomentum of lepton in semi-leptonic decays-->
+        <parameter name="cheatLepton4momentum" type="bool">false</parameter>
+		<!--Cheat Flight direction of mother hadron-->
+        <parameter name="cheatFlightDirection" type="bool">false</parameter>
+		<!--Scenario for finding flight direction of mother hadron: 1 = default , 2 = assign jet axis , 3 = assign flight direction of leading particle in the jet-->
+        <parameter name="vertexingScenario" type="int">4</parameter>
+		<!--Number of iterations for correcting flight direction of CHARGED parent hadron-->
+        <parameter name="nIterFlightDirCorrection" type="int">1</parameter>
+		<!--Cheat Particle ID for Charged Decay Products-->
+        <parameter name="cheatPVAcharged" type="bool">false</parameter>
+		<!--Cosine of Acceptance angle for charged PFOs to be assigned to the semi-leptonic decay when lepton is in 2nd vertex-->
+        <parameter name="chargedCosAcceptanceAngleSLD4" type="float">0.5</parameter>
+		<!--Cosine of Acceptance angle for charged PFOs to be assigned to the semi-leptonic decay when lepton is with 3rd vertex-->
+        <parameter name="chargedCosAcceptanceAngleSLD5" type="float">0.5</parameter>
+		<!--Cheat FourMomentum of charged visibles in semi-leptonic decays-->
+        <parameter name="cheatCharged4momentum" type="bool">false</parameter>
+		<!--Cheat Particle ID for Neutral Decay Products-->
+        <parameter name="cheatPVAneutral" type="bool">false</parameter>
+		<!--Cosine of Acceptance angle for neutral PFOs to be assigned to the semi-leptonic decay -->
+        <parameter name="neutralCosAcceptanceAngle" type="float">0.5</parameter>
+		<!--Cheat FourMomentum of Neutral visibles in semi-leptonic decays-->
+        <parameter name="cheatNeutral4momentum" type="bool">false</parameter>
+		<!--Cut on Invariant mass of visible charged decay products for semi-leptonic decay of B-Hadron when leptin is in 2nd vertex-->
+        <parameter name="BSLDChargedSLD4InvMassCut" type="float">1.80</parameter>
+		<!--Cut on Invariant mass of visible charged decay products for semi-leptonic decay of B-Hadron when leptin is with 3rd vertex-->
+        <parameter name="BSLDChargedSLD5InvMassCut" type="float">1.50</parameter>
+		<!--Cut on Invariant mass of visible neutral decay products for semi-leptonic decay of B-Hadron when leptin is in 2nd vertex-->
+        <parameter name="BSLDNeutralSLD4InvMassCut" type="float">2.80</parameter>
+		<!--Cut on Invariant mass of visible neutral decay products for semi-leptonic decay of B-Hadron when leptin is with 3rd vertex-->
+        <parameter name="BSLDNeutralSLD5InvMassCut" type="float">2.50</parameter>
+		<!--Cut on Invariant mass of visible charged decay products for semi-leptonic decay of C-Hadron when leptin is in 2nd vertex-->
+        <parameter name="CSLDChargedSLD4InvMassCut" type="float">0.00</parameter>
+		<!--Cut on Invariant mass of visible charged decay products for semi-leptonic decay of C-Hadron when leptin is with 3rd vertex-->
+        <parameter name="CSLDChargedSLD5InvMassCut" type="float">0.00</parameter>
+		<!--Cut on Invariant mass of visible neutral decay products for semi-leptonic decay of C-Hadron when leptin is in 2nd vertex-->
+        <parameter name="CSLDNeutralSLD4InvMassCut" type="float">0.00</parameter>
+		<!--Cut on Invariant mass of visible neutral decay products for semi-leptonic decay of C-Hadron when leptin is with 3rd vertex-->
+        <parameter name="CSLDNeutralSLD5InvMassCut" type="float">0.00</parameter>
+		<!--0: get 4p from linked track/cluster to MCP, 1: get 4p from PFO with linked track/cluster, 2: get 4p from linked PFO-->
+        <parameter name="recoFourMomentumOfVisibles" type="int">2</parameter>
+		<!--Angle uncertainty (radian) for semi-leptonic decay of B-Hadron -->
+		<parameter name="sigmaAlphaNu" type="float">0.100</parameter>
+		<!--Energy uncertainty (GeV) for semi-leptonic decay of B-Hadron -->
+		<parameter name="sigmaENu" type="float">4.00</parameter>
+		<!--Display recoLepton, downstraem vertex and RP and reconstructed secondary vertex in Event Display-->
+		<parameter name="displayEvent" type="bool">${displayEvent}</parameter>
+		<!--Whether create root file for new pfo collection or not true:create / false: do not create-->
+        <parameter name="fillRootTree" type="bool">${createRootTree}</parameter>
+		<!--Name of the output root file-->
+        <parameter name="RootFile" type="string">${OutputDirectory}/${OutputBaseName}_SLDCorrection_${OutputBaseName_iter}.root</parameter>
+		<!--Event selection based on semi-leptonic decays of B-hadrons: (0): without BSLD (1): with >= 0 BSLD(all events) (2): with >= 1 BSLD (3): with correctable BSLD -->
+        <parameter name="BSLDMode" type="int">1</parameter>
+		<!--Event selection based on semi-leptonic decays of C-hadrons: (0): without CSLD (1): with >= 0 CSLD(all events) (2): with >= 1 CSLD (3): with correctable CSLD -->
+        <parameter name="CSLDMode" type="int">1</parameter>
+		<!--Event selection based on semi-leptonic decays of T-Leptons: (0): without TSLD (1): with >= 0 TSLD(all events) (2): with >= 1 TSLD (3): with correctable TSLD -->
+        <parameter name="TSLDMode" type="int">1</parameter>
+		<!--Event selection based on semi-leptonic decays: (0): without SLD (1): with >= 0 SLD(all events) (2): with >= 1 SLD (3): with correctable SLD -->
+        <parameter name="SLDMode" type="int">1</parameter>
+		<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+		<parameter name="Verbosity" type="string">${Verbosity}</parameter>
+	</processor>
+
+	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+		<!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+		<!--drops the named collections from the event-->
+		<!--parameter name="DropCollectionNames" type="StringVec">TPCHits HCalHits  </parameter-->
+		<!--drops all collections of the given type from the event-->
+		<!--parameter name="DropCollectionTypes" type="StringVec">SimTrackerHit SimCalorimeterHit  </parameter-->
+		<!-- write complete objects in subset collections to the file (i.e. ignore subset flag)-->
+		<!--parameter name="FullSubsetCollections" type="StringVec">${MCparticleCollectionName}  </parameter-->
+		<!--force keep of the named collections - overrules DropCollectionTypes (and DropCollectionNames)-->
+		<parameter name="KeepCollectionNames" type="StringVec">SemiLeptonicDecayVertex SemiLeptonicDecay_RP recoNeutrinos JetSLDLink SLDJetLink mcNurecoNuLink recoNumcNuLink NuSLDLink SLDNuLink</parameter>
+		<!-- name of output file -->
+		<parameter name="LCIOOutputFile" type="string">${OutputDirectory}/${OutputBaseName}.slcio</parameter>
+		<!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
+		<parameter name="LCIOWriteMode" type="string">WRITE_NEW</parameter>
+		<!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
+		<!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
+		<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+		<parameter name="Verbosity" type="string">DEBUG</parameter>
+	</processor>
+</marlin>

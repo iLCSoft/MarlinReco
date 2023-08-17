@@ -121,6 +121,7 @@ public:
   TPCDigiProcessor(const TPCDigiProcessor&) = delete;
   TPCDigiProcessor& operator=(const TPCDigiProcessor&) = delete;
 
+
   virtual Processor*  newProcessor() { return new TPCDigiProcessor ; }
   
   

@@ -83,9 +83,9 @@ static const PIDParticle_base protonProperties("proton", 2212, .938272, BBparsPr
 class LLPIDHypothesis : public PIDParticle_base {
 public:
 
-  LLPIDHypothesis (const char *_name, int _pdg, double _mass,
-               float _prior, const double* _BBpars) :
-    PIDParticle_base(_name, _pdg, _mass, _BBpars),
+  LLPIDHypothesis (const char *name, int _pdg, double _mass,
+               float _prior, const double* BBpars) :
+    PIDParticle_base(name, _pdg, _mass, BBpars),
     prior(_prior), _posterior(0), _logL(0), _threshold(0)
   {  }
 
@@ -121,8 +121,11 @@ private:
 class MVAPIDHypothesis : public PIDParticle_base {
 public:
 
-  MVAPIDHypothesis (const char *_name, int _pdg, double _mass, const double* _BBpars, const float mvaCut=0.) :
-    PIDParticle_base(_name, _pdg, _mass, _BBpars),
+  MVAPIDHypothesis(const MVAPIDHypothesis&) = default;
+  MVAPIDHypothesis& operator=(const MVAPIDHypothesis&) = default;
+
+  MVAPIDHypothesis (const char *name, int _pdg, double _mass, const double* BBpars, const float mvaCut=0.) :
+    PIDParticle_base(name, _pdg, _mass, BBpars),
     _mva(0), _q(0), _sigAbove(0), _mvaCut(mvaCut), _reader(new TMVA::Reader("Silent")),
     _histoQ(NULL), _histoSig(NULL), _histoBkg(NULL)
   {  }

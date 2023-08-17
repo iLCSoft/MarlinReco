@@ -198,7 +198,7 @@ Int_t getOriginalSerial(MCParticle *mcPart, LCCollection *colMCP, Bool_t iHiggs)
   return originalSerial;
 }
 
-Int_t getOriginalSerial(ReconstructedParticle *recPart, LCCollection *colMCTL, LCCollection *colMCP, Bool_t iHiggs) {
+Int_t getOriginalSerial(ReconstructedParticle *recPart, LCCollection *colMCTL, LCCollection *colMCP, Bool_t /*iHiggs*/) {
   // get the serial number of the original particle where the PFO comes from
 
   Int_t originalSerial = -1;
@@ -930,7 +930,7 @@ void listMCParticles(LCCollection *colMC) {
   
 }
 
-  void dumpJetParticles(ReconstructedParticle *jet, LCCollection *colMC, LCCollection *colMCTL) {
+  void dumpJetParticles(ReconstructedParticle *jet, LCCollection* /*colMC*/, LCCollection *colMCTL) {
     // list the particles of jets
 
     LCRelationNavigator *navMCTL = new LCRelationNavigator(colMCTL);
@@ -979,7 +979,7 @@ void listMCParticles(LCCollection *colMC) {
 
   // *******************************************************
   // *******************************************************
-  Int_t getVertexComponents(LCCollection *colMC, LCCollection *colMCTL, ReconstructedParticle *vertex, Double_t energyComponents[2], Int_t nparticles[2]) {
+  Int_t getVertexComponents(LCCollection */*colMC*/, LCCollection *colMCTL, ReconstructedParticle *vertex, Double_t energyComponents[2], Int_t nparticles[2]) {
   // calculate energies from signal particles or overlay in a vertex
   // [0]: from signal; [1]: from overlay
 

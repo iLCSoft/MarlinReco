@@ -50,7 +50,6 @@ class SimpleFCalDigi : public Processor {
 
   std::string _cellIDLayerString{};
 
-  std::string  _defaultEncoding{};
   std::string  _caloLayout{};
   std::string  _caloID{};
   std::string  _caloType{};
@@ -70,6 +69,3 @@ class SimpleFCalDigi : public Processor {
 } ;
 
 #endif
-
-
-

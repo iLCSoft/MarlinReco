@@ -48,17 +48,17 @@ class QuarkJetPairing : public Processor {
   int permutation[nJETS]{};
 
 
-  float jet_ptot[4]{};
-  float jet_px[4]{};
-  float jet_py[4]{};
-  float jet_pz[4]{};
-  float jet_ene[4]{};
+  // float jet_ptot[4]{};
+  // float jet_px[4]{};
+  // float jet_py[4]{};
+  // float jet_pz[4]{};
+  // float jet_ene[4]{};
 
-  float quark_ptot[4]{};
-  float quark_px[4]{};
-  float quark_py[4]{};
-  float quark_pz[4]{};
-  float quark_ene[4]{};
+  // float quark_ptot[4]{};
+  // float quark_px[4]{};
+  // float quark_py[4]{};
+  // float quark_pz[4]{};
+  // float quark_ene[4]{};
 
   float phi_jet_quark[4][4]{};
   float momentum[3]{}, jetenergy{};

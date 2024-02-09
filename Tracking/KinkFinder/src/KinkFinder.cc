@@ -17,6 +17,8 @@
 
 #include "HelixClass.h"
 
+#include <memory>
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -924,12 +926,13 @@ void KinkFinder::processEvent( LCEvent * evt ) {
       }
     }
   }
-  LCCollectionVec * colKinkRecoPart  = NULL;
-  LCCollectionVec * colKinkVertex    = NULL;
-  LCCollectionVec * colProngRecoPart = NULL;
-  LCCollectionVec * colProngVertex   = NULL;
-  LCCollectionVec * colSplitRecoPart = NULL;
-  LCCollectionVec * colSplitVertex   = NULL;
+
+  auto colKinkRecoPart  = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colKinkVertex    = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
+  auto colProngRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colProngVertex   = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
+  auto colSplitRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colSplitVertex   = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
 
   for(unsigned int i=0;i< tracks.size();++i){ 
     if(kinkDaughters[i].size()>0 || prongDaughters[i].size()>0 || splitDaughters[i].size()>0){
@@ -986,10 +989,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	part->setStartVertex( vtx );
 	part->addTrack( tracks[splitDaughters[i][0].tracki] );
 	part->addTrack( tracks[splitDaughters[i][0].trackj] );
-	if(colSplitRecoPart==NULL){
-	  colSplitRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	  colSplitVertex   = new LCCollectionVec(LCIO::VERTEX);
-	}
 	colSplitRecoPart->addElement( part );
 	colSplitVertex->addElement( vtx );
       }
@@ -1029,10 +1028,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  part->setStartVertex( vtx );
 	  part->addTrack( tracks[kinkDaughters[i][0].tracki] );
 	  part->addTrack( tracks[kinkDaughters[i][0].trackj] );
-	  if(colKinkRecoPart==NULL){
-	    colKinkRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	    colKinkVertex   = new LCCollectionVec(LCIO::VERTEX);
-	  }
 	  colKinkRecoPart->addElement( part );
 	  colKinkVertex->addElement( vtx );
 	  //   trackUsed[firstTrack] = 1;
@@ -1071,10 +1066,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  part->setStartVertex( vtx );
 	  part->addTrack( tracks[prongDaughters[i][0].tracki] );
 	  for(unsigned id=0;id<prongDaughters[i].size();id++)part->addTrack( tracks[prongDaughters[i][id].trackj] );
-	  if(colProngRecoPart==NULL){
-	    colProngRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	    colProngVertex   = new LCCollectionVec(LCIO::VERTEX);
-	  }
 	  colProngRecoPart->addElement( part );
 	  colProngVertex->addElement( vtx );
 	}
@@ -1085,19 +1076,12 @@ void KinkFinder::processEvent( LCEvent * evt ) {
    
   }
 
-
-  if(colKinkRecoPart!=NULL){
-    evt->addCollection(colKinkRecoPart,  _kinkRecoPartColName.c_str()  );
-    evt->addCollection(colKinkVertex,    _kinkVertexColName.c_str()     );
-  }   
-  if(colProngRecoPart!=NULL){
-    evt->addCollection(colProngRecoPart, _prongRecoPartColName.c_str() );
-    evt->addCollection(colProngVertex,   _prongVertexColName.c_str()    );
-  }
-  if(colSplitRecoPart!=NULL){
-    evt->addCollection(colSplitRecoPart, _splitRecoPartColName.c_str() );
-    evt->addCollection(colSplitVertex,   _splitVertexColName.c_str()    );
-  }
+  evt->addCollection(colKinkRecoPart.release(), _kinkRecoPartColName);
+  evt->addCollection(colKinkVertex.release(), _kinkVertexColName);
+  evt->addCollection(colProngRecoPart.release(), _prongRecoPartColName);
+  evt->addCollection(colProngVertex.release(), _prongVertexColName);
+  evt->addCollection(colSplitRecoPart.release(), _splitRecoPartColName);
+  evt->addCollection(colSplitVertex.release(), _splitVertexColName);
 
   for(unsigned int  itrack=0;itrack< tracks.size();++itrack){
     delete helixEnd[itrack];

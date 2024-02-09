@@ -508,7 +508,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  if(rInner[i]>_rKinkCut || rInner[j]>_rKinkCut){
 	    float seedj[3];
 	    float refs[3];
-	    float deltaz;
 	    float ddx;
 	    float ddy;
 	    float ddz;
@@ -527,7 +526,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      refs[1]  = helixStart[j]->getReferencePoint()[1];
 	      refs[2]  = helixStart[j]->getReferencePoint()[2];
 	      helixStart[j]->getPointInZ(z, refs, seedj);
-	      deltaz =  zAtEnd[i] - zAtStart[j];
 	      ddx = (zout[i].x-zin[j].x);
 	      ddy = (zout[i].y-zin[j].y);
 	      ddz = (zout[i].z-zin[j].z);
@@ -546,7 +544,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      refs[1]  = helixEnd[j]->getReferencePoint()[1];
 	      refs[2]  = helixEnd[j]->getReferencePoint()[2];
 	      helixEnd[j]->getPointInZ(z, refs, seedj);	      
-	      deltaz =  zAtEnd[i] - zAtEnd[j];
 	      ddx = (zout[i].x-zout[j].x);
 	      ddy = (zout[i].y-zout[j].y);
 	      ddz = (zout[i].z-zout[j].z);
@@ -631,10 +628,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      }
 	    }
 	    
-	    bool  ok = true;
-	    if(fabs(deltaz)>200)ok=false;
-	    if(fabs(deltaz)>100 && dr > 5.0)ok=false;
-	    
 	    float deltaRxyCut = -100;
 	    float drCut   = -100;
 //    	    bool goodRadialSep = false;
@@ -683,7 +676,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    //	    std::cout << i << " : " << j << " dr = " << dr << " ( " << drCut << " )    deltaRxy = " << deltarxy << " ( " << deltaRxyCut << " ) " << std::endl; 
 	    if( (dr<drCut && deltarxy < deltaRxyCut*2) || mcKink){
 	      bool possibleSplit = false;
-	      bool split = false;
 	      rkink = sqrt(xkink*xkink+ykink*ykink);
 
 	      if( (rkink > _rKinkCut && !flipped) || mcKink){
@@ -812,7 +804,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 			std::cout << " CAND SPLIT I : " << nhitsi << " ntpc " << ntpci << " nclose " << nclosei << " max " << maxdisti << " fclose : " << fclosei << std::endl; 
 			std::cout << " CAND SPLIT J : " << nhitsj << " ntpc " << ntpcj << " nclose " << nclosej << " max " << maxdistj << " fclose : " << fclosej << std::endl; 
 		      }
-		      if(maxdistj<50 && maxdisti < 50 && fclosej > 0.95 && fclosei > 0.95 && ntpcj+ntpci < _tpcMaxRow+10.)split = true;
 		      splitDaughters[i].push_back(kinkij);
 		    }
 		  }

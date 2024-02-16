@@ -1,4 +1,5 @@
 #include "SimpleFCalDigi.h"
+
 #include <EVENT/LCCollection.h>
 #include <EVENT/SimCalorimeterHit.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -7,15 +8,21 @@
 #include <IMPL/LCRelationImpl.h>
 #include <EVENT/LCParameters.h>
 #include <UTIL/CellIDDecoder.h>
-#include <iostream>
-#include <string>
-#include <math.h>
+#include <UTIL/LCRelationNavigator.h>
+
 #include <marlin/Global.h>
+
 #include <gear/GEAR.h>
 #include <gear/CalorimeterParameters.h>
 #include <gear/GearParameters.h>
 #include <gear/LayerLayout.h>
+
 #include "CalorimeterHitType.h"
+
+#include <iostream>
+#include <string>
+#include <math.h>
+
 
 using namespace std;
 using namespace lcio ;
@@ -134,7 +141,8 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
     
 
   LCCollectionVec *lcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
-  LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+
+  auto hitRelNav = UTIL::LCRelationNavigator(LCIO::CALORIMETERHIT, LCIO::SIMCALORIMETERHIT);
 
   LCFlagImpl flag;
 
@@ -210,8 +218,8 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
 
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);
-	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
-	  relcol->addElement( rel );
+
+	  hitRelNav.addRelation(calhit, hit, 1.);
 	}
 
       }
@@ -221,7 +229,7 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   }
   lcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(lcalcol,_outputFcalCollection.c_str());
-  evt->addCollection(relcol,_outputRelCollection.c_str());
+  evt->addCollection(hitRelNav.createLCCollection(), _outputRelCollection);
 
 
   _nEvt++;

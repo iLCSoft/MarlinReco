@@ -156,14 +156,14 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   // * Reading Collections of FCAL Simulated Hits * 
   // 
   string initString;
-  for (unsigned int i(0); i < _fcalCollections.size(); ++i) {
+  for (unsigned int iColl(0); iColl < _fcalCollections.size(); ++iColl) {
     try{
-      LCCollection * col = evt->getCollection( _fcalCollections[i].c_str() ) ;
+      LCCollection * col = evt->getCollection( _fcalCollections[iColl].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
-      for (int j(0); j < numElements; ++j) {
-	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      for (int iHit(0); iHit < numElements; ++iHit) {
+	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( iHit ) ) ;
 	float energy = hit->getEnergy();
 
 	if (energy > _thresholdFcal) {

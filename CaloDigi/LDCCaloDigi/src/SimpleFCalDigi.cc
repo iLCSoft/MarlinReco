@@ -111,9 +111,10 @@ void SimpleFCalDigi::init() {
   _nRun = -1;
   _nEvt = 0;
 
-  //fg: need to set default encoding in for reading old files...
-  //CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding(_defaultEncoding.c_str()) ;
+  if (_defaultEncoding != "M:3,S-1:3,I:9,J:9,K-1:6") {
+    streamlog_out(WARNING) << "'_defaultEncoding' parameter set to a non-default value. This parameters is ignored" << std::endl;
+  }
+
   if ( ! _caloID.compare("lcal")  && // true if it is false ... 
                  _fixLCalHits          ) {  
             // parametrs for fixing wrong cellID to xyz coding in LCal Mokka

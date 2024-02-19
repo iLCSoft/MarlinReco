@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <boost/algorithm/string.hpp>
 #include <TClass.h>
 #include <TCut.h>
@@ -95,7 +96,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
   registerProcessorParameter("plotFolder",
                  "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; if empty, no plots are created; default: .  [current working directory]",
                  _plotFolder,
-                 std::string("."));
+                 std::string("CPID_Plots"));
 
   registerProcessorParameter("fileFormat",
                  "File format of the automatic confusion matrix plots of inference; default: .png",
@@ -165,8 +166,8 @@ void ComprehensivePIDProcessor::init() {
     throw std::runtime_error("mode error");
   }
 
-  if (_TTreeFileName == "-") {sloM << "TTreeFileName is '-', no root file is created" << std::endl;}
-  if (_plotFolder == "-") {sloM << "plotFolder is '-', no plots are created" << std::endl;}
+  if (_TTreeFileName == "") {sloM << "TTreeFileName is empty, no root file is created" << std::endl;}
+  if (_plotFolder == "") {sloM << "plotFolder is empty, no plots are created" << std::endl;}
 
   _nEvt = 0;
   _nPFO = 0;
@@ -177,7 +178,7 @@ void ComprehensivePIDProcessor::init() {
 
   if (_modeExtract)
   {
-    if (_TTreeFileName!="-")
+    if (_TTreeFileName!="")
     {
       _writeTTreeFile = true;
       _TTreeFile = new TFile(_TTreeFileName.c_str(), "RECREATE");
@@ -253,7 +254,7 @@ void ComprehensivePIDProcessor::init() {
       _observablesNames.push_back(s.append(obsNames[j]));
     }
 
-    sloM << "New algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() <<  std::endl;
+    sloM << "New algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() << "\n" <<  std::endl;
   }
 
   sloM << "Input algorithm inits done" << std::endl;
@@ -285,7 +286,7 @@ void ComprehensivePIDProcessor::init() {
       _trainingModels.push_back(ModelMgr::instance()->createModel(_trainModelTypes[i]));
       _trainingModels[i]->setName(_trainModelNames[i]);
 
-      sloM << "New model created: " << _trainingModels[i]->type() << ":" << _trainingModels[i]->name() << "\n" <<  std::endl;
+      sloM << "New model created: " << _trainingModels[i]->type() << ":" << _trainingModels[i]->name() <<  std::endl;
 
       if (_modeInfer)
       {
@@ -296,6 +297,7 @@ void ComprehensivePIDProcessor::init() {
         _weightFiles.push_back(empty);
         ReadReferenceFile(i);
       }
+      sloM << std::endl;
     }
 
     // if training observables are not specified in the steering file use the extracted observables + momabs and lambda (without d0, z0, MCPDG and nTrack)
@@ -621,23 +623,32 @@ void ComprehensivePIDProcessor::end()
     sloM << "Training done" << std::endl << std::endl;
   }
 
-  if (_modeInfer && _plotFolder!="-")
+  if (_modeInfer && _plotFolder!="")
   {
-    TCanvas* can = new TCanvas("Canvas2D","Canvas2D",500,500);
-    gStyle->SetPalette(kBird);
-    can->SetLogz();
-    can->SetGrid(0,0);
-    gStyle->SetOptStat(0);
-
-    for (int m=0; m<_nModels; ++m)
+    bool cont = true;
+    if (!std::filesystem::exists(_plotFolder))
     {
-      PlotTH2(can, _PDGCheck[m]);
-      PlotTH2(can, _PDGCheck[m], 1);
-      if (_writeTTreeFile) _PDGCheck[m]->Write();
-      for (int j=0; j<_nMomBins[m]; ++j)
+      try {std::filesystem::create_directory(std::filesystem::path(_plotFolder));}
+      catch (...) {sloM << "plotFolder does not exist and could not be created, plotting is skipped."; cont = false;}
+    }
+    if (cont)
+    {
+      TCanvas* can = new TCanvas("Canvas2D","Canvas2D",500,500);
+      gStyle->SetPalette(kBird);
+      can->SetLogz();
+      can->SetGrid(0,0);
+      gStyle->SetOptStat(0);
+
+      for (int m=0; m<_nModels; ++m)
       {
-        PlotTH2(can, _PDGChecks[m][j]);
-        if (_writeTTreeFile) _PDGChecks[m][j]->Write();
+        PlotTH2(can, _PDGCheck[m]);
+        PlotTH2(can, _PDGCheck[m], 1);
+        if (_writeTTreeFile) _PDGCheck[m]->Write();
+        for (int j=0; j<_nMomBins[m]; ++j)
+        {
+          PlotTH2(can, _PDGChecks[m][j]);
+          if (_writeTTreeFile) _PDGChecks[m][j]->Write();
+        }
       }
     }
   }
@@ -731,7 +742,7 @@ void ComprehensivePIDProcessor::ReadReferenceFile(int n)
     sloE << "Reference file " << refname << " could not be opened!" << std::endl;
     throw std::runtime_error("reffile error");
   }
-  sloM << "Reference file successfully read." << "\n" << std::endl;
+  sloM << "Reference file successfully read." << std::endl;
 }
 
 std::string ComprehensivePIDProcessor::ReferenceFile(int n)

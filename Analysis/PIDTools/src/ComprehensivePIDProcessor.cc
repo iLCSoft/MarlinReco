@@ -52,7 +52,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  false);
 
   registerProcessorParameter("modeInfer",
-                 "Set true to infer the trained MVA with the specified observables to the PFOs; if true you need to provide the weight files; default: false.",
+                 "Set true to infer the trained MVA with the specified observables to the PFOs; if true you need to provide the reference and weight files; default: false.",
                  _modeInfer,
                  false);
 
@@ -84,17 +84,17 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
 
   std::vector<int> signalPDGs = {11,13,211,321,2212};
   registerProcessorParameter("signalPDGs",
-                 "Vector of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
+                 "List of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
                  _signalPDGs,
                  signalPDGs);
 
   registerProcessorParameter("backgroundPDGs",
-                 "Vector of PDG numbers that are considered background; default: {}.",
+                 "List of PDG numbers that are considered background; default: {}.",
                  _backgroundPDGs,
                  std::vector<int>());
 
   registerProcessorParameter("plotFolder",
-                 "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; if empty, no plots are created; default: .  [current working directory]",
+                 "Folder in which the automatic confusion matrix plots of inference will be put, is created if not already existing; if empty, no plots are created; default: CPID_Plots  [current working directory]",
                  _plotFolder,
                  std::string("CPID_Plots"));
 
@@ -105,22 +105,22 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
 
 
   registerProcessorParameter("momMin",
-                 "For training: minimum momentum cut / GeV; default: 1.",
+                 "For momentum bins: minimum momentum cut / GeV; default: 1.",
                  _momMin,
                  float(1));
 
   registerProcessorParameter("momMax",
-                 "For training: maximum momentum cut / GeV; default: 100.",
+                 "For momentum bins: maximum momentum cut / GeV; default: 100.",
                  _momMax,
                  float(100));
 
   registerProcessorParameter("momLog",
-                 "For training: should the momentum bins be logarihtmic; default: true.",
+                 "For momentum bins: should the momentum bins be logarihtmic; default: true.",
                  _momLog,
                  true);
 
   registerProcessorParameter("momNBins",
-                 "For training: number of momentum bins; default: 12.",
+                 "For momentum bins: number of momentum bins; default: 12.",
                  _momNBins,
                  int(12));
 
@@ -145,12 +145,12 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  float(0));
 
   registerProcessorParameter("cutNTracksMin",
-                 "PFOs with fewer tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 "PFOs with fewer (<) tracks than the given value are ignored; set to -1 to accept all PFOs; default: -1.",
                  _cutNTracksMin,
                  int(-1));
 
   registerProcessorParameter("cutNTracksMax",
-                 "PFOs with more tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 "PFOs with more (>) tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
                  _cutNTracksMax,
                  int(-1));
 

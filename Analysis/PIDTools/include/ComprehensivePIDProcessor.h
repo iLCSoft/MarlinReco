@@ -52,12 +52,12 @@ using namespace marlin;
  * Signal and background PDGs can be defined. Only PFOs which originate from either of these are used.
  * The consequence of belonging to either of these groups lies in the details of the individual TrainingModels.
  * The PFOs are divided into momentum bins, for each of which a separate TrainingModel is created and trained/inferred from.
- * If inference is specified, a plot of the confusion matrix of all signal PDGs is created in the current working directory during end.
+ * If inference is specified, confusion matrix plots of all signal PDGs can be created in the specified folder during end.
  *
  * @param _PFOColName - Name of the PFO input collection (ReconstructedParticleImpl).
- *    string, default: PandoraPFOs.
+ *    string, default: "PandoraPFOs".
  * @param _RecoMCTruthLinkName - Name of the link from PFOs to MCParticles input collection (LCRelation).
- *    string, default: RecoMCTruthLink.
+ *    string, default: "RecoMCTruthLink".
  *
  * @param _modeExtract - Set true to extract PID observables via the specified InputAlgorithms.
  *    bool, default: false.
@@ -67,15 +67,47 @@ using namespace marlin;
  *    bool, default: false.
  *
  * @param _TTreeFileName - Name of the root file in which the TTree with all observables is stored; in case of extraction it is an optional output with no output if left empty, otherwise it is a necessary input.
- *    string, default: TTreeFile.root.
+ *    string, default: "TTreeFile.root".
  * @param _inputAlgoSpecs - List of input algorithms; for each specify type:name or only type (then name=type).
  *    string vector, default: {}.
  * @param _trainModelSpecs - List of training models; for each specify type:name or only type (then name=type).
  *    string vector, default: {}.
  * @param _reffile - Reference file(s). If only one file but several training models are specified the reference files are auto-numbered.
- *    string vector, default: {Ref.txt}.
+ *    string vector, default: {"Ref.txt"}.
  * @param _trainingObservables - List of observables that should be used for traning. If empty, all observables from the specified algorithms + momabs + lambda are used.
- *    string vector, default: {}
+ *    string vector, default: {}.
+ *
+ * @param _signalPDGs - List of PDG numbers that are considered signal.
+ *    int vector, default: {11,13,211,321,2212}.
+ * @param _backgroundPDGs - List of PDG numbers that are considered background.
+ *    int vector, default: {}.
+ *
+ * @param _plotFolder - Folder in which the automatic confusion matrix plots of inference will be put, is created if not already existing; if empty, no plots are created.
+ *    string, default: "CPID_Plots".
+ * @param _fileFormat - File format of the automatic confusion matrix plots of inference.
+ *    string, default: ".png".
+ *
+ * @param _momMin - For momentum bins: minimum momentum / GeV.
+ *    float, default: 1.
+ * @param _momMax - For momentum bins: maximum momentum / GeV.
+ *    float, default: 100
+ * @param _momLog - For momentum bins: should the momentum bins be logarithmic.
+ *    bool, default: true.
+ * @param _momNBins - For momentum bins: number of momentum bins.
+ *    int, default: 12.
+ *
+ * @param _cutD0 - PFOs whose first track have a d0 larger than the given value will be ignored; set to 0 to accept all particles.
+ *    float, default: 0.
+ * @param _cutZ0 - PFOs whose first track have a z0 larger than the given value will be ignored; set to 0 to accept all particles.
+ *    float, default: 0.
+ * @param _cutLamMin - PFOs whose first track have an angle lambda (relative to the cathode) smaller than the given value will be ignored; set to 0 to accept all particles.
+ *    float, default: 0.
+ * @param _cutLamMax - PFOs whose first track have an angle lambda (relative to the cathode) larger than the given value will be ignored; set to 0 to accept all particles.
+ *    float, default: 0.
+ * @param _cutNTracksMin - PFOs with fewer (<) tracks than the given value are ignored; set to -1 to accept all PFOs.
+ *    int, default: -1.
+ * @param _cutNTracksMax - PFOs with more (>) tracks than the given value are ignored; set to -1 to accept all PFOs.
+ *    int, default: -1.
  */
 
 class ComprehensivePIDProcessor : public Processor{

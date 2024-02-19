@@ -17,6 +17,8 @@
 
 #include "HelixClass.h"
 
+#include <memory>
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -506,7 +508,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  if(rInner[i]>_rKinkCut || rInner[j]>_rKinkCut){
 	    float seedj[3];
 	    float refs[3];
-	    float deltaz;
 	    float ddx;
 	    float ddy;
 	    float ddz;
@@ -525,7 +526,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      refs[1]  = helixStart[j]->getReferencePoint()[1];
 	      refs[2]  = helixStart[j]->getReferencePoint()[2];
 	      helixStart[j]->getPointInZ(z, refs, seedj);
-	      deltaz =  zAtEnd[i] - zAtStart[j];
 	      ddx = (zout[i].x-zin[j].x);
 	      ddy = (zout[i].y-zin[j].y);
 	      ddz = (zout[i].z-zin[j].z);
@@ -544,7 +544,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      refs[1]  = helixEnd[j]->getReferencePoint()[1];
 	      refs[2]  = helixEnd[j]->getReferencePoint()[2];
 	      helixEnd[j]->getPointInZ(z, refs, seedj);	      
-	      deltaz =  zAtEnd[i] - zAtEnd[j];
 	      ddx = (zout[i].x-zout[j].x);
 	      ddy = (zout[i].y-zout[j].y);
 	      ddz = (zout[i].z-zout[j].z);
@@ -629,10 +628,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	      }
 	    }
 	    
-	    bool  ok = true;
-	    if(fabs(deltaz)>200)ok=false;
-	    if(fabs(deltaz)>100 && dr > 5.0)ok=false;
-	    
 	    float deltaRxyCut = -100;
 	    float drCut   = -100;
 //    	    bool goodRadialSep = false;
@@ -681,7 +676,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	    //	    std::cout << i << " : " << j << " dr = " << dr << " ( " << drCut << " )    deltaRxy = " << deltarxy << " ( " << deltaRxyCut << " ) " << std::endl; 
 	    if( (dr<drCut && deltarxy < deltaRxyCut*2) || mcKink){
 	      bool possibleSplit = false;
-	      bool split = false;
 	      rkink = sqrt(xkink*xkink+ykink*ykink);
 
 	      if( (rkink > _rKinkCut && !flipped) || mcKink){
@@ -810,7 +804,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 			std::cout << " CAND SPLIT I : " << nhitsi << " ntpc " << ntpci << " nclose " << nclosei << " max " << maxdisti << " fclose : " << fclosei << std::endl; 
 			std::cout << " CAND SPLIT J : " << nhitsj << " ntpc " << ntpcj << " nclose " << nclosej << " max " << maxdistj << " fclose : " << fclosej << std::endl; 
 		      }
-		      if(maxdistj<50 && maxdisti < 50 && fclosej > 0.95 && fclosei > 0.95 && ntpcj+ntpci < _tpcMaxRow+10.)split = true;
 		      splitDaughters[i].push_back(kinkij);
 		    }
 		  }
@@ -924,12 +917,13 @@ void KinkFinder::processEvent( LCEvent * evt ) {
       }
     }
   }
-  LCCollectionVec * colKinkRecoPart  = NULL;
-  LCCollectionVec * colKinkVertex    = NULL;
-  LCCollectionVec * colProngRecoPart = NULL;
-  LCCollectionVec * colProngVertex   = NULL;
-  LCCollectionVec * colSplitRecoPart = NULL;
-  LCCollectionVec * colSplitVertex   = NULL;
+
+  auto colKinkRecoPart  = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colKinkVertex    = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
+  auto colProngRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colProngVertex   = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
+  auto colSplitRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
+  auto colSplitVertex   = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
 
   for(unsigned int i=0;i< tracks.size();++i){ 
     if(kinkDaughters[i].size()>0 || prongDaughters[i].size()>0 || splitDaughters[i].size()>0){
@@ -986,10 +980,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	part->setStartVertex( vtx );
 	part->addTrack( tracks[splitDaughters[i][0].tracki] );
 	part->addTrack( tracks[splitDaughters[i][0].trackj] );
-	if(colSplitRecoPart==NULL){
-	  colSplitRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	  colSplitVertex   = new LCCollectionVec(LCIO::VERTEX);
-	}
 	colSplitRecoPart->addElement( part );
 	colSplitVertex->addElement( vtx );
       }
@@ -1029,10 +1019,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  part->setStartVertex( vtx );
 	  part->addTrack( tracks[kinkDaughters[i][0].tracki] );
 	  part->addTrack( tracks[kinkDaughters[i][0].trackj] );
-	  if(colKinkRecoPart==NULL){
-	    colKinkRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	    colKinkVertex   = new LCCollectionVec(LCIO::VERTEX);
-	  }
 	  colKinkRecoPart->addElement( part );
 	  colKinkVertex->addElement( vtx );
 	  //   trackUsed[firstTrack] = 1;
@@ -1071,10 +1057,6 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 	  part->setStartVertex( vtx );
 	  part->addTrack( tracks[prongDaughters[i][0].tracki] );
 	  for(unsigned id=0;id<prongDaughters[i].size();id++)part->addTrack( tracks[prongDaughters[i][id].trackj] );
-	  if(colProngRecoPart==NULL){
-	    colProngRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-	    colProngVertex   = new LCCollectionVec(LCIO::VERTEX);
-	  }
 	  colProngRecoPart->addElement( part );
 	  colProngVertex->addElement( vtx );
 	}
@@ -1085,19 +1067,12 @@ void KinkFinder::processEvent( LCEvent * evt ) {
    
   }
 
-
-  if(colKinkRecoPart!=NULL){
-    evt->addCollection(colKinkRecoPart,  _kinkRecoPartColName.c_str()  );
-    evt->addCollection(colKinkVertex,    _kinkVertexColName.c_str()     );
-  }   
-  if(colProngRecoPart!=NULL){
-    evt->addCollection(colProngRecoPart, _prongRecoPartColName.c_str() );
-    evt->addCollection(colProngVertex,   _prongVertexColName.c_str()    );
-  }
-  if(colSplitRecoPart!=NULL){
-    evt->addCollection(colSplitRecoPart, _splitRecoPartColName.c_str() );
-    evt->addCollection(colSplitVertex,   _splitVertexColName.c_str()    );
-  }
+  evt->addCollection(colKinkRecoPart.release(), _kinkRecoPartColName);
+  evt->addCollection(colKinkVertex.release(), _kinkVertexColName);
+  evt->addCollection(colProngRecoPart.release(), _prongRecoPartColName);
+  evt->addCollection(colProngVertex.release(), _prongVertexColName);
+  evt->addCollection(colSplitRecoPart.release(), _splitRecoPartColName);
+  evt->addCollection(colSplitVertex.release(), _splitVertexColName);
 
   for(unsigned int  itrack=0;itrack< tracks.size();++itrack){
     delete helixEnd[itrack];

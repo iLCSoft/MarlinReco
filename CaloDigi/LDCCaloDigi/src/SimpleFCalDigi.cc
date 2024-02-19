@@ -1,4 +1,5 @@
 #include "SimpleFCalDigi.h"
+
 #include <EVENT/LCCollection.h>
 #include <EVENT/SimCalorimeterHit.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -7,15 +8,21 @@
 #include <IMPL/LCRelationImpl.h>
 #include <EVENT/LCParameters.h>
 #include <UTIL/CellIDDecoder.h>
-#include <iostream>
-#include <string>
-#include <math.h>
+#include <UTIL/LCRelationNavigator.h>
+
 #include <marlin/Global.h>
+
 #include <gear/GEAR.h>
 #include <gear/CalorimeterParameters.h>
 #include <gear/GearParameters.h>
 #include <gear/LayerLayout.h>
+
 #include "CalorimeterHitType.h"
+
+#include <iostream>
+#include <string>
+#include <math.h>
+
 
 using namespace std;
 using namespace lcio ;
@@ -104,9 +111,10 @@ void SimpleFCalDigi::init() {
   _nRun = -1;
   _nEvt = 0;
 
-  //fg: need to set default encoding in for reading old files...
-  //CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding(_defaultEncoding.c_str()) ;
+  if (_defaultEncoding != "M:3,S-1:3,I:9,J:9,K-1:6") {
+    streamlog_out(WARNING) << "'_defaultEncoding' parameter set to a non-default value. This parameters is ignored" << std::endl;
+  }
+
   if ( ! _caloID.compare("lcal")  && // true if it is false ... 
                  _fixLCalHits          ) {  
             // parametrs for fixing wrong cellID to xyz coding in LCal Mokka
@@ -134,7 +142,8 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
     
 
   LCCollectionVec *lcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
-  LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+
+  auto hitRelNav = UTIL::LCRelationNavigator(LCIO::CALORIMETERHIT, LCIO::SIMCALORIMETERHIT);
 
   LCFlagImpl flag;
 
@@ -147,14 +156,14 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   // * Reading Collections of FCAL Simulated Hits * 
   // 
   string initString;
-  for (unsigned int i(0); i < _fcalCollections.size(); ++i) {
+  for (unsigned int iColl(0); iColl < _fcalCollections.size(); ++iColl) {
     try{
-      LCCollection * col = evt->getCollection( _fcalCollections[i].c_str() ) ;
+      LCCollection * col = evt->getCollection( _fcalCollections[iColl].c_str() ) ;
       initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder( col );
-      for (int j(0); j < numElements; ++j) {
-	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      for (int iHit(0); iHit < numElements; ++iHit) {
+	SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( iHit ) ) ;
 	float energy = hit->getEnergy();
 
 	if (energy > _thresholdFcal) {
@@ -210,8 +219,8 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
 
 	  calhit->setRawHit(hit);
 	  lcalcol->addElement(calhit);
-	  LCRelationImpl *rel = new LCRelationImpl(calhit,hit,1.);
-	  relcol->addElement( rel );
+
+	  hitRelNav.addRelation(calhit, hit, 1.);
 	}
 
       }
@@ -221,7 +230,7 @@ void SimpleFCalDigi::processEvent( LCEvent * evt ) {
   }
   lcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
   evt->addCollection(lcalcol,_outputFcalCollection.c_str());
-  evt->addCollection(relcol,_outputRelCollection.c_str());
+  evt->addCollection(hitRelNav.createLCCollection(), _outputRelCollection);
 
 
   _nEvt++;

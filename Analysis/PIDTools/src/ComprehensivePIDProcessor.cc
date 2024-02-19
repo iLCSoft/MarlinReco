@@ -16,6 +16,7 @@
 #include <boost/algorithm/string.hpp>
 #include <TClass.h>
 #include <TCut.h>
+#include <TText.h>
 
 using namespace lcio;
 using namespace marlin;
@@ -55,7 +56,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  false);
 
   registerProcessorParameter("TTreeFileName",
-                 "Name of the root file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input; default: TTreeFile.root",
+                 "Name of the root file in which the TTree with all observables is stored; in case of extraction it is an optional output with no output if left empty, otherwise it is a necessary input; default: TTreeFile.root",
                  _TTreeFileName,
                  std::string("TTreeFile.root"));
 
@@ -92,7 +93,7 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  std::vector<int>());
 
   registerProcessorParameter("plotFolder",
-                 "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; default: .  [current working directory]",
+                 "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; if empty, no plots are created; default: .  [current working directory]",
                  _plotFolder,
                  std::string("."));
 
@@ -164,6 +165,9 @@ void ComprehensivePIDProcessor::init() {
     throw std::runtime_error("mode error");
   }
 
+  if (_TTreeFileName == "-") {sloM << "TTreeFileName is '-', no root file is created" << std::endl;}
+  if (_plotFolder == "-") {sloM << "plotFolder is '-', no plots are created" << std::endl;}
+
   _nEvt = 0;
   _nPFO = 0;
 
@@ -173,12 +177,13 @@ void ComprehensivePIDProcessor::init() {
 
   if (_modeExtract)
   {
-    if (_TTreeFileName!="")
+    if (_TTreeFileName!="-")
     {
+      _writeTTreeFile = true;
       _TTreeFile = new TFile(_TTreeFileName.c_str(), "RECREATE");
       _TTreeFile->cd();
+      _observablesTree = new TTree("observablesTree","Tree of all observable values");
     }
-    _observablesTree = new TTree("observablesTree","Tree of all observable values");
   }
   else
   {
@@ -248,7 +253,7 @@ void ComprehensivePIDProcessor::init() {
       _observablesNames.push_back(s.append(obsNames[j]));
     }
 
-    sloM << "New algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() << "\n" <<  std::endl;
+    sloM << "New algorithm created: " << _inputAlgorithms[i]->type() << ":" << _inputAlgorithms[i]->name() <<  std::endl;
   }
 
   sloM << "Input algorithm inits done" << std::endl;
@@ -392,14 +397,13 @@ void ComprehensivePIDProcessor::init() {
     sloM << "-------------------------------------------------" << std::endl;
   }
 
-  if (_modeExtract)
+  if (_modeExtract && _writeTTreeFile)
   {
     for (int iObs=0; iObs<_nObs; ++iObs)
     {
       std::stringstream s; s << _observablesNames[iObs].c_str() << "/F";
       _observablesTree-> Branch(_observablesNames[iObs].c_str(), &(_observablesValues[iObs]), s.str().c_str());
     }
-    _observablesTree->Write();
   }
 
   sloM << "Branches done" << std::endl;
@@ -414,7 +418,6 @@ void ComprehensivePIDProcessor::init() {
   _rejectedPFOs->GetXaxis()->SetBinLabel(5,"too large d0");
   _rejectedPFOs->GetXaxis()->SetBinLabel(6,"too large z0");
   _rejectedPFOs->SetYTitle("abundance");
-
 
 }
 
@@ -553,7 +556,7 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
         }
         sloD << "observables extracted " << std::endl;
 
-        _observablesTree->Fill();
+        if (_writeTTreeFile) _observablesTree->Fill();
         sloD << "trees filled" << std::endl;
       }
 
@@ -602,11 +605,11 @@ void ComprehensivePIDProcessor::end()
   sloM << "PFOs passed: " << _nPFO << std::endl;
 
 
-  if (_modeExtract)
+  if (_writeTTreeFile)
   {
     _TTreeFile->cd();
-    //_observablesTree->Print();
     _observablesTree->Write();
+    _rejectedPFOs->Write();
   }
 
   if (_modeTrain)
@@ -618,9 +621,9 @@ void ComprehensivePIDProcessor::end()
     sloM << "Training done" << std::endl << std::endl;
   }
 
-  if (_modeInfer)
+  if (_modeInfer && _plotFolder!="-")
   {
-    TCanvas* can = new TCanvas;
+    TCanvas* can = new TCanvas("Canvas2D","Canvas2D",500,500);
     gStyle->SetPalette(kBird);
     can->SetLogz();
     can->SetGrid(0,0);
@@ -629,12 +632,17 @@ void ComprehensivePIDProcessor::end()
     for (int m=0; m<_nModels; ++m)
     {
       PlotTH2(can, _PDGCheck[m]);
+      PlotTH2(can, _PDGCheck[m], 1);
+      if (_writeTTreeFile) _PDGCheck[m]->Write();
       for (int j=0; j<_nMomBins[m]; ++j)
+      {
         PlotTH2(can, _PDGChecks[m][j]);
+        if (_writeTTreeFile) _PDGChecks[m][j]->Write();
+      }
     }
   }
 
-  _TTreeFile->Close();
+  if (_writeTTreeFile) _TTreeFile->Close();
 
   for (int i=0; i<_nAlgos;  ++i) delete _inputAlgorithms[i];
   for (int i=0; i<_nModels; ++i) delete _trainingModels [i];
@@ -723,7 +731,7 @@ void ComprehensivePIDProcessor::ReadReferenceFile(int n)
     sloE << "Reference file " << refname << " could not be opened!" << std::endl;
     throw std::runtime_error("reffile error");
   }
-  sloM << "Reference file successfully read." << std::endl;
+  sloM << "Reference file successfully read." << "\n" << std::endl;
 }
 
 std::string ComprehensivePIDProcessor::ReferenceFile(int n)
@@ -739,10 +747,51 @@ std::string ComprehensivePIDProcessor::ReferenceFile(int n)
   return refname;
 }
 
-void ComprehensivePIDProcessor::PlotTH2(TCanvas* can, TH2* hist)
+void ComprehensivePIDProcessor::PlotTH2(TCanvas* can, TH2* hist, int effpur)
 {
   hist->Draw("colz");
+  std::stringstream s; s << _plotFolder << "/" << hist->GetName();
+
+  std::vector<double> sumX{}, sumY{};
+  if (effpur) // calculate row and column sums
+  {
+    int nX = hist->GetNbinsX();
+    int nY = hist->GetNbinsY();
+    sumX.resize(nY);
+    sumY.resize(nX);
+    std::fill(sumX.begin(), sumX.end(), 0);
+    std::fill(sumY.begin(), sumY.end(), 0);
+    for (int i=0; i<nX; ++i)
+      for (int j=0; j<nY; ++j)
+      {
+        sumX[j] = sumX[j] + hist->GetBinContent(i+1,j+1);
+        sumY[i] = sumY[i] + hist->GetBinContent(i+1,j+1);
+      }
+  }
+  if (effpur==1 || effpur==3) // print efficiency
+  {
+    for (int i=0; i<hist->GetNbinsX(); ++i)
+    {
+      std::stringstream e; e << hist->GetBinContent(i+1,i+1)/sumY[i];
+      std::string eff = e.str(); eff.resize(4);
+      TText* t = new TText(i-.45,i+.05,eff.c_str());
+      t->Draw();
+    }
+    s << "_eff";
+  }
+  if (effpur==2 || effpur==3)  // print purity
+  {
+    for (int j=0; j<hist->GetNbinsY(); ++j)
+    {
+      std::stringstream p; p << hist->GetBinContent(j+1,j+1)/sumX[j];
+      std::string pur = p.str(); pur.resize(4);
+      TText* t = new TText(j-.2,j-.45,pur.c_str());
+      t->Draw();
+    }
+    s << "_pur";
+  }
+
   can->Update();
-  std::stringstream s; s << _plotFolder << "/" << hist->GetName() << _fileFormat;
+  s << _fileFormat;
   can->Print(s.str().c_str());
 }

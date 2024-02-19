@@ -66,7 +66,7 @@ using namespace marlin;
  * @param _modeInfer - Set true to infer PID from the specified TrainingModels. Cannot be true at the same time as _modeTrain.
  *    bool, default: false.
  *
- * @param _TTreeFileName - Name of the root file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input.
+ * @param _TTreeFileName - Name of the root file in which the TTree with all observables is stored; in case of extraction it is an optional output with no output if left empty, otherwise it is a necessary input.
  *    string, default: TTreeFile.root.
  * @param _inputAlgoSpecs - List of input algorithms; for each specify type:name or only type (then name=type).
  *    string vector, default: {}.
@@ -103,7 +103,7 @@ public:
   void ReadReferenceFile(int n);
   std::string ReferenceFile(int n);
 
-  void PlotTH2(TCanvas* can, TH2* hist);
+  void PlotTH2(TCanvas* can, TH2* hist, int effpur=0);
  
 private:
 
@@ -138,6 +138,7 @@ private:
   long long int _nPFO=0;
 
   TFile* _TTreeFile{};
+  bool _writeTTreeFile = false;
 
   std::vector<std::string> _inputAlgoTypes{};
   std::vector<std::string> _inputAlgoNames{};

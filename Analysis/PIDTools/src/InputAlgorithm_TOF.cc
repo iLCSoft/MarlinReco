@@ -25,7 +25,8 @@ namespace cpid {
       throw std::runtime_error("parameters error");
     }
 
-    std::vector<std::string> obsNames{"beta"};
+    //std::vector<std::string> obsNames{"beta"};
+    std::vector<std::string> obsNames{"mass2"};
     return obsNames;
   }
 
@@ -42,15 +43,20 @@ namespace cpid {
     const ParticleID& TOFPID = PIDHan.getParticleID(pfo,TOFAlgoID);
     const FloatVec& TOFParams = TOFPID.getParameters();
 
+    const double* mom = pfo->getMomentum();
+
     if (int(TOFParams.size())>TOFParaID_length)
     {
+      float momabs = sqrt(mom[0]*mom[0] + mom[1]*mom[1] + mom[2]*mom[2]);
       float TOFlength = TOFParams[TOFParaID_length];
       float TOFbeta_ch = (TOFlength/TOFParams[TOFParaID_closest]) / 299.8;
-      if (isnan(TOFbeta_ch) || isinf(TOFbeta_ch)) TOFbeta_ch = -1;
-      obsValues.push_back(std::pair<float,float>{TOFbeta_ch, 0});
+      float TOFmass2 = (isnan(TOFbeta_ch) || isinf(TOFbeta_ch)) ? 0 : momabs*momabs/TOFbeta_ch/TOFbeta_ch - momabs*momabs;
+      obsValues.push_back(std::pair<float,float>{TOFmass2, 0});
+      //if (isnan(TOFbeta_ch) || isinf(TOFbeta_ch)) TOFbeta_ch = -1;
+      //obsValues.push_back(std::pair<float,float>{TOFbeta_ch, 0});
     }
     else
-      obsValues.push_back(std::pair<float,float>{-1,-1} );
+      obsValues.push_back(std::pair<float,float>{-1,-1});
 
     return obsValues;
   }

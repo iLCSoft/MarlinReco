@@ -166,6 +166,9 @@ void LeptonIDProcessor::setupMVAReader()
 
 void LeptonIDProcessor::init()
 {
+    // usually a good idea to
+    printParameters();
+
     streamlog_out(DEBUG) << "   init called  " << std::endl;
     if (_buildTree) {
         // if I keep this here it magically appears in the aida file :)
@@ -194,7 +197,7 @@ void LeptonIDProcessor::processRunHeader(LCRunHeader *run)
     (void) run;
 }
 
-void LeptonIDProcessor::modifyEvent(LCEvent *evt)
+void LeptonIDProcessor::processEvent(LCEvent *evt)
 {
     streamlog_out(DEBUG) << "process Event called" << std::endl;
     LCCollection *PandoraPFOs = nullptr;

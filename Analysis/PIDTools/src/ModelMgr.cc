@@ -41,9 +41,9 @@ namespace cpid
 
   void ModelMgr::printAvailableModelTypes()
   {
-    std::cout << "Available training models: " << std::endl;
-    for (const auto& [key, value] : _map) {sloM << " " << key << std::endl;}
-    sloM << "-------------------------" << std::endl;
+    sloD << "Available training models: " << std::endl;
+    for (const auto& [key, value] : _map) {sloD << " " << key << std::endl;}
+    sloD << "-------------------------" << std::endl;
   }
 
 }

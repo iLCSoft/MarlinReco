@@ -13,9 +13,11 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <boost/algorithm/string.hpp>
 #include <TClass.h>
 #include <TCut.h>
+#include <TText.h>
 
 using namespace lcio;
 using namespace marlin;
@@ -50,12 +52,12 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  false);
 
   registerProcessorParameter("modeInfer",
-                 "Set true to infer the trained MVA with the specified observables to the PFOs; if true you need to provide the weight files; default: false.",
+                 "Set true to infer the trained MVA with the specified observables to the PFOs; if true you need to provide the reference and weight files; default: false.",
                  _modeInfer,
                  false);
 
   registerProcessorParameter("TTreeFileName",
-                 "Name of the root file in which the TTree with all observables is stored; optional output in case of extraction, otherwise necessary input; default: TTreeFile.root",
+                 "Name of the root file in which the TTree with all observables is stored; in case of extraction it is an optional output with no output if left empty, otherwise it is a necessary input; default: TTreeFile.root",
                  _TTreeFileName,
                  std::string("TTreeFile.root"));
 
@@ -82,19 +84,19 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
 
   std::vector<int> signalPDGs = {11,13,211,321,2212};
   registerProcessorParameter("signalPDGs",
-                 "Vector of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
+                 "List of PDG numbers that are considered signal; default: {11,13,211,321,2212}.",
                  _signalPDGs,
                  signalPDGs);
 
   registerProcessorParameter("backgroundPDGs",
-                 "Vector of PDG numbers that are considered background; default: {}.",
+                 "List of PDG numbers that are considered background; default: {}.",
                  _backgroundPDGs,
                  std::vector<int>());
 
   registerProcessorParameter("plotFolder",
-                 "Folder in which the automatic confusion matrix plots of inference will be put, needs to exist; default: .  [current working directory]",
+                 "Folder in which the automatic confusion matrix plots of inference will be put, is created if not already existing; if empty, no plots are created; default: CPID_Plots  [current working directory]",
                  _plotFolder,
-                 std::string("."));
+                 std::string("CPID_Plots"));
 
   registerProcessorParameter("fileFormat",
                  "File format of the automatic confusion matrix plots of inference; default: .png",
@@ -103,22 +105,22 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
 
 
   registerProcessorParameter("momMin",
-                 "For training: minimum momentum cut / GeV; default: 1.",
+                 "For momentum bins: minimum momentum cut / GeV; default: 1.",
                  _momMin,
                  float(1));
 
   registerProcessorParameter("momMax",
-                 "For training: maximum momentum cut / GeV; default: 100.",
+                 "For momentum bins: maximum momentum cut / GeV; default: 100.",
                  _momMax,
                  float(100));
 
   registerProcessorParameter("momLog",
-                 "For training: should the momentum bins be logarihtmic; default: true.",
+                 "For momentum bins: should the momentum bins be logarihtmic; default: true.",
                  _momLog,
                  true);
 
   registerProcessorParameter("momNBins",
-                 "For training: number of momentum bins; default: 12.",
+                 "For momentum bins: number of momentum bins; default: 12.",
                  _momNBins,
                  int(12));
 
@@ -143,12 +145,12 @@ ComprehensivePIDProcessor::ComprehensivePIDProcessor() : Processor("Comprehensiv
                  float(0));
 
   registerProcessorParameter("cutNTracksMin",
-                 "PFOs with fewer tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 "PFOs with fewer (<) tracks than the given value are ignored; set to -1 to accept all PFOs; default: -1.",
                  _cutNTracksMin,
                  int(-1));
 
   registerProcessorParameter("cutNTracksMax",
-                 "PFOs with more tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
+                 "PFOs with more (>) tracks the given value are ignored; set to -1 to accept all PFOs; default: -1.",
                  _cutNTracksMax,
                  int(-1));
 
@@ -164,6 +166,9 @@ void ComprehensivePIDProcessor::init() {
     throw std::runtime_error("mode error");
   }
 
+  if (_TTreeFileName == "") {sloM << "TTreeFileName is empty, no root file is created" << std::endl;}
+  if (_plotFolder == "") {sloM << "plotFolder is empty, no plots are created" << std::endl;}
+
   _nEvt = 0;
   _nPFO = 0;
 
@@ -175,10 +180,11 @@ void ComprehensivePIDProcessor::init() {
   {
     if (_TTreeFileName!="")
     {
+      _writeTTreeFile = true;
       _TTreeFile = new TFile(_TTreeFileName.c_str(), "RECREATE");
       _TTreeFile->cd();
+      _observablesTree = new TTree("observablesTree","Tree of all observable values");
     }
-    _observablesTree = new TTree("observablesTree","Tree of all observable values");
   }
   else
   {
@@ -280,7 +286,7 @@ void ComprehensivePIDProcessor::init() {
       _trainingModels.push_back(ModelMgr::instance()->createModel(_trainModelTypes[i]));
       _trainingModels[i]->setName(_trainModelNames[i]);
 
-      sloM << "New model created: " << _trainingModels[i]->type() << ":" << _trainingModels[i]->name() << "\n" <<  std::endl;
+      sloM << "New model created: " << _trainingModels[i]->type() << ":" << _trainingModels[i]->name() <<  std::endl;
 
       if (_modeInfer)
       {
@@ -291,6 +297,7 @@ void ComprehensivePIDProcessor::init() {
         _weightFiles.push_back(empty);
         ReadReferenceFile(i);
       }
+      sloM << std::endl;
     }
 
     // if training observables are not specified in the steering file use the extracted observables + momabs and lambda (without d0, z0, MCPDG and nTrack)
@@ -392,14 +399,13 @@ void ComprehensivePIDProcessor::init() {
     sloM << "-------------------------------------------------" << std::endl;
   }
 
-  if (_modeExtract)
+  if (_modeExtract && _writeTTreeFile)
   {
     for (int iObs=0; iObs<_nObs; ++iObs)
     {
       std::stringstream s; s << _observablesNames[iObs].c_str() << "/F";
       _observablesTree-> Branch(_observablesNames[iObs].c_str(), &(_observablesValues[iObs]), s.str().c_str());
     }
-    _observablesTree->Write();
   }
 
   sloM << "Branches done" << std::endl;
@@ -414,7 +420,6 @@ void ComprehensivePIDProcessor::init() {
   _rejectedPFOs->GetXaxis()->SetBinLabel(5,"too large d0");
   _rejectedPFOs->GetXaxis()->SetBinLabel(6,"too large z0");
   _rejectedPFOs->SetYTitle("abundance");
-
 
 }
 
@@ -553,7 +558,7 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
         }
         sloD << "observables extracted " << std::endl;
 
-        _observablesTree->Fill();
+        if (_writeTTreeFile) _observablesTree->Fill();
         sloD << "trees filled" << std::endl;
       }
 
@@ -602,11 +607,11 @@ void ComprehensivePIDProcessor::end()
   sloM << "PFOs passed: " << _nPFO << std::endl;
 
 
-  if (_modeExtract)
+  if (_writeTTreeFile)
   {
     _TTreeFile->cd();
-    //_observablesTree->Print();
     _observablesTree->Write();
+    _rejectedPFOs->Write();
   }
 
   if (_modeTrain)
@@ -618,23 +623,37 @@ void ComprehensivePIDProcessor::end()
     sloM << "Training done" << std::endl << std::endl;
   }
 
-  if (_modeInfer)
+  if (_modeInfer && _plotFolder!="")
   {
-    TCanvas* can = new TCanvas;
-    gStyle->SetPalette(kBird);
-    can->SetLogz();
-    can->SetGrid(0,0);
-    gStyle->SetOptStat(0);
-
-    for (int m=0; m<_nModels; ++m)
+    bool cont = true;
+    if (!std::filesystem::exists(_plotFolder))
     {
-      PlotTH2(can, _PDGCheck[m]);
-      for (int j=0; j<_nMomBins[m]; ++j)
-        PlotTH2(can, _PDGChecks[m][j]);
+      try {std::filesystem::create_directory(std::filesystem::path(_plotFolder));}
+      catch (...) {sloM << "plotFolder does not exist and could not be created, plotting is skipped."; cont = false;}
+    }
+    if (cont)
+    {
+      TCanvas* can = new TCanvas("Canvas2D","Canvas2D",500,500);
+      gStyle->SetPalette(kBird);
+      can->SetLogz();
+      can->SetGrid(0,0);
+      gStyle->SetOptStat(0);
+
+      for (int m=0; m<_nModels; ++m)
+      {
+        PlotTH2(can, _PDGCheck[m]);
+        PlotTH2(can, _PDGCheck[m], 1);
+        if (_writeTTreeFile) _PDGCheck[m]->Write();
+        for (int j=0; j<_nMomBins[m]; ++j)
+        {
+          PlotTH2(can, _PDGChecks[m][j]);
+          if (_writeTTreeFile) _PDGChecks[m][j]->Write();
+        }
+      }
     }
   }
 
-  _TTreeFile->Close();
+  if (_writeTTreeFile) _TTreeFile->Close();
 
   for (int i=0; i<_nAlgos;  ++i) delete _inputAlgorithms[i];
   for (int i=0; i<_nModels; ++i) delete _trainingModels [i];
@@ -739,10 +758,51 @@ std::string ComprehensivePIDProcessor::ReferenceFile(int n)
   return refname;
 }
 
-void ComprehensivePIDProcessor::PlotTH2(TCanvas* can, TH2* hist)
+void ComprehensivePIDProcessor::PlotTH2(TCanvas* can, TH2* hist, int effpur)
 {
   hist->Draw("colz");
+  std::stringstream s; s << _plotFolder << "/" << hist->GetName();
+
+  std::vector<double> sumX{}, sumY{};
+  if (effpur) // calculate row and column sums
+  {
+    int nX = hist->GetNbinsX();
+    int nY = hist->GetNbinsY();
+    sumX.resize(nY);
+    sumY.resize(nX);
+    std::fill(sumX.begin(), sumX.end(), 0);
+    std::fill(sumY.begin(), sumY.end(), 0);
+    for (int i=0; i<nX; ++i)
+      for (int j=0; j<nY; ++j)
+      {
+        sumX[j] = sumX[j] + hist->GetBinContent(i+1,j+1);
+        sumY[i] = sumY[i] + hist->GetBinContent(i+1,j+1);
+      }
+  }
+  if (effpur==1 || effpur==3) // print efficiency
+  {
+    for (int i=0; i<hist->GetNbinsX(); ++i)
+    {
+      std::stringstream e; e << hist->GetBinContent(i+1,i+1)/sumY[i];
+      std::string eff = e.str(); eff.resize(4);
+      TText* t = new TText(i-.45,i+.05,eff.c_str());
+      t->Draw();
+    }
+    s << "_eff";
+  }
+  if (effpur==2 || effpur==3)  // print purity
+  {
+    for (int j=0; j<hist->GetNbinsY(); ++j)
+    {
+      std::stringstream p; p << hist->GetBinContent(j+1,j+1)/sumX[j];
+      std::string pur = p.str(); pur.resize(4);
+      TText* t = new TText(j-.2,j-.45,pur.c_str());
+      t->Draw();
+    }
+    s << "_pur";
+  }
+
   can->Update();
-  std::stringstream s; s << _plotFolder << "/" << hist->GetName() << _fileFormat;
+  s << _fileFormat;
   can->Print(s.str().c_str());
 }

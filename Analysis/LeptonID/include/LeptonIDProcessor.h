@@ -35,7 +35,7 @@ using namespace marlin;
  * @version $Id: MyProcessor.h,v 1.4 2005-10-11 12:57:39 gaede Exp $
  */
 
-class LeptonIDProcessor : public Processor, public EventModifier
+class LeptonIDProcessor : public Processor //, public EventModifier
 {
 
 public:
@@ -57,7 +57,7 @@ public:
 
   /** Called for every event - the working horse.
    */
-  virtual void modifyEvent(LCEvent *evt);
+  virtual void processEvent(LCEvent *evt);
 
   virtual const std::string & name() const {return Processor::name();}
 
@@ -90,15 +90,15 @@ protected:
 
   std::vector<std::string> _usedVariables{};
 
-  bool _buildTree;
-  bool _evalMVA;
+  bool _buildTree = true;
+  bool _evalMVA = false;
 
   float _MCTruthRecoCweightCut{};
   float _MCTruthRecoTweightCut{};
   float _RecoMCTruthCweightCut{};
   float _RecoMCTruthTweightCut{};
 
-  TTree* _tree;
+  TTree* _tree{};
   TMVA::Reader _mvareader;
 
   int _truePDG{};

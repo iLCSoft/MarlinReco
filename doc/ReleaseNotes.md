@@ -1,3 +1,25 @@
+# v01-35
+
+* 2024-02-23 Ulrich Einhaus ([PR#130](https://github.com/iLCSoft/MarlinReco/pull/130))
+  Minor changes in CPID:
+  - allow for no automatic creation of root file or plots
+  - if no output root file and no training then no intermediate TTree is filled
+  - add efficiency numbers on additional confusion matrix plot
+  - in TOF algorithm use mass² instead of beta
+  
+  LeptonID: Remove inheritance from EventModifier
+
+* 2024-02-16 tmadlener ([PR#129](https://github.com/iLCSoft/MarlinReco/pull/129))
+  - Populate the type information for the output relation collection in the `SimpleFCalDigi`
+  - Fix some warnings there as well. (Fixes [#100](https://github.com/iLCSoft/MarlinReco/issues/100))
+
+* 2024-02-12 tmadlener ([PR#128](https://github.com/iLCSoft/MarlinReco/pull/128))
+  - Use the key4hep-build action for building against key4hep stacks
+  - Switch to LCG_104 based clicdp nightlies for CI
+
+* 2024-02-12 tmadlener ([PR#126](https://github.com/iLCSoft/MarlinReco/pull/126))
+  - Make the KinkFinder always produce all output collections even if some of them are empty
+
 # v01-34
 
 * 2023-07-07 tmadlener ([PR#124](https://github.com/iLCSoft/MarlinReco/pull/124))

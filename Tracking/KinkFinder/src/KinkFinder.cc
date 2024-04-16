@@ -832,7 +832,7 @@ void KinkFinder::processEvent( LCEvent * evt ) {
 			 probSigma > probHyperon){
 			kinkij.mass = mSigma;
 			kinkij.pdgCode = 3222;
-			if(charge[i]<0)kinkij.pdgCode = 3222;
+			if(charge[i]<0)kinkij.pdgCode = -3222;
 		      }
 		      if(probHyperon > probPion  && 
 			 probHyperon > probKaon  &&

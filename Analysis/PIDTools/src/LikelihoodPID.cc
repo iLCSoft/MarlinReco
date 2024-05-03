@@ -409,35 +409,8 @@ double LikelihoodPID::get_dEdxChi2(int parttype, TVector3 p, float hit, double d
 }
 
 double LikelihoodPID::get_dEdxFactor(int /*parttype*/, TVector3 /*p*/, float hit, double dEdx){
-  //get parameters for chi2
-  // double tmppar[5],tmpmass=0.0;
-  // for(int i=0;i<5;i++) tmppar[i]=par[parttype][i];
-  // //getmass
-  // switch(parttype){
-  // case 0:
-  //   tmpmass=emass;
-  //   break;
-  // case 1:
-  //   tmpmass=mmass;
-  //   break;
-  // case 2:
-  //   tmpmass=pimass;
-  //   break;
-  // case 3:
-  //   tmpmass=kmass;
-  //   break;
-  // case 4:
-  //   tmpmass=pmass;
-  //   break;
-  // }
-
-  //cal. polar angle
-  // double trkcos=p.CosTheta();
-
   //get nomalized dEdx
   double dEdx_Norm=get_Norm(dEdx);
-
-  //cout << "check " << emass << " " << tmpmass << " " << trkcos << " " << dEdx_Norm << " " << ExpdEdx << endl;
   double dEdx_Error = _dEdxerrfact * dEdx_Norm * hit/dEdx;    //change 20151218
 
   //get likelihood factor

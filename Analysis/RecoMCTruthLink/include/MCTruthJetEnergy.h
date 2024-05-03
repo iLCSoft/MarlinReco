@@ -41,7 +41,6 @@ class MCTruthJetEnergy : public Processor {
   MCTruthJetEnergy(const MCTruthJetEnergy&) = delete;
   MCTruthJetEnergy& operator=(const MCTruthJetEnergy&) = delete;
 
-
   virtual Processor*  newProcessor() { return new MCTruthJetEnergy ; }
   
   

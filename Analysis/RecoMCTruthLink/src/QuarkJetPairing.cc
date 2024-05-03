@@ -108,7 +108,6 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
 
   float energy = 0;
  
-  // float jet_ene[4];
   float quark_ene[4];
      
   float jet_theta[4];
@@ -131,7 +130,6 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
      
   for(int i=0; i<4; i++){
        
-    // jet_ene[i]=0;
     quark_ene[i]=0;
        
     jet_theta[i]=0;
@@ -169,8 +167,7 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
 	jet_px[i]=j->getMomentum()[0]; 
 	jet_py[i]=j->getMomentum()[1];
 	jet_pz[i]=j->getMomentum()[2];
-	// jet_ene[i]=j->getEnergy();
- 	    
+
       }  
       jet_ptot[i]=sqrt(pow(jet_px[i], 2)+pow(jet_py[i], 2)+pow(jet_pz[i], 2));
     }
@@ -203,8 +200,6 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
  
   int counter_jets = 0; 
    
-  // Float_t theta[4];
-  
   Float_t alpha[24];
   Float_t alpha_min = 9999; 
   int iperm_min = 0; 
@@ -263,7 +258,6 @@ void QuarkJetPairing::processEvent( LCEvent * evt ) {
 	
 	  //////////////////////////////////////////// Determination of theta //////////////////////////
 	
-	  // theta[ijet]=0;
 	  quark_theta[ijet] = atan((sqrt((pow(quark_px[quark[ijet][iperm_min]],2))+(pow(quark_py[quark[ijet][iperm_min]],2))))/quark_pz[quark[ijet][iperm_min]]);
 	  jet_theta[ijet] = atan((sqrt((pow(jet_px[jet[ijet][iperm_min]],2))+(pow(jet_py[jet[ijet][iperm_min]],2))))/jet_pz[jet[ijet][iperm_min]]);
 	  if(quark_theta[ijet] < 0){

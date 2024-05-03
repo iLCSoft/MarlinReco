@@ -64,7 +64,6 @@ namespace TTbarAnalysis
 		//
 		//	Private methods
 		//
-			// static double * castIntToDouble(int * array);
 	};
 			template<class T >
 			std::vector< T * > * MathOperator::MergeVectors(std::vector< T * > * vector1, std::vector< T * > * vector2)

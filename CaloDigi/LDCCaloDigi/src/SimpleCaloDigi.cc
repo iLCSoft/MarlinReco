@@ -140,10 +140,6 @@ void SimpleCaloDigi::init() {
   _nRun = -1;
   _nEvt = 0;
 
-  //fg: need to set default encoding in for reading old files...
-  // dudarboh: does nothing anymore, default encoding spedified in the constructor
-  // CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-
 }
 
 

@@ -570,10 +570,6 @@ void ILDCaloDigi::init() {
   _strip_virt_cells=-999;
   _countWarnings=0;
 
-  //fg: need to set default encoding in for reading old files...
-  // dudarboh: does nothing anymore, default encoding spedified in the constructor
-  // CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-
   const gear::GearParameters& pMokka = Global::GEAR->getGearParameters("MokkaParameters");
 
   // Calorimeter geometry from GEAR
@@ -882,34 +878,35 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 eCellInTime+=ecor;
               }
 
-              if(!used[i]){
+              if (!used[i]) {
                 // merge with other hits?
                 used[i] = true;
-                for(unsigned int j =i+1; j<n;j++){
-                    if(!used[j]){
-                        float timej   = hit->getTimeCont(j);
-                        float energyj = hit->getEnergyCont(j);
-                        float deltatij = fabs(timei-timej);
-		                if (_ecalSimpleTimingCut){
-                            float deltatTmp = _ecalCorrectTimesForPropagation?dt:0;
-                            if (timej-deltatTmp>_ecalTimeWindowMin && timej-deltatTmp<ecalTimeWindowMax){
-                                energySum += energyj;
-                                if (timej < timei) timei = timej;
-    			            }
-		                }
-                        else{
-                			if(deltatij<_ecalDeltaTimeHitResolution){
-                    			if(energyj>energyi) timei=timej;
-                    			energyi+=energyj;
-                    			used[j] = true;
-                			}
-		                }
+                for (unsigned int j = i + 1; j < n; j++) {
+                  if (!used[j]) {
+                    float timej    = hit->getTimeCont(j);
+                    float energyj  = hit->getEnergyCont(j);
+                    float deltatij = fabs(timei - timej);
+                    if (_ecalSimpleTimingCut) {
+                      float deltatTmp = _ecalCorrectTimesForPropagation ? dt : 0;
+                      if (timej - deltatTmp > _ecalTimeWindowMin && timej - deltatTmp < ecalTimeWindowMax) {
+                        energySum += energyj;
+                        if (timej < timei)
+                          timei = timej;
+                      }
+                    } else {
+                      if (deltatij < _ecalDeltaTimeHitResolution) {
+                        if (energyj > energyi)
+                          timei = timej;
+                        energyi += energyj;
+                        used[j] = true;
+                      }
                     }
+                  }
                 }
-		if (_ecalSimpleTimingCut){
-			used = vector<bool>(n, true); // mark everything as used to terminate for loop on next run
-			energyi += energySum; //fill energySum back into energyi to have rest of loop behave the same.
-		}
+                if (_ecalSimpleTimingCut) {
+                  used = vector<bool>(n, true);  // mark everything as used to terminate for loop on next run
+                  energyi += energySum;          //fill energySum back into energyi to have rest of loop behave the same.
+                }
                 if(_digitalEcal){
                   calibr_coeff = this->digitalEcalCalibCoeff(layer);
                   if(_mapsEcalCorrection){
@@ -1107,8 +1104,6 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
               float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
               float energyi = hit->getEnergyCont(i); //energy of current subhit
 	      float energySum = 0;
-              // float deltat = 0;
-              // if(_hcalCorrectTimesForPropagation)deltat=dt;  //deltat now carries hit timing correction.
 	      //std::cout <<"outer:" << i << " " << n << std::endl;
 
               //idea of the following section: 

@@ -545,8 +545,7 @@ namespace TTbarAnalysis
 			streamlog_out(MESSAGE)<<"WARNING: Long-lived noninteracting particle " << parent->getPDG() <<"!\n";
 			return result;
 		}
-		// bool finished = false;
-		for (unsigned int i = 0; i < daughters.size(); i++) 
+		for (unsigned int i = 0; i < daughters.size(); i++)
 		{
 			MCParticle * daughter = daughters[i];
 			if (CheckParticle(daughter, TRACKABLE_PARTICLES))
@@ -556,8 +555,7 @@ namespace TTbarAnalysis
 				{
 					//streamlog_out(MESSAGE)<<"CAUTION: Low momentum particle of " << MathOperator::getModule(daughter->getMomentum()) << " GeV!\n";
 				}
-				// finished = true;
-				if (selectReco && IsReconstructed(daughter)) 
+				if (selectReco && IsReconstructed(daughter))
 				{
 					result.push_back(daughter);
 				}

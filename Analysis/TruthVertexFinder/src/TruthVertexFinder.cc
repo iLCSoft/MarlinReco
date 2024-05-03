@@ -498,10 +498,8 @@ namespace TTbarAnalysis
 			_bdistance = MathOperator::getDistance(verticies->at(1)->getPosition(), verticies->at(0)->getPosition());
 			_btotalnumber = _cnumber + _bnumber;
 			streamlog_out(MESSAGE) <<"Checking b-quark meson...\n";
-			// bool compatible = opera.CheckCompatibility(daughters, chain->Get(0), chain->Get(1)->getCharge());
-				
+
 			streamlog_out(MESSAGE) <<"Checking c-quark meson...\n";
-			// compatible = opera.CheckCompatibility(cdaughters, chain->Get(1));
 			_bptmiss = getMissingPt(daughters, cdaughters, verticies->at(0));
 			streamlog_out(MESSAGE) <<"Missing pt for b-quark hadron: " << _bptmiss << "\n";	
 			_ccharge = (int)chain->Get(1)->getCharge();

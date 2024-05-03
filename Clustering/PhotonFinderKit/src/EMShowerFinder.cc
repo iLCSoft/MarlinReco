@@ -104,11 +104,6 @@ void EMShowerFinder::init() {
   // usually a good idea to 
   printParameters();
 
-  // FIXME: hard coded cell id's for old Mokka (e.g. Mokka v5.4) versions)
-  // dudarboh: does nothing anymore, default encoding spedified in the constructor
-  // CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
-
-
   // debug
   if (_drawOnCED)  MarlinCED::init(this);
 

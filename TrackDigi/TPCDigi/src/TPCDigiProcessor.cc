@@ -529,9 +529,9 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
         if( ptSqrdMC > (0.2*0.2) ) ++_NPhysicsAbove02GeVSimTPCHits ;
         if( ptSqrdMC > 1.0 )  ++_NPhysicsAbove1GeVSimTPCHits ;
         
-      #ifdef DIGIPLOTS
-            if(_mcp) plotHelixHitResidual(_mcp, &thisPoint);
-      #endif  
+#ifdef DIGIPLOTS
+        if(_mcp) plotHelixHitResidual(_mcp, &thisPoint);
+#endif  
       } else {
         ++_NBackgroundSimTPCHits;
       }
@@ -636,7 +636,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           }
         }
         
-        #ifdef DIGIPLOTS
+#ifdef DIGIPLOTS
         if(colFlag.bitSet(LCIO::THBIT_MOMENTUM)) {
           
           const float * mcpMomentum = _SimTHit->getMomentum() ;
@@ -664,7 +664,7 @@ void TPCDigiProcessor::processEvent( LCEvent * evt )
           streamlog_out(DEBUG3) << "padTheta from track mom = " << mom.theta() * (360.0 / twopi) << endl; 
           
         }
-        #endif        
+#endif        
         
       }
       
@@ -1091,8 +1091,6 @@ void TPCDigiProcessor::end()
 void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
-  // const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
-  // const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
   
   Voxel_tpc* seed_hit  = aVoxel;
   
@@ -1123,9 +1121,6 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   trkHit->setEDep(seed_hit->getEDep());
   //  trkHit->setType( 500 );
   
-  //  int side = lcio::ILDDetID::barrel ;
-  //  
-  //  if( pos[2] < 0.0 ) side = 1 ;
   
   (*_cellid_encoder)[ lcio::LCTrackerCellID::subdet() ] = lcio::ILDDetID::TPC ;
   (*_cellid_encoder)[ lcio::LCTrackerCellID::layer()  ] = seed_hit->getRowIndex() ;
@@ -1190,7 +1185,7 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   }
   
   
- #ifdef DIGIPLOTS
+#ifdef DIGIPLOTS
   SimTrackerHit* theSimHit = _tpcHitMap[seed_hit];
   double rSimSqrd = theSimHit->getPosition()[0]*theSimHit->getPosition()[0] + theSimHit->getPosition()[1]*theSimHit->getPosition()[1];
   
@@ -1212,14 +1207,13 @@ void TPCDigiProcessor::writeVoxelToHit( Voxel_tpc* aVoxel){
   _zSigmaVsZHisto->fill(seed_hit->getZ(),sqrt(covMat[5]));
   _rPhiSigmaHisto->fill(sqrt((covMat[2])/(cos(point.phi())*cos(point.phi()))));
   _zSigmaHisto->fill(sqrt(covMat[5]));
- #endif
+#endif
 }
 
 void TPCDigiProcessor::writeMergedVoxelsToHit( vector <Voxel_tpc*>* hitsToMerge){
   
   const gear::TPCParameters& gearTPC = Global::GEAR->getTPCParameters() ;
   const gear::PadRowLayout2D& padLayout = gearTPC.getPadLayout() ;
-  // const gear::Vector2D padCoord = padLayout.getPadCenter(1) ;
   
   TrackerHitImpl* trkHit = new TrackerHitImpl ;
   

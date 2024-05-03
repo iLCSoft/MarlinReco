@@ -473,8 +473,8 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
        nfirst_vertices++;     
        if(_printing>6)std::cout << std::setw(2) << i << " " << std::setw(2) << fvec[i].ivertex << " " 
                                 << std::setw(2) << fvec[i].nedges << " " << fvec[i].febits << "  { "; 
-       for (std::list<int>::iterator iter=fvec[i].fvelist.begin(); iter!=fvec[i].fvelist.end(); ++iter){
-           if(_printing>6)std::cout << std::setw(2) << *iter << " ";
+       for (const int elem : fvec[i].fvelist) {
+           if(_printing>6)std::cout << std::setw(2) << elem << " ";
        } 
        if(_printing>6)std::cout << "}" << std::endl;
    }
@@ -556,9 +556,9 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
            std::vector<int> tmp;
            if(fvec[d[i]].nedges>1){    // Only do this for those first vertices with more than one edge
 // Iterate over the elements of the list associated with first vertex d[i]
-              for (std::list<int>::iterator iter=fvec[d[i]].fvelist.begin(); iter!=fvec[d[i]].fvelist.end(); ++iter){
+              for (const int elem : fvec[d[i]].fvelist) {
 //                std::cout << std::setw(2) << *it << " ";
-                  tmp.push_back(*iter);
+                  tmp.push_back(elem);
               }
 //            std::cout << std::endl;
               array.push_back(tmp);

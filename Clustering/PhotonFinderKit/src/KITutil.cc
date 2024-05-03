@@ -141,12 +141,10 @@ void Precalc2(vector< Superhit2* >& shvec,double r, double z, double cell, doubl
 
            unsigned int nPts=shvec.size();
            ANNpointArray dataPts;
-           // ANNpoint queryPt;
            ANNidxArray nnIdx;
            ANNdistArray dists;
            ANNkd_tree* kdTree;
 
-	   // queryPt=annAllocPt(3); // 3d point 
 	   dataPts=annAllocPts(nPts,3);
            nnIdx=new ANNidx[36];
 	   dists=new ANNdist[36];
@@ -287,8 +285,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 		unsigned int N, vector<float> miipstep, CoreCut2 Ccut)
 {       
           typedef pair<int,int>   test;
-	  // int psl_plun_global=0;
-	  
+
 	  double Diagby2=PGDB[PGdb::ECAL1_BAR].cell_size*sqrt(2.0)/2.0;
 	  double d=PGDB[PGdb::ECAL1_BAR].r_inner;
 	  double z=PGDB[PGdb::ECAL1_CAP].z_inner;
@@ -341,8 +338,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 		}
 	      poslednjipun=im;
 	    }
-	  // psl_plun_global=poslednjipun;
-	 
+
 	  vector < PROTSEED2 > prs;
 
 		for(unsigned int im=0;im<bbb[0].size();im++)

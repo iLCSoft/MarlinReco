@@ -226,16 +226,12 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 
   if (_makePlots) {
     // first fill some simple MC histos
-    // float phi=-999;
-    // float theta=-999;
     try {
       LCCollection * col = evt->getCollection("MCParticle");
       if (col->getNumberOfElements()>0) {
 	MCParticle * mcp = dynamic_cast<MCParticle*>(col->getElementAt(0) );
 	TVector3 mom(mcp->getMomentum()[0], mcp->getMomentum()[1], mcp->getMomentum()[2]);
 	h_phiThetaMC->Fill(mom.Phi(), mom.Theta());
-	// phi = mom.Phi();
-	// theta = mom.Theta();
       }
     }
     catch(DataNotAvailableException &e) {};
@@ -249,7 +245,6 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 
   std::pair < TVector3, TVector3 > stripEnds;
   std::vector <std::string> * toSplit;
-  // std::vector <std::string> * stripSplitter;
   int orientation;
 
   std::map < IMPL::LCCollectionVec*, std::string > outputcolls;
@@ -270,12 +265,10 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
     case 0:
       orientation = TRANSVERSE;
       toSplit = &_ecalCollectionsTranStrips;
-      // stripSplitter = &_ecalCollectionsLongStrips;
       break;
     case 1:
       orientation = LONGITUDINAL;
       toSplit = &_ecalCollectionsLongStrips;
-      // stripSplitter = &_ecalCollectionsTranStrips;
       break;
     default:
       streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;

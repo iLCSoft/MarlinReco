@@ -669,14 +669,12 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
   //cout<<"nLadders "<<nLadders<<" "<<dPhi<<" "<<Phi0<<" "<<endl;
   
 
-  // int iLadder=0;
   for (int ic=0; ic<nLadders; ++ic) {
     PhiLadder = double(ic)*dPhi + Phi0;
     PhiInLocal = PhiInLab - PhiLadder;
     //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
     if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 
         RXY*cos(PhiInLocal)-Radius < _layerThickness[layer]) {
-      // iLadder = ic;
       break;
     }
     //cout<<"phi ladder "<<PhiLadder<<endl;

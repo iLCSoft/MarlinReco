@@ -292,7 +292,7 @@ double PDF::GetLikelihood(std::string CatName){
 
    
    //FIXED:SJA:removed variable array:  double LH [nCats];
-   double *LH = new double [nCats];
+   std::vector<double> LH(nCats, 0.0);
 
    double sum2=0.;
 
@@ -309,7 +309,6 @@ double PDF::GetLikelihood(std::string CatName){
      std::cout << " Error in Likelihood " << std::endl;
      delete[] sum;
      delete[] prod;
-     delete[] LH;
      return -1;
    }
 
@@ -322,13 +321,11 @@ double PDF::GetLikelihood(std::string CatName){
       std::cout << " Error in Likelihood : total LH not 1!" << std::endl;
       delete[] sum;
       delete[] prod;
-      delete[] LH;
       return -1;
     }
 
     delete[] sum;
     delete[] prod;
-    delete[] LH;
     return LH[index]/sum2;
 }
 

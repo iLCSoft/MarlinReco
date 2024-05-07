@@ -181,14 +181,14 @@ void IsoLepTrainingProcessor::processEvent( LCEvent * evt ) {
     TLorentzVector lortz = TLorentzVector(pv,energy);
     //    Int_t orig = getOriginalPDGForIsoLep(mcPart);
     Int_t orig = getOriginalPDGForIsoLep(mcPart,colMC);    
-    Int_t status = mcPart->getGeneratorStatus();
+    // Int_t status = mcPart->getGeneratorStatus();
     if (i>=6 && i<=11) {
       if (TMath::Abs(pdg) == 11 || TMath::Abs(pdg) == 13 || TMath::Abs(pdg) == 15) {
 	pdgLepMC = pdg;
 	pdgLepMCv.push_back(pdgLepMC);
       }
     }
-    Int_t origw = pdgLepMC > 0? -24 : 24;
+    // Int_t origw = pdgLepMC > 0? -24 : 24;
     //    if ((TMath::Abs(pdg)==pdgLepMC) && (orig==24||orig==pdgLepMC) && status==1) {
     //    if (pdg==pdgLepMC && (orig==origw||orig==pdgLepMC) && status==1 && TMath::Abs(pdg)==_iso_lep_type && !(mcPart->isOverlay())) {
       //    if (status == 1 && TMath::Abs(pdg)==_iso_lep_type && TMath::Abs(orig) == 13 && !(mcPart->isOverlay())) {

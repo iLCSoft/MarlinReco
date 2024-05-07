@@ -466,10 +466,7 @@ float V0Finder::Rmin( Track* track ) {
     if(z<zmin)zmin=z;
     if(z>zmax)zmax=z;
   }
-  float tanLambda = track->getTanLambda();
   //  std::cout << " V0 Check : " << tanLambda << " z = " << zmin << " - " << zmax << std::endl; 
-  float zzz = zmin;
-  if(tanLambda<0)zzz=zmax;
 
   float zstart = 0;
   if(fabs(zmin)<fabs(zmax))zstart = zmin;

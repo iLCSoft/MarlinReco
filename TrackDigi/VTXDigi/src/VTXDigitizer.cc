@@ -395,8 +395,8 @@ void VTXDigitizer::processEvent( LCEvent * evt ) {
           // LCRelationImpl * rel = new LCRelationImpl(recoHit,simTrkHit,float(1.0));
           // RelCol->addElement(rel);
           // Clean Up                
-          for (int i=0; i < int(simTrkHitVec.size()); ++i) {
-            SimTrackerHit * hit = simTrkHitVec[i];
+          for (int j=0; j < int(simTrkHitVec.size()); ++j) {
+            SimTrackerHit * hit = simTrkHitVec[j];
             delete hit;
           }     
         }          
@@ -564,7 +564,6 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
   
   if (nLadders > 2) { // laddered structure
     //std::cout<<"laddered structure "<<std::endl;
-    int iLadder=0;
     for (int ic=0; ic<nLadders; ++ic) {
       //      PhiLadder = - PI2 + double(ic)*dPhi + Phi0;
       PhiLadder = double(ic)*dPhi + Phi0;
@@ -572,7 +571,6 @@ void VTXDigitizer::FindLocalPosition(SimTrackerHit * hit,
       //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
       if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 
           RXY*cos(PhiInLocal)-Radius < _layerThickness[layer]) {
-        iLadder = ic;
         break;
       }
       //cout<<"phi ladder "<<PhiLadder<<endl;
@@ -810,14 +808,14 @@ void VTXDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
             double xCurrent,yCurrent;
             TransformCellIDToXY(ix,iy,xCurrent,yCurrent);
             gsl_sf_result result;
-            int status = gsl_sf_erf_Q_e(float((xCurrent - 0.5*_pixelSizeX - xCentre)/sigmaX), &result);
+            gsl_sf_erf_Q_e(float((xCurrent - 0.5*_pixelSizeX - xCentre)/sigmaX), &result);
             float LowerBound = 1 - result.val;
-            status = gsl_sf_erf_Q_e(float((xCurrent + 0.5*_pixelSizeX - xCentre)/sigmaX), &result);
+            gsl_sf_erf_Q_e(float((xCurrent + 0.5*_pixelSizeX - xCentre)/sigmaX), &result);
             float UpperBound = 1 - result.val;
             float integralX = UpperBound - LowerBound;
-            status = gsl_sf_erf_Q_e(float((yCurrent - 0.5*_pixelSizeY - yCentre)/sigmaY), &result);
+            gsl_sf_erf_Q_e(float((yCurrent - 0.5*_pixelSizeY - yCentre)/sigmaY), &result);
             LowerBound = 1 - result.val;
-            status = gsl_sf_erf_Q_e(float((yCurrent + 0.5*_pixelSizeY - yCentre)/sigmaY), &result);
+            gsl_sf_erf_Q_e(float((yCurrent + 0.5*_pixelSizeY - yCentre)/sigmaY), &result);
             UpperBound = 1 - result.val;
             float integralY = UpperBound - LowerBound;
             float totCharge = float(spoint.charge)*integralX*integralY;

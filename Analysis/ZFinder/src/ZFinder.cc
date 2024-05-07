@@ -240,15 +240,12 @@ void ZFinder::FindZmumu(LCCollectionVec * recparcol) {
   ReconstructedParticle* pMplus  = NULL;
   ReconstructedParticle* pMminus = NULL;
   float bestdmz = 999.;
-  unsigned int   besti=0;
-  unsigned int   bestj=0;
-  for(unsigned int i=0;i<pmuplus.size();i++){  
+  for(unsigned int i=0;i<pmuplus.size();i++){
     for(unsigned int j=0;j<pmuminus.size();j++){  
       LorentzVector pmumu = pmuplus[i]+pmuminus[j];
       float massmumu = pmumu.m();
       if( fabs(massmumu-91.2) < bestdmz){
 	bestdmz = fabs(massmumu-91.2);
-	besti=i; bestj=j;
 	pMplus  = pMplusPfoVec[i];
 	pMminus = pMminusPfoVec[j];
       }
@@ -365,7 +362,6 @@ void ZFinder::FindZee(LCCollectionVec * recparcol) {
   ReconstructedParticle* pEplus  = NULL;
   ReconstructedParticle* pEminus = NULL;
   float bestdmz = 999.;
-  unsigned int   besti = 999;
   unsigned int   bestj = 999;
   for(unsigned int i=0;i<peplus.size();i++){  
     for(unsigned int j=0;j<peminus.size();j++){  
@@ -373,7 +369,7 @@ void ZFinder::FindZee(LCCollectionVec * recparcol) {
       float massee = pee.m();
       if( fabs(massee-91.2) < bestdmz){
 	bestdmz = fabs(massee-91.2);
-	besti=i; bestj=j;
+        bestj=j;
 	pEplus = pEplusPfoVec[i];
 	pEminus = pEminusPfoVec[j];
       }
@@ -570,4 +566,3 @@ void ZFinder::FindZee(LCCollectionVec * recparcol) {
 
   return;
 }
-

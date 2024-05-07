@@ -141,12 +141,10 @@ void Precalc2(vector< Superhit2* >& shvec,double r, double z, double cell, doubl
 
            unsigned int nPts=shvec.size();
            ANNpointArray dataPts;
-           ANNpoint queryPt;
            ANNidxArray nnIdx;
            ANNdistArray dists;
            ANNkd_tree* kdTree;
 
-	   queryPt=annAllocPt(3); // 3d point 
 	   dataPts=annAllocPts(nPts,3);
            nnIdx=new ANNidx[36];
 	   dists=new ANNdist[36];
@@ -287,8 +285,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 		unsigned int N, vector<float> miipstep, CoreCut2 Ccut)
 {       
           typedef pair<int,int>   test;
-	  int psl_plun_global=0;
-	  
+
 	  double Diagby2=PGDB[PGdb::ECAL1_BAR].cell_size*sqrt(2.0)/2.0;
 	  double d=PGDB[PGdb::ECAL1_BAR].r_inner;
 	  double z=PGDB[PGdb::ECAL1_CAP].z_inner;
@@ -341,8 +338,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 		}
 	      poslednjipun=im;
 	    }
-	  psl_plun_global=poslednjipun;
-	 
+
 	  vector < PROTSEED2 > prs;
 
 		for(unsigned int im=0;im<bbb[0].size();im++)
@@ -460,11 +456,11 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 			      a.X[2]=Xatf[2];
 			      a.active=true;
 			      bool stavi=true;
-			      for( unsigned int im=0;im<prs2->size();im++)
+			      for( unsigned int im2=0;im2<prs2->size();im2++)
 				{
-				  if((*prs2)[im].active)
+				  if((*prs2)[im2].active)
 				    {
-				      if( (*prs2)[im].cl==a.cl)
+				      if( (*prs2)[im2].cl==a.cl)
 					stavi=false;
 				    }
 				}
@@ -494,11 +490,11 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 			  a.active=true;
 		
 			  bool stavi=true;
-			  for( unsigned int im=0;im<prs2->size();im++)
+			  for( unsigned int im2=0;im2<prs2->size();im2++)
 			    {
-			      if((*prs2)[im].active)
+			      if((*prs2)[im2].active)
 				{
-				  if( (*prs2)[im].cl==a.cl)
+				  if( (*prs2)[im2].cl==a.cl)
 				    stavi=false;
 				}
 			    }
@@ -562,12 +558,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 
 	  if(kojsv.size()!=0)
 	    {
-           
-	      int iskoristio[kojsv.size()];
-	      for(unsigned int i=0;i<kojsv.size();i++)
-		{
-		  iskoristio[i]=0;
-		}
+          std::vector<int> iskoristio(kojsv.size(), 0);
 	      for(unsigned int i=0;i<kojsv.size();i++)
 		{
 		  if( iskoristio[i]==0)
@@ -687,11 +678,7 @@ void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb , vector <PROTSEED2> * 
 		       }else{
                           
 		       vector <int> izabrani;
-		       int isko[trojka.size()];
-		       for(unsigned int jj=0;jj<trojka.size();jj++)
-			     {
-			       isko[jj]=0;
-			     }
+               std::vector <int> isko(trojka.size(), 0);
 		       for(unsigned int j=0;j<nivoi.size();j++)   
 			 {
 			       vector<int> sabr;
@@ -1158,22 +1145,22 @@ void LineCaloIntersect2(double* X1, double* X2,double&d,double&zmax,  double*X)
       }
    
     }else { // endcap 
-                double n[8][3];
+                double nn[8][3];
                 if(X2[2]>0.0)
                  {
-		   n[0][0]=0.0; 
-		   n[0][1]=0.0;
-		   n[0][2]=1.0;
+		   nn[0][0]=0.0; 
+		   nn[0][1]=0.0;
+		   nn[0][2]=1.0;
 		 }else{
-		  n[0][0]=0.0; 
-		  n[0][1]=0.0;
-		  n[0][2]=-1.0;
+		  nn[0][0]=0.0; 
+		  nn[0][1]=0.0;
+		  nn[0][2]=-1.0;
 		}
 
 
-		double tmp=-(n[0][0]*n[0][0]+n[0][1]*n[0][1]+n[0][2]*n[0][2])*zmax
-		            +n[0][0]*X1[0]+n[0][1]*X1[1]+n[0][2]*X1[2];
-		double tmp2=n[0][0]*(X1[0]-X2[0])+n[0][1]*(X1[1]-X2[1])+n[0][2]*(X1[2]-X2[2]);
+		double tmp=-(nn[0][0]*nn[0][0]+nn[0][1]*nn[0][1]+nn[0][2]*nn[0][2])*zmax
+		            +nn[0][0]*X1[0]+nn[0][1]*X1[1]+nn[0][2]*X1[2];
+		double tmp2=nn[0][0]*(X1[0]-X2[0])+nn[0][1]*(X1[1]-X2[1])+nn[0][2]*(X1[2]-X2[2]);
 		double t=0.0;
      
 		if(tmp2!=0.0)

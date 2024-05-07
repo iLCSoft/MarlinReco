@@ -487,10 +487,10 @@ void CreatePDFs::processEvent( LCEvent * evt ) {
           Track *track=NULL;
           FloatVec weight = TrackToMCPNav.getRelatedFromWeights(mcp);
           float weightmax=-1.0;
-          for(unsigned int i=0; i<ovt.size(); i++){
-            if(weight[i]>weightmax){
-              weightmax=weight[i];
-              track = dynamic_cast<Track*>(ovt[i]);
+          for(unsigned int k=0; k<ovt.size(); k++){
+            if(weight[k]>weightmax){
+              weightmax=weight[k];
+              track = dynamic_cast<Track*>(ovt[k]);
             }// if ...
           }// for( int i=0 ...
           if(track!=NULL){

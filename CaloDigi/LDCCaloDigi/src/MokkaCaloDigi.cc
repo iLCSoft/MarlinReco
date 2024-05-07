@@ -221,14 +221,14 @@ void MokkaCaloDigi::init() {
     }
 
     if (z >= y_dim1_for_z && z < (y_dim1_for_z+y_dim2_for_z)) {
-      float z = 
+      float zTmp = 
 	_regularBarrelModuleLength-2*_lateralPlateThickness+(id*_hcalAbsorberThickness+(id-1)*_hcalSensitiveThickness-y_dim1_for_z)*(top_end_dim_z-_regularBarrelModuleLength)/y_dim2_for_z;
-      z_width = int(z/_virtualCellSizeZ)*_virtualCellSizeZ;
+      z_width = int(zTmp/_virtualCellSizeZ)*_virtualCellSizeZ;
     }
 
     if (z >= (y_dim1_for_z+y_dim2_for_z) ) {
-      float z = top_end_dim_z - 2*_lateralPlateThickness;
-      z_width = int(z/_virtualCellSizeZ)*_virtualCellSizeZ;
+      float zTmp = top_end_dim_z - 2*_lateralPlateThickness;
+      z_width = int(zTmp/_virtualCellSizeZ)*_virtualCellSizeZ;
     }
 
 
@@ -464,8 +464,6 @@ MyHit * MokkaCaloDigi::ProcessHitInBarrel( SimCalorimeterHit * hit ) {
   int I=(cellid & MASK_I) >> SHIFT_I; // I
 
   float zBegin = 0.;
-  float chamberLength = 0.;
-  float offsetMaxZ;
 
   // calculation of the lower z coordinate of the sensitive part of barrel module
   if (Module == 1) {
@@ -483,15 +481,6 @@ MyHit * MokkaCaloDigi::ProcessHitInBarrel( SimCalorimeterHit * hit ) {
   if (Module == 5) {
     zBegin = 1.5*_regularBarrelModuleLength + 2*_modulesGap + _lateralPlateThickness;
   }
-  if (Module == 1 || Module == 5) {
-    chamberLength = _endBarrelChamberLength[Layer];
-    offsetMaxZ = _endBarrelOffsetMaxZ[Layer];
-  }
-  else {
-    chamberLength = _regularBarrelChamberLength;
-    offsetMaxZ = _regularBarrelOffsetMaxZ;
-  }
-
 
   float xBegin = -0.5*_barrelLateralWidth[Layer];
   int Inew = I / _cellScaleX;
@@ -678,4 +667,3 @@ void MokkaCaloDigi::end(){
  	    << std::endl ;
 
 }
-

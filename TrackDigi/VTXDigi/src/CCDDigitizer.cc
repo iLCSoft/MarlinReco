@@ -509,8 +509,8 @@ void CCDDigitizer::processEvent( LCEvent * evt ) {
           RelCol->addElement(rel);
         }
 // Clean Up        
-        for (int i=0; i < int(simTrkHitVec.size()); ++i) {
-          SimTrackerHit * hit = simTrkHitVec[i];
+        for (int j=0; j < int(simTrkHitVec.size()); ++j) {
+          SimTrackerHit * hit = simTrkHitVec[j];
           delete hit;
         }     
       } 
@@ -669,14 +669,12 @@ void CCDDigitizer::FindLocalPosition(SimTrackerHit * hit,
   //cout<<"nLadders "<<nLadders<<" "<<dPhi<<" "<<Phi0<<" "<<endl;
   
 
-  int iLadder=0;
   for (int ic=0; ic<nLadders; ++ic) {
     PhiLadder = double(ic)*dPhi + Phi0;
     PhiInLocal = PhiInLab - PhiLadder;
     //cout<<"Phi "<<PhiLadder<<" "<<PhiInLocal<<" "<<PhiInLab<<" "<<_layerThickness[layer]<<" "<<Radius<<endl;
     if (RXY*cos(PhiInLocal)-Radius > -_layerThickness[layer] && 
         RXY*cos(PhiInLocal)-Radius < _layerThickness[layer]) {
-      iLadder = ic;
       break;
     }
     //cout<<"phi ladder "<<PhiLadder<<endl;
@@ -883,18 +881,18 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
        diffusion(xdif, ydif,sigmadirect);
        //diffusiontable(xdif, ydif,sigmadirect);
       
-      for(int i=0;i<maxpixx;i++){
+      for(int j=0;j<maxpixx;j++){
         for(int k=0;k<maxpixy;k++){
           
-          spxl[i][k]= (1-weight) * pxl[i][k];
+          spxl[j][k]= (1-weight) * pxl[j][k];
         }
       }
       
       diffusion(xdif, ydif,sigmareflect);
       //diffusiontable(xdif, ydif,sigmareflect);
-      for(int i=0;i<maxpixx;i++){
+      for(int j=0;j<maxpixx;j++){
         for(int k=0;k<maxpixy;k++){
-          pxl[i][k]= spxl[i][k]+ weight * pxl[i][k]; 
+          pxl[j][k]= spxl[j][k]+ weight * pxl[j][k]; 
         }
       }      
       //  delete spxl;
@@ -927,8 +925,8 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
     double Numladderpixy=(int)(ladderlength/_pixelSizeY); 
      
 
-    for (int i = 0; i<maxpixx; i++) {
-      int ix=i+xcell-midpixx;
+    for (int j = 0; j<maxpixx; j++) {
+      int ix=j+xcell-midpixx;
       // if(_debug)cout<<ix<<","<<endl;
 
       if (ix >= 0 && ix<=Numladderpixx) {//test, whether pixel exists
@@ -938,7 +936,7 @@ void CCDDigitizer::ProduceHits( SimTrackerHitImplVec & vectorOfHits) {
           if (iy >=0 && iy<=Numladderpixy) {
 
 
-            double charge=(1e+6*energy*_electronsPerKeV) *pxl[i][k]; 
+            double charge=(1e+6*energy*_electronsPerKeV) *pxl[j][k]; 
             // if(_debug)cout<<"charge   " <<i<<" "<<k<<" "<<charge<<endl;
             int iexist = 0;
 
@@ -1640,4 +1638,3 @@ void CCDDigitizer::diffusiontable(double xdif, double ydif,double sigma){
   }
 }
 */
-

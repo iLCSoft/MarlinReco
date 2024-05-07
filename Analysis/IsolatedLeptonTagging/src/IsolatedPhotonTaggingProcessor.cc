@@ -146,7 +146,7 @@ void IsolatedPhotonTaggingProcessor::processEvent( LCEvent * evt ) {
     Double_t charge = recPart->getCharge();
     TVector3 momentum = TVector3(recPart->getMomentum());
     TLorentzVector lortz = TLorentzVector(momentum,energy);
-    Double_t momentumMagnitude = momentum.Mag();
+    // Double_t momentumMagnitude = momentum.Mag();
     // get cone information
     // double cone based isolation algorithm
     Double_t coneEnergy0[3] = {0.,0.,0.};  // {total, neutral, charged} cone energy
@@ -156,11 +156,11 @@ void IsolatedPhotonTaggingProcessor::processEvent( LCEvent * evt ) {
     Double_t coneEC     = coneEnergy0[2];
     TLorentzVector lortzLargeCone = TLorentzVector(pLargeCone[0],pLargeCone[1],pLargeCone[2],pLargeCone[3]);
     TVector3 momentumLargeCone = lortzLargeCone.Vect();
-    Double_t cosThetaWithLargeCone = 1.;
-    if (momentumLargeCone.Mag() > 0.0000001) {
-      cosThetaWithLargeCone = momentum.Dot(momentumLargeCone)/momentumMagnitude/momentumLargeCone.Mag();
-    }
-    Double_t energyRatioWithLargeCone = energy/(energy+lortzLargeCone.E());
+    // Double_t cosThetaWithLargeCone = 1.;
+    // if (momentumLargeCone.Mag() > 0.0000001) {
+    //   cosThetaWithLargeCone = momentum.Dot(momentumLargeCone)/momentumMagnitude/momentumLargeCone.Mag();
+    // }
+    // Double_t energyRatioWithLargeCone = energy/(energy+lortzLargeCone.E());
     Double_t pandoraID = recPart->getType();
     if (TMath::Abs(charge) < 0.5 && pandoraID == 22) {
       if (energy < _minE) continue; // cut on the minimum energy
@@ -210,4 +210,3 @@ void IsolatedPhotonTaggingProcessor::end(){
   }
 
 }
-

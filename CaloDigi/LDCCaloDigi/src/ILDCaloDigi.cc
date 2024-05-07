@@ -570,9 +570,6 @@ void ILDCaloDigi::init() {
   _strip_virt_cells=-999;
   _countWarnings=0;
 
-  //fg: need to set default encoding in for reading old files...
-  CellIDDecoder<SimCalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6") ;
-
   const gear::GearParameters& pMokka = Global::GEAR->getGearParameters("MokkaParameters");
 
   // Calorimeter geometry from GEAR
@@ -761,8 +758,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
   // * Reading Collections of ECAL Simulated Hits *
   //
 
-  for (unsigned int i(0); i < _ecalCollections.size(); ++i) {
-    std::string colName =  _ecalCollections[i] ;
+  for (unsigned int colIdx(0); colIdx < _ecalCollections.size(); ++colIdx) {
+    std::string colName =  _ecalCollections[colIdx] ;
 
     streamlog_out ( DEBUG ) << "looking for collection: " << colName << endl;
 
@@ -806,8 +803,8 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       int numElements = col->getNumberOfElements();
       streamlog_out ( DEBUG ) << colName << " number of elements = " << numElements << endl;
 
-      for (int j(0); j < numElements; ++j) {
-        SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      for (int hitIdx(0); hitIdx < numElements; ++hitIdx) {
+        SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( hitIdx ) ) ;
         float energy = hit->getEnergy();
 
         // apply threshold cut
@@ -881,35 +878,35 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                 eCellInTime+=ecor;
               }
 
-              if(!used[i]){
+              if (!used[i]) {
                 // merge with other hits?
                 used[i] = true;
-                for(unsigned int j =i+1; j<n;j++){
-                  if(!used[j]){
-                    float timej   = hit->getTimeCont(j);
-                    float energyj = hit->getEnergyCont(j);
-                    float deltat = fabs(timei-timej);
-		    if (_ecalSimpleTimingCut){
-			    float deltat = _ecalCorrectTimesForPropagation?dt:0;
-			    if (timej-deltat>_ecalTimeWindowMin && timej-deltat<ecalTimeWindowMax){
-				    energySum += energyj;
-				    if (timej < timei){
-					    timei = timej;
-				    }
-			    }
-		    } else {
-			if(deltat<_ecalDeltaTimeHitResolution){
-			if(energyj>energyi)timei=timej;
-			energyi+=energyj;
-			used[j] = true;
-			}
-		    }
+                for (unsigned int j = i + 1; j < n; j++) {
+                  if (!used[j]) {
+                    float timej    = hit->getTimeCont(j);
+                    float energyj  = hit->getEnergyCont(j);
+                    float deltatij = fabs(timei - timej);
+                    if (_ecalSimpleTimingCut) {
+                      float deltatTmp = _ecalCorrectTimesForPropagation ? dt : 0;
+                      if (timej - deltatTmp > _ecalTimeWindowMin && timej - deltatTmp < ecalTimeWindowMax) {
+                        energySum += energyj;
+                        if (timej < timei)
+                          timei = timej;
+                      }
+                    } else {
+                      if (deltatij < _ecalDeltaTimeHitResolution) {
+                        if (energyj > energyi)
+                          timei = timej;
+                        energyi += energyj;
+                        used[j] = true;
+                      }
+                    }
                   }
                 }
-		if (_ecalSimpleTimingCut){
-			used = vector<bool>(n, true); // mark everything as used to terminate for loop on next run
-			energyi += energySum; //fill energySum back into energyi to have rest of loop behave the same.
-		}
+                if (_ecalSimpleTimingCut) {
+                  used = vector<bool>(n, true);  // mark everything as used to terminate for loop on next run
+                  energyi += energySum;          //fill energySum back into energyi to have rest of loop behave the same.
+                }
                 if(_digitalEcal){
                   calibr_coeff = this->digitalEcalCalibCoeff(layer);
                   if(_mapsEcalCorrection){
@@ -1008,7 +1005,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       // add ECAL collection to event
       ecalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
 
-      evt->addCollection(ecalcol,_outputEcalCollections[i].c_str());
+      evt->addCollection(ecalcol,_outputEcalCollections[colIdx].c_str());
     }
     catch(DataNotAvailableException &e){
       streamlog_out(DEBUG) << "could not find input ECAL collection " << colName << std::endl;
@@ -1041,9 +1038,9 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
   // * Reading HCAL Collections of Simulated Hits *
   //
 
-  for (unsigned int i(0); i < _hcalCollections.size(); ++i) {
+  for (unsigned int colIdx(0); colIdx < _hcalCollections.size(); ++colIdx) {
 
-    std::string colName =  _hcalCollections[i] ;
+    std::string colName =  _hcalCollections[colIdx] ;
 
     if ( colName.find("dummy")!=string::npos ) {
       streamlog_out ( DEBUG ) << "ignoring input HCAL collection name (looks like dummy name)" << colName << endl;
@@ -1056,14 +1053,14 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
 
 
     try{
-      LCCollection * col = evt->getCollection( _hcalCollections[i].c_str() ) ;
+      LCCollection * col = evt->getCollection( _hcalCollections[colIdx].c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
       int numElements = col->getNumberOfElements();
       CellIDDecoder<SimCalorimeterHit> idDecoder(col);
       LCCollectionVec *hcalcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
       hcalcol->setFlag(_flag.getFlag());
-      for (int j(0); j < numElements; ++j) { //loop over all SimCalorimeterHits in this collection
-        SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;
+      for (int hitIdx(0); hitIdx < numElements; ++hitIdx) { //loop over all SimCalorimeterHits in this collection
+        SimCalorimeterHit * hit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( hitIdx ) ) ;
         float energy = hit->getEnergy();
 
         if (energy > _thresholdHcal[0]/2) { //preselect for SimHits with energySum>threshold. Doubtful at least, as lower energy hit might fluctuate up and still be counted
@@ -1107,8 +1104,6 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
               float timei   = hit->getTimeCont(i); //absolute hit timing of current subhit
               float energyi = hit->getEnergyCont(i); //energy of current subhit
 	      float energySum = 0;
-              float deltat = 0;
-              if(_hcalCorrectTimesForPropagation)deltat=dt;  //deltat now carries hit timing correction.
 	      //std::cout <<"outer:" << i << " " << n << std::endl;
 
               //idea of the following section: 
@@ -1129,18 +1124,18 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
                   if(!used[j]){
                     float timej   = hit->getTimeCont(j);
                     float energyj = hit->getEnergyCont(j);
-                    float deltat = fabs(timei-timej);
+                    float deltatij = fabs(timei-timej);
                     //              std::cout << " HCAL  deltat : " << deltat << std::endl;
 		    if (_hcalSimpleTimingCut){
-			    float deltat = _hcalCorrectTimesForPropagation?dt:0;
-			    if (timej-deltat>_hcalTimeWindowMin && timej-deltat<hcalTimeWindowMax){
+			    float deltatTmp = _hcalCorrectTimesForPropagation?dt:0;
+			    if (timej-deltatTmp>_hcalTimeWindowMin && timej-deltatTmp<hcalTimeWindowMax){
 				    energySum += energyj;
 				    if (timej<timei){
 					    timei = timej; //use earliest hit time for simpletimingcut
 				    }
 			    }
 		    } else {
-			if(deltat<_hcalDeltaTimeHitResolution){ //if this subhit is close to current subhit, add this hit's energy to timecluster
+			if(deltatij<_hcalDeltaTimeHitResolution){ //if this subhit is close to current subhit, add this hit's energy to timecluster
 			if(energyj>energyi)timei=timej; //this is probably not what was intended. i guess this should find the largest hit of one timecluster and use its hittime for the cluster, but instead it compares the current hit energy to the sum of already found hit energies
 			//std::cout << timei << " - " << timej << std::endl;
 			//std::cout << energyi << " - " << energyj << std::endl;
@@ -1230,7 +1225,7 @@ void ILDCaloDigi::processEvent( LCEvent * evt ) {
       }
       // add HCAL collection to event
       hcalcol->parameters().setValue(LCIO::CellIDEncoding,initString);
-      evt->addCollection(hcalcol,_outputHcalCollections[i].c_str());
+      evt->addCollection(hcalcol,_outputHcalCollections[colIdx].c_str());
     }
     catch(DataNotAvailableException &e){
       streamlog_out(DEBUG) << "could not find input HCAL collection " << colName << std::endl;

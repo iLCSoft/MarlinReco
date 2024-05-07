@@ -43,7 +43,7 @@ PID_CaloTotal::PID_CaloTotal() :
     PIDVariable_base("CaloTotal", "(ECAL+HCAL)/p", "")
 {}
 
-int PID_CaloTotal::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CaloTotal::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 p3)
 {
   float p = p3.Mag();
   if(p < pCut) {
@@ -77,7 +77,7 @@ PID_CaloEFrac::PID_CaloEFrac() :
     PIDVariable_base("CaloEFrac", "ECAL/(ECAL+HCAL)", "")
 {}
 
-int PID_CaloEFrac::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CaloEFrac::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   float ecal=0., hcal=0.;
   if(cluvec.size()>0){
@@ -112,7 +112,7 @@ PID_CaloMuSys::PID_CaloMuSys() :
     PIDVariable_base("CaloMuSys", "E_{#mu system}", "GeV")
 {}
 
-int PID_CaloMuSys::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CaloMuSys::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   float mucal=0.;
   if(cluvec.size()>0){
@@ -141,7 +141,7 @@ PID_CluShapeChi2::PID_CluShapeChi2() :
     PIDVariable_base("CluShapeChi2", "Cluster shape #chi^{2}", "")
 {}
 
-int PID_CluShapeChi2::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CluShapeChi2::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   if (cluvec.size() < 1) {
     SetOutOfRange();
@@ -168,7 +168,7 @@ PID_CluShapeLDiscr::PID_CluShapeLDiscr() :
     PIDVariable_base("DiscrepancyL", "d_{Shower max} / d_{EM shower max}", "")
 {}
 
-int PID_CluShapeLDiscr::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CluShapeLDiscr::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   if (cluvec.size() < 1) {
     SetOutOfRange();
@@ -190,7 +190,7 @@ PID_CluShapeTDiscr::PID_CluShapeTDiscr() :
     PIDVariable_base("DiscrepancyT", "Absorption length", "R_{m}")
 {}
 
-int PID_CluShapeTDiscr::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CluShapeTDiscr::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   if (cluvec.size() < 1) {
     SetOutOfRange();
@@ -212,7 +212,7 @@ PID_CluShapeXl20::PID_CluShapeXl20() :
     PIDVariable_base("Xl20", "xl20", "?")
 {}
 
-int PID_CluShapeXl20::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec trax, const TVector3 p3)
+int PID_CluShapeXl20::Update(const EVENT::ClusterVec cluvec, const EVENT::TrackVec /*trax*/, const TVector3 /*p3*/)
 {
   if (cluvec.size() < 1) {
     SetOutOfRange();
@@ -249,7 +249,7 @@ PID_dEdxChi2::~PID_dEdxChi2()
   delete _hypothesis;
 }
 
-int PID_dEdxChi2::Update(const EVENT::ClusterVec cluvec,
+int PID_dEdxChi2::Update(const EVENT::ClusterVec /*cluvec*/,
     const EVENT::TrackVec trax, const TVector3 p3)
 {
   int result = 0;
@@ -291,7 +291,7 @@ PID_dEdxLogChi2::~PID_dEdxLogChi2()
   delete _hypothesis;
 }
 
-int PID_dEdxLogChi2::Update(const EVENT::ClusterVec cluvec,
+int PID_dEdxLogChi2::Update(const EVENT::ClusterVec /*cluvec*/,
     const EVENT::TrackVec trax, const TVector3 p3)
 {
   int result = 0;
@@ -331,7 +331,7 @@ PIDVariables_base::PIDVariables_base() :
   _p(0.)
 {}
 
-PIDVariables_base::PIDVariables_base(EVENT::ReconstructedParticle* particle) :
+PIDVariables_base::PIDVariables_base(EVENT::ReconstructedParticle* /*particle*/) :
   _p(0.)
 {}
 

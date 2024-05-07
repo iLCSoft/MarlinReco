@@ -226,16 +226,12 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 
   if (_makePlots) {
     // first fill some simple MC histos
-    float phi=-999;
-    float theta=-999;
     try {
       LCCollection * col = evt->getCollection("MCParticle");
       if (col->getNumberOfElements()>0) {
 	MCParticle * mcp = dynamic_cast<MCParticle*>(col->getElementAt(0) );
 	TVector3 mom(mcp->getMomentum()[0], mcp->getMomentum()[1], mcp->getMomentum()[2]);
 	h_phiThetaMC->Fill(mom.Phi(), mom.Theta());
-	phi = mom.Phi();
-	theta = mom.Theta();
       }
     }
     catch(DataNotAvailableException &e) {};
@@ -249,7 +245,6 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
 
   std::pair < TVector3, TVector3 > stripEnds;
   std::vector <std::string> * toSplit;
-  std::vector <std::string> * stripSplitter;
   int orientation;
 
   std::map < IMPL::LCCollectionVec*, std::string > outputcolls;
@@ -270,12 +265,10 @@ void hybridRecoProcessor::processEvent( LCEvent * evt ) {
     case 0:
       orientation = TRANSVERSE;
       toSplit = &_ecalCollectionsTranStrips;
-      stripSplitter = &_ecalCollectionsLongStrips;
       break;
     case 1:
       orientation = LONGITUDINAL;
       toSplit = &_ecalCollectionsLongStrips;
-      stripSplitter = &_ecalCollectionsTranStrips;
       break;
     default:
       streamlog_out ( ERROR ) << "ERROR crazy stuff!!! abandoning event..." << endl;
@@ -398,22 +391,22 @@ std::vector <CalorimeterHit*> hybridRecoProcessor::getVirtualHits(LCEvent* evt, 
   if (_saveIntersections) { 
     // make new collection with a hit at each end of a strip
     //   for debugging purposes
-    float pp[3];
-    pp[0] = stripEnds.first.X();
-    pp[1] = stripEnds.first.Y();
-    pp[2] = stripEnds.first.Z();
+    float pp2[3];
+    pp2[0] = stripEnds.first.X();
+    pp2[1] = stripEnds.first.Y();
+    pp2[2] = stripEnds.first.Z();
     CalorimeterHitImpl* interhit = new CalorimeterHitImpl();
-    interhit->setPosition( pp );
+    interhit->setPosition( pp2 );
     interhit->setEnergy(0.03);
 
     if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
     else if (orientation==LONGITUDINAL) stripEndsLongCol->addElement(interhit);
 
-    pp[0] = stripEnds.second.X();
-    pp[1] = stripEnds.second.Y();
-    pp[2] = stripEnds.second.Z();
+    pp2[0] = stripEnds.second.X();
+    pp2[1] = stripEnds.second.Y();
+    pp2[2] = stripEnds.second.Z();
     interhit = new CalorimeterHitImpl();
-    interhit->setPosition( pp );
+    interhit->setPosition( pp2 );
     interhit->setEnergy(0.03);
 
     if (orientation==TRANSVERSE) stripEndsTransCol->addElement(interhit);
@@ -507,10 +500,10 @@ std::vector <CalorimeterHit*> hybridRecoProcessor::getVirtualHits(LCEvent* evt, 
 	  if (intercept.Mag()>0) { // intercept found, calculate in which virtual cell
 	    nSplitters++;
 	    float frac(-1);
-	    for (int i=0; i<3; i++) {
-	      float dx = stripEnds.second[i] - stripEnds.first[i];
+	    for (int k=0; k<3; k++) {
+	      float dx = stripEnds.second[k] - stripEnds.first[k];
 	      if (fabs(dx)>0.1) {
-		frac = (intercept[i]-stripEnds.first[i])/dx;
+		frac = (intercept[k]-stripEnds.first[k])/dx;
 		break;
 	      }
 	    }

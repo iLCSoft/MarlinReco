@@ -98,22 +98,12 @@ SimpleFCalDigi::SimpleFCalDigi() : Processor("SimpleFCalDigi") {
 			     std::string("endcap")
 			     );
 
-  registerProcessorParameter("DefaultEncoding" ,
-			     "string defining cell encoding" , 
-			     _defaultEncoding , 
-			     std::string("M:3,S-1:3,I:9,J:9,K-1:6")
-			     );
-
 }
 
 void SimpleFCalDigi::init() {
 
   _nRun = -1;
   _nEvt = 0;
-
-  if (_defaultEncoding != "M:3,S-1:3,I:9,J:9,K-1:6") {
-    streamlog_out(WARNING) << "'_defaultEncoding' parameter set to a non-default value. This parameters is ignored" << std::endl;
-  }
 
   if ( ! _caloID.compare("lcal")  && // true if it is false ... 
                  _fixLCalHits          ) {  

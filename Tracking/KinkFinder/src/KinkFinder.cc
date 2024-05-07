@@ -1135,4 +1135,3 @@ float KinkFinder::kinkMass(HelixClass* parent, HelixClass* daughter, float daugh
   return mx;
 
 }
-

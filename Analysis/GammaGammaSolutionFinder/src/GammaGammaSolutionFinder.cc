@@ -487,7 +487,7 @@ void GammaGammaSolutionFinder::FindGammaGammaSolutions(LCCollectionVec * recparc
   // version, but has the advantage that it will return "false" if the
   // matching returned is not actually a maximum cardinality matching
   // in the graph.
-   bool success = checked_edmonds_maximum_cardinality_matching(g, &mate[0]);
+   bool success [[maybe_unused]] = checked_edmonds_maximum_cardinality_matching(g, &mate[0]);
    assert(success);
    if(_printing>6)std::cout << std::endl << "Found a matching of size " << matching_size(g, &mate[0]) << std::endl;
    if(_printing>6)std::cout << "The matching is:" << std::endl;

@@ -51,8 +51,8 @@ float RealisticCaloDigiScinPpd::convertEnergy( float energy, int inUnit ) const 
   if      ( inUnit==NPE ) return energy;
   else if ( inUnit==MIP ) return _PPD_pe_per_mip*energy;
   else if ( inUnit==GEVDEP ) return _PPD_pe_per_mip*energy/_calib_mip;
-  else streamlog_out (ERROR) << "unknown unit " << inUnit << std::endl;
-  assert (0);
+
+  throw std::runtime_error("RealisticCaloDigiScinPpd::convertEnergy - unknown unit " + std::to_string(inUnit));
 }
 
 float RealisticCaloDigiScinPpd::digitiseDetectorEnergy(float energy) const {

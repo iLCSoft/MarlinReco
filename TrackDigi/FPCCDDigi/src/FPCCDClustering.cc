@@ -968,7 +968,7 @@ void FPCCDClustering::makeTrackerHit(LCCollection* STHcol, int layer, int ladder
       FPCCDPixelHit::HitQuality_t addedQuality = aHit->getQuality();
       if( trackquality != FPCCDPixelHit::kBKGOverlap){
         if(trackquality == FPCCDPixelHit::kBKG){
-          addedQuality=FPCCDPixelHit::kBKG ? trackquality=FPCCDPixelHit::kBKG : trackquality=FPCCDPixelHit::kBKGOverlap;
+          addedQuality = FPCCDPixelHit::kBKG;
         }
       }
       else if(addedQuality==FPCCDPixelHit::kSignalOverlap){trackquality=FPCCDPixelHit::kSignalOverlap;       }

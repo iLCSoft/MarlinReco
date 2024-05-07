@@ -14,6 +14,13 @@
 //#include <AIDA/IHistogram1D.h>
 #endif // MARLIN_USE_AIDA
 
+#include <EVENT/ReconstructedParticle.h>
+#include <EVENT/LCRelation.h>
+#include "IMPL/LCCollectionVec.h"
+#include <IMPL/ReconstructedParticleImpl.h>
+#include <IMPL/ParticleIDImpl.h>
+#include <UTIL/PIDHandler.h>
+#include <UTIL/LCRelationNavigator.h>
 
 using namespace lcio ;
 using namespace marlin ;

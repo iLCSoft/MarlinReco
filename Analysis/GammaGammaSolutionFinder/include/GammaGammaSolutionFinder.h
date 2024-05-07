@@ -1,6 +1,9 @@
 // Boost Graph Library
 #include <boost/graph/adjacency_list.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <boost/graph/max_cardinality_matching.hpp>
+#pragma GCC diagnostic pop
 
 #include "marlin/Processor.h"
 #include "EVENT/ReconstructedParticle.h"

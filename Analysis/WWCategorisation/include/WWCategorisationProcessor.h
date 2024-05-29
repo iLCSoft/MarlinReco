@@ -30,12 +30,12 @@ class WWCategorisationProcessor: public Processor {
    *
    * The categories as well as the 4 observables used to derive the reconstructed categories
    * (invariant mass, number of non-isolated PFOs, missing pT, missing energy) are stored as event parameters:
-   * WWCategorisation.TrueCat, .RecoCatBasic, .RecoCatAdvanced, .mInv, .nPFO, .misspT, .missE
+   * WWCategorisation.TrueCat, .RecoCatBasic, .RecoCatAdvanced, .nPFO (all int), .mInv, .misspT, .missE (all float).
    *
    * The true category does not give relevant results for event that are not W(W).
    * The basic reconstruction categorises via number and flavour of isolated leptons + one invariant mass cut for the hadronic channel.
    * The advanced reconstruction uses a combination of cuts on the 4 observables.
-   * For details see a recent talk by A. Silva.
+   * For details see Master thesis by A. Silva (work in progress).
    *
    * Input collections are MCParticles as well as the PFOs split into isolated particles (e, mu, tau, gamma) and non-isolated PFOs.
    * In addition, if corresponding file names are provided, a TTree of the event observables is written into a TFile
@@ -61,12 +61,12 @@ class WWCategorisationProcessor: public Processor {
   virtual void end();
 
   // counting leptons in an array
-  int CountingLeptons(std::vector<int> daughters_pdg_vector);
+  int CountingLeptons(std::vector<int>& daughters_pdg_vector);
 
   // create a plot of the confusion matrix in the pwd
   virtual void PlotConfusionMatrix( TCanvas* canvas, TH2* histogram );
 
-  bool IsLepton(int pdg);
+  static bool IsLepton(int pdg);
 
 
  protected:
@@ -96,11 +96,11 @@ class WWCategorisationProcessor: public Processor {
 
   // other parameters
 
-  const int _n_cat = 7;
+  static const int _n_cat = 7;
   std::map<int, int> _sl_subcat = {{11, 2}, {13, 3}, {15, 4}};
 
-  std::vector<long long int> _nTrue{};
-  std::vector<long long int> _nReco{};
+  long long int _nTrue[_n_cat];
+  long long int _nReco[_n_cat];
 
   float _mInv = 0, _misspT = 0, _missE = 0;
   int _nPFO = 0;

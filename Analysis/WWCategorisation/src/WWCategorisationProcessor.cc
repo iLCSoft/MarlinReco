@@ -4,7 +4,8 @@
 #include <sstream>
 #include <cmath>
 #include <vector>
-#include <array> 
+#include <array>
+#include <algorithm>
 
 #include "EVENT/LCCollection.h"
 #include "EVENT/ReconstructedParticle.h"
@@ -114,8 +115,8 @@ void WWCategorisationProcessor::init(){
   }
 
  for (int i=0; i < _n_cat; ++i){  // number of events in each category
-    _nTrue.push_back(0);
-    _nReco.push_back(0);
+    _nTrue[i] = 0;
+    _nReco[i] = 0;
   }
   
   _nRun = 0 ;
@@ -131,6 +132,7 @@ void WWCategorisationProcessor::processEvent( LCEvent*  evt) {
   streamlog_out(DEBUG) <<" processing event " << evt->getEventNumber() << "  in run " << evt->getRunNumber() << std::endl ;
   
   LCCollection *col_muon{}, *col_electron{}, *col_tau{}, *col_mcparticles{}, *col_pfominusisolatedthings{}, *col_photons{};
+  LCParameters& pars = evt->parameters();
 
   try{
     col_mcparticles            = evt->getCollection(_MCParColName);
@@ -141,7 +143,10 @@ void WWCategorisationProcessor::processEvent( LCEvent*  evt) {
     col_pfominusisolatedthings = evt->getCollection(_PFOsMinusIsolatedObjetcs);
   }
   catch(DataNotAvailableException &e){
-    streamlog_out(MESSAGE) << "Input collections not found - skipping event " << _nEvt << std::endl;
+    streamlog_out(MESSAGE) << "Input collections not found - skipping event and setting categories to -1 " << _nEvt << std::endl;
+    pars.setValue("WWCategorisation.TrueCat", -1);
+    pars.setValue("WWCategorisation.RecoCatBasic", -1);
+    pars.setValue("WWCategorisation.RecoCatAdvanced", -1);
     return;
   }
 
@@ -195,7 +200,7 @@ void WWCategorisationProcessor::processEvent( LCEvent*  evt) {
         general_daughters_pdgs.push_back(abs(daughters[i]->getPDG()));
       }
     }else{ //PRINT OUT ACTUAL SIZE IF NOT ANY OF THE ONES MENTIONED
-      streamlog_out(DEBUG) << "atual size of daughters: " << daughters.size() << std::endl;
+      streamlog_out(DEBUG) << "actual size of daughters: " << daughters.size() << std::endl;
     }
 
     int channel = CountingLeptons(general_daughters_pdgs); //which channel -> based of how many final state leptons we found
@@ -350,7 +355,6 @@ void WWCategorisationProcessor::processEvent( LCEvent*  evt) {
 
 
   // store in event parameters
-  LCParameters& pars = evt->parameters();
   pars.setValue("WWCategorisation.TrueCat", _true_cat);
   pars.setValue("WWCategorisation.RecoCatBasic", _reco_cat_basic);
   pars.setValue("WWCategorisation.RecoCatAdvanced", _reco_cat_advanced);
@@ -373,8 +377,8 @@ void WWCategorisationProcessor::check(LCEvent *) {}
 
 void WWCategorisationProcessor::end(){
   // efficiency confusion matrix
-  for(unsigned int reco_idx = 1; reco_idx < _nReco.size()+1; reco_idx++){
-    for(unsigned int true_idx = 1; true_idx < _nTrue.size()+1; true_idx++){
+  for(unsigned int reco_idx = 1; reco_idx < _n_cat+1; reco_idx++){
+    for(unsigned int true_idx = 1; true_idx < _n_cat+1; true_idx++){
       double val = _nTrue[true_idx-1] != 0 ? _confusion_matrix->GetBinContent(true_idx,reco_idx)/_nTrue[true_idx-1] : 0;
       _confusion_matrix_ef->SetBinContent(true_idx, reco_idx, val);
     }
@@ -398,14 +402,15 @@ void WWCategorisationProcessor::end(){
   if (_doTT) _TTreeFile->Close();
 }
 
-int WWCategorisationProcessor::CountingLeptons(std::vector<int> daughters_pdg_vector){
-  int numberof_leptons = 0;
-  for(long unsigned int i = 0; i < daughters_pdg_vector.size(); i++){
-    if(( daughters_pdg_vector[i] == 11) || (daughters_pdg_vector[i] == 13) || (daughters_pdg_vector[i] == 15)){
-      numberof_leptons++;
-    }
-  }
-  return numberof_leptons;
+int WWCategorisationProcessor::CountingLeptons(std::vector<int>& daughters_pdg_vector){
+//  int numberof_leptons = 0;
+//  for(long unsigned int i = 0; i < daughters_pdg_vector.size(); i++){
+//    if(( daughters_pdg_vector[i] == 11) || (daughters_pdg_vector[i] == 13) || (daughters_pdg_vector[i] == 15)){
+//      numberof_leptons++;
+//    }
+//  }
+//  return numberof_leptons;
+  return std::count_if(daughters_pdg_vector.begin(), daughters_pdg_vector.end(), IsLepton);
 }
 
 bool WWCategorisationProcessor::IsLepton(int pdg){
@@ -415,10 +420,10 @@ bool WWCategorisationProcessor::IsLepton(int pdg){
 void WWCategorisationProcessor::PlotConfusionMatrix(TCanvas* can, TH2* histogram){
   histogram->Draw("text colz");
 
-  for  (long unsigned int i=1; i<_nTrue.size()+1; ++i){
-    std::stringstream t; t << _nTrue.at(i-1);
+  for  (long unsigned int i=0; i<_n_cat; ++i){
+    std::stringstream t; t << _nTrue[i];
     std::string t1 = t.str(); t1.resize(6);
-    TText* text2 = new TText(i -1.15 , _n_cat-.45 ,t1.c_str());
+    TText* text2 = new TText(i -.15 , _n_cat-.45 ,t1.c_str());
     text2->SetTextSize(0.035);
     text2->Draw();
   }

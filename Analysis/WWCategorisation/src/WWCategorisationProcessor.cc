@@ -29,44 +29,48 @@ WWCategorisationProcessor::WWCategorisationProcessor() : Processor("WWCategorisa
   _description = "Categorisation of all WW decay channels" ;
   
   registerInputCollection(LCIO::MCPARTICLE,
-			   "MCParticles",
-			   "Name of the MCParticle collection",
-			   _MCParColName,
-			   std::string("MCParticlesSkimmed"));
+          "MCParticles",
+          "Name of the MCParticle collection",
+          _MCParColName,
+          std::string("MCParticlesSkimmed"));
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
-         "IsolatedElectrons",
-         "Name of the ReconstructedParticle collection",
-         _ElectronColName,
-         std::string("IsolatedElectrons"));
+          "IsolatedElectrons",
+          "Name of the ReconstructedParticle collection",
+          _ElectronColName,
+          std::string("IsolatedElectrons"));
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
-			   "IsolatedMuons",
-			   "Name of the ReconstructedParticle collection",
-			   _MuonColName,
-			   std::string("IsolatedMuons"));
+          "IsolatedMuons",
+          "Name of the ReconstructedParticle collection",
+          _MuonColName,
+          std::string("IsolatedMuons"));
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
-			   "IsolatedTaus",
-			   "Name of the ReconstructedParticle collection",
-			   _TauColName,
-			   std::string("IsolatedTaus"));
+          "IsolatedTaus",
+          "Name of the ReconstructedParticle collection",
+          _TauColName,
+          std::string("IsolatedTaus"));
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-			   "IsolatedPhotons",
-			   "Name of the ReconstructedParticle collection",
-			   _PhotonColName,
-			   std::string("IsolatedPhotons"));
+          "IsolatedPhotons",
+          "Name of the ReconstructedParticle collection",
+          _PhotonColName,
+          std::string("IsolatedPhotons"));
   registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE,
-			   "PFOsminusphoton",
-			   "Name of the ReconstructedParticle collection",
-			   _PFOsMinusIsolatedObjetcs,
-			   std::string("PFOsminusphoton"));
+          "PFOsminusphoton",
+          "Name of the ReconstructedParticle collection",
+          _PFOsMinusIsolatedObjetcs,
+          std::string("PFOsminusphoton"));
 
+  registerProcessorParameter("MCElCat_CosThCut",
+          "Cut using cos(theta) value of MC electrons, above which sl-electron events are categorised as 'invisible' (true_cat 1 instead of 2); default: 0.994 (detector acceptance).",
+          _MCElCat_CosThCut,
+          float(0.994));
   registerProcessorParameter("TTreeFileName",
-          "Name of the root file in which the TTree with the 4 event observables is stored; if left empty no root file is created; default: TTreeFile.root",
+          "Name of the root file in which the TTree with the 4 event observables is stored; if left empty no root file is created; default: WWCategorisationTTreeFile.root",
           _TTreeFileName,
-          std::string("TTreeFile.root"));
+          std::string("WWCategorisationTTreeFile.root"));
   registerProcessorParameter("ConfusionMatrixFileName",
-          "Name of the png file in which the confusion matrix is stored; if left empty no file is created; default: ConfusionMatrix.png",
+          "Name of the png file in which the confusion matrix is stored; if left empty no file is created; default: WWCategorisationConfusionMatrix.png",
           _ConfusionMatrixFileName,
-          std::string("ConfusionMatrix.png"));
+          std::string("WWCategorisationConfusionMatrix.png"));
 }
 
 void WWCategorisationProcessor::init(){
@@ -98,8 +102,10 @@ void WWCategorisationProcessor::init(){
     _confusion_matrix_ef->SetXTitle("True Event Category");
     _confusion_matrix_ef->SetYTitle("Reco Event Category");
     _confusion_matrix_ef->GetXaxis()->SetBinLabel(1,"hadronic");
-    _confusion_matrix_ef->GetXaxis()->SetBinLabel(2,"#splitline{true e#nu qq}{#theta < 6.27 deg} "); // #splitline{first line}{second line} # use latex with #
-    _confusion_matrix_ef->GetXaxis()->SetBinLabel(3,"#splitline{true e#nu qq}{#theta > 6.27 deg} ");
+    std::stringstream bl2; bl2 << "#splitline{true e#nu qq}{cos #theta > " << _MCElCat_CosThCut << " }";
+    std::stringstream bl3; bl3 << "#splitline{true e#nu qq}{cos #theta < " << _MCElCat_CosThCut << " }";
+    _confusion_matrix_ef->GetXaxis()->SetBinLabel(2,bl2.str().c_str()); // #splitline{first line}{second line} # use latex with #
+    _confusion_matrix_ef->GetXaxis()->SetBinLabel(3,bl3.str().c_str());
     _confusion_matrix_ef->GetXaxis()->SetBinLabel(4,"true #mu#nu qq");
     _confusion_matrix_ef->GetXaxis()->SetBinLabel(5,"true #tau#nu qq");
     _confusion_matrix_ef->GetXaxis()->SetBinLabel(6,"leptonic");
@@ -245,7 +251,7 @@ void WWCategorisationProcessor::processEvent( LCEvent*  evt) {
     double mctheta = lv.Theta();
     double cosine_mctheta = fabs(cos(mctheta));
     streamlog_out(DEBUG) << "cosine(#theta): " << cosine_mctheta << std::endl;
-    if(cosine_mctheta > 0.994) true_cat = 1;
+    if(cosine_mctheta > _MCElCat_CosThCut) true_cat = 1;
   }
 
   // true category established
@@ -403,13 +409,6 @@ void WWCategorisationProcessor::end(){
 }
 
 int WWCategorisationProcessor::CountingLeptons(std::vector<int>& daughters_pdg_vector){
-//  int numberof_leptons = 0;
-//  for(long unsigned int i = 0; i < daughters_pdg_vector.size(); i++){
-//    if(( daughters_pdg_vector[i] == 11) || (daughters_pdg_vector[i] == 13) || (daughters_pdg_vector[i] == 15)){
-//      numberof_leptons++;
-//    }
-//  }
-//  return numberof_leptons;
   return std::count_if(daughters_pdg_vector.begin(), daughters_pdg_vector.end(), IsLepton);
 }
 

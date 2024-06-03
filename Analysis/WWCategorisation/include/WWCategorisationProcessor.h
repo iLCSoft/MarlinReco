@@ -31,6 +31,7 @@ class WWCategorisationProcessor: public Processor {
    * The categories as well as the 4 observables used to derive the reconstructed categories
    * (invariant mass, number of non-isolated PFOs, missing pT, missing energy) are stored as event parameters:
    * WWCategorisation.TrueCat, .RecoCatBasic, .RecoCatAdvanced, .nPFO (all int), .mInv, .misspT, .missE (all float).
+   * The angular cut, above which a semileptonic electron is considered outside of the detector acceptance, can be adjusted via the _MCElCat_CosThCut parameter.
    *
    * The true category does not give relevant results for event that are not W(W).
    * The basic reconstruction categorises via number and flavour of isolated leptons + one invariant mass cut for the hadronic channel.
@@ -78,10 +79,9 @@ class WWCategorisationProcessor: public Processor {
   std::string _TauColName{};
   std::string _PhotonColName{};
   std::string _PFOsMinusIsolatedObjetcs{};
-  std::string _jetcolName{};
 
   // processor parameters
-  std::string _LikelihoodPIDMethod = "dEdxPIDv2";
+  float _MCElCat_CosThCut{};
   std::string _TTreeFileName{};
   std::string _ConfusionMatrixFileName{};
 

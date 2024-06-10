@@ -813,7 +813,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         for(int j_jet_end=1 ; j_jet_end<=jets_end[0][k_dj_end] ; j_jet_end++) {
           fafpf->addParticle(dynamic_cast<ReconstructedParticle*>(jet_vec->getElementAt(jets_end[j_jet_end][k_dj_end]-1)) );
         }
-        ParticleIDImpl* pid[26];
+        ParticleIDImpl* pid[3];
         pid[0] = new ParticleIDImpl; 
         pid[0]->setPDG(pdg[0]);
         pid[0]->setType(type[jets_end[1][k_dj_end]]%100);  // maybe flag from boson? could be 0,1, or 2 jets in the fafp that's from boson ..

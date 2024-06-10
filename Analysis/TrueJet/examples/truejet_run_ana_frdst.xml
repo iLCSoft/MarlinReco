@@ -24,7 +24,6 @@
   <parameter name="MaxRecordNumber" value="10" />  
   <parameter name="SkipNEvents" value="" />  
   <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile"> gear_ild.xml </parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG5 </parameter> 
  </global>
 
@@ -48,7 +47,18 @@
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed</parameter>
   <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
   <parameter name="RecoMCTruthLinkName" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
-  -->
+ -->
+<!-- Standard TrueJet collection names, Should be OK if you didn't modify things
+  <parameter name="TrueJets" type="string"  lcioInType="ReconstructedParticle">TrueJets</parameter>
+  <parameter name="TrueJetPFOLink" type="string" lcioInType="LCRelation"> TrueJetPFOLink </parameter>
+  <parameter name="TrueJetMCParticleLink" type="string" lcioInType="LCRelation">TrueJetMCParticleLink </parameter>
+  <parameter name="FinalColourNeutrals" type="string"  lcioInType="ReconstructedParticle">FinalColourNeutrals</parameter>
+  <parameter name="InitialColourNeutrals" type="string"  lcioInType="ReconstructedParticle">InitialColourNeutrals</parameter>
+  <parameter name="InitialElementonLink" type="string" lcioInType="LCRelation">InitialElementonLink</parameter>
+  <parameter name="FinalElementonLink" type="string" lcioInType="LCRelation">FinalElementonLink</parameter>
+  <parameter name="InitialColourNeutralLink" type="string" lcioInType="LCRelation">InitialColourNeutralLink</parameter>
+  <parameter name="FinalColourNeutralLink" type="string" lcioInType="LCRelation">FinalColourNeutralLink</parameter>
+   -->
 
 </processor>
 

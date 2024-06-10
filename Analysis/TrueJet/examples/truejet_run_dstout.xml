@@ -23,7 +23,6 @@
   <parameter name="MaxRecordNumber" value="0" />  
   <parameter name="SkipNEvents" value="0" />  
   <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile"> gear_ild.xml </parameter>  
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING </parameter> 
  </global>
 
@@ -111,14 +110,14 @@
 
 
   <parameter name="TrueJets" type="string"  lcioOutType="ReconstructedParticle">TrueJets</parameter>
-  <parameter name="FinalColourNeutrals" type="string"  lcioOutType="ReconstructedParticle">FinalColourNeutrals</parameter>
-  <parameter name="InitialColourNeutrals" type="string"  lcioOutType="ReconstructedParticle">InitialColourNeutrals</parameter>
   <parameter name="TrueJetPFOLink" type="string" lcioOutType="LCRelation"> TrueJetPFOLink </parameter>
   <parameter name="TrueJetMCParticleLink" type="string" lcioOutType="LCRelation">TrueJetMCParticleLink </parameter>
+  <parameter name="FinalColourNeutrals" type="string"  lcioOutType="ReconstructedParticle">FinalColourNeutrals</parameter>
+  <parameter name="InitialColourNeutrals" type="string"  lcioOutType="ReconstructedParticle">InitialColourNeutrals</parameter>
   <parameter name="InitialElementonLink" type="string" lcioOutType="LCRelation">InitialElementonLink</parameter>
-  <parameter name="InitialElementonLink" type="string" lcioOutType="LCRelation">InitialElementonLink</parameter>
+  <parameter name="FinalElementonLink" type="string" lcioOutType="LCRelation">FinalElementonLink</parameter>
   <parameter name="InitialColourNeutralLink" type="string" lcioOutType="LCRelation">InitialColourNeutralLink</parameter>
-  <parameter name="InitialColourNeutralLink" type="string" lcioOutType="LCRelation">InitialColourNeutralLink</parameter>
+  <parameter name="FinalColourNeutralLink" type="string" lcioOutType="LCRelation">FinalColourNeutralLink</parameter>
   -->
 
 

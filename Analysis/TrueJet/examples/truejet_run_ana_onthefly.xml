@@ -41,6 +41,7 @@ inputdst
 
 
  <processor name="mytruejet" type="TrueJet">
+<!-- If the pre-built TrueJet (in libMarlinReco) is used, this setting doesn't do anything, since the standard build is done without debug -->
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">
 DEBUG9
   </parameter> 
@@ -85,6 +86,17 @@ DEBUG9
   <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
   <parameter name="RecoMCTruthLinkName" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
   -->
+<!-- Standard TrueJet collection names, Should be OK if you didn't modify things
+  <parameter name="TrueJets" type="string"  lcioInType="ReconstructedParticle">TrueJets</parameter>
+  <parameter name="TrueJetPFOLink" type="string" lcioInType="LCRelation"> TrueJetPFOLink </parameter>
+  <parameter name="TrueJetMCParticleLink" type="string" lcioInType="LCRelation">TrueJetMCParticleLink </parameter>
+  <parameter name="FinalColourNeutrals" type="string"  lcioInType="ReconstructedParticle">FinalColourNeutrals</parameter>
+  <parameter name="InitialColourNeutrals" type="string"  lcioInType="ReconstructedParticle">InitialColourNeutrals</parameter>
+  <parameter name="InitialElementonLink" type="string" lcioInType="LCRelation">InitialElementonLink</parameter>
+  <parameter name="FinalElementonLink" type="string" lcioInType="LCRelation">FinalElementonLink</parameter>
+  <parameter name="InitialColourNeutralLink" type="string" lcioInType="LCRelation">InitialColourNeutralLink</parameter>
+  <parameter name="FinalColourNeutralLink" type="string" lcioInType="LCRelation">FinalColourNeutralLink</parameter>
+   -->
 
 </processor>
 

@@ -705,10 +705,10 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       LCCollectionVec* fafpf_vec = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE ) ;
       auto fafpfPidHandler = UTIL::PIDHandler(fafpf_vec);
-      auto fafpf_mainPidId = fafpfPidHandler.addAlgorithm("TrueType_fafpf", {});
-      std::array<int, 25> fafpf_pidIds{};
+      auto fafpf_mainPidId = fafpfPidHandler.addAlgorithm("TrueJet_fafpf", {});
+      std::array<int, 2> fafpf_pidIds{};
       for (size_t i = 0; i < fafpf_pidIds.size(); ++i) {
-          fafpf_pidIds[i] = fafpfPidHandler.addAlgorithm("TrutType_fafpf_jet_" + std::to_string(i), {});
+          fafpf_pidIds[i] = fafpfPidHandler.addAlgorithm("TrueJet_fafpf_jet_" + std::to_string(i), {});
       }
 
       LCRelationNavigator FinalColourNeutral_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::RECONSTRUCTEDPARTICLE ) ;
@@ -832,7 +832,7 @@ void TrueJet::processEvent( LCEvent * event ) {
                                       0, fafpf_mainPidId, {});
 
         for ( int j_jet_end=1 ; j_jet_end<=jets_end[0][k_dj_end] ; j_jet_end++ ) {
-          fafpfPidHandler.setParticleID(fafpf, type[jets_end[j_jet_end][k_dj_end]], pdg[j_jet_end], 0, fafpf_pidIds[j_jet_end], {});
+          fafpfPidHandler.setParticleID(fafpf, type[jets_end[j_jet_end][k_dj_end]], pdg[j_jet_end], 0, fafpf_pidIds[j_jet_end - 1], {});
 
           if ( elementon[jets_end[j_jet_end][k_dj_end]] > 0 ) {
             FinalElementon_Nav.addRelation(  jet_vec->getElementAt(jets_end[j_jet_end][k_dj_end]-1) , 
@@ -849,10 +849,10 @@ void TrueJet::processEvent( LCEvent * event ) {
 
       LCCollectionVec* fafpi_vec = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE ) ;
       auto fafpiPidHandler = UTIL::PIDHandler(fafpi_vec);
-      auto fafpi_mainPidId = fafpiPidHandler.addAlgorithm("TrueType_fafpi", {});
+      auto fafpi_mainPidId = fafpiPidHandler.addAlgorithm("TrueJet_fafpi", {});
       std::array<int, 25> fafpi_pidIds{};
       for (size_t i = 0; i < fafpi_pidIds.size(); ++i) {
-          fafpi_pidIds[i] = fafpiPidHandler.addAlgorithm("TrutType_fafpi_jet_" + std::to_string(i), {});
+          fafpi_pidIds[i] = fafpiPidHandler.addAlgorithm("TrueJet_fafpi_jet_" + std::to_string(i), {});
       }
 
       LCRelationNavigator InitialElementon_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::MCPARTICLE ) ;
@@ -981,7 +981,7 @@ void TrueJet::processEvent( LCEvent * event ) {
         fafpiPidHandler.setParticleID(fafpi, type[jets_begin[1][k_dj_begin]] % 100, pdg[0], 0, fafpi_mainPidId, {});
 
         for(int j_jet_begin=1 ; j_jet_begin<=jets_begin[0][k_dj_begin] ; j_jet_begin++) {
-          fafpiPidHandler.setParticleID(fafpi, type[jets_begin[j_jet_begin][k_dj_begin]], pdg[j_jet_begin], 0, fafpi_pidIds[j_jet_begin], {});
+          fafpiPidHandler.setParticleID(fafpi, type[jets_begin[j_jet_begin][k_dj_begin]], pdg[j_jet_begin], 0, fafpi_pidIds[j_jet_begin - 1], {});
           fafpi->addParticle(dynamic_cast<ReconstructedParticle*>(jet_vec->getElementAt(jets_begin[j_jet_begin][k_dj_begin]-1)));
         }
         fafpi_vec->addElement(fafpi);

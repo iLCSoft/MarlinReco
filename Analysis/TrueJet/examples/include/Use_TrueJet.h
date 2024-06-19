@@ -58,15 +58,15 @@ class Use_TrueJet : public Processor , public TrueJet_Parser {
   /** Input collection name.
    */
 
-  int _nRun ;
-  int _nEvt ;
+  int _nRun{} ;
+  int _nEvt{} ;
 
 private:
 
 
-  std::string  _MCParticleColllectionName ;
-  std::string _recoParticleCollectionName ;
-  std::string _recoMCTruthLink ;
+  std::string  _MCParticleColllectionName{} ;
+  std::string _recoParticleCollectionName{} ;
+  std::string _recoMCTruthLink{} ;
 
 } ;
 

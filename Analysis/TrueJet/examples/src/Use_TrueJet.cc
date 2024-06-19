@@ -1,12 +1,7 @@
 #include "Use_TrueJet.h"
-#include <stdlib.h>
-#include <cmath>
-#include <iostream>
-#include <iomanip>
 
 
 // ----- include for verbosity dependend logging ---------
-#include "marlin/VerbosityLevels.h"
 
 #ifdef MARLIN_USE_AIDA
 #include <marlin/AIDAProcessor.h>
@@ -15,6 +10,10 @@
 //#include <AIDA/IHistogram1D.h>
 #endif // MARLIN_USE_AIDA
 
+
+#include <cstdlib>
+#include <iomanip>
+#include <cmath>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -126,7 +125,7 @@ void Use_TrueJet::init() {
 }
 
 
-void Use_TrueJet::processRunHeader( LCRunHeader* run) { 
+void Use_TrueJet::processRunHeader( LCRunHeader* ) {
 
     _nRun++ ;
 } 
@@ -148,7 +147,7 @@ void Use_TrueJet::processEvent( LCEvent * evt ) {
     try{
         rmclcol = evt->getCollection( _recoMCTruthLink );
     }
-    catch( lcio::DataNotAvailableException e )
+    catch( lcio::DataNotAvailableException& e )
     {
         rmclcol = NULL;
     }
@@ -497,7 +496,7 @@ void Use_TrueJet::processEvent( LCEvent * evt ) {
    try{
      pfocol = evt->getCollection( _recoParticleCollectionName );
    }
-   catch( lcio::DataNotAvailableException e ){
+   catch( lcio::DataNotAvailableException& e ){
      //streamlog_out(WARNING) <<  _recoParticleCollectionName   << " collection not available" << std::endl;
      pfocol = NULL;
    }
@@ -529,7 +528,7 @@ void Use_TrueJet::processEvent( LCEvent * evt ) {
    try{
      mcpcol = evt->getCollection(  _MCParticleColllectionName );
    }
-   catch( lcio::DataNotAvailableException e ){
+   catch( lcio::DataNotAvailableException& e ){
      mcpcol = NULL;
    }
    
@@ -570,7 +569,7 @@ void Use_TrueJet::processEvent( LCEvent * evt ) {
 
 
 
-void Use_TrueJet::check( LCEvent * evt ) { 
+void Use_TrueJet::check( LCEvent * ) {
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

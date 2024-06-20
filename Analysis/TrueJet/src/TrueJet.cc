@@ -31,6 +31,16 @@ LCRelationNavigator* reltrue =0;
 
 TrueJet aTrueJet ;
 
+namespace {
+/// Return a 0 padded number for 2 digit numbers
+auto paddedNumber(int i) {
+    if (i < 9) {
+        return "0" + std::to_string(i);
+    }
+    return std::to_string(i);
+}
+}
+
 TrueJet::TrueJet() : Processor("TrueJet") {
 
     // modify processor description
@@ -708,7 +718,7 @@ void TrueJet::processEvent( LCEvent * event ) {
       auto fafpf_mainPidId = fafpfPidHandler.addAlgorithm("TrueJet_fafpf", {});
       std::array<int, 2> fafpf_pidIds{};
       for (size_t i = 0; i < fafpf_pidIds.size(); ++i) {
-          fafpf_pidIds[i] = fafpfPidHandler.addAlgorithm("TrueJet_fafpf_jet_" + std::to_string(i), {});
+          fafpf_pidIds[i] = fafpfPidHandler.addAlgorithm("TrueJet_fafpf_jet_" + ::paddedNumber(i), {});
       }
 
       LCRelationNavigator FinalColourNeutral_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::RECONSTRUCTEDPARTICLE ) ;
@@ -852,7 +862,7 @@ void TrueJet::processEvent( LCEvent * event ) {
       auto fafpi_mainPidId = fafpiPidHandler.addAlgorithm("TrueJet_fafpi", {});
       std::array<int, 25> fafpi_pidIds{};
       for (size_t i = 0; i < fafpi_pidIds.size(); ++i) {
-          fafpi_pidIds[i] = fafpiPidHandler.addAlgorithm("TrueJet_fafpi_jet_" + std::to_string(i), {});
+          fafpi_pidIds[i] = fafpiPidHandler.addAlgorithm("TrueJet_fafpi_jet_" + ::paddedNumber(i), {});
       }
 
       LCRelationNavigator InitialElementon_Nav(LCIO::RECONSTRUCTEDPARTICLE , LCIO::MCPARTICLE ) ;

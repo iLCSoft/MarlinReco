@@ -154,7 +154,7 @@ void TrueJet::processEvent( LCEvent * event ) {
     // For the concepts this method works with, see the comments in TrueJet.h
 
     evt=event;
-    streamlog_out(WARNING) << " processing event: " << evt->getEventNumber() 
+    streamlog_out(MESSAGE) << " processing event: " << evt->getEventNumber()
         << "   in run:  " << evt->getRunNumber() << std::endl ;
     streamlog_out(MESSAGE4) << " =====================================" << std::endl;
 

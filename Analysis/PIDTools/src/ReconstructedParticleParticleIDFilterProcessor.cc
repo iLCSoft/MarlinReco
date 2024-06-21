@@ -54,6 +54,8 @@ struct RecoParticleIDFilterAccessor : public IMPL::ReconstructedParticleImpl {
     auto lastIt =
         std::remove_if(_pid.begin(), _pid.end(), [algoId](const auto& pid) { return (pid->getAlgorithmType() == algoId); });
 
+    // We have to take care of cleanup in this case!
+    std::for_each(lastIt, _pid.end(), [](auto& p) { delete p; });
     _pid.erase(lastIt, _pid.end());
   }
 };

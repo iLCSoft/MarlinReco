@@ -51,12 +51,21 @@ struct PIDHandlerFilterAccessor : public UTIL::PIDHandler {
 
 struct RecoParticleIDFilterAccessor : public IMPL::ReconstructedParticleImpl {
   void purgeParticleIDAlgorithm(const int algoId) {
-    auto lastIt =
-        std::remove_if(_pid.begin(), _pid.end(), [algoId](const auto& pid) { return (pid->getAlgorithmType() == algoId); });
+    auto& pids   = _pid;  // Better debugging experience with a local variable
+    auto  lastIt = std::remove_if(pids.begin(), pids.end(), [algoId](auto pid) {
+      if (pid->getAlgorithmType() == algoId) {
+        // We need to cleanup the ParticleID object here, because this is the
+        // last time that we really have access to it, because remove_if does
+        // not guarantee anything for the objects it "removes". Hence, a
+        // followup loop to delete the pointers before we erase them does not
+        // work, because we will be cleaning up the wrong things.
+        delete pid;
+        return true;
+      }
+      return false;
+    });
 
-    // We have to take care of cleanup in this case!
-    std::for_each(lastIt, _pid.end(), [](auto& p) { delete p; });
-    _pid.erase(lastIt, _pid.end());
+    pids.erase(lastIt, pids.end());
   }
 };
 

@@ -3,14 +3,10 @@
 
 #include "marlin/Processor.h"
 #include "lcio.h"
-#include <EVENT/LCCollection.h>
+
 #include <EVENT/MCParticle.h>
-#include <EVENT/ReconstructedParticle.h>
-#include <EVENT/LCRelation.h>
-#include <UTIL/LCRelationNavigator.h>
-#include "IMPL/LCCollectionVec.h"
-#include <IMPL/ReconstructedParticleImpl.h>
-#include <IMPL/ParticleIDImpl.h>
+#include <EVENT/LCCollection.h>
+
 #include <string>
 
 

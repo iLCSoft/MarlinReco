@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<marlin>
+  <execute>
+    <processor name="ParticleIDFilter"/>
+    <processor name="FilteredOutput"/>
+  </execute>
+
+  <processor name="ParticleIDFilter" type="ReconstructedParticleParticleIDFilterProcessor">
+    <parameter name="RecoParticleCollection" type="string" value="PandoraPFOs"/>
+    <parameter name="FilterPIDAlgos" type="StringVev" value="BasicVariablePID LikelihoodPID"/>
+    <parameter name="Verbosity" type="string" value="DEBUG"/>
+  </processor>
+
+  <processor name="FilteredOutput" type="LCIOOutputProcessor">
+    <!--   standard output: full reconstruction keep all collections -->
+    <parameter name="LCIOOutputFile" type="string" >
+      filteredParticleIDs.slcio
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+    <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
+  </processor>
+
+  <constants/>
+
+  <global>
+    <parameter name="LCIOInputFiles" value=""/>
+  </global>
+
+
+</marlin>

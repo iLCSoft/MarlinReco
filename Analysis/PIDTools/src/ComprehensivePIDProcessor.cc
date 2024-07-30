@@ -500,17 +500,21 @@ void ComprehensivePIDProcessor::processEvent(LCEvent* evt) {
       }
 
       // apply and register cuts
-      if (bestk==-1)
+      if (_modeTrain)
       {
-        ++_nRejectedPFOs[0];
-        for (unsigned k=0; k<mcparVec.size(); ++k) {sloD << mcparWei[k] << "|" << (int(mcparWei[k])%10000)/1000. << "  ";}
-        sloD << std::endl;
-        continue;
-      }
-      if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
-      {
-        ++_nRejectedPFOs[1];
-        continue;
+        if (bestk==-1)
+        {
+          ++_nRejectedPFOs[0];
+          for (unsigned k=0; k<mcparVec.size(); ++k) {sloD << mcparWei[k] << "|" << (int(mcparWei[k])%10000)/1000. << "  ";}
+          sloD << std::endl;
+          continue;
+        }
+        if (std::find(_signalPDGs.begin(),_signalPDGs.end(),abs(MCPDG)) == _signalPDGs.end() && std::find(_backgroundPDGs.begin(),_backgroundPDGs.end(),abs(MCPDG)) == _backgroundPDGs.end())
+        {
+          ++_nRejectedPFOs[1];
+          sloD << MCPDG << std::endl;
+          continue;
+        }
       }
 
       int nTracks = pfo->getTracks().size();

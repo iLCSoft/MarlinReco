@@ -1,3 +1,37 @@
+# v01-36
+
+* 2024-07-30 Ulrich Einhaus ([PR#136](https://github.com/iLCSoft/MarlinReco/pull/136))
+  Bug: PFOs were ignored if their MC PDG was not among signal or background PDGs. This is of minor effect, since by default all detector-stable charged particles are considered signal or background, but could lead to MC info leaking into reconstructed values in case of unintended usage.
+  Solution: This effect now requires training mode to be ON, which is exclusive with inference mode.
+
+* 2024-06-24 tmadlener ([PR#135](https://github.com/iLCSoft/MarlinReco/pull/135))
+  - Add a `ReconstructedParticleParticleIDFilterProcessor` that allows to filter `ParticleID` objects from existing `ReconstructedParticle`s.
+
+* 2024-06-24 tmadlener ([PR#132](https://github.com/iLCSoft/MarlinReco/pull/132))
+  - Make the `TrueJet` processor use the `PIDHandler` to set the `ParticleIDs` for the different objects it creates. This sets the necessary metadata that is required, e.g. for the conversion to EDM4hep.
+
+* 2024-06-19 Carl Mikael Berggren ([PR#134](https://github.com/iLCSoft/MarlinReco/pull/134))
+  Reduce the size of the ParticleID vector for the final fermion-antifermion pair, since
+  
+  for this case, there can only be one pair. This to avoid cluttering of empty collections after transition to the EDM4HEP world. At the same time, the documentation and example steerings in the examples subdirectory have been updated. mainly for the move of TrueJet_Parser from here to MarlinUtil, but also spell-checking etc.
+
+* 2024-06-10 Ulrich Einhaus ([PR#133](https://github.com/iLCSoft/MarlinReco/pull/133))
+  - This adds the WWCategorisationProcessor to MarlinReco
+  - It categorises each event by its WW decays channels. It provides a true category (only meaningful for true WW events) as well as two levels of reconstructed category. They are stored as event parameters.
+  - This may serve as common coherent categorisation for any analyses using WW events.
+
+* 2024-05-07 Bohdan Dudar ([PR#99](https://github.com/iLCSoft/MarlinReco/pull/99))
+  - Fix all compiler warnings in MarlinReco, including
+    - A lot of shadowed variables
+    - A lot of unused parameters / variables
+    - A few deprecations
+    - A genuine use-after-free bug
+    - A few others
+  - Make at least one CI workflow use `-Werror` to make it harder to (re-)introduce new warnings
+
+* 2024-04-16 NAKAJIMA Jurina ([PR#131](https://github.com/iLCSoft/MarlinReco/pull/131))
+  - Fixed PDG code for kinks identifies as antiSigma+
+
 # v01-35
 
 * 2024-02-23 Ulrich Einhaus ([PR#130](https://github.com/iLCSoft/MarlinReco/pull/130))

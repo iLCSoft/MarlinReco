@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         build_type: ["release", "nightly"]
-        image: ["alma9", "ubuntu22", "centos7"]
+        image: ["alma9", "ubuntu22"]
       fail-fast: false
 
     steps:

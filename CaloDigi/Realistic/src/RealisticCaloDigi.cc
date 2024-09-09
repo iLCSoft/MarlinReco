@@ -12,6 +12,7 @@
 #include <UTIL/CellIDDecoder.h>
 #include <marlin/ProcessorEventSeeder.h>
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <assert.h>

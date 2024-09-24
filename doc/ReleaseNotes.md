@@ -1,3 +1,11 @@
+# v01-36-01
+
+* 2024-09-09 jmcarcell ([PR#139](https://github.com/iLCSoft/MarlinReco/pull/139))
+  - Add a missing `#include <algorithm>`
+
+* 2024-09-03 Thomas Madlener ([PR#137](https://github.com/iLCSoft/MarlinReco/pull/137))
+  - Remove CentOS7 from the Key4hep CI workflows
+
 # v01-36
 
 * 2024-07-30 Ulrich Einhaus ([PR#136](https://github.com/iLCSoft/MarlinReco/pull/136))

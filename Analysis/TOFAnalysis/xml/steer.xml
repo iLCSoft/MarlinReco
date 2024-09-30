@@ -17,18 +17,7 @@
 
     <global>
         <parameter name="LCIOInputFiles" type="StringVec">
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_034.d_rec_00015161_144.slcio -->
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_001.d_rec_00015161_328.slcio -->
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/4f_WW_hadronic/ILD_l5_o1_v02/v02-02/00015155/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500066.P4f_ww_h.eL.pR.n000_500.d_rec_00015155_198.slcio -->
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_002.d_rec_00015161_221.slcio
-            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_003.d_rec_00015161_24.slcio -->
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001_209.d_rec_00015161_259.slcio -->
-
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/dst-merged/250-SetA/4f_WW_hadronic/ILD_l5_o1_v02/v02-02/00015128/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500068.P4f_ww_h.eR.pL.n000.d_dstm_15128_0.slcio -->
-            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/dst-merged/250-SetA/higgs/ILD_l5_o1_v02/v02-02/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I402010.Pn23n23h.eR.pL.n001.d_dstm_15096_10.slcio
-
-            <!-- no true primary vertex on event 36 -->
-            <!-- /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n001_194.d_rec_00015161_56.slcio -->
+            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_034.d_rec_00015161_144.slcio
         </parameter>
         <parameter name="MaxRecordNumber" type="int">0</parameter>
         <parameter name="SkipNEvents" type="int">0</parameter>

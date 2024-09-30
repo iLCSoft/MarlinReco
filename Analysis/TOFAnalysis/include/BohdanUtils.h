@@ -57,7 +57,6 @@ dd4hep::rec::Vector3D getPhotonAtCalorimeter(EVENT::MCParticle* mc);
 
 EVENT::SimTrackerHit* getSimTrackerHit(EVENT::TrackerHit* hit, const UTIL::LCRelationNavigator& navToSimTrackerHits);
 
-unsigned long interpolateHexColor(unsigned long startColor, unsigned long endColor, float ratio);
 
 bool isSETHit(const EVENT::TrackerHit* hit);
 

@@ -265,23 +265,6 @@ EVENT::SimTrackerHit* getSimTrackerHit(EVENT::TrackerHit* hit, const UTIL::LCRel
     return simHit;
 }
 
-unsigned long interpolateHexColor(unsigned long startColor, unsigned long endColor, float ratio) {
-    //WARNING: chatGPT's work
-    unsigned char startR = (startColor >> 16) & 0xFF;
-    unsigned char startG = (startColor >> 8) & 0xFF;
-    unsigned char startB = startColor & 0xFF;
-
-    unsigned char endR = (endColor >> 16) & 0xFF;
-    unsigned char endG = (endColor >> 8) & 0xFF;
-    unsigned char endB = endColor & 0xFF;
-
-    unsigned char interpolatedR = static_cast<unsigned char>(startR + ratio * (endR - startR));
-    unsigned char interpolatedG = static_cast<unsigned char>(startG + ratio * (endG - startG));
-    unsigned char interpolatedB = static_cast<unsigned char>(startB + ratio * (endB - startB));
-
-    return (interpolatedR << 16) | (interpolatedG << 8) | interpolatedB;
-}
-
 bool isSETHit(const EVENT::TrackerHit* hit){
     if (hit == nullptr) return false;
     UTIL::BitField64 encoder( UTIL::LCTrackerCellID::encoding_string() ) ;

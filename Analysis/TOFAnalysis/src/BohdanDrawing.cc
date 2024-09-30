@@ -385,7 +385,7 @@ void plotTrackParams(const std::vector<HitState>& trackHitStates, EVENT::MCParti
     TStyle* myStyle = getMyStyle();
 
     struct Margin{
-        float left, right, top, bottom;
+        float left{}, right{}, top{}, bottom{};
         Margin(float l, float r, float t, float b){
             left = l;
             right = r;

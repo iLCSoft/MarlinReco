@@ -40,7 +40,7 @@
 
     <processor name="InitDD4hep" type="InitializeDD4hep">
         <parameter name="DD4hepXMLFile" type="string">
-            /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2024-03-08/x86_64-centos7-gcc12.2.0-opt/k4geo/main-hqwxq3/share/k4geo/ILD/compact/ILD_sl5_v02/ILD_l5_o1_v02.xml
+             /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2024-09-29/x86_64-almalinux9-gcc14.2.0-opt/k4geo/0b59886a8aa93c3189604ae24dd83e987e913f25_develop-ljczo5/share/k4geo/ILD/compact/ILD_sl5_v02/ILD_l5_o1_v02.xml
         </parameter>
     </processor>
 

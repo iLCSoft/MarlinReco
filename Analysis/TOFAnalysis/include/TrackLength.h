@@ -18,7 +18,7 @@ enum class TrackLengthOption{
 
 struct HitState{
     // Struct which contains a combination of the simulated, reconstructed tracker hit and the track state of the track at this reconstructed hit position
-    IMPL::TrackStateImpl ts;
+    IMPL::TrackStateImpl ts{};
     EVENT::TrackerHit* hit = nullptr;
     EVENT::SimTrackerHit* simHit = nullptr;
 };

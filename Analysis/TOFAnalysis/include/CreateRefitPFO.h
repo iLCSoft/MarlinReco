@@ -22,8 +22,8 @@ class CreateRefitPFO : public marlin::Processor{
 		TLorentzVector getTrackFourMomentum(EVENT::Track* track , double mass);
 		std::vector<float> updateChargedPFOCovMat(EVENT::Track* track , double mass);
     private:
-        int _nEvt;
-        double _bField;        
+        int _nEvt{};
+        double _bField{};        
 };
 
 #endif

@@ -44,14 +44,14 @@ class BohdanAna : public marlin::Processor, EventDisplayer {
         int _nEvent{};
         float _bField{};
         
-        std::unique_ptr<TFile> _file;
-        std::unique_ptr<TTree> _tree;
-        std::unique_ptr<TTree> _treeEvents;
+        std::unique_ptr<TFile> _file{};
+        std::unique_ptr<TTree> _tree{};
+        std::unique_ptr<TTree> _treeEvents{};
 
         bool _dst_mode{};
         bool _produce_refit_output{};
         bool _produce_csv_output{};
-        std::ofstream _csv_output_file;
+        std::ofstream _csv_output_file{};
         int _global_pfo_number{};
 
         // Event information
@@ -240,13 +240,13 @@ class BohdanAna : public marlin::Processor, EventDisplayer {
         std::array<float, 16> _tofFit{};
 
         // ECAL HITS FOR FURTHER TOF RECONSTRUCTION
-        int _nHits;
-        std::vector<float> _xHit;
-        std::vector<float> _yHit;
-        std::vector<float> _zHit;
-        std::vector<float> _tHit;
-        std::vector<int> _layerHit;
-        std::vector<float> _energyHit;
+        int _nHits{};
+        std::vector<float> _xHit{};
+        std::vector<float> _yHit{};
+        std::vector<float> _zHit{};
+        std::vector<float> _tHit{};
+        std::vector<int> _layerHit{};
+        std::vector<float> _energyHit{};
 
         MarlinTrk::IMarlinTrkSystem* _trkSystem = nullptr;
         TApplication _application = TApplication("app", 0, nullptr);

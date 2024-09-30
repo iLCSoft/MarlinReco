@@ -17,7 +17,7 @@
 #include <vector>
 
 struct VertexData{
-    dd4hep::rec::Vector3D pos;
+    dd4hep::rec::Vector3D pos{};
     std::vector<EVENT::MCParticle* > mcs{};
     bool isPrimary = false;
     bool isV0 = false;

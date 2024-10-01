@@ -43,16 +43,19 @@ IMPL::TrackStateImpl TrackLengthUtils::getTrackStateAtHit(MarlinTrk::IMarlinTrac
   return ts;
 }
 
-double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2) {
-  double tanL = ts1.getTanLambda();
-  double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
-  double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-  return std::abs((z2 - z1) / tanL) * std::sqrt(1. + tanL * tanL);
+
+double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    // OPTIMIZE: Are results better with tanL = ts2.getTanLambda(); ?
+    // Or tanL = (ts1+ts2)/2 ? Or some other weighted combination? ...
+    double tanL = ts1.getTanLambda();
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
+    return std::abs( (z2-z1)/tanL ) * std::sqrt( 1.+tanL*tanL );
 }
 
 
 double TrackLengthUtils::getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    // Suboptimal and not used. Use getHelixLength()
+    // Prooven suboptimal and kept only for reference. Use getHelixLength()
     double omega = std::abs( ts1.getOmega() );
     double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
     double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
@@ -67,7 +70,7 @@ double TrackLengthUtils::getHelixLengthOption1(const EVENT::TrackState& ts1, con
 };
 
 double TrackLengthUtils::getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
-    // Suboptimal and not used. Use getHelixLength()
+    // Prooven suboptimal and kept only for reference. Use getHelixLength()
     double omega = std::abs( ts1.getOmega() );
     double tanL = std::abs( ts1.getTanLambda() );
     double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );

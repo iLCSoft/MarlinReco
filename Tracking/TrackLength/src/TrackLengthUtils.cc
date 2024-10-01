@@ -50,40 +50,45 @@ double TrackLengthUtils::getHelixLength(const EVENT::TrackState& ts1, const EVEN
   return std::abs((z2 - z1) / tanL) * std::sqrt(1. + tanL * tanL);
 }
 
-double TrackLengthUtils::getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2) {
-  double omega = std::abs(ts1.getOmega());
-  double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
-  double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
-  double dz = std::abs(z2 - z1);
-  double dPhi = std::abs(ts2.getPhi() - ts1.getPhi());
-  // We are never sure whether the track indeed curled for more than pi
-  // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
-  // We always assume it was the crossing of the (-pi/+pi) and correct for this.
-  // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi <
-  // pi).
-  if (dPhi > M_PI)
-    dPhi = 2 * M_PI - dPhi;
-  return std::sqrt(dPhi * dPhi / (omega * omega) + dz * dz);
+
+double TrackLengthUtils::getHelixLengthOption1(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    // Suboptimal and not used. Use getHelixLength()
+    double omega = std::abs( ts1.getOmega() );
+    double z1 = ts1.getReferencePoint()[2] + ts1.getZ0();
+    double z2 = ts2.getReferencePoint()[2] + ts2.getZ0();
+    double dz = std::abs(z2 - z1);
+    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
+    // We are never sure whether the track indeed curled for more than pi
+    // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
+    // We always assume it was the crossing of the (-pi/+pi) and correct for this.
+    // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi < pi).
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
+    return std::sqrt(dPhi*dPhi/(omega*omega)+dz*dz);
 };
 
-double TrackLengthUtils::getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2) {
-  double omega = std::abs(ts1.getOmega());
-  double tanL = std::abs(ts1.getTanLambda());
-  double dPhi = std::abs(ts2.getPhi() - ts1.getPhi());
-  // We are never sure whether the track indeed curled for more than pi
-  // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
-  // We always assume it was the crossing of the (-pi/+pi) and correct for this.
-  // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi <
-  // pi).
-  if (dPhi > M_PI)
-    dPhi = 2 * M_PI - dPhi;
-  return dPhi / omega * std::sqrt(1 + tanL * tanL);
+double TrackLengthUtils::getHelixLengthOption2(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2){
+    // Suboptimal and not used. Use getHelixLength()
+    double omega = std::abs( ts1.getOmega() );
+    double tanL = std::abs( ts1.getTanLambda() );
+    double dPhi = std::abs( ts2.getPhi() - ts1.getPhi() );
+    // We are never sure whether the track indeed curled for more than pi
+    // or it was just a crossing of the singularity point (-pi/+pi) in the phi coordinate system.
+    // We always assume it was the crossing of the (-pi/+pi) and correct for this.
+    // Thus this formula only applicable for small distances between the track states or for the non-curly tracks (dPhi < pi).
+    if (dPhi > M_PI) dPhi = 2*M_PI - dPhi;
+    return dPhi/omega*std::sqrt(1+tanL*tanL);
 };
 
-std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track) {
-  vector<Track*> subTracks;
-  // add track itself, which contains VXD+FTD+SIT+TPC hits of the first curl.
-  subTracks.push_back(track);
+std::vector<EVENT::Track*> TrackLengthUtils::getSubTracks(EVENT::Track* track){
+    vector<Track*> subTracks;
+    // OPTIMIZE: Remove geometry dependency.
+    // The geometry dependency comes from the ILD tracking.
+    // The way subtracks are stored inside the Track object is special to ILD tracking.
+    // The geometry dependency can be easily removed, but at the cost of a few vertex hits sometimes missing with ILD tracking...
+    // Ideally this function should be just: return track->getTracks(), if the subtracks stored consistently in ILD tracking...
+
+    // add track itself, which contains VXD+FTD+SIT+TPC hits of the first curl.
+    subTracks.push_back(track);
 
   int nSubTracks = track->getTracks().size();
   if (nSubTracks <= 1)
@@ -213,11 +218,15 @@ std::vector<IMPL::TrackStateImpl> TrackLengthUtils::getTrackStates(EVENT::Recons
     }
   }
 
-  const TrackStateImpl* tsCalo =
-      static_cast<const TrackStateImpl*>(lastGoodRefittedTrack.getTrackState(TrackState::AtCalorimeter));
-  if (pfo->getClusters().size() > 0 && tsCalo != nullptr)
-    trackStates.push_back(*(tsCalo));
-  return trackStates;
+    const TrackStateImpl* tsCaloBugged = static_cast<const TrackStateImpl*> (lastGoodRefittedTrack.getTrackState(TrackState::AtCalorimeter) );
+    if ( pfo->getClusters().size() > 0 && tsCaloBugged != nullptr ){
+        // d0 and z0 of the track state at calo MUST be 0. This is a bug! Fix manually here for old produced MC samples.
+        IMPL::TrackStateImpl tsCalo = *(dynamic_cast<const IMPL::TrackStateImpl*> (tsCaloBugged));
+        tsCalo.setD0(0.);
+        tsCalo.setZ0(0.);
+        trackStates.push_back( tsCalo );
+    }
+    return trackStates;
 }
 
 double TrackLengthUtils::getHelixNRevolutions(const EVENT::TrackState& ts1, const EVENT::TrackState& ts2) {

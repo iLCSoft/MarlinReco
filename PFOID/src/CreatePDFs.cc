@@ -576,10 +576,10 @@ void CreatePDFs::processEvent( LCEvent * evt ) {
       
       if(!noCluster){
         delete helix;
-        delete ca;
-        delete cx;
-        delete cy;
-        delete cz;
+        delete[] ca;
+        delete[] cx;
+        delete[] cy;
+        delete[] cz;
         delete clsp;
       }
     }// for i ... Reco Particles

@@ -3536,39 +3536,7 @@ void SLDCorrection::end()
 		h_secondaryVertex->GetYaxis()->SetTitle("#SLDecay [%]");
 		h_secondaryVertex->Write();
 		m_pTFile->Close();
-		delete h_SLDStatus;
-		delete h_BHadronType;
-		delete h_CHadronType;
-		delete h_NuPxResidual;
-		delete h_NuPyResidual;
-		delete h_NuPzResidual;
-		delete h_NuEResidual;
-		delete h_NuPxNormalizedResidual;
-		delete h_NuPyNormalizedResidual;
-		delete h_NuPzNormalizedResidual;
-		delete h_NuENormalizedResidual;
-		delete h_recoNuPx_mcNuPx;
-		delete h_recoNuPy_mcNuPy;
-		delete h_recoNuPz_mcNuPz;
-		delete h_recoNuE_mcNuE;
-		delete h_parentPx_daughtersPx;
-		delete h_parentPy_daughtersPy;
-		delete h_parentPz_daughtersPz;
-		delete h_parentE_daughtersE;
-		delete h_recoPFOLinkedToElectron_Type;
-		delete h_recoPFOLinkedToMuon_Type;
-		delete h_SLDecayFlavour;
-		delete h_SLDecayModeB;
-		delete h_SLDecayModeC;
-		delete h_SLDecayOrder;
-		delete h_foundVertex;
-		delete h_secondaryVertex;
-		delete h_parentHadronCharge;
-		delete h_MCPTracks;
-		delete h_MCPTracks_Eweighted;
-		delete h_MCPTracks_Ptweighted;
-		delete h_FlightDirectionError;
-		delete h_distRecoLeptonToDownStreamVertex;
+
 		delete m_pTFile;
 	}
 }

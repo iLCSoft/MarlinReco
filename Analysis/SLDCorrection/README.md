@@ -72,3 +72,17 @@ Green histograms are used to estimate the overall uncertainty due to neutrino co
 sigmaAlphaNu = 0.100 rad , sigmaENu = 4.0 GeV
 
 In the end, neutrinos are assumed to be massless and sigmaAlphaNu and sigmaENu are transformed to a covariance matrix in (p,E) space.
+
+### SLDStatus Reference
+| SLDStatus | Interpretation                                  |
+|-----------|-------------------------------------------------|
+|         0 | PrimaryVertex collection found, but empty       |
+|         1 | Reconstructed Lepton is not found               |
+|         2 | Reconstructed Lepton doesn't belong to any jet  |
+|         3 | Infer SLD from reconstructed lepton in primary vertex    |
+|         4 | Infer SLD from reconstructed lepton in a secondary (BuildUp) Vertex.    |
+|         5 | Infer SLD frmo BuildUp Vertex in a jet. Intersection point of Lepton and other BuildUp Vertices in jet is used as vertex of semi-leptonic decay.   |
+|         6 | Inferred from lepton track alone.               |
+|         7 | other                                           |
+
+In the h_SLDStatus histogram, these values are inserted with a shift of -0.5

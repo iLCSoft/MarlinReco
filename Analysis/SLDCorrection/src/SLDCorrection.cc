@@ -801,7 +801,7 @@ void SLDCorrection::init()
 		m_pTTree1->Branch( "DSVDistanceFromPV" , &m_DSVDistanceFromPV );
 		m_pTTree1->Branch( "Lepton3DImpactParameter" , &m_Lepton3DImpactParameter );
 		m_pTTree1->Branch( "OtherParticle3DImpactParameter" , &m_OtherParticle3DImpactParameter );
-		h_SLDStatus = new TH1I( "SLDStatus" , ";" , 7 , 0 , 7 );
+		h_SLDStatus = new TH1I( "SLDStatus" , ";" , 8 , -1 , 7 );
 		h_SLDStatus->GetXaxis()->SetBinLabel(1,"No #font[32]{l}^{REC}" );
 		h_SLDStatus->GetXaxis()->SetBinLabel(2,"#font[32]{l}#notin^{}jet" );
 		h_SLDStatus->GetXaxis()->SetBinLabel(3,"#font[32]{l}#in^{}Vtx^{Prim.}" );
@@ -1743,6 +1743,18 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 	LCRelationNavigator RecoMCParticleNav( pLCEvent->getCollection( m_RecoMCTruthLinkCollection ) );
 	LCRelationNavigator MCParticleRecoNav( pLCEvent->getCollection( m_MCTruthRecoLinkCollection ) );
 	LCCollection *primaryVertexCollection = pLCEvent->getCollection( m_inputPrimaryVertex );
+
+	int SLDStatus = -999;
+	if ( primaryVertexCollection->getNumberOfElements() == 0 )
+	{
+		SLDStatus = 0;
+		streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+		streamlog_out(WARNING) << "	||||||||||||||||||||| PrimaryVertex is not found |||||||||||||||||||||" << std::endl;
+		streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+		if ( m_fillRootTree ) h_SLDStatus->Fill( -0.5 );
+		return;
+	}
+
 	Vertex* primaryVertex = dynamic_cast<Vertex*>( primaryVertexCollection->getElementAt( 0 ) );
 	Vertex* startVertex = dynamic_cast<Vertex*>( primaryVertexCollection->getElementAt( 0 ) );
 	LCCollection *jetCollection = pLCEvent->getCollection( m_inputJetCollection );
@@ -1995,7 +2007,6 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-	int SLDStatus = -999;
 	if ( linkedRecoLepton == NULL )
 	{
 		SLDStatus = 1;

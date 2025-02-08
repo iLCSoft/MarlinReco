@@ -55,7 +55,8 @@ SLDCorrection::SLDCorrection() :
 	m_nSLDecayToElectron(0),
 	m_nSLDecayToMuon(0),
 	m_nSLDecayToTau(0),
-	m_nTauNeutrino(0)
+	m_nTauNeutrino(0),
+	m_pTFile(NULL)
 {
 	_description = "SLDCorrection finds semi-leptonic decays within jets and performs a correction to 4-momentum of the jet due to the missing neutrino(s)";
 
@@ -422,7 +423,7 @@ SLDCorrection::SLDCorrection() :
 	registerProcessorParameter(	"RootFile",
 	                                "Name of the output root file",
 					m_rootFile,
-					std::string("Output.root")
+					std::string("")
 				);
 
 	registerProcessorParameter(	"BsldMode",
@@ -465,9 +466,11 @@ void SLDCorrection::init()
 
 	if ( m_fillRootTree )
 	{
-		m_pTFile = new TFile(m_rootFile.c_str(), "recreate" );
-		m_pTTree1 = new TTree("SLDCorrection", "SLDCorrection" );
-		m_pTTree1->SetDirectory(m_pTFile );
+		if (m_rootFile.size()) {
+			m_pTFile = new TFile(m_rootFile.c_str(), "recreate" );
+			m_pTTree1->SetDirectory(m_pTFile );
+		}
+
 		m_pTTree1->Branch( "event" , &m_nEvt, "event/I" );
 		m_pTTree1->Branch( "SLDFlavour" , &m_SLDFlavour );
 		m_pTTree1->Branch( "SLDType" , &m_SLDType );
@@ -801,6 +804,7 @@ void SLDCorrection::init()
 		m_pTTree1->Branch( "DSVDistanceFromPV" , &m_DSVDistanceFromPV );
 		m_pTTree1->Branch( "Lepton3DImpactParameter" , &m_Lepton3DImpactParameter );
 		m_pTTree1->Branch( "OtherParticle3DImpactParameter" , &m_OtherParticle3DImpactParameter );
+
 		h_SLDStatus = new TH1I( "SLDStatus" , ";" , 8 , -1 , 7 );
 		h_SLDStatus->GetXaxis()->SetBinLabel(1,"No #font[32]{l}^{REC}" );
 		h_SLDStatus->GetXaxis()->SetBinLabel(2,"#font[32]{l}#notin^{}jet" );
@@ -3381,15 +3385,15 @@ void SLDCorrection::fillTrueRecoFourMomentum( const TLorentzVector &trueVisibleF
 	}
 	TVector3 recoPVARecoMomentum_minus_truePVARecoNeutralMomentum = recoPVARecoFourMomentum_minus_truePVARecoNeutralFourMomentum.Vect();
 	TVector3 recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction = recoPVARecoMomentum_minus_truePVARecoNeutralMomentum; recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.SetMag( 1.0 );
-	TVector3 recoPVARecoMomentum_minus_truePVARecoChargedMomentum = recoPVARecoFourMomentum_minus_truePVARecoChargedFourMomentum.Vect();
-	TVector3 recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction = recoPVARecoMomentum_minus_truePVARecoChargedMomentum; recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.SetMag( 1.0 );
+	TVector3 recoPVARecoMomentum_minus_truePVARecoMomentum = recoPVARecoFourMomentum_minus_truePVARecoChargedFourMomentum.Vect();
+	TVector3 recoPVARecoMomentum_minus_truePVARecoMomentum_Direction = recoPVARecoMomentum_minus_truePVARecoMomentum; recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.SetMag( 1.0 );
 
 	m_Alpha_RecoPVARecoAll_minus_TruePVARecoNeutral_vs_recoPVArecoCharged.push_back( acos( recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.Dot( recoPVARecoChargedDirection ) ) );
 	m_SinAlpha_RecoPVARecoAll_minus_TruePVARecoNeutral_vs_recoPVArecoCharged.push_back( sin( acos( recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.Dot( recoPVARecoChargedDirection ) ) ) );
 	m_CosAlpha_RecoPVARecoAll_minus_TruePVARecoNeutral_vs_recoPVArecoCharged.push_back( recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.Dot( recoPVARecoChargedDirection ) );
-	m_Alpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( acos( recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot( recoPVARecoNeutralDirection ) ) );
-	m_SinAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( sin( acos( recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot( recoPVARecoNeutralDirection ) ) ) );
-	m_CosAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot( recoPVARecoNeutralDirection ) );
+	m_Alpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( acos( recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot( recoPVARecoNeutralDirection ) ) );
+	m_SinAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( sin( acos( recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot( recoPVARecoNeutralDirection ) ) ) );
+	m_CosAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back( recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot( recoPVARecoNeutralDirection ) );
 
 	m_trueNeutrinoFourMomentum_Px.push_back( trueNeutrinoFourMomentum.Px() );
 	m_trueNeutrinoFourMomentum_Py.push_back( trueNeutrinoFourMomentum.Py() );
@@ -3513,7 +3517,10 @@ void SLDCorrection::end()
 {
 	if ( m_fillRootTree )
 	{
-		m_pTFile->cd();
+		if (m_rootFile.size()) {
+			m_pTFile->cd();
+		}
+		
 		m_pTTree1->Write();
 		h_SLDStatus->GetYaxis()->SetTitle("number of SLDecays");
 		h_SLDStatus->Write();
@@ -3546,8 +3553,9 @@ void SLDCorrection::end()
 		h_secondaryVertex->Scale( 100.0 / ( h_secondaryVertex->GetEntries() ) );
 		h_secondaryVertex->GetYaxis()->SetTitle("#SLDecay [%]");
 		h_secondaryVertex->Write();
-		m_pTFile->Close();
 
-		delete m_pTFile;
+		if (m_rootFile.size()) {
+			m_pTFile->Close();
+		}
 	}
 }

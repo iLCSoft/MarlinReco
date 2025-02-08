@@ -21,14 +21,13 @@
 #include "TMatrixD.h"
 #include "DD4hep/Detector.h"
 #include "SLDCorrectionTypes.h"
-class TFile;
-class TDirectory;
-class TH1F;
-class TH1I;
-class TH2I;
-class TH2F;
-class TTree;
-class TF1;
+#include <TFile.h>
+#include <TH1F.h>
+#include <TH1I.h>
+#include <TH2I.h>
+#include <TH2F.h>
+#include <TTree.h>
+#include <TF1.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -553,7 +552,7 @@ private:
 	TH1F					*h_FlightDirectionError{};
 	TH1F					*h_distRecoLeptonToDownStreamVertex{};
 	TFile					*m_pTFile{};
-	TTree					*m_pTTree1{};
+	TTree					*m_pTTree1 = new TTree( "SLDCorrection", "SLDCorrection" );
 
 
 };

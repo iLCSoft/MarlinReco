@@ -33,6 +33,12 @@ int getRecoFlightDirection( const RecoParticle &linkedRecoLepton , TVector3 &rec
 	daughterHadronFlightDistance = 0.0;
 	daughterHadronFlightDirection = TVector3( 0.0 , 0.0 , 0.0 );
 	sldVertexPosition.clear();
+	if ( linkedRecoLepton->getTracks().size() == 0 )
+	{
+		streamlog_out(DEBUG1) << "	(" << SLDStatus << ") No track for linkedRecoLepton. SLDCorrection aborts." << std::endl;
+		return SLDStatus;
+	}
+
 	if ( recoLeptonIsInVertex )
 	{
 		SLDStatus = 4;
@@ -115,9 +121,6 @@ int getRecoFlightDirection( const RecoParticle &linkedRecoLepton , TVector3 &rec
 			//	minDistanceToPrimaryVertex = distanceToPrimaryVertex;
 			//	thirdVertex = testVertex;
 			//}
-		}
-		if ( thirdVertex != NULL )
-		{
 		}
 	}
 	else

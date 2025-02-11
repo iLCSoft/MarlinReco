@@ -14,13 +14,6 @@
 #include <GeometryUtil.h>
 #include "TLorentzVector.h"
 #include "TVector3.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TH1I.h"
-#include "TH2I.h"
-#include "TF1.h"
-#include "TTree.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TCanvas.h"
@@ -466,11 +459,20 @@ void SLDCorrection::init()
 
 	if ( m_fillRootTree )
 	{
+<<<<<<< HEAD
+=======
+		m_pTTree1 = new TTree("SLDCorrection", "SLDCorrection" );
+
+>>>>>>> 4b093b5 (Corrected headers and made output compatible to AIDA)
 		if (m_rootFile.size()) {
 			m_pTFile = new TFile(m_rootFile.c_str(), "recreate" );
 			m_pTTree1->SetDirectory(m_pTFile );
 		}
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4b093b5 (Corrected headers and made output compatible to AIDA)
 		m_pTTree1->Branch( "event" , &m_nEvt, "event/I" );
 		m_pTTree1->Branch( "SLDFlavour" , &m_SLDFlavour );
 		m_pTTree1->Branch( "SLDType" , &m_SLDType );
@@ -1871,7 +1873,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 	getTruePVADecayProducts( parentHadron , SLDLepton , trueNeutrino , linkedRecoLepton , weightPFOtoMCP , weightMCPtoPFO , tempTruePVANeutralDecayProducts , tempTruePVAChargedDecayProducts , RecoMCParticleNav , MCParticleRecoNav );
 	for ( unsigned int i_par = 0 ; i_par < tempTruePVANeutralDecayProducts.size() ; ++i_par )
 	{
-		if ( ( tempTruePVANeutralDecayProducts[ i_par ]->getTracks() ).size() == 0 )
+		if ( ( tempTruePVANeutralDecayProducts[ i_par ]->getTracks() ).empty() )
 		{
 			truePVANeutralDecayProducts.push_back( tempTruePVANeutralDecayProducts[ i_par ] );
 		}
@@ -1882,7 +1884,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 	}
 	for ( unsigned int i_par = 0 ; i_par < tempTruePVAChargedDecayProducts.size() ; ++i_par )
 	{
-		if ( ( tempTruePVAChargedDecayProducts[ i_par ]->getTracks() ).size() == 0 )
+		if ( ( tempTruePVAChargedDecayProducts[ i_par ]->getTracks() ).empty() )
 		{
 			truePVANeutralDecayProducts.push_back( tempTruePVAChargedDecayProducts[ i_par ] );
 		}
@@ -2076,8 +2078,8 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 
 	int vertexingScenario = m_vertexingScenario;
 	PFOVector sortedChargedPFOs;
-	if ( aloneChargedPFOsInJet.size() != 0 ) sortParticles( sortedChargedPFOs , aloneChargedPFOsInJet , jetAxis );
-	if ( sortedChargedPFOs.size() == 0 && m_vertexingScenario == 4 ) vertexingScenario = 1;
+	if ( ! aloneChargedPFOsInJet.empty() ) sortParticles( sortedChargedPFOs , aloneChargedPFOsInJet , jetAxis );
+	if ( sortedChargedPFOs.empty() && m_vertexingScenario == 4 ) vertexingScenario = 1;
 	m_flightDirectionStatus.push_back( vertexingScenario );
 	double hadronFlightLength;
 	TVector3 daughterHadronFlightDirection;
@@ -2163,7 +2165,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 		if ( jetParticle == linkedRecoLepton ) continue;
 		TVector3 jetParticleMomentum = TVector3( jetParticle->getMomentum() );
 		jetParticleMomentum.SetMag( 1.0 );
-		if ( jetParticle->getTracks().size() == 0 && jetParticleMomentum.Dot( PVAConeAxis ) >= m_neutralCosAcceptanceAngle )
+		if ( jetParticle->getTracks().empty() && jetParticleMomentum.Dot( PVAConeAxis ) >= m_neutralCosAcceptanceAngle )
 		{
 			streamlog_out(DEBUG2) << "----------------------------------------------------------------------" << std::endl;
 			streamlog_out(DEBUG2) << "-------- Added One Neutral PFO to SLDecay products candidates --------" << std::endl;
@@ -2172,7 +2174,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 			allPFOsInJet.push_back( jetParticle );
 			neutralPFOsInJet.push_back( jetParticle );
 		}
-		else if ( jetParticle->getTracks().size() != 0 && jetParticleMomentum.Dot( PVAConeAxis ) >= chargedCosAcceptanceAngle )
+		else if ( ! jetParticle->getTracks().empty() && jetParticleMomentum.Dot( PVAConeAxis ) >= chargedCosAcceptanceAngle )
 		{
 			bool particleIsInAVertex = false;
 			for ( unsigned int i_vtx = 0 ; i_vtx < buildUpVertexVector.size() ; ++i_vtx )
@@ -2452,13 +2454,13 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 	addNeutrinoCovarianceMatrix( recoNeutrinoFourMomentumPos , NeutrinoCovMatPos );
 	addNeutrinoCovarianceMatrix( recoNeutrinoFourMomentumNeg , NeutrinoCovMatNeg );
 	int PVAStatus = 0;
-	if ( recoPVANeutralDecayProducts.size() == 0 ) //( without neutral PVA)
+	if ( recoPVANeutralDecayProducts.empty() ) //( without neutral PVA)
 	{
 		PVAStatus = 3;
 	}
 	else //( with neutral PVA)
 	{
-		if ( recoPVAVertexDecayProducts.size() + recoPVAChargedDecayProducts.size() == 0 ) //( without charged PVA)
+		if ( recoPVAVertexDecayProducts.size() + recoPVAChargedDecayProducts.empty() ) //( without charged PVA)
 		{
 			PVAStatus = 2;
 		}
@@ -2726,7 +2728,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 
 void SLDCorrection::checkSLDInput( const MCP &SLDHadron )
 {
-	if ( SLDHadron->getDaughters().size() == 0 )
+	if ( SLDHadron->getDaughters().empty() )
 	{
 		streamlog_out(MESSAGE) << "" << std::endl;
 		streamlog_out(MESSAGE) << "		++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
@@ -3436,7 +3438,7 @@ void SLDCorrection::investigateJetEnergyContent( const RecoParticle &assignedJet
 	double neutralsEnergy = 0.0;
 	for ( unsigned int i_par = 0 ; i_par < assignedJet->getParticles().size() ; ++i_par )
 	{
-		if ( ( assignedJet->getParticles()[ i_par ] )->getTracks().size() != 0 )
+		if ( ! ( assignedJet->getParticles()[ i_par ] )->getTracks().empty() )
 		{
 			chargedEnergy += assignedJet->getParticles()[ i_par ]->getEnergy();
 		}
@@ -3554,8 +3556,43 @@ void SLDCorrection::end()
 		h_secondaryVertex->GetYaxis()->SetTitle("#SLDecay [%]");
 		h_secondaryVertex->Write();
 
-		if (m_rootFile.size()) {
+		delete h_SLDStatus;
+		delete h_BHadronType;
+		delete h_CHadronType;
+		delete h_NuPxResidual;
+		delete h_NuPyResidual;
+		delete h_NuPzResidual;
+		delete h_NuEResidual;
+		delete h_NuPxNormalizedResidual;
+		delete h_NuPyNormalizedResidual;
+		delete h_NuPzNormalizedResidual;
+		delete h_NuENormalizedResidual;
+		delete h_recoNuPx_mcNuPx;
+		delete h_recoNuPy_mcNuPy;
+		delete h_recoNuPz_mcNuPz;
+		delete h_recoNuE_mcNuE;
+		delete h_parentPx_daughtersPx;
+		delete h_parentPy_daughtersPy;
+		delete h_parentPz_daughtersPz;
+		delete h_parentE_daughtersE;
+		delete h_recoPFOLinkedToElectron_Type;
+		delete h_recoPFOLinkedToMuon_Type;
+		delete h_SLDecayFlavour;
+		delete h_SLDecayModeB;
+		delete h_SLDecayModeC;
+		delete h_SLDecayOrder;
+		delete h_foundVertex;
+		delete h_secondaryVertex;
+		delete h_parentHadronCharge;
+		delete h_MCPTracks;
+		delete h_MCPTracks_Eweighted;
+		delete h_MCPTracks_Ptweighted;
+		delete h_FlightDirectionError;
+		delete h_distRecoLeptonToDownStreamVertex;
+
+		if (m_pTFile != NULL) {
 			m_pTFile->Close();
+			delete m_pTFile;
 		}
 	}
 }

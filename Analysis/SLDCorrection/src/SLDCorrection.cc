@@ -459,20 +459,10 @@ void SLDCorrection::init()
 
 	if ( m_fillRootTree )
 	{
-<<<<<<< HEAD
-=======
-		m_pTTree1 = new TTree("SLDCorrection", "SLDCorrection" );
-
->>>>>>> 4b093b5 (Corrected headers and made output compatible to AIDA)
 		if (m_rootFile.size()) {
 			m_pTFile = new TFile(m_rootFile.c_str(), "recreate" );
 			m_pTTree1->SetDirectory(m_pTFile );
 		}
-<<<<<<< HEAD
-
-=======
-		
->>>>>>> 4b093b5 (Corrected headers and made output compatible to AIDA)
 		m_pTTree1->Branch( "event" , &m_nEvt, "event/I" );
 		m_pTTree1->Branch( "SLDFlavour" , &m_SLDFlavour );
 		m_pTTree1->Branch( "SLDType" , &m_SLDType );

@@ -1178,16 +1178,20 @@ void RecoMCTruthLinker::clusterLinker(  LCEvent * evt,  LCCollection* mcpCol ,  
         for(int j=0;j<simHit->getNMCContributions() ;j++){
           
           MCParticle* mcp = simHit->getParticleCont( j ) ;
-          double e  = simHit->getEnergyCont( j ) * calib_factor ;
-          streamlog_out( DEBUG3 ) <<"     true contributor = "<< mcp->id() << " e: " << e 
-                                  <<" mapped to " <<remap_as_you_go.find(mcp)->second->id() << std::endl;
           if ( mcp == 0 ) {
             streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << " has no creator " <<std::endl;
-            // streamlog_out( DEBUG7 ) <<"         true contributor = "<< mcp << " e: " << e 
-            //    <<" mapped to " <<remap_as_you_go.find(mcp)->second << std::endl;
             continue ; 
           }
-          mcp=remap_as_you_go.find(mcp)->second;
+          auto it_mcp = remap_as_you_go.find(mcp);
+          if ( it_mcp == remap_as_you_go.end() ){
+            streamlog_out( DEBUG7 ) <<"      simhit = "<< simHit << "; its true contributor "<<mcp->id()<<" is not found in the map"<<std::endl;
+            continue;
+          }
+
+          double e  = simHit->getEnergyCont( j ) * calib_factor ;
+          streamlog_out( DEBUG3 ) <<"     true contributor = "<< mcp->id() << " e: " << e 
+                                  <<" mapped to " <<it_mcp->second->id() << std::endl;
+          mcp=it_mcp->second;
           mcpEnergy[ mcp ] +=  e ;// count the hit-energy caused by this true particle
           eTot += e ;             // total energy
           ehit+= e;

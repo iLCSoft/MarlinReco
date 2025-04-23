@@ -1344,24 +1344,29 @@ void SLDCorrection::processEvent( EVENT::LCEvent *pLCEvent )
 			bool isBHadronSLDecay = false;
 			bool isCHadronSLDecay = false;
 			bool isTauLeptonSLDecay = false;
+			size_t i_parent = 0;
 			if ( ( abs( testLepton->getPDG() ) == 11 || abs( testLepton->getPDG() ) == 13 || abs( testLepton->getPDG() ) == 15 ) )
 			{
 				int chargedLeptonPDG;
-				for ( long unsigned int i_parent = 0 ; i_parent < ( testLepton->getParents() ).size() ; ++i_parent )
+				for ( ; i_parent < ( testLepton->getParents() ).size() ; ++i_parent )
 				{
 					MCP parent = testLepton->getParents()[ i_parent ];
 					primarySLDecay = hasPrimarySLDecay( parent , chargedLeptonPDG );
-					if ( primarySLDecay ) downStreamSLDecay = hasDownStreamSLDecay( parent );
-					if ( primarySLDecay ) upStreamSLDecay = hasUpStreamSLDecay( parent );
+					if ( primarySLDecay ) {
+						downStreamSLDecay = hasDownStreamSLDecay( parent );
+						upStreamSLDecay = hasUpStreamSLDecay( parent );
+						break;
+					}
 				}
 				if ( primarySLDecay )
 				{
 					bool solveSLD = true;
+					MCP parentHadron = testLepton->getParents()[ i_parent ];
 					std::vector< TLorentzVector > recoNeutrinoFourMomentum;
 					std::vector< std::vector< float > > recoNeutrinoCovMat;
-					isBHadronSLDecay = checkBHadronSLDecay( testLepton );
-					isCHadronSLDecay = checkCHadronSLDecay( testLepton );
-					isTauLeptonSLDecay = checkTauLeptonSLDecay( testLepton );
+					isBHadronSLDecay = checkBHadronSLDecay( parentHadron );
+					isCHadronSLDecay = checkCHadronSLDecay( parentHadron );
+					isTauLeptonSLDecay = checkTauLeptonSLDecay( parentHadron );
 					if ( isBHadronSLDecay )
 					{
 						++m_nSLDecayOfBHadron;
@@ -1448,7 +1453,7 @@ void SLDCorrection::processEvent( EVENT::LCEvent *pLCEvent )
 						streamlog_out(DEBUG3) << "	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 						streamlog_out(DEBUG3) << "	<<<<<<<<<<<<<<<< There are no upstream and downstream semi-leptonic decay >>>>>>>>>>>>>>>>>" << std::endl;
 						streamlog_out(DEBUG3) << "	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-						doSLDCorrection( pLCEvent , testLepton , BsemiLeptonicVertices , semiLeptonicVertexRecoParticles , jetsOfSemiLeptonicDecays , neutrinos , SLDStatus , PVAStatus , solutionSigns , mcNeutrinos );
+						doSLDCorrection( pLCEvent , testLepton , i_parent, BsemiLeptonicVertices , semiLeptonicVertexRecoParticles , jetsOfSemiLeptonicDecays , neutrinos , SLDStatus , PVAStatus , solutionSigns , mcNeutrinos );
 						m_parentHadronMass.push_back( ( testLepton->getParents()[ 0 ] )->getMass() );
 						m_parentHadronPDG.push_back( ( testLepton->getParents()[ 0 ] )->getPDG() );
 						for ( unsigned int i_Btype = 0 ; i_Btype < BHadPDGs.size() ; ++i_Btype )
@@ -1669,33 +1674,33 @@ bool SLDCorrection::hasUpStreamSLDecay( const MCP &parentHadron )
 	return hasSLDecay;
 }
 
-bool SLDCorrection::checkBHadronSLDecay( const MCP &SLDLepton )
+bool SLDCorrection::checkBHadronSLDecay( const MCP &parentHadron )
 {
 	bool isBHadronSLDecay = false;
-	MCP parentHadron = SLDLepton->getParents()[ 0 ];
+	
 	if ( floor( fabs( parentHadron->getPDG() ) / 100 ) == 5 || floor( fabs( parentHadron->getPDG() ) / 1000 ) == 5 ) isBHadronSLDecay = true;
 	return isBHadronSLDecay;
 }
 
-bool SLDCorrection::checkCHadronSLDecay( const MCP &SLDLepton )
+bool SLDCorrection::checkCHadronSLDecay( const MCP &parentHadron )
 {
 	bool isCHadronSLDecay = false;
-	MCP parentHadron = SLDLepton->getParents()[ 0 ];
+
 	if ( floor( fabs( parentHadron->getPDG() ) / 100 ) == 4 || floor( fabs( parentHadron->getPDG() ) / 1000 ) == 4 ) isCHadronSLDecay = true;
 	return isCHadronSLDecay;
 }
 
-bool SLDCorrection::checkTauLeptonSLDecay( const MCP &SLDLepton )
+bool SLDCorrection::checkTauLeptonSLDecay( const MCP &parent )
 {
 	bool TauLeptonSLDecay = false;
-	MCP parent = SLDLepton->getParents()[ 0 ];
+
 	if ( abs( parent->getPDG() ) == 15 ) TauLeptonSLDecay = true;
 	return TauLeptonSLDecay;
 }
 
-void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLepton , VertexVector& semiLeptonicVertices , PFOVector& semiLeptonicVertexRecoParticles , PFOVector& jetsOfSemiLeptonicDecays , PFOVectorVector& neutrinos , IntVector &sldStatus , IntVector &pvaStatus , IntVector &solutionSigns , MCPVector &trueNeutrinos )
+void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLepton , size_t parentHadronIDx , VertexVector& semiLeptonicVertices , PFOVector& semiLeptonicVertexRecoParticles , PFOVector& jetsOfSemiLeptonicDecays , PFOVectorVector& neutrinos , IntVector &sldStatus , IntVector &pvaStatus , IntVector &solutionSigns , MCPVector &trueNeutrinos )
 {
-	showTrueParameters( SLDLepton );
+	showTrueParameters( SLDLepton , parentHadronIDx );
 	PFOVector neutrinosOfThisSLD{};
 
 	VertexImpl *semiLeptonicVertex = new VertexImpl;
@@ -1740,6 +1745,8 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 	LCRelationNavigator MCParticleRecoNav( pLCEvent->getCollection( m_MCTruthRecoLinkCollection ) );
 	LCCollection *primaryVertexCollection = pLCEvent->getCollection( m_inputPrimaryVertex );
 
+	MCP parentHadron = SLDLepton->getParents()[ parentHadronIDx ];
+
 	int SLDStatus = -999;
 	if ( primaryVertexCollection->getNumberOfElements() == 0 )
 	{
@@ -1781,7 +1788,7 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 		DDMarlinCED::drawDD4hepDetector( this->_theDetector , 0 , std::vector<std::string>{} ); // draw geometry
 		DDCEDPickingHandler& pHandler = DDCEDPickingHandler::getInstance();
 		pHandler.update(pLCEvent);
-		drawMCParticles( SLDLepton->getParents()[ 0 ] , SLDLepton->getParents()[ 0 ] );
+		drawMCParticles( parentHadron , parentHadron );
 	}
 	//m_displayEvent = false;
 
@@ -1793,8 +1800,8 @@ void SLDCorrection::doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLe
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-	MCP trueNeutrino = getTrueNeutrino( SLDLepton );
-	MCP parentHadron = SLDLepton->getParents()[ 0 ];
+	MCP trueNeutrino = getTrueNeutrino( SLDLepton, parentHadronIDx );
+
 	TLorentzVector trueVisibleFourMomentumAtSLDVertex( 0.0 , 0.0 , 0.0 , 0.0 );
 	for ( unsigned int i_d = 0 ; i_d < parentHadron->getDaughters().size() ; ++i_d )
 	{
@@ -2915,10 +2922,10 @@ void SLDCorrection::evaluateInputCovMat( const TLorentzVector &trueVisibleFourMo
 	m_recoNeutrinoDirectionError.push_back( acos( recoNeutrinoDirection.Dot( trueNeutrinoDirection ) ) );
 }
 
-void SLDCorrection::showTrueParameters( const MCP &SLDLepton )
+void SLDCorrection::showTrueParameters( const MCP &SLDLepton, size_t parentHadronIDx )
 {
 	TLorentzVector true4mom( 0.0 , 0.0 , 0.0 , 0.0 );
-	MCP parentHadron = SLDLepton->getParents()[ 0 ];
+	MCP parentHadron = SLDLepton->getParents()[ parentHadronIDx ];
 	streamlog_out(DEBUG4) << "	PARENT HADRON:" << std::endl;
 	streamlog_out(DEBUG4) << *parentHadron << std::endl;
 	TVector3 trueFliDir = TVector3( parentHadron->getMomentumAtEndpoint() );
@@ -3202,12 +3209,12 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumStandardMethod( const TVect
 	return Neutrino_tlv;
 }
 
-MCP SLDCorrection::getTrueNeutrino( const MCP &SLDLepton )
+MCP SLDCorrection::getTrueNeutrino( const MCP &SLDLepton, size_t parent_idx )
 {
-	MCP trueNeutrino{};
+	MCP trueNeutrino = nullptr;
 	try
 	{
-		MCP MotherHadron = SLDLepton->getParents()[ 0 ];
+		MCP MotherHadron = SLDLepton->getParents()[ parent_idx ];
 		int nNeutrinos = 0;
 		for ( long unsigned int i_daughter = 0 ; i_daughter < ( MotherHadron->getDaughters() ).size() ; ++i_daughter )
 		{

@@ -12,11 +12,12 @@ calculate corrections to energy and direction of photon-like PFOs.
 
 ## step 1
 
-- prepareInput.py -> from lcio files, makes root tree with photon PFO/Cluster/MC properties
-- n.b. at least for prepareInput.py, USE A LATER VERION of LCIO. v02-03-03/lcio/v02-21 seems very slow and to consume a lot of memory when looping over clusters...
+- python3 prepareInput.py
+- from lcio files, makes root tree with photon PFO/Cluster/MC properties
 
 ## step 2
 
-- extractCorrection.py -> derive the corrections
+- python3 extractCorrection.py
+- derive the corrections
 - input is the root file produced by prepareInput.py
 - output is the parameters to pass to photonCorrectionProcessor

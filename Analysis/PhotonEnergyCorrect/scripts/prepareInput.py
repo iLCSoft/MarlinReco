@@ -19,20 +19,16 @@ filenames = {}
 enlabs = ['0p2', '0p4', '0p7', '001', '002', '3p5', '005', '7p5', '010',
           '015', '030', '050', '100', '125', '175', '250', '350', '500']
 
-# the orig files
-# indir='/hsm/ilc/grid/storm/prod/ilc/mc-opt/ild/dst-merged/1-calib/single/ILD_l5_o1_v02_nobg/v02-01'
-# label='rv02-01.sv02-01'
-
-# and my samples
 indir = 'runReco/output'
-# label = 'noPhotonCorr'
-label = 'new3PhotonCorr'
+label = 'noPhotonCorr'
 
 for enlab in enlabs:
     inpatt = indir + '/*' + label + '*.Ps_22_' + enlab + '*DST.slcio'
     infiles = glob.glob(inpatt)
     infiles.sort()
     filenames[enlab] = infiles
+
+# #######################
 
 maxevt = 0    # evts per energy point. <=0 : all events
 
@@ -41,7 +37,7 @@ inputPFOcollection = 'PandoraPFOs'
 inputMCcollection = 'MCParticle'
 
 # output file name
-outname = "singlegammas_newSample_"+label+".root"
+outname = "singlegammas_"+label+".root"
 
 ROOT.gROOT.SetBatch()
 
@@ -180,12 +176,9 @@ for enlab in filenames.keys():
     outtree[enlab].Branch('mcEndX', mcEndX, 'mcEndX/F')
 
 
-# #################################################################
-# fill tree for a given energy point
-#
-
-
 def run(en):
+    # #################################################################
+    # fill tree for a given energy point
 
     reader = IOIMPL.LCFactory.getInstance().createLCReader()
     fnames = filenames[en]

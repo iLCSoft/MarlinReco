@@ -19,16 +19,13 @@ from math import cos, log10, pi, sqrt, isnan
 #
 # the name of the input file
 #
-# inname = "singlegammas.root"
-inname = "singlegammas_newSampleNoCorr.root"
-# inname = "singlegammas_newSample_new3PhotonCorr.root"
+inname = "singlegammas.root"
 
 # don't include photon samples below this energy in fits
 #   (lower energies often difficult to fit)
 fit_emin = 0.99
 
-#
-# which energy/phi/theta variables in tree to correct?
+# which energy/phi/theta variables in tree to calculcate correction for?
 # True  = use cluster parameters (ie not corrected)
 # False = use PFO parameters (potentially already corrected,
 #         if photonCorrectionProcessor was run in reconstruction
@@ -40,6 +37,8 @@ useMC = False
 # ########################################################################
 
 ROOT.gROOT.SetBatch()
+ROOT.gStyle.SetPadLeftMargin(0.15)
+
 fin = ROOT.TFile(inname, "read")
 
 # name of output pdf file
@@ -82,6 +81,7 @@ cc.Print(plname + '[')
 #   eCorr_costh.push_back( 0.774  ); # _costhCorr_gaus3_mean       = pars[9];
 #   eCorr_costh.push_back( 0.009  ); # _costhCorr_gaus3_sigm       = pars[10]
 #   eCorr_costh.push_back( 1.002  ); # _costhCorr_endcap_scale     = pars[11]
+#
 cosThFnBar = ROOT.TF1('cosThFnBar',
                       '[0]*(x<0.8? 1+[10]*x+gaus(1)+gaus(4)+gaus(7):[11])')
 # =====================================
@@ -106,8 +106,11 @@ def gapCompensate_theta():
                           200, max(0.001, 1.-nsig/sqrt(kk)), 1+nsig/sqrt(kk))
         if useMC:
             vv.Draw(eVar+"/"+str(kk)+":abs(mcCth)>>"+hn, eVar+">0")
+            encth.GetXaxis().SetTitle('cosTheta [MC]')
         else:
             vv.Draw(eVar+"/"+str(kk)+":abs(cos(pfoTheta))>>"+hn, eVar+">0")
+            encth.GetXaxis().SetTitle('cosTheta [PFO]')
+        encth.GetYaxis().SetTitle(eVar+' / trueE')
         encthHists[kk] = encth
         encth.Draw()
         ic += 1
@@ -124,6 +127,7 @@ def gapCompensate_theta():
         epx = encth.ProfileX()
         costhprofiles[kk] = epx
         epx.Draw()
+        epx.GetYaxis().SetTitle(eVar+' / trueE')
 
         cosThFnBar.SetParameter(0, 1.)
         cosThFnBar.SetParameter(1, -0.1)
@@ -154,7 +158,7 @@ def gapCompensate_theta():
         ic += 1
     cc.Print(plname)
 
-    parGraphs = []
+    parGraphs = {}
     for iv in range(0, 12):
         x = array('d')
         y = array('d')
@@ -169,7 +173,7 @@ def gapCompensate_theta():
         pg = ROOT.TGraphErrors(len(x), x, y, dx, dy)
         pg.SetName('barrel_theta_par'+str(iv))
         pg.SetTitle('barrel_theta_par'+str(iv))
-        parGraphs.append(pg)
+        parGraphs[iv] = pg
 
 # the energy dependence is not too strong
 # so we assume fixed values indep of energy
@@ -179,13 +183,15 @@ def gapCompensate_theta():
     cc.Divide(4, 3)
     ic = 1
 
-    local_energyCorr_costh = []
-    for pg in parGraphs:
+    local_energyCorr_costh = {}
+    for iv, pg in parGraphs.items():
         cc.cd(ic)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
         pg.Fit("pol1", "q")
         valAtTen = pg.GetFunction("pol1").Eval(1.)  # log10(10) GeV = 1.
-        local_energyCorr_costh.append(valAtTen)
+        local_energyCorr_costh[iv] = valAtTen
         ic += 1
     cc.Print(plname)
 
@@ -226,6 +232,8 @@ def gapCompensate_theta():
     cc.Clear()
     cosThFnBar.SetNpx(500)
     cosThFnBar.Draw()
+    cosThFnBar.GetHistogram().GetXaxis().SetTitle('cos(theta)')
+    cosThFnBar.GetHistogram().GetYaxis().SetTitle('corr. func. @ 10GeV')
     cc.Print(plname)
 
     return out_energyCorr_costh
@@ -268,13 +276,16 @@ def gapCompensate_phiBarrel():
 
         enphi = ROOT.TH2F(hn, hn, 500, 0, pi/4, 500,
                           max(0.001, 1.-nsig/sqrt(kk)), 1.+nsig/sqrt(kk))
+        enphi.GetYaxis().SetTitle(eVar + ' / trueE')
 
         if useMC:
             vv.Draw(eVar+"/"+str(kk)+":abs(mcPhiFold)>>"+hn,
                     "abs(mcCth)<0.8 && "+eVar+">0")
+            enphi.GetXaxis().SetTitle('phi(folded) [MC]')
         else:
             vv.Draw(eVar+"/"+str(kk)+":abs(pfoPhiFold)>>"+hn,
                     "abs(cos(pfoTheta))<0.8 && "+eVar+">0")
+            enphi.GetXaxis().SetTitle('phi(folded) [PFO]')
 
         enphiHists[kk] = enphi
         enphi.Draw()
@@ -292,6 +303,7 @@ def gapCompensate_phiBarrel():
         cc.cd(ic)
         epx = enphi.ProfileX()
         epx.Draw()
+        epx.GetYaxis().SetTitle(eVar + ' / trueE')
 
         phiFnBar.SetParameter(0, 1)
         phiFnBar.SetParameter(1, -0.1)
@@ -313,7 +325,7 @@ def gapCompensate_phiBarrel():
         ic += 1
     cc.Print(plname)
 
-    phiparGraphs = []
+    phiparGraphs = {}
     for iv in range(0, 5):
         x = array('d')
         y = array('d')
@@ -328,19 +340,21 @@ def gapCompensate_phiBarrel():
         pg = ROOT.TGraphErrors(len(x), x, y, dx, dy)
         pg.SetName('barrel_phi_par'+str(iv))
         pg.SetTitle('barrel_phi_par'+str(iv))
-        phiparGraphs.append(pg)
+        phiparGraphs[iv] = pg
 
     cc.Clear()
     cc.Divide(3, 2)
     ic = 1
 
-    output_energyCorr_barrelPhi = [0.] * 5
+    output_energyCorr_barrelPhi = {}
 
     local_barrelPhi = []
 
-    for pg in phiparGraphs:
+    for iv, pg in phiparGraphs.items():
         cc.cd(ic)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
         pg.Fit("pol1", "q")
         valAtTen = pg.GetFunction("pol1").Eval(1.)  # log10(10) GeV = 1.
 
@@ -348,16 +362,16 @@ def gapCompensate_phiBarrel():
 
         # this is in the form that we will use in the
         # photonCorrectionProcessor steering
-        if ic == 3:  # this is the gap position, keep energy dependence
+        if iv == 1:  # depth
+            output_energyCorr_barrelPhi[2] = valAtTen
+        elif iv == 2:  # this is the gap position, keep energy dependence
             output_energyCorr_barrelPhi[0] = \
                 pg.GetFunction("pol1").GetParameter(0)
             output_energyCorr_barrelPhi[1] = \
                 pg.GetFunction("pol1").GetParameter(1)
-        elif ic == 2:  # depth
-            output_energyCorr_barrelPhi[2] = valAtTen
-        elif ic == 4:  # width (-ve side)
+        elif iv == 3:  # width (-ve side)
             output_energyCorr_barrelPhi[3] = valAtTen
-        elif ic == 5:  # width (+ve side)
+        elif iv == 4:  # width (+ve side)
             output_energyCorr_barrelPhi[4] = valAtTen
         ic += 1
     cc.Print(plname)
@@ -409,17 +423,20 @@ def gapCompensate_endcap():
         hn = "enendcap_" + str(kk)
         nsig = 3.
         if kk > 30:
-            nsig = 10
+            nsig = 8
 
         enphi = ROOT.TH2F(hn, hn, 500, 30, 1500, 500,
                           max(0.001, 1.-nsig/sqrt(kk)), 1.+nsig/sqrt(kk))
+        enphi.GetYaxis().SetTitle(eVar + ' / trueE')
 
         if useMC:
             vv.Draw(eVar+"/"+str(kk)+":mcEndX>>"+hn,
                     "mcEndX>0.8 && "+eVar+">0")
+            enphi.GetXaxis().SetTitle('endcap quardant dist [mm, MC]')
         else:
             vv.Draw(eVar+"/"+str(kk)+":pfoEndX>>"+hn,
                     "pfoEndX>0.8 && "+eVar+">0")
+            enphi.GetXaxis().SetTitle('endcap quadrant dist [mm, PFO]')
 
         enendxHists[kk] = enphi
         enphi.Draw()
@@ -436,6 +453,8 @@ def gapCompensate_endcap():
         epx = encth.ProfileX()
 
         epx.Draw()
+        epx.GetYaxis().SetTitle(eVar + ' / trueE')
+
         endXEnd.SetParameter(0, 1.)
         endXEnd.SetParameter(1, -0.04)
         endXEnd.SetParameter(2, 850.)
@@ -463,7 +482,7 @@ def gapCompensate_endcap():
         ic += 1
     cc.Print(plname)
 
-    endgapGraphs = []
+    endgapGraphs = {}
     for iv in range(0, 7):
         x = array('d')
         y = array('d')
@@ -478,19 +497,21 @@ def gapCompensate_endcap():
         pg = ROOT.TGraphErrors(len(x), x, y, dx, dy)
         pg.SetName('barrel_phi_par'+str(iv))
         pg.SetTitle('barrel_phi_par'+str(iv))
-        endgapGraphs.append(pg)
+        endgapGraphs[iv] = pg
 
     cc.Clear()
     cc.Divide(3, 3)
     ic = 1
 
-    local_energyCorr_endcap = []
-    for pg in endgapGraphs:
+    local_energyCorr_endcap = {}
+    for iv, pg in endgapGraphs.items():
         cc.cd(ic)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
         pg.Fit("pol1", "q")
         valAtTen = pg.GetFunction("pol1").Eval(1.)  # log10(10) GeV = 1.
-        local_energyCorr_endcap.append(valAtTen)
+        local_energyCorr_endcap[iv] = valAtTen
         ic += 1
     cc.Print(plname)
 
@@ -498,7 +519,7 @@ def gapCompensate_endcap():
     for i in range(1, 7):
         endXEnd.SetParameter(i, local_energyCorr_endcap[i])
 
-    out_energyCorr_endcap = [0.]*6
+    out_energyCorr_endcap = {}
     out_energyCorr_endcap[0] = local_energyCorr_endcap[1]
     out_energyCorr_endcap[1] = local_energyCorr_endcap[2]
     out_energyCorr_endcap[2] = local_energyCorr_endcap[3]
@@ -517,11 +538,74 @@ def gapCompensate_endcap():
 output_energyCorr_endcap = gapCompensate_endcap()
 # ################################
 
+
 # =================================
 # now we should try to apply all the above correcions
 #  look at energy distribution after
 #  then linearise the energy measurement
 # =================================
+
+# energy correction functions
+
+def setEnThetaCorrFn():
+    cosThFnBar.SetParameter(0, 1.)
+    cosThFnBar.SetParameter(1, output_energyCorr_costh[0])
+    cosThFnBar.SetParameter(2, output_energyCorr_costh[2])
+    cosThFnBar.SetParameter(3, output_energyCorr_costh[3])
+    cosThFnBar.SetParameter(4, output_energyCorr_costh[4])
+    cosThFnBar.SetParameter(5, 0.)
+    cosThFnBar.SetParameter(6, output_energyCorr_costh[7])
+    cosThFnBar.SetParameter(7, output_energyCorr_costh[8])
+    cosThFnBar.SetParameter(8, output_energyCorr_costh[9])
+    cosThFnBar.SetParameter(9, output_energyCorr_costh[10])
+    cosThFnBar.SetParameter(10, 0.)
+    return
+
+
+def getEnThetaCorr(costheta):
+    setEnThetaCorrFn()
+    return cosThFnBar.Eval(abs(costheta))
+
+
+def setEnPhiCorrFn(en):
+    phiFnBar.SetParameter(0, 1.)
+    phiFnBar.SetParameter(1, output_energyCorr_barrelPhi[2])
+    phiFnBar.SetParameter(2, output_energyCorr_barrelPhi[0] +
+                          log10(en)*output_energyCorr_barrelPhi[1])
+    phiFnBar.SetParameter(3, output_energyCorr_barrelPhi[3])
+    phiFnBar.SetParameter(4, output_energyCorr_barrelPhi[4])
+    return
+
+
+def getEnPhiCorr(en, phiFold):
+    setEnPhiCorrFn(en)
+    return phiFnBar.Eval(phiFold)
+
+
+def setEnEndcapCorrFn():
+    endXEnd.SetParameter(0, 1.)
+    endXEnd.SetParameter(1, output_energyCorr_endcap[0])
+    endXEnd.SetParameter(2, output_energyCorr_endcap[1])
+    endXEnd.SetParameter(3, output_energyCorr_endcap[2])
+    endXEnd.SetParameter(4, output_energyCorr_endcap[3])
+    endXEnd.SetParameter(5, output_energyCorr_endcap[4])
+    endXEnd.SetParameter(6, output_energyCorr_endcap[5])
+    return
+
+
+def getEnEndcapCorr(en, endX):
+    setEnEndcapCorrFn()
+    return endXEnd.Eval(endX)
+
+
+# get the corrected energy
+def getEnCorr(en, costheta, phiFold, endX):
+    corrFac = getEnThetaCorr(costheta)
+    if abs(costheta) < 0.8:
+        corrFac = corrFac * getEnPhiCorr(en, phiFold)
+    else:
+        corrFac = corrFac * getEnEndcapCorr(en, endX)
+    return en / corrFac
 
 
 def energy_linearise():
@@ -538,6 +622,7 @@ def energy_linearise():
     cc.Clear()
     cc.Divide(5, 4)
     ic = 1
+    # loop over input energies
     for kk, vv in sorted(inTrees.items()):
 
         cc.cd(ic)
@@ -547,9 +632,15 @@ def energy_linearise():
         hen_corr = ROOT.TH1F("enCorr"+str(kk), "enCorr"+str(kk), 100,
                              max(0.001, kk-6*sqrt(kk)), kk+6*sqrt(kk))
 
+        hen_orig.GetXaxis().SetTitle('reconstructed energy')
+        hen_orig.GetYaxis().SetTitle('photons / bin')
+        hen_corr.GetXaxis().SetTitle('reconstructed energy')
+        hen_corr.GetYaxis().SetTitle('photons / bin')
+
         hen_orig.SetLineColor(1)
         hen_corr.SetLineColor(2)
 
+        # loop over the tree entries
         for i in range(0, vv.GetEntries()):
             vv.GetEntry(i)
 
@@ -558,27 +649,16 @@ def energy_linearise():
             else:
                 en = vv.pfoEn
 
-            # hen_orig.Fill( vv.clEn )
             hen_orig.Fill(en)
-            if useMC:
-                costh_corr = cosThFnBar.Eval(vv.mcCth)
-            else:
-                costh_corr = cosThFnBar.Eval(cos(vv.pfoTheta))
-            phiBar_corr = 1.0
-            endX_corr = 1.0
-            if abs(vv.mcCth) < 0.8:
-                if useMC:
-                    phiBar_corr = phiFnBar.Eval(vv.mcPhiFold)
-                else:
-                    phiBar_corr = phiFnBar.Eval(vv.pfoPhiFold)
-            else:
-                if useMC:
-                    endX_corr = endXEnd.Eval(vv.mcEndX)
-                else:
-                    endX_corr = endXEnd.Eval(vv.pfoEndX)
-            total_corr = 1./(costh_corr*phiBar_corr*endX_corr)
 
-            hen_corr.Fill(en*total_corr)
+            if useMC:
+                en_corr = getEnCorr(en, vv.mcCth,
+                                    vv.mcPhiFold, vv.mcEndX)
+            else:
+                en_corr = getEnCorr(en, cos(vv.pfoTheta),
+                                    vv.pfoPhiFold, vv.pfoEndX)
+
+            hen_corr.Fill(en_corr)
 
         hen_corr.Draw()
         hen_orig.Draw("same")
@@ -611,6 +691,8 @@ def energy_linearise():
 
     pg = ROOT.TGraphErrors(len(inTrees), x, y, dx, dy)
     pg.Draw("apl")
+    pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+    pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
     pg.Fit("pol1", "q", "", log10(fit_emin), 3)
 
     energyCor_Lin = []
@@ -652,12 +734,17 @@ def angle_phiBarrel():
         hn = "barphiphi_" + str(kk)
         yy = 0.03/sqrt(kk)
         phiphi = ROOT.TH2F(hn, hn, 300, 0, 3.14159/4., 200, -yy, yy)
+        phiphi.GetYaxis().SetTitle(phifVar+' - truePhiFold [rad]')
+
         if useMC:
             vv.Draw("("+phifVar+"-mcPhiFold):mcPhiFold>>"+hn,
                     eVar+">0 && abs(mcCth)<0.8")
+            phiphi.GetXaxis().SetTitle('phi [folded, MC]')
+
         else:
             vv.Draw("("+phifVar+"-mcPhiFold):pfoPhiFold>>"+hn,
                     eVar+">0 && abs(cos(pfoTheta))<0.8")
+            phiphi.GetXaxis().SetTitle('phi [folded, PFO]')
 
         barphiphiHists[kk] = phiphi
         phiphi.Draw()
@@ -677,6 +764,7 @@ def angle_phiBarrel():
         cc.cd(ic)
         epx = phiphi.ProfileX()
         epx.Draw()
+        epx.GetYaxis().SetTitle(phifVar+' - truePhi [rad]')
 
         # first fix the sharp peak pos and size
         fn_barphiphi.FixParameter(2, 0.43)
@@ -725,6 +813,8 @@ def angle_phiBarrel():
         pg.SetTitle('barrel_phiphi_par'+str(iv))
         barphiphiGraphs.append(pg)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
 
         if iv == 0:
             pg.Fit("fn_phiphiFit", "q")
@@ -772,13 +862,20 @@ def angle_thetaBarrel():
     for kk, vv in sorted(inTrees.items()):
         cc.cd(ic)
 
-        hn = "barthcth_"+str(kk)
-        yy = 0.01 / sqrt(kk)
+        hn = "barrel_thcth_"+str(kk)
+        if kk < 50:
+            yy = 0.01 / sqrt(kk)
+        else:
+            yy = 0.02 / sqrt(kk)
+
         cthcth = ROOT.TH2F(hn, hn, 500, -1, 1, 200, -yy, yy)
+        cthcth.GetYaxis().SetTitle(thVar+' - trueTheta [rad]')
         if useMC:
             vv.Draw(thVar+"-acos(mcCth):mcCth>>"+hn, eVar+">0")
+            cthcth.GetXaxis().SetTitle('Cos(Theta) [MC, rad]')
         else:
             vv.Draw(thVar+"-acos(mcCth):cos(pfoTheta)>>"+hn, eVar+">0")
+            cthcth.GetXaxis().SetTitle('Cos(Theta) [PFO, rad]')
 
         barthcthHists[kk] = cthcth
         cthcth.Draw()
@@ -796,6 +893,7 @@ def angle_thetaBarrel():
         cc.cd(ic)
         epx = cthcth.ProfileX()
         epx.Draw()
+        epx.GetYaxis().SetTitle(cthcth.GetYaxis().GetTitle())
 
         fn_barthcth.SetParameter(0, -3.e-4)
         fn_barthcth.SetParameter(1, 1.e-4)
@@ -832,6 +930,8 @@ def angle_thetaBarrel():
         pg.SetTitle('barrel_phi_par'+str(iv))
         barthcthGraphs.append(pg)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
         pg.Fit("pol1", "q")
 
         output_cthcthCorr_barrel.append(pg.GetFunction("pol1").GetParameter(0))
@@ -862,16 +962,19 @@ def angle_thetaEndcap():
     ic = 1
     for kk, vv in sorted(inTrees.items()):
         cc.cd(ic)
-        hn = "endthth_" + str(kk)
+        hn = "endcap_thth_" + str(kk)
         yy = 0.01/sqrt(kk)
         # x-axis in radians
         thth = ROOT.TH2F(hn, hn, 50, 0.2, 0.6, 200, -yy, yy)
+        thth.GetYaxis().SetTitle(thVar + ' - trueTheta')
         if useMC:
             vv.Draw("(mcCth<0 ? -1. : 1.)*( " + thVar +
                     " - acos(mcCth) ):acos(abs(mcCth))>>" + hn, eVar + ">0")
+            thth.GetXaxis().SetTitle('theta [MC]')
         else:
             vv.Draw("(cos(pfoTheta)<0 ? -1. : 1.)*( " + thVar +
                     "-acos(mcCth)):acos(abs(cos(pfoTheta)))>>" + hn, eVar+">0")
+            thth.GetXaxis().SetTitle('theta [PFO]')
 
         endththHists[kk] = thth
         thth.Draw()
@@ -888,6 +991,7 @@ def angle_thetaEndcap():
     for kk, vv in sorted(endththHists.items()):
         cc.cd(ic)
         tp = vv.ProfileX()
+        tp.GetYaxis().SetTitle(thth.GetYaxis().GetTitle())
 
         fn_endthth.SetParameter(0, 2.e-4)
         fn_endthth.SetParameter(1, -4.e-4)
@@ -928,6 +1032,8 @@ def angle_thetaEndcap():
         pg.SetTitle('endcap_theta_par' + str(iv))
         endththGraphs.append(pg)
         pg.Draw("apl")
+        pg.GetHistogram().GetXaxis().SetTitle('log10( photon energy [GeV] )')
+        pg.GetHistogram().GetYaxis().SetTitle('fitted parameter')
         pg.Fit("pol0", "q")
 
         output_ththCorr_endcap.append(pg.GetFunction("pol0").GetParameter(0))

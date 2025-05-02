@@ -563,7 +563,6 @@ def setEnThetaCorrFn():
 
 
 def getEnThetaCorr(costheta):
-    setEnThetaCorrFn()
     return cosThFnBar.Eval(abs(costheta))
 
 
@@ -577,8 +576,7 @@ def setEnPhiCorrFn(en):
     return
 
 
-def getEnPhiCorr(en, phiFold):
-    setEnPhiCorrFn(en)
+def getEnPhiCorr(phiFold):
     return phiFnBar.Eval(phiFold)
 
 
@@ -593,8 +591,7 @@ def setEnEndcapCorrFn():
     return
 
 
-def getEnEndcapCorr(en, endX):
-    setEnEndcapCorrFn()
+def getEnEndcapCorr(endX):
     return endXEnd.Eval(endX)
 
 
@@ -602,9 +599,9 @@ def getEnEndcapCorr(en, endX):
 def getEnCorr(en, costheta, phiFold, endX):
     corrFac = getEnThetaCorr(costheta)
     if abs(costheta) < 0.8:
-        corrFac = corrFac * getEnPhiCorr(en, phiFold)
+        corrFac = corrFac * getEnPhiCorr(phiFold)
     else:
-        corrFac = corrFac * getEnEndcapCorr(en, endX)
+        corrFac = corrFac * getEnEndcapCorr(endX)
     return en / corrFac
 
 
@@ -618,6 +615,11 @@ def energy_linearise():
     y = array('d')
     dx = array('d')
     dy = array('d')
+
+    # set function parameters to the calculated ones
+    # these 2 are energy independent
+    setEnThetaCorrFn()
+    setEnEndcapCorrFn()
 
     cc.Clear()
     cc.Divide(5, 4)
@@ -649,7 +651,13 @@ def energy_linearise():
             else:
                 en = vv.pfoEn
 
+            if en <= 0:
+                continue
+
             hen_orig.Fill(en)
+
+            # set the energy-dependent function parameters
+            setEnPhiCorrFn(en)
 
             if useMC:
                 en_corr = getEnCorr(en, vv.mcCth,

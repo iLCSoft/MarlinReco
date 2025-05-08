@@ -21,14 +21,13 @@
 #include "TMatrixD.h"
 #include "DD4hep/Detector.h"
 #include "SLDCorrectionTypes.h"
-class TFile;
-class TDirectory;
-class TH1F;
-class TH1I;
-class TH2I;
-class TH2F;
-class TTree;
-class TF1;
+#include <TFile.h>
+#include <TH1F.h>
+#include <TH1I.h>
+#include <TH2I.h>
+#include <TH2F.h>
+#include <TTree.h>
+#include <TF1.h>
 
 using namespace lcio ;
 using namespace marlin ;
@@ -59,19 +58,19 @@ public:
 	bool hasUpStreamSLDecay( const MCP &parentHadron );
 
 	//	checkBHadronSLDecay checks the flavour of the Hadron decays semi-leptonicall, if B-Hadron: true, if not: false
-	bool checkBHadronSLDecay( const MCP &SLDLepton );
+	bool checkBHadronSLDecay( const MCP &parentHadron );
 
 	//	checkCHadronSLDecay checks the flavour of the Hadron decays semi-leptonicall, if C-Hadron: true, if not: false
-	bool checkCHadronSLDecay( const MCP &SLDLepton );
+	bool checkCHadronSLDecay( const MCP &parentHadron );
 
 	//	checkTauLeptonSLDecay checks the flavour of the Hadron decays semi-leptonicall, if tau-lepton: true, if not: false
-	bool checkTauLeptonSLDecay( const MCP &SLDLepton );
+	bool checkTauLeptonSLDecay( const MCP &parentHadron );
 
 	//	doSLDCorrection prepares all inputs for nu-correction and makes output LCIO elements (SLDVertex, associated RP of SLDVertex, solutions for neutrino as Reconstructed Particle, etc)
-	virtual void doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLepton , VertexVector& semiLeptonicVertices , PFOVector& semiLeptonicVertexRecoParticles , PFOVector& jetsOfSemiLeptonicDecays , PFOVectorVector& neutrinos , IntVector &sldStatus , IntVector &pvaStatus , IntVector &solutionSigns , MCPVector &trueNeutrinos );
+	virtual void doSLDCorrection( EVENT::LCEvent *pLCEvent , const MCP &SLDLepton , size_t parentHadronIDx, VertexVector& semiLeptonicVertices , PFOVector& semiLeptonicVertexRecoParticles , PFOVector& jetsOfSemiLeptonicDecays , PFOVectorVector& neutrinos , IntVector &sldStatus , IntVector &pvaStatus , IntVector &solutionSigns , MCPVector &trueNeutrinos );
 
 	//	showTrueParameters prints true input for nu-correction
-	void showTrueParameters( const MCP &SLDLepton );
+	void showTrueParameters( const MCP &SLDLepton , size_t parentHadronIDx );
 
 	//	getNeutrinoFourMomentum corrects neutrino energy using rapidity-based approach
 	TLorentzVector getNeutrinoFourMomentum( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign );
@@ -83,7 +82,7 @@ public:
 	TLorentzVector getNeutrinoFourMomentumStandardMethod( const TVector3 &flightDirection , const TLorentzVector &visibleFourMomentum , const double &parentHadronMass , const float &solutionSign );
 
 	//	getTrueNeutrinogets true four-momentum of neutrino
-	MCP getTrueNeutrino( const MCP &SLDLepton );
+	MCP getTrueNeutrino( const MCP &SLDLepton, size_t parent_idx );
 
 	//	fillTrueRecoFourMomentummakes performance evaluation variables stored in root tree
 	void fillTrueRecoFourMomentum( const TLorentzVector &trueVisibleFourMomentumAtSLDVertex , const TLorentzVector &truePVATrueFourMomentum , const TLorentzVector &truePVARecoFourMomentum , const TLorentzVector &recoPVARecoFourMomentum , const TLorentzVector &visibleFourMomentum , const TLorentzVector &trueLeptonFourMomentum , const TLorentzVector &recoLeptonFourMomentum , const TLorentzVector &leptonFourMomentum , const TLorentzVector &truePVATrueChargedFourMomentum , const TLorentzVector &truePVARecoChargedFourMomentum , const TLorentzVector &recoSLDVertexChargedFourMomentum , const TLorentzVector &recoPVARecoChargedFourMomentum , const TLorentzVector &chargedFourMomentum , const TLorentzVector &truePVATrueNeutralFourMomentum , const TLorentzVector &truePVARecoNeutralFourMomentum , const TLorentzVector &recoPVARecoNeutralFourMomentum , const TLorentzVector &neutralFourMomentum , const TLorentzVector &trueNeutrinoFourMomentum , const TLorentzVector &recoNeutrinoFourMomentumClose , const TLorentzVector &trueHadronFourMomentum , const TLorentzVector &recoHadronFourMomentum , const TVector3 &trueFlightDirection , const TVector3 &recoFlightDirection , const TVector3 &flightDirection );
@@ -553,7 +552,7 @@ private:
 	TH1F					*h_FlightDirectionError{};
 	TH1F					*h_distRecoLeptonToDownStreamVertex{};
 	TFile					*m_pTFile{};
-	TTree					*m_pTTree1{};
+	TTree					*m_pTTree1 = new TTree( "SLDCorrection", "SLDCorrection" );
 
 
 };

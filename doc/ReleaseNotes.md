@@ -1,3 +1,11 @@
+# v01-36-02
+
+* 2025-02-20 Bohdan Dudar ([PR#146](https://github.com/iLCSoft/MarlinReco/pull/146))
+  - Fix a segmentation fault in RecoMCTruthLinker when an MCParticle is not found in the internal map (see [#125](https://github.com/iLCSoft/MarlinReco/issues/125))
+
+* 2024-10-01 Bohdan Dudar ([PR#142](https://github.com/iLCSoft/MarlinReco/pull/142))
+  - Fix `mismateched-new-delete` warning uncovered by gcc14 (see [#140](https://github.com/iLCSoft/MarlinReco/issues/140))
+
 # v01-36-01
 
 * 2024-09-09 jmcarcell ([PR#139](https://github.com/iLCSoft/MarlinReco/pull/139))

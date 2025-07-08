@@ -1881,8 +1881,15 @@ void TrueJet::true_lepton()
 
         // ! loop until either stable descendent found
 
+     int n_execution = 0;
      while ( k[lept][2] != 94 && k[lept][1] != 1 && k[lept][4] == k[lept][5] ) {
        lept = k[lept][4] ;
+       n_execution++;
+
+       if (n_execution > 999) {
+        streamlog_out(DEBUG2) << "This should not happen, yet it did..." << std::endl;
+        break;
+       }
      }
    
      streamlog_out(DEBUG2)<< " after looping to stable : " << lept << " " <<  k[lept][2] << std::endl;

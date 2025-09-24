@@ -147,6 +147,7 @@ private:
   bool _modeExtract=false;
   bool _modeTrain=false;
   bool _modeInfer=false;
+  bool _addMCPID=false;
 
   std::string _TTreeFileName{};
   std::vector<std::string> _inputAlgoSpecs{};

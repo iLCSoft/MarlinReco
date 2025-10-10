@@ -256,6 +256,17 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
   for (unsigned int i(0); i < _inputCollections.size(); ++i) {
     std::string colName =  _inputCollections[i] ;
     streamlog_out ( DEBUG1 ) << "looking for collection: " << colName << endl;
+
+    // create new collection: hits
+    LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
+    newcol->setFlag(_flag.getFlag());
+
+    // hit relations to simhits [calo -> sim]
+    LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+    relcol->setFlag(_flag_rel.getFlag());
+    relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
+    relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
+
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -270,15 +281,6 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 
       if ( numElements==0 ) continue;
 
-      // create new collection: hits
-      LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
-      newcol->setFlag(_flag.getFlag());
-
-      // hit relations to simhits [calo -> sim]
-      LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
-      relcol->setFlag(_flag_rel.getFlag());
-      relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
-      relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
       // loop over input hits
       for (int j=0; j < numElements; ++j) {
@@ -316,14 +318,15 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
 
       // add collection to event
       newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
-      evt->addCollection(newcol,_outputCollections[i].c_str());
-
-      // add relation collection to event
-      evt->addCollection(relcol,_outputRelCollections[i].c_str());
 
     } catch(DataNotAvailableException &e){
       streamlog_out(DEBUG1) << "could not find input collection " << colName << std::endl;
     }
+
+    evt->addCollection(newcol,_outputCollections[i].c_str());
+
+    // add relation collection to event
+    evt->addCollection(relcol,_outputRelCollections[i].c_str());
   }
 
 

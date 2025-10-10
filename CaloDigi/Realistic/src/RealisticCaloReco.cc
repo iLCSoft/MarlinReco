@@ -126,6 +126,16 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
     std::string relName =  _inputRelCollections[i] ;
     streamlog_out ( DEBUG ) << "looking for hit, relation collection: " << colName << " " << relName << endl;
 
+    // create new collection
+    LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
+    newcol->setFlag(_flag.getFlag());
+
+    // relation from reconstructed to sim hits
+    LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
+    relcol->setFlag(_flag_rel.getFlag());
+    relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
+    relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
+
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
@@ -136,15 +146,6 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
       if ( _idDecoder ) delete _idDecoder;
       _idDecoder = new CellIDDecoder<CalorimeterHit> ( col );
 
-      // create new collection
-      LCCollectionVec *newcol = new LCCollectionVec(LCIO::CALORIMETERHIT);
-      newcol->setFlag(_flag.getFlag());
-
-      // relation from reconstructed to sim hits
-      LCCollectionVec *relcol  = new LCCollectionVec(LCIO::LCRELATION);
-      relcol->setFlag(_flag_rel.getFlag());
-      relcol->parameters().setValue( RELATIONFROMTYPESTR , LCIO::CALORIMETERHIT ) ;
-      relcol->parameters().setValue( RELATIONTOTYPESTR   , LCIO::SIMCALORIMETERHIT ) ;
 
       int numElements = col->getNumberOfElements();
       streamlog_out ( DEBUG ) << colName << " number of elements = " << numElements << endl;
@@ -183,12 +184,13 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
       // add collection to event
       newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
       
-      evt->addCollection(newcol,_outputHitCollections[i].c_str());
-      evt->addCollection(relcol, _outputRelCollections[i].c_str());
     }
     catch(DataNotAvailableException &e){
       streamlog_out(DEBUG) << "could not find input ECAL collection " << colName << std::endl;
     }
+
+    evt->addCollection(newcol,_outputHitCollections[i].c_str());
+    evt->addCollection(relcol, _outputRelCollections[i].c_str());
   }
   return;
 }

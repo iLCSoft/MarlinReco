@@ -281,9 +281,6 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
       int numElements = col->getNumberOfElements();
       streamlog_out ( DEBUG1 ) << colName << " number of elements = " << numElements << endl;
 
-      if ( numElements==0 ) continue;
-
-
       // loop over input hits
       for (int j=0; j < numElements; ++j) {
         SimCalorimeterHit * simhit = dynamic_cast<SimCalorimeterHit*>( col->getElementAt( j ) ) ;

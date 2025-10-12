@@ -270,6 +270,8 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
     try{
       LCCollection * col = evt->getCollection( colName.c_str() ) ;
       string initString = col->getParameters().getStringVal(LCIO::CellIDEncoding);
+      newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
+
       CHT::CaloType cht_type = caloTypeFromString(colName);
       CHT::CaloID   cht_id   = caloIDFromString(colName);
       CHT::Layout   cht_lay  = layoutFromString(colName);
@@ -316,13 +318,12 @@ void RealisticCaloDigi::processEvent( LCEvent * evt ) {
         } // theshold
       } // input hits
 
-      // add collection to event
-      newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
 
     } catch(DataNotAvailableException &e){
       streamlog_out(DEBUG1) << "could not find input collection " << colName << std::endl;
     }
 
+    // add collection to event
     evt->addCollection(newcol,_outputCollections[i].c_str());
 
     // add relation collection to event

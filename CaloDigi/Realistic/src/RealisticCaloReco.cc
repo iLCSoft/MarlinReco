@@ -148,6 +148,8 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 
 
       int numElements = col->getNumberOfElements();
+      newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
+
       streamlog_out ( DEBUG ) << colName << " number of elements = " << numElements << endl;
 
       for (int j(0); j < numElements; ++j) {
@@ -181,14 +183,13 @@ void RealisticCaloReco::processEvent( LCEvent * evt ) {
 
       }
 
-      // add collection to event
-      newcol->parameters().setValue(LCIO::CellIDEncoding,initString);
-      
+
     }
     catch(DataNotAvailableException &e){
       streamlog_out(DEBUG) << "could not find input ECAL collection " << colName << std::endl;
     }
 
+    // add collection to event
     evt->addCollection(newcol,_outputHitCollections[i].c_str());
     evt->addCollection(relcol, _outputRelCollections[i].c_str());
   }

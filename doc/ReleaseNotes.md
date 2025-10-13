@@ -1,3 +1,15 @@
+# v01-37
+
+* 2025-10-10 Thomas Madlener ([PR#150](https://github.com/iLCSoft/MarlinReco/pull/150))
+  - Make sure that RealisticCalo{Digi,Reco} always produce (potentially empty) outputs. This was missed in earlier iterations of updating processors throughout the chain.
+
+* 2025-08-12 Thomas Madlener ([PR#149](https://github.com/iLCSoft/MarlinReco/pull/149))
+  - Switch to latest available nightlies and releases for Key4hep based CI workflows
+    - Add `workflow_dispatch` trigger and scheduled runs every week
+
+* 2025-05-14 Daniel Jeans ([PR#147](https://github.com/iLCSoft/MarlinReco/pull/147))
+  - Add code needed to obtain the photon energy and direction corrections which are used in the photonCorrectionProcessor (as promised in https://github.com/iLCSoft/MarlinReco/issues/144#issuecomment-2576491059 )
+
 # v01-36-02
 
 * 2025-02-20 Bohdan Dudar ([PR#146](https://github.com/iLCSoft/MarlinReco/pull/146))

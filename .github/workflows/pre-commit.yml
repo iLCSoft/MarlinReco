@@ -1,0 +1,34 @@
+name: pre-commit
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - uses: cvmfs-contrib/github-action-cvmfs@v5
+    - uses: aidasoft/run-lcg-view@v4
+      with:
+        container: el9
+        view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
+        run: |
+          echo "::group::Setup pre-commit"
+          # Newer versions of git are more cautious around the github runner
+          # environment and without this git rev-parse --show-cdup in pre-commit
+          # fails
+          git config --global --add safe.directory $(pwd)
+          python -m venv /root/pre-commit-venv
+          source /root/pre-commit-venv/bin/activate
+          pip install pre-commit
+          echo "::endgroup::"
+          echo "::group::Run pre-commit"
+          pre-commit run --show-diff-on-failure \
+            --color=always \
+            --all-files
+          echo "::endgroup::"

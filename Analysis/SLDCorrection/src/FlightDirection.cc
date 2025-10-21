@@ -22,8 +22,10 @@ void getTrueFlightDirection(const MCP& SLDLepton, TVector3& trueFlightDirection,
   trueSLDVertex.push_back(motherHadron->getEndpoint()[0]);
   trueSLDVertex.push_back(motherHadron->getEndpoint()[1]);
   trueSLDVertex.push_back(motherHadron->getEndpoint()[2]);
+  // clang-format off
   streamlog_out(DEBUG1) << "	True End Vertex ( x , y , z ):		(	" << trueSLDVertex[0] << "	,	"
                         << trueSLDVertex[1] << "	,	" << trueSLDVertex[2] << "	)" << std::endl;
+  // clang-format on
   return;
 }
 
@@ -457,8 +459,10 @@ double intersectTrackLine(const Trk& track, const Vtx& primaryVertex, const TVec
   double xTrackPCA = xReference + (1.0 / trackOmega - trackD0) * std::sin(trackPhi) - std::sin(minPhi) / trackOmega;
   double yTrackPCA = yReference - (1.0 / trackOmega - trackD0) * std::cos(trackPhi) + std::cos(minPhi) / trackOmega;
   double zTrackPCA = zReference + trackZ0 - (minPhi - trackPhi) * trackTanLambda / trackOmega;
-  streamlog_out(DEBUG1) << "	Lepton PCA (x,y,z) = 	( " << xTrackPCA << "	,	" << yTrackPCA
-                        << "	,	" << zTrackPCA << "	)" << std::endl;
+  // clang-format off
+  streamlog_out(DEBUG1) << "	Lepton PCA (x,y,z) = 	( " << xTrackPCA << "	,	" << yTrackPCA << "	,	"
+                        << zTrackPCA << "	)" << std::endl;
+  // clang-format on
   ced_hit(xTrackPCA, yTrackPCA, zTrackPCA, 5, 5, 0xff0000);
   PCAatTrack = TVector3(xTrackPCA, yTrackPCA, zTrackPCA);
 
@@ -779,8 +783,10 @@ double get3DImpactParameter(const Trk& track, const Vtx& primaryVertex, TVector3
   double xTrackPCA = xReference + (1.0 / trackOmega - trackD0) * std::sin(trackPhi) - std::sin(minPhi) / trackOmega;
   double yTrackPCA = yReference - (1.0 / trackOmega - trackD0) * std::cos(trackPhi) + std::cos(minPhi) / trackOmega;
   double zTrackPCA = zReference + trackZ0 - (minPhi - trackPhi) * trackTanLambda / trackOmega;
+  // clang-format off
   streamlog_out(DEBUG1) << "	Lepton PCA (x,y,z) = 	( " << xTrackPCA << "	,	" << yTrackPCA
                         << "	,	" << zTrackPCA << "	)" << std::endl;
+  // clang-format on
   ced_hit(xTrackPCA, yTrackPCA, zTrackPCA, 10, 1, 0xff0000);
   PCAatTrack = TVector3(xTrackPCA, yTrackPCA, zTrackPCA);
 

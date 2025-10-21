@@ -1158,13 +1158,15 @@ void SLDCorrection::processEvent(EVENT::LCEvent* pLCEvent) {
   int nTauNeutrino = 0;
   ++m_nEvtSum;
   Clear();
+  // clang-format off
   streamlog_out(MESSAGE) << "" << std::endl;
   streamlog_out(MESSAGE) << "	////////////////////////////////////////////////////////////////////////////"
                          << std::endl;
-  streamlog_out(MESSAGE) << "	////////////////////	Processing event 	" << m_nEvt
-                         << "	////////////////////" << std::endl;
+  streamlog_out(MESSAGE) << "	////////////////////	Processing event 	" << m_nEvt << "	////////////////////"
+                         << std::endl;
   streamlog_out(MESSAGE) << "	////////////////////////////////////////////////////////////////////////////"
                          << std::endl;
+  // clang-format on
 
   IMPL::LCCollectionVec* semiLeptonicVertex(NULL);
   semiLeptonicVertex = new IMPL::LCCollectionVec(LCIO::VERTEX);
@@ -2283,6 +2285,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   visibleFourMomentum = leptonFourMomentum + neutralFourMomentum + chargedFourMomentum;
   flightDirection.SetMag(1.0);
 
+  // clang-format off
   streamlog_out(DEBUG8) << "" << std::endl;
   streamlog_out(DEBUG8) << "		||||||||||||||| Input to SLDecay Correction |||||||||||||||" << std::endl;
   streamlog_out(DEBUG8) << "		SLD Vertex Status: " << SLDStatus << std::endl;
@@ -2290,14 +2293,14 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
                            "	, Py		, Pz		, E		, Charge	)"
                         << std::endl;
   streamlog_out(DEBUG8) << "		Neutrino" << std::endl;
-  streamlog_out(DEBUG8) << "			True:(				" << trueNeutrino->getPDG()
-                        << "	, " << trueNeutrino->getMass() << "	, " << trueNeutrino->getMomentum()[0] << "	, "
+  streamlog_out(DEBUG8) << "			True:(				" << trueNeutrino->getPDG() << "	, "
+                        << trueNeutrino->getMass() << "	, " << trueNeutrino->getMomentum()[0] << "	, "
                         << trueNeutrino->getMomentum()[1] << "	, " << trueNeutrino->getMomentum()[2] << "	, "
                         << trueNeutrino->getEnergy() << "	, " << trueNeutrino->getCharge() << "	)" << std::endl;
   streamlog_out(DEBUG8) << "" << std::endl;
   streamlog_out(DEBUG8) << "		Hadron" << std::endl;
-  streamlog_out(DEBUG8) << "			True:(				" << parentHadron->getPDG()
-                        << "	, " << parentHadron->getMass() << "	, " << parentHadron->getMomentum()[0] << "	, "
+  streamlog_out(DEBUG8) << "			True:(				" << parentHadron->getPDG() << "	, "
+                        << parentHadron->getMass() << "	, " << parentHadron->getMomentum()[0] << "	, "
                         << parentHadron->getMomentum()[1] << "	, " << parentHadron->getMomentum()[2] << "	, "
                         << parentHadron->getEnergy() << "	, " << parentHadron->getCharge() << "	)" << std::endl;
   streamlog_out(DEBUG8) << "" << std::endl;
@@ -2309,8 +2312,8 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   streamlog_out(DEBUG8) << "			Reco:(				" << linkedRecoLepton->getType()
                         << "	, " << linkedRecoLepton->getMass() << "	, " << linkedRecoLepton->getMomentum()[0]
                         << "	, " << linkedRecoLepton->getMomentum()[1] << "	, "
-                        << linkedRecoLepton->getMomentum()[2] << "	, " << linkedRecoLepton->getEnergy()
-                        << "	, " << linkedRecoLepton->getCharge() << "	)" << std::endl;
+                        << linkedRecoLepton->getMomentum()[2] << "	, " << linkedRecoLepton->getEnergy() << "	, "
+                        << linkedRecoLepton->getCharge() << "	)" << std::endl;
   streamlog_out(DEBUG8) << "			Used:(				" << "xxx" << "	, "
                         << leptonFourMomentum.M() << "	, " << leptonFourMomentum.Px() << "	, "
                         << leptonFourMomentum.Py() << "	, " << leptonFourMomentum.Pz() << "	, "
@@ -2386,6 +2389,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   streamlog_out(DEBUG8) << "			Daughter:	(						"
                         << daughterHadronFlightDirection.X() << "		, " << daughterHadronFlightDirection.Y()
                         << "		, " << daughterHadronFlightDirection.Z() << "	)" << std::endl;
+  // clang-format on
 
   if (visibleFourMomentum.M() > parentHadronMass)
     parentHadronMass = visibleFourMomentum.M();
@@ -2945,6 +2949,7 @@ void SLDCorrection::showTrueParameters(const MCP& SLDLepton) {
       streamlog_out(DEBUG4) << " ONE MCPARTICLE IS ADDED" << std::endl;
     }
   }
+  // clang-format off
   streamlog_out(DEBUG4) << "	TRUE PARENT HADRON MASS =  			" << parentHadron->getMass()
                         << std::endl;
   streamlog_out(DEBUG4) << "	TRUE FLIHT DIRECTION (x,y,z): 			" << trueFliDir.X()
@@ -2957,6 +2962,7 @@ void SLDCorrection::showTrueParameters(const MCP& SLDLepton) {
                         << "	,	" << truePvisPar.Py() << "	,	" << truePvisPar.Pz() << std::endl;
   streamlog_out(DEBUG4) << "	TRUE VISIBLE FOUR-MOMENTUM(nor) (Px,Py,Pz):	" << truePvisNor.Px()
                         << "	,	" << truePvisNor.Py() << "	,	" << truePvisNor.Pz() << std::endl;
+  // clang-format on
 }
 
 TLorentzVector SLDCorrection::getNeutrinoFourMomentum(const TVector3& flightDirection,
@@ -2965,6 +2971,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentum(const TVector3& flightDire
   int sign = (solutionSign != 0 ? solutionSign / abs(solutionSign) : 1);
   m_solutionSign.push_back(sign);
   const char* solSign = (sign >= 0 ? "+" : "-");
+  // clang-format off
   streamlog_out(DEBUG4) << "" << std::endl;
   streamlog_out(DEBUG4) << "		--------------------------------------------" << std::endl;
   streamlog_out(DEBUG4) << "		Calculate Neutrino 4-Momentum for " << solSign << " solution" << std::endl;
@@ -2979,6 +2986,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentum(const TVector3& flightDire
   streamlog_out(DEBUG4) << "		Visible 4-Momentum:			( " << visibleFourMomentum.Px()
                         << "	, " << visibleFourMomentum.Py() << "	, " << visibleFourMomentum.Pz() << "	, "
                         << visibleFourMomentum.E() << " )" << std::endl;
+  // clang-format on
 
   double visible_mass = visibleFourMomentum.M();
   streamlog_out(DEBUG4) << "		Visible Inv Mass:	" << visible_mass << std::endl;
@@ -3036,9 +3044,11 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentum(const TVector3& flightDire
       << "		Parent Hadron Energy =									"
       << parent_hadron_E << std::endl;
   TVector3 parent_hadron_p = sqrt(pow(parent_hadron_E, 2) - pow(ParentHadronMass, 2)) * flightDirection;
-  streamlog_out(DEBUG4) << "		Parent Hadron Momentum:			( " << parent_hadron_p.Px()
-                        << "	, " << parent_hadron_p.Py() << "	, " << parent_hadron_p.Pz() << "	, "
+  // clang-format off
+  streamlog_out(DEBUG4) << "		Parent Hadron Momentum:			( " << parent_hadron_p.Px() << "	, "
+                        << parent_hadron_p.Py() << "	, " << parent_hadron_p.Pz() << "	, "
                         << parent_hadron_E << " )" << std::endl;
+  // clang-format on
 
   double sigma_E_vis = 0.0;
   double sigma_E_vis_prime = 0.0;
@@ -3095,6 +3105,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumModified(TVector3& flightDi
   int sign = (solutionSign != 0 ? solutionSign / abs(solutionSign) : 1);
   m_solutionSign.push_back(sign);
   const char* solSign = (sign >= 0 ? "+" : "-");
+  // clang-format off
   streamlog_out(DEBUG9) << "" << std::endl;
   streamlog_out(DEBUG9) << "		--------------------------------------------" << std::endl;
   streamlog_out(DEBUG9) << "		Calculate Neutrino 4-Momentum for " << solSign << " solution" << std::endl;
@@ -3110,6 +3121,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumModified(TVector3& flightDi
   streamlog_out(DEBUG9) << "		Visible 4-Momentum:			( " << visibleFourMomentum.Px()
                         << "	, " << visibleFourMomentum.Py() << "	, " << visibleFourMomentum.Pz() << "	, "
                         << visibleFourMomentum.E() << " )" << std::endl;
+  // clang-format on
 
   double visible_mass = visibleFourMomentum.M();
   streamlog_out(DEBUG9) << "		Visible Inv Mass:	" << visible_mass << std::endl;
@@ -3194,9 +3206,11 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumModified(TVector3& flightDi
   TVector3 parent_hadron_p =
       (ParentHadronMass >= parent_hadron_E ? 0.0 : sqrt(pow(parent_hadron_E, 2) - pow(ParentHadronMass, 2))) *
       flightDirection;
-  streamlog_out(DEBUG9) << "		Parent Hadron Momentum:			( " << parent_hadron_p.Px()
-                        << "	, " << parent_hadron_p.Py() << "	, " << parent_hadron_p.Pz()
+  // clang-format off
+  streamlog_out(DEBUG9) << "		Parent Hadron Momentum:			( " << parent_hadron_p.Px() << "	, "
+                        << parent_hadron_p.Py() << "	, " << parent_hadron_p.Pz()
                         << "	) = " << parent_hadron_p.Mag() << std::endl;
+  // clang-format on
 
   TVector3 Neutrino_p_nor = -1.0 * visible_p_nor;
   streamlog_out(DEBUG9) << "		Neutrino Momentum (nor):		( " << Neutrino_p_nor.Px() << "	, "
@@ -3233,6 +3247,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumStandardMethod(const TVecto
   int sign = (solutionSign != 0 ? solutionSign / abs(solutionSign) : 1);
   m_solutionSign.push_back(sign);
   const char* solSign = (sign >= 0 ? "+" : "-");
+  // clang-format off
   streamlog_out(DEBUG4) << "" << std::endl;
   streamlog_out(DEBUG4) << "		--------------------------------------------" << std::endl;
   streamlog_out(DEBUG4) << "		Calculate Neutrino 4-Momentum for " << solSign << " solution" << std::endl;
@@ -3247,6 +3262,7 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumStandardMethod(const TVecto
   streamlog_out(DEBUG4) << "		Visible 4-Momentum:			( " << visibleFourMomentum.Px()
                         << "	, " << visibleFourMomentum.Py() << "	, " << visibleFourMomentum.Pz() << "	, "
                         << visibleFourMomentum.E() << " )" << std::endl;
+  // clang-format on
 
   double visible_mass = visibleFourMomentum.M();
   streamlog_out(DEBUG4) << "		Visible Inv Mass:	" << visible_mass << std::endl;

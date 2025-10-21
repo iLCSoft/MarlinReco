@@ -2,26 +2,26 @@
 #define STANDARD_INCLUDES_H 1
 
 #include "lcio.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <set>
 
-//#include <math>
+// #include <math>
+#include <algorithm> // for std::find
+#include <iterator>  // for std::begin, std::end
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <algorithm> // for std::find
-#include <iterator> // for std::begin, std::end
 
 #include "CalorimeterHitType.h"
 
-//ROOT
+// ROOT
 #include "TFile.h"
-#include "TTree.h"
 #include "TH1F.h"
 #include "TLorentzVector.h"
+#include "TTree.h"
 
-//LCIO
+// LCIO
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
 #include <EVENT/ReconstructedParticle.h>
@@ -30,7 +30,7 @@
 //----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 #endif

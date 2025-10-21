@@ -1,9 +1,9 @@
 #ifndef CreatePDFProcessor_hh
 #define CreatePDFProcessor_hh 1
 
+#include <marlin/Processor.h>
 #include <string>
 #include <vector>
-#include <marlin/Processor.h>
 
 #include <EVENT/LCCollection.h>
 
@@ -12,25 +12,25 @@
 #include "TFile.h"
 #include "TH1.h"
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
-//class LikelihoodPID;
+// class LikelihoodPID;
 
-class CreatePDFProcessor : public Processor{
+class CreatePDFProcessor : public Processor {
 public:
-  virtual Processor*  newProcessor() { return new CreatePDFProcessor ; }
+  virtual Processor* newProcessor() { return new CreatePDFProcessor; }
   CreatePDFProcessor();
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run);
-  virtual void processEvent( LCEvent * evt );
-  virtual void check( LCEvent * evt );
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
   virtual void end();
- 
+
 private:
   CreatePDFProcessor(const CreatePDFProcessor&) = delete;
   CreatePDFProcessor& operator=(const CreatePDFProcessor&) = delete;
-  void CalculateDeltaPosition(float charge, TVector3 &p, const float* caylpos, float* delpos);
+  void CalculateDeltaPosition(float charge, TVector3& p, const float* caylpos, float* delpos);
 
   std::string _description{};
   std::string _PfoCollection{};
@@ -47,17 +47,16 @@ private:
 
   float _dEdxNormalization{}, _dEdxErrorFactor{}, _bfield{};
 
-  LikelihoodPID *_myPID{};
+  LikelihoodPID* _myPID{};
   TFile* _fpdf{};
   TH1F* pidvariable[6][21]{};
   std::string _filename{};
 
-  std::string itos(int i)
-  {
+  std::string itos(int i) {
     std::stringstream s;
     s << i;
     return s.str();
   }
 };
 
-#endif 
+#endif

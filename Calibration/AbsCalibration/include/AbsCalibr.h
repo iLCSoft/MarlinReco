@@ -3,12 +3,12 @@
 
 #include <vector>
 
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 
-using namespace lcio ;
-using namespace marlin ;
-using namespace std ;
+using namespace lcio;
+using namespace marlin;
+using namespace std;
 
 /**            === AbsCalibr ==== <br>
  *  Processor makes:<br>
@@ -22,37 +22,28 @@ using namespace std ;
  */
 
 namespace marlin {
-  class AbsCalibr : public Processor {
-  
-  public:
-  
-    virtual Processor*  newProcessor() { return new AbsCalibr ; }
-    AbsCalibr() ;
-    //-----------------------------------------------------------------------
-    virtual void init() ;
-    virtual void processRunHeader( LCRunHeader* run ) ;
-    virtual void processEvent( LCEvent * evt ) ; 
-    virtual void check( LCEvent * evt ) ; 
-    virtual void end() ;
-    //-----------------------------------------------------------------------
+class AbsCalibr : public Processor {
 
-  protected:
+public:
+  virtual Processor* newProcessor() { return new AbsCalibr; }
+  AbsCalibr();
+  //-----------------------------------------------------------------------
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
+  virtual void end();
+  //-----------------------------------------------------------------------
 
-    int _nRun{};
-    int _nEvt{};
+protected:
+  int _nRun{};
+  int _nEvt{};
 
-    enum {
-      ECAL1=0,
-      ECAL2,
-      HCAL
-    };
+  enum { ECAL1 = 0, ECAL2, HCAL };
 
-    vector<int> _nlayer{};
-    vector<float> _coeff{};
-    vector<float> _cuts{};
-  } ;
-} //namespace marlin
+  vector<int> _nlayer{};
+  vector<float> _coeff{};
+  vector<float> _cuts{};
+};
+} // namespace marlin
 #endif
-
-
-

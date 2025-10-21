@@ -2,20 +2,19 @@
 #ifndef VTXDigitizer_h
 #define VTXDigitizer_h 1
 
-#include "marlin/Processor.h"
-#include "lcio.h"
+#include "EVENT/LCIO.h"
 #include "EVENT/SimTrackerHit.h"
-#include "IMPL/TrackerHitImpl.h"
 #include "IMPL/SimTrackerHitImpl.h"
+#include "IMPL/TrackerHitImpl.h"
+#include "MyG4UniversalFluctuationForSi.h"
+#include "lcio.h"
+#include "marlin/Processor.h"
+#include <IMPL/LCCollectionVec.h>
 #include <string>
 #include <vector>
-#include "MyG4UniversalFluctuationForSi.h"
-#include "EVENT/LCIO.h"
-#include <IMPL/LCCollectionVec.h>
 
-
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 struct IonisationPoint {
   double x{};
@@ -30,7 +29,6 @@ struct SignalPoint {
   double sigmaX{};
   double sigmaY{};
   double charge{};
-
 };
 
 typedef std::vector<IonisationPoint> IonisationPointVec;
@@ -46,7 +44,7 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * It is divided by n subsegments, where n can be specified by a user <br>
  * via external Processor parameter. For each subsegment the charge  <br>
  * is simulated according to Landau distribution as expected for Silicon. <br>
- * The charge transfer from the middle point of track subsegment (referred <br> 
+ * The charge transfer from the middle point of track subsegment (referred <br>
  * hereafter to as ionisation point) <br>
  * to the outer collection plane is performed taking <br>
  * into account Lorentz effect in the magnetic field <br>
@@ -59,13 +57,13 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * the z coordinate). <br>
  * The output of the processor is the collection of Reconstructed Tracker Hits. <br>
  * Each reconstructed hit is assigned the position of the center-of-gravity of <br>
- * the cluster of fired pixels. Lorentz effect is corrected for. 
- * <h4>Input collections and prerequisites</h4> 
+ * the cluster of fired pixels. Lorentz effect is corrected for.
+ * <h4>Input collections and prerequisites</h4>
  * Processor requires collection of simulated vertex tracker hits. <br>
  * If such a collection with the user specified name does not exist <br>
  * processor takes no action.
  * <h4>Output</h4>
- * Processor produces an output collection of the Tracker Hits. 
+ * Processor produces an output collection of the Tracker Hits.
  * Collection has name "VTXTrackerHits".
  * @param CollectionName name of input SimTrackerHit collection <br>
  * (default parameter value : "vxd01_VXD", taken from Mokka)
@@ -88,7 +86,7 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * @param LaddersInLayer vector of integers, numbers of phi-ladders in each layer <br>
  * (default parameter values : 8, 8, 12, 16, 20; taken from Mokka database for VXD model vxd01) <br>
  * @param LadderRadius vector of doubles, radii of layers (in mm) <br>
- * (default parameter values : 15.301, 26.301, 38.301, 49.301, 60.301; taken from Mokka database 
+ * (default parameter values : 15.301, 26.301, 38.301, 49.301, 60.301; taken from Mokka database
  * for VXD model vxd01) <br>
  * @param ActiveLadderOffset vector of doubles, offset of active Si layer along phi-angle (in mm) for each layer <br>
  * (default parameter values : 1.455, 1.39866, 2.57163, 3.59295, 4.42245) <br>
@@ -101,7 +99,7 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * @param SegmentLength segment length along track path which is used to subdivide track into segments (in mm).
  * The number of track subsegments is calculated as int(TrackLengthWithinActiveLayer/SegmentLength)+1 <br>
  * (default parameter value : 0.005) <br>
- * @param WidthOfCluster defines width in Gaussian sigmas to perform charge integration for 
+ * @param WidthOfCluster defines width in Gaussian sigmas to perform charge integration for
  * a given pixel <br>
  * (default parameter value : 3.0) <br>
  * @param ElectronicEffects flag to switch on gaussian smearing of signal (electronic noise) <br>
@@ -111,7 +109,7 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * @param GenerateBackground flag to switch on pseudo-generation of pair background hits
  * Background hits are uniformly generated in cosQ and Phi <br>
  * (default parameter value : 0)
- * @param BackgroundHitsPerLayer expected mean value of background hits accumulated in each layer 
+ * @param BackgroundHitsPerLayer expected mean value of background hits accumulated in each layer
  * over readout time. This number is calculated as Number of background hits per bunch crossing times
  * number of bunch crossings over integration time. <br>
  * (default values : 34400 23900 9600 5500 3100 corresponding to 100 overlaid bunch crossings) <br>
@@ -121,41 +119,38 @@ typedef std::vector<SimTrackerHitImpl*> SimTrackerHitImplVec;
  * @author A. Raspereza, MPI Munich
  */
 class VTXDigitizer : public Processor {
-  
- public:
+
+public:
   VTXDigitizer(const VTXDigitizer&) = delete;
   VTXDigitizer& operator=(const VTXDigitizer&) = delete;
 
-  virtual Processor*  newProcessor() { return new VTXDigitizer ; }
-  
-  
-  VTXDigitizer() ;
-  
+  virtual Processor* newProcessor() { return new VTXDigitizer; }
+
+  VTXDigitizer();
+
   /**
    * Initialisation member function
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /**
    * Processing of run header
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Processing of one event
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
+  virtual void processEvent(LCEvent* evt);
+
   /** Produces check plots
    */
-  virtual void check( LCEvent * evt ) ; 
-  
+  virtual void check(LCEvent* evt);
+
   /** Termination member function
    */
-  virtual void end() ;
-  
-  
- protected:
+  virtual void end();
 
+protected:
   /** Input collection name.
    */
   std::string _colName{};
@@ -165,7 +160,7 @@ class VTXDigitizer : public Processor {
   /** Run number
    */
   int _nRun{};
-  
+
   /** Event number
    */
   int _nEvt{};
@@ -178,14 +173,13 @@ class VTXDigitizer : public Processor {
   double _cutOnDeltaRays{};
   /** Diffusion coefficient in mm for nominla layer thickness
    */
-  double _diffusionCoefficient{}; 
+  double _diffusionCoefficient{};
   /** layer thickness
    */
- //  double _layerThickness;
-//   /** layer half-thickness
-//    */
-//   double _layerHalfThickness;
-
+  //  double _layerThickness;
+  //   /** layer half-thickness
+  //    */
+  //   double _layerHalfThickness;
 
   int _numberOfLayers{};
   double _pixelSizeX{};
@@ -216,7 +210,7 @@ class VTXDigitizer : public Processor {
   double _currentPhi{};
   double _widthOfCluster{};
 
-  double PI{},TWOPI{},PI2{};
+  double PI{}, TWOPI{}, PI2{};
   double SCALING{};
 
   int _produceFullPattern{};
@@ -237,43 +231,36 @@ class VTXDigitizer : public Processor {
   IonisationPointVec _ionisationPoints{};
   SignalPointVec _signalPoints{};
 
-  MyG4UniversalFluctuationForSi * _fluctuate{};
+  MyG4UniversalFluctuationForSi* _fluctuate{};
 
-  /** 
-   * Finds coordinates 
+  /**
+   * Finds coordinates
    */
-  void FindLocalPosition(SimTrackerHit * hit,
-                         double * localPosition,
-                         double * localDirection);
+  void FindLocalPosition(SimTrackerHit* hit, double* localPosition, double* localDirection);
 
-  void TransformToLab(double * xLoc, double * xLab);
-  void ProduceIonisationPoints( SimTrackerHit * hit);
-  void ProduceSignalPoints( );
-  void ProduceHits(SimTrackerHitImplVec & simTrkVec);
-  void TransformXYToCellID(double x, double y, 
-                           int & ix, 
-                           int & iy);  
-  void TransformCellIDToXY(int ix, int iy,
-                           double & x, double & y);
-  void PoissonSmearer( SimTrackerHitImplVec & simTrkVec );
-  void GainSmearer( SimTrackerHitImplVec & simTrkVec );
-  void PrintInfo( SimTrackerHit * simTrkHit, TrackerHitImpl * recoHit);
-  TrackerHitImpl * ReconstructTrackerHit(SimTrackerHitImplVec & simTrkVec );
-  void TrackerHitToLab( TrackerHitImpl * recoHit );
-  void PositionWithinCell(double x, double y,
-                          int & ix, int & iy,
-                          double & xCell, double & yCell);
-  void generateBackground(LCCollectionVec * col);
+  void TransformToLab(double* xLoc, double* xLab);
+  void ProduceIonisationPoints(SimTrackerHit* hit);
+  void ProduceSignalPoints();
+  void ProduceHits(SimTrackerHitImplVec& simTrkVec);
+  void TransformXYToCellID(double x, double y, int& ix, int& iy);
+  void TransformCellIDToXY(int ix, int iy, double& x, double& y);
+  void PoissonSmearer(SimTrackerHitImplVec& simTrkVec);
+  void GainSmearer(SimTrackerHitImplVec& simTrkVec);
+  void PrintInfo(SimTrackerHit* simTrkHit, TrackerHitImpl* recoHit);
+  TrackerHitImpl* ReconstructTrackerHit(SimTrackerHitImplVec& simTrkVec);
+  void TrackerHitToLab(TrackerHitImpl* recoHit);
+  void PositionWithinCell(double x, double y, int& ix, int& iy, double& xCell, double& yCell);
+  void generateBackground(LCCollectionVec* col);
 
-  double _xLayerReco{},_yLayerReco{},_zLayerReco{};
-  double _xLayerSim{},_yLayerSim{},_zLayerSim{};
+  double _xLayerReco{}, _yLayerReco{}, _zLayerReco{};
+  double _xLayerSim{}, _yLayerSim{}, _zLayerSim{};
   int _iLayer{};
 
-  int _nCoveredX{},_nCoveredY{},_nCells{};
+  int _nCoveredX{}, _nCoveredY{}, _nCells{};
 
   int _totEntries{};
   double _totMomentum{};
-  double _momX{},_momY{},_momZ{};
+  double _momX{}, _momY{}, _momZ{};
   double _eDep{};
 
   double _amplX[20]{};
@@ -283,19 +270,15 @@ class VTXDigitizer : public Processor {
   double _amplMax{};
   double _eSum{};
   double _energyLoss{};
-  double _clusterWidthX{},_clusterWidthY{};
-  double _ampl33{},_ampl55{},_ampl77{};
-  int _ncell33{},_ncell55{},_ncell77{};
+  double _clusterWidthX{}, _clusterWidthY{};
+  double _ampl33{}, _ampl55{}, _ampl77{};
+  int _ncell33{}, _ncell55{}, _ncell77{};
   int _storeNtuple{};
-  double _xLocalRecoCOG{},_yLocalRecoCOG{};
-  double _xLocalRecoEdge{},_yLocalRecoEdge{};
-  double _xLocalSim{},_yLocalSim{};
+  double _xLocalRecoCOG{}, _yLocalRecoCOG{};
+  double _xLocalRecoEdge{}, _yLocalRecoEdge{};
+  double _xLocalSim{}, _yLocalSim{};
 
-  std::vector <SimTrackerHitImplVec> _hitsInLayer{};
-
-  
-
-
-} ;
+  std::vector<SimTrackerHitImplVec> _hitsInLayer{};
+};
 
 #endif

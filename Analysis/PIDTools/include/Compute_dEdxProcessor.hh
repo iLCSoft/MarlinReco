@@ -1,16 +1,15 @@
 #ifndef Compute_dEdxProcessor_hh
 #define Compute_dEdxProcessor_hh 1
 
-
-#include <string>
-#include <vector>
-#include <random>
-#include <marlin/Processor.h>
 #include <EVENT/LCCollection.h>
 #include <TH2.h>
+#include <marlin/Processor.h>
+#include <random>
+#include <string>
+#include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** Compute dE/dx Processor <br>
  *  This processor calculates the dE/dx for every track.<br>
@@ -58,8 +57,8 @@ using namespace marlin ;
  *  If none of the above is chosen, the processor defaults to 1.<br>
  *  @param _StratCompHist - flag indicating if Bethe-Bloch histograms for each dx strategy should created.<br>
  *  default: false<br>
- *  @param _StratCompHistWeight - flag indicating if Bethe-Bloch histograms (if chosen) should be filled with a sqrt(number-of-track-hits) weighting.<br>
- *  default: false (-> weight for each track = 1)<br>
+ *  @param _StratCompHistWeight - flag indicating if Bethe-Bloch histograms (if chosen) should be filled with a
+ * sqrt(number-of-track-hits) weighting.<br> default: false (-> weight for each track = 1)<br>
  *  @param _StratCompHistFiles - file names of the generated dx strategy comparison histograms (if chosen).<br>
  *  The respective strategy number and '.png' is added.<br>
  *  default: dEdx_Histo_Strategy  (-> "dEdx_Histo_Strategy1.png", etc.)<br>
@@ -68,24 +67,23 @@ using namespace marlin ;
  *  @version $Id$
  */
 
-class Compute_dEdxProcessor : public Processor{
+class Compute_dEdxProcessor : public Processor {
 public:
-  virtual Processor*  newProcessor() { return new Compute_dEdxProcessor ; }
+  virtual Processor* newProcessor() { return new Compute_dEdxProcessor; }
   Compute_dEdxProcessor();
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run);
-  virtual void processEvent( LCEvent * evt );
-  virtual void check( LCEvent * evt );
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
   virtual void end();
- 
+
 private:
   Compute_dEdxProcessor(const Compute_dEdxProcessor&) = delete;
   Compute_dEdxProcessor& operator=(const Compute_dEdxProcessor&) = delete;
 
-  std::pair<double,double> CalculateEnergyLoss(TrackerHitVec& hitVec, Track* trk);
+  std::pair<double, double> CalculateEnergyLoss(TrackerHitVec& hitVec, Track* trk);
   double getNormalization(double dedx, float hit, double trkcos);
   double getSmearing(double dEdx);
-
 
   std::string _description = "";
   std::string _LDCTrackCollection = "";
@@ -105,7 +103,7 @@ private:
 
   // smearing
   std::random_device seed_gen{};
-  std::default_random_engine *engine = NULL;
+  std::default_random_engine* engine = NULL;
   std::uniform_real_distribution<> dist{};
   bool _isSmearing = 0;
   float _smearingFactor = 0;

@@ -3,8 +3,8 @@
 
 #include "RealisticCaloDigi.h"
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** === RealisticCaloDigiSilicon Processor === <br>
     realistic digitisation of silicon calorimeter hits
@@ -12,19 +12,16 @@ using namespace marlin ;
 */
 
 class RealisticCaloDigiSilicon : public RealisticCaloDigi {
-  
- public:
-  virtual Processor*  newProcessor() { return new RealisticCaloDigiSilicon ; }
-  RealisticCaloDigiSilicon() ;
 
- protected:
-  int getMyUnit() const {return MIP;}
-  float convertEnergy( float energy, int inputUnit )const; // convert energy from input to output (MIP) scale 
-  float digitiseDetectorEnergy(float energy)const;         // apply silicon-specific realistic digitisation
-  float _ehEnergy{};                                    // energy to create e-h pair in silicon
-} ;
+public:
+  virtual Processor* newProcessor() { return new RealisticCaloDigiSilicon; }
+  RealisticCaloDigiSilicon();
+
+protected:
+  int getMyUnit() const { return MIP; }
+  float convertEnergy(float energy, int inputUnit) const; // convert energy from input to output (MIP) scale
+  float digitiseDetectorEnergy(float energy) const;       // apply silicon-specific realistic digitisation
+  float _ehEnergy{};                                      // energy to create e-h pair in silicon
+};
 
 #endif
-
-
-

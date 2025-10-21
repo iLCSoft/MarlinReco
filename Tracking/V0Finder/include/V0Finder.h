@@ -1,26 +1,25 @@
 #ifndef V0Finder_H
 #define V0Finder_H 1
 
-#include "marlin/Processor.h"
+#include "TrackPair.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 #include <vector>
-#include "TrackPair.h"
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /** V0Finder Processor <br>
  *  V0Finder processor identify neutral vertices originating <br>
  *  from photon conversions and decays of K0S and Lamda0 <br>
- * <h4>Input collections and prerequisites</h4> 
+ * <h4>Input collections and prerequisites</h4>
  *  Processor requires collection of tracks. The name of the collection <br>
- *  is specified by the processor parameter "TrackCollection". <br> 
+ *  is specified by the processor parameter "TrackCollection". <br>
  *  If no collection with the specified name exist in event <br>
  *  processor takes no action <br>
  *  <h4>Output</h4>
- *  Processor produces LCIO collections of the reconstructed particles, <br> 
+ *  Processor produces LCIO collections of the reconstructed particles, <br>
  *  and vertices, containing information on the reconstructed neutral vertices <br>
  *  Position of the vertex is accessed through the LCIO object VERTEX. <br>
  *  Four-vector of the vertex is stored in the object RECONSTRUCTEDPARTICLE <br>
@@ -48,39 +47,36 @@ using namespace marlin ;
  *  @param MassRangeL0 maximal allowed deviation in mass for L0 hypothesis <br>
  *  (default value 0.008 GeV) <br>
  *  @author A.Raspereza, DESY
- *  @version $Id$ 
+ *  @version $Id$
  */
 class V0Finder : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new V0Finder ; }
-  
-  
-  V0Finder() ;
-  
-  virtual void init() ;
-  
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  virtual void end() ;
 
- protected:
+public:
+  virtual Processor* newProcessor() { return new V0Finder; }
 
-  void Sorting( TrackPairVec & trkPairVec );
-  float Rmin( Track* track );
-  
+  V0Finder();
+
+  virtual void init();
+
+  virtual void processRunHeader(LCRunHeader* run);
+
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
+  virtual void end();
+
+protected:
+  void Sorting(TrackPairVec& trkPairVec);
+  float Rmin(Track* track);
+
   int _nRun{};
   int _nEvt{};
-  
+
   std::string _trackColName{};
   std::string _vertexColName{};
   std::string _recoPartColName{};
-  
+
   float _rVertCut{};
   float _dVertCut{};
 
@@ -101,10 +97,6 @@ class V0Finder : public Processor {
   float _rxyCutLambda{};
 
   float _minTrackHitRatio{};
-
-} ;
+};
 
 #endif
-
-
-

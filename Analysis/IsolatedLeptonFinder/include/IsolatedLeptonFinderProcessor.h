@@ -12,166 +12,161 @@
 #define IsolatedLeptonFinderProcessor_h 1
 
 #include <algorithm>
-#include <string>
 #include <map>
+#include <string>
 
-#include <marlin/Processor.h>
 #include <lcio.h>
+#include <marlin/Processor.h>
 
-#include <EVENT/ReconstructedParticle.h>
-#include <EVENT/MCParticle.h>
 #include "IMPL/ReconstructedParticleImpl.h"
+#include <EVENT/MCParticle.h>
+#include <EVENT/ReconstructedParticle.h>
 #include <UTIL/LCRelationNavigator.h>
-
 
 class IsolatedLeptonFinderProcessor : public marlin::Processor {
 
-	public:
+public:
+  virtual Processor* newProcessor() { return new IsolatedLeptonFinderProcessor; }
 
-		virtual Processor*  newProcessor() { return new IsolatedLeptonFinderProcessor ; }
+  IsolatedLeptonFinderProcessor();
 
-		IsolatedLeptonFinderProcessor() ;
+  IsolatedLeptonFinderProcessor(const IsolatedLeptonFinderProcessor&) = delete;
+  IsolatedLeptonFinderProcessor& operator=(const IsolatedLeptonFinderProcessor&) = delete;
 
-		IsolatedLeptonFinderProcessor(const IsolatedLeptonFinderProcessor &) = delete;
-		IsolatedLeptonFinderProcessor & operator = (const IsolatedLeptonFinderProcessor &) = delete;
+  virtual void init();
+  virtual void processEvent(LCEvent* evt);
+  virtual void end();
 
-		virtual void init() ;
-		virtual void processEvent( LCEvent * evt ) ;
-		virtual void end() ;
+protected:
+  /** Returns true if pfo is a lepton */
+  bool IsGoodLepton(ReconstructedParticle* pfo);
 
-	protected:
+  /** Returns true if pfo is an isolated lepton */
+  bool IsIsolatedLepton(ReconstructedParticle* pfo);
 
-		/** Returns true if pfo is a lepton */
-		bool IsGoodLepton( ReconstructedParticle* pfo ) ;
+  /** Returns true if isolated, as defined by the cone energy */
+  bool IsIsolatedRectangular(ReconstructedParticle* pfo);
+  bool IsIsolatedPolynomial(ReconstructedParticle* pfo);
+  bool IsIsolatedJet(ReconstructedParticle* pfo);
 
-		/** Returns true if pfo is an isolated lepton */
-		bool IsIsolatedLepton( ReconstructedParticle* pfo) ;
+  /** Returns true if charged */
+  bool IsCharged(ReconstructedParticle* pfo);
 
-		/** Returns true if isolated, as defined by the cone energy */
-		bool IsIsolatedRectangular( ReconstructedParticle* pfo) ;
-		bool IsIsolatedPolynomial( ReconstructedParticle* pfo) ;
-		bool IsIsolatedJet( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes muon or electron ID cuts */
+  bool IsLepton(ReconstructedParticle* pfo);
 
-		/** Returns true if charged */
-		bool IsCharged( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes electron ID cuts */
+  bool IsElectron(ReconstructedParticle* pfo);
 
-		/** Returns true if it passes muon or electron ID cuts */
-		bool IsLepton( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes muon ID cuts */
+  bool IsMuon(ReconstructedParticle* pfo);
 
-		/** Returns true if it passes electron ID cuts */
-		bool IsElectron( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes photon ID cuts */
+  bool IsPhoton(ReconstructedParticle* pfo);
 
-		/** Returns true if it passes muon ID cuts */
-		bool IsMuon( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes impact parameter cuts */
+  bool PassesImpactParameterCuts(ReconstructedParticle* pfo);
 
-		/** Returns true if it passes photon ID cuts */
-		bool IsPhoton( ReconstructedParticle* pfo ) ;
+  /** Returns true if it passes impact parameter significance cuts */
+  bool PassesImpactParameterSignificanceCuts(ReconstructedParticle* pfo);
 
-		/** Returns true if it passes impact parameter cuts */
-		bool PassesImpactParameterCuts( ReconstructedParticle* pfo ) ;
+  /** Helper function to order PFOS by energy */
+  bool isMoreEnergetic(int i, int j) {
+    ReconstructedParticle* pfo_i = static_cast<ReconstructedParticle*>(_pfoCol->getElementAt(i));
+    ReconstructedParticle* pfo_j = static_cast<ReconstructedParticle*>(_pfoCol->getElementAt(j));
+    return (pfo_i->getEnergy() > pfo_j->getEnergy());
+  }
 
-		/** Returns true if it passes impact parameter significance cuts */
-		bool PassesImpactParameterSignificanceCuts( ReconstructedParticle* pfo ) ;
+  /** Adds photons around lepton to four vector */
+  void dressLepton(ReconstructedParticleImpl* pfo, int PFO_idx);
 
-		/** Helper function to order PFOS by energy */
-		bool isMoreEnergetic (int i, int j) {
-			ReconstructedParticle* pfo_i = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(i) );
-			ReconstructedParticle* pfo_j = static_cast<ReconstructedParticle*>( _pfoCol->getElementAt(j) );
-			return (pfo_i->getEnergy()>pfo_j->getEnergy());
-		}
+  /** Calculates the cone energy */
+  float getConeEnergy(ReconstructedParticle* pfo);
 
-		/** Adds photons around lepton to four vector */
-		void dressLepton( ReconstructedParticleImpl* pfo, int PFO_idx ) ;
+  /** [0]:Ecal energy, [1]:Hcal energy */
+  void getCalEnergy(ReconstructedParticle* pfo, float* cale);
 
-		/** Calculates the cone energy */
-		float getConeEnergy( ReconstructedParticle* pfo) ;
+  /** Replace missing copy constructor by hand */
+  ReconstructedParticleImpl* CopyReconstructedParticle(ReconstructedParticle* pfo);
 
-		/** [0]:Ecal energy, [1]:Hcal energy */
-		void getCalEnergy( ReconstructedParticle* pfo , float* cale) ;
+  /** Input collection */
+  std::string _inputPFOsCollection{};
 
-		/** Replace missing copy constructor by hand */
-		ReconstructedParticleImpl* CopyReconstructedParticle ( ReconstructedParticle* pfo ) ;
+  /** Output collection (all input with isolated leptons removed) */
+  std::string _outputPFOsRemovedIsoLepCollection{};
 
-		/** Input collection */
-		std::string _inputPFOsCollection{};
+  /** Output collection of isolated leptons */
+  std::string _outputIsoLepCollection{};
 
-		/** Output collection (all input with isolated leptons removed) */
-		std::string _outputPFOsRemovedIsoLepCollection{};
+  /** Output collection (all input with dressed isolated leptons removed) */
+  std::string _outputPFOsRemovedDressedIsoLepCollection{};
 
-		/** Output collection of isolated leptons */
-		std::string _outputIsoLepCollection{};
+  /** Output collection of dressed isolated leptons */
+  std::string _outputDressedIsoLepCollection{};
 
-		/** Output collection (all input with dressed isolated leptons removed) */
-		std::string _outputPFOsRemovedDressedIsoLepCollection{};
+  LCCollection* _pfoCol = nullptr;
+  float _cosConeAngle = 0;
+  std::vector<ReconstructedParticle*> _workingList = {};
 
-		/** Output collection of dressed isolated leptons */
-		std::string _outputDressedIsoLepCollection{};
+  /** If set to true, uses PID cuts */
+  bool _usePID = false;
+  float _electronMinEnergyDepositByMomentum = 0;
+  float _electronMaxEnergyDepositByMomentum = 0;
+  float _electronMinEcalToHcalFraction = 0;
+  float _electronMaxEcalToHcalFraction = 0;
+  float _muonMinEnergyDepositByMomentum = 0;
+  float _muonMaxEnergyDepositByMomentum = 0;
+  float _muonMinEcalToHcalFraction = 0;
+  float _muonMaxEcalToHcalFraction = 0;
 
-		LCCollection* _pfoCol=nullptr;
-		float _cosConeAngle = 0;
-		std::vector<ReconstructedParticle*> _workingList = {};
+  /** If set to true, uses impact parameter cuts */
+  bool _useImpactParameter = false;
+  float _minD0 = 0;
+  float _maxD0 = 0;
+  float _minZ0 = 0;
+  float _maxZ0 = 0;
+  float _minR0 = 0;
+  float _maxR0 = 0;
 
-		/** If set to true, uses PID cuts */
-		bool _usePID = false;
-		float _electronMinEnergyDepositByMomentum = 0;
-		float _electronMaxEnergyDepositByMomentum = 0;
-		float _electronMinEcalToHcalFraction = 0;
-		float _electronMaxEcalToHcalFraction = 0;
-		float _muonMinEnergyDepositByMomentum = 0;
-		float _muonMaxEnergyDepositByMomentum = 0;
-		float _muonMinEcalToHcalFraction = 0;
-		float _muonMaxEcalToHcalFraction = 0;
+  /** If set to true, uses impact parameter significance cuts */
+  bool _useImpactParameterSignificance = false;
+  float _minD0Sig = 0;
+  float _maxD0Sig = 0;
+  float _minZ0Sig = 0;
+  float _maxZ0Sig = 0;
+  float _minR0Sig = 0;
+  float _maxR0Sig = 0;
 
-		/** If set to true, uses impact parameter cuts */
-		bool _useImpactParameter = false;
-		float _minD0 = 0;
-		float _maxD0 = 0;
-		float _minZ0 = 0;
-		float _maxZ0 = 0;
-		float _minR0 = 0;
-		float _maxR0 = 0;
+  /** If set to true, uses rectangular cuts for isolation */
+  bool _useRectangularIsolation = false;
+  float _isoMinTrackEnergy = 0;
+  float _isoMaxTrackEnergy = 0;
+  float _isoMinConeEnergy = 0;
+  float _isoMaxConeEnergy = 0;
 
-		/** If set to true, uses impact parameter significance cuts */
-		bool _useImpactParameterSignificance = false;
-		float _minD0Sig = 0;
-		float _maxD0Sig = 0;
-		float _minZ0Sig = 0;
-		float _maxZ0Sig = 0;
-		float _minR0Sig = 0;
-		float _maxR0Sig = 0;
+  /** If set to true, uses polynomial cuts for isolation */
+  bool _usePolynomialIsolation = false;
+  float _isoPolynomialA = 0;
+  float _isoPolynomialB = 0;
+  float _isoPolynomialC = 0;
 
-		/** If set to true, uses rectangular cuts for isolation */
-		bool _useRectangularIsolation = false;
-		float _isoMinTrackEnergy = 0;
-		float _isoMaxTrackEnergy = 0;
-		float _isoMinConeEnergy = 0;
-		float _isoMaxConeEnergy = 0;
+  /** If set to true, uses jet-based isolation (LAL algorithm) */
+  bool _useJetIsolation = false;
+  std::string _jetCollectionName{};
+  std::map<ReconstructedParticle*, ReconstructedParticle*> _rpJetMap{};
+  float _jetIsoVetoMinXt = 0;
+  float _jetIsoVetoMaxXt = 0;
+  float _jetIsoVetoMinZ = 0;
+  float _jetIsoVetoMaxZ = 0;
 
-		/** If set to true, uses polynomial cuts for isolation */
-		bool _usePolynomialIsolation = false;
-		float _isoPolynomialA = 0;
-		float _isoPolynomialB = 0;
-		float _isoPolynomialC = 0;
+  /** If set to true, uses lepton dressing */
+  bool _useDressedLeptons = false;
+  bool _mergeCloseElectrons = false;
+  float _dressPhotonConeAngle = 0;
+  float _mergeLeptonConeAngle = 0;
 
-		/** If set to true, uses jet-based isolation (LAL algorithm) */
-		bool _useJetIsolation = false;
-		std::string _jetCollectionName {};
-		std::map<ReconstructedParticle*,ReconstructedParticle*> _rpJetMap {};
-		float _jetIsoVetoMinXt = 0;
-		float _jetIsoVetoMaxXt = 0;
-		float _jetIsoVetoMinZ = 0;
-		float _jetIsoVetoMaxZ = 0;
-
-
-		/** If set to true, uses lepton dressing */
-		bool _useDressedLeptons = false;
-		bool _mergeCloseElectrons = false;
-		float _dressPhotonConeAngle = 0;
-		float _mergeLeptonConeAngle = 0;
-
-		/** If set to true, uses Pandora particle IDs */
-		bool _usePandoraIDs = false;
-} ;
+  /** If set to true, uses Pandora particle IDs */
+  bool _usePandoraIDs = false;
+};
 
 #endif
-

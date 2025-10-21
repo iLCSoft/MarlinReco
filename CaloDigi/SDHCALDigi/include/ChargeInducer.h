@@ -1,54 +1,48 @@
 #ifndef ChargeInducer_h
 #define ChargeInducer_h
 
-#include <string>
 #include <map>
+#include <string>
 
 #include <random>
 
-class SimDigitalGeomCellId ;
-struct AsicKey ;
+class SimDigitalGeomCellId;
+struct AsicKey;
 
-class ChargeInducer
-{
-	public :
-		ChargeInducer() ;
-		virtual ~ChargeInducer() ;
-		virtual float getCharge(SimDigitalGeomCellId* cellID) = 0 ;
+class ChargeInducer {
+public:
+  ChargeInducer();
+  virtual ~ChargeInducer();
+  virtual float getCharge(SimDigitalGeomCellId* cellID) = 0;
 
-		void setSeed(unsigned int value) ;
+  void setSeed(unsigned int value);
 
-	protected :
-		std::mt19937 generator ;
-} ;
+protected:
+  std::mt19937 generator;
+};
 
-class UniformPolya : public ChargeInducer
-{
-	public :
-		UniformPolya(float _qbar , float _theta) ;
-		~UniformPolya() ;
+class UniformPolya : public ChargeInducer {
+public:
+  UniformPolya(float _qbar, float _theta);
+  ~UniformPolya();
 
-		virtual float getCharge(SimDigitalGeomCellId* cellID) ;
+  virtual float getCharge(SimDigitalGeomCellId* cellID);
 
+protected:
+  std::gamma_distribution<float> gammadist;
+};
 
-	protected :
-		std::gamma_distribution<float> gammadist ;
+class AsicPolya : public UniformPolya {
+public:
+  AsicPolya(float _qbar, float _theta, std::string fileName);
+  ~AsicPolya();
 
-} ;
+  virtual float getCharge(SimDigitalGeomCellId* cellID);
 
-class AsicPolya : public UniformPolya
-{
-	public :
-		AsicPolya(float _qbar , float _theta , std::string fileName) ;
-		~AsicPolya() ;
+protected:
+  void readFile(std::string fileName);
 
-		virtual float getCharge(SimDigitalGeomCellId* cellID) ;
+  std::map<AsicKey, std::gamma_distribution<float>> polyaMap;
+};
 
-
-	protected :
-		void readFile(std::string fileName) ;
-
-		std::map<AsicKey , std::gamma_distribution<float> > polyaMap ;
-} ;
-
-#endif //ChargeInducer_h
+#endif // ChargeInducer_h

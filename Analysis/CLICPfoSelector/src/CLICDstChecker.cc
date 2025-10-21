@@ -1,4 +1,6 @@
 #include "CLICDstChecker.h"
+#include "ClusterShapes.h"
+#include "PfoUtilities.h"
 #include <CalorimeterHitType.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCObject.h>
@@ -21,23 +23,20 @@
 #include <gear/TPCParameters.h>
 #include <gear/VXDLayerLayout.h>
 #include <gear/VXDParameters.h>
-#include <marlin/Global.h>
-#include <math.h>
-#include <iostream>
 #include <iostream>
 #include <map>
-#include "ClusterShapes.h"
-#include "PfoUtilities.h"
+#include <marlin/Global.h>
+#include <math.h>
 
 #include <limits>
 
 using namespace lcio;
 using namespace marlin;
 
-const int   precision        = 2;
-const int   widthFloat       = 7;
-const int   widthInt         = 5;
-const int   widthSmallInt    = 3;
+const int precision = 2;
+const int widthFloat = 7;
+const int widthInt = 5;
+const int widthSmallInt = 3;
 const float radiansToDegrees = 57.2957;
 
 CLICDstChecker aCLICDstChecker;
@@ -51,8 +50,8 @@ CLICDstChecker::CLICDstChecker() : Processor("CLICDstChecker") {
 
   registerProcessorParameter("ShowBackground", "Show background pfo information", m_showBackground, int(1));
 
-  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "InputPfoCollection", "Input PFO Collection", m_inputPfoCollection,
-                          std::string("PandoraPFANewPFOs"));
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "InputPfoCollection", "Input PFO Collection",
+                          m_inputPfoCollection, std::string("PandoraPFANewPFOs"));
 
   registerProcessorParameter("PfoToMcRelationCollection", "Input PFO to MC particle relation Collection",
                              m_inputPfoToMcRelationCollection, std::string("RecoMCTruthLink"));
@@ -82,12 +81,12 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
   }
 
   std::vector<ReconstructedParticle*> physicsPfos;
-  std::vector<MCParticle*>            physicsMatchedMcParticle;
+  std::vector<MCParticle*> physicsMatchedMcParticle;
   std::vector<ReconstructedParticle*> backgroundPfos;
 
   try {
-    LCCollection* col   = evt->getCollection(m_inputPfoCollection.c_str());
-    const int     nelem = col->getNumberOfElements();
+    LCCollection* col = evt->getCollection(m_inputPfoCollection.c_str());
+    const int nelem = col->getNumberOfElements();
     for (int iPfo = 0; iPfo < nelem; ++iPfo)
       m_pfoVector.push_back(static_cast<ReconstructedParticle*>(col->getElementAt(iPfo)));
     std::sort(m_pfoVector.begin(), m_pfoVector.end(), PfoUtil::PfoSortFunction);
@@ -96,8 +95,8 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
   };
 
   try {
-    LCCollection* col   = evt->getCollection(m_inputMcParticleCollection.c_str());
-    int           nelem = col->getNumberOfElements();
+    LCCollection* col = evt->getCollection(m_inputMcParticleCollection.c_str());
+    int nelem = col->getNumberOfElements();
     for (int iMc = 0; iMc < nelem; ++iMc) {
       MCParticle* pMc = static_cast<MCParticle*>(col->getElementAt(iMc));
       // insert all existing mc pointers into set *** MUST CHECK THIS BEFORE USING RELATION ***
@@ -105,9 +104,9 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
       const float px(pMc->getMomentum()[0]);
       const float py(pMc->getMomentum()[1]);
       const float pz(pMc->getMomentum()[2]);
-      const float p          = sqrt(px * px + py * py + pz * pz);
+      const float p = sqrt(px * px + py * py + pz * pz);
       const float cosThetaMc = fabs(pz) / p;
-      float       thetaMc    = 0.;
+      float thetaMc = 0.;
       if (cosThetaMc < 1.0)
         thetaMc = acos(cosThetaMc) * radiansToDegrees;
       if ((pMc->getParents()).size() == 0)
@@ -126,8 +125,8 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
   }
 
   for (unsigned int iPfo = 0; iPfo < m_pfoVector.size(); ++iPfo) {
-    ReconstructedParticle* pPfo      = m_pfoVector[iPfo];
-    LCObjectVec            objectVec = m_pfoToMcNavigator->getRelatedToObjects(pPfo);
+    ReconstructedParticle* pPfo = m_pfoVector[iPfo];
+    LCObjectVec objectVec = m_pfoToMcNavigator->getRelatedToObjects(pPfo);
     if (objectVec.size() > 0) {
       for (unsigned int imc = 0; imc < objectVec.size(); imc++) {
         MCParticle* pMC = static_cast<MCParticle*>(objectVec[imc]);
@@ -142,9 +141,9 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
     }
   }
 
-  float eSignal     = 0;
+  float eSignal = 0;
   float eBackground = 0;
-  float eMc         = 0;
+  float eMc = 0;
 
   for (unsigned int ipass = 0; ipass < 2; ipass++) {
     unsigned int nPfos;
@@ -163,7 +162,7 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
 
       ReconstructedParticle* pPfo;
       (ipass == 0) ? pPfo = physicsPfos[iPfo] : pPfo = backgroundPfos[iPfo];
-      MCParticle* pMc                                = NULL;
+      MCParticle* pMc = NULL;
       if (ipass == 0) {
         pMc = physicsMatchedMcParticle[iPfo];
         eMc += pMc->getEnergy();
@@ -172,21 +171,21 @@ void CLICDstChecker::processEvent(LCEvent* evt) {
       const int type = pPfo->getType();
       //      const bool isCompound = pPfo->isCompound();
       float momentum[3];
-      for (unsigned int i  = 0; i < 3; i++)
-        momentum[i]        = pPfo->getMomentum()[i];
-      const float pT       = sqrt(momentum[0] * momentum[0] + momentum[1] * momentum[1]);
-      const float p        = sqrt(pT * pT + momentum[2] * momentum[2]);
+      for (unsigned int i = 0; i < 3; i++)
+        momentum[i] = pPfo->getMomentum()[i];
+      const float pT = sqrt(momentum[0] * momentum[0] + momentum[1] * momentum[1]);
+      const float p = sqrt(pT * pT + momentum[2] * momentum[2]);
       const float cosTheta = fabs(momentum[2]) / p;
-      const float energy   = pPfo->getEnergy();
-      //eTotalInput+=energy;
-      //      const float mass = pPfo->getMass();
-      //      const float charge = pPfo->getCharge();
+      const float energy = pPfo->getEnergy();
+      // eTotalInput+=energy;
+      //       const float mass = pPfo->getMass();
+      //       const float charge = pPfo->getCharge();
       const ParticleIDVec particleIDs = pPfo->getParticleIDs();
       //      ParticleID *particleIDUsed = pPfo->getParticleIDUsed();
       //      const float goodnessOfPID = pPfo->getGoodnessOfPID();
       const ReconstructedParticleVec particles = pPfo->getParticles();
-      const ClusterVec               clusters  = pPfo->getClusters();
-      const TrackVec                 tracks    = pPfo->getTracks();
+      const ClusterVec clusters = pPfo->getClusters();
+      const TrackVec tracks = pPfo->getTracks();
 
       //      for(unsigned int i = 0; i< tracks.size(); i++){
       //	Track *track = tracks[i];

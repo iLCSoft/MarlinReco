@@ -5,7 +5,6 @@
 
 #include "algebraImplementation.h"
 
-
 /*
    Process to obtain the covariance matrix in
    the momenta space.
@@ -36,47 +35,39 @@
 
 class MomentumCov : public marlin::Processor {
 
- public:
+public:
+  virtual marlin::Processor* newProcessor() { return new MomentumCov; }
 
-  virtual marlin::Processor*  newProcessor() { return new MomentumCov ; }
-
-
-  MomentumCov() ;
+  MomentumCov();
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
+  virtual void init();
 
   /** Called for every run.
    */
-  virtual void processRunHeader( EVENT::LCRunHeader * ) ;
+  virtual void processRunHeader(EVENT::LCRunHeader*);
 
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( EVENT::LCEvent * ) ;
+  virtual void processEvent(EVENT::LCEvent*);
 
-
-  virtual void check( EVENT::LCEvent * ) ;
-
+  virtual void check(EVENT::LCEvent*);
 
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
+  virtual void end();
 
-  void copy_reconstructedParticle(ReconstructedParticle const *,
-                                  ReconstructedParticleImpl *);
+  void copy_reconstructedParticle(ReconstructedParticle const*, ReconstructedParticleImpl*);
 
-
- protected:
-
+protected:
   /** Input collection name.
    */
   std::string _colPFOs{};
   std::string _colNewPFOs{};
   int _nRun{};
   int _nEvt{};
-
-} ;
+};
 
 #endif

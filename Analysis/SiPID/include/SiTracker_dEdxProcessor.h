@@ -1,24 +1,22 @@
 #ifndef SiTracker_dEdxProcessor_h
 #define SiTracker_dEdxProcessor_h 1
 
-#include <string>
 #include <chrono>
+#include <string>
 
-#include "marlin/Processor.h"
 #include "MarlinTrk/Factory.h"
+#include "marlin/Processor.h"
 
 #include "lcio.h"
-#include <TTree.h>
 #include <TFile.h>
+#include <TTree.h>
 
-#include <DDRec/SurfaceManager.h>
 #include <DDRec/DetectorData.h>
+#include <DDRec/SurfaceManager.h>
 #include <LayerFinder.h>
 
-using namespace lcio ;
-using namespace marlin ;
-
-
+using namespace lcio;
+using namespace marlin;
 
 /**  SiTracker_dEdxProcessor for Marlin.
  *
@@ -29,8 +27,7 @@ using namespace marlin ;
  * Dec 2016 - Jan 2018
  */
 
-
-struct dEdxPoint{
+struct dEdxPoint {
 public:
   dEdxPoint(const double _dE, const double _dx);
   dEdxPoint(const dEdxPoint&);
@@ -43,61 +40,56 @@ private:
   double dE;
   double dx;
   double dEdx;
-} ;
-
+};
 
 class SiTracker_dEdxProcessor : public Processor {
-  
- public:
-  virtual Processor*  newProcessor() { return new SiTracker_dEdxProcessor ; }
-  
-  SiTracker_dEdxProcessor() ;
-  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor &) = delete;
-  
-  virtual ~SiTracker_dEdxProcessor() ;
 
-  SiTracker_dEdxProcessor & operator = (const SiTracker_dEdxProcessor &) = delete;
+public:
+  virtual Processor* newProcessor() { return new SiTracker_dEdxProcessor; }
+
+  SiTracker_dEdxProcessor();
+  SiTracker_dEdxProcessor(const SiTracker_dEdxProcessor&) = delete;
+
+  virtual ~SiTracker_dEdxProcessor();
+
+  SiTracker_dEdxProcessor& operator=(const SiTracker_dEdxProcessor&) = delete;
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /** Called at the end of every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  virtual void check( LCEvent * evt ) ; 
-  
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
-  
+  virtual void end();
+
   // Evaluation methods for dE/dx
   typedef std::vector<dEdxPoint> dEdxVec;
-  static bool dEdxOrder(dEdxPoint p1, dEdxPoint p2) { return p1.Get_dEdx() < p2.Get_dEdx() ; }
+  static bool dEdxOrder(dEdxPoint p1, dEdxPoint p2) { return p1.Get_dEdx() < p2.Get_dEdx(); }
   static double truncFractionUp;
   static double truncFractionLo;
-  static double dEdxGeneralTruncMean(dEdxVec, double &dEdxError,
-                              const double truncLo=0,
-                              const double truncHi=0);
-  static double dEdxMean(dEdxVec, double &dEdxError);
-  static double dEdxMedian(dEdxVec, double &dEdxError);
-  static double dEdxTruncMean(dEdxVec, double &dEdxError);
-  static double dEdxHarmonic(dEdxVec, double &dEdxError);
-  static double dEdxHarmonic2(dEdxVec, double &dEdxError);
-  static double dEdxWgtHarmonic(dEdxVec, double &dEdxError);
-  static double dEdxWgtHarmonic2(dEdxVec, double &dEdxError);
+  static double dEdxGeneralTruncMean(dEdxVec, double& dEdxError, const double truncLo = 0, const double truncHi = 0);
+  static double dEdxMean(dEdxVec, double& dEdxError);
+  static double dEdxMedian(dEdxVec, double& dEdxError);
+  static double dEdxTruncMean(dEdxVec, double& dEdxError);
+  static double dEdxHarmonic(dEdxVec, double& dEdxError);
+  static double dEdxHarmonic2(dEdxVec, double& dEdxError);
+  static double dEdxWgtHarmonic(dEdxVec, double& dEdxError);
+  static double dEdxWgtHarmonic2(dEdxVec, double& dEdxError);
 
+  typedef double (*evalChoice)(dEdxVec, double& dEdxError);
 
-  typedef double (*evalChoice)(dEdxVec, double &dEdxError);
-
-  protected:
-
+protected:
   evalChoice dEdxEval{};
 
   /*** Steerable parameters ***/
@@ -118,12 +110,12 @@ class SiTracker_dEdxProcessor : public Processor {
   std::string m_dEdxEstimator{};
 
   /*** Detector-related objects ***/
-  const dd4hep::rec::SurfaceMap *surfMap;
-  MarlinTrk::IMarlinTrkSystem *trkSystem;
+  const dd4hep::rec::SurfaceMap* surfMap;
+  MarlinTrk::IMarlinTrkSystem* trkSystem;
 
   double _bField{};
 
-  LayerFinder *layerFinder{};
+  LayerFinder* layerFinder{};
 
   int lastRunHeaderProcessed{};
 
@@ -136,10 +128,6 @@ class SiTracker_dEdxProcessor : public Processor {
     timers.at(i) += std::chrono::duration_cast<std::chrono::duration<double>>(newTP - lastTP);
     lastTP = newTP;
   }
-
-} ;
+};
 
 #endif
-
-
-

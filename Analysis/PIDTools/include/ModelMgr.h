@@ -6,40 +6,35 @@
 #include <map>
 #include <set>
 
-namespace cpid
-{
-  class ModelMgr
-  {
-    friend class TrainingModel;
+namespace cpid {
+class ModelMgr {
+  friend class TrainingModel;
 
-    public:
+public:
+  static ModelMgr* instance();
 
-      static ModelMgr* instance();
+  virtual ~ModelMgr() {};
 
-      virtual ~ModelMgr(){};
+  // create new algorithm to be used in processor
+  // the caller takes ownership here - don't forget to delete!
+  TrainingModel* createModel(const std::string& type);
 
-      // create new algorithm to be used in processor
-      // the caller takes ownership here - don't forget to delete!
-      TrainingModel* createModel(const std::string& type);
+  // get archetype algorithm from map
+  TrainingModel* getModel(const std::string& type);
 
-      // get archetype algorithm from map
-      TrainingModel* getModel(const std::string& type);
+  void printAvailableModelTypes();
 
-      void printAvailableModelTypes();
+protected:
+  void registerModel(TrainingModel* model);
 
-    protected:
+  std::vector<std::string> getAvailableModelTypes();
 
-      void registerModel(TrainingModel* model);
+  ModelMgr();
 
-      std::vector<std::string> getAvailableModelTypes();
-
-      ModelMgr();
-
-    private:
-
-      static ModelMgr* _me;
-      std::map<const std::string, TrainingModel*> _map{};
-  };
-}
+private:
+  static ModelMgr* _me;
+  std::map<const std::string, TrainingModel*> _map{};
+};
+} // namespace cpid
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef CheckPlots_h
 #define CheckPlots_h 1
 
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -12,32 +11,30 @@
 
 #include "lcio.h"
 
+#include <EVENT/CalorimeterHit.h>
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
-#include <EVENT/SimTrackerHit.h>
-#include <EVENT/SimCalorimeterHit.h>
-#include <EVENT/TrackerHit.h>
-#include <EVENT/CalorimeterHit.h>
-#include <EVENT/Track.h>
 #include <EVENT/ReconstructedParticle.h>
+#include <EVENT/SimCalorimeterHit.h>
+#include <EVENT/SimTrackerHit.h>
+#include <EVENT/Track.h>
+#include <EVENT/TrackerHit.h>
 #include <UTIL/LCRelationNavigator.h>
 
-#include <gear/GEAR.h>
 #include <gear/BField.h>
+#include <gear/GEAR.h>
 
 #include <MarlinUtil.h>
 
 #ifdef MARLIN_USE_AIDA
-#include <marlin/AIDAProcessor.h>
-#include <AIDA/IHistogramFactory.h>
 #include <AIDA/ICloud1D.h>
 #include <AIDA/ICloud2D.h>
+#include <AIDA/IHistogramFactory.h>
+#include <marlin/AIDAProcessor.h>
 #endif
 
-
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /**
  *    This processor provides check plots. The plots are arranged in the following different categories:
@@ -59,8 +56,8 @@ using namespace marlin ;
  *    ThetaCut : cut in theta to assign particles which are lost in the beam pipe
  *    FillTracks : toggles the check plots for the tracks
  *    ColNameTracks : name of the LCCollection of tracks
- *    ColNameRelationTrackToMCP : name of the LCRelation collection connecting the tracks and the corresponding MC particle
- *    FillReconstructedParticles : toggles the check plots for the reconstructed paricles
+ *    ColNameRelationTrackToMCP : name of the LCRelation collection connecting the tracks and the corresponding MC
+ * particle FillReconstructedParticles : toggles the check plots for the reconstructed paricles
  *    ColNameReconstructedParticles : name of the LCCollection of reconstructed paricles
  *
  *    @author O. Wendt (DESY)
@@ -68,22 +65,19 @@ using namespace marlin ;
  *
  */
 class CheckPlots : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new CheckPlots ; }
-    
-  CheckPlots() ;
-  
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void check( LCEvent * evt ) ; 
-  virtual void end() ;
-  
-  
- private:
 
+public:
+  virtual Processor* newProcessor() { return new CheckPlots; }
+
+  CheckPlots();
+
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
+  virtual void end();
+
+private:
   int _nRun;
   int _nEvt;
 
@@ -95,7 +89,7 @@ class CheckPlots : public Processor {
 
   int _fillSimCaloHit;
   float _simECut;
-  
+
   int _fillCaloHit;
   float _ECut;
 
@@ -121,20 +115,18 @@ class CheckPlots : public Processor {
   double _energyRecoCh;
   double _energyRecoN;
 
+#ifdef MARLIN_USE_AIDA
 
-
-  #ifdef MARLIN_USE_AIDA
-    
   // MCPs with generator status != 1
   // numbers per event
   AIDA::ICloud1D* _cMCNumberSim;
   AIDA::ICloud1D* _cMCEnergySumSim;
-  
+
   AIDA::ICloud1D* _cMCNumberElectronsSim;
   AIDA::ICloud1D* _cMCNumberMuonsSim;
   AIDA::ICloud1D* _cMCNumberTausSim;
   AIDA::ICloud1D* _cMCNumberNusSim;
-  
+
   AIDA::ICloud1D* _cMCNumberPiChSim;
   AIDA::ICloud1D* _cMCNumberKChSim;
   AIDA::ICloud1D* _cMCNumberProtonsSim;
@@ -145,18 +137,15 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCNumberGammasSim;
   AIDA::ICloud1D* _cMCNumberLambda0sSim;
   AIDA::ICloud1D* _cMCNumberSigma0sSim;
-  AIDA::ICloud1D* _cMCNumberXi0sSim;  
+  AIDA::ICloud1D* _cMCNumberXi0sSim;
 
   AIDA::ICloud1D* _cMCNumberRemainingSim;
-  
-    
 
-    
   // MCPs with generator status == 1
   // numbers per event
   AIDA::ICloud1D* _cMCNumberGen;
   AIDA::ICloud1D* _cMCEnergySumGen;
-  
+
   AIDA::ICloud1D* _cMCNumberHChGen;
   AIDA::ICloud1D* _cMCNumberH0Gen;
   AIDA::ICloud1D* _cMCNumberGGen; // all gammas, i.e. gammas and pi0s
@@ -168,7 +157,7 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCNumberMuonsGen;
   AIDA::ICloud1D* _cMCNumberTausGen;
   AIDA::ICloud1D* _cMCNumberNusGen;
-  
+
   AIDA::ICloud1D* _cMCNumberPiChGen;
   AIDA::ICloud1D* _cMCNumberKChGen;
   AIDA::ICloud1D* _cMCNumberProtonsGen;
@@ -179,13 +168,11 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCNumberGammasGen;
   AIDA::ICloud1D* _cMCNumberLambda0sGen;
   AIDA::ICloud1D* _cMCNumberSigma0sGen;
-  AIDA::ICloud1D* _cMCNumberXi0sGen;  
+  AIDA::ICloud1D* _cMCNumberXi0sGen;
 
   AIDA::ICloud1D* _cMCNumberLostInBeamPipe;
   AIDA::ICloud1D* _cMCNumberRemainingGen;
-    
-    
-    
+
   // MCPs with generator status != 1
   // numbers per single particle
   AIDA::ICloud1D* _cMCEnergySim;
@@ -194,7 +181,7 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCEnergyMuonsSim;
   AIDA::ICloud1D* _cMCEnergyTausSim;
   AIDA::ICloud1D* _cMCEnergyNusSim;
-  
+
   AIDA::ICloud1D* _cMCEnergyPiChSim;
   AIDA::ICloud1D* _cMCEnergyKChSim;
   AIDA::ICloud1D* _cMCEnergyProtonsSim;
@@ -205,11 +192,9 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCEnergyGammasSim;
   AIDA::ICloud1D* _cMCEnergyLambda0sSim;
   AIDA::ICloud1D* _cMCEnergySigma0sSim;
-  AIDA::ICloud1D* _cMCEnergyXi0sSim;  
+  AIDA::ICloud1D* _cMCEnergyXi0sSim;
 
   AIDA::ICloud1D* _cMCEnergyRemainingSim;
-  
-
 
   // MCPs with generator status == 1
   // numbers per single particle
@@ -226,7 +211,7 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCEnergyMuonsGen;
   AIDA::ICloud1D* _cMCEnergyTausGen;
   AIDA::ICloud1D* _cMCEnergyNusGen;
-  
+
   AIDA::ICloud1D* _cMCEnergyPiChGen;
   AIDA::ICloud1D* _cMCEnergyKChGen;
   AIDA::ICloud1D* _cMCEnergyProtonsGen;
@@ -237,23 +222,20 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMCEnergyGammasGen;
   AIDA::ICloud1D* _cMCEnergyLambda0sGen;
   AIDA::ICloud1D* _cMCEnergySigma0sGen;
-  AIDA::ICloud1D* _cMCEnergyXi0sGen;  
+  AIDA::ICloud1D* _cMCEnergyXi0sGen;
 
   AIDA::ICloud1D* _cMCEnergyLostInBeamPipe;
   AIDA::ICloud1D* _cMCEnergyRemainingGen;
 
-
-
-  // SimCalorimeterHit spectra      
+  // SimCalorimeterHit spectra
   AIDA::ICloud1D* _cNumberSimCaloHits;
-  AIDA::ICloud1D* _cEnergySimCaloHitsSum;  
+  AIDA::ICloud1D* _cEnergySimCaloHitsSum;
   AIDA::ICloud1D* _cEnergySimCaloHits;
-      
-  // CalorimeterHit spectra      
-  AIDA::ICloud1D* _cNumberCaloHits;
-  AIDA::ICloud1D* _cEnergyCaloHitsSum;  
-  AIDA::ICloud1D* _cEnergyCaloHits;
 
+  // CalorimeterHit spectra
+  AIDA::ICloud1D* _cNumberCaloHits;
+  AIDA::ICloud1D* _cEnergyCaloHitsSum;
+  AIDA::ICloud1D* _cEnergyCaloHits;
 
   // clouds corresponding to the tracks
   AIDA::ICloud1D* _cNumberTracks;
@@ -261,12 +243,10 @@ class CheckPlots : public Processor {
   AIDA::ICloud1D* _cMomentumTracks;
   AIDA::ICloud1D* _cNumberMCParticlesPerTrack;
 
-
   // clouds corresponding to the reconstructed particles
   AIDA::ICloud1D* _cNumberReconstructedParticles;
   AIDA::ICloud1D* _cEnergyReconstructedParticles;
   AIDA::ICloud1D* _cEnergySumReconstructedParticles;
-
 
   // clouds for comparison of MC tree and reconstructed particles
   AIDA::ICloud2D* _cNumberMCvsNumberReco;
@@ -280,31 +260,25 @@ class CheckPlots : public Processor {
   AIDA::ICloud2D* _cEnergyMCvsEnergyReco;
   AIDA::ICloud2D* _cEnergyMCChvsEnergyRecoCh;
   AIDA::ICloud2D* _cEnergyMCNvsEnergyRecoN;
-     
-  #endif
-
-
-
-  void createClouds();
-
-  void fillMCGenCheckPlots(LCEvent * evt);
-  void fillMCSimCheckPlots(LCEvent * evt);
-
-  //  void fillSimTrackerHitCheckPlots(LCEvent * evt);
-  void fillSimCaloHitCheckPlots(LCEvent * evt);
-
-  //  void fillTrackerHitCheckPlots(LCEvent * evt);
-  void fillCaloHitCheckPlots(LCEvent * evt);
-
-  void fillTrackCheckPlots(LCEvent * evt);
-
-  void fillReconstructedParticlesCheckPlots(LCEvent * evt);
-
-  void fillComparisonMCRecoPlots();
-  
-} ;
 
 #endif
 
+  void createClouds();
 
+  void fillMCGenCheckPlots(LCEvent* evt);
+  void fillMCSimCheckPlots(LCEvent* evt);
 
+  //  void fillSimTrackerHitCheckPlots(LCEvent * evt);
+  void fillSimCaloHitCheckPlots(LCEvent* evt);
+
+  //  void fillTrackerHitCheckPlots(LCEvent * evt);
+  void fillCaloHitCheckPlots(LCEvent* evt);
+
+  void fillTrackCheckPlots(LCEvent* evt);
+
+  void fillReconstructedParticlesCheckPlots(LCEvent* evt);
+
+  void fillComparisonMCRecoPlots();
+};
+
+#endif

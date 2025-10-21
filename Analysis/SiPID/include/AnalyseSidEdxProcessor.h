@@ -8,18 +8,16 @@
 #ifndef INCLUDE_ANALYSESIDEDXPROCESSOR_H_
 #define INCLUDE_ANALYSESIDEDXPROCESSOR_H_
 
-
 #include <string>
 
 #include "marlin/Processor.h"
 
 #include "lcio.h"
-#include <TTree.h>
 #include <TFile.h>
+#include <TTree.h>
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /**  AnalyseSidEdxProcessor for marlin.
  *
@@ -32,36 +30,35 @@ using namespace marlin ;
 
 class AnalyseSidEdxProcessor : public Processor {
 
- public:
-  virtual Processor*  newProcessor() { return new AnalyseSidEdxProcessor ; }
+public:
+  virtual Processor* newProcessor() { return new AnalyseSidEdxProcessor; }
 
-  AnalyseSidEdxProcessor() ;
-  AnalyseSidEdxProcessor(const AnalyseSidEdxProcessor&) = delete ;
+  AnalyseSidEdxProcessor();
+  AnalyseSidEdxProcessor(const AnalyseSidEdxProcessor&) = delete;
 
-  AnalyseSidEdxProcessor& operator=(const AnalyseSidEdxProcessor&) = delete ;
+  AnalyseSidEdxProcessor& operator=(const AnalyseSidEdxProcessor&) = delete;
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
+  virtual void init();
 
   /** Called for every run.
    * Really?
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
+  virtual void processRunHeader(LCRunHeader* run);
 
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ;
+  virtual void processEvent(LCEvent* evt);
 
-  virtual void check( LCEvent * evt ) ;
+  virtual void check(LCEvent* evt);
 
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
+  virtual void end();
 
- protected:
-
+protected:
   /*** Steerable parameters ***/
   std::string m_rootFileName{};
   std::string m_trackColName{};
@@ -81,9 +78,6 @@ class AnalyseSidEdxProcessor : public Processor {
   int nTracks{};
 
   int lastRunHeaderProcessed{};
-} ;
-
-
-
+};
 
 #endif /* INCLUDE_ANALYSESIDEDXPROCESSOR_H_ */

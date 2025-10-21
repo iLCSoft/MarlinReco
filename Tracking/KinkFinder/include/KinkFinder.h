@@ -1,28 +1,28 @@
 #ifndef KinkFinder_H
 #define KinkFinder_H 1
 
-#include "marlin/Processor.h"
+#include "HelixClass.h"
+#include "TrackPair.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 #include <vector>
-#include "TrackPair.h"
-#include "HelixClass.h"
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** KinkFinder Processor <br>
  *  KinkFinder processor identifes kinked tracks originating <br>
  *  from charged particle decays e.g. kaons, sigmas.  <br>
  *  KinkFinder also identifies prongs 1 -> many track matches and  <br>
  *  split tracks <br>
- * <h4>Input collections and prerequisites</h4> 
+ * <h4>Input collections and prerequisites</h4>
  *  Processor requires collection of tracks. The name of the collection <br>
- *  is specified by the processor parameter "TrackCollection". <br> 
+ *  is specified by the processor parameter "TrackCollection". <br>
  *  If no collection with the specified name exist in event <br>
  *  processor takes no action <br>
  *  <h4>Output</h4>
- *  Processor produces LCIO collections of the reconstructed particles, <br> 
+ *  Processor produces LCIO collections of the reconstructed particles, <br>
  *  and vertices, containing information on the reconstructed neutral vertices <br>
  *  Position of the vertex is accessed through the LCIO object VERTEX. <br>
  *  Four-vector of the vertex is stored in the object RECONSTRUCTEDPARTICLE <br>
@@ -64,7 +64,7 @@ using namespace marlin ;
  *  (default value 20 mm) <br>
  *  @param TightKinkProjectionCutTPC tight cut projected track trajectories to be tagged a kink in the TPC  <br>
  *  (default value 5 mm) <br>
- *  @param VeryTightKinkProjectionCutTPC very tight cut projected track trajectories to be tagged a kink in the TPC  <br>
+ *  @param VeryTightKinkProjectionCutTPC very tight cut projected track trajectories to be tagged a kink in the TPC <br>
  *  (default value 1 mm) <br>
  *  @param KinkProjectionCutSIT maximum difference in projected track trajectories to be tagged a kink in the SIT  <br>
  *  (default value 10 mm) <br>
@@ -90,48 +90,43 @@ typedef struct {
 } vec3;
 
 typedef struct {
-  int   tracki;
-  int   trackj;
+  int tracki;
+  int trackj;
   float vtx[3];
   float p[3];
   float mass;
   float distance;
-  int   pdgCode;
+  int pdgCode;
 } twoTrackIntersection_t;
-
 
 /** KinkFinder Processor <br>
  *  KinkFinder processor identify kinked tracks <br>
  */
 class KinkFinder : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new KinkFinder ; }
-  
-  
-  KinkFinder() ;
-  
-  virtual void init() ;
-  
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  virtual void end() ;
 
- protected:
+public:
+  virtual Processor* newProcessor() { return new KinkFinder; }
 
-  void Sorting( TrackPairVec & trkPairVec );
-  
+  KinkFinder();
+
+  virtual void init();
+
+  virtual void processRunHeader(LCRunHeader* run);
+
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
+  virtual void end();
+
+protected:
+  void Sorting(TrackPairVec& trkPairVec);
+
   float kinkMass(HelixClass* parent, HelixClass* daughter, float daughterMass, float neutralMass);
-
 
   int _nRun{};
   int _nEvt{};
-  
+
   std::string _trackColName{};
 
   std::string _kinkVertexColName{};
@@ -141,11 +136,11 @@ class KinkFinder : public Processor {
   std::string _kinkRecoPartColName{};
   std::string _prongRecoPartColName{};
   std::string _splitRecoPartColName{};
-  
+
   float _rKinkCut{};
-  int   _minTrackHits{};
-  int   _maxDeltaTpcLayers{};
-  int   _debugPrinting{};
+  int _minTrackHits{};
+  int _maxDeltaTpcLayers{};
+  int _debugPrinting{};
   float _kaonDecayMassCut{};
   float _pionDecayMassCut{};
   float _sigmaDecayMassCut{};
@@ -161,21 +156,15 @@ class KinkFinder : public Processor {
   float _maxSplitTrackDeltaP{};
   float _minELambda{};
 
-
   float _bField{};
   float _tpcInnerR{};
   float _tpcOuterR{};
   float _tpcZmax{};
-  int   _tpcMaxRow{};
-  int   _nLayersSIT{};
-  int   _nLayersVTX{};
+  int _tpcMaxRow{};
+  int _nLayersSIT{};
+  int _nLayersVTX{};
   std::vector<float> _rSIT{};
   std::vector<float> _rVTX{};
-
-
-} ;
+};
 
 #endif
-
-
-

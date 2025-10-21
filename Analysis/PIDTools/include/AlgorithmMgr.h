@@ -6,40 +6,35 @@
 #include <map>
 #include <set>
 
-namespace cpid
-{
-  class AlgorithmMgr
-  {
-    friend class InputAlgorithm;
+namespace cpid {
+class AlgorithmMgr {
+  friend class InputAlgorithm;
 
-    public:
+public:
+  static AlgorithmMgr* instance();
 
-      static AlgorithmMgr* instance();
+  virtual ~AlgorithmMgr() {};
 
-      virtual ~AlgorithmMgr(){};
+  // create new algorithm to be used in processor
+  // the caller takes ownership here - don't forget to delete!
+  InputAlgorithm* createAlgorithm(const std::string& type);
 
-      // create new algorithm to be used in processor
-      // the caller takes ownership here - don't forget to delete!
-      InputAlgorithm* createAlgorithm(const std::string& type);
+  // get archetype algorithm from map
+  InputAlgorithm* getAlgorithm(const std::string& type);
 
-      // get archetype algorithm from map
-      InputAlgorithm* getAlgorithm(const std::string& type);
+  void printAvailableAlgorithmTypes();
 
-      void printAvailableAlgorithmTypes();
+protected:
+  void registerAlgorithm(InputAlgorithm* algorithm);
 
-    protected:
+  std::vector<std::string> getAvailableAlgorithmTypes();
 
-      void registerAlgorithm(InputAlgorithm* algorithm);
+  AlgorithmMgr();
 
-      std::vector<std::string> getAvailableAlgorithmTypes();
-
-      AlgorithmMgr();
-
-    private:
-
-      static AlgorithmMgr* _me;
-      std::map<const std::string, InputAlgorithm*> _map{};
-  };
-}
+private:
+  static AlgorithmMgr* _me;
+  std::map<const std::string, InputAlgorithm*> _map{};
+};
+} // namespace cpid
 
 #endif

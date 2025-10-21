@@ -1,17 +1,17 @@
 #ifndef REALISTICCALODIGI_H
 #define REALISTICCALODIGI_H 1
 
-#include "marlin/Processor.h"
-#include <IMPL/LCFlagImpl.h>
-#include <EVENT/SimCalorimeterHit.h>
 #include "lcio.h"
-#include <string>
-#include <vector>
+#include "marlin/Processor.h"
+#include <EVENT/SimCalorimeterHit.h>
+#include <IMPL/LCFlagImpl.h>
 #include <functional>
 #include <optional>
+#include <string>
+#include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** === RealisticCaloDigi Processor === <br>
     Digitisation of calorimeter hits
@@ -23,39 +23,37 @@ using namespace marlin ;
  */
 
 class RealisticCaloDigi : virtual public Processor {
-  
- public:
 
-  RealisticCaloDigi( ) ;
-  RealisticCaloDigi ( const RealisticCaloDigi& ) = delete;
+public:
+  RealisticCaloDigi();
+  RealisticCaloDigi(const RealisticCaloDigi&) = delete;
   RealisticCaloDigi& operator=(const RealisticCaloDigi&) = delete;
 
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void check( LCEvent * evt ) ; 
-  virtual void end() ;
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
+  virtual void end();
 
- protected:
-  
+protected:
   // energy scales we know about
   enum { MIP, GEVDEP, NPE };
   // integration result types
-  using integr_res = std::pair<float,float>;
+  using integr_res = std::pair<float, float>;
   using integr_res_opt = std::optional<integr_res>;
   using integr_function = std::function<integr_res_opt(const EVENT::SimCalorimeterHit*)>;
 
   virtual float EnergyDigi(float energy, int id0, int id1);
-  virtual integr_res_opt Integrate( const SimCalorimeterHit * hit ) const;
-  
-  integr_res_opt StandardIntegration( const SimCalorimeterHit * hit ) const ;
-  integr_res_opt ROCIntegration( const SimCalorimeterHit * hit ) const ;
+  virtual integr_res_opt Integrate(const SimCalorimeterHit* hit) const;
+
+  integr_res_opt StandardIntegration(const SimCalorimeterHit* hit) const;
+  integr_res_opt ROCIntegration(const SimCalorimeterHit* hit) const;
   float SmearTime(float time) const;
 
   // virtual methods to be be overloaded in tech-specific derived classes
-  virtual int   getMyUnit() const = 0 ;
-  virtual float digitiseDetectorEnergy(float energy) const = 0 ;
-  virtual float convertEnergy( float energy, int inScale ) const = 0; // convert energy from input to output scale
+  virtual int getMyUnit() const = 0;
+  virtual float digitiseDetectorEnergy(float energy) const = 0;
+  virtual float convertEnergy(float energy, int inScale) const = 0; // convert energy from input to output scale
 
   // general parameters
 
@@ -63,36 +61,35 @@ class RealisticCaloDigi : virtual public Processor {
   std::vector<std::string> _outputCollections{};
   std::vector<std::string> _outputRelCollections{};
 
-
   // parameters for digitization effects
 
   std::string _integration_method{}; // timing calculation method
-  float _threshold_value{};         // hit energy threshold
-  std::string _threshold_unit{};    // hit energy threshold unit
+  float _threshold_value{};          // hit energy threshold
+  std::string _threshold_unit{};     // hit energy threshold unit
 
-  int   _time_apply{};              // apply timing cuts?
-  int   _time_correctForPropagation{}; // correct times for propagation?
-  float _time_windowMin{};          // defn of timing window
+  int _time_apply{};                 // apply timing cuts?
+  int _time_correctForPropagation{}; // correct times for propagation?
+  float _time_windowMin{};           // defn of timing window
   float _time_windowMax{};
-  float _fast_shaper{};             // fast shaper value. unit in ns
-  float _slow_shaper{};             // slow shaper value. unit in ns
-  float _time_resol{};              // time resolution (unit ns)
+  float _fast_shaper{}; // fast shaper value. unit in ns
+  float _slow_shaper{}; // slow shaper value. unit in ns
+  float _time_resol{};  // time resolution (unit ns)
 
-  float _calib_mip{};               // MIP calibration factor (most probable energy deposit by MIP in active material of one layer)
+  float _calib_mip{}; // MIP calibration factor (most probable energy deposit by MIP in active material of one layer)
 
-  float _misCalib_uncorrel{};       // general miscalibration (uncorrelated between channels)
-  bool  _misCalib_uncorrel_keep{};  // if true, use the same cell miscalibs over events (requires more memory)
+  float _misCalib_uncorrel{};     // general miscalibration (uncorrelated between channels)
+  bool _misCalib_uncorrel_keep{}; // if true, use the same cell miscalibs over events (requires more memory)
 
-  float _misCalib_correl{};         // general miscalibration (100% uncorrelated between channels)
+  float _misCalib_correl{}; // general miscalibration (100% uncorrelated between channels)
 
-  float _deadCell_fraction{};       // fraction of random dead channels
-  bool  _deadCell_keep{};           // keep same cells dead between events? (requires more memory)
+  float _deadCell_fraction{}; // fraction of random dead channels
+  bool _deadCell_keep{};      // keep same cells dead between events? (requires more memory)
 
-  float _elec_noiseMip{};           // electronics noise (as fraction of MIP)
-  float _elec_rangeMip{};           // electronics dynamic range (in terms of MIPs)
+  float _elec_noiseMip{}; // electronics noise (as fraction of MIP)
+  float _elec_rangeMip{}; // electronics dynamic range (in terms of MIPs)
 
   std::string _cellIDLayerString{};
-  
+
   // internal variables
 
   int _threshold_iunit{};
@@ -102,13 +99,9 @@ class RealisticCaloDigi : virtual public Processor {
 
   float _event_correl_miscalib{};
 
-  std::map < std::pair <int, int> , float > _cell_miscalibs{};
-  std::map < std::pair <int, int> , bool  > _cell_dead{};
+  std::map<std::pair<int, int>, float> _cell_miscalibs{};
+  std::map<std::pair<int, int>, bool> _cell_dead{};
   integr_function _integr_function{};
-
-} ;
+};
 
 #endif
-
-
-

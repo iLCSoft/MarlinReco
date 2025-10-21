@@ -2,8 +2,8 @@
 #define BRUTEFORCEECAL_GAPFILLER_H 1
 
 #include "marlin/Processor.h"
-#include <IMPL/LCFlagImpl.h>
 #include <EVENT/CalorimeterHit.h>
+#include <IMPL/LCFlagImpl.h>
 
 #include <IMPL/LCCollectionVec.h>
 
@@ -13,31 +13,27 @@
 
 #include "DDRec/DetectorData.h"
 
-
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 class BruteForceEcalGapFiller : public Processor {
 
- public:
+public:
+  virtual Processor* newProcessor() { return new BruteForceEcalGapFiller; }
 
-  virtual Processor*  newProcessor() { return new BruteForceEcalGapFiller ; }
-
-
-  BruteForceEcalGapFiller( ) ;
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* /*run*/ ) {}
-  virtual void processEvent( LCEvent * evt ) ;
-  virtual void check( LCEvent * /*evt*/ ) {}
-  virtual void end() ;
+  BruteForceEcalGapFiller();
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* /*run*/) {}
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* /*evt*/) {}
+  virtual void end();
 
   BruteForceEcalGapFiller(const BruteForceEcalGapFiller&) = delete;
   BruteForceEcalGapFiller& operator=(const BruteForceEcalGapFiller&) = delete;
 
- protected:
-
-  enum {MAXMODULE=10, MAXSTAVE=15, MAXLAYER=50};
-  std::vector < CalorimeterHit* > hitsByLayerModuleStave[MAXLAYER][MAXSTAVE][MAXMODULE];
+protected:
+  enum { MAXMODULE = 10, MAXSTAVE = 15, MAXLAYER = 50 };
+  std::vector<CalorimeterHit*> hitsByLayerModuleStave[MAXLAYER][MAXSTAVE][MAXMODULE];
 
   std::string _inputHitCollection{};
   std::string _outputHitCollection{};
@@ -56,7 +52,7 @@ class BruteForceEcalGapFiller : public Processor {
 
   LCFlagImpl _flag{};
 
-  enum {ECALENDCAP, ECALBARREL};
+  enum { ECALENDCAP, ECALBARREL };
 
   int _currentLayout{};
 
@@ -66,9 +62,8 @@ class BruteForceEcalGapFiller : public Processor {
 
   void getGeometryData(const int ihitType);
 
-  void addIntraModuleGapHits( LCCollectionVec* newcol );
-  void addInterModuleGapHits( LCCollectionVec* newcol );
- 
-} ;
+  void addIntraModuleGapHits(LCCollectionVec* newcol);
+  void addInterModuleGapHits(LCCollectionVec* newcol);
+};
 
 #endif

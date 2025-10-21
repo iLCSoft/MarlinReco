@@ -3,7 +3,6 @@
 #include <cassert>
 #include <iostream>
 
-
 using std::cout;
 using std::endl;
 
@@ -13,17 +12,14 @@ RealisticCaloRecoSilicon::RealisticCaloRecoSilicon() : RealisticCaloReco::Proces
   _description = "Performs fist reconstruction of silicon ECAL hits";
 }
 
-void RealisticCaloRecoSilicon::init() {
-  RealisticCaloReco::init();
-}
-
+void RealisticCaloRecoSilicon::init() { RealisticCaloReco::init(); }
 
 float RealisticCaloRecoSilicon::reconstructEnergy(const CalorimeterHit* hit) {
   // here the input energy should be in MIPs
   float energy = hit->getEnergy();
   // what layer is this hit in?
-  int layer   = (*_idDecoder) (hit)[_cellIDLayerString];
+  int layer = (*_idDecoder)(hit)[_cellIDLayerString];
   // now correct for sampling fraction
-  energy *= getLayerCalib( layer );
+  energy *= getLayerCalib(layer);
   return energy;
 }

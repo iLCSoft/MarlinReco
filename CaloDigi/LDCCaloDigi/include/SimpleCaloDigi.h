@@ -2,14 +2,13 @@
 #ifndef DIGITIZERAR_H
 #define DIGITIZERAR_H 1
 
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 #include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /** === SimpleCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
@@ -37,7 +36,7 @@ using namespace marlin ;
  *  a given sampling fraction. <br>
  *  List of layer numbers terminating each section are given through <br>
  *  processor parameters ECALLayers and HCALLayers <br>
- *  There is an option to perform digitization of <br> 
+ *  There is an option to perform digitization of <br>
  *  both ECAL and HCAL in a digital mode. <br>
  *  Digital mode is activated by  <br>
  *  setting processor parameters <br>
@@ -50,45 +49,39 @@ using namespace marlin ;
  *  Relations between CalorimeterHits and SimCalorimeterHits <br>
  *  are held in the corresponding relation collection. <br>
  *  The name of this relation collection is specified <br>
- *  via processor parameter RelationOutputCollection. <br> 
+ *  via processor parameter RelationOutputCollection. <br>
  *  <h4>Input collections and prerequisites</h4>
  *  SimCalorimeterHit collections <br>
  *  <h4>Output</h4>
  *  CalorimeterHit collections for ECal and HCal. <br>
  *  Collection of relations <br>
- *  between CalorimeterHits and SimCalorimeterHits. <br> 
+ *  between CalorimeterHits and SimCalorimeterHits. <br>
  *  For ECal Calorimeter hits the variable type is set to 0, <br>
  *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
  *  @version $Id$ <br>
  */
 class SimpleCaloDigi : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new SimpleCaloDigi ; }
-  
-  
-  SimpleCaloDigi() ;
-  
-  virtual void init() ;
-  
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  
-  virtual void end() ;
-  
-  
- protected:
 
+public:
+  virtual Processor* newProcessor() { return new SimpleCaloDigi; }
+
+  SimpleCaloDigi();
+
+  virtual void init();
+
+  virtual void processRunHeader(LCRunHeader* run);
+
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
+  virtual void end();
+
+protected:
   int _nRun{};
   int _nEvt{};
-  
+
   std::vector<std::string> _ecalCollections{};
   std::vector<std::string> _hcalCollections{};
 
@@ -96,24 +89,17 @@ class SimpleCaloDigi : public Processor {
   std::string _outputHcalCollection{};
   std::string _outputRelCollection{};
 
-
   float _thresholdEcal{};
   float _thresholdHcal{};
 
   int _digitalEcal{};
   int _digitalHcal{};
 
-
   std::vector<float> _calibrCoeffEcal{};
   std::vector<float> _calibrCoeffHcal{};
 
   std::vector<int> _ecalLayers{};
   std::vector<int> _hcalLayers{};
-
-
-} ;
+};
 
 #endif
-
-
-

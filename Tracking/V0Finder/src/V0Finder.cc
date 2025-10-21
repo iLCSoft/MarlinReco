@@ -133,6 +133,9 @@ void V0Finder::processRunHeader( LCRunHeader* ) {
 
 void V0Finder::processEvent( LCEvent * evt ) { 
 
+  // Declaration of the output collections
+  LCCollectionVec * colRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+  LCCollectionVec * colVertex   = new LCCollectionVec(LCIO::VERTEX);
 
   try {
   
@@ -341,9 +344,6 @@ void V0Finder::processEvent( LCEvent * evt ) {
       
       Sorting( trkPairs );
       
-      // Declaration of the output collections
-      LCCollectionVec * colRecoPart = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-      LCCollectionVec * colVertex   = new LCCollectionVec(LCIO::VERTEX);
       
       for (int iTrkP=0;iTrkP<nTrkPairs;++iTrkP) {
 	TrackPair * pair = trkPairs[iTrkP];
@@ -404,8 +404,6 @@ void V0Finder::processEvent( LCEvent * evt ) {
 	}
       }
       
-      evt->addCollection( colRecoPart,_recoPartColName.c_str() );
-      evt->addCollection( colVertex, _vertexColName.c_str() );
       
     }
     
@@ -421,7 +419,8 @@ void V0Finder::processEvent( LCEvent * evt ) {
   }
   catch(DataNotAvailableException &e) {}
 
-
+  evt->addCollection( colRecoPart,_recoPartColName.c_str() );
+  evt->addCollection( colVertex, _vertexColName.c_str() );
 
   _nEvt++;
 

@@ -39,7 +39,7 @@ Verbosity level. Put to MESSAGE or WARNING to make it almost shut up.
 
   The processor uses the MCParticle collection, and the
 RecoMCTruthLink navigator as input. It recreates the Pythia event
-record from the MCParticles, corrects in-consistencies (both those 
+record from the MCParticles, corrects in-consistencies (both those
 already present in  the input file and those created by
 simulation). It identifies the _initial_ and _final_ colour-neutral
 systems, meaning those at the beginning and end of the parton-shower,
@@ -58,16 +58,16 @@ them.
 
 The  _final_ colour-neutral systems always give rise to two jets.
 This is also true if the colour-neutral system is a "cluster"
-i.e. a bound state of initial quarks (normally the  colour-neutral 
+i.e. a bound state of initial quarks (normally the  colour-neutral
 system is a "string" i.e.. a system of two quarks and a chain of gluons).
 Usually, a "cluster" materialises to a single hadron, so one of the
 two jets will be _empty_ . However, both jets will be present earlier
 in the parton-shower.
 
-The _initial_ colour-neutral system  might make more than two jets, 
-due to gluon radiation. In the this case, TrueJet keeps track of 
-which jets ultimately came from a given _initial_ colour-neutral system. 
-The _initial_  colour-neutral system is the one that is expected to come 
+The _initial_ colour-neutral system  might make more than two jets,
+due to gluon radiation. In the this case, TrueJet keeps track of
+which jets ultimately came from a given _initial_ colour-neutral system.
+The _initial_  colour-neutral system is the one that is expected to come
 from a single IVB-fermion-antifermion vertex in the initial hard process.
 
 The same logic also works for leptons: They, too, are grouped together
@@ -82,7 +82,7 @@ All post-parton shower MCParticles that were not assigned to
 any jet by this process are from overlaid gamma-gamma->hadrons
 events, or beam-strahlung pairs, and are grouped together into one single jet.
 
-For further explanations of the method , see the commented listing in 
+For further explanations of the method , see the commented listing in
 the examples folder and  [this talk](http://agenda.linearcollider.org/getFile.py/access?contribId=0&resId=0&materialId=slides&confId=6526).
 (note that some collection-names have changed wrt. that talk).
 
@@ -137,21 +137,21 @@ the examples folder and  [this talk](http://agenda.linearcollider.org/getFile.py
 </processor>
 ```
 
-If DSTOutput called: need to add the TrueJet outputs to the parameters of 
+If DSTOutput called: need to add the TrueJet outputs to the parameters of
 processor name="DSTOutput", by adding
 
 
 -       TrueJets
 -       FinalColourNeutrals
 -       InitialColourNeutrals
--       TrueJetPFOLink 
--       TrueJetMCParticleLink 
--       FinalElementonLink 
--       InitialElementonLink 
--       FinalColourNeutralLink 
+-       TrueJetPFOLink
+-       TrueJetMCParticleLink
+-       FinalElementonLink
+-       InitialElementonLink
+-       FinalColourNeutralLink
 -       InitialColourNeutralLink
 
-to the   <parameter name="KeepCollectionNames" type="StringVec"> 
+to the   <parameter name="KeepCollectionNames" type="StringVec">
 section of the DSTOutput processor parameters. If full functionality
 of TrueJet_Parser is wanted, at least
 
@@ -167,17 +167,17 @@ should also be in the list, but they would be in any useful DST-output anyhow...
 
    `getEnergy, getMass, getMomentum, getCharge` returns those quantities, calculated from the values
     of all PFOs connected to the true jet.
-    
+
    `getParticles` returns the list of all PFOs in the jet.
    `getParticleIDs()[0]->getType` returns the jet type as:
-   
+
        1  : jet from string
        2  : jet is lepton
        3  : jet from cluster
        4  : jet is ISR
        5  : jet is overlay
        6  : jet is a photon from the matrix-element
-       
+
 
 
 if the jet came from a quark from gluon-splitting, [(jet radiating the gluon)+1]*100 is added to the type.
@@ -195,7 +195,7 @@ leptons from the initial boson, or as the sum of true energies of all stable par
 `getParticles` returns the TrueJets connected to the system (always two, except for ISR)
 
    `getParticleIDs()[0]->getType` returns the  Colour Neutral type as:
-   
+
        1  : c.n. is string
        2  : c.n. is lepton-pair
        3  : c.n. is cluster
@@ -206,7 +206,7 @@ leptons from the initial boson, or as the sum of true energies of all stable par
 Colour Neutral system.
 
    `getParticleIDs()[0:2]->getPDG` returns the  Colour Neutral PDG as:
-   
+
        0 : PDG of the system itself (92=string, 91=cluster, 22=photon (ISR or ME), any lepton PDG=lepton pair)
        1 : PDG of first elementon (quark, lepton or photon)
        2 : PDG of second elementon (quark or  lepton)
@@ -222,13 +222,13 @@ of the CMcluster, or the particle produced by the boson, in case there was no CM
 if there was hard gluon radiation or (top) quark-decay during the parton shower)
 
    `getParticleIDs()[0]->getType` returns the Colour Neutral type as:
-   
+
        1,3  : c.n. is hadronic
        2    : c.n. lepton-pair
-       
+
 `getParticleIDs()[1:n]->getType` is the same as the type of jet 1:n emerging from the
  Colour Neutral system.
-   
+
    `getParticleIDs()[0:n]->getPDG` returns the  Colour Neutral PDG as:
 
        0   : PDG of the boson (23=Z, 24=W, 25=H ... )
@@ -239,7 +239,7 @@ H->WW*, ZZ* or Zgamma, the boson is *not* the Higgs, but rather the W, Z or gamm
 the other hand, the boson *is* the Higgs.
 
 No other information is filled.
- 
+
 ** Navigators: **
 
 |   Name                      |  Object   |  Related objects |
@@ -263,7 +263,7 @@ then
 
 
 `reltjmcp->getRelated`*To*`Objects( aTrueJet )`
-                     
+
 
 returns the list of mcparticles in jet aTrueJet, while
 
@@ -280,9 +280,9 @@ Except for _TrueJetMCParticle_, the weight of the relation has no particular mea
 In _TrueJetMCParticle_ the meaning of the weight (as from `www =  reltjmcp->getRelated`*To*`Weights(  aTrueJet )` )
 is:
 
-      1   : stable particle from generator, or decayed particle where the sum of 4-mom of the daughters is 
+      1   : stable particle from generator, or decayed particle where the sum of 4-mom of the daughters is
             different from the 4-mom of the particle (which indicates that the detector simulation has modified
-	    the particle before decay)  
+	    the particle before decay)
      -1   : generator inner brems photon.
 
       11  : generator decayed particle.

@@ -50,7 +50,7 @@ This processor has four output parameters:
   In case <img src="https://render.githubusercontent.com/render/math?math=N_{\mathrm{turns}} > 0.5"> the track segment length is calculated between neighboring track states as:
    <img src="https://render.githubusercontent.com/render/math?math=\ell_{\mathrm{last}} = \frac{\left |z_{i %2B 1} - z_{i}\right |}{| \tan{\lambda} |} \sqrt{1 %2B \tan^2{\lambda} }">.<br>
 
-  If helix has more than half revolution between two tracker states then we are unable to use the formula with phi angle, thus we use different formula that does not rely on the azimuthal angle but only on z coordinate and the dip of the helix. Later formula is less precise, so we use it only in these exception cases. More than half turn situation generally should not happen between TPC hits as neighboring TPC hits usually close to each other. But more than half turn often can happen between last TPC hit and the extrapolated track state at the ECal endcap. 
+  If helix has more than half revolution between two tracker states then we are unable to use the formula with phi angle, thus we use different formula that does not rely on the azimuthal angle but only on z coordinate and the dip of the helix. Later formula is less precise, so we use it only in these exception cases. More than half turn situation generally should not happen between TPC hits as neighboring TPC hits usually close to each other. But more than half turn often can happen between last TPC hit and the extrapolated track state at the ECal endcap.
 
 
 ## Steering file example
@@ -77,7 +77,7 @@ One can find output for PandoraPFOs which has new TrackLength algorithm attached
     parameters:
     --------------- print out of ReconstructedParticle collection ---------------
                                         . . .
-    parameter ParameterNames_MyTrackLengthProcessor [string]: trackLengthToSET, trackLengthToEcal, momentumHMToSET, momentumHMToEcal, 
+    parameter ParameterNames_MyTrackLengthProcessor [string]: trackLengthToSET, trackLengthToEcal, momentumHMToSET, momentumHMToEcal,
                                         . . .
 
 
@@ -85,11 +85,11 @@ One can find output for PandoraPFOs which has new TrackLength algorithm attached
 
 
     ------------ detailed PID info: ---
-      algorithms :                                        
+      algorithms :
       [id: 9]   MyTrackLengthProcessor - params:  trackLengthToSET trackLengthToEcal momentumHMToSET momentumHMToEcal
 
       [particle] |  PDG   | likelihood |  type  |  algoId  | parameters :
-                 |        |            |        |          |              
+                 |        |            |        |          |
       [00000071]                        . . .
                  |      0 | 0.0000e+00 | 000000 |        9 | [ trackLengthToSET : 2.62e+03, trackLengthToEcal : 2.85e+03, momentumHMToSET : 3.84e+00, momentumHMToEcal : 3.84e+00,]
 
@@ -104,7 +104,7 @@ Here is the code example how to do that:
         const ParticleID& pfoPID = pidHandler.getParticleID(pfo, algorithmID);
         const std::vector<float>& parameters = pfoPID.getParameters();
         int parIdx = pidHandler.getParameterIndex(algorithmID, parameterName);
-        return parameters[parIdx]; 
+        return parameters[parIdx];
     }
 
     void YourAmazingAnalysisProcessor::processEvent(LCEvent* event){

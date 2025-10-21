@@ -4,7 +4,7 @@
 <!--#     for selecting subsets of gammagamma candidates        #-->
 <!--#     corresponding to correct gamma gamma combination      #-->
 <!--#     using MC information.                                 #-->
-<!--#                                                           #--> 
+<!--#                                                           #-->
 <!--#############################################################-->
 
 <marlin>
@@ -16,7 +16,7 @@
  </execute>
 
  <global>
-   <parameter name="LCIOInputFiles"> myfile_OUT.slcio </parameter> 
+   <parameter name="LCIOInputFiles"> myfile_OUT.slcio </parameter>
    <parameter name="SkipNEvents" value="0" />
    <parameter name="MaxRecordNumber" value="10" />
    <parameter name="SupressCheck" value="false" />

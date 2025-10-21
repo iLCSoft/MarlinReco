@@ -11,30 +11,30 @@
 
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <constants>
-  <!-- define constants here - use in steering file as ${ConstantName} --> 
+  <!-- define constants here - use in steering file as ${ConstantName} -->
   <!--constant name="DetectorModel" value="ILD_l5_o1_v02" /-->
  </constants>
 
  <execute>
    <processor name="MyAIDAProcessor"/>
    <processor name="MyTrackZVertexGrouping"/>
-   <processor name="MyLCIOOutputProcessor"/>  
-  <!--/if-->                                 
+   <processor name="MyLCIOOutputProcessor"/>
+  <!--/if-->
  </execute>
 
  <global>
    <parameter name="LCIOInputFiles">
      /data/ilcsoft/data/rv02-00-01.sv02-00-01.mILD_l5_o1_v02.E500-TDR_ws.I201001.Pnp-hino-vldm_770_nn12g.eR.pL.n001.d_dstm_10894_0.slcio
    </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="10" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="AllowToModifyEvent" value="false" />  
-  <parameter name="GearXMLFile"></parameter>  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="10" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="AllowToModifyEvent" value="false" />
+  <parameter name="GearXMLFile"></parameter>
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
-  <!-- optionally limit the collections that are read from the input file: -->  
+  <!-- optionally limit the collections that are read from the input file: -->
   <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
  </global>
 

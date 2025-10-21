@@ -1,5 +1,5 @@
 #############################################################################
-#                                                                           # 
+#                                                                           #
 # SiStripDigi+SiStripClus - digitization and clusterizer packages           #
 #                                                                           #
 #  version 2.0.0                                                            #
@@ -14,19 +14,19 @@
  -------------------------------------------------
 
   - Make sure that cmake is in your PATH environment!
-  
-  - Make sure that you have already installed GEAR, LCIO, MARLIN, ROOT 
+
+  - Make sure that you have already installed GEAR, LCIO, MARLIN, ROOT
     and CMakeModules! If not, you can download them from ilcsoft home page:
-    http://ilcsoft.desy.de/portal/software_packages. (Each package has 
+    http://ilcsoft.desy.de/portal/software_packages. (Each package has
     its own howto.)
 
   - Copy original template file ./CMakeLists.txt.orig to
-    ./CMakeLists.txt and edit it if needed (for experts only)  
+    ./CMakeLists.txt and edit it if needed (for experts only)
 
-  - Copy original template file .config/BuildSetup.cmake.orig to file 
-    ./config/BuildSetup.cmake, edit it and change paths according to your 
+  - Copy original template file .config/BuildSetup.cmake.orig to file
+    ./config/BuildSetup.cmake, edit it and change paths according to your
     system setup, i.e. change paths to GEAR, LCIO, MARLIN or use shell
-    environment variables (see setup.sh) ... 
+    environment variables (see setup.sh) ...
 
     Afterwards go to SiStripDigi directory and type:
 
@@ -34,38 +34,38 @@
     $ cd build
     $ cmake -C ../config/BuildSetup.cmake ..
     $ make install
-    
+
   - Don't forget to set plugins to be loaded by Marlin:
-    
+
     export MARLIN_DLL=$MARLIN_DLL:$SISTRIPDIGI/lib/libSiStripDigi.so
-    
-  - If you like, use doxygen to generate documentation: 
-     
-    $ doxygen Doxyfile  
-   
+
+  - If you like, use doxygen to generate documentation:
+
+    $ doxygen Doxyfile
+
  How SiStripDigi works:
  ----------------------
- 
-  SiStripDigi (a Marlin processor) represents a detailed strip detector digitizer 
-  that's mainly intended for detailed simulation studies; but in principle, can 
-  be used for full physics studies. The geometry information required for data 
-  processing is being accessed on the fly via a geometry interface: SiStripGeom 
-  that simply utilizes the information obtained from given GEAR *.xml file. As 
-  regards the solid-state physics, the processor naturally implements the following 
-  processes for e-h pairs created by a high-energy particle: drift in electric field 
-  (simplified just as electric field of a p-n junction - oriented in negative direction 
-  of X axis of local reference system, i.e. electrons drift in positive direction X, holes 
+
+  SiStripDigi (a Marlin processor) represents a detailed strip detector digitizer
+  that's mainly intended for detailed simulation studies; but in principle, can
+  be used for full physics studies. The geometry information required for data
+  processing is being accessed on the fly via a geometry interface: SiStripGeom
+  that simply utilizes the information obtained from given GEAR *.xml file. As
+  regards the solid-state physics, the processor naturally implements the following
+  processes for e-h pairs created by a high-energy particle: drift in electric field
+  (simplified just as electric field of a p-n junction - oriented in negative direction
+  of X axis of local reference system, i.e. electrons drift in positive direction X, holes
   vice versa), diffusion due to multiple collisions and Lorentz shift in magnetic
-  field; furthermore, it also takes into account electronics processes: mutual micro-strip 
-  crosstalks (dependent on AC/DC coupling), electronics noise, the type of current collected 
-  by strips and set if there are floating string in between real read-out strips. As DSSDs 
-  are assumed to be digitized, both electrons and holes are collected. Electrons drift to 
-  strips oriented in R-Phi direction, holes to strips oriented in Z direction. A user can 
-  naturally influence these effects when changing processor parameters: sensor depletion 
-  voltage (set by default to 60 V), sensor bias voltage (set by default to 150 V), temperature 
-  of a silicon wafer (set by default to 300 K), interstrip capacitance (set by default to 6 pF), 
-  strip-to-backplane capacitance (set by default to 0 pF), coupling capacitance (set by default 
-  to 120 pF) and sigma of CMS-like noise (set by default to 1200 electrons). Finally, to 
+  field; furthermore, it also takes into account electronics processes: mutual micro-strip
+  crosstalks (dependent on AC/DC coupling), electronics noise, the type of current collected
+  by strips and set if there are floating string in between real read-out strips. As DSSDs
+  are assumed to be digitized, both electrons and holes are collected. Electrons drift to
+  strips oriented in R-Phi direction, holes to strips oriented in Z direction. A user can
+  naturally influence these effects when changing processor parameters: sensor depletion
+  voltage (set by default to 60 V), sensor bias voltage (set by default to 150 V), temperature
+  of a silicon wafer (set by default to 300 K), interstrip capacitance (set by default to 6 pF),
+  strip-to-backplane capacitance (set by default to 0 pF), coupling capacitance (set by default
+  to 120 pF) and sigma of CMS-like noise (set by default to 1200 electrons). Finally, to
   achieve higher effectivity one can influence the simulation precision using these parameters:
   space precision (set by default to 20 um), relative Lorentz angle precision (set by
   default to 1%) and relative drift time precision (set by default to 1%). As the space
@@ -76,46 +76,46 @@
   uniformly using the info from Geant 4, otherwise internal fluctuation is used. As an
   output one obtains a standard LCIO collection of TrackerPulses, so to obtain hits,
   one still must perform clustering, for instance SiStripClus processor can do it ...
-  
+
   For more details: see generated documentation ...
-  
+
  How SiStripClus works:
  ----------------------
- 
-  SiStripClus (a Marlin processor) provides a cluster finding algorithm based on 
-  COG (centre of gravity) method (cluster size is lower than 3) or on head-tail 
-  analog method (cluster-size is equal or higher than 3) and thus transforms electric 
-  pulses (TrackerPulses - obtained from SiStripDigi processor) into real 2D hits 
-  (RPhi + Z) (resp. 3D hits, where the 3rd component is calculated as a center of 
-  a sensor). First, a seed strip (which is a strip with signal higher than roughly 
-  5 * noise level - set by user) in Z direction is found, than the processor looks 
-  for neighbouring strips (with signals higher than roughly 2 * noise level - set 
-  by user) and thus finds 1D clusters in Z. The same is performed in R-Phi direction 
-  (pitch in R-Phi might differ in forward region based on current Z position); final 
-  2D hits are calculated (including "blind" hits, so-called ghosts). All the calculations 
-  are performed in local reference system (using information from geometry interface: 
-  SiStripGeom) and final 3D hits are transformed back into global ref. system. In 
+
+  SiStripClus (a Marlin processor) provides a cluster finding algorithm based on
+  COG (centre of gravity) method (cluster size is lower than 3) or on head-tail
+  analog method (cluster-size is equal or higher than 3) and thus transforms electric
+  pulses (TrackerPulses - obtained from SiStripDigi processor) into real 2D hits
+  (RPhi + Z) (resp. 3D hits, where the 3rd component is calculated as a center of
+  a sensor). First, a seed strip (which is a strip with signal higher than roughly
+  5 * noise level - set by user) in Z direction is found, than the processor looks
+  for neighbouring strips (with signals higher than roughly 2 * noise level - set
+  by user) and thus finds 1D clusters in Z. The same is performed in R-Phi direction
+  (pitch in R-Phi might differ in forward region based on current Z position); final
+  2D hits are calculated (including "blind" hits, so-called ghosts). All the calculations
+  are performed in local reference system (using information from geometry interface:
+  SiStripGeom) and final 3D hits are transformed back into global ref. system. In
   order to obtain quasi-realistic covariance matrices for each hit, the
   resolution can be simulated using this processor (use #define ROOT_OUTPUT)
   and then put as input Marlin resolution parameters ...
-  
+
   For more details: see generated documentation ...
-   
+
  What's new?
  -----------
-    
+
   v1.0.0
   ------
   - Added possibility to digitize forward slanted sensors with non-uniform pitch in RPhi (along Z-axiz), Z. Drasal Jul 2009
-  
+
   v1.0.1
   ------
   - Implemented new parameter for cut on time to emulate the integration time, K. Prothmann Dec. 2009
-  
+
   v1.0.2
   ------
   - Added possibility to digitize floating strips (in RPhi or Z) too, Z. Drasal Feb 2010
-  
+
   v1.0.3
   ------
   - Added detailed landau fluctuations in Si based on Geant 4 G4UniversalFluctuation, Z. Drasal Apr 2010
@@ -123,7 +123,7 @@
 
   v2.0.0
   ------
-  - Major changes in the geometrical interface (SiStripGeom-SiStripGeomFTD) adapting the code to FTD subdetector, J. Duarte 
+  - Major changes in the geometrical interface (SiStripGeom-SiStripGeomFTD) adapting the code to FTD subdetector, J. Duarte
     Oct 2011
   - Using two Single Side sensors as Pseudo-Double Sided with the strips in stereoangle, J. Duarte Oct 2011
   - Still need some documentation...

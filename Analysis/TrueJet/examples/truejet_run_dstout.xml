@@ -19,11 +19,11 @@
 <parameter name="LCIOInputFiles">
 /afs/desy.de/group/flc/pool/analysis/rv01-16-p05_500.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.I250006.P4f_ww_h.eL.pR-00001-DST.slcio
 </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="0" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="0" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING </parameter>
  </global>
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">
@@ -42,29 +42,29 @@
 
 
 <processor name="DSTOutput" type="LCIOOutputProcessor">
-   <!--   
-     DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles 
+   <!--
+     DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles
      TO DO:  add LCFI flavour tag stuff
    -->
    <parameter name="LCIOOutputFile" type="string" >
   /tmp/newhej.slcio
    </parameter>
-   <parameter name="DropCollectionTypes" type="StringVec"> 
-       MCParticle 
-       LCRelation 
-       SimTrackerHit 
+   <parameter name="DropCollectionTypes" type="StringVec">
+       MCParticle
+       LCRelation
+       SimTrackerHit
        SimCalorimeterHit
-       TrackerHit 
-       CalorimeterHit 
-       Track 
+       TrackerHit
+       CalorimeterHit
+       Track
        ReconstructedParticle
-       LCFloatVec      
+       LCFloatVec
        LCGenericObject
        TrackerHitPlane
     </parameter>
     <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed2"/>
-    <parameter name="KeepCollectionNames" type="StringVec"> 
-       MCParticlesSkimmed 
+    <parameter name="KeepCollectionNames" type="StringVec">
+       MCParticlesSkimmed
        RecoMCTruthLink
        MCTruthRecoLink
        TrackMCTruthLink
@@ -82,19 +82,19 @@
        Durham_3Jets
        Durham_4Jets
        Durham_5Jets
-       Durham_6Jets 
+       Durham_6Jets
        BuildUpVertex
        BuildUpVertex_RP
        BuildUpVertex_V0
        BuildUpVertex_V0_RP
        PrimaryVertex
        PrimaryVertex_RP
-       TrueJetPFOLink 
-       TrueJetMCParticleLink 
+       TrueJetPFOLink
+       TrueJetMCParticleLink
        TrueJets
-       FinalElementonLink 
-       InitialElementonLink 
-       FinalColourNeutralLink 
+       FinalElementonLink
+       InitialElementonLink
+       FinalColourNeutralLink
        InitialColourNeutralLink
        FinalColourNeutrals
        InitialColourNeutrals

@@ -1,7 +1,7 @@
 RealisticCalo* is a re-orgainsation of the calorimeter digitisation and reconstruction code, which was previously in ILDCaloDigi.
 It's also designed to work only with DD4hep geometry information.
 
-The task has been split into several tasks: 
+The task has been split into several tasks:
 
 1) hit digitisation
 
@@ -29,7 +29,7 @@ In principle, it should be possible (and probably more efficient) to use cell in
 
 One instance of each processor should be used for each collection of hits (or set of collections with identical properties).
 
-There are virtual base classes RealisticCaloDigi and RealisticCaloReco. 
+There are virtual base classes RealisticCaloDigi and RealisticCaloReco.
 Derived classes for a particular technology inherit from these: RealisticCaloDigiSilicon, RealisticCaloDigiScinPpd and RealisticCaloRecoSilicon, RealisticCaloRecoSilicon.
 
 example of steering:

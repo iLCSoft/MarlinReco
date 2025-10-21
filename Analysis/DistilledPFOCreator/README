@@ -1,10 +1,10 @@
 DistilledPFOCreator Processor
 
-Purpose: Create a PFO collection consisting of the set of ReconstructedParticles that is the union 
-         of the PandoraPFOs collection and the GammaGammaParticles collection (consisting of unique mass-constrained gamma-gamma combinations) 
+Purpose: Create a PFO collection consisting of the set of ReconstructedParticles that is the union
+         of the PandoraPFOs collection and the GammaGammaParticles collection (consisting of unique mass-constrained gamma-gamma combinations)
          while avoiding any double-counting of GammaGammaParticle constituents.
 
-Method:  Read in PandoraPFOs and GammaGammaParticles. 
+Method:  Read in PandoraPFOs and GammaGammaParticles.
          Create a subset collection taking care of double counting.
          The DistilledPFOs collection can be used instead of PandoraPFOs for jet energy reconstruction.
 

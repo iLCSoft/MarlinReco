@@ -5,18 +5,18 @@
 <!--#     based on collections of candidates for                #-->
 <!--#          pi0           -> gamma gamma                     #-->
 <!--#          eta           -> gamma gamma                     #-->
-<!--#          etaprime(958) -> gamma gamma                     #--> 
+<!--#          etaprime(958) -> gamma gamma                     #-->
 <!--#                                                           #-->
 <!--#############################################################-->
 
 <marlin>
  <execute>
-   <processor name="MyGammaGammaSolutionFinder"/> 
+   <processor name="MyGammaGammaSolutionFinder"/>
    <processor name="MyLCIOOutputProcessor"/>
  </execute>
 
  <global>
-   <parameter name="LCIOInputFiles"> myfile_OUT.slcio </parameter> 
+   <parameter name="LCIOInputFiles"> myfile_OUT.slcio </parameter>
    <parameter name="SkipNEvents" value="0" />
    <parameter name="MaxRecordNumber" value="10" />
    <parameter name="SupressCheck" value="false" />
@@ -25,7 +25,7 @@
  </global>
 
  <processor name="MyGammaGammaSolutionFinder" type="GammaGammaSolutionFinder">
-    <parameter name="GammaGammaCandidateCollections" 
+    <parameter name="GammaGammaCandidateCollections"
                type="StringVec">GammaGammaCandidatePi0s GammaGammaCandidateEtas GammaGammaCandidateEtaPrimes</parameter>
     <parameter name="Printing" value="2" />
     <parameter name="OutputParticleCollectionName" value="GammaGammaParticles" />

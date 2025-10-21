@@ -2,7 +2,7 @@ This directory contains an example XML steering file and GEAR XML file for the L
 
 steer_ldc.xml
 
-gear_ldc.xml  
+gear_ldc.xml
 
 It also contains an example GNUmakefile which can be used in to build MarlinReco under the DESY Linux 5 computing environment. This would need to be modified for other computing environments.
 
@@ -14,4 +14,4 @@ muon.lcio
 
 The above four files must be copied to your $MARLIN directory.
 
- 
+

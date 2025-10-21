@@ -1,6 +1,6 @@
  AddClusterProperties: A Marlin processor to add the information on cluster
 position and direction and their errors to the Cluster:s, and to add
-the 4-momentum covariance matrix to neutral PFO:s 
+the 4-momentum covariance matrix to neutral PFO:s
 
 Author:
 
@@ -16,8 +16,8 @@ hit-energies. The covariance matrix of the C-of-G is also calculated from the we
 hits, and the direction of the cluster is calculated as the direction of the major
 axis (ie. the eigen-vector corresponding to the largest eigen-value) of the covariance matrix.
 (This is direction is the same as the major axis of inertia of the hits interpreted as
-a mass distribution, or the direction of an axis that minimises the distance from the 
-axis to the points, in a Xi^2 sense.) Furthermore, the uncertainty of the major axis 
+a mass distribution, or the direction of an axis that minimises the distance from the
+axis to the points, in a Xi^2 sense.) Furthermore, the uncertainty of the major axis
 direction is also calculated.
 
 These values are entered in to the Cluster object by the setters
@@ -28,7 +28,7 @@ These values are entered in to the Cluster object by the setters
         clu->setDirectionError(&DirectionError[0]);
 In addition, three shape parameters are set: npoints,sum_wgt^2 and sum_wgt^4. Knowing
 these allows to use  WeightedPoints3D to extract other information (eigen-values,
-other eigen-vectors, ... ) about the the cluster, without the need to have access 
+other eigen-vectors, ... ) about the the cluster, without the need to have access
 to the hits, ie. at DST level.
 
 It is also checks if clu->getEnergyError() returns 0.0. If so, a simple estimate of the
@@ -36,8 +36,8 @@ energy error is done. It uses the total cluster energy and the sub-detector ener
 guess which constants to use. clu->setEnergyError(Eerror) is then called.
 
 Once all clusters in the event have been processed, the 4-momentum with covariance matrix
-is added to the neutral PFOs in the event. This is done by using the energy of the cluster, and its error, 
-together with the  C-of-G of the cluster and its covariance matrix. One assumes that the cluster is 
+is added to the neutral PFOs in the event. This is done by using the energy of the cluster, and its error,
+together with the  C-of-G of the cluster and its covariance matrix. One assumes that the cluster is
 created by a neutral particle that comes from (0,0,0). The values are added to the PFO by
           part->setMomentum(mom);
           part->setCovMatrix(p_cov_v);

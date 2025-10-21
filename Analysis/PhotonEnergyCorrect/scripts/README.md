@@ -25,8 +25,8 @@ prepareInput.py :
 
 ## step 2: calculate optimal parameters for predetermined correction functions
 
-extractCorrection.py : 
-- set "inname" to the root file produced in the previous step 
+extractCorrection.py :
+- set "inname" to the root file produced in the previous step
 - set useClus : to correct PFO energies or Cluster energies
   probably usually should use PFO, unless they have already been corrected and
   you want to use the original uncorrected energies (which can be found in the cluster energies)

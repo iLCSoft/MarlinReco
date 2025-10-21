@@ -37,9 +37,9 @@ not, and whether the jet was type 1 or type 3.:
        1       w/o       2 and 3
        1        w        1 and 2
        3       w/o       1
-       3        w        1 and 2  
+       3        w        1 and 2
 
-For leptons, they are expected to be identical, for ISR only the 
+For leptons, they are expected to be identical, for ISR only the
 first is relevant, and for overlay, none is relevant.
 
 The full listing follows. The two status numbers are the modified
@@ -72,7 +72,7 @@ the case for jet 2 (13), since nothing significant happened
 with the that quark in the parton shower. It is also true for
 jet 5, although it did join to form a cluster.
 For jets 1 and 6, which originates from a gluon, the two are
-different (14/14 and 37/36, respectively), but the fafp of the gluon 
+different (14/14 and 37/36, respectively), but the fafp of the gluon
 is the same as that of the beginning (14).
 The qrk/lept is the last originator before the final colour neutral
 system, i.e. the quark going into the string (jets 1/2, lines 37/41), or

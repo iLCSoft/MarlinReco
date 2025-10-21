@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Example of steering file to correct the angular dependence of dEdx in
 2020 DST samples (and all generated with v02-02, v02-02-01..)
 
@@ -15,7 +15,7 @@ Author: A. Irles 2021/04
   <!--########  Execute  ######################################## -->
   <execute>
     <processor name="InitDD4hep"/>
-    <processor name="MyCorrect_Compute_dEdxProcessor"/>  
+    <processor name="MyCorrect_Compute_dEdxProcessor"/>
     <processor name="MyLikelihoodPID" />
     <processor name="DSTOutput"/>
   </execute>
@@ -25,7 +25,7 @@ Author: A. Irles 2021/04
     <parameter name="LCIOInputFiles">
       /lustre/ific.uv.es/prj/ific/flc/mc-2020/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000.d_dstm_15161_0.slcio
     </parameter>
-    <parameter name="MaxRecordNumber" value="0"/>  
+    <parameter name="MaxRecordNumber" value="0"/>
     <!--parameter name="GearXMLFile" value="GearOutput.xml"/-->
     <parameter name="SkipNEvents" value="0"/>
     <parameter name="SupressCheck" value="false"/>
@@ -79,7 +79,7 @@ Author: A. Irles 2021/04
     <parameter name="dEdxParameter_proton" type="FloatVec"> 0.0770318 1053.24 4.95076e+06 0.281489 0.000168616 </parameter>
     <!--dE/dx normalization-->
     <parameter name="dEdxNormalization" type="float">1.350e-7</parameter>
-    <!--dE/dx error factor(7.55 for l5, 8.53 for s5)--> 
+    <!--dE/dx error factor(7.55 for l5, 8.53 for s5)-->
     <parameter name="dEdxErrorFactor" type="float">7.55</parameter>
     <!-- Method: Maximum Likelihood(0), Bayesian(1), or risk based Bayesian(2)-->
     <parameter name="UseBayesian" type="int">2</parameter>
@@ -89,6 +89,6 @@ Author: A. Irles 2021/04
     <parameter name="PIDMethodsToRun_version" type="string"> v2 </parameter>
     <!--Name of the PFO collection-->
     <parameter name="RecoParticleCollection" type="string"> PandoraPFOs </parameter>
-  </processor> 
+  </processor>
 
 </marlin>

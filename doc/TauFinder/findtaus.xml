@@ -23,7 +23,7 @@
      </parameter>
    </global>
 
-  
+
   <processor name="MyPrepareRECParticles" type="PrepareRECParticles">
   <parameter name="outputColMC" value="MCParticles_tau"/>
   <parameter name="outputColTracks" value="Tracks_tau"/>
@@ -89,7 +89,7 @@
    <parameter name="LCIOWriteMode" type="string" value="None"/>
 </processor>
 
- 
+
 
 
 </marlin>

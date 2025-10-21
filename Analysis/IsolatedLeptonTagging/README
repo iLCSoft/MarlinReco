@@ -23,9 +23,9 @@ due to potential problem in muon reconstruction with associated hits in Yoke, ad
 
 https://agenda.linearcollider.org/event/7978/contributions/41777/attachments/33315/50904/IsoLep_20180627.pdf
 
-2.) weights have been re-trained using new samples yyxylv (yyxyev) as signal and yyxyyx (including yycyyc, yycyyu, yyuyyc and yyuyyu) as background. Available now are for ILD_l5_o1_v02. Same weights can be used in most studies for ILD_s5_o1_v02 as well. Re-trained weigts for ILD_s5_o1_v02 will be provided later. 
+2.) weights have been re-trained using new samples yyxylv (yyxyev) as signal and yyxyyx (including yycyyc, yycyyu, yyuyyc and yyuyyu) as background. Available now are for ILD_l5_o1_v02. Same weights can be used in most studies for ILD_s5_o1_v02 as well. Re-trained weigts for ILD_s5_o1_v02 will be provided later.
 
-3.) upon request, more weights would be available for 4-fermion processes, or more optimised pre-cuts for MVA might be provided. 
+3.) upon request, more weights would be available for 4-fermion processes, or more optimised pre-cuts for MVA might be provided.
 
 
 

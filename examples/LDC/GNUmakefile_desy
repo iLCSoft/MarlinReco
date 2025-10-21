@@ -1,9 +1,9 @@
 #########################################################
 #
-# top level GNUmakefile to build Marlin with addtional 
+# top level GNUmakefile to build Marlin with addtional
 # user packages containing processors
 #
-#  usage: all additional packages are expected to live 
+#  usage: all additional packages are expected to live
 #  in the packages subdirectory with the following structure:
 #         ./packages/MyPackage/include
 #                             ./src/
@@ -11,9 +11,9 @@
 #                             ./lib
 #
 #  where the GNUmakefile has a target 'lib; that creates
-#  a library   ./packages/MyPackage/lib/libMyPackage.a  
+#  a library   ./packages/MyPackage/lib/libMyPackage.a
 #  see e.g.:  $MARLIN/examples/mymarlin
-#  
+#
 #
 # @author Frank Gaede, DESY
 # @version $Id: GNUmakefile_desy,v 1.1 2005-08-04 16:38:57 aplin Exp $
@@ -22,7 +22,7 @@
 
 
 #
-# ---------------- additional user libs go here ------------------- 
+# ---------------- additional user libs go here -------------------
 #
 
 USERINCLUDES  = -I $(MARLIN)/packages/MarlinUtil/include
@@ -56,7 +56,7 @@ export USERLIBS
 subdirs := $(patsubst packages/%/src/GNUmakefile,packages/%, $(wildcard packages/*/src/GNUmakefile) )
 
 
-packages := $(patsubst packages/%,%,$(subdirs)) 
+packages := $(patsubst packages/%,%,$(subdirs))
 
 MARLINLIB := -Wl,-whole-archive $(foreach package,$(packages),  -L $(MARLIN)/packages/$(package)/lib -l$(package) ) -Wl,-no-whole-archive
 export MARLINLIB
@@ -68,7 +68,7 @@ export packagelibs
 
 
 
-all: lib bin 
+all: lib bin
 
 
 lib:

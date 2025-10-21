@@ -8,14 +8,14 @@
 <marlin>
  <execute>
   <processor name="MyAIDAProcessor"/>
-  <processor name="MyTestProcessor"/>  
-  <processor name="MyLCIOOutputProcessor"/>  
+  <processor name="MyTestProcessor"/>
+  <processor name="MyLCIOOutputProcessor"/>
  </execute>
 
  <global>
   <parameter name="LCIOInputFiles"> simjob.slcio </parameter>
-  <parameter name="MaxRecordNumber" value="5001" />  
-  <parameter name="SupressCheck" value="false" />  
+  <parameter name="MaxRecordNumber" value="5001" />
+  <parameter name="SupressCheck" value="false" />
  </global>
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">

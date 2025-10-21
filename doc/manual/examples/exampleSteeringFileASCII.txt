@@ -5,7 +5,7 @@
   ##########################################
 
 .begin Global  ---------------------------------------
-   LCIOInputFiles simjob.slcio 
+   LCIOInputFiles simjob.slcio
 
   # the active processors that are called in the given order
    ActiveProcessors MyAIDAProcessor
@@ -24,7 +24,7 @@
 ProcessorType AIDAProcessor
 #---Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor
 
-#	 compression of output file 0: false >0: true (default) 
+#	 compression of output file 0: false >0: true (default)
 #	 type:  [int]
 #	 default: 1
 	Compress   1
@@ -49,14 +49,14 @@ ProcessorType CEDViewer
 
 #	collection to be displayed ( ColName, marker type[0-2], size)
 #	 type:  [StringVec]
-#	 example: 
-#	DrawCollection   DrawCollection 0 3 
+#	 example:
+#	DrawCollection   DrawCollection 0 3
 
 .end -------------------------------------------------
 
 .begin MyCalorimeterFinalStage
 ProcessorType CalorimeterFinalStage
-#---CalorimeterFinalStage 
+#---CalorimeterFinalStage
 
 #	Cluster Input Collection Name
 #	 type:  [string]
@@ -83,8 +83,8 @@ ProcessorType ClusterCheater
 
 #	Calorimeter Collection Names
 #	 type:  [StringVec]
-#	 default: ECAL HCAL 
-	CaloCollections   ECAL HCAL 
+#	 default: ECAL HCAL
+	CaloCollections   ECAL HCAL
 
 
 #	Magnetic Field
@@ -141,8 +141,8 @@ ProcessorType Fox
 
 #	Numbers of the moments that are to be calculate 0-th is calculate by default
 #	 type:  [IntVec]
-#	 default: 
-	CalculateFoxWolframMoments   
+#	 default:
+	CalculateFoxWolframMoments
 
 
 #	Name of the ReconstructedParticle collection
@@ -158,8 +158,8 @@ ProcessorType GenericViewer
 
 #	Calo Hit Collection Names
 #	 type:  [StringVec]
-#	 default: ECAL HCAL 
-	CaloHitCollections   ECAL HCAL 
+#	 default: ECAL HCAL
+	CaloHitCollections   ECAL HCAL
 
 
 #	Cluster Collection Name
@@ -242,14 +242,14 @@ ProcessorType GenericViewer
 
 #	Sim Calo Hit Collection Names
 #	 type:  [StringVec]
-#	 default: ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps 
-	SimCaloHitCollections   ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps 
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps
+	SimCaloHitCollections   ecal02_EcalBarrel ecal02_EcalEndcap hcalFeRPC1_HcalBarrelEnd hcalFeRPC1_HcalBarrelReg hcalFeRPC1_HcalEndCaps
 
 
 #	Sim Tracker Hit Collection Names
 #	 type:  [StringVec]
-#	 default: tpc03_TPC 
-	SimTrackerHitCollections   tpc03_TPC 
+#	 default: tpc03_TPC
+	SimTrackerHitCollections   tpc03_TPC
 
 
 #	Track Collection Name
@@ -260,8 +260,8 @@ ProcessorType GenericViewer
 
 #	Tracker Hit Collection Names
 #	 type:  [StringVec]
-#	 default: TPCTrackerHits 
-	TrackerHitCollections   TPCTrackerHits 
+#	 default: TPCTrackerHits
+	TrackerHitCollections   TPCTrackerHits
 
 
 #	True Cluster Collection Name
@@ -288,17 +288,17 @@ ProcessorType LCIOOutputProcessor
 
 #	drops the named collections from the event
 #	 type:  [StringVec]
-#	 example: 
-#	DropCollectionNames   TPCHits HCalHits 
+#	 example:
+#	DropCollectionNames   TPCHits HCalHits
 
 
 #	drops all collections of the given type from the event
 #	 type:  [StringVec]
-#	 example: 
-#	DropCollectionTypes   SimTrackerHit SimCalorimeterHit 
+#	 example:
+#	DropCollectionTypes   SimTrackerHit SimCalorimeterHit
 
 
-#	 name of output file 
+#	 name of output file
 #	 type:  [string]
 #	 default: outputfile.slcio
 	LCIOOutputFile   outputfile.slcio
@@ -346,26 +346,26 @@ ProcessorType MokkaCaloDigi
 
 #	Calibration coefficients for ECAL
 #	 type:  [FloatVec]
-#	 default: 31.3 83 
-	CalibrECAL   31.3 83 
+#	 default: 31.3 83
+	CalibrECAL   31.3 83
 
 
 #	Calibration coefficients for HCAL
 #	 type:  [FloatVec]
-#	 default: 27.3 
-	CalibrHCAL   27.3 
+#	 default: 27.3
+	CalibrHCAL   27.3
 
 
 #	ECAL Collection Names
 #	 type:  [StringVec]
-#	 default: ecal02_EcalBarrel ecal02_EcalEndcap 
-	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap 
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap
+	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap
 
 
 #	Index of ECal Layers
 #	 type:  [IntVec]
-#	 default: 30 100 
-	ECALLayers   30 100 
+#	 default: 30 100
+	ECALLayers   30 100
 
 
 #	Threshold for ECAL Hits in GeV
@@ -376,14 +376,14 @@ ProcessorType MokkaCaloDigi
 
 #	HCAL Collection Names
 #	 type:  [StringVec]
-#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
-	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps
+	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps
 
 
 #	Index of HCal Layers
 #	 type:  [IntVec]
-#	 default: 100 
-	HCALLayers   100 
+#	 default: 100
+	HCALLayers   100
 
 
 #	Threshold for HCAL Hits in GeV
@@ -404,19 +404,19 @@ ProcessorType MokkaCaloDigi
 	IfDigitalHcal   0
 
 
-#	name for the new collection 
+#	name for the new collection
 #	 type:  [string]
 #	 default: ECAL
 	NewECALCollName   ECAL
 
 
-#	size of the new cell (integer) 
+#	size of the new cell (integer)
 #	 type:  [int]
 #	 default: 3
 	NewHCALCellSize   3
 
 
-#	name for the new collection 
+#	name for the new collection
 #	 type:  [string]
 #	 default: HCAL
 	NewHCALCollName   HCAL
@@ -429,13 +429,13 @@ ProcessorType SatoruJetFinderProcessor
 
 #	Set debug level
 #	 type:  [int]
-#	 example: 
+#	 example:
 #	Debug   0
 
 
 #	mode for manual alogorithm selection, see documentation for details
 #	 type:  [string]
-#	 example: 
+#	 example:
 #	GlobalMode   0A
 
 
@@ -447,13 +447,13 @@ ProcessorType SatoruJetFinderProcessor
 
 #	Merging mode, if mode is "manual"
 #	 type:  [int]
-#	 example: 
+#	 example:
 #	MergingMode   0
 
 
 #	Merging threshold, if mode is "manual"
 #	 type:  [float]
-#	 example: 
+#	 example:
 #	MergingThreshold   0
 
 
@@ -465,7 +465,7 @@ ProcessorType SatoruJetFinderProcessor
 
 #	Force everything to N jets(if supported by current mode)
 #	 type:  [int]
-#	 example: 
+#	 example:
 #	NJetRequested   4
 
 
@@ -477,25 +477,25 @@ ProcessorType SatoruJetFinderProcessor
 
 #	Primary jet finding mode, if mode is "manual"
 #	 type:  [int]
-#	 example: 
+#	 example:
 #	PrimaryJetFindingMode   0
 
 
 #	Secong jet finding mode, if mode is "manual"
 #	 type:  [int]
-#	 example: 
+#	 example:
 #	SecondJetFindingMode   0
 
 
 #	Threshold, if mode is "manual"
 #	 type:  [float]
-#	 example: 
+#	 example:
 #	Threshold   0
 
 
 #	YCut for jet finding algorithm(if supported by current mode)
 #	 type:  [float]
-#	 example: 
+#	 example:
 #	YCut   0
 
 .end -------------------------------------------------
@@ -529,26 +529,26 @@ ProcessorType SimpleCaloDigi
 
 #	Calibration coefficients for ECAL
 #	 type:  [FloatVec]
-#	 default: 31.3 83 
-	CalibrECAL   31.3 83 
+#	 default: 31.3 83
+	CalibrECAL   31.3 83
 
 
 #	Calibration coefficients for HCAL
 #	 type:  [FloatVec]
-#	 default: 27.3 
-	CalibrHCAL   27.3 
+#	 default: 27.3
+	CalibrHCAL   27.3
 
 
 #	ECAL Collection Names
 #	 type:  [StringVec]
-#	 default: ecal02_EcalBarrel ecal02_EcalEndcap 
-	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap 
+#	 default: ecal02_EcalBarrel ecal02_EcalEndcap
+	ECALCollections   ecal02_EcalBarrel ecal02_EcalEndcap
 
 
 #	Index of ECal Layers
 #	 type:  [IntVec]
-#	 default: 30 100 
-	ECALLayers   30 100 
+#	 default: 30 100
+	ECALLayers   30 100
 
 
 #	ECAL Collection of real Hits
@@ -565,14 +565,14 @@ ProcessorType SimpleCaloDigi
 
 #	HCAL Collection Names
 #	 type:  [StringVec]
-#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
-	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps 
+#	 default: hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps
+	HCALCollections   hcalFeScintillator_HcalBarrelEnd hcalFeScintillator_HcalBarrelReg hcalFeScintillator_HcalEndCaps
 
 
 #	Index of HCal Layers
 #	 type:  [IntVec]
-#	 default: 100 
-	HCALLayers   100 
+#	 default: 100
+	HCALLayers   100
 
 
 #	HCAL Collection of real Hits
@@ -612,8 +612,8 @@ ProcessorType SimpleFastMCProcessor
 
 #	Resolution of charged particles in polar angle range:  d(1/P)  th_min  th_max
 #	 type:  [FloatVec]
-#	 default: 5e-05 0 1.5708 
-	ChargedResolution   5e-05 0 1.5708 
+#	 default: 5e-05 0 1.5708
+	ChargedResolution   5e-05 0 1.5708
 
 
 #	Name of the MCParticle input collection
@@ -630,14 +630,14 @@ ProcessorType SimpleFastMCProcessor
 
 #	Resolution dE/E=A+B/sqrt(E/GeV) of neutral hadrons in polar angle range: A  B th_min  th_max
 #	 type:  [FloatVec]
-#	 default: 0.04 0.5 0 1.5708 
-	NeutralHadronResolution   0.04 0.5 0 1.5708 
+#	 default: 0.04 0.5 0 1.5708
+	NeutralHadronResolution   0.04 0.5 0 1.5708
 
 
 #	Resolution dE/E=A+B/sqrt(E/GeV) of photons in polar angle range: A  B th_min  th_max
 #	 type:  [FloatVec]
-#	 default: 0.01 0.1 0 1.5708 
-	PhotonResolution   0.01 0.1 0 1.5708 
+#	 default: 0.01 0.1 0 1.5708
+	PhotonResolution   0.01 0.1 0 1.5708
 
 .end -------------------------------------------------
 
@@ -651,7 +651,7 @@ ProcessorType Sphere
 	CollectionName   RecontructedParticle
 
 
-#	name of parameter to store the results 
+#	name of parameter to store the results
 #	 type:  [string]
 #	 default: sphericity_tensor_eigenvalues
 	eigenvalues_parameter_name   sphericity_tensor_eigenvalues
@@ -758,8 +758,8 @@ ProcessorType TrackCheater
 
 #	Tracker Hit Collection Names
 #	 type:  [StringVec]
-#	 default: TPCTrackerHits TPCTrackerHits 
-	TrackerHitCollections   TPCTrackerHits TPCTrackerHits 
+#	 default: TPCTrackerHits TPCTrackerHits
+	TrackerHitCollections   TPCTrackerHits TPCTrackerHits
 
 
 #	Collection of True Clusters
@@ -771,9 +771,9 @@ ProcessorType TrackCheater
 
 .begin MyTrackwiseClustering
 ProcessorType TrackwiseClustering
-#--- description not set by author 
+#--- description not set by author
 
-#	Cluster Collection Name 
+#	Cluster Collection Name
 #	 type:  [string]
 #	 default: ClustersAR
 	ClusterCollection   ClustersAR
@@ -793,8 +793,8 @@ ProcessorType TrackwiseClustering
 
 #	Distance To Merge Forward
 #	 type:  [FloatVec]
-#	 default: 50 100 
-	DistanceMergeForward   50 100 
+#	 default: 50 100
+	DistanceMergeForward   50 100
 
 
 #	Distance to Track Seed
@@ -803,10 +803,10 @@ ProcessorType TrackwiseClustering
 	DistanceToTrackSeed   25
 
 
-#	Distance to Track Back 
+#	Distance to Track Back
 #	 type:  [FloatVec]
-#	 default: 100 500 
-	DistanceTrackBack   100 500 
+#	 default: 100 500
+	DistanceTrackBack   100 500
 
 
 #	Do Merging
@@ -815,16 +815,16 @@ ProcessorType TrackwiseClustering
 	DoMerging   1
 
 
-#	Ecal Collection Names 
+#	Ecal Collection Names
 #	 type:  [StringVec]
-#	 default: ECAL 
-	EcalCollections   ECAL 
+#	 default: ECAL
+	EcalCollections   ECAL
 
 
-#	Hcal Collection Names 
+#	Hcal Collection Names
 #	 type:  [StringVec]
-#	 default: HCAL 
-	HcalCollections   HCAL 
+#	 default: HCAL
+	HcalCollections   HCAL
 
 
 #	Maximal Hits To Merge
@@ -839,22 +839,22 @@ ProcessorType TrackwiseClustering
 	MinimalHitsInCluster   10
 
 
-#	N hits scan to merge forward 
+#	N hits scan to merge forward
 #	 type:  [int]
 #	 default: 10
 	NScanToMergeForward   10
 
 
-#	N hits to define SP 
+#	N hits to define SP
 #	 type:  [int]
 #	 default: 5
 	NToDefineSP   5
 
 
-#	Resolution Parameter 
+#	Resolution Parameter
 #	 type:  [FloatVec]
-#	 default: 20 80 
-	ResolutionParameter   20 80 
+#	 default: 20 80
+	ResolutionParameter   20 80
 
 
 #	Resolution To Merge Halo Hits
@@ -863,19 +863,19 @@ ProcessorType TrackwiseClustering
 	ResolutionToMerge   400
 
 
-#	Step to Track Back 
+#	Step to Track Back
 #	 type:  [FloatVec]
-#	 default: 10 100 
-	StepTrackBack   10 100 
+#	 default: 10 100
+	StepTrackBack   10 100
 
 
-#	Track Collection Names 
+#	Track Collection Names
 #	 type:  [StringVec]
-#	 default: Track 
-	TrackCollections   Track 
+#	 default: Track
+	TrackCollections   Track
 
 
-#	Type of Generic Distance 
+#	Type of Generic Distance
 #	 type:  [int]
 #	 default: 0
 	TypeOfGenericDistance   0

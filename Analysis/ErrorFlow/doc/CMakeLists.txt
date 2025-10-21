@@ -11,7 +11,7 @@ IF( DOXYGEN_FOUND )
     # build documentation out-of-source
     SET( DOC_SRC_DIR "${PROJECT_SOURCE_DIR}/doc" )
     SET( DOC_BIN_DIR "${PROJECT_BINARY_DIR}/docbuild" )
-    
+
     # directories to search for documentation
     SET( DOX_INPUT ../include ../src )
 

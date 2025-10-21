@@ -8,11 +8,11 @@
 	<parameter name="LCIOInputFiles">
 	  gun_electron_0-250GeV.dst.0001.slcio
 	</parameter>
-	<parameter name="MaxRecordNumber" value="0" />  
-	<parameter name="SkipNEvents" value="0" />  
-	<parameter name="SupressCheck" value="false" />  
-	<parameter name="GearXMLFile"> GearOutput.xml </parameter>  
-	<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">MESSAGE</parameter> 
+	<parameter name="MaxRecordNumber" value="0" />
+	<parameter name="SkipNEvents" value="0" />
+	<parameter name="SupressCheck" value="false" />
+	<parameter name="GearXMLFile"> GearOutput.xml </parameter>
+	<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">MESSAGE</parameter>
 </global>
 
 <processor name="MyCreatePDFProcessor" type="CreatePDFProcessor">
@@ -36,12 +36,12 @@
 	<parameter name="dEdxParameter_proton" type="std::vector< std::float >">
 	  7.78772e-02 4.49300e+04 9.13778e+04 1.50088e-01 -6.64184e-04
 	</parameter>
-	
+
 	<!--dE/dx normalization-->
 	<parameter name="dEdxNormalization" type="float">
 	  1.350e-7
 	</parameter>
-	
+
 	<!--dE/dx error factor-->
 	<parameter name="dEdxErrorFactor" type="float">
 	  7.55

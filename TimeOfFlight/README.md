@@ -99,13 +99,13 @@ One can find output for PandoraPFOs which has new TOF algorithms attached...
 
 
     ------------ detailed PID info: ---
-      algorithms :                                        
+      algorithms :
       [id: 9]   MyTofClosest0ps - params:  timeOfFlight
       [id: 11]   MyTofFrankAvg50ps - params:  timeOfFlight
       [id: 10]   MyTofSET10ps - params:  timeOfFlight
 
       [particle] |  PDG   | likelihood |  type  |  algoId  | parameters :
-                 |        |            |        |          |              
+                 |        |            |        |          |
       [00000073]                        . . .
                  |      0 | 0.0000e+00 | 000000 |        9 | [ timeOfFlight : 9.58e+00,]
                  |      0 | 0.0000e+00 | 000000 |       10 | [ timeOfFlight : 0.00e+00,]
@@ -122,7 +122,7 @@ Here is the code example how to do that:
         const ParticleID& pfoPID = pidHandler.getParticleID(pfo, algorithmID);
         const std::vector<float>& parameters = pfoPID.getParameters();
         int parIdx = pidHandler.getParameterIndex(algorithmID, parameterName);
-        return parameters[parIdx]; 
+        return parameters[parIdx];
     }
 
     void YourAmazingAnalysisProcessor::processEvent(LCEvent* event){

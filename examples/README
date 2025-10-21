@@ -1,38 +1,38 @@
 This directory contains example steering files for MarlinReco
 package.
 
-The directory LDC contains an example XML steering file and GEAR 
-XML file for the LDC concept study detector needed for MarlinReco. 
+The directory LDC contains an example XML steering file and GEAR
+XML file for the LDC concept study detector needed for MarlinReco.
 For detailed information see LDC/README file.
 
-Example steering XML file exampleVTX.xml is meant to illustrate 
+Example steering XML file exampleVTX.xml is meant to illustrate
 VertexTracking processor running only on the vertex detector hits.
-When running Marlin with this steering file, LCIO file 
-top_vxd01.slcio is proccessed. This file contains LCIO collection 
-hits produced in the vertex detector. 
-The output file output.slcio is produced which contains also 
+When running Marlin with this steering file, LCIO file
+top_vxd01.slcio is proccessed. This file contains LCIO collection
+hits produced in the vertex detector.
+The output file output.slcio is produced which contains also
 the collection of the reconstructed tracks in the vertex detector.
 
 Example steering XML file example_VTX_FTD.xml is used to demonstrate
-the extended functionality of the VertexTracking processor. 
-When running Marlin with this steering file, a combined tracking 
-in the vertex detector and forward tracking disks is performed. 
-Tracks are output in Track collection, named VTXTracks, and output 
-lcio file, named output.slcio, is produced. When running Marlin 
-with example_VTX_FTD.xml steering file, the LCIO file 
-top_6j_500GeV_silicon.slcio is processes. It contains LCIO collections 
+the extended functionality of the VertexTracking processor.
+When running Marlin with this steering file, a combined tracking
+in the vertex detector and forward tracking disks is performed.
+Tracks are output in Track collection, named VTXTracks, and output
+lcio file, named output.slcio, is produced. When running Marlin
+with example_VTX_FTD.xml steering file, the LCIO file
+top_6j_500GeV_silicon.slcio is processes. It contains LCIO collections
 of TrackerHits both in the vertex detector and FTD.
 
-Example steering XML file "steer_ldctracking.xml" demonstrates 
-functionality of LEPTrackingProcessor, SiliconTracking and 
-FullLDCTracking processors. The job steered by this file 
-reads detector geometry description from the GEAR xml file "gear_ldc01_tracking.xml", 
-performs combined tracking in TPC and silicon detectors (VTX,FTD,SIT) and 
+Example steering XML file "steer_ldctracking.xml" demonstrates
+functionality of LEPTrackingProcessor, SiliconTracking and
+FullLDCTracking processors. The job steered by this file
+reads detector geometry description from the GEAR xml file "gear_ldc01_tracking.xml",
+performs combined tracking in TPC and silicon detectors (VTX,FTD,SIT) and
 produces "outputfile.slcio" file. The job runs on "ZHllX_350.slcio" file,
-which is produced by Mokka (Model LDC01) and contains results of 
+which is produced by Mokka (Model LDC01) and contains results of
 the simulation of LDC detector response to ZH->llX events. The file
-input LCIO file "ZHllX_350.slcio" contains collections 
-of SimCalorimeterHits and SimTrackerHits. The output file "outputfile.slcio"  
+input LCIO file "ZHllX_350.slcio" contains collections
+of SimCalorimeterHits and SimTrackerHits. The output file "outputfile.slcio"
 contains in addition collections of TPCTracks, SiTracks and full LDCTracks.
 The gear steering "gear_ldc00_tracking.xml" describes geometry
 of the tracking system implemented in the Mokka model LDC00. This
@@ -40,10 +40,10 @@ steering must be used whenever you process lcio files containing
 results of the Mokka program run with detector model LDC00.
 
 Be aware of the fact that gear steerings "gear_ldc00_tracking.xml"
-and "gear_ldc01_tracking.xml" describe only tracking system 
-within Mokka models LDC00 and LDC01. If you intend to run 
-full reconstruction, including calorimeter clustering and 
-particle flow, you have to supplement these steerings with 
+and "gear_ldc01_tracking.xml" describe only tracking system
+within Mokka models LDC00 and LDC01. If you intend to run
+full reconstruction, including calorimeter clustering and
+particle flow, you have to supplement these steerings with
 the description of the ECAL and HCAL.
 
 Content of the output LCIO files can be inspected with "dumpevt" utility

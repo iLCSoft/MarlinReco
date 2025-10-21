@@ -9,19 +9,19 @@ Purpose:
 Steering file: e.g.
 ===================
   <processor name="MyZFinderMuMu" type="ZFinder">
-    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />  
-    <parameter name="ZDecay" value="mumu" />  
+    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />
+    <parameter name="ZDecay" value="mumu" />
     <parameter name="Printing" value="0" />
-    <parameter name="AddPhotons" value="1" />  
-    <parameter name="OutputParticleCollectionName" value="ZmumuPFOs" />  
+    <parameter name="AddPhotons" value="1" />
+    <parameter name="OutputParticleCollectionName" value="ZmumuPFOs" />
   </processor>
 
   <processor name="MyZFinderEE" type="ZFinder">
-    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />  
-    <parameter name="ZDecay" value="ee" />  
+    <parameter name="InputParticleCollectionName" value="PandoraPFOs" />
+    <parameter name="ZDecay" value="ee" />
     <parameter name="Printing" value="0" />
-    <parameter name="AddPhotons" value="1" />  
-    <parameter name="OutputParticleCollectionName" value="ZeePFOs" />  
+    <parameter name="AddPhotons" value="1" />
+    <parameter name="OutputParticleCollectionName" value="ZeePFOs" />
   </processor>
 
 

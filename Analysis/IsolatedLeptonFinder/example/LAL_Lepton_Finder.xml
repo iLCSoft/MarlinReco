@@ -10,10 +10,10 @@
 %%INPUT%%
 </parameter>
 <parameter name="MaxRecordNumber" value="%%EVT_PER_JOB%%" />
-<parameter name="SkipNEvents" value="%%NSKIP%%" />  
-<parameter name="SupressCheck" value="false" />  
-<parameter name="GearXMLFile"> ILD_o1_v05.xml </parameter>  
-<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter> 
+<parameter name="SkipNEvents" value="%%NSKIP%%" />
+<parameter name="SupressCheck" value="false" />
+<parameter name="GearXMLFile"> ILD_o1_v05.xml </parameter>
+<parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter>
 </global>
 
 

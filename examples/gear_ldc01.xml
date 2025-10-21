@@ -2,7 +2,7 @@
 
      <!--Example XML file for GEAR describing the LDC detector -->
 
-  <detectors> 
+  <detectors>
 
     <detector id="0" name="TPCTest" geartype="TPCParameters" type="UNKNOWN" insideTrackingVolume="yes">
         <maxDriftLength value="1970"/>
@@ -20,7 +20,7 @@
         <parameter name="tpcOuterRadius" type="double"> 1580.0 </parameter>
 	<parameter name="BField" type="double"> 4.0 </parameter>
      </detector>
-   
+
      <!-- Electromagnetic Calorimeter Barrel -->
      <detector name="EcalBarrel" geartype="CalorimeterParameters">
         <layout type="Barrel" symmetry="8" phi0="0.0" />
@@ -90,9 +90,9 @@
        <parameter name="ElectronicEndThickness" type="double"> 0.19656 </parameter>
        <parameter name="ElectronicEndLength" type="double"> 10.0 </parameter>
        <parameter name="StripLineFinalZ" type="DoubleVec"> 136.0 136.0 140.0 145.0 150.0 </parameter>
-       <parameter name="StripLineThickness" type="double"> 0.09438 </parameter>       
+       <parameter name="StripLineThickness" type="double"> 0.09438 </parameter>
        <parameter name="StripLineBeamPipeRadius" type="double"> 23.0 </parameter>
-       <parameter name="VXDEndPlateInnerRadius" type="double"> 23.2 </parameter>     
+       <parameter name="VXDEndPlateInnerRadius" type="double"> 23.2 </parameter>
        <parameter name="BeamPipeRadius" type="double"> 10. </parameter>
        <parameter name="BeamPipeHalfZ" type="double"> 61. </parameter>
        <parameter name="BeamPipeThickness" type="double"> 0.5 </parameter>
@@ -109,12 +109,12 @@
         <parameter name="FTDInnerSupportdR" type="double"> 2.0 </parameter>
         <parameter name="FTDOuterSupportdR" type="double"> 10.0 </parameter>
 	<parameter name="FTDInnerSupportThickness" type="double"> 4.0 </parameter>
-	<parameter name="FTDOuterSupportThickness" type="double"> 4.0 </parameter>	
+	<parameter name="FTDOuterSupportThickness" type="double"> 4.0 </parameter>
 	<parameter name="zFTDOuterCyllinderStart" type="double"> 800.0 </parameter>
 	<parameter name="zFTDOuterCyllinderEnd" type="double"> 1300.0 </parameter>
 	<parameter name="zFTDInnerConeStart" type="double"> 550.0 </parameter>
 	<parameter name="zFTDInnerConeEnd" type="double"> 1300.0 </parameter>
-	<parameter name="FTDCopperThickness" type="double"> 0.08 </parameter>	
+	<parameter name="FTDCopperThickness" type="double"> 0.08 </parameter>
 	<parameter name="FTDOuterCyllinderThickness" type="double"> 1.0 </parameter>
 	<parameter name="LastHeavyLayer" type="int"> 3 </parameter>
 	<parameter name="Silicon_RadLen" type="double"> 93.6 </parameter>
@@ -124,23 +124,22 @@
 	<parameter name="Silicon_dEdx" type="double"> 0.00038678 </parameter>
 	<parameter name="Silicon872_dEdx" type="double"> 0.00144752 </parameter>
 	<parameter name="Kapton_dEdx" type="double">  0.0002414  </parameter>
-	<parameter name="Copper_dEdx" type="double"> 0.0014336 </parameter>	
+	<parameter name="Copper_dEdx" type="double"> 0.0014336 </parameter>
      </detector>
 
-     <!-- Silicon Intermediate Tracker -->     
+     <!-- Silicon Intermediate Tracker -->
      <detector id="18" name="SIT" geartype="GearParameters" type="UNKNOWN" insideTrackingVolume="true">
         <parameter name="SITLayerRadius" type="DoubleVec"> 160.0 300.0 </parameter>
 	<parameter name="SITLayerHalfLength" type="DoubleVec"> 380. 660.0 </parameter>
 	<parameter name="SITLayerThickness" type="double"> 0.3 </parameter>
 	<parameter name="SITLayer_dEdx" type="double"> 0.00144752 </parameter>
 	<parameter name="SITLayer_RadLen" type="double"> 25.0 </parameter>
-     </detector>     
+     </detector>
 
 
-  </detectors> 
+  </detectors>
 
 
 
 </gear>
-   
- 
+

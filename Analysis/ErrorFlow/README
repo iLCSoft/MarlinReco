@@ -24,7 +24,7 @@ Quick steps to change this example into your own Marlin plugin:
 ---------------------------------------------------------------
 
     1.) rename source files:
-        
+
         mv include/MyProcessor.h include/ChooseAReasonableNameForThisClass.h
         mv src/MyProcessor.cc src/ChooseAReasonableNameForThisClass.cc
 

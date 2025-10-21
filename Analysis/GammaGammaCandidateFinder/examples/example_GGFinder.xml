@@ -5,20 +5,20 @@
 <!--#                                                           #-->
 <!--#          pi0           -> gamma gamma                     #-->
 <!--#          eta           -> gamma gamma                     #-->
-<!--#          etaprime(958) -> gamma gamma                     #--> 
+<!--#          etaprime(958) -> gamma gamma                     #-->
 <!--#                                                           #-->
 <!--#############################################################-->
 
 <marlin>
  <execute>
    <processor name="MyPi0Finder"/>
-   <processor name="MyEtaFinder"/> 
-   <processor name="MyEtaPrimeFinder"/>  
+   <processor name="MyEtaFinder"/>
+   <processor name="MyEtaPrimeFinder"/>
    <processor name="MyLCIOOutputProcessor"/>
  </execute>
 
  <global>
-   <parameter name="LCIOInputFiles"> input.slcio </parameter> 
+   <parameter name="LCIOInputFiles"> input.slcio </parameter>
    <parameter name="SkipNEvents" value="0" />
    <parameter name="MaxRecordNumber" value="10" />
    <parameter name="SupressCheck" value="false" />

@@ -50,8 +50,8 @@ The ROC implementation has been implementation through the `PR83` in the MarlinR
   - `fastShaper`: 90 ns. First estimate
   - `slowShaper`: 180 ns. First estimate
   - `timingResolution`: 700 ps. First guess from AHCAL value, as the TDC is similar. Not a real estimate
-   
-   
+
+
 
 
 

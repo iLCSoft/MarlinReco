@@ -19,8 +19,8 @@
  <global>
   <parameter name="LCIOInputFiles"> ZHllX_350.slcio </parameter>
   <parameter name="GearXMLFile"> gear_ldc01_tracking.xml </parameter>
-  <parameter name="MaxRecordNumber" value="11" />  
-  <parameter name="SupressCheck" value="false" />  
+  <parameter name="MaxRecordNumber" value="11" />
+  <parameter name="SupressCheck" value="false" />
   <parameter name="BField"> 4.0 </parameter>
  </global>
 

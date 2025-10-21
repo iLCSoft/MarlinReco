@@ -12,11 +12,11 @@
   <processor name="MyPGDBP"/>
   <processor name="MyAIDAProcessor"/>
 
-  <processor name="MyVTXDigiProcessor"/> 
-  <processor name="MyFTDDigiProcessor"/>  
+  <processor name="MyVTXDigiProcessor"/>
+  <processor name="MyFTDDigiProcessor"/>
   <processor name="MyTPCDigiProcessor"/>
-  <processor name="MyMokkaCaloDigi"/>  
-  <processor name="MyTrackCheater"/>  
+  <processor name="MyMokkaCaloDigi"/>
+  <processor name="MyTrackCheater"/>
   <processor name="MyEMShowerFinder"/>
   <processor name="MyTrackBasedPFlow"/>
 
@@ -26,11 +26,11 @@
 <!-- --------------------------------------------------------------------------------- -->
 
 
- <global> 
+ <global>
   <parameter name="LCIOInputFiles"> input.slcio  </parameter>
-  <parameter name="MaxRecordNumber" value="0" /> 
+  <parameter name="MaxRecordNumber" value="0" />
   <parameter name="SkipNEvents" value="0" />
-  <parameter name="SupressCheck" value="false" />  
+  <parameter name="SupressCheck" value="false" />
   <parameter name="GearXMLFile"> gear_LDC00Sc_r1690_l2730_B4T.xml </parameter>
   <parameter name="printAction">0 </parameter>
   <parameter name="BField"> 4.0 </parameter>
@@ -188,7 +188,7 @@
   <!--merging clusters forward-wise?-->
   <parameter name="DoMergingForward" type="int">0 </parameter>
   <!--merging low multiplicity clusters?-->
-  <parameter name="DoMergingLowMultiplicity" type="int">0 </parameter> 
+  <parameter name="DoMergingLowMultiplicity" type="int">0 </parameter>
   <!--Maximal Hits To Merge-->
   <parameter name="MaximalHitsToMerge" type="int">20 </parameter>
   <!--Minimal allowed hits in cluster-->
@@ -222,9 +222,9 @@
   <!--cut on pt, use only tracks with pt larger than cut (in GeV)-->
   <parameter name="cutOnPt" type="double"> 0.5 </parameter>
   <!--cut on d0 of the tracks, use only tracks with d0 smaller than cut (in mm)-->
-  <parameter name="absD0Cut" type="double"> 50.0 </parameter> 
+  <parameter name="absD0Cut" type="double"> 50.0 </parameter>
   <!--cut on z0 of the tracks, use only tracks with z0 smaller than cut (in mm)-->
-  <parameter name="absZ0Cut" type="double"> 50.0 </parameter> 
+  <parameter name="absZ0Cut" type="double"> 50.0 </parameter>
   <!--cut on minimal number of TPC hits, use only tracks with more TPC tracker hits than cut for the tracks which were not extrapolated-->
   <parameter name="minNTPCHits" type="int"> 5 </parameter>
   <!--cut on minimal number of non TPC hits, use only tracks with more non TPC tracker hits than cut for the tracks which were not extrapolated-->
@@ -256,7 +256,7 @@
   <!--minimal radius of an outer cylindrical tube around the extralpolated helix for Calorimeter hits to be excluded as MIP like stub (in 3 zones)-->
   <parameter name="minimalRadiusOfOuterTubeForMIPLikeStub" type="FloatVec">25 27 80  </parameter>
   <!--number of outermost Tracker hits used for the extrapolation of the track into the calorimeter-->
-  <parameter name="nOfTrackerHitsUsedForExtrapolation" type="int">20 </parameter> 
+  <parameter name="nOfTrackerHitsUsedForExtrapolation" type="int">20 </parameter>
   <!--cut on the minimal radius of the tracker hits to be taken into account in the helix extrapolation (in cylindrical coordinates)-->
   <parameter name="rMinCutHelixExtrapolation" type="d"> 800 </parameter>
   <!--cut on the minimal z coordiante of the tracker hits to be taken into account in the helix extrapolation (in cylindrical coordinates)-->

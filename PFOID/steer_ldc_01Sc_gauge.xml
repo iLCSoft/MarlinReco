@@ -38,9 +38,9 @@
   <parameter name="LCIOInputFiles"> /panfs/user/smarty/Gauge_pion_000119.slcio </parameter>
   <parameter name="LCIOInputFiles"> /panfs/user/smarty/Gauge_photon_000119.slcio </parameter>
   <parameter name="LCIOInputFiles"> /panfs/user/smarty/Gauge_hadron_000119.slcio </parameter>
-  <parameter name="MaxRecordNumber" value="10000" />  
+  <parameter name="MaxRecordNumber" value="10000" />
   <parameter name="SkipNEvents" value="0"/>
-  <parameter name="SupressCheck" value="false" /> 
+  <parameter name="SupressCheck" value="false" />
   <!--parameter name="GearXMLFile"> gearOutput.xml </parameter-->
   <parameter name="GearXMLFile"> gear_ldc01.xml </parameter>
   <parameter name="BField"> 4.0 </parameter>

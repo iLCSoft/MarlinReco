@@ -56,7 +56,7 @@ $MARLIN/bin/Marlin truejet_run_ana_onthefly.xml
 will do the job, provided you did build `Use_TrueJet` as per above.
 
 The files _event-865-run-82501-4f_WW_semileptonic-I250018.lis_ and _comments-on-event-865-run-82501.txt_
-contains such a debug output, and comments on how to understand the information given. 
+contains such a debug output, and comments on how to understand the information given.
 
 
 
@@ -64,7 +64,7 @@ contains such a debug output, and comments on how to understand the information 
 ## Further information on using TrueJet_Parser:
 
  `TrueJet_Parser` is class to help to interpret the collections created by `TrueJet`.
- 
+
 
 
 In the processor using it, three things are needed:
@@ -140,37 +140,37 @@ yourprocessor::yourprocessor() : Processor("yourprocessor") {
 
 
   registerInputCollection( LCIO::LCRELATION,
-                            "TrueJetPFOLink" , 
+                            "TrueJetPFOLink" ,
                             "Name of the TrueJetPFOLink input collection"  ,
                             _trueJetPFOLink,
                             std::string("TrueJetPFOLink") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
-                            "TrueJetMCParticleLink" , 
+                            "TrueJetMCParticleLink" ,
                             "Name of the TrueJetMCParticleLink input collection"  ,
                             _trueJetMCParticleLink,
                             std::string("TrueJetMCParticleLink") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
-                            "FinalElementonLink rueJetMCParticleLink" , 
+                            "FinalElementonLink rueJetMCParticleLink" ,
                             "Name of the  FinalElementonLink input collection"  ,
                             _finalElementonLink,
                             std::string("FinalElementonLink") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
-                            "InitialElementonLink" , 
+                            "InitialElementonLink" ,
                             "Name of the  InitialElementonLink input collection"  ,
                             _initialElementonLink,
                             std::string("InitialElementonLink") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
-                            "FinalColourNeutralLink" , 
+                            "FinalColourNeutralLink" ,
                             "Name of the  FinalColourNeutralLink input collection"  ,
                             _finalColourNeutralLink,
                             std::string("FinalColourNeutralLink") ) ;
 
   registerInputCollection( LCIO::LCRELATION,
-                            "InitialColourNeutralLink" , 
+                            "InitialColourNeutralLink" ,
                             "Name of the  InitialColourNeutralLink input collection"  ,
                             _initialColourNeutralLink,
                             std::string("InitialColourNeutralLink") ) ;

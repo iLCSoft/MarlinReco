@@ -1,7 +1,7 @@
 #############################################################################
 #
 # CMAKE file for building Marlin package - SiStripDigi
-# 
+#
 # @author Zbynek Drasal
 # @author J. Duarte Campderros (updates)
 #

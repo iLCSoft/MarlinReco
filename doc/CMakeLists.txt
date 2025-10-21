@@ -19,7 +19,7 @@ IF( DOXYGEN_FOUND )
 
     #SET( DOX_INPUT overview.html ../include ../src )
     SET( DOX_PREDEFINED MARLIN_USE_AIDA ) # TODO test !!
-    
+
     ADD_CUSTOM_COMMAND(
         OUTPUT  "${DOC_BIN_DIR}/html/index.html"
         COMMAND DOX_PROJECT_NAME="${PROJECT_NAME}"
@@ -32,13 +32,13 @@ IF( DOXYGEN_FOUND )
         COMMENT "Building API Documentation..."
         DEPENDS Doxyfile CMakeLists.txt overview.html
     )
-    
+
     # add doc_html target
     ADD_CUSTOM_TARGET( doc_html DEPENDS "${DOC_BIN_DIR}/html/index.html" )
 
     # tell doc target to call doc_html
     ADD_DEPENDENCIES( doc doc_html )
-    
+
 ELSE()
     MESSAGE( STATUS "Doxygen not found in your system!!" )
     IF( INSTALL_DOC )
@@ -77,7 +77,7 @@ IF( LATEX_COMPILER AND MAKEINDEX_COMPILER AND PDFLATEX_COMPILER
 
     # tell doc target to call doc_manual
     ADD_DEPENDENCIES( doc doc_manual )
-    
+
 ELSE()
     MESSAGE( STATUS "Latex not found in your system!!" )
     IF( INSTALL_DOC )

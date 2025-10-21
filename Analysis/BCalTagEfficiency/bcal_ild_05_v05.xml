@@ -29,17 +29,17 @@
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <execute>
   <processor name="MyBCalTagEfficiency"/>
-  <processor name="MyLCIOOutputProcessor"/>  
+  <processor name="MyLCIOOutputProcessor"/>
  </execute>
 
  <global>
   <parameter name="LCIOInputFiles">input.slcio</parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="0" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile">GearOutput_ILD_o1_v05.xml</parameter>  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="0" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="GearXMLFile">GearOutput_ILD_o1_v05.xml</parameter>
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
  </global>
 
@@ -47,13 +47,13 @@
 
 <processor name="MyBCalTagEfficiency" type="BCalTagEfficiency">
 <!--ForwardVeto propagates electrons or photons from IP to the BeamCal, and it gives the Energy and Momentum of the detected ones to the output ReconstructedParticles collection-->
-  
+
   <!--  INPUT --->
   <!--Name of the MCParticle collection-->
   <parameter name="CollectionName" type="string" lcioInType="MCParticle">MCParticle </parameter>
   <!--Name of input file for background energy density-->
   <parameter name="BackgroundFilename" type="string">../../../ILDConfig/StandardConfig/current/bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root</parameter>
-  
+
   <!--  OUTPUT --->
   <!--Name of the collection of clusters of tagged e's/gammas-->
   <parameter name="BCALClusterName" type="string" lcioOutType="Cluster">BCalEffiClusters</parameter>
@@ -61,7 +61,7 @@
   <parameter name="BCALMCTruthLinkName" type="string" lcioOutType="LCRelation">BCalEffiMCTruthLink</parameter>
   <!--Name of the tagged e/gamma collection-->
   <parameter name="RecoPartCollectionName" type="string" lcioOutType="ReconstructedParticle">BCalEffiRecoParticles</parameter>
-  
+
   <!--  STEERING --->
   <!--Scaling of the energy density w.r.t default setup-->
   <parameter name="densityScaling" type="float">1 </parameter>

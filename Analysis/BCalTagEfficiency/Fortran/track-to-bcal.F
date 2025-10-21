@@ -38,7 +38,7 @@
       PARAMETER( CONSA = .0029979246 )
 *-----
 *-----
-*      print*,"helloworld, pin = ", pin(1), pin(2), pin(3)    
+*      print*,"helloworld, pin = ", pin(1), pin(2), pin(3)
       BMAG=B
       PI=4.*ATAN(1.)
       EBEAM=EB
@@ -65,9 +65,9 @@
 *         parameters (TRACK, Delphi convention)
 *         are calculated, if they should be of
 *         use ...)
-      
+
       end
-   
+
       SUBROUTINE ZTTPLA(P,V,ZPLA,FIRST,IPRP,IPZ,PHI0,
      .                  PEND,VEND,DST,TRACK,ERROR)
 *

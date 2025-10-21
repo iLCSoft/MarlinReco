@@ -34,22 +34,22 @@
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <execute>
    <processor name="MyAIDAProcessor"/>
-   <processor name="MyIsolatedLeptonTaggingProcessor"/>  
-   <processor name="MyLCIOOutputProcessor"/>  
+   <processor name="MyIsolatedLeptonTaggingProcessor"/>
+   <processor name="MyLCIOOutputProcessor"/>
  </execute>
 
  <global>
    <parameter name="LCIOInputFiles">
 data_dbd_500/higgs_ffh/ILD_o1_v05/v01-16-p05_500/rv01-16-p05_500.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.I106519.Pe2e2h.eL.pR-00001-DST.slcio
    </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="11" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="GearXMLFile"> gear_ILD_o1_v05.xml </parameter>  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="11" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="GearXMLFile"> gear_ILD_o1_v05.xml </parameter>
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
-  <!-- optionally limit the collections that are read from the input file: -->  
+  <!-- optionally limit the collections that are read from the input file: -->
   <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
  </global>
 

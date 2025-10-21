@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="us-ascii"?>
 
 <!--##########################################
-                                            
+
          Example steering file for marlin running the CheatedMCOverlayRemoval
-         processor to identify MC particles that are overlay and removes the 
-	 corresponding PFOs from the collection and writing out a DST with 
-	 the skimmed down collection of PFOs. 
-                                            
+         processor to identify MC particles that are overlay and removes the
+	 corresponding PFOs from the collection and writing out a DST with
+	 the skimmed down collection of PFOs.
+
     ##########################################-->
 
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
@@ -18,7 +18,7 @@
   </execute>
 
   <global>
-    <parameter name="LCIOInputFiles"> 
+    <parameter name="LCIOInputFiles">
       a_RECO_file.slcio
     </parameter>
     <parameter name="MaxRecordNumber" value="10000"/>
@@ -52,7 +52,7 @@
     <parameter name="MCParticleCollection" type="string"  lcioInType="MCParticle">MCParticlesSkimmed</parameter>
     <parameter name="RecoMCTruthLink" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>
     <parameter name="MCTruthRecoLink" type="string" lcioInType="LCRelation"> MCTruthRecoLink </parameter>
-    <parameter name="OutputPfoCollection" type="string" lcioOutType="ReconstructedParticle">PFOsWithoutMCOverlay</parameter>    
+    <parameter name="OutputPfoCollection" type="string" lcioOutType="ReconstructedParticle">PFOsWithoutMCOverlay</parameter>
     <parameter name="OutputOverlayCollection" type="string" lcioOutType="ReconstructedParticle"> PFOsFromOverlay </parameter>
     <parameter name="Verbosity" type="string">SILENT</parameter>
   </processor>

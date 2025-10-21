@@ -1,12 +1,12 @@
 GammaGammaCandidateFinder Processor
 
-Purpose: Assemble a collection of ReconstructedParticles consisting of pairs of photons consistent with known 
-         particles which can decay to two photons, including 
+Purpose: Assemble a collection of ReconstructedParticles consisting of pairs of photons consistent with known
+         particles which can decay to two photons, including
          pi0 -> gamma gamma, eta0 -> gamma gamma, etaprime(958)0 -> gamma gamma.
 
-Note that the same photon will often be a constituent of more than one GammaGammaCandidate. 
-The "photon matching" problem of assigning individual photons uniquely to at most one GammaGammaParticle 
-or similar composite particle is planned to be treated in a separate processor after the creation of 
+Note that the same photon will often be a constituent of more than one GammaGammaCandidate.
+The "photon matching" problem of assigning individual photons uniquely to at most one GammaGammaParticle
+or similar composite particle is planned to be treated in a separate processor after the creation of
 these GammaGammaCandidates.
 
 trunk v>=5283
@@ -19,12 +19,12 @@ trunk v>=5186
 Gamma-gamma four-vector (px, py, pz, E) output covariance matrix now calculated and filled.
 
 trunk v>=5052
-Include mass-constrained fit (and MarlinKinfit dependency). 
+Include mass-constrained fit (and MarlinKinfit dependency).
 Fit probability currently stored in GoodnessOfPID, and gamma-gamma 4-vector is now fitted.
 Implementation still needs work on handling covariance matrix from input - and covariance matrix on output.
 
-trunk v5021 
-Currently the algorithm does not do any mass-constrained fitting, but this is one of the main reasons for 
+trunk v5021
+Currently the algorithm does not do any mass-constrained fitting, but this is one of the main reasons for
 this processor, and the eventual GammaGammaCandidate collections will be mass-constrained.
 
 An example xml steering file is examples/example_GGFinder.xml

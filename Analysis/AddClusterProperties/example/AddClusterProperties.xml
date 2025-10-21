@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="us-ascii"?>
 
 <!--##########################################
-                                            
+
          Example steering file for marlin running the AddClusterProperties
          processor to add position and direction (w/ covariance) for clusters
          and 4-momentum (w/ covariance) to neutral PFPs, and writing out a
-         DST with the added information. 
-                                            
+         DST with the added information.
+
     ##########################################-->
 
 
 <marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
  <execute>
-   <processor name="MyAIDAProcessor"/> 
+   <processor name="MyAIDAProcessor"/>
    <processor name="MyAddClusterProperties"/>
    <processor name="DSTOutput"/>
   </execute>
 
  <global>
-  <parameter name="LCIOInputFiles"> 
+  <parameter name="LCIOInputFiles">
 a_RECO_file.slcio
    </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="10000" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <parameter name="AllowToModifyEvent" value="true" />  
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG3  </parameter> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="10000" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <parameter name="AllowToModifyEvent" value="true" />
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG3  </parameter>
   <parameter name="RandomSeed" value="1234567890" />
  </global>
 
@@ -52,28 +52,28 @@ a_RECO_file.slcio
 
 
 <processor name="DSTOutput" type="LCIOOutputProcessor">
-   <!--   
-     DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles 
+   <!--
+     DST output: drop all hits, skim MCParticles and keep final Tracks, Clusters and  ReconstructedParticles
      TO DO:  add LCFI flavour tag stuff
    -->
    <parameter name="LCIOOutputFile" type="string" >
   a_DST_file.slcio
    </parameter>
-   <parameter name="DropCollectionTypes" type="StringVec"> 
-       MCParticle 
-       LCRelation 
-       SimTrackerHit 
+   <parameter name="DropCollectionTypes" type="StringVec">
+       MCParticle
+       LCRelation
+       SimTrackerHit
        SimCalorimeterHit
-       TrackerHit 
-       CalorimeterHit 
-       Track 
+       TrackerHit
+       CalorimeterHit
+       Track
        ReconstructedParticle
-       LCFloatVec      
+       LCFloatVec
        LCGenericObject
        TrackerHitPlane
     </parameter>
     <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed"/>
-    <parameter name="KeepCollectionNames" type="StringVec"> 
+    <parameter name="KeepCollectionNames" type="StringVec">
        MCParticlesSkimmed
        RecoMCTruthLink
        MarlinTrkTracksMCTruthLink
@@ -88,7 +88,7 @@ a_RECO_file.slcio
        Durham_3Jets
        Durham_4Jets
        Durham_5Jets
-       Durham_6Jets 
+       Durham_6Jets
        BuildUpVertex
        BuildUpVertex_RP
        BuildUpVertex_V0
@@ -99,4 +99,4 @@ a_RECO_file.slcio
     <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
     <!--parameter name="SplitFileSizekB" type="int" value="1992294"/-->
  </processor>
- 
+

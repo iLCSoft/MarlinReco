@@ -22,8 +22,8 @@
       else
         print *, ' please give seven arguments ! '
         stop
-      endif   
- 
+      endif
+
       call bcalhit(pin,q,vin,B,EB,zbcal,pout,vout)
       print *, (pout(i),i=1,3)
       print *, (vout(i),i=1,3)

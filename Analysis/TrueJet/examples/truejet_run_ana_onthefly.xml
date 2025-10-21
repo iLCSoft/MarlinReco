@@ -20,11 +20,11 @@
 <parameter name="LCIOInputFiles">
 inputdst
 </parameter>
-  <!-- limit the number of processed records (run+evt): -->  
-  <parameter name="MaxRecordNumber" value="1000" />  
-  <parameter name="SkipNEvents" value="0" />  
-  <parameter name="SupressCheck" value="false" />  
-  <!-- parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG4</parameter--> 
+  <!-- limit the number of processed records (run+evt): -->
+  <parameter name="MaxRecordNumber" value="1000" />
+  <parameter name="SkipNEvents" value="0" />
+  <parameter name="SupressCheck" value="false" />
+  <!-- parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG4</parameter-->
  </global>
 
  <processor name="MyAIDAProcessor" type="AIDAProcessor">
@@ -44,7 +44,7 @@ inputdst
 <!-- If the pre-built TrueJet (in libMarlinReco) is used, this setting doesn't do anything, since the standard build is done without debug -->
   <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">
 DEBUG9
-  </parameter> 
+  </parameter>
 
 
 <!-- These are the defaults, probably exactly what you need.
@@ -72,7 +72,7 @@ DEBUG9
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle</parameter>
  -->
 <!--
-   <parameter name="Whizard1" type="bool">1</parameter>  
+   <parameter name="Whizard1" type="bool">1</parameter>
 -->
 
 
@@ -80,8 +80,8 @@ DEBUG9
 
 
 <processor name="myuse_truejet" type="Use_TrueJet">
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG5</parameter> 
- <!-- Using the defaults above, only your "own" parameters are needed 
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">DEBUG5</parameter>
+ <!-- Using the defaults above, only your "own" parameters are needed
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticlesSkimmed</parameter>
   <parameter name="RecoParticleCollection" type="string"  lcioInType="ReconstructedParticle">PandoraPFOs</parameter>
   <parameter name="RecoMCTruthLinkName" type="string" lcioInType="LCRelation"> RecoMCTruthLink </parameter>

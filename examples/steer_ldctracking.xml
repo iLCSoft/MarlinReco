@@ -80,15 +80,15 @@
    <!--parameter name="GearXMLFile"> gear.LDC01_06Sc_p01.xml </parameter-->
    <parameter name="GearXMLFile"> LDC01_06Sc_p01_new.xml </parameter>
    <!--parameter name="GearXMLFile"> gear.LDCPrime_02Sc_p01.xml </parameter-->
-   <!--parameter name="GearXMLFile"> gear.LDC01Sc.xml </parameter-->     
+   <!--parameter name="GearXMLFile"> gear.LDC01Sc.xml </parameter-->
    <!--parameter name="GearXMLFile"> gear.LDCPrime_02Sc.ftd01.xml </parameter-->
 
 
-   <parameter name="MaxRecordNumber" value="1001" />  
-   <parameter name="SupressCheck" value="false" />  
+   <parameter name="MaxRecordNumber" value="1001" />
+   <parameter name="SupressCheck" value="false" />
    <parameter name="SkipNEvents" value="6000" />
 
- 
+
 </global>
 
 
@@ -194,7 +194,7 @@
 
  <processor name="MyCurlKillerProcessor" type="CurlKillerProcessor">
   <parameter name="InputCollectionName" type="string"> AllTPCTrackerHits </parameter>
-  <parameter name="RemainingCollectionName" type="string"> TPCTrackerHits </parameter>  
+  <parameter name="RemainingCollectionName" type="string"> TPCTrackerHits </parameter>
  </processor>
 
  <processor name="MyFullTrackPerformance" type="FullTrackPerformance">
@@ -233,7 +233,7 @@
  <!-- Material Database builder-->
   <parameter name="UseExtrapolations" type="int"> 1 </parameter>
   <parameter name="UseMaterials" type="int"> 1 </parameter>
-  
+
  </processor>
 
  <processor name="MyVTXDigiProcessor" type="VTXDigiProcessor">
@@ -243,10 +243,10 @@
   <parameter name="PointResolutionZ_VTX" type="float">0.004 </parameter>
   <parameter name="PointResolutionRPhi_SIT" type="float">0.01 </parameter>
   <parameter name="PointResolutionZ_SIT" type="float">0.01 </parameter>
-  <parameter name="VTXCollectionName" type="string"> VXDCollection </parameter> 
+  <parameter name="VTXCollectionName" type="string"> VXDCollection </parameter>
   <parameter name="SITCollectionName" type="string"> SITCollection </parameter>
-  <!--parameter name="VTXCollectionName" type="string"> vxd00_VXD </parameter--> 
-  <!--parameter name="SITCollectionName" type="string"> sit00_SIT </parameter-->   
+  <!--parameter name="VTXCollectionName" type="string"> vxd00_VXD </parameter-->
+  <!--parameter name="SITCollectionName" type="string"> sit00_SIT </parameter-->
   <parameter name="RemoveDrays" type="int"> 0 </parameter>
  </processor>
 
@@ -262,51 +262,51 @@
  <!--Creates true tracks...-->
   <parameter name="ECut" type="float">0.1 </parameter>
   <parameter name="HitToHelixDist" type="float">  40.0 </parameter>
-  <parameter name="MinimalHits" type="float"> 3 </parameter>  
+  <parameter name="MinimalHits" type="float"> 3 </parameter>
   <parameter name="TrackerHitCollections" type="StringVec"> VTXTrackerHits FTDTrackerHits SITTrackerHits TPCTrackerHits </parameter>
   <parameter name="TrueTrackCollection" type="string">TrueTracks </parameter>
-  <parameter name="MCTrueTrackRelCollectionName" type="string"> TrueTracksMCP </parameter> 
+  <parameter name="MCTrueTrackRelCollectionName" type="string"> TrueTracksMCP </parameter>
   <parameter name="PrintInfo" type="int"> 0 </parameter>
   <parameter name="FitTrueTrack" type="int"> 0 </parameter>
  </processor>
- 
+
  <processor name="MyTrackCheaterSi" type="TrackCheater">
    <!--Creates true tracks...-->
    <parameter name="ECut" type="float">0.1 </parameter>
    <parameter name="HitToHelixDist" type="float">  40.0 </parameter>
-   <parameter name="MinimalHits" type="float"> 3 </parameter>  
+   <parameter name="MinimalHits" type="float"> 3 </parameter>
    <parameter name="TrackerHitCollections" type="StringVec"> VTXTrackerHits FTDTrackerHits SITTrackerHits </parameter>
    <parameter name="TrueTrackCollection" type="string"> SiTracks </parameter>
    <parameter name="MCTrueTrackRelCollectionName" type="string"> SiTracksMCP </parameter>
    <parameter name="PrintInfo" type="int"> 0 </parameter>
    <parameter name="FitTrueTrack" type="int"> 1 </parameter>
- </processor> 
-   
+ </processor>
+
  <processor name="MyTrackCheaterTPC" type="TrackCheater">
   <!--Creates true tracks...-->
   <parameter name="ECut" type="float">0.1 </parameter>
   <parameter name="HitToHelixDist" type="float">  40.0 </parameter>
-  <parameter name="MinimalHits" type="float"> 3 </parameter>  
+  <parameter name="MinimalHits" type="float"> 3 </parameter>
   <parameter name="TrackerHitCollections" type="StringVec"> TPCTrackerHits </parameter>
   <parameter name="TrueTrackCollection" type="string"> TPCTracks </parameter>
   <parameter name="MCTrueTrackRelCollectionName" type="string"> TPCTracksMCP </parameter>
   <parameter name="PrintInfo" type="int"> 0 </parameter>
   <parameter name="FitTrueTrack" type="int"> 1 </parameter>
  </processor>
- 
- 
+
+
  <processor name="MyTrackCheaterLDC" type="TrackCheater">
    <!--Creates true tracks...-->
    <parameter name="ECut" type="float">0.1 </parameter>
    <parameter name="HitToHelixDist" type="float">  40.0 </parameter>
-   <parameter name="MinimalHits" type="float"> 3 </parameter>  
+   <parameter name="MinimalHits" type="float"> 3 </parameter>
    <parameter name="TrackerHitCollections" type="StringVec"> VTXTrackerHits FTDTrackerHits SITTrackerHits TPCTrackerHits </parameter>
    <parameter name="TrueTrackCollection" type="string"> LDCTracks </parameter>
    <parameter name="MCTrueTrackRelCollectionName" type="string"> LDCTracksMCP </parameter>
    <parameter name="PrintInfo" type="int"> 0 </parameter>
    <parameter name="FitTrueTrack" type="int"> 1 </parameter>
  </processor>
- 
+
 
  <processor name="MySiliconTracking" type="SiliconTracking">
  <!--Vertex Tracking-->
@@ -321,11 +321,11 @@
   <parameter name="NDivisionsInPhi" type="int"> 60 </parameter>
   <parameter name="NDivisionsInPhiFTD" type="int"> 3 </parameter>
   <parameter name="NDivisionsInTheta" type="int"> 60 </parameter>
-  <parameter name="LayerCombinations" type="IntVec">    6 4 3  6 4 2  6 3 2  5 4 3  5 4 2  5 3 2  
+  <parameter name="LayerCombinations" type="IntVec">    6 4 3  6 4 2  6 3 2  5 4 3  5 4 2  5 3 2
                                                         5 3 1  5 2 1  4 3 2  4 3 1  4 2 1  3 2 1 </parameter>
-  <parameter name="LayerCombinationsFTD" type="IntVec"> 6 5 4  6 5 3  5 4 3  5 4 2  5 4 1  5 3 2  
-                                                        5 3 1  5 2 1  4 3 2  4 3 1  4 3 0  4 2 1  
-                                                        4 2 0  4 1 0  3 2 1  3 2 0  3 1 0  2 1 0  </parameter>  
+  <parameter name="LayerCombinationsFTD" type="IntVec"> 6 5 4  6 5 3  5 4 3  5 4 2  5 4 1  5 3 2
+                                                        5 3 1  5 2 1  4 3 2  4 3 1  4 3 0  4 2 1
+                                                        4 2 0  4 1 0  3 2 1  3 2 0  3 1 0  2 1 0  </parameter>
   <parameter name="MinimalHits" type="int"> 3 </parameter>
   <parameter name="FastAttachment" type="int"> 0 </parameter>
   <parameter name="MinDistCutAttach" type="float"> 2.5 </parameter>
@@ -400,20 +400,20 @@
  <!--Sim Tracker Hit Collection Names-->
  <!--parameter name="SimTrackerHitCollections" type="StringVec"> </parameter-->
  <parameter name="SimTrackerHitCollections" type="StringVec">STpc01_TPC ftd01_FTD sit00_SIT vxd01_VXD </parameter>
-  
+
 
  <!--Tracker Hit Collection Names-->
  <!--parameter name="TrackerHitCollections" type="StringVec">STpc01_TPC ftd01_FTD sit00_SIT vxd01_VXD </parameter-->
 
  <!--True Cluster Collection Name-->
  <!--parameter name="TrueClusterCollection" type="StringVec"> </parameter-->
-  
+
  <!--Cluster Collection Name-->
  <!--parameter name="ClusterCollection" type="StringVec"> </parameter-->
-  
+
  <!--True Track Collection Name-->
  <!--parameter name="TrueTrackCollection" type="StringVec"> TrueTracks </parameter-->
-  
+
  <!--Track Collection Name-->
  <!--parameter name="TrackCollection" type="StringVec"> LDCTracks </parameter-->
 

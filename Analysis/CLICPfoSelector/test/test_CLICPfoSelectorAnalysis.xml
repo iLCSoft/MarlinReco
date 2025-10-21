@@ -25,7 +25,7 @@
     <!-- Limit the number of processed records (run+evt): -->
     <parameter name="MaxRecordNumber" value="10" />
     <parameter name="SkipNEvents" value="0" />
-    <parameter name="SupressCheck" value="false" />  
+    <parameter name="SupressCheck" value="false" />
     <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
     <parameter name="RandomSeed" value="1234567890" />
   </global>

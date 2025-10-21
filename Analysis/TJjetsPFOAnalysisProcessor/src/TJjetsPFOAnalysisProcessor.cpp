@@ -1,185 +1,91 @@
 #include "TJjetsPFOAnalysisProcessor.h"
 
-TJjetsPFOAnalysisProcessor aTJjetsPFOAnalysisProcessor ;
+TJjetsPFOAnalysisProcessor aTJjetsPFOAnalysisProcessor;
 
+TJjetsPFOAnalysisProcessor::TJjetsPFOAnalysisProcessor()
+    : Processor("TJjetsPFOAnalysisProcessor"),
+      // Parameters for PFOAnalysis
+      m_nRun(0), m_nEvt(0), m_nRunSum(0), m_nEvtSum(0), m_printing(0), m_lookForQuarksWithMotherZ(0),
+      m_mcPfoSelectionRadius(500.f), m_mcPfoSelectionMomentum(0.01f), m_mcPfoSelectionLowEnergyNPCutOff(1.2f),
+      m_nPfosTotal(0), m_nPfosNeutralHadrons(0), m_nPfosPhotons(0), m_nPfosTracks(0), m_pfoEnergyTotal(0.f),
+      m_pfoEnergyNeutralHadrons(0.f), m_pfoEnergyPhotons(0.f), m_pfoEnergyTracks(0.f), m_pfoECalToEmEnergy(0.f),
+      m_pfoECalToHadEnergy(0.f), m_pfoHCalToEmEnergy(0.f), m_pfoHCalToHadEnergy(0.f), m_pfoMuonToEnergy(0.f),
+      m_pfoOtherEnergy(0.f), m_pfoMassTotal(0.f), m_nPfoTargetsTotal(0), m_nPfoTargetsNeutralHadrons(0),
+      m_nPfoTargetsPhotons(0), m_nPfoTargetsTracks(0), m_pfoTargetsEnergyTotal(0.f),
+      m_pfoTargetsEnergyNeutralHadrons(0.f), m_pfoTargetsEnergyPhotons(0.f), m_pfoTargetsEnergyTracks(0.f),
+      m_mcEnergyENu(0.f), m_mcEnergyFwd(0.f), m_eQQ(-99.f), m_eQ1(-99.f), m_eQ2(-99.f), m_costQQ(-99.f),
+      m_costQ1(-99.f), m_costQ2(-99.f), m_mQQ(-99.f), m_thrust(-99.f), m_qPdg(-99.f), m_pTFile(NULL), m_pTTree(NULL),
+      m_hPfoEnergySum(NULL), m_hPfoEnergySumL7A(NULL) {
+  _description = "TJjetsPFOAnalysisProcessor: Basically a copy-pasted version of the PFOAnalysis processor working on "
+                 "individual TrueJet jets";
 
-TJjetsPFOAnalysisProcessor::TJjetsPFOAnalysisProcessor() :
-    Processor("TJjetsPFOAnalysisProcessor"),
-    // Parameters for PFOAnalysis
-    m_nRun(0),
-    m_nEvt(0),
-    m_nRunSum(0),
-    m_nEvtSum(0),
-    m_printing(0),
-    m_lookForQuarksWithMotherZ(0),
-    m_mcPfoSelectionRadius(500.f),
-    m_mcPfoSelectionMomentum(0.01f),
-    m_mcPfoSelectionLowEnergyNPCutOff(1.2f),
-    m_nPfosTotal(0),
-    m_nPfosNeutralHadrons(0),
-    m_nPfosPhotons(0),
-    m_nPfosTracks(0),
-    m_pfoEnergyTotal(0.f),
-    m_pfoEnergyNeutralHadrons(0.f),
-    m_pfoEnergyPhotons(0.f),
-    m_pfoEnergyTracks(0.f),
-    m_pfoECalToEmEnergy(0.f),
-    m_pfoECalToHadEnergy(0.f),
-    m_pfoHCalToEmEnergy(0.f),
-    m_pfoHCalToHadEnergy(0.f),
-    m_pfoMuonToEnergy(0.f),
-    m_pfoOtherEnergy(0.f),
-    m_pfoMassTotal(0.f),
-    m_nPfoTargetsTotal(0),
-    m_nPfoTargetsNeutralHadrons(0),
-    m_nPfoTargetsPhotons(0),
-    m_nPfoTargetsTracks(0),
-    m_pfoTargetsEnergyTotal(0.f),
-    m_pfoTargetsEnergyNeutralHadrons(0.f),
-    m_pfoTargetsEnergyPhotons(0.f),
-    m_pfoTargetsEnergyTracks(0.f),
-    m_mcEnergyENu(0.f),
-    m_mcEnergyFwd(0.f),
-    m_eQQ(-99.f),
-    m_eQ1(-99.f),
-    m_eQ2(-99.f),
-    m_costQQ(-99.f),
-    m_costQ1(-99.f),
-    m_costQ2(-99.f),
-    m_mQQ(-99.f),
-    m_thrust(-99.f),
-    m_qPdg(-99.f),
-    m_pTFile(NULL),
-    m_pTTree(NULL),
-    m_hPfoEnergySum(NULL),
-    m_hPfoEnergySumL7A(NULL)
-{
-    _description = "TJjetsPFOAnalysisProcessor: Basically a copy-pasted version of the PFOAnalysis processor working on individual TrueJet jets" ;
+  // Standard input collections
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "InputAllPFOsCollection", "Name of the PFOs collection",
+                          _colAllPFOs, std::string("PandoraPFOs"));
 
+  registerInputCollection(LCIO::MCPARTICLE, "MCParticleCollection", "Name of the MC particle collection", _colMC,
+                          std::string("MCParticle"));
 
+  // Collection for TrueJet
 
+  registerInputCollection(LCIO::LCRELATION, "RecoMCTruthLink", "Name of the RecoMCTruthLink input collection",
+                          _recoMCTruthLink, std::string("RecoMCTruthLink"));
 
-    // Standard input collections
-    registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-            "InputAllPFOsCollection",
-            "Name of the PFOs collection",
-            _colAllPFOs,
-            std::string("PandoraPFOs")
-    );
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "TrueJets", "Name of the TrueJetCollection output collection",
+                          _trueJetCollectionName, std::string("TrueJets"));
 
-    registerInputCollection( LCIO::MCPARTICLE,
-            "MCParticleCollection",
-            "Name of the MC particle collection",
-            _colMC,
-            std::string("MCParticle")
-    );
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "FinalColourNeutrals",
+                          "Name of the FinalColourNeutralCollection output collection",
+                          _finalColourNeutralCollectionName, std::string("FinalColourNeutrals"));
 
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "InitialColourNeutrals",
+                          "Name of the InitialColourNeutralCollection output collection",
+                          _initialColourNeutralCollectionName, std::string("InitialColourNeutrals"));
 
-    // Collection for TrueJet
+  registerInputCollection(LCIO::LCRELATION, "TrueJetPFOLink", "Name of the TrueJetPFOLink output collection",
+                          _trueJetPFOLink, std::string("TrueJetPFOLink"));
 
-  	registerInputCollection( LCIO::LCRELATION,
-      		"RecoMCTruthLink",
-      		"Name of the RecoMCTruthLink input collection"  ,
-  			_recoMCTruthLink,
-  			std::string("RecoMCTruthLink") ) ;
+  registerInputCollection(LCIO::LCRELATION, "TrueJetMCParticleLink",
+                          "Name of the TrueJetMCParticleLink output collection", _trueJetMCParticleLink,
+                          std::string("TrueJetMCParticleLink"));
 
-  	registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-  			"TrueJets" ,
-  			"Name of the TrueJetCollection output collection"  ,
-  			_trueJetCollectionName ,
-  			std::string("TrueJets") ) ;
+  registerInputCollection(LCIO::LCRELATION, "FinalElementonLink", "Name of the  FinalElementonLink output collection",
+                          _finalElementonLink, std::string("FinalElementonLink"));
 
-  	registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-  			"FinalColourNeutrals" ,
-  			"Name of the FinalColourNeutralCollection output collection"  ,
-  			_finalColourNeutralCollectionName ,
-  			std::string("FinalColourNeutrals") ) ;
+  registerInputCollection(LCIO::LCRELATION, "InitialElementonLink",
+                          "Name of the  InitialElementonLink output collection", _initialElementonLink,
+                          std::string("InitialElementonLink"));
 
-  	registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-  			"InitialColourNeutrals" ,
-  			"Name of the InitialColourNeutralCollection output collection"  ,
-  			_initialColourNeutralCollectionName ,
-  			std::string("InitialColourNeutrals") ) ;
+  registerInputCollection(LCIO::LCRELATION, "FinalColourNeutralLink",
+                          "Name of the  FinalColourNeutralLink output collection", _finalColourNeutralLink,
+                          std::string("FinalColourNeutralLink"));
 
-  	 registerInputCollection( LCIO::LCRELATION,
-  			"TrueJetPFOLink" ,
-  			"Name of the TrueJetPFOLink output collection"  ,
-  			_trueJetPFOLink,
-  			std::string("TrueJetPFOLink") ) ;
+  registerInputCollection(LCIO::LCRELATION, "InitialColourNeutralLink",
+                          "Name of the  InitialColourNeutralLink output collection", _initialColourNeutralLink,
+                          std::string("InitialColourNeutralLink"));
 
-  	registerInputCollection( LCIO::LCRELATION,
-  			"TrueJetMCParticleLink" ,
-  			"Name of the TrueJetMCParticleLink output collection"  ,
-  			_trueJetMCParticleLink,
-  			std::string("TrueJetMCParticleLink") ) ;
+  // Collections for PFOAnalysis
 
-  	registerInputCollection( LCIO::LCRELATION,
-  			"FinalElementonLink" ,
-  			"Name of the  FinalElementonLink output collection"  ,
-  			_finalElementonLink,
-  			std::string("FinalElementonLink") ) ;
+  registerProcessorParameter("LookForQuarksWithMotherZ", "Flag to look for quarks with mother Z",
+                             m_lookForQuarksWithMotherZ, int(0));
 
-  	registerInputCollection( LCIO::LCRELATION,
-  			"InitialElementonLink" ,
-  			"Name of the  InitialElementonLink output collection"  ,
-  			_initialElementonLink,
-  			std::string("InitialElementonLink") ) ;
+  registerProcessorParameter("MCPfoSelectionRadius", "MC pfo selection radius", m_mcPfoSelectionRadius, float(500.f));
 
-  	registerInputCollection( LCIO::LCRELATION,
-  			"FinalColourNeutralLink" ,
-  			"Name of the  FinalColourNeutralLink output collection"  ,
-  			_finalColourNeutralLink,
-  			std::string("FinalColourNeutralLink") ) ;
+  registerProcessorParameter("MCPfoSelectionMomentum", "MC pfo selection momentum", m_mcPfoSelectionMomentum,
+                             float(0.01f));
 
-  	registerInputCollection( LCIO::LCRELATION,
-  			"InitialColourNeutralLink" ,
-  			"Name of the  InitialColourNeutralLink output collection"  ,
-  			_initialColourNeutralLink,
-  			std::string("InitialColourNeutralLink") ) ;
+  registerProcessorParameter("MCPfoSelectionLowEnergyNPCutOff",
+                             "MC pfo selection neutron and proton low energy cut-off",
+                             m_mcPfoSelectionLowEnergyNPCutOff, float(1.0f));
 
-
-
-    // Collections for PFOAnalysis
-
-    registerProcessorParameter(
-        "LookForQuarksWithMotherZ",
-        "Flag to look for quarks with mother Z",
-        m_lookForQuarksWithMotherZ,
-        int(0));
-
-    registerProcessorParameter(
-        "MCPfoSelectionRadius",
-        "MC pfo selection radius",
-        m_mcPfoSelectionRadius,
-        float(500.f));
-
-    registerProcessorParameter(
-        "MCPfoSelectionMomentum",
-        "MC pfo selection momentum",
-        m_mcPfoSelectionMomentum,
-        float(0.01f));
-
-    registerProcessorParameter(
-        "MCPfoSelectionLowEnergyNPCutOff",
-        "MC pfo selection neutron and proton low energy cut-off",
-        m_mcPfoSelectionLowEnergyNPCutOff,
-        float(1.0f));
-
-    registerProcessorParameter(
-        "RootFile",
-        "Name of the output root file",
-        m_rootFile,
-        std::string("PFOAnalysis.root"));
-
+  registerProcessorParameter("RootFile", "Name of the output root file", m_rootFile, std::string("PFOAnalysis.root"));
 }
 
-
-
 void TJjetsPFOAnalysisProcessor::init() {
-  streamlog_out(DEBUG) << "   init called  " << std::endl ;
+  streamlog_out(DEBUG) << "   init called  " << std::endl;
 
   // usually a good idea to
-  printParameters() ;
+  printParameters();
 
   m_nRun = 0;
   m_nEvt = 0;
@@ -188,9 +94,8 @@ void TJjetsPFOAnalysisProcessor::init() {
   this->Clear();
 
   m_pTFile = new TFile(m_rootFile.c_str(), "recreate");
-  makeNTuple() ;
+  makeNTuple();
 }
-
 
 void TJjetsPFOAnalysisProcessor::makeNTuple() {
   m_pTTree = new TTree("PfoAnalysisTree", "PfoAnalysisTree");
@@ -234,7 +139,8 @@ void TJjetsPFOAnalysisProcessor::makeNTuple() {
   m_pTTree->Branch("nPfoTargetsPhotons", &m_nPfoTargetsPhotons, "nPfoTargetsPhotons/I");
   m_pTTree->Branch("nPfoTargetsTracks", &m_nPfoTargetsTracks, "nPfoTargetsTracks/I");
   m_pTTree->Branch("pfoTargetsEnergyTotal", &m_pfoTargetsEnergyTotal, "pfoTargetsEnergyTotal/F");
-  m_pTTree->Branch("pfoTargetsEnergyNeutralHadrons", &m_pfoTargetsEnergyNeutralHadrons, "pfoTargetsEnergyNeutralHadrons/F");
+  m_pTTree->Branch("pfoTargetsEnergyNeutralHadrons", &m_pfoTargetsEnergyNeutralHadrons,
+                   "pfoTargetsEnergyNeutralHadrons/F");
   m_pTTree->Branch("pfoTargetsEnergyPhotons", &m_pfoTargetsEnergyPhotons, "pfoTargetsEnergyPhotons/F");
   m_pTTree->Branch("pfoTargetsEnergyTracks", &m_pfoTargetsEnergyTracks, "pfoTargetsEnergyTracks/F");
   m_pTTree->Branch("mcEnergyENu", &m_mcEnergyENu, "mcEnergyENu/F");
@@ -255,25 +161,18 @@ void TJjetsPFOAnalysisProcessor::makeNTuple() {
   m_hPfoEnergySumL7A->SetDirectory(m_pTFile);
 }
 
-
-
-void TJjetsPFOAnalysisProcessor::processRunHeader( LCRunHeader* /*run*/) {
+void TJjetsPFOAnalysisProcessor::processRunHeader(LCRunHeader* /*run*/) {
   m_nRun = 0;
   m_nEvt = 0;
   ++m_nRunSum;
 }
 
-
-
-
-
-void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * event ) {
+void TJjetsPFOAnalysisProcessor::processEvent(LCEvent* event) {
 
   // tj is a pointer to a Trujet_Parser, with the data of this processor object:
-  TrueJet_Parser* tj= this ;
+  TrueJet_Parser* tj = this;
   // this method gets all the collections needed + initialises a few convienent variables.
   tj->getall(event);
-
 
   m_nRun = event->getRunNumber();
   m_nEvt = event->getEventNumber();
@@ -285,44 +184,40 @@ void TJjetsPFOAnalysisProcessor::processEvent( LCEvent * event ) {
   m_jets.clear();
   this->findTrueJetParticles(event);
 
-  for (int i_jet=0; i_jet<njets(); i_jet++) {
+  for (int i_jet = 0; i_jet < njets(); i_jet++) {
     m_nJet = i_jet;
     this->Clear();
 
-    if( initial_elementon(i_jet) != NULL) {
+    if (initial_elementon(i_jet) != NULL) {
       m_jetInitElPDG = initial_elementon(i_jet)->getPDG();
     } else {
       m_jetInitElPDG = 0;
     }
-    if( final_elementon(i_jet) != NULL) {
+    if (final_elementon(i_jet) != NULL) {
       m_jetFinElPDG = final_elementon(i_jet)->getPDG();
     } else {
       m_jetFinElPDG = 0;
     }
-
 
     this->ExtractCollections(m_jets[i_jet]);
     this->MakeQuarkVariables(m_jets[i_jet]);
     this->PerformPfoAnalysis();
 
     m_pTTree->Fill();
-    
+
     delete m_jets[i_jet];
   }
 }
 
-
-
-void TJjetsPFOAnalysisProcessor::check( LCEvent * /*event*/ ) {
-    // nothing to check here - could be used to fill checkplots in reconstruction processor
+void TJjetsPFOAnalysisProcessor::check(LCEvent* /*event*/) {
+  // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
-
-void TJjetsPFOAnalysisProcessor::end(){
-  if (m_printing > -1)
-  {
-    std::cout << "PfoAnalysis::end() " << this->name() << " processed " << m_nEvtSum << " events in " << m_nRunSum << " runs " << std::endl
-    << "Rootfile: " << m_rootFile.c_str() << std::endl;
+void TJjetsPFOAnalysisProcessor::end() {
+  if (m_printing > -1) {
+    std::cout << "PfoAnalysis::end() " << this->name() << " processed " << m_nEvtSum << " events in " << m_nRunSum
+              << " runs " << std::endl
+              << "Rootfile: " << m_rootFile.c_str() << std::endl;
   }
 
   m_pTFile->cd();

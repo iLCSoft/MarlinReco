@@ -27,8 +27,8 @@ struct LCParametersFilterAccessor : public IMPL::LCParametersImpl {
 
 struct PIDHandlerFilterAccessor : public UTIL::PIDHandler {
   void purgeAlgoMetaData(const std::string& algoName) {
-    auto& algoIDMap    = _cpm.map();
-    auto  nameIDHandle = algoIDMap.extract(algoName);
+    auto& algoIDMap = _cpm.map();
+    auto nameIDHandle = algoIDMap.extract(algoName);
     if (nameIDHandle.empty()) {
       streamlog_out(DEBUG) << "Could not find the meta information mapping the ID to the name for " << algoName
                            << " cannot purge it\n";
@@ -39,8 +39,8 @@ struct PIDHandlerFilterAccessor : public UTIL::PIDHandler {
 
     // Take out the parameter names meta information as well, otherwise the
     // PIDHandler will re-insert them into the collection parameters
-    auto& paramNameMap    = _pNames;
-    auto  paramNameHandle = paramNameMap.extract(nameIDHandle.mapped());
+    auto& paramNameMap = _pNames;
+    auto paramNameHandle = paramNameMap.extract(nameIDHandle.mapped());
     if (paramNameHandle.empty()) {
       streamlog_out(DEBUG) << "Could not find parameter names for " << algoName << " cannot purge them\n";
     } else {
@@ -51,8 +51,8 @@ struct PIDHandlerFilterAccessor : public UTIL::PIDHandler {
 
 struct RecoParticleIDFilterAccessor : public IMPL::ReconstructedParticleImpl {
   void purgeParticleIDAlgorithm(const int algoId) {
-    auto& pids   = _pid;  // Better debugging experience with a local variable
-    auto  lastIt = std::remove_if(pids.begin(), pids.end(), [algoId](auto pid) {
+    auto& pids = _pid; // Better debugging experience with a local variable
+    auto lastIt = std::remove_if(pids.begin(), pids.end(), [algoId](auto pid) {
       if (pid->getAlgorithmType() == algoId) {
         // We need to cleanup the ParticleID object here, because this is the
         // last time that we really have access to it, because remove_if does
@@ -71,10 +71,11 @@ struct RecoParticleIDFilterAccessor : public IMPL::ReconstructedParticleImpl {
 
 ReconstructedParticleParticleIDFilterProcessor::ReconstructedParticleParticleIDFilterProcessor()
     : marlin::Processor("ReconstructedParticleParticleIDFilterProcessor") {
-  _description = "ReconstructedParticleParticleIDFilterProcessor: Filters ParticleID objects from ReconstructedParticles";
+  _description =
+      "ReconstructedParticleParticleIDFilterProcessor: Filters ParticleID objects from ReconstructedParticles";
 
-  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "RecoParticleCollection", "collection to filter", m_inputCollName,
-                          std::string("PandoraPFOs"));
+  registerInputCollection(LCIO::RECONSTRUCTEDPARTICLE, "RecoParticleCollection", "collection to filter",
+                          m_inputCollName, std::string("PandoraPFOs"));
 
   registerProcessorParameter("FilterPIDAlgos", "PID algorithm names to filter", m_filterPidAlgos,
                              std::vector<std::string>{});
@@ -82,9 +83,9 @@ ReconstructedParticleParticleIDFilterProcessor::ReconstructedParticleParticleIDF
 
 void ReconstructedParticleParticleIDFilterProcessor::processEvent(LCEvent* event) {
   try {
-    auto  recoColl      = dynamic_cast<IMPL::LCCollectionVec*>(event->getCollection(m_inputCollName));
-    auto  pidHandler    = UTIL::PIDHandler(recoColl);
-    auto& collParams    = static_cast<LCParametersFilterAccessor&>(recoColl->parameters());
+    auto recoColl = dynamic_cast<IMPL::LCCollectionVec*>(event->getCollection(m_inputCollName));
+    auto pidHandler = UTIL::PIDHandler(recoColl);
+    auto& collParams = static_cast<LCParametersFilterAccessor&>(recoColl->parameters());
     auto& filterHandler = static_cast<PIDHandlerFilterAccessor&>(pidHandler);
 
     for (const auto& algoName : m_filterPidAlgos) {

@@ -13,15 +13,13 @@
 
 class RealisticCaloRecoSilicon : public RealisticCaloReco {
 
- public:
-  virtual Processor*  newProcessor() { return new RealisticCaloRecoSilicon ; }
+public:
+  virtual Processor* newProcessor() { return new RealisticCaloRecoSilicon; }
   RealisticCaloRecoSilicon();
 
- protected:
-
+protected:
   virtual void init();
   virtual float reconstructEnergy(const CalorimeterHit* hit);
+};
 
-} ;
-
-#endif 
+#endif

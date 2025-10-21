@@ -1,44 +1,43 @@
 #ifndef LikelihoodPIDProcessor_hh
 #define LikelihoodPIDProcessor_hh 1
 
-#include <string>
-#include <vector>
-#include <marlin/Processor.h>
-#include <iostream>
 #include <cstring>
 #include <fstream>
+#include <iostream>
+#include <marlin/Processor.h>
+#include <string>
+#include <vector>
 
 #include <EVENT/LCCollection.h>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 class LikelihoodPID;
 class LowMomentumMuPiSeparationPID_BDTG;
 
-class LikelihoodPIDProcessor : public Processor{
+class LikelihoodPIDProcessor : public Processor {
 public:
-
   LikelihoodPIDProcessor(const LikelihoodPIDProcessor&) = delete;
   LikelihoodPIDProcessor& operator=(const LikelihoodPIDProcessor&) = delete;
 
-  virtual Processor*  newProcessor() { return new LikelihoodPIDProcessor ; }
+  virtual Processor* newProcessor() { return new LikelihoodPIDProcessor; }
   LikelihoodPIDProcessor();
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run);
-  virtual void processEvent( LCEvent * evt );
-  virtual void check( LCEvent * evt );
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
   virtual void end();
- 
+
 private:
-  void createParticleIDClass(int parttype, ReconstructedParticle *part, PIDHandler &pidh, int algoID, float MVAoutput);
-  
-  LikelihoodPID *_myPID{};
+  void createParticleIDClass(int parttype, ReconstructedParticle* part, PIDHandler& pidh, int algoID, float MVAoutput);
+
+  LikelihoodPID* _myPID{};
   std::string _description{};
   std::string _inputPFOsCollection{};
   std::string _PDFName{};
   std::vector<std::string> _weightFileName{};
- 
+
   std::vector<std::string> _methodstorun{};
   std::string _methodstorun_version{};
 
@@ -55,7 +54,7 @@ private:
   std::vector<float> _dEdxParamsProton{};
   std::vector<float> _cost{};
 
-  LowMomentumMuPiSeparationPID_BDTG *_mupiPID{};
+  LowMomentumMuPiSeparationPID_BDTG* _mupiPID{};
 
   bool _basicFlg{}, _dEdxFlg{}, _showerShapesFlg{};
   int _UseBayes{};
@@ -63,4 +62,4 @@ private:
   float _dEdxNormalization{}, _dEdxErrorFactor{};
 };
 
-#endif 
+#endif

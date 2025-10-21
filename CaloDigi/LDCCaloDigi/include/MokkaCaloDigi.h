@@ -1,16 +1,15 @@
 #ifndef MokkaCaloDigi1_h
 #define MokkaCaloDigi1_h 1
 
-#include "marlin/Processor.h"
 #include "EVENT/SimCalorimeterHit.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include "IMPL/LCCollectionVec.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 
-
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** === MokkaCaloDigi Processor === <br>
  *  Calorimeter digitizer Processor for LCIO <br>
@@ -45,7 +44,7 @@ using namespace marlin ;
  *  a given sampling fraction. <br>
  *  List of layer numbers terminating each section are given through <br>
  *  processor parameters ECALLayers and HCALLayers <br>
- *  There is an option to perform digitization of <br> 
+ *  There is an option to perform digitization of <br>
  *  both ECAL and HCAL in a digital mode. <br>
  *  Digital digitization is activated by  <br>
  *  setting processor parameters <br>
@@ -58,58 +57,51 @@ using namespace marlin ;
  *  Relations between CalorimeterHits and SimCalorimeterHits <br>
  *  are held in the corresponding relation collection. <br>
  *  The name of this relation collection is specified <br>
- *  via processor parameter RelationOutputCollection. <br> 
+ *  via processor parameter RelationOutputCollection. <br>
  *  @authors A. Raspereza and P. Krstonosic (DESY) <br>
  *  @version $Id$ <br>
  */
 
 struct MyHit {
-  CalorimeterHitImpl * hit{};
+  CalorimeterHitImpl* hit{};
   std::vector<SimCalorimeterHit*> simHits{};
 };
 
-
 class MokkaCaloDigi : public Processor {
-  
- public:
-  
+
+public:
   MokkaCaloDigi(const MokkaCaloDigi&) = delete;
   MokkaCaloDigi& operator=(const MokkaCaloDigi&) = delete;
 
-  virtual Processor*  newProcessor() { return new MokkaCaloDigi ; }
-  
-  
-  MokkaCaloDigi() ;
-  
+  virtual Processor* newProcessor() { return new MokkaCaloDigi; }
+
+  MokkaCaloDigi();
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
+  virtual void end();
 
+  MyHit* ProcessHitInBarrel(SimCalorimeterHit* hit);
+  MyHit* ProcessHitInEndcap(SimCalorimeterHit* hit);
 
-  MyHit * ProcessHitInBarrel(SimCalorimeterHit * hit);
-  MyHit * ProcessHitInEndcap(SimCalorimeterHit * hit);
-
- protected:
-
-  std::vector<std::string>  _ecalCollections{};
-  std::vector<std::string>  _hcalCollections{};
+protected:
+  std::vector<std::string> _ecalCollections{};
+  std::vector<std::string> _hcalCollections{};
   std::string _newCollNameHCAL{};
   std::string _newCollNameECAL{};
   std::string _relationCollName{};
@@ -126,10 +118,10 @@ class MokkaCaloDigi : public Processor {
   std::vector<int> _hcalLayers{};
   std::vector<float> _calibrCoeffEcal{};
   std::vector<float> _calibrCoeffHcal{};
-  float * _endBarrelChamberLength{};
-  float * _barrelLateralWidth{};
-  float * _barrelOffsetMaxX{};
-  float * _endBarrelOffsetMaxZ{};
+  float* _endBarrelChamberLength{};
+  float* _barrelLateralWidth{};
+  float* _barrelOffsetMaxX{};
+  float* _endBarrelOffsetMaxZ{};
   float _regularBarrelOffsetMaxZ{};
   float _lateralPlateThickness{};
   float _modulesGap{};
@@ -149,15 +141,12 @@ class MokkaCaloDigi : public Processor {
   float _regularBarrelModuleLength{};
   float _regularBarrelChamberLength{};
   float _deltaPhi{};
-  std::vector< std::vector<MyHit*> > _calorimeterHitVec{};
-  LCCollectionVec * _relationCollection{};
+  std::vector<std::vector<MyHit*>> _calorimeterHitVec{};
+  LCCollectionVec* _relationCollection{};
   int _startIEndcap{};
   int _startJEndcap{};
   float _startXEndcap{};
   float _startZEndcap{};
-
-
-
-} ;
+};
 
 #endif

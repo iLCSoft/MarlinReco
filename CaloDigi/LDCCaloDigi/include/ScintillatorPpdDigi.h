@@ -3,38 +3,36 @@
 
 class ScintillatorPpdDigi {
 
- public:
-
+public:
   ScintillatorPpdDigi();
-  ~ScintillatorPpdDigi(){}
+  ~ScintillatorPpdDigi() {}
 
   // expected # photoelectrons / MIP
-  void setPEperMIP(float x)           {_pe_per_mip=x;}
+  void setPEperMIP(float x) { _pe_per_mip = x; }
 
   // calibration factor from input hit energy to MIPs
-  void setCalibMIP(float x)           {_calib_mip=x;}
+  void setCalibMIP(float x) { _calib_mip = x; }
 
   // #pixels of PPD
-  void setNPix(int x)                 {_npix=x;}
+  void setNPix(int x) { _npix = x; }
 
   // random miscalibration of total #pixels (as a fraction of pixel number: 0.05 = 5% miscalibration)
-  void setRandomMisCalibNPix(float x) {_misCalibNpix=x;}
+  void setRandomMisCalibNPix(float x) { _misCalibNpix = x; }
 
   // spread in pixel capacitance (as a fraction: 0.05 = 5% spread)
-  void setPixSpread(float x)          {_pixSpread=x;}
+  void setPixSpread(float x) { _pixSpread = x; }
 
   // electronics noise (in MIP units)
-  void setElecNoise(float x)          {_elecNoise=x;}
+  void setElecNoise(float x) { _elecNoise = x; }
 
   // electronics dynamic range (in MIP units)
-  void setElecRange(float x)          {_elecMaxDynRange_MIP=x;}
+  void setElecRange(float x) { _elecMaxDynRange_MIP = x; }
 
-  float getDigitisedEnergy( float energy );
+  float getDigitisedEnergy(float energy);
 
   void printParameters();
 
- private:
-
+private:
   float _pe_per_mip{};
   float _calib_mip{};
   float _npix{};
@@ -42,7 +40,6 @@ class ScintillatorPpdDigi {
   float _pixSpread{};
   float _elecNoise{};
   float _elecMaxDynRange_MIP{};
-
 };
 
 #endif

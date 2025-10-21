@@ -1,17 +1,16 @@
 #ifndef FORMTRUECLUSTERSKP_H
 #define FORMTRUECLUSTERSKP_H 1
 
-#include "marlin/Processor.h"
-#include "lcio.h"
-#include <string>
-#include <vector>
 #include "HelixClass.h"
+#include "lcio.h"
+#include "marlin/Processor.h"
 #include <EVENT/CalorimeterHit.h>
 #include <EVENT/MCParticle.h>
+#include <string>
+#include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /** === Cluster Cheater 5_3 === <br>
  *  This processor constructs true clusters.<br>
@@ -21,37 +20,31 @@ using namespace marlin ;
  *    @version $ld: $<br>
  */
 class ClusterCheater5_3 : public Processor {
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new ClusterCheater5_3 ; }
-  
-  
-  ClusterCheater5_3() ;
+
+public:
+  virtual Processor* newProcessor() { return new ClusterCheater5_3; }
+
+  ClusterCheater5_3();
 
   /** Initialization
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
-  
-  
- protected:
+  virtual void end();
 
+protected:
   int _nRun{};
   int _nEvt{};
 
@@ -63,12 +56,9 @@ class ClusterCheater5_3 : public Processor {
   std::string _relCollection{};
   std::string _trueClustToMCP{};
   std::string _MCcollection{};
- 
+
   int _backcut{};
- int _Nmin{};
-} ;
+  int _Nmin{};
+};
 
 #endif
-
-
-

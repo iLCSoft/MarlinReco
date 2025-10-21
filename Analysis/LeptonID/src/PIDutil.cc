@@ -10,11 +10,11 @@
 #include <UTIL/LCRelationNavigator.h>
 
 std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator const& nav) {
-  const auto&  weights = nav.getRelatedToWeights(p);
+  const auto& weights = nav.getRelatedToWeights(p);
   size_t max_ci = UTIL::getMaxWeightIdx(weights, MarlinUtil::getClusterWeight);
   size_t max_ti = UTIL::getMaxWeightIdx(weights, MarlinUtil::getTrackWeight);
-  float max_cw  = weights[max_ci];
-  float max_tw  = weights[max_ti];
+  float max_cw = weights[max_ci];
+  float max_tw = weights[max_ti];
   if (max_ci != max_ti) {
     // confusion, skip particle
     return std::make_tuple(nullptr, 0.0F, 0.0F);
@@ -30,7 +30,7 @@ std::tuple<LCObject*, float, float> getRelated(LCObject* p, LCRelationNavigator 
 }
 
 WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* PandoraClusters) {
-  const auto&   hits   = clu->getCalorimeterHits();
+  const auto& hits = clu->getCalorimeterHits();
   size_t n_hits = hits.size();
   if (n_hits > 0) {
     // we have a REC file and can use all details
@@ -49,15 +49,15 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
     return WeightedPoints3D(int(n_hits), ehits.data(), xhits.data(), yhits.data(), zhits.data());
   } else {
     // we have a DST file and have to call the more complicated constructor and some stuff will be approximate
-    auto*               coga = clu->getPosition();
+    auto* coga = clu->getPosition();
     std::vector<double> cogv(coga, coga + 3);
 
     const auto& shapes = clu->getShape();
 
     StringVec shape_keys;
     PandoraClusters->getParameters().getStringVals("ClusterShapeParameters", shape_keys);
-    int    npoints  = 0;
-    double wgt_sum  = 0;
+    int npoints = 0;
+    double wgt_sum = 0;
     double wgt2_sum = 0;
     double wgt4_sum = 0;
     streamlog_out(DEBUG) << "shape_keys: [";
@@ -75,9 +75,9 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
     }
     streamlog_out(DEBUG) << "]" << std::endl;
 
-    auto   pos_error = clu->getPositionError();
+    auto pos_error = clu->getPositionError();
     double seen_covmat[3][3];
-    int    n = 0;
+    int n = 0;
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j <= i; j++) {
         seen_covmat[j][i] = pos_error[n] * wgt_sum * wgt_sum / wgt2_sum;
@@ -93,7 +93,7 @@ WeightedPoints3D getWeightedPoints3D(const Cluster* clu, const LCCollection* Pan
       }
     }
 
-    const auto&                dir_error = clu->getDirectionError();
+    const auto& dir_error = clu->getDirectionError();
     std::vector<double> thphcov(dir_error.begin(), dir_error.end());
 
     return WeightedPoints3D(cogv, cov_fr_clu, thphcov, npoints, wgt_sum, wgt2_sum, wgt4_sum);

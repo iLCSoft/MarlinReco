@@ -6,29 +6,28 @@
 using namespace lcio;
 namespace cpid {
 
-  class InputAlgorithm_dEdx : public InputAlgorithm {
+class InputAlgorithm_dEdx : public InputAlgorithm {
 
-  public:
+public:
+  InputAlgorithm_dEdx(const InputAlgorithm_dEdx&) = delete;
 
-    InputAlgorithm_dEdx(const InputAlgorithm_dEdx&) = delete;
+  InputAlgorithm_dEdx& operator=(const InputAlgorithm_dEdx&) = delete;
 
-    InputAlgorithm_dEdx& operator=(const InputAlgorithm_dEdx&) = delete;
+  virtual ~InputAlgorithm_dEdx() = default;
 
-    virtual ~InputAlgorithm_dEdx() = default;
+  InputAlgorithm_dEdx();
 
-    InputAlgorithm_dEdx();
+  virtual InputAlgorithm* newAlgorithm() { return new InputAlgorithm_dEdx; }
 
-    virtual InputAlgorithm* newAlgorithm() {return new InputAlgorithm_dEdx;}
+  virtual std::vector<std::string> init(const std::vector<float>& inparF, const std::vector<std::string>& inparS);
 
-    virtual std::vector<std::string> init(const std::vector<float>& inparF, const std::vector<std::string>& inparS);
-  
-    // The work horse
-    virtual std::vector<std::pair<float,float> > extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col, int PDG);
+  // The work horse
+  virtual std::vector<std::pair<float, float>> extractObservables(ReconstructedParticleImpl* pfo, LCCollection* pfo_col,
+                                                                  int PDG);
 
-  private:
-
-  };
+private:
+};
 
 } // end namespace cpid
 
-#endif 
+#endif

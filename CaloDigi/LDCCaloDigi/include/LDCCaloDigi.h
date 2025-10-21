@@ -1,17 +1,17 @@
 #ifndef DIGITIZER_LDCCALODIGI_H
 #define DIGITIZER_LDCCALODIGI_H 1
 
+#include "lcio.h"
 #include "marlin/Processor.h"
 #include <IMPL/CalorimeterHitImpl.h>
-#include "lcio.h"
 #include <string>
 #include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 const int MAX_LAYERS = 200;
-const int MAX_STAVES =  16;
+const int MAX_STAVES = 16;
 
 /** === LDCCaloDigi Processor === <br>
  *  Simple calorimeter digitizer Processor. <br>
@@ -39,7 +39,7 @@ const int MAX_STAVES =  16;
  *  a given sampling fraction. <br>
  *  List of layer numbers terminating each section are given through <br>
  *  processor parameters ECALLayers and HCALLayers <br>
- *  There is an option to perform digitization of <br> 
+ *  There is an option to perform digitization of <br>
  *  both ECAL and HCAL in a digital mode. <br>
  *  Digital mode is activated by  <br>
  *  setting processor parameters <br>
@@ -52,13 +52,13 @@ const int MAX_STAVES =  16;
  *  Relations between CalorimeterHits and SimCalorimeterHits <br>
  *  are held in the corresponding relation collection. <br>
  *  The name of this relation collection is specified <br>
- *  via processor parameter RelationOutputCollection. <br> 
+ *  via processor parameter RelationOutputCollection. <br>
  *  <h4>Input collections and prerequisites</h4>
  *  SimCalorimeterHit collections <br>
  *  <h4>Output</h4>
  *  CalorimeterHit collections for ECal and HCal. <br>
  *  Collection of relations <br>
- *  between CalorimeterHits and SimCalorimeterHits. <br> 
+ *  between CalorimeterHits and SimCalorimeterHits. <br>
  *  For ECal Calorimeter hits the variable type is set to 0, <br>
  *  whereas for HCal Calorimeter hits the type is set to 1 <br>
  *  @author A. Raspereza (DESY) <br>
@@ -66,35 +66,31 @@ const int MAX_STAVES =  16;
  *  @version $Id$ <br>
  */
 class LDCCaloDigi : public Processor {
-  
- public:
-  
+
+public:
   LDCCaloDigi(const LDCCaloDigi&) = delete;
   LDCCaloDigi& operator=(const LDCCaloDigi&) = delete;
 
-  virtual Processor*  newProcessor() { return new LDCCaloDigi ; }
-  
-  
-  LDCCaloDigi() ;
-  
-  virtual void init() ;
-  
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
-  virtual void processEvent( LCEvent * evt ) ; 
-   
-  virtual void check( LCEvent * evt ) ; 
-  
-  virtual void end() ;
+  virtual Processor* newProcessor() { return new LDCCaloDigi; }
 
-  virtual void fillECALGaps() ;
-  
-  
- protected:
+  LDCCaloDigi();
 
+  virtual void init();
+
+  virtual void processRunHeader(LCRunHeader* run);
+
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
+  virtual void end();
+
+  virtual void fillECALGaps();
+
+protected:
   int _nRun{};
   int _nEvt{};
-  
+
   std::vector<std::string> _ecalCollections{};
   std::vector<std::string> _hcalCollections{};
 
@@ -128,7 +124,6 @@ class LDCCaloDigi : public Processor {
   float _endcapPixelSizeX[MAX_LAYERS]{};
   float _endcapPixelSizeY[MAX_LAYERS]{};
   float _barrelStaveDir[MAX_STAVES][2]{};
-
-} ;
+};
 
 #endif

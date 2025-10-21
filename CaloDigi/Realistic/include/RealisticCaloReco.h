@@ -1,8 +1,8 @@
 #ifndef DIGITIZER_REALISTICCALORECO_H
 #define DIGITIZER_REALISTICCALORECO_H 1
 
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 
 #include <EVENT/CalorimeterHit.h>
 #include <IMPL/CalorimeterHitImpl.h>
@@ -16,8 +16,8 @@
 #include <string>
 #include <vector>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 /** === RealisticCaloReco Processor === <br>
     realistic reconstruction of calorimeter hits
@@ -29,33 +29,30 @@ using namespace marlin ;
     changed relations: now keep relation between reconstructed and simulated hits.
 */
 
-
 class RealisticCaloReco : virtual public Processor {
-  
- public:
-  RealisticCaloReco() ;
-  RealisticCaloReco ( const RealisticCaloReco& ) = delete;
+
+public:
+  RealisticCaloReco();
+  RealisticCaloReco(const RealisticCaloReco&) = delete;
   RealisticCaloReco& operator=(const RealisticCaloReco&) = delete;
 
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void check( LCEvent * evt ) ; 
-  virtual void end() ;
+  virtual void init();
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void processEvent(LCEvent* evt);
+  virtual void check(LCEvent* evt);
+  virtual void end();
 
-
- protected:
-
-  float getLayerCalib( int ilayer );
-  virtual float reconstructEnergy(const CalorimeterHit* hit)=0;  // to be overloaded, technology-specific
+protected:
+  float getLayerCalib(int ilayer);
+  virtual float reconstructEnergy(const CalorimeterHit* hit) = 0; // to be overloaded, technology-specific
 
   // parameters
-  std::vector <std::string> _inputHitCollections{};
-  std::vector <std::string> _inputRelCollections{};
-  std::vector <std::string> _outputHitCollections{};
-  std::vector <std::string> _outputRelCollections{};
-  std::vector <float> _calibrCoeff{};
-  std::vector <int>   _calLayers{};
+  std::vector<std::string> _inputHitCollections{};
+  std::vector<std::string> _inputRelCollections{};
+  std::vector<std::string> _outputHitCollections{};
+  std::vector<std::string> _outputRelCollections{};
+  std::vector<float> _calibrCoeff{};
+  std::vector<int> _calLayers{};
 
   std::string _cellIDLayerString{};
 
@@ -63,11 +60,7 @@ class RealisticCaloReco : virtual public Processor {
   LCFlagImpl _flag{};
   LCFlagImpl _flag_rel{};
 
-  CellIDDecoder<CalorimeterHit> * _idDecoder{};
-
-} ;
+  CellIDDecoder<CalorimeterHit>* _idDecoder{};
+};
 
 #endif
-
-
-

@@ -1,48 +1,46 @@
 #ifndef KITUTIL_h
 #define KITUTIL_h 1
 
-#include "lcio.h"
 #include "EVENT/LCIO.h"
-#include <EVENT/SimCalorimeterHit.h>
+#include "Phys_Geom_Database.h"
+#include "lcio.h"
+#include <ANN/ANN.h>
 #include <EVENT/CalorimeterHit.h>
-#include <vector>
-#include <list>
-#include <stack>
-#include <string>
+#include <EVENT/SimCalorimeterHit.h>
 #include <UTIL/CellIDDecoder.h>
-#include "Phys_Geom_Database.h" 
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_linalg.h>
 #include <gsl/gsl_eigen.h>
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_integration.h>
 #include <gsl/gsl_sf_pow_int.h>
-#include <ANN/ANN.h>
+#include <gsl/gsl_vector.h>
+#include <list>
+#include <stack>
+#include <string>
+#include <vector>
 
 using namespace lcio;
 using namespace std;
 
 class Tmpcl2;
 /**
- *    Basic hit class for reconstruction, contains the calorimeter hit plus     
+ *    Basic hit class for reconstruction, contains the calorimeter hit plus
  *    additional parameters
  *    @authors P.Krstonosic (DESY)
  */
-class Superhit2
-{
- public:
-
+class Superhit2 {
+public:
   Superhit2(const Superhit2&) = delete;
   Superhit2& operator=(const Superhit2&) = delete;
   /**
-   *  Constructor , needs absolute MIP energy (calibrated ) , and pointer to 
+   *  Constructor , needs absolute MIP energy (calibrated ) , and pointer to
    *  calorimeter hit
    */
-  Superhit2(float E,CalorimeterHit* chitin);  
+  Superhit2(float E, CalorimeterHit* chitin);
   /**
    *    Destructor
    */
@@ -55,19 +53,19 @@ class Superhit2
    *   Pointer to the LCIO calorimeter hit
    */
   CalorimeterHit* chit{};
-  
+
   bool connect{};
   /**
    *   Transformed position of the hit
    */
-  float point[3]{};  // transform position
+  float point[3]{}; // transform position
   /**
    *   Real coordinate of the hit, copy of calorimeter hit data for direct access
    */
   float pointt[3]{}; // true position
   /**
    *   Energy of hit i terms of MIP
-   */ 
+   */
   float mip{};
   /**
    *   MIP value [GeV]
@@ -76,25 +74,25 @@ class Superhit2
   /**
    *   Number of neighbours
    */
-  int top{};         // topological parameter
+  int top{}; // topological parameter
   /**
-   *    Is hit assigned to a cluster or not 
+   *    Is hit assigned to a cluster or not
    */
   bool is_assigned{};
   /**
    *    Vector of pointers to the neighbouring hits of Superhit2 type
    */
-  vector <Superhit2*> neighbours{};
+  vector<Superhit2*> neighbours{};
   /**
-   *   Pointer to the cluster to wich hit belong 
+   *   Pointer to the cluster to wich hit belong
    */
-  Tmpcl2 * cl{};
+  Tmpcl2* cl{};
   /**
-   *  stove as coded by Mokka 
+   *  stove as coded by Mokka
    */
   int S{};
   /**
-   *  layer as coded by Mokka 
+   *  layer as coded by Mokka
    */
   int K{};
   /**
@@ -102,33 +100,32 @@ class Superhit2
    */
   int M{};
   /**
-   *  0 by constructor  1 for ecal 2 for hcal 
-   */ 
+   *  0 by constructor  1 for ecal 2 for hcal
+   */
   int tip{};
- 
-};  
+};
 /**
  *    Basic cluster class for reconstruction
  *    @authors P.Krstonosic (DESY)
  */
-class Tmpcl2{
+class Tmpcl2 {
 
- public : 
+public:
   /**
-    * Constructor.
-    */
-   Tmpcl2();
+   * Constructor.
+   */
+  Tmpcl2();
   /**
-    * Destructor. 
-    */
+   * Destructor.
+   */
   ~Tmpcl2();
   /**
    *  Calculates center of inerta for the objects in hits vector
    */
-  void calcCenter();  
+  void calcCenter();
   /**
    *  returnes double[3] for the center as calculated with calcCenter method
-   */ 
+   */
   double* getCenter();
   /**
    *  returnes energy of cluster in GeV.
@@ -139,21 +136,21 @@ class Tmpcl2{
    */
   void findInertia();
 
-  // vector<Superhit2*> konektori; 
+  // vector<Superhit2*> konektori;
   /**
    * hit in the cluster
    */
-   vector<Superhit2*> hits{};
-   /**
-    * pointers to clusters that are contained in this cluster
-    */
+  vector<Superhit2*> hits{};
+  /**
+   * pointers to clusters that are contained in this cluster
+   */
   vector<Tmpcl2*> daughters{};
   /**
    * pointers to clusters that contain this cluster
    */
   vector<Tmpcl2*> parents{};
   /**
-   * energy  in GeV (sum over hits in cluster) 
+   * energy  in GeV (sum over hits in cluster)
    */
   double energy{};
   /**
@@ -167,34 +164,33 @@ class Tmpcl2{
   /**
    * normalized eigenvalues of inertia tensor
    */
-  double inteigen[3]{}; 
+  double inteigen[3]{};
   /**
    * eigenvectors of inertia tensor
-   */       
-  double inteigenvec[9]{};     
+   */
+  double inteigenvec[9]{};
 
   /**
    *  Internal type of the cluster
    */
-  int type{};      
+  int type{};
 };
 
-class Photon2
-{
+class Photon2 {
 
- public:  
+public:
   /**
    * Constructor.
    */
-  Photon2(double Ein,double* pravac, double* pocetak);
-   /**
-    * Destructor.
-    */
+  Photon2(double Ein, double* pravac, double* pocetak);
+  /**
+   * Destructor.
+   */
   ~Photon2();
-  
-  void Prob(CalorimeterHit* ch,double cut,double* out);
-  
-  // data- stvari koje se racunaju jednom i gotovo 
+
+  void Prob(CalorimeterHit* ch, double cut, double* out);
+
+  // data- stvari koje se racunaju jednom i gotovo
   double z1{};
   double z2{};
   double k1{};
@@ -218,18 +214,18 @@ class Photon2
   double alfahom{};
   double alfasam{};
   double betasam{};
-  //  
+  //
   double Ee{};
   double dir[3]{};
   double start[3]{};
 };
-typedef vector<Superhit2*>  Shitvec2;
-typedef vector<Tmpcl2*>     Tmpclvec2;
+typedef vector<Superhit2*> Shitvec2;
+typedef vector<Tmpcl2*> Tmpclvec2;
 
 /**
  * container for holding the numbers needed for energy estimation
  */
-typedef struct{
+typedef struct {
   /**
    * level of cluster
    */
@@ -250,16 +246,16 @@ typedef struct{
    *   lower validity range of energy estimation funciton in GeV
    */
   double Emin;
- /**
+  /**
    *   upper validity range of energy estimation funciton in GeV
    */
   double Emax;
-}  CoreCalib2;
+} CoreCalib2;
 
 /**
  * container for storing the EM shower core candidates
  */
-typedef struct{
+typedef struct {
   /**
    * pointer to the cluster
    */
@@ -273,21 +269,21 @@ typedef struct{
    */
   double X[3];
   /**
-   *  flag to activate deactivate 
+   *  flag to activate deactivate
    */
   bool active;
-}PROTSEED2;
+} PROTSEED2;
 
 /**
  *  container for keeping the parameters of the core fineder together
  */
-typedef struct{
+typedef struct {
   /**
-   * fluctuation suppresion cut 
+   * fluctuation suppresion cut
    */
   double Rcut;
   /**
-   *  distance cut for core merging 
+   *  distance cut for core merging
    */
   double Distcut;
   /**
@@ -302,62 +298,60 @@ typedef struct{
    * minimal number of hits in i-th level cluster to be accepted for splitting  of the core
    */
   unsigned int MinHitSplit;
-}CoreCut2;
-
+} CoreCut2;
 
 /**
  *  Creation of superhits, input is ECAL collection ,it's decoded and pointer to resulting container for
  *  superhits
  */
-void CreateAllShits2(LCCollection* colt,CellIDDecoder<CalorimeterHit>& id,vector<Superhit2*>* calo);
+void CreateAllShits2(LCCollection* colt, CellIDDecoder<CalorimeterHit>& id, vector<Superhit2*>* calo);
 
 /**
- *  Global precalculation function , iput is vector of superhits, ECAL decoder, number of hits, and 
+ *  Global precalculation function , iput is vector of superhits, ECAL decoder, number of hits, and
  *  number of neighbors  cut for hit separation
  */
-void TotalPrecalc2(vector<Superhit2*>* calo,CellIDDecoder<CalorimeterHit>& id,
-		  unsigned int nelem, int Ncut);
+void TotalPrecalc2(vector<Superhit2*>* calo, CellIDDecoder<CalorimeterHit>& id, unsigned int nelem, int Ncut);
 /**
- *  Precalculation function used internaly by TotalPrecalc 
+ *  Precalculation function used internaly by TotalPrecalc
  */
-void Precalc2(vector< Superhit2* >& shvec,double r, double z, double cell, double dist,bool tip,int stove,int module,CellIDDecoder<CalorimeterHit>& id);
+void Precalc2(vector<Superhit2*>& shvec, double r, double z, double cell, double dist, bool tip, int stove, int module,
+              CellIDDecoder<CalorimeterHit>& id);
 
 /**
  *  Basic function for transformation of hit coordinates
  */
-void GridTransform2( CalorimeterHit* clh,float& radius, float& halfz, float& cellsize,float*X,
-		    bool tip,int stove,int module,CellIDDecoder<CalorimeterHit>& id);
+void GridTransform2(CalorimeterHit* clh, float& radius, float& halfz, float& cellsize, float* X, bool tip, int stove,
+                    int module, CellIDDecoder<CalorimeterHit>& id);
 
 /**
  *  Global EM core finding function , iput is vector of superhits, array of Tmpcl vectors bbb for internal
  *  computation, vector of EM core candidates prs2, and parameters of the algorithm
  */
-void FindCores2(Shitvec2* secal1, vector< Tmpclvec2>& bbb , vector <PROTSEED2> * prs2,
-		unsigned int N, vector<float> miipstep, CoreCut2 Ccut);
+void FindCores2(Shitvec2* secal1, vector<Tmpclvec2>& bbb, vector<PROTSEED2>* prs2, unsigned int N,
+                vector<float> miipstep, CoreCut2 Ccut);
 /**
- *  NN clustering 
+ *  NN clustering
  */
-void cluster5( vector<Superhit2*>* shv, vector<Tmpcl2*>* clv);
+void cluster5(vector<Superhit2*>* shv, vector<Tmpcl2*>* clv);
 /**
- * returns energy estimate for a given core , input  int level, double core energy in GeV, and 
+ * returns energy estimate for a given core , input  int level, double core energy in GeV, and
  * calibration data table
  */
-double  giveMeEEstimate2(int nivo,double Ecore, vector<CoreCalib2> cc);
+double giveMeEEstimate2(int nivo, double Ecore, vector<CoreCalib2> cc);
 /**
- * Example function for creation of the energy estimaiton table 
+ * Example function for creation of the energy estimaiton table
  */
 void CreateCalibrationLDC00(vector<CoreCalib2>* cc);
 
-
-void LineCaloIntersectD2( double* X1, double* dir,double&d,double&zmax, double*X);
-void LineCaloIntersect2(double* X1, double* X2,double&d,double&zmax,  double*X);
-double LinePointDistance2( double* X1, double* X2, double* X0);
-void PointOnLine3(const double* X1,const double* X2,const float* X0,double* Xline);
-void PointOnLine22(const double* Xstart,const double* dir,const float* X0,double* Xline);
-void ModuleNormal2(double* X1,double& zmax, double* X0);
+void LineCaloIntersectD2(double* X1, double* dir, double& d, double& zmax, double* X);
+void LineCaloIntersect2(double* X1, double* X2, double& d, double& zmax, double* X);
+double LinePointDistance2(double* X1, double* X2, double* X0);
+void PointOnLine3(const double* X1, const double* X2, const float* X0, double* Xline);
+void PointOnLine22(const double* Xstart, const double* dir, const float* X0, double* Xline);
+void ModuleNormal2(double* X1, double& zmax, double* X0);
 void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv);
-double D_cl_cl2(Tmpcl2* cl1,Tmpcl2* cl2) ;
-inline double Dot2(double* X1,double* X2);
-void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv,vector<Tmpcl2*>& clout);
+double D_cl_cl2(Tmpcl2* cl1, Tmpcl2* cl2);
+inline double Dot2(double* X1, double* X2);
+void ClusterInCluster2(Tmpcl2* cl, vector<Tmpcl2*>& clv, vector<Tmpcl2*>& clout);
 
 #endif

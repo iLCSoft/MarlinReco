@@ -1,7 +1,7 @@
 #include "PfoUtilities.h"
 
-#include <CalorimeterHitType.h>
 #include "marlin/VerbosityLevels.h"
+#include <CalorimeterHitType.h>
 
 #include <EVENT/LCCollection.h>
 #include <EVENT/MCParticle.h>
@@ -12,56 +12,57 @@
 #include <IMPL/LCCollectionVec.h>
 
 #include <CalorimeterHitType.h>
-#include <marlinutil/GeometryUtil.h>
 #include <algorithm>
+#include <marlinutil/GeometryUtil.h>
 #include <set>
 
 float PfoUtil::TimeAtEcal(const Track* pTrack, float& tof) {
-  float             bField      = MarlinUtil::getBzAtOrigin();
+  float bField = MarlinUtil::getBzAtOrigin();
   const TrackState* pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
 
-  //locationAtEcal in mm
+  // locationAtEcal in mm
   const float* locationAtECal = pTrackState->getReferencePoint();
-  HelixClass   helix;
-  helix.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(),
-                             bField);
+  HelixClass helix;
+  helix.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(),
+                             pTrack->getTanLambda(), bField);
 
-  //time-of-flight is distance divided by c=300mm/ns
+  // time-of-flight is distance divided by c=300mm/ns
   tof = sqrt(locationAtECal[0] * locationAtECal[0] + locationAtECal[1] * locationAtECal[1] +
              locationAtECal[2] * locationAtECal[2]) /
         300;
 
-  //HelixClass::getDistanceToPoint(float const* xPoint, float * Distance) returns
-  //a time computed as distance/momentum
+  // HelixClass::getDistanceToPoint(float const* xPoint, float * Distance) returns
+  // a time computed as distance/momentum
   float distance[3] = {0.0, 0.0, 0.0};
-  float minTime     = helix.getDistanceToPoint(locationAtECal, distance);
+  float minTime = helix.getDistanceToPoint(locationAtECal, distance);
 
   const float px = helix.getMomentum()[0];
   const float py = helix.getMomentum()[1];
   const float pz = helix.getMomentum()[2];
-  //139MeV is mass of pion
+  // 139MeV is mass of pion
   const float E = sqrt(px * px + py * py + pz * pz + 0.139 * 0.139);
-  minTime       = minTime / 300 * E - tof;
+  minTime = minTime / 300 * E - tof;
 
   return minTime;
 }
 
-void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCaloHitsUsed, float& meanTimeEcal, int& nEcal,
-                              float& meanTimeHcalEndcap, int& nHcalEnd, bool correctHitTimesForTimeOfFlight) {
+void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCaloHitsUsed, float& meanTimeEcal,
+                              int& nEcal, float& meanTimeHcalEndcap, int& nHcalEnd,
+                              bool correctHitTimesForTimeOfFlight) {
   float sumTimeEnergy(0.f);
   float sumEnergy(0.f);
   float sumEnergyEcal(0.f);
   float sumTimeEnergyEcal(0.f);
   float sumEnergyHcalEndcap(0.f);
   float sumTimeEnergyHcalEndcap(0.f);
-  meanTime           = std::numeric_limits<float>::max();
-  meanTimeEcal       = std::numeric_limits<float>::max();
+  meanTime = std::numeric_limits<float>::max();
+  meanTimeEcal = std::numeric_limits<float>::max();
   meanTimeHcalEndcap = std::numeric_limits<float>::max();
-  nEcal              = 0;
-  nHcalEnd           = 0;
-  nCaloHitsUsed      = 0;
+  nEcal = 0;
+  nHcalEnd = 0;
+  nCaloHitsUsed = 0;
 
-  CalorimeterHitVec  hits = cluster->getCalorimeterHits();
+  CalorimeterHitVec hits = cluster->getCalorimeterHits();
   std::vector<float> hittimes;
   std::vector<float> tofCorrections;
   std::vector<float> deltaTimes;
@@ -69,10 +70,10 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCal
   for (unsigned int ihit = 0; ihit < hits.size(); ++ihit) {
     // optionally correct hit times for straight line tof (may have already been done in another processor)
     if (correctHitTimesForTimeOfFlight) {
-      const float x   = hits[ihit]->getPosition()[0];
-      const float y   = hits[ihit]->getPosition()[1];
-      const float z   = hits[ihit]->getPosition()[2];
-      const float r   = sqrt(x * x + y * y + z * z);
+      const float x = hits[ihit]->getPosition()[0];
+      const float y = hits[ihit]->getPosition()[1];
+      const float z = hits[ihit]->getPosition()[2];
+      const float r = sqrt(x * x + y * y + z * z);
       const float tof = r / 300.;
       tofCorrections.push_back(tof);
       hittimes.push_back(hits[ihit]->getTime() - tof);
@@ -83,7 +84,7 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCal
 
   std::sort(hittimes.begin(), hittimes.end());
 
-  int   iMedian    = static_cast<int>(hits.size() / 2.);
+  int iMedian = static_cast<int>(hits.size() / 2.);
   float medianTime = hittimes[iMedian];
   // streamlog_out( MESSAGE ) << " Median time : " << medianTime << std::endl;
 
@@ -106,8 +107,8 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCal
   // streamlog_out( MESSAGE ) << " deltaMedian : " << deltaMedian << std::endl;
 
   for (unsigned int ihit = 0; ihit < hits.size(); ++ihit) {
-    CalorimeterHit* hit     = hits[ihit];
-    float           hitTime = hits[ihit]->getTime();
+    CalorimeterHit* hit = hits[ihit];
+    float hitTime = hits[ihit]->getTime();
     if (correctHitTimesForTimeOfFlight)
       hitTime -= tofCorrections[ihit];
 
@@ -142,7 +143,8 @@ void PfoUtil::GetClusterTimes(const Cluster* cluster, float& meanTime, int& nCal
   if (sumEnergyHcalEndcap > 0.f)
     meanTimeHcalEndcap = sumTimeEnergyHcalEndcap / sumEnergyHcalEndcap;
 
-  // streamlog_out( MESSAGE ) << "Tot En. = " << sumEnergy << " in ECAL: sum = " << sumEnergyEcal << ", nClu = " << nEcal << "\n"
+  // streamlog_out( MESSAGE ) << "Tot En. = " << sumEnergy << " in ECAL: sum = " << sumEnergyEcal << ", nClu = " <<
+  // nEcal << "\n"
   // << "          " << " in HcalEnd: sum = " << sumEnergyHcalEndcap << ", nHcalEndClu = " << nHcalEnd << std::endl;
 
   return;

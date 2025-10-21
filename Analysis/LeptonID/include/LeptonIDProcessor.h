@@ -1,19 +1,19 @@
 #ifndef LeptonIDProcessor_h
 #define LeptonIDProcessor_h 1
 
-#include <marlin/Processor.h>
-#include <marlin/EventModifier.h>
 #include <lcio.h>
-#include <string>
 #include <map>
+#include <marlin/EventModifier.h>
+#include <marlin/Processor.h>
+#include <string>
 
 #include <EVENT/Cluster.h>
 #include <EVENT/MCParticle.h>
 
 #include <marlinutil/WeightedPoints3D.h>
 
-#include <TTree.h>
 #include <TMVA/Reader.h>
+#include <TTree.h>
 
 using namespace lcio;
 using namespace marlin;
@@ -39,7 +39,7 @@ class LeptonIDProcessor : public Processor //, public EventModifier
 {
 
 public:
-  virtual Processor *newProcessor() { return new LeptonIDProcessor; }
+  virtual Processor* newProcessor() { return new LeptonIDProcessor; }
 
   LeptonIDProcessor();
 
@@ -53,15 +53,15 @@ public:
 
   /** Called for every run.
    */
-  virtual void processRunHeader(LCRunHeader *run);
+  virtual void processRunHeader(LCRunHeader* run);
 
   /** Called for every event - the working horse.
    */
-  virtual void processEvent(LCEvent *evt);
+  virtual void processEvent(LCEvent* evt);
 
-  virtual const std::string & name() const {return Processor::name();}
+  virtual const std::string& name() const { return Processor::name(); }
 
-  virtual void check(LCEvent *evt);
+  virtual void check(LCEvent* evt);
 
   /** Called after data processing for clean up.
    */
@@ -69,7 +69,7 @@ public:
 
 protected:
   void clear();
-  void getShowerShapes(Cluster *clu);
+  void getShowerShapes(Cluster* clu);
   void getClusterShapes(WeightedPoints3D& wgpt);
   void setupTree();
   void setupMVAReader();
@@ -107,48 +107,48 @@ protected:
   int _likelihoodPDG{};
 
   std::map<std::string, float_t> _vars = {
-    {"seenP", 0.0},
-    {"seenLogP", 0.0},
-    {"seenCosTheta", 0.0},
-    {"seenE", 0.0},
-    {"seenEcalDep", 0.0},
-    {"seenHcalDep", 0.0},
-    {"seenYokeDep", 0.0},
-    {"e_over_p", 0.0},
-    {"ecal_share", 0.0},
-    {"dEdxDist_e", 0.0},
-    {"shape0", 0.0},
-    {"shape1", 0.0},
-    {"shape2", 0.0},
-    {"shape3", 0.0},
-    {"shape4", 0.0},
-    {"shape5", 0.0},
-    {"shape6", 0.0},
-    {"shape7", 0.0},
-    {"shape8", 0.0},
-    {"shape9", 0.0},
-    {"shape10", 0.0},
-    {"shape11", 0.0},
-    {"shape12", 0.0},
-    {"shape13", 0.0},
-    {"shape14", 0.0},
-    {"shape15", 0.0},
-    {"shape16", 0.0},
-    {"shape17", 0.0},
-    {"shape18", 0.0},
-    {"shape19", 0.0},
-    {"shape20", 0.0},
-    {"shape21", 0.0},
-    {"shape22", 0.0},
-    {"shape23", 0.0},
-    {"cluEllipsoid_r1", 0.0},
-    {"cluEllipsoid_r2", 0.0},
-    {"cluEllipsoid_r3", 0.0},
-    {"cluEllipsoid_vol", 0.0},
-    {"cluEllipsoid_r_ave", 0.0},
-    {"cluEllipsoid_density", 0.0},
-    {"cluEllipsoid_eccentricity_T", 0.0},
-    {"cluEllipsoid_eccentricity_L", 0.0},
+      {"seenP", 0.0},
+      {"seenLogP", 0.0},
+      {"seenCosTheta", 0.0},
+      {"seenE", 0.0},
+      {"seenEcalDep", 0.0},
+      {"seenHcalDep", 0.0},
+      {"seenYokeDep", 0.0},
+      {"e_over_p", 0.0},
+      {"ecal_share", 0.0},
+      {"dEdxDist_e", 0.0},
+      {"shape0", 0.0},
+      {"shape1", 0.0},
+      {"shape2", 0.0},
+      {"shape3", 0.0},
+      {"shape4", 0.0},
+      {"shape5", 0.0},
+      {"shape6", 0.0},
+      {"shape7", 0.0},
+      {"shape8", 0.0},
+      {"shape9", 0.0},
+      {"shape10", 0.0},
+      {"shape11", 0.0},
+      {"shape12", 0.0},
+      {"shape13", 0.0},
+      {"shape14", 0.0},
+      {"shape15", 0.0},
+      {"shape16", 0.0},
+      {"shape17", 0.0},
+      {"shape18", 0.0},
+      {"shape19", 0.0},
+      {"shape20", 0.0},
+      {"shape21", 0.0},
+      {"shape22", 0.0},
+      {"shape23", 0.0},
+      {"cluEllipsoid_r1", 0.0},
+      {"cluEllipsoid_r2", 0.0},
+      {"cluEllipsoid_r3", 0.0},
+      {"cluEllipsoid_vol", 0.0},
+      {"cluEllipsoid_r_ave", 0.0},
+      {"cluEllipsoid_density", 0.0},
+      {"cluEllipsoid_eccentricity_T", 0.0},
+      {"cluEllipsoid_eccentricity_L", 0.0},
   };
 };
 

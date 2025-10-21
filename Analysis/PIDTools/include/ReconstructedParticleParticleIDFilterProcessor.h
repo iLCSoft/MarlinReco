@@ -11,15 +11,16 @@ public:
   Processor* newProcessor() override { return new ReconstructedParticleParticleIDFilterProcessor(); }
 
   ReconstructedParticleParticleIDFilterProcessor();
-  ReconstructedParticleParticleIDFilterProcessor(const ReconstructedParticleParticleIDFilterProcessor&)            = delete;
-  ReconstructedParticleParticleIDFilterProcessor& operator=(const ReconstructedParticleParticleIDFilterProcessor&) = delete;
-  ~ReconstructedParticleParticleIDFilterProcessor()                                                                = default;
+  ReconstructedParticleParticleIDFilterProcessor(const ReconstructedParticleParticleIDFilterProcessor&) = delete;
+  ReconstructedParticleParticleIDFilterProcessor&
+  operator=(const ReconstructedParticleParticleIDFilterProcessor&) = delete;
+  ~ReconstructedParticleParticleIDFilterProcessor() = default;
 
   void processEvent(LCEvent* event) override;
 
 private:
-  std::string              m_inputCollName{};
+  std::string m_inputCollName{};
   std::vector<std::string> m_filterPidAlgos{};
 };
 
-#endif  // ReconstructedParticleParticleIDFilterProcessor_H
+#endif // ReconstructedParticleParticleIDFilterProcessor_H

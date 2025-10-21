@@ -1,76 +1,68 @@
 #ifndef ThrustReconstruction_h
 #define ThrustReconstruction_h 1
-#include <vector>
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
+#include <IMPL/ReconstructedParticleImpl.h>
 #include <iostream>
 #include <string>
-#include <IMPL/ReconstructedParticleImpl.h>
+#include <vector>
 
-#include <CLHEP/Vector/ThreeVector.h>
 #include <CLHEP/Random/RanluxEngine.h>
+#include <CLHEP/Vector/ThreeVector.h>
 
-namespace CLHEP{}    // declare namespace CLHEP for backward compatibility
-using namespace CLHEP ;
+namespace CLHEP {} // namespace CLHEP
+using namespace CLHEP;
 
+using namespace lcio;
+using namespace marlin;
 
-using namespace lcio ;
-using namespace marlin ;
-
-
-
-/** Thrust processor for marlin. 
-  * Calculates the thrust axis and thrust value for each event using two 
-  * different algorithms: 
-  * Tasso algorithm --- calculates only the principle thrust value and axis
-  * Jetnet algorithm --- calculates the principle thrust value and axis
-  *                                 the major thrust value and axis
-  *                                 the minor thrust value and axis
+/** Thrust processor for marlin.
+ * Calculates the thrust axis and thrust value for each event using two
+ * different algorithms:
+ * Tasso algorithm --- calculates only the principle thrust value and axis
+ * Jetnet algorithm --- calculates the principle thrust value and axis
+ *                                 the major thrust value and axis
+ *                                 the minor thrust value and axis
  */
 class ThrustReconstruction : public Processor {
-  
+
 public:
-  
   ThrustReconstruction(const ThrustReconstruction&) = delete;
   ThrustReconstruction& operator=(const ThrustReconstruction&) = delete;
 
-  virtual Processor* newProcessor() { return new ThrustReconstruction;}
-  
-  
-  ThrustReconstruction() ;
-  
+  virtual Processor* newProcessor() { return new ThrustReconstruction; }
+
+  ThrustReconstruction();
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void modifyRunHeader( LCRunHeader* /*run*/ ) {}
-  
+  virtual void processRunHeader(LCRunHeader* run);
+  virtual void modifyRunHeader(LCRunHeader* /*run*/) {}
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void modifyEvent( LCEvent * /*evt*/ ) {}
-  
- 
-  
-  
+  virtual void processEvent(LCEvent* evt);
+  virtual void modifyEvent(LCEvent* /*evt*/) {}
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
-  
+  virtual void end();
+
 protected:
   int TassoThrust();
   int JetsetThrust();
-  double sign(double a,double b);
-  double min(double a,double b);
+  double sign(double a, double b);
+  double min(double a, double b);
 
   /** Input collection name.
    */
 
-  std::string  _inputCollectionName{};
+  std::string _inputCollectionName{};
   int _typeOfThrustFinder{};
 
   float _principleThrustValue{};
@@ -79,11 +71,11 @@ protected:
   Hep3Vector _principleThrustAxis{};
   Hep3Vector _majorThrustAxis{};
   Hep3Vector _minorThrustAxis{};
-  float _min{},_max{};
+  float _min{}, _max{};
   LCCollection* _inParVec{};
   std::vector<Hep3Vector> _partMom{};
   std::string filename{};
   RanluxEngine myrnd{};
-} ;
+};
 
 #endif

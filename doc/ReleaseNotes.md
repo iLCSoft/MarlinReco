@@ -1,3 +1,15 @@
+# v01-37-01
+
+* 2025-10-21 Thomas Madlener ([PR#153](https://github.com/iLCSoft/MarlinReco/pull/153))
+  - Add the default `.clang-format` configuration from Key4hep and add a pre-commit hook to enforce formatting going forward
+
+* 2025-10-21 Thomas Madlener ([PR#152](https://github.com/iLCSoft/MarlinReco/pull/152))
+  - Make sure the V0Finder always creates its output collections
+
+* 2025-10-21 Thomas Madlener ([PR#151](https://github.com/iLCSoft/MarlinReco/pull/151))
+  - Truly make sure that `RealisticCaloDigi` always creates an output collection, not only if it's non-empty.
+  - Set the CellID encoding string as early as possible for `RealisticCalo{Digi,Reco}` to avoid jumping over this in case we exit a loop early.
+
 # v01-37
 
 * 2025-10-10 Thomas Madlener ([PR#150](https://github.com/iLCSoft/MarlinReco/pull/150))

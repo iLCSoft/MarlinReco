@@ -14,6 +14,7 @@
 #include <TCut.h>
 #include <TText.h>
 #include <boost/algorithm/string.hpp>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>

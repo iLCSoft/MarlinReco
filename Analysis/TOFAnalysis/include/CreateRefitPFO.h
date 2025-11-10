@@ -15,7 +15,7 @@ public:
 
   void init();
   void processEvent(EVENT::LCEvent* event);
-  void end(){};
+  void end() {};
 
   int getTrackPDG(EVENT::Track* track, UTIL::LCRelationNavigator& nav);
   int getTrackIndex(EVENT::LCCollection* trackCollection, EVENT::Track* selectedTrack);

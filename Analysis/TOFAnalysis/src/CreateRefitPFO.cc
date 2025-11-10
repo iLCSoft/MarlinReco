@@ -53,12 +53,12 @@ void CreateRefitPFO::processEvent( EVENT::LCEvent* event ){
             double mass = 0.13957039;
             if ( std::abs(tracksPdg[0]) == 321 ) mass = 0.493677;
             else if ( std::abs(tracksPdg[0]) == 2212 ) mass = 0.938272088;
-        
+
             //do calculations
             std::vector<float> covMatrix = updateChargedPFOCovMat(refittedTracks[0], mass);
             TLorentzVector fourMomentum = getTrackFourMomentum(refittedTracks[0], mass);
             const double momentum[3] = {fourMomentum.Px(), fourMomentum.Py(), fourMomentum.Pz()};
-        
+
             //update these parameters, copy everything else
             outputPFO->setType(tracksPdg[0]);
             outputPFO->setMomentum(momentum);
@@ -73,17 +73,17 @@ void CreateRefitPFO::processEvent( EVENT::LCEvent* event ){
             double mass2 = 0.13957039;
             if ( std::abs(tracksPdg[1]) == 321 ) mass2 = 0.493677;
             else if ( std::abs(tracksPdg[1]) == 2212 ) mass2 = 0.938272088;
-        
+
             TLorentzVector fourMomentum1 = getTrackFourMomentum(refittedTracks[0], mass1);
             TLorentzVector fourMomentum2 = getTrackFourMomentum(refittedTracks[1], mass2);
             TLorentzVector fourMomentum = fourMomentum1 + fourMomentum2;
             const double momentum[3] = {fourMomentum.Px(), fourMomentum.Py(), fourMomentum.Pz()};
-        
+
             std::vector<float> covMatrix1 = updateChargedPFOCovMat(refittedTracks[0], mass1);
             std::vector<float> covMatrix2 = updateChargedPFOCovMat(refittedTracks[1], mass2);
             std::vector<float> covMatrix;
             for(size_t j=0; j<covMatrix1.size(); ++j) covMatrix.push_back( covMatrix1[j] + covMatrix2[j] );
-        
+
             //update these parameters, copy everything else
             outputPFO->setType(pfo->getType());
             outputPFO->setMomentum(momentum);
@@ -166,7 +166,7 @@ std::vector<float> CreateRefitPFO::updateChargedPFOCovMat(EVENT::Track* track, d
 	const int columns = 4; // n columns jacobian
 
 	double omega = track->getOmega();
-    if (omega == 0.0) return std::vector<float>(10, 0); 
+    if (omega == 0.0) return std::vector<float>(10, 0);
 
     double pt = 0.299792458e-3 * _bField / std::abs( track->getOmega() );
 	double px = pt*std::cos( track->getPhi() );

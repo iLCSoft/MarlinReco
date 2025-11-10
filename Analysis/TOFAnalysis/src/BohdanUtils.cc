@@ -92,7 +92,7 @@ float getParameterFromPID(EVENT::ReconstructedParticle* pfo, UTIL::PIDHandler& p
     const EVENT::ParticleID& pfoPID = pidHandler.getParticleID(pfo, algorithmID);
     const std::vector<float>& parameters = pfoPID.getParameters();
     int parIdx = pidHandler.getParameterIndex(algorithmID, parameterName);
-    return parameters[parIdx]; 
+    return parameters[parIdx];
 }
 
 
@@ -258,7 +258,7 @@ EVENT::SimTrackerHit* getSimTrackerHit(EVENT::TrackerHit* hit, const UTIL::LCRel
     // Otherwise I need to check every possible tracker hit relation collection, which makes this code x10 longer.
     // In case collection doesn't exist, merging is still happens (I think..) with a warning, which is good.
     if (navToSimTrackerHits.getRelatedToObjects(hit).empty()) return nullptr;
-    
+
     const std::vector<float>& weights = navToSimTrackerHits.getRelatedToWeights(hit);
     int max_i = std::max_element(weights.begin(), weights.end()) - weights.begin();
     EVENT::SimTrackerHit* simHit = static_cast<EVENT::SimTrackerHit*> (navToSimTrackerHits.getRelatedToObjects(hit)[max_i]);
@@ -313,7 +313,7 @@ float getZ0True(EVENT::MCParticle* mc){
 
     double phiRefPoint = std::atan2( pos.y()-yC, pos.x()-xC );
     double phiAtPCA = std::atan2( -yC, -xC );
-    double deltaPhi = phiRefPoint - phiAtPCA;    
+    double deltaPhi = phiRefPoint - phiAtPCA;
     double xCircles = ( -pos.z()*q/(radius*tanL) - deltaPhi) / (2.*M_PI);
     int nCircles, n1, n2;
     if (xCircles >= 0.){
@@ -334,7 +334,7 @@ float getOmegaTrue(EVENT::MCParticle* mc){
     double bField = MarlinUtil::getBzAtOrigin();
     double ct = 2.99792458E-4;
     Vector3D mom( mc->getMomentum() );
-    return ct*bField / mom.rho();    
+    return ct*bField / mom.rho();
 }
 
 float getTanLTrue(EVENT::MCParticle* mc){
@@ -601,5 +601,5 @@ EVENT::LCCollection* getMCParticleCollection(EVENT::LCEvent* evt){
     const std::vector<std::string>* names = evt->getCollectionNames();
     if ( std::find(names->begin(), names->end(), "MCParticle") != names->end() ) return evt->getCollection("MCParticle");
     else if ( std::find(names->begin(), names->end(), "MCParticlesSkimmed") != names->end() ) return evt->getCollection("MCParticlesSkimmed");
-    else return nullptr;    
+    else return nullptr;
 }

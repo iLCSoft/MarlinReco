@@ -125,7 +125,7 @@ def zqq():
     input("wait")
 
 # zqq()
-    
+
 def ww():
     histos = {}
 
@@ -180,7 +180,7 @@ def ww():
     leg.SetFillStyle(0)
     c.Update()
     input("wait")
-# ww()ll 
+# ww()ll
 
 
 def higgs():
@@ -294,7 +294,7 @@ def overlay():
     c.Update()
     input("wait")
 # overlay()
-    
+
 
 def reco_impact():
     #NOTE: .Filter("abs(imidiateParentPDG) != 211 && abs(imidiateParentPDG) != 321")\
@@ -311,7 +311,7 @@ def reco_impact():
     histos["track"] = df.Filter("hasTrack").Histo1D((get_rand_string(), "", 500, 0, 10), "mom" )
     histos["nodecay"] = df.Filter("hasTrack && !isDecayedInTracker").Histo1D((get_rand_string(), "", 500, 0, 10), "mom" )
     histos["shower"] = df.Filter("hasTrack && !isDecayedInTracker && hasShower").Histo1D((get_rand_string(), "", 500, 0, 10), "mom" )
- 
+
     histos["gen"].Scale(1./n_events.GetValue())
     histos["track"].Scale(1./n_events.GetValue())
     histos["nodecay"].Scale(1./n_events.GetValue())
@@ -481,7 +481,7 @@ def tof_impact(use_dedx=True, process="zss", particle=kaon):
         if particle == kaon:
             h_dedx_tof10_signal = apply_efficiency(h_k, eff_dedx_tof10_pik)
         elif particle == proton:
-            h_dedx_tof10_signal = apply_efficiency(h_p, eff_dedx_tof10_kp)        
+            h_dedx_tof10_signal = apply_efficiency(h_p, eff_dedx_tof10_kp)
         h_dedx_tof10_signal.SetLineColor( ROOT.TColor.GetColor("#ff0000") )
         h_dedx_tof10_signal.SetLineWidth(2)
 
@@ -489,7 +489,7 @@ def tof_impact(use_dedx=True, process="zss", particle=kaon):
         if particle == kaon:
             h_dedx_bkg = apply_efficiency(h_pi, eff_dedx_pik, mode="misid")
         elif particle == proton:
-            h_dedx_bkg = apply_efficiency(h_k, eff_dedx_kp, mode="misid")        
+            h_dedx_bkg = apply_efficiency(h_k, eff_dedx_kp, mode="misid")
         h_dedx_bkg.SetLineColor( ROOT.TColor.GetColor("#0066ff") )
         h_dedx_bkg.SetLineWidth(2)
         h_dedx_bkg.SetLineStyle(2)
@@ -525,7 +525,7 @@ def tof_impact(use_dedx=True, process="zss", particle=kaon):
         h_dedx_bkg.DrawCopy("histo same")
         h_dedx_tof30_bkg.DrawCopy("histo same")
         h_dedx_tof10_bkg.DrawCopy("histo same")
-        
+
         h_total_signal.SetMaximum(1.05*max([h.GetMaximum() for h in [h_total_signal, h_dedx_signal, h_dedx_tof30_signal, h_dedx_tof10_signal, h_dedx_bkg, h_dedx_tof30_bkg, h_dedx_tof10_bkg]]))
 
         leg = create_legend(0.2, 0.75, 0.76, 0.91)
@@ -594,7 +594,7 @@ def tof_impact(use_dedx=True, process="zss", particle=kaon):
         if particle == kaon:
             h_tof30_bkg = apply_efficiency(h_pi, eff_tof30_pik, mode="misid")
         elif particle == proton:
-            h_tof30_bkg = apply_efficiency(h_k, eff_tof30_kp, mode="misid")        
+            h_tof30_bkg = apply_efficiency(h_k, eff_tof30_kp, mode="misid")
         h_tof30_bkg.SetLineColor( ROOT.TColor.GetColor("#0066ff") )
         h_tof30_bkg.SetLineWidth(2)
         h_tof30_bkg.SetLineStyle(7)
@@ -603,7 +603,7 @@ def tof_impact(use_dedx=True, process="zss", particle=kaon):
         if particle == kaon:
             h_tof10_bkg = apply_efficiency(h_pi, eff_tof10_pik, mode="misid")
         elif particle == proton:
-            h_tof10_bkg = apply_efficiency(h_k, eff_tof10_kp, mode="misid")        
+            h_tof10_bkg = apply_efficiency(h_k, eff_tof10_kp, mode="misid")
         h_tof10_bkg.SetLineColor( ROOT.TColor.GetColor("#0066ff") )
         h_tof10_bkg.SetLineWidth(2)
 

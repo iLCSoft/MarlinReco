@@ -126,7 +126,7 @@ df = df.Define("beta", "trackLengthToEcal_IKF_zedLambda/(tofClosest0*299.792458)
         Define("mom_ip", "sqrt(recoIpPx*recoIpPx + recoIpPy*recoIpPy + recoIpPz*recoIpPz)").\
         Define("mom_ecal", "sqrt(recoCaloPx*recoCaloPx + recoCaloPy*recoCaloPy + recoCaloPz*recoCaloPz)").\
         Define("mom_hm", "harmonicMomToEcal_IKF_zedLambda")
-        
+
 h_ip = df.Define("mass", "mom_ip*sqrt( 1./(beta*beta) - 1.)*1000").Histo1D(("h_ip", "; mass [MeV]; N entries", 500, 130, 150), "mass")
 h_ecal = df.Define("mass", "mom_ecal*sqrt( 1./(beta*beta) - 1.)*1000").Histo1D(("h_ecal", "; mass [MeV]; N entries", 500, 130, 150), "mass")
 h_hm = df.Define("mass", "mom_hm*sqrt( 1./(beta*beta) - 1.)*1000").Histo1D(("h_hm", "; mass [MeV]; N entries", 500, 130, 150), "mass")

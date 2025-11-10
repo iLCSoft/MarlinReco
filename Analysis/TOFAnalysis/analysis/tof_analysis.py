@@ -29,7 +29,7 @@ def create_tof_studies_file():
     df = df.Define("dToImpact", "dToImpact(hitPos, rImpact)")\
             .Define("dToLine", "dToLine(hitPos, rImpact, momImpact)")\
             .Define("dl", "sqrt(dToImpact*dToImpact - dToLine*dToLine)")
-            
+
     write_columns = ["tHit", "layerHit", "dToImpact", "dToLine", "dl", "pdg", "tofClosest0"]
     df.Snapshot("treename", "/nfs/dust/ilc/user/dudarboh/tof/tof_studies_UPDATE_ME.root", write_columns)
     sys.exit("Done!")
@@ -76,9 +76,9 @@ df = smear_time(df)
 
 canvas = create_canvas()
 ### ALL HITS
-# df_test = df.Define("dt", "1000*(Mean( tSurface ) - tofClosest0)") 
+# df_test = df.Define("dt", "1000*(Mean( tSurface ) - tofClosest0)")
 ### FRANK SELECTION
-# df_test = df.Define("dt", "1000*(Mean( tSurface[selectFrankHits(dToLine, layerHit)]) - tofClosest0)") 
+# df_test = df.Define("dt", "1000*(Mean( tSurface[selectFrankHits(dToLine, layerHit)]) - tofClosest0)")
 ### NEW SELECTION
 # df_test = df.Define("tSurface_cyl_mask", "tSurface[selectCylinderHits(dToLine, 10.)]")\
 #             .Define("tSurface_both_masks", "tSurface_cyl_mask[selectMedianHits(tSurface_cyl_mask, 170.)]")\
@@ -122,7 +122,7 @@ input("waut")
 #################################################### COMPARE FRANK VS NEW
 
 # canvas = create_canvas()
-# df_frank = df.Define("dt", "1000*(Mean( tSurface[selectFrankHits(dToLine, layerHit)]) - tofClosest0)") 
+# df_frank = df.Define("dt", "1000*(Mean( tSurface[selectFrankHits(dToLine, layerHit)]) - tofClosest0)")
 # h_frank = df_frank.Histo1D((get_rand_string(), "; T_{reco} - T_{true} (ps); N entries", 1500, -300, 300), "dt")
 # df_new = df.Define("tSurface_cyl_mask", "tSurface[selectCylinderHits(dToLine, 10.)]")\
 #             .Define("tSurface_both_masks", "tSurface_cyl_mask[selectMedianHits(tSurface_cyl_mask, 170.)]")\

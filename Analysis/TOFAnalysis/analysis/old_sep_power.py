@@ -254,7 +254,7 @@ input("wait")
 # fits_tof_protons = ROOT.TObjArray()
 # h_tof_protons.FitSlicesY(gaus_tof, 0, -1, 0, "QN", fits_tof_protons)
 
- 
+
 # #pions vs kaons dE/dx
 # # h_sp_pik = ROOT.TH1F("h_sp_pik", "title; momentum (GeV); Separation power", n_x_bins, np.array(x_bins))
 # # h_sp_kp = ROOT.TH1F("h_sp_kp", "title; momentum (GeV); Separation power", n_x_bins, np.array(x_bins))

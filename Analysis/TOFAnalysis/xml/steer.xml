@@ -46,7 +46,7 @@
     </processor>
 
     <processor name="MergeClusterHitsRelations" type="MergeCollections">
-        <parameter name="InputCollections" type="StringVec"> 
+        <parameter name="InputCollections" type="StringVec">
             EcalBarrelRelationsSimRec
             EcalEndcapRingRelationsSimRec
             EcalEndcapsRelationsSimRec

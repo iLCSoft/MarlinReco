@@ -22,7 +22,7 @@ DEDX_BINS = np.linspace(MIN_DEDX, MAX_DEDX, N_DEDX_BINS+1)
 N_MASS2_BINS, MIN_MASS2, MAX_MASS2 = 3000, -3, 3  # GeV^2/c^4
 # MASS2_BINS = np.array([ MIN_MASS2 + (MAX_MASS2 - MIN_MASS2)*i/N_MASS2_BINS for i in range(N_MASS2_BINS+1) ])
 MASS2_BINS = np.linspace(MIN_MASS2, MAX_MASS2, N_MASS2_BINS+1)
-MOMENTUM_COLUMN = "harmonicMomToEcal_IKF_zedLambda" 
+MOMENTUM_COLUMN = "harmonicMomToEcal_IKF_zedLambda"
 TRACK_LENGTH_COLUMN = "trackLengthToEcal_IKF_zedLambda"
 RESOLUTIONS = [0, 1, 5, 10, 30, 50, 100, 300] # ps
 COLORS_RESOLUTION = [ ROOT.TColor.GetColor(c) for c in ["#00aaff", "#0091ea", "#0079d3", "#0061bd", "#004aa5", "#00348d", "#001d75", "#00045c"] ]
@@ -76,7 +76,7 @@ def draw_hadr_vs_secondary():
     n_reco_low = df1.Filter("mom < 3").Count()
     n_reco_shower_low = df2.Filter("mom < 3").Count()
     n_gen_total = df_gen.Count()
- 
+
     h2.SetLineColor(ROOT.TColor.GetColor("#20bf55"))
     h3.SetLineColor(ROOT.TColor.GetColor("#01baef"))
     h1.SetLineWidth(4)
@@ -138,7 +138,7 @@ def draw_prim_vs_secondary():
     n_reco_low = df1.Filter("mom < 3").Count()
     n_reco_shower_low = df2.Filter("mom < 3").Count()
     n_gen_total = df_gen.Count()
- 
+
     h2.SetLineColor(ROOT.TColor.GetColor("#20bf55"))
     h3.SetLineColor(ROOT.TColor.GetColor("#01baef"))
     h1.SetLineWidth(4)

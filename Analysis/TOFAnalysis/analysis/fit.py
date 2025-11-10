@@ -24,7 +24,7 @@ df = df.Redefine("dl", f"dl[layerHit<{10}]")\
         .Redefine("tSurface", f"tSurface[layerHit<{10}]")\
         .Redefine("layerHit", f"layerHit[layerHit<{10}]")
 
-        
+
 # R 10 mm CUT
 df = df.Define("r_cut", "selectCylinderHits(dToLine, 10.)")\
         .Redefine("dl", f"dl[r_cut]")\
@@ -72,8 +72,8 @@ for i, (d_arr,t_arr) in enumerate(zip(data["dToImpact"], data["tHit"])):
 
     frame.GetYaxis().SetRangeUser(tof_true-0.1, tof_true+0.3)
 
-    d_arr = np.array([x for x in d_arr])    
-    t_arr = np.array([x for x in t_arr])    
+    d_arr = np.array([x for x in d_arr])
+    t_arr = np.array([x for x in t_arr])
     gr = ROOT.TGraph(len(d_arr), d_arr, t_arr)
     gr.SetMarkerSize(2)
     gr.Draw("P")

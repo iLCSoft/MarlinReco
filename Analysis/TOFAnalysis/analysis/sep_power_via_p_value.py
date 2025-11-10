@@ -16,7 +16,7 @@ LOG_MOMENTUM_BINS = np.array([ 10**(MIN_LOG_MOMENTUM + (MAX_LOG_MOMENTUM-MIN_LOG
 N_DEDX_BINS, MIN_DEDX, MAX_DEDX = 3000, 0, 1e-6
 DEDX_BINS = np.array([ MIN_DEDX + (MAX_DEDX - MIN_DEDX)*i/N_DEDX_BINS for i in range(N_DEDX_BINS+1) ])
 N_MASS2_BINS, MIN_MASS2, MAX_MASS2 = 3000, -3, 3  # GeV^2/c^4
-MOMENTUM_COLUMN = "harmonicMomToEcal_IKF_zedLambda" 
+MOMENTUM_COLUMN = "harmonicMomToEcal_IKF_zedLambda"
 TRACK_LENGTH_COLUMN = "trackLengthToEcal_IKF_zedLambda"
 RESOLUTIONS = [0, 1, 5, 10, 17, 30, 50, 100] # ps
 COLORS_RESOLUTION = [ ROOT.TColor.GetColor(c) for c in ["#00aaff", "#0091ea", "#0079d3", "#0061bd", "#004aa5", "#00348d", "#001d75", "#00045c"] ]
@@ -29,7 +29,7 @@ MIN_SEP_POWER, MAX_SEP_POWER = -0.2, 7.5
 def main():
     canvases = []
     df_init = ROOT.RDataFrame("treename", "/nfs/dust/ilc/user/dudarboh/tof/BohdanAna.root")
- 
+
     # Get all histos first to utilise lazy RDataFrame behaviour
     histos = {"TOF" : {}, "dEdx" : {}}
     for RES in RESOLUTIONS:

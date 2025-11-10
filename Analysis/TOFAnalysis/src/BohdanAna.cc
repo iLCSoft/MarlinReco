@@ -193,7 +193,7 @@ void BohdanAna::fillRecoVertexInfo(EVENT::LCEvent* evt, EVENT::MCParticle* mc, c
     LCCollection* primVtxCol = evt->getCollection("PrimaryVertex");
     LCCollection* secondaryVtxCol = evt->getCollection("BuildUpVertex");
     LCCollection* secondaryV0VtxCol = evt->getCollection("BuildUpVertex_V0");
-    
+
     EVENT::Vertex* matchedVertex = nullptr;
     for(int i=0; i<primVtxCol->getNumberOfElements(); ++i){
         auto vertex = static_cast<Vertex*> (primVtxCol->getElementAt(i));
@@ -585,7 +585,7 @@ void BohdanAna::processEvent(EVENT::LCEvent * evt){
     _primVertexTrue = Vector3D();
     _primVertexReco = Vector3D();
     _primRefitVertexReco = Vector3D();
-    
+
     _ipTrue = Vector3D( static_cast< EVENT::MCParticle* >(mcs->getElementAt(0))->getVertex() );
 
     auto primVertexIt = std::find_if(trueVertices.begin(), trueVertices.end(), [](const VertexData& vtx){return vtx.isPrimary;});

@@ -62,7 +62,7 @@ EVENT::MCParticle* getHitEarliestMC( EVENT::CalorimeterHit* hit, const UTIL::LCR
     // Otherwise I need to check every hit relation collection separately, which makes this code x10 longer.
     // In case collection doesn't exist, merging is still happens (I think..) with a warning, which is good.
     if (navToSimCalorimeterHits.getRelatedToObjects(hit).empty()) return nullptr;
-    
+
     // There should be really only one sim hit for calo rec hit, but we still do it thourougly.
     const std::vector<float>& weights = navToSimCalorimeterHits.getRelatedToWeights(hit);
     if ( weights.empty() ) return nullptr;

@@ -23,7 +23,7 @@
 
 #include <numeric>
 #include <cstdlib>
-	
+
 using CLHEP::RandGauss;
 using dd4hep::rec::Vector3D;
 
@@ -185,7 +185,7 @@ void displayPFO(EVENT::ReconstructedParticle* pfo){
         auto hits = track->getTrackerHits();
         for (auto* hit : hits ){
             auto pos = hit->getPosition();
-    
+
             ced_hit(pos[0], pos[1], pos[2], type, size, color);
             // hitIdx++;
         }
@@ -305,7 +305,7 @@ void plotECALTimes(EVENT::Cluster* cluster, Vector3D posAtEcal, Vector3D momAtEc
         x_frank.push_back( hit2dToTrack[hit] );
         y_frank_smeared.push_back( hit2timeSmeared[hit] );
     }
- 
+
     TGraph gr3( x_frank.size(), x_frank.data(), y_frank_smeared.data() );
     TF1 f("f", Form("%f + (x-%f)/%f", y_all_smeared.front(), x_all.front(), CLHEP::c_light), 0., *std::max_element(x_all.begin(), x_all.end()) );
     gr3.SetTitle("Selected hits;d to track (mm); Hit time (ns)");

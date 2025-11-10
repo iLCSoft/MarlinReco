@@ -43,7 +43,7 @@ class BohdanAna : public marlin::Processor, EventDisplayer {
     private:
         int _nEvent{};
         float _bField{};
-        
+
         std::unique_ptr<TFile> _file{};
         std::unique_ptr<TTree> _tree{};
         std::unique_ptr<TTree> _treeEvents{};

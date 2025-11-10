@@ -7,17 +7,17 @@
 #include "marlinutil/DDMarlinCED.h"
 
 /**
- * Mixin class for attaching an event display to any inheriting processor. 
+ * Mixin class for attaching an event display to any inheriting processor.
  * The inheriting processor has to make this class a friend as well, and make
- * sure to call the EventDisplayer constructor passing itself for registering 
- * an additional processor parameter, steering whether to actually run an event 
+ * sure to call the EventDisplayer constructor passing itself for registering
+ * an additional processor parameter, steering whether to actually run an event
  * display or not.
  */
 class EventDisplayer {
     public:
         template<typename T>
         EventDisplayer(T* proc);
-        
+
         /// Initialize the display. Call this in init of your processor
         void initDisplay(marlin::Processor* proc);
 
@@ -52,7 +52,7 @@ void EventDisplayer::drawDisplay(marlin::Processor* proc, EVENT::LCEvent* evt, F
     if (!_isInit) {
         initDisplay(proc);
     }
-    
+
     DDMarlinCED::newEvent(proc, evt);
     DDMarlinCED::drawDD4hepDetector(_detector, false, std::vector<std::string>{""});
     DDCEDPickingHandler& pHandler= DDCEDPickingHandler::getInstance();
@@ -60,7 +60,7 @@ void EventDisplayer::drawDisplay(marlin::Processor* proc, EVENT::LCEvent* evt, F
 
     func(std::forward<Args>(args)...);
 
-    DDMarlinCED::draw(proc);            
+    DDMarlinCED::draw(proc);
 }
 
 

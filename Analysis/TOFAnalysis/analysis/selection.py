@@ -46,7 +46,7 @@ canvas2 = ROOT.TCanvas("c_2d_m_vs_p_total","",600,600)
 histos ={}
 n_events ={}
 for cut in cuts:
-    df_sel = df.Filter(cut) 
+    df_sel = df.Filter(cut)
     histos[cut] = df_sel.Histo2D((f"h2_{cut}", "; Momentum (GeV/c); Mass^{2} (GeV^{2}/c^{4})", n_mom_bins, mom_min, mom_max, n_mass_bins, mass_min, mass_max), "harmonicMomToEcal_IKF_zedLambda","mass2")
     n_events[cut] = df_sel.Count()
 

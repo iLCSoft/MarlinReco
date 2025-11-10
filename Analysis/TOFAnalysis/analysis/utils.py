@@ -84,7 +84,7 @@ def get_uncertainty(particle, dp, dl, dt, func="m"):
     track_length_down, track_length_up = particle.track_length*(1. - dl), particle.track_length*(1. + dl)
     tof_down, tof_up = particle.tof - dt, particle.tof + dt
 
-    beta_down, beta_up = track_length_down/(tof_up*SPEED_OF_LIGHT), track_length_up/(tof_down*SPEED_OF_LIGHT) 
+    beta_down, beta_up = track_length_down/(tof_up*SPEED_OF_LIGHT), track_length_up/(tof_down*SPEED_OF_LIGHT)
     m2_down, m2_up = mom_down*mom_down*(1./(beta_up*beta_up) - 1.), mom_up*mom_up*(1./(beta_down*beta_down) - 1.)
     if func == "m":
         return np.nan_to_num(np.sqrt(m2_down), nan=0), np.nan_to_num(np.sqrt(m2_up), nan=0)
@@ -169,13 +169,13 @@ def interval_quantile_(x, quant=0.9):
 
     return i_start, i_start + n_quant
 
-def fit90(x): 
+def fit90(x):
     x = np.sort(x)
     n10percent = int(round(len(x)*0.1))
     n90percent = len(x) - n10percent
-    
+
     start, end = interval_quantile_(x, quant=0.9)
-    
+
     rms90 = np.std(x[start:end])
     mean90 = np.mean(x[start:end])
     mean90_err = rms90/np.sqrt(n90percent)
@@ -280,7 +280,7 @@ def draw_optimal_cut(h1, h2, cut):
     line.SetLineWidth(2)
     line.SetLineStyle(9)
     line.Draw()
-    
+
     canvas.Update()
     input("wait")
 
@@ -407,7 +407,7 @@ def draw_dedx_sep_powers(gr_tof, gr_dedx):
     legend.AddEntry(gr_tof, gr_tof.GetTitle(),"lp")
     canvas.Modified()
     canvas.Update()
-    # draw an axis on the right side    
+    # draw an axis on the right side
     x_pos = 10**canvas.GetUxmax() # NOTE: FREAKING ROOT https://root-forum.cern.ch/t/getumin-getumax-show-wrong-results-for-the-canvases-with-the-log-scale/58867
     axis_eff = ROOT.TGaxis(x_pos, canvas.GetUymin(), x_pos-0.001, canvas.GetUymax(), MIN_SEP_POWER, MAX_SEP_POWER)
     axis_eff.SetTitleColor( ROOT.gStyle.GetTitleColor("Y") )

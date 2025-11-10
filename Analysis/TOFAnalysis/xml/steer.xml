@@ -1,0 +1,123 @@
+<marlin>
+    <constants>
+        <constant name="produce_refit_output">false</constant>
+    </constants>
+
+    <execute>
+        <processor name="InitDD4hep" />
+        <processor name="MergeTrackerHitsRelations"/>
+        <processor name="MergeClusterHitsRelations"/>
+        <processor name="Correct_dEdx"/>
+        <if condition=${produce_refit_output} >
+                <processor name="CreateRefitPFO"/>
+                <processor name="VertexFinderRefit"/>
+        </if>
+        <processor name="BohdanAna"/>
+    </execute>
+
+    <global>
+        <parameter name="LCIOInputFiles" type="StringVec">
+            /pnfs/desy.de/ilc/prod/ilc/mc-2020/ild/rec/250-SetA/2f_hadronic_eL_pR/ILD_l5_o1_v02/v02-02/00015161/000/rv02-02.sv02-02.mILD_l5_o1_v02.E250-SetA.I500010.P2f_z_h.eL.pR.n000_034.d_rec_00015161_144.slcio
+        </parameter>
+        <parameter name="MaxRecordNumber" type="int">0</parameter>
+        <parameter name="SkipNEvents" type="int">0</parameter>
+        <parameter name="SupressCheck" type="bool">false</parameter>
+        <parameter name="AllowToModifyEvent" type="bool">false</parameter>
+        <parameter name="RandomSeed" type="int">1234567890</parameter>
+        <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT" type="string">MESSAGE</parameter>
+    </global>
+
+    <processor name="InitDD4hep" type="InitializeDD4hep">
+        <parameter name="DD4hepXMLFile" type="string">
+             /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2024-09-29/x86_64-almalinux9-gcc14.2.0-opt/k4geo/0b59886a8aa93c3189604ae24dd83e987e913f25_develop-ljczo5/share/k4geo/ILD/compact/ILD_sl5_v02/ILD_l5_o1_v02.xml
+        </parameter>
+    </processor>
+
+    <processor name="BohdanAna" type="BohdanAna">
+        <parameter name="eventDisplay" type="bool">false</parameter>
+        <parameter name="produce_csv_output" type="bool">false</parameter>
+        <parameter name="produce_refit_output" type="bool">${produce_refit_output}</parameter>
+        <parameter name="dst_mode" type="bool">true</parameter>
+    </processor>
+
+    <processor name="MergeTrackerHitsRelations" type="MergeCollections">
+        <parameter name="InputCollections" type="StringVec"> VXDTrackerHitRelations TPCTrackerHitRelations SITTrackerHitRelations SETTrackerHitRelations FTDPixelTrackerHitRelations FTDStripTrackerHitRelations </parameter>
+        <parameter name="OutputCollection" type="string"> TrackerHitsRelations </parameter>
+    </processor>
+
+    <processor name="MergeClusterHitsRelations" type="MergeCollections">
+        <parameter name="InputCollections" type="StringVec">
+            EcalBarrelRelationsSimRec
+            EcalEndcapRingRelationsSimRec
+            EcalEndcapsRelationsSimRec
+            HcalBarrelRelationsSimRec
+            HcalEndcapRingRelationsSimRec
+            HcalEndcapsRelationsSimRec
+            RelationBCalHit
+            RelationLHcalHit
+            RelationLcalHit
+            RelationMuonHit
+        </parameter>
+        <parameter name="OutputCollection" type="string"> CalorimeterHitsRelations </parameter>
+    </processor>
+
+    <processor name="Correct_dEdx" type="AngularCorrection_dEdxProcessor">
+        <!--parameter for new angular correction dedx= uncorrected_dedx  / f, with f= pol3(lambda)-->
+        <!-- Parameters for 2020 DST (and all generated with v02-02 and v02-02-01 -->
+        <parameter name="AngularCorrectionParameters" type="FloatVec"> 0.970205 0.0007506 4.41781e-8 5.8222e-8 </parameter>
+        <!--LDC track collection name-->
+        <parameter name="LDCTrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+        <!--parameters used in the outdated angular correction outdated_dedx= uncorrected_dedx / f, with f = 1. / ( 1.0+[1]*cos(theta)*cos(theta)/[0] )-->
+    </processor>
+
+    <processor name="CreateRefitPFO" type="CreateRefitPFO">
+        <!-- Creates "updatedPandoraPFOs" collection -->
+    </processor>
+
+    <processor name="VertexFinderRefit" type="LcfiplusProcessor">
+      <!-- run primary and secondary vertex finders -->
+      <parameter name="Algorithms" type="stringVec"> PrimaryVertexFinder BuildUpVertex </parameter>
+      <parameter name="ReadSubdetectorEnergies" type="int" value="1"/> <!-- true for ILD -->
+      <parameter name="UpdateVertexRPDaughters" type="int" value="0"/> <!-- false for non-updative PandoraPFOs -->
+      <parameter name="TrackHitOrdering" type="int" value="1"/> <!-- Track hit ordering: 0=ILD-LOI,SID-DBD, 1=ILD-DBD -->
+      <parameter name="PrintEventNumber" type="int" value="0"/> <!-- 0 for not printing event number, n for printing every n events -->
+      <!-- IP distribution used in constraint on primary vertex fitting [mm], ???numbers are from GuineaPig for 5000 GeV???  (250 GeV)-->
+      <parameter name="BeamSizeX" type="float" value="313.e-6"/>
+      <parameter name="BeamSizeY" type="float" value="3.14e-6"/>
+      <parameter name="BeamSizeZ" type="float" value="202.e-3"/>
+      <!-- specify input collection names -->
+      <parameter name="PFOCollection" type="string" value="updatedPandoraPFOs" />
+      <parameter name="PrimaryVertexCollectionName" type="string" value="PrimaryVertex_refit" />
+      <parameter name="BuildUpVertexCollectionName" type="string" value="BuildUpVertex_refit" />
+      <parameter name="BuildUpVertex.V0VertexCollectionName" type="string" value="BuildUpVertex_V0_refit" />
+      <!-- parameters for primary vertex finder -->
+      <parameter name="PrimaryVertexFinder.TrackMaxD0" type="double" value="20." />
+      <parameter name="PrimaryVertexFinder.TrackMaxZ0" type="double" value="20." />
+      <parameter name="PrimaryVertexFinder.TrackMinVtxFtdHits" type="int" value="1" />
+      <parameter name="PrimaryVertexFinder.Chi2Threshold" type="double" value="25." />
+      <parameter name="PrimaryVertexFinder.BeamspotConstraint" type="bool" value="true" />
+      <parameter name="PrimaryVertexFinder.BeamspotSmearing" type="bool" value="0" />
+      <!-- parameters for secondary vertex finder -->
+      <parameter name="BuildUpVertex.TrackMaxD0" type="double" value="10." />
+      <parameter name="BuildUpVertex.TrackMaxZ0" type="double" value="20." />
+      <parameter name="BuildUpVertex.TrackMinPt" type="double" value="0.1" />
+      <parameter name="BuildUpVertex.TrackMaxD0Err" type="double" value="0.1" />
+      <parameter name="BuildUpVertex.TrackMaxZ0Err" type="double" value="0.1" />
+      <parameter name="BuildUpVertex.TrackMinTpcHits" type="int" value="10000" />
+      <parameter name="BuildUpVertex.TrackMinFtdHits" type="int" value="10000" />
+      <parameter name="BuildUpVertex.TrackMinVxdHits" type="int" value="10000" />
+      <parameter name="BuildUpVertex.TrackMinVxdFtdHits" type="int" value="0" />
+      <parameter name="BuildUpVertex.PrimaryChi2Threshold" type="double" value="25." />
+      <parameter name="BuildUpVertex.SecondaryChi2Threshold" type="double" value="9." />
+      <parameter name="BuildUpVertex.MassThreshold" type="double" value="10." />
+      <parameter name="BuildUpVertex.MinDistFromIP" type="double" value="0.3" />
+      <parameter name="BuildUpVertex.MaxChi2ForDistOrder" type="double" value="1.0" />
+      <parameter name="BuildUpVertex.AssocIPTracks" type="int" value="1" />
+      <parameter name="BuildUpVertex.AssocIPTracksMinDist" type="double" value="0." />
+      <parameter name="BuildUpVertex.AssocIPTracksChi2RatioSecToPri" type="double" value="2.0" />
+      <parameter name="BuildUpVertex.UseV0Selection" type="int" value="1" />
+      <parameter name="BuildUpVertex.UseAVF" type="bool" value="0" />
+    </processor>
+
+
+</marlin>

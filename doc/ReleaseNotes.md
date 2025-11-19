@@ -1,3 +1,11 @@
+# v01-38
+
+* 2025-11-10 Bohdan Dudar ([PR#141](https://github.com/iLCSoft/MarlinReco/pull/141))
+  - Adding time-of-flight particle identification analysis codes from Bohdan Dudar's PhD studies.
+
+* 2025-10-30 Thomas Madlener ([PR#154](https://github.com/iLCSoft/MarlinReco/pull/154))
+  - Make sure to include `<cmath>` header since implicit inclusion from upstream ROOT no longer works for ROOT >= 6.38
+
 # v01-37-01
 
 * 2025-10-21 Thomas Madlener ([PR#153](https://github.com/iLCSoft/MarlinReco/pull/153))

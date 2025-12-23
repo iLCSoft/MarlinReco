@@ -392,21 +392,21 @@ void WWCategorisationProcessor::processEvent(LCEvent* evt) {
 void WWCategorisationProcessor::check(LCEvent*) {}
 
 void WWCategorisationProcessor::end() {
-  // efficiency confusion matrix
-  for (unsigned int reco_idx = 1; reco_idx < _n_cat + 1; reco_idx++) {
-    for (unsigned int true_idx = 1; true_idx < _n_cat + 1; true_idx++) {
-      double val =
-          _nTrue[true_idx - 1] != 0 ? _confusion_matrix->GetBinContent(true_idx, reco_idx) / _nTrue[true_idx - 1] : 0;
-      _confusion_matrix_ef->SetBinContent(true_idx, reco_idx, val);
-    }
-  }
-
   if (_doTT) {
     _TTreeFile->cd();
     _observablesTree->Write();
   }
 
   if (_doCM) {
+    // efficiency confusion matrix
+    for (unsigned int reco_idx = 1; reco_idx < _n_cat + 1; reco_idx++) {
+      for (unsigned int true_idx = 1; true_idx < _n_cat + 1; true_idx++) {
+        double val =
+            _nTrue[true_idx - 1] != 0 ? _confusion_matrix->GetBinContent(true_idx, reco_idx) / _nTrue[true_idx - 1] : 0;
+        _confusion_matrix_ef->SetBinContent(true_idx, reco_idx, val);
+      }
+    }
+
     TCanvas* can = new TCanvas;
     PlotConfusionMatrix(can, _confusion_matrix_ef);
     if (_doTT) {

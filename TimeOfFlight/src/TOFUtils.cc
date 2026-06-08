@@ -51,7 +51,7 @@ const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* trac
     return subdet == UTIL::ILDDetID::TPC;
   };
 
-  int indexOfFirstTPCCurl = 0;
+  int indexOfFirstTPCCurl = -1;
   int nSubTracks = track->getTracks().size();
   for (int i = 0; i < nSubTracks; ++i) {
     Track* subTrack = track->getTracks()[i];
@@ -62,12 +62,11 @@ const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* trac
     }
   }
 
-  // Take the trackState at the calorimeter surface always from the latest curl
-  // Track has only one curl
+  // If there are no subtracks or there is only one TPC subtrack return the track state of the track itself.
   if (indexOfFirstTPCCurl == nSubTracks - 1)
     return track->getTrackState(TrackState::AtCalorimeter);
   else {
-    // Track has multiple curls
+    // Else, track has several TPC subtracks (curls). For more precise results at the endcaps return the track state at calo of the last subtrack.
     Track* lastSubTrack = track->getTracks().back();
     return lastSubTrack->getTrackState(TrackState::AtCalorimeter);
   }

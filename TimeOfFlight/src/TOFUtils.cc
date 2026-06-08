@@ -66,7 +66,8 @@ const EVENT::TrackState* TOFUtils::getTrackStateAtCalorimeter(EVENT::Track* trac
   if (indexOfFirstTPCCurl == nSubTracks - 1)
     return track->getTrackState(TrackState::AtCalorimeter);
   else {
-    // Else, track has several TPC subtracks (curls). For more precise results at the endcaps return the track state at calo of the last subtrack.
+    // Else, track has several TPC subtracks (curls). For more precise results at the endcaps return the track state at
+    // calo of the last subtrack.
     Track* lastSubTrack = track->getTracks().back();
     return lastSubTrack->getTrackState(TrackState::AtCalorimeter);
   }

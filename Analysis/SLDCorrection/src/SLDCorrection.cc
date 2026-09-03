@@ -8,19 +8,12 @@
 #include "IMPL/ParticleIDImpl.h"
 #include "TAxis.h"
 #include "TCanvas.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH1I.h"
-#include "TH2F.h"
-#include "TH2I.h"
 #include "TLine.h"
 #include "TLorentzVector.h"
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TRatioPlot.h"
 #include "TStyle.h"
-#include "TTree.h"
 #include "TVector3.h"
 #include "UTIL/PIDHandler.h"
 #include "marlin/VerbosityLevels.h"
@@ -40,11 +33,10 @@ using namespace marlin;
 SLDCorrection aSLDCorrection;
 
 SLDCorrection::SLDCorrection()
-    :
-
-      Processor("SLDCorrection"), m_nRun(0), m_nEvt(0), m_nRunSum(0), m_nEvtSum(0), m_Bfield(0.f),
+    : Processor("SLDCorrection"), m_nRun(0), m_nEvt(0), m_nRunSum(0), m_nEvtSum(0), m_Bfield(0.f),
       foundFlightDirection(true), m_nSLDecayOfBHadron(0), m_nSLDecayOfCHadron(0), m_nSLDecayOfTauLepton(0),
-      m_nSLDecayTotal(0), m_nSLDecayToElectron(0), m_nSLDecayToMuon(0), m_nSLDecayToTau(0), m_nTauNeutrino(0) {
+      m_nSLDecayTotal(0), m_nSLDecayToElectron(0), m_nSLDecayToMuon(0), m_nSLDecayToTau(0), m_nTauNeutrino(0),
+      m_pTFile(NULL) {
   _description = "SLDCorrection finds semi-leptonic decays within jets and performs a correction to 4-momentum of the "
                  "jet due to the missing neutrino(s)";
 
@@ -273,7 +265,7 @@ SLDCorrection::SLDCorrection()
 
   registerProcessorParameter("traceEvent", "trace events with large discrepancy", m_traceEvent, bool(false));
 
-  registerProcessorParameter("RootFile", "Name of the output root file", m_rootFile, std::string("Output.root"));
+  registerProcessorParameter("RootFile", "Name of the output root file", m_rootFile, std::string(""));
 
   registerProcessorParameter("BsldMode", "Event selection based on semi-leptonic decays of B-hadrons", m_BSLDMode,
                              int(0));
@@ -289,7 +281,6 @@ SLDCorrection::SLDCorrection()
 }
 
 void SLDCorrection::init() {
-
   streamlog_out(DEBUG) << "	init called  " << std::endl;
   m_Bfield = MarlinUtil::getBzAtOrigin();
   if (!m_cheatPVAcharged)
@@ -300,9 +291,10 @@ void SLDCorrection::init() {
   DDMarlinCED::init(this);
 
   if (m_fillRootTree) {
-    m_pTFile = new TFile(m_rootFile.c_str(), "recreate");
-    m_pTTree1 = new TTree("SLDCorrection", "SLDCorrection");
-    m_pTTree1->SetDirectory(m_pTFile);
+    if (m_rootFile.size()) {
+      m_pTFile = new TFile(m_rootFile.c_str(), "recreate");
+      m_pTTree1->SetDirectory(m_pTFile);
+    }
     m_pTTree1->Branch("event", &m_nEvt, "event/I");
     m_pTTree1->Branch("SLDFlavour", &m_SLDFlavour);
     m_pTTree1->Branch("SLDType", &m_SLDType);
@@ -652,14 +644,16 @@ void SLDCorrection::init() {
     m_pTTree1->Branch("DSVDistanceFromPV", &m_DSVDistanceFromPV);
     m_pTTree1->Branch("Lepton3DImpactParameter", &m_Lepton3DImpactParameter);
     m_pTTree1->Branch("OtherParticle3DImpactParameter", &m_OtherParticle3DImpactParameter);
-    h_SLDStatus = new TH1I("SLDStatus", ";", 7, 0, 7);
-    h_SLDStatus->GetXaxis()->SetBinLabel(1, "No #font[32]{l}^{REC}");
-    h_SLDStatus->GetXaxis()->SetBinLabel(2, "#font[32]{l}#notin^{}jet");
-    h_SLDStatus->GetXaxis()->SetBinLabel(3, "#font[32]{l}#in^{}Vtx^{Prim.}");
-    h_SLDStatus->GetXaxis()->SetBinLabel(4, "#font[32]{l}#in^{}2^{nd}Vtx");
-    h_SLDStatus->GetXaxis()->SetBinLabel(5, "#font[32]{l}+3^{rd}Vtx");
-    h_SLDStatus->GetXaxis()->SetBinLabel(6, "#font[32]{l}+trk^{alone}");
-    h_SLDStatus->GetXaxis()->SetBinLabel(7, "other");
+
+    h_SLDStatus = new TH1I("SLDStatus", ";", 8, -1, 7);
+    h_SLDStatus->GetXaxis()->SetBinLabel(1, "No primary vertex");
+    h_SLDStatus->GetXaxis()->SetBinLabel(2, "No #font[32]{l}^{REC}");
+    h_SLDStatus->GetXaxis()->SetBinLabel(3, "#font[32]{l}#notin^{}jet");
+    h_SLDStatus->GetXaxis()->SetBinLabel(4, "#font[32]{l}#in^{}Vtx^{Prim.}");
+    h_SLDStatus->GetXaxis()->SetBinLabel(5, "#font[32]{l}#in^{}2^{nd}Vtx");
+    h_SLDStatus->GetXaxis()->SetBinLabel(6, "#font[32]{l}+3^{rd}Vtx");
+    h_SLDStatus->GetXaxis()->SetBinLabel(7, "#font[32]{l}+trk^{alone}");
+    h_SLDStatus->GetXaxis()->SetBinLabel(8, "other");
 
     h_BHadronType = new TH1F("BHadronType", ";", 8, -0.5, 7.5);
     h_BHadronType->GetXaxis()->SetBinLabel(1, "B^{0}");           // PDG = 511
@@ -1225,23 +1219,27 @@ void SLDCorrection::processEvent(EVENT::LCEvent* pLCEvent) {
       bool isBHadronSLDecay = false;
       bool isCHadronSLDecay = false;
       bool isTauLeptonSLDecay = false;
+      size_t i_parent = 0;
       if ((abs(testLepton->getPDG()) == 11 || abs(testLepton->getPDG()) == 13 || abs(testLepton->getPDG()) == 15)) {
         int chargedLeptonPDG;
-        for (long unsigned int i_parent = 0; i_parent < (testLepton->getParents()).size(); ++i_parent) {
-          MCP parent = testLepton->getParents()[i_parent];
+        MCP parent = nullptr;
+
+        for (; i_parent < (testLepton->getParents()).size(); ++i_parent) {
+          parent = testLepton->getParents()[i_parent];
           primarySLDecay = hasPrimarySLDecay(parent, chargedLeptonPDG);
-          if (primarySLDecay)
+          if (primarySLDecay) {
             downStreamSLDecay = hasDownStreamSLDecay(parent);
-          if (primarySLDecay)
             upStreamSLDecay = hasUpStreamSLDecay(parent);
+            break;
+          }
         }
         if (primarySLDecay) {
           bool solveSLD = true;
           std::vector<TLorentzVector> recoNeutrinoFourMomentum;
           std::vector<std::vector<float>> recoNeutrinoCovMat;
-          isBHadronSLDecay = checkBHadronSLDecay(testLepton);
-          isCHadronSLDecay = checkCHadronSLDecay(testLepton);
-          isTauLeptonSLDecay = checkTauLeptonSLDecay(testLepton);
+          isBHadronSLDecay = checkBHadronSLDecay(parent);
+          isCHadronSLDecay = checkCHadronSLDecay(parent);
+          isTauLeptonSLDecay = checkTauLeptonSLDecay(parent);
           if (isBHadronSLDecay) {
             ++m_nSLDecayOfBHadron;
             m_SLDFlavour.push_back(5);
@@ -1288,18 +1286,16 @@ void SLDCorrection::processEvent(EVENT::LCEvent* pLCEvent) {
               h_SLDecayModeC->Fill(2.5);
             solveSLD = solveSLD && (chargedLeptonPDG == testLepton->getPDG());
           }
-          m_SLDecayXi.push_back(testLepton->getParents()[0]->getVertex()[0]);
-          m_SLDecayYi.push_back(testLepton->getParents()[0]->getVertex()[1]);
-          m_SLDecayZi.push_back(testLepton->getParents()[0]->getVertex()[2]);
-          m_SLDecayRi.push_back(sqrt(pow(testLepton->getParents()[0]->getVertex()[0], 2) +
-                                     pow(testLepton->getParents()[0]->getVertex()[1], 2) +
-                                     pow(testLepton->getParents()[0]->getVertex()[2], 2)));
-          m_SLDecayXf.push_back(testLepton->getParents()[0]->getEndpoint()[0]);
-          m_SLDecayYf.push_back(testLepton->getParents()[0]->getEndpoint()[1]);
-          m_SLDecayZf.push_back(testLepton->getParents()[0]->getEndpoint()[2]);
-          m_SLDecayRf.push_back(sqrt(pow(testLepton->getParents()[0]->getEndpoint()[0], 2) +
-                                     pow(testLepton->getParents()[0]->getEndpoint()[1], 2) +
-                                     pow(testLepton->getParents()[0]->getEndpoint()[2], 2)));
+          m_SLDecayXi.push_back(parent->getVertex()[0]);
+          m_SLDecayYi.push_back(parent->getVertex()[1]);
+          m_SLDecayZi.push_back(parent->getVertex()[2]);
+          m_SLDecayRi.push_back(
+              sqrt(pow(parent->getVertex()[0], 2) + pow(parent->getVertex()[1], 2) + pow(parent->getVertex()[2], 2)));
+          m_SLDecayXf.push_back(parent->getEndpoint()[0]);
+          m_SLDecayYf.push_back(parent->getEndpoint()[1]);
+          m_SLDecayZf.push_back(parent->getEndpoint()[2]);
+          m_SLDecayRf.push_back(sqrt(pow(parent->getEndpoint()[0], 2) + pow(parent->getEndpoint()[1], 2) +
+                                     pow(parent->getEndpoint()[2], 2)));
           if (isBHadronSLDecay && !m_includeBSLD)
             solveSLD = false;
           if (isCHadronSLDecay && !m_includeCSLD)
@@ -1342,23 +1338,20 @@ void SLDCorrection::processEvent(EVENT::LCEvent* pLCEvent) {
             streamlog_out(DEBUG3)
                 << "	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                 << std::endl;
-            doSLDCorrection(pLCEvent, testLepton, BsemiLeptonicVertices, semiLeptonicVertexRecoParticles,
+            doSLDCorrection(pLCEvent, testLepton, i_parent, BsemiLeptonicVertices, semiLeptonicVertexRecoParticles,
                             jetsOfSemiLeptonicDecays, neutrinos, SLDStatus, PVAStatus, solutionSigns, mcNeutrinos);
-            m_parentHadronMass.push_back((testLepton->getParents()[0])->getMass());
-            m_parentHadronPDG.push_back((testLepton->getParents()[0])->getPDG());
+            m_parentHadronMass.push_back(parent->getMass());
+            m_parentHadronPDG.push_back(parent->getPDG());
             for (unsigned int i_Btype = 0; i_Btype < BHadPDGs.size(); ++i_Btype) {
-              if (abs((testLepton->getParents()[0])->getPDG()) == BHadPDGs[i_Btype] && m_fillRootTree)
+              if (abs(parent->getPDG()) == BHadPDGs[i_Btype] && m_fillRootTree)
                 h_BHadronType->Fill(i_Btype);
             }
-            m_trueParentHadronFlightDistance.push_back(std::sqrt(
-                std::pow(testLepton->getParents()[0]->getEndpoint()[0] - testLepton->getParents()[0]->getVertex()[0],
-                         2) +
-                std::pow(testLepton->getParents()[0]->getEndpoint()[1] - testLepton->getParents()[0]->getVertex()[1],
-                         2) +
-                std::pow(testLepton->getParents()[0]->getEndpoint()[2] - testLepton->getParents()[0]->getVertex()[2],
-                         2)));
-            for (unsigned int i_d = 0; i_d < (testLepton->getParents()[0])->getDaughters().size(); ++i_d) {
-              MCP mcDaughter = (testLepton->getParents()[0])->getDaughters()[i_d];
+            m_trueParentHadronFlightDistance.push_back(
+                std::sqrt(std::pow(parent->getEndpoint()[0] - parent->getVertex()[0], 2) +
+                          std::pow(parent->getEndpoint()[1] - parent->getVertex()[1], 2) +
+                          std::pow(parent->getEndpoint()[2] - parent->getVertex()[2], 2)));
+            for (unsigned int i_d = 0; i_d < parent->getDaughters().size(); ++i_d) {
+              MCP mcDaughter = parent->getDaughters()[i_d];
               int daughterPDG = std::abs(mcDaughter->getPDG());
               if (daughterPDG < 11 || daughterPDG > 16) {
                 m_daughterHadronMass.push_back(mcDaughter->getMass());
@@ -1581,35 +1574,36 @@ bool SLDCorrection::hasUpStreamSLDecay(const MCP& parentHadron) {
   return hasSLDecay;
 }
 
-bool SLDCorrection::checkBHadronSLDecay(const MCP& SLDLepton) {
+bool SLDCorrection::checkBHadronSLDecay(const MCP& parentHadron) {
   bool isBHadronSLDecay = false;
-  MCP parentHadron = SLDLepton->getParents()[0];
+
   if (floor(fabs(parentHadron->getPDG()) / 100) == 5 || floor(fabs(parentHadron->getPDG()) / 1000) == 5)
     isBHadronSLDecay = true;
   return isBHadronSLDecay;
 }
 
-bool SLDCorrection::checkCHadronSLDecay(const MCP& SLDLepton) {
+bool SLDCorrection::checkCHadronSLDecay(const MCP& parentHadron) {
   bool isCHadronSLDecay = false;
-  MCP parentHadron = SLDLepton->getParents()[0];
+
   if (floor(fabs(parentHadron->getPDG()) / 100) == 4 || floor(fabs(parentHadron->getPDG()) / 1000) == 4)
     isCHadronSLDecay = true;
   return isCHadronSLDecay;
 }
 
-bool SLDCorrection::checkTauLeptonSLDecay(const MCP& SLDLepton) {
+bool SLDCorrection::checkTauLeptonSLDecay(const MCP& parent) {
   bool TauLeptonSLDecay = false;
-  MCP parent = SLDLepton->getParents()[0];
+
   if (abs(parent->getPDG()) == 15)
     TauLeptonSLDecay = true;
   return TauLeptonSLDecay;
 }
 
-void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLepton, VertexVector& semiLeptonicVertices,
-                                    PFOVector& semiLeptonicVertexRecoParticles, PFOVector& jetsOfSemiLeptonicDecays,
-                                    PFOVectorVector& neutrinos, IntVector& sldStatus, IntVector& pvaStatus,
-                                    IntVector& solutionSigns, MCPVector& trueNeutrinos) {
-  showTrueParameters(SLDLepton);
+void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLepton, size_t parentHadronIDx,
+                                    VertexVector& semiLeptonicVertices, PFOVector& semiLeptonicVertexRecoParticles,
+                                    PFOVector& jetsOfSemiLeptonicDecays, PFOVectorVector& neutrinos,
+                                    IntVector& sldStatus, IntVector& pvaStatus, IntVector& solutionSigns,
+                                    MCPVector& trueNeutrinos) {
+  showTrueParameters(SLDLepton, parentHadronIDx);
   PFOVector neutrinosOfThisSLD{};
 
   VertexImpl* semiLeptonicVertex = new VertexImpl;
@@ -1652,6 +1646,20 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   LCRelationNavigator RecoMCParticleNav(pLCEvent->getCollection(m_RecoMCTruthLinkCollection));
   LCRelationNavigator MCParticleRecoNav(pLCEvent->getCollection(m_MCTruthRecoLinkCollection));
   LCCollection* primaryVertexCollection = pLCEvent->getCollection(m_inputPrimaryVertex);
+
+  MCP parentHadron = SLDLepton->getParents()[parentHadronIDx];
+
+  int SLDStatus = -999;
+  if (primaryVertexCollection->getNumberOfElements() == 0) {
+    SLDStatus = 0;
+    streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+    streamlog_out(WARNING) << "	||||||||||||||||||||| PrimaryVertex is not found |||||||||||||||||||||" << std::endl;
+    streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+    if (m_fillRootTree)
+      h_SLDStatus->Fill(-0.5);
+    return;
+  }
+
   Vertex* primaryVertex = dynamic_cast<Vertex*>(primaryVertexCollection->getElementAt(0));
   Vertex* startVertex = dynamic_cast<Vertex*>(primaryVertexCollection->getElementAt(0));
   LCCollection* jetCollection = pLCEvent->getCollection(m_inputJetCollection);
@@ -1679,7 +1687,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
     DDMarlinCED::drawDD4hepDetector(this->_theDetector, 0, std::vector<std::string>{}); // draw geometry
     DDCEDPickingHandler& pHandler = DDCEDPickingHandler::getInstance();
     pHandler.update(pLCEvent);
-    drawMCParticles(SLDLepton->getParents()[0], SLDLepton->getParents()[0]);
+    drawMCParticles(parentHadron, parentHadron);
   }
   // m_displayEvent = false;
 
@@ -1691,8 +1699,8 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  MCP trueNeutrino = getTrueNeutrino(SLDLepton);
-  MCP parentHadron = SLDLepton->getParents()[0];
+  MCP trueNeutrino = getTrueNeutrino(SLDLepton, parentHadronIDx);
+
   TLorentzVector trueVisibleFourMomentumAtSLDVertex(0.0, 0.0, 0.0, 0.0);
   for (unsigned int i_d = 0; i_d < parentHadron->getDaughters().size(); ++i_d) {
     if (parentHadron->getDaughters()[i_d] != trueNeutrino)
@@ -1763,14 +1771,14 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
                           tempTruePVANeutralDecayProducts, tempTruePVAChargedDecayProducts, RecoMCParticleNav,
                           MCParticleRecoNav);
   for (unsigned int i_par = 0; i_par < tempTruePVANeutralDecayProducts.size(); ++i_par) {
-    if ((tempTruePVANeutralDecayProducts[i_par]->getTracks()).size() == 0) {
+    if ((tempTruePVANeutralDecayProducts[i_par]->getTracks()).empty()) {
       truePVANeutralDecayProducts.push_back(tempTruePVANeutralDecayProducts[i_par]);
     } else {
       truePVAChargedDecayProducts.push_back(tempTruePVANeutralDecayProducts[i_par]);
     }
   }
   for (unsigned int i_par = 0; i_par < tempTruePVAChargedDecayProducts.size(); ++i_par) {
-    if ((tempTruePVAChargedDecayProducts[i_par]->getTracks()).size() == 0) {
+    if ((tempTruePVAChargedDecayProducts[i_par]->getTracks()).empty()) {
       truePVANeutralDecayProducts.push_back(tempTruePVAChargedDecayProducts[i_par]);
     } else {
       truePVAChargedDecayProducts.push_back(tempTruePVAChargedDecayProducts[i_par]);
@@ -1920,11 +1928,10 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  int SLDStatus = -999;
-  if (linkedRecoLepton == NULL) {
+  if (linkedRecoLepton == NULL || linkedRecoLepton->getTracks().size() == 0) {
     SLDStatus = 1;
     streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
-    streamlog_out(WARNING) << "	||||||||||||||||| Reconstructed Lepton is not found ||||||||||||||||||" << std::endl;
+    streamlog_out(WARNING) << "	|||||||||||| No reconstructed lepton / track found |||||||||||||" << std::endl;
     streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
     if (m_fillRootTree)
       h_SLDStatus->Fill(0.5);
@@ -1992,9 +1999,9 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
 
   int vertexingScenario = m_vertexingScenario;
   PFOVector sortedChargedPFOs;
-  if (aloneChargedPFOsInJet.size() != 0)
+  if (!aloneChargedPFOsInJet.empty())
     sortParticles(sortedChargedPFOs, aloneChargedPFOsInJet, jetAxis);
-  if (sortedChargedPFOs.size() == 0 && m_vertexingScenario == 4)
+  if (sortedChargedPFOs.empty() && m_vertexingScenario == 4)
     vertexingScenario = 1;
   m_flightDirectionStatus.push_back(vertexingScenario);
   double hadronFlightLength;
@@ -2085,15 +2092,14 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
       continue;
     TVector3 jetParticleMomentum = TVector3(jetParticle->getMomentum());
     jetParticleMomentum.SetMag(1.0);
-    if (jetParticle->getTracks().size() == 0 && jetParticleMomentum.Dot(PVAConeAxis) >= m_neutralCosAcceptanceAngle) {
+    if (jetParticle->getTracks().empty() && jetParticleMomentum.Dot(PVAConeAxis) >= m_neutralCosAcceptanceAngle) {
       streamlog_out(DEBUG2) << "----------------------------------------------------------------------" << std::endl;
       streamlog_out(DEBUG2) << "-------- Added One Neutral PFO to SLDecay products candidates --------" << std::endl;
       streamlog_out(DEBUG2) << "----------------------------------------------------------------------" << std::endl;
       streamlog_out(DEBUG2) << *jetParticle << std::endl;
       allPFOsInJet.push_back(jetParticle);
       neutralPFOsInJet.push_back(jetParticle);
-    } else if (jetParticle->getTracks().size() != 0 &&
-               jetParticleMomentum.Dot(PVAConeAxis) >= chargedCosAcceptanceAngle) {
+    } else if (!jetParticle->getTracks().empty() && jetParticleMomentum.Dot(PVAConeAxis) >= chargedCosAcceptanceAngle) {
       bool particleIsInAVertex = false;
       for (unsigned int i_vtx = 0; i_vtx < buildUpVertexVector.size(); ++i_vtx) {
         if (!particleIsInAVertex) {
@@ -2423,7 +2429,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   addNeutrinoCovarianceMatrix(recoNeutrinoFourMomentumPos, NeutrinoCovMatPos);
   addNeutrinoCovarianceMatrix(recoNeutrinoFourMomentumNeg, NeutrinoCovMatNeg);
   int PVAStatus = 0;
-  if (recoPVANeutralDecayProducts.size() == 0) //( without neutral PVA)
+  if (recoPVANeutralDecayProducts.empty()) //( without neutral PVA)
   {
     PVAStatus = 3;
   } else //( with neutral PVA)
@@ -2710,7 +2716,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
 }
 
 void SLDCorrection::checkSLDInput(const MCP& SLDHadron) {
-  if (SLDHadron->getDaughters().size() == 0) {
+  if (SLDHadron->getDaughters().empty()) {
     streamlog_out(MESSAGE) << "" << std::endl;
     streamlog_out(MESSAGE)
         << "		++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -2933,9 +2939,9 @@ void SLDCorrection::evaluateInputCovMat(const TLorentzVector& trueVisibleFourMom
   m_recoNeutrinoDirectionError.push_back(acos(recoNeutrinoDirection.Dot(trueNeutrinoDirection)));
 }
 
-void SLDCorrection::showTrueParameters(const MCP& SLDLepton) {
+void SLDCorrection::showTrueParameters(const MCP& SLDLepton, size_t parentHadronIDx) {
   TLorentzVector true4mom(0.0, 0.0, 0.0, 0.0);
-  MCP parentHadron = SLDLepton->getParents()[0];
+  MCP parentHadron = SLDLepton->getParents()[parentHadronIDx];
   streamlog_out(DEBUG4) << "	PARENT HADRON:" << std::endl;
   streamlog_out(DEBUG4) << *parentHadron << std::endl;
   TVector3 trueFliDir = TVector3(parentHadron->getMomentumAtEndpoint());
@@ -3040,11 +3046,11 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentum(const TVector3& flightDire
       ((visibleFourMomentum.E() * (pow(ParentHadronMass, 2) + pow(visible_mass, 2)) / (2 * ParentHadronMass)) -
        visible_p_par.Dot(visible_p_par_prime)) *
       ParentHadronMass / (pow(visible_mass, 2) + visible_p_nor.Mag2());
+  // clang-format off
   streamlog_out(DEBUG4)
       << "		Parent Hadron Energy =									"
       << parent_hadron_E << std::endl;
   TVector3 parent_hadron_p = sqrt(pow(parent_hadron_E, 2) - pow(ParentHadronMass, 2)) * flightDirection;
-  // clang-format off
   streamlog_out(DEBUG4) << "		Parent Hadron Momentum:			( " << parent_hadron_p.Px() << "	, "
                         << parent_hadron_p.Py() << "	, " << parent_hadron_p.Pz() << "	, "
                         << parent_hadron_E << " )" << std::endl;
@@ -3340,10 +3346,11 @@ TLorentzVector SLDCorrection::getNeutrinoFourMomentumStandardMethod(const TVecto
   return Neutrino_tlv;
 }
 
-MCP SLDCorrection::getTrueNeutrino(const MCP& SLDLepton) {
-  MCP trueNeutrino{};
+MCP SLDCorrection::getTrueNeutrino(const MCP& SLDLepton, size_t parent_idx) {
+  MCP trueNeutrino = nullptr;
   try {
-    MCP MotherHadron = SLDLepton->getParents()[0];
+    MCP MotherHadron = SLDLepton->getParents()[parent_idx];
+    int nNeutrinos = 0;
     for (long unsigned int i_daughter = 0; i_daughter < (MotherHadron->getDaughters()).size(); ++i_daughter) {
       MCP daughter = MotherHadron->getDaughters()[i_daughter];
       if (daughter->getGeneratorStatus() == 1 && (abs(daughter->getPDG()) == abs(SLDLepton->getPDG()) + 1)) {
@@ -3533,11 +3540,10 @@ void SLDCorrection::fillTrueRecoFourMomentum(
   TVector3 recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction =
       recoPVARecoMomentum_minus_truePVARecoNeutralMomentum;
   recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.SetMag(1.0);
-  TVector3 recoPVARecoMomentum_minus_truePVARecoChargedMomentum =
+  TVector3 recoPVARecoMomentum_minus_truePVARecoMomentum =
       recoPVARecoFourMomentum_minus_truePVARecoChargedFourMomentum.Vect();
-  TVector3 recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction =
-      recoPVARecoMomentum_minus_truePVARecoChargedMomentum;
-  recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.SetMag(1.0);
+  TVector3 recoPVARecoMomentum_minus_truePVARecoMomentum_Direction = recoPVARecoMomentum_minus_truePVARecoMomentum;
+  recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.SetMag(1.0);
 
   m_Alpha_RecoPVARecoAll_minus_TruePVARecoNeutral_vs_recoPVArecoCharged.push_back(
       acos(recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.Dot(recoPVARecoChargedDirection)));
@@ -3546,11 +3552,11 @@ void SLDCorrection::fillTrueRecoFourMomentum(
   m_CosAlpha_RecoPVARecoAll_minus_TruePVARecoNeutral_vs_recoPVArecoCharged.push_back(
       recoPVARecoMomentum_minus_truePVARecoNeutralMomentum_Direction.Dot(recoPVARecoChargedDirection));
   m_Alpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back(
-      acos(recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot(recoPVARecoNeutralDirection)));
+      acos(recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot(recoPVARecoNeutralDirection)));
   m_SinAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back(
-      sin(acos(recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot(recoPVARecoNeutralDirection))));
+      sin(acos(recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot(recoPVARecoNeutralDirection))));
   m_CosAlpha_RecoPVARecoAll_minus_TruePVARecoCharged_vs_recoPVArecoNeutral.push_back(
-      recoPVARecoMomentum_minus_truePVARecoChargedMomentum_Direction.Dot(recoPVARecoNeutralDirection));
+      recoPVARecoMomentum_minus_truePVARecoMomentum_Direction.Dot(recoPVARecoNeutralDirection));
 
   m_trueNeutrinoFourMomentum_Px.push_back(trueNeutrinoFourMomentum.Px());
   m_trueNeutrinoFourMomentum_Py.push_back(trueNeutrinoFourMomentum.Py());
@@ -3591,7 +3597,7 @@ void SLDCorrection::investigateJetEnergyContent(const RecoParticle& assignedJet)
   double photonEnergy = 0.0;
   double neutralsEnergy = 0.0;
   for (unsigned int i_par = 0; i_par < assignedJet->getParticles().size(); ++i_par) {
-    if ((assignedJet->getParticles()[i_par])->getTracks().size() != 0) {
+    if (!(assignedJet->getParticles()[i_par])->getTracks().empty()) {
       chargedEnergy += assignedJet->getParticles()[i_par]->getEnergy();
     } else if ((assignedJet->getParticles()[i_par])->getType() == 22) {
       photonEnergy += assignedJet->getParticles()[i_par]->getEnergy();
@@ -3672,7 +3678,10 @@ void SLDCorrection::check(EVENT::LCEvent* pLCEvent) {
 
 void SLDCorrection::end() {
   if (m_fillRootTree) {
-    m_pTFile->cd();
+    if (m_rootFile.size()) {
+      m_pTFile->cd();
+    }
+
     m_pTTree1->Write();
     h_SLDStatus->GetYaxis()->SetTitle("number of SLDecays");
     h_SLDStatus->Write();
@@ -3705,7 +3714,7 @@ void SLDCorrection::end() {
     h_secondaryVertex->Scale(100.0 / (h_secondaryVertex->GetEntries()));
     h_secondaryVertex->GetYaxis()->SetTitle("#SLDecay [%]");
     h_secondaryVertex->Write();
-    m_pTFile->Close();
+
     delete h_SLDStatus;
     delete h_BHadronType;
     delete h_CHadronType;
@@ -3739,6 +3748,10 @@ void SLDCorrection::end() {
     delete h_MCPTracks_Ptweighted;
     delete h_FlightDirectionError;
     delete h_distRecoLeptonToDownStreamVertex;
-    delete m_pTFile;
+
+    if (m_pTFile != NULL) {
+      m_pTFile->Close();
+      delete m_pTFile;
+    }
   }
 }

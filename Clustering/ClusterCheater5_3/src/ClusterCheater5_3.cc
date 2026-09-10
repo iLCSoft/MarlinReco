@@ -93,7 +93,6 @@ void ClusterCheater5_3::processEvent(LCEvent* evt) {
   // float totalUnrecoverableOverlapEcal1min=0.0;
   // float totalUnrecoverableOverlapEcal2min=0.0;
   // float totalUnrecoverableOverlapHcalmin=0.0;
-  float noPointerEcal = 0.0;
   // float noPointerHcal=0.0;
 
   typedef std::map<MCParticle*, ClusterImpl*> mapMCP2Clust;
@@ -183,9 +182,6 @@ void ClusterCheater5_3::processEvent(LCEvent* evt) {
             cluster->addHit(calhit, (float)1.0);
           }
 
-        } else { // par !=0
-
-          noPointerEcal += simhit->getEnergyCont(0);
         } // par !=0
       }
     } // over nhits

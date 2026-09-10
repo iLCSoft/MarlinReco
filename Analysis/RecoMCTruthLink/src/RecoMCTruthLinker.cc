@@ -1337,12 +1337,10 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
     // finally calculate the weight of each true partic to the seen
     // (= energy_from_this_true/ total ), and add the weighted reltion.
 
-    float totwgt = 0.0;
     for (int iii = 0; iii < ifound; iii++) {
       float weight = (MCPes[iii] / eTot) * (clu->getEnergy() - ecalohitsum_unknown) / clu->getEnergy();
       mcpEnergyTot[theMCPs[iii]] += weight * clu->getEnergy();
 
-      totwgt += weight;
       if (theMCPs[iii] == 0) {
 
         streamlog_out(ERROR) << " cluster " << clu->id() << " has " << MCPes[iii] << " GeV of " << eTot << " GeV [ "

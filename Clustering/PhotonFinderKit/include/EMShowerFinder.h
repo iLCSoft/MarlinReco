@@ -26,15 +26,14 @@
 using namespace lcio;
 using namespace marlin;
 
-typedef struct {
+struct ECALHitWithAttributes {
 
   CalorimeterHit* ECALHit{};
   std::vector<PROTSEED2*> relatedCores{};
   std::vector<double> probabilitiesForThisECALHit{};
   std::vector<double> distancesToCoresForThisECALHit{};
   std::vector<double> estimatedEnergyPerCore{};
-
-} ECALHitWithAttributes;
+};
 
 // integer runtime extension which flags CalorimeterHits in EMShowers
 struct isPartOfEMShowerCandidate : LCIntExtension<isPartOfEMShowerCandidate> {};

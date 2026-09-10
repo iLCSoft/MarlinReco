@@ -393,7 +393,6 @@ std::vector<CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calor
   }
 
   std::map<int, float> virtEnergy;
-  int nSplitters(0);
 
   // loop over splitter cols, find nearby hits
   for (int jj = 0; jj < 2; jj++) { // strips, cells
@@ -465,7 +464,6 @@ std::vector<CalorimeterHit*> DDStripSplitter::getVirtualHits(LCEvent* evt, Calor
         // check if strips intersect
         TVector3 intercept = stripIntersect(hit, stripDir, hit2, stripDir2);
         if (intercept.Mag() > 0) { // intercept found, calculate in which virtual cell
-          nSplitters++;
           float frac(-1);
           for (int ii = 0; ii < 3; ii++) {
             float dx = stripEnds.second[ii] - stripEnds.first[ii];

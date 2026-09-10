@@ -212,11 +212,8 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
   // loop over GammaGammaParticles
   //----------------------------------------------------------------------------------------------------------------------------
 
-  double ESum_Reco = 0.0;
   double ESum_Reco_Correct = 0.0;
   double ESum_Reco_MC_Correct = 0.0;
-  double ESum_Reco_Wrong = 0.0;
-  double ESum_Reco_MC_All = 0.0;
   double ESum_Reco_Meas = 0.0;
 
   int nCorrectPi0 = 0;
@@ -224,8 +221,6 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
   int nCorrectEtaPrime = 0;
 
   int nRecoPi0 = 0;
-  int nRecoEta = 0;
-  int nRecoEtaPrime = 0;
 
   while (ReconstructedParticle* ggp = ggpIt.next()) {
 
@@ -241,24 +236,14 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
 
     if (ggp->getType() == 111)
       nRecoPi0++;
-    if (ggp->getType() == 221)
-      nRecoEta++;
-    if (ggp->getType() == 331)
-      nRecoEtaPrime++;
-
-    ESum_Reco += ggp->getEnergy(); // Fitted energy sum (regardless of whether the fit is correct
 
     // get photons
     const EVENT::ReconstructedParticleVec& gammas = ggp->getParticles();
     int istrue = 0;
     int pdg = 0;
     int ntruephoton = 0;
-    int ntruemeson = 0;
-    double sumTrueE = 0;
     double sumTrueP[3] = {0, 0, 0};
-    double sumE = 0;
     double sumP[3] = {0, 0, 0};
-    double sumWeight = 0;
     MCParticle* mcgps[2];
 
     streamlog_out(DEBUG) << " Consitituent gammas.size() " << gammas.size() << std::endl;
@@ -269,8 +254,6 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
                            << " Emeas = " << gammas[igamma]->getEnergy() << std::endl;
       streamlog_out(DEBUG) << " Momentum = " << gammas[igamma]->getMomentum()[0] << " "
                            << gammas[igamma]->getMomentum()[1] << " " << gammas[igamma]->getMomentum()[2] << std::endl;
-
-      sumE += gammas[igamma]->getEnergy();
 
       Egg_Meas += gammas[igamma]->getEnergy(); // Measured energy (this is zeroed for each ggp ...)
 
@@ -370,14 +353,10 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
       // found a correct photon or a conversion
       ntruephoton++;
 
-      sumWeight += maxweight;
-      sumTrueE += mcg->getEnergy();
       for (int i = 0; i < 3; i++)
         sumTrueP[i] += mcg->getMomentum()[i];
 
       streamlog_out(DEBUG) << " Gamma MCParticle of GGP " << igamma << " Etrue = " << mcg->getEnergy() << std::endl;
-
-      ESum_Reco_MC_All += mcg->getEnergy();
 
       // get parent
       mcgps[igamma] = mcg->getParents()[0];
@@ -385,7 +364,6 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
         continue;
       if (mcgps[igamma]->getPDG() == typeRequired) {
         // found photon from desired meson
-        ntruemeson++;
         streamlog_out(MESSAGE) << "(correct) PDG of photon's parent is = " << mcgps[igamma]->getPDG() << std::endl;
         pdg = mcgps[igamma]->getPDG();
       } else {
@@ -428,8 +406,6 @@ void GammaGammaCandidateTruthFilter::processEvent(LCEvent* evt) {
                                  << " Etrue = " << mcgps[0]->getEnergy() << " VTX squared = " << rVertexSquared
                                  << std::endl;
         }
-      } else {
-        ESum_Reco_Wrong += ggp->getEnergy();
       }
     }
   } // loop over GammaGammaParticles

@@ -868,19 +868,6 @@ void KinkFinder::processEvent(LCEvent* evt) {
     }
   }
 
-  int countk = 0;
-  int countp = 0;
-  for (unsigned int i = 0; i < tracks.size(); ++i) {
-
-    if (kinkDaughters[i].size() > 0 || prongDaughters[i].size() > 0) {
-      if (kinkDaughters[i].size() == 1 && prongDaughters[i].size() < 2) {
-        countk++;
-      } else {
-        countp++;
-      }
-    }
-  }
-
   auto colKinkRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);
   auto colKinkVertex = std::make_unique<LCCollectionVec>(LCIO::VERTEX);
   auto colProngRecoPart = std::make_unique<LCCollectionVec>(LCIO::RECONSTRUCTEDPARTICLE);

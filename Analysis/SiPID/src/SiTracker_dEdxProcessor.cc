@@ -60,11 +60,6 @@ SiTracker_dEdxProcessor::SiTracker_dEdxProcessor()
   registerProcessorParameter("TrkHitCollections", "Tracker hit collections that will be analysed", m_trkHitCollNames,
                              defaultTrkHitCollections);
 
-  int elementMask = 0;
-  for (unsigned ibit = 0; ibit < sizeof(int) * CHAR_BIT; ibit++) {
-    elementMask += 1 << ibit;
-  }
-
   registerProcessorParameter("CheatSensorThicknesses", "Shall we use the sensitive thicknesses from parameters?",
                              m_cheatSensorThicknesses, false);
 

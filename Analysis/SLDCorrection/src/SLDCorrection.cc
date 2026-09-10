@@ -3344,7 +3344,6 @@ MCP SLDCorrection::getTrueNeutrino(const MCP& SLDLepton) {
   MCP trueNeutrino{};
   try {
     MCP MotherHadron = SLDLepton->getParents()[0];
-    int nNeutrinos = 0;
     for (long unsigned int i_daughter = 0; i_daughter < (MotherHadron->getDaughters()).size(); ++i_daughter) {
       MCP daughter = MotherHadron->getDaughters()[i_daughter];
       if (daughter->getGeneratorStatus() == 1 && (abs(daughter->getPDG()) == abs(SLDLepton->getPDG()) + 1)) {
@@ -3355,7 +3354,6 @@ MCP SLDCorrection::getTrueNeutrino(const MCP& SLDLepton) {
         trueNeutrino = daughter;
       }
     }
-    ++nNeutrinos;
   } catch (DataNotAvailableException& e) {
     streamlog_out(MESSAGE) << "	True Neutrino for semi-leptonic decay not found in MCParticles" << std::endl;
   }

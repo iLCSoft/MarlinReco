@@ -236,8 +236,6 @@ unsigned int GammaGammaSolutionFinder::CountIndependentPhotons() {
   // For convenience sort the GammaGammaCandidates by fit probability
   std::sort(_pfovec.begin(), _pfovec.end(), GammaGammaSolutionFinder::PfoProbabilitySortFunction);
 
-  int k = -1;
-
   for (unsigned int i = 0; i < _pfovec.size(); i++) {
     const ReconstructedParticleVec particles = _pfovec[i]->getParticles();
     //      if(_printing>3)std::cout << "FindGammaGammaSolutions: (nparticles = " << particles.size() << " )" <<
@@ -248,8 +246,6 @@ unsigned int GammaGammaSolutionFinder::CountIndependentPhotons() {
       //          std::cout << "GWWWW " << i << " " << j << " " << particle << std::endl;
       if (daughter_particles.find(particle) == daughter_particles.end()) {
         daughter_particles.insert(particle); // Add particle to the set
-        k++;                                 // Increment photon index
-                                             // std::cout << i << " " << k << std::endl;
       }
     }
   }

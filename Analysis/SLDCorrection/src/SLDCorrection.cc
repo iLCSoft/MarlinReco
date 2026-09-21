@@ -291,7 +291,7 @@ void SLDCorrection::init() {
   DDMarlinCED::init(this);
 
   if (m_fillRootTree) {
-    if (m_rootFile.size()) {
+    if (!m_rootFile.empty()) {
       m_pTFile = new TFile(m_rootFile.c_str(), "recreate");
       m_pTTree1->SetDirectory(m_pTFile);
     }
@@ -1928,7 +1928,7 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  if (linkedRecoLepton == NULL || linkedRecoLepton->getTracks().size() == 0) {
+  if (linkedRecoLepton == NULL || linkedRecoLepton->getTracks().empty()) {
     SLDStatus = 1;
     streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
     streamlog_out(WARNING) << "	|||||||||||| No reconstructed lepton / track found |||||||||||||" << std::endl;
@@ -3678,7 +3678,7 @@ void SLDCorrection::check(EVENT::LCEvent* pLCEvent) {
 
 void SLDCorrection::end() {
   if (m_fillRootTree) {
-    if (m_rootFile.size()) {
+    if (!m_rootFile.empty()) {
       m_pTFile->cd();
     }
 
@@ -3749,7 +3749,7 @@ void SLDCorrection::end() {
     delete h_FlightDirectionError;
     delete h_distRecoLeptonToDownStreamVertex;
 
-    if (m_pTFile != NULL) {
+    if (m_pTFile) {
       m_pTFile->Close();
       delete m_pTFile;
     }

@@ -48,7 +48,7 @@ int getRecoFlightDirection(const RecoParticle& linkedRecoLepton, TVector3& recoF
   daughterHadronFlightDistance = 0.0;
   daughterHadronFlightDirection = TVector3(0.0, 0.0, 0.0);
   sldVertexPosition.clear();
-  if (linkedRecoLepton->getTracks().size() == 0) {
+  if (linkedRecoLepton->getTracks().empty()) {
     streamlog_out(DEBUG1) << "	(" << SLDStatus << ") No track for linkedRecoLepton. SLDCorrection aborts."
                           << std::endl;
     return SLDStatus;

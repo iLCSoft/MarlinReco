@@ -535,8 +535,6 @@ void ZFinder::FindZee(LCCollectionVec* recparcol) {
     }
 
     // Set parameters of reconstructed Z
-    if (Mass > 0)
-      Mass = sqrt(Mass);
     recoPart->setMomentum(Mom);
     recoPart->setEnergy(Energy);
     recoPart->setMass(Mass);

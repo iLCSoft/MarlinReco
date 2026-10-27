@@ -3350,7 +3350,6 @@ MCP SLDCorrection::getTrueNeutrino(const MCP& SLDLepton, size_t parent_idx) {
   MCP trueNeutrino = nullptr;
   try {
     MCP MotherHadron = SLDLepton->getParents()[parent_idx];
-    int nNeutrinos = 0;
     for (long unsigned int i_daughter = 0; i_daughter < (MotherHadron->getDaughters()).size(); ++i_daughter) {
       MCP daughter = MotherHadron->getDaughters()[i_daughter];
       if (daughter->getGeneratorStatus() == 1 && (abs(daughter->getPDG()) == abs(SLDLepton->getPDG()) + 1)) {

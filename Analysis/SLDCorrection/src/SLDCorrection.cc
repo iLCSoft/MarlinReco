@@ -1652,9 +1652,9 @@ void SLDCorrection::doSLDCorrection(EVENT::LCEvent* pLCEvent, const MCP& SLDLept
   int SLDStatus = -999;
   if (primaryVertexCollection->getNumberOfElements() == 0) {
     SLDStatus = 0;
-    streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
-    streamlog_out(WARNING) << "	||||||||||||||||||||| PrimaryVertex is not found |||||||||||||||||||||" << std::endl;
-    streamlog_out(WARNING) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+    streamlog_out(MESSAGE) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+    streamlog_out(MESSAGE) << "	||||||||||||||||||||| PrimaryVertex is not found |||||||||||||||||||||" << std::endl;
+    streamlog_out(MESSAGE) << "	||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl;
     if (m_fillRootTree)
       h_SLDStatus->Fill(-0.5);
     return;

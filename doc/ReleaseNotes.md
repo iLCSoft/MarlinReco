@@ -1,3 +1,19 @@
+# v01-38-02
+
+* 2026-10-28 nVentis ([PR#143](https://github.com/ilcsoft/MarlinReco/pull/143))
+  - fixed segfaults in SLDCorrection:
+  - affects all versions: implemented checks if assumed elements exist
+  - affects recent key4hep versions: delete of histograms crashing the end method
+
+* 2026-10-26 Victor Schwan ([PR#161](https://github.com/ilcsoft/MarlinReco/pull/161))
+  - In `FindZee` the mass is already computed as `sqrt(E^2 - p^2)` (also after the optional cluster-energy correction), but `sqrt` was applied a second time before `setMass()`, so the stored mass of the `eeX` candidate was `sqrt(m_ee)` (~9.5 instead of ~91 GeV). Momentum and energy were correct. `FindZmumu` computes `m^2` first and was not affected.
+
+* 2026-09-10 Thomas Madlener ([PR#160](https://github.com/ilcsoft/MarlinReco/pull/160))
+  - Switch to the latest version of the key4hep-build workflow
+  - Remove variables that are assigned but never read, together with the loops and branches that existed only to feed them, to fix `-Werror=unused-but-set-variable` on the gcc 16 / C++23 nightly stack
+  - Give the anonymous struct in `EMShowerFinder.h` a proper name instead of naming it through a `typedef`, which fixes `-Werror=non-c-typedef-for-linkage`
+  - Drop the momentum breakdown in `AbsCalibr::Balance()` that was accumulated per particle category but never read, leaving the returned energy unchanged
+
 # v01-38-01
 
 * 2026-06-08 Bohdan Dudar ([PR#159](https://github.com/iLCSoft/MarlinReco/pull/159))

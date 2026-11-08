@@ -116,7 +116,7 @@ KinkFinder::KinkFinder() : Processor("KinkFinder") {
   registerProcessorParameter("VXDName", "Name of the vertex DetElement", _VXDName, std::string("VXD"));
 
   registerProcessorParameter("SITName", "Name of the Si inner tracker DetElement", _SITName, std::string("SIT"));
-  
+
   registerProcessorParameter("TPCName", "Name of the TPC DetElement", _TPCName, std::string("TPC"));
 }
 

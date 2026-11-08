@@ -137,6 +137,10 @@ protected:
   std::string _prongRecoPartColName{};
   std::string _splitRecoPartColName{};
 
+  std::string _VXDName{};
+  std::string _SITName{};
+  std::string _TPCName{};
+
   float _rKinkCut{};
   int _minTrackHits{};
   int _maxDeltaTpcLayers{};

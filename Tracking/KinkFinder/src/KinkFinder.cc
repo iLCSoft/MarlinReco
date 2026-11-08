@@ -112,6 +112,12 @@ KinkFinder::KinkFinder() : Processor("KinkFinder") {
   registerProcessorParameter("MinELambda", "Minimum Lambda Energy", _minELambda, float(2.));
 
   registerProcessorParameter("DebugPrinting", "Debug level", _debugPrinting, int(0));
+
+  registerProcessorParameter("VXDName", "Name of the vertex DetElement", _VXDName, std::string("VXD"));
+
+  registerProcessorParameter("SITName", "Name of the Si inner tracker DetElement", _SITName, std::string("SIT"));
+  
+  registerProcessorParameter("TPCName", "Name of the TPC DetElement", _TPCName, std::string("TPC"));
 }
 
 void KinkFinder::init() {
@@ -125,7 +131,7 @@ void KinkFinder::init() {
   theDet.field().magneticField({0., 0., 0.}, bfieldV);
   _bField = bfieldV[2] / dd4hep::tesla;
 
-  dd4hep::DetElement tpcDE = theDet.detector("TPC");
+  dd4hep::DetElement tpcDE = theDet.detector(_TPCName);
   const dd4hep::rec::FixedPadSizeTPCData* tpc = tpcDE.extension<dd4hep::rec::FixedPadSizeTPCData>();
 
   _tpcInnerR = tpc->rMinReadout / dd4hep::mm;
@@ -133,7 +139,7 @@ void KinkFinder::init() {
   _tpcZmax = tpc->driftLength / dd4hep::mm;
   _tpcMaxRow = tpc->maxRow;
 
-  dd4hep::DetElement vtxDE = theDet.detector("VXD");
+  dd4hep::DetElement vtxDE = theDet.detector(_VXDName);
   dd4hep::rec::ZPlanarData* vtx = vtxDE.extension<dd4hep::rec::ZPlanarData>();
   _nLayersVTX = vtx->layers.size();
 
@@ -141,7 +147,7 @@ void KinkFinder::init() {
     _rVTX.push_back(vtx->layers[iL].distanceSensitive / dd4hep::mm);
   }
 
-  dd4hep::DetElement sitDE = theDet.detector("SIT");
+  dd4hep::DetElement sitDE = theDet.detector(_SITName);
   dd4hep::rec::ZPlanarData* sit = sitDE.extension<dd4hep::rec::ZPlanarData>();
   _nLayersSIT = sit->layers.size();
 

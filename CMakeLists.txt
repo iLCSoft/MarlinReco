@@ -232,3 +232,24 @@ FILE(GLOB_RECURSE
         Analysis/CLICPfoSelector/src/*.cc Analysis/CLICPfoSelector/include/*.h
      )
 INCLUDE("cmake/clang-cpp-checks.cmake")
+
+FIND_PROGRAM( K4RUN k4run )
+IF( BUILD_TESTING AND K4RUN )
+  SET( RECO_MC_TRUTH_LINK_TESTS ${PROJECT_SOURCE_DIR}/Analysis/RecoMCTruthLink/tests )
+  STRING( REGEX REPLACE "[^:]*libMarlinReco\\.so:?" "" MARLIN_DLL_WITHOUT_MARLINRECO "$ENV{MARLIN_DLL}" )
+
+  ADD_TEST( NAME RecoMCTruthLinker_make_events
+            COMMAND python ${RECO_MC_TRUTH_LINK_TESTS}/scripts/make_truth_link_events.py truth_link_events.edm4hep.root )
+  SET_TESTS_PROPERTIES( RecoMCTruthLinker_make_events PROPERTIES FIXTURES_SETUP truth_link_events )
+
+  ADD_TEST( NAME RecoMCTruthLinker_run
+            COMMAND k4run ${RECO_MC_TRUTH_LINK_TESTS}/options/runRecoMCTruthLinker.py )
+  SET_TESTS_PROPERTIES( RecoMCTruthLinker_run PROPERTIES
+                        FIXTURES_REQUIRED truth_link_events
+                        FIXTURES_SETUP truth_links
+                        ENVIRONMENT "MARLIN_DLL=$<TARGET_FILE:MarlinReco>:${MARLIN_DLL_WITHOUT_MARLINRECO}" )
+
+  ADD_TEST( NAME RecoMCTruthLinker_check
+            COMMAND python ${RECO_MC_TRUTH_LINK_TESTS}/scripts/check_truth_links.py )
+  SET_TESTS_PROPERTIES( RecoMCTruthLinker_check PROPERTIES FIXTURES_REQUIRED truth_links )
+ENDIF()

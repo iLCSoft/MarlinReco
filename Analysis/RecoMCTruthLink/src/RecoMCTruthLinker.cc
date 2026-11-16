@@ -628,9 +628,14 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
         CalorimeterHit* caloHit = dynamic_cast<CalorimeterHit*>(caloHits[0]);
 
         // for split hits, need to get calib factor over sum of all rec hits (DJ)
+        // a calo hit made of several sim hits is shared among them by sim hit energy
+        std::vector<double> simEnergyOfCaloHits(caloHits.size(), 0.0);
         double allRecoEn(0);
         for (size_t jk = 0; jk < caloHits.size(); jk++) {
-          allRecoEn += ((CalorimeterHit*)caloHits[jk])->getEnergy();
+          for (auto simHitOfCaloHit : *getCaloHits((CalorimeterHit*)caloHits[jk])) {
+            simEnergyOfCaloHits[jk] += ((SimCalorimeterHit*)simHitOfCaloHit)->getEnergy();
+          }
+          allRecoEn += ((CalorimeterHit*)caloHits[jk])->getEnergy() * simHit->getEnergy() / simEnergyOfCaloHits[jk];
         }
         double calib_factor = allRecoEn / simHit->getEnergy();
 
@@ -991,8 +996,7 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
           simHitMapEnergy[mcp] += e;
           //          chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
           for (size_t jk = 0; jk < caloHits.size(); jk++) {
-            chitTruthRelNav.addRelation(caloHits[jk], mcp,
-                                        e * ((CalorimeterHit*)caloHits[jk])->getEnergy() / allRecoEn);
+            chitTruthRelNav.addRelation(caloHits[jk], mcp, simHit->getEnergyCont(k) / simEnergyOfCaloHits[jk]);
           }
 
         } // mc-contributon-to-simHit loop
@@ -1054,15 +1058,18 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
       streamlog_out(DEBUG4) << "     Treating hit = " << hit->id() << " e " << hit->getEnergy()
                             << " nb sim hits : " << simHits.size() << std::endl;
 
+      double simEnergyOfHit = 0.0;
+      for (auto simHitOfHit : simHits) {
+        simEnergyOfHit += ((SimCalorimeterHit*)simHitOfHit)->getEnergy();
+      }
+
       double ehit = 0.0;
       int nsimhit = 0;
       for (LCObjectVec::const_iterator objIt = simHits.begin(); objIt != simHits.end(); ++objIt) {
 
         SimCalorimeterHit* simHit = dynamic_cast<SimCalorimeterHit*>(*objIt); // ... and a sim hit ....
 
-        double calib_factor =
-            hit->getEnergy() /
-            simHit->getEnergy(); // In this place, this defn of calib_factor is still appropriate for split hits (DJ)
+        double calib_factor = hit->getEnergy() / simEnergyOfHit;
 
         streamlog_out(DEBUG3) << "     simhit = " << simHit->id() << " has " << simHit->getNMCContributions()
                               << " contributors " << std::endl;
@@ -1338,7 +1345,7 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
     // (= energy_from_this_true/ total ), and add the weighted reltion.
 
     for (int iii = 0; iii < ifound; iii++) {
-      float weight = (MCPes[iii] / eTot) * (clu->getEnergy() - ecalohitsum_unknown) / clu->getEnergy();
+      float weight = MCPes[iii] / ecalohitsum;
       mcpEnergyTot[theMCPs[iii]] += weight * clu->getEnergy();
 
       if (theMCPs[iii] == 0) {

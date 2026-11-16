@@ -19,8 +19,6 @@
 #include "marlinutil/MarlinUtil.h"
 #include <cstdio>
 
-#include "gearimpl/Vector3D.h"
-
 #include <algorithm>
 #include <map>
 #include <math.h>
@@ -563,7 +561,7 @@ void RecoMCTruthLinker::trackLinker(LCEvent* evt, LCCollection* /*mcpCol*/, LCCo
   *ttrlcol = trackTruthRelNav.createLCCollection();
 }
 
-void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCCollection* clusterCol,
+void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* /*mcpCol*/, LCCollection* clusterCol,
                                       LCCollection** ctrlcol, LCCollection** trclcol, LCCollection** chittrlcol) {
 
   mergeCaloHitRelations(evt);
@@ -1016,8 +1014,6 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
   streamlog_out(DEBUG6) << " ================= " << std::endl;
   streamlog_out(DEBUG6) << " Treating clusters. There are " << nCluster << " of them " << std::endl;
 
-  std::vector<Cluster*> missingMC;
-  missingMC.reserve(nCluster);
   // now for the clusters
 
   MCParticle* mother = 0;
@@ -1122,9 +1118,6 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
                           << " Sum of Simcalohit E: " << eTot << "  no_sim_hit: " << no_sim_hit
                           << ". Energy from unknow source : " << ecalohitsum_unknown << std::endl;
     if (eTot == 0.0) { // fixme - this might happen if clusters are from Lcal/Muon only
-
-      // save reco particle in missingMC
-      missingMC.push_back(clu);
 
       streamlog_out(DEBUG8) << " no calorimeter hits found for "
                             << " cluster " << clu->id() << " e:"
@@ -1379,72 +1372,6 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
   } // cluster loop
 
   streamlog_out(DEBUG6) << " *** Sorting out Cluster<->MCParticle : DONE" << std::endl;
-  streamlog_out(DEBUG6) << " *** Guessing Cluster<->MCParticle in cases where MCParticle<->simHit is broken (LCAL/DBD)"
-                        << std::endl;
-
-  // recover missing MCParticles for neutrals, typically LCal. Not fixed in DBD ... :
-  // attach the MCParticle with smallest angle to cluster
-
-  // (This is from the original RecoMCTruthLinker. I didn't revise it/MB)
-
-  for (unsigned i = 0; i < missingMC.size(); ++i) {
-
-    int nMCP = mcpCol->getNumberOfElements();
-
-    Cluster* clu = missingMC[i];
-
-    gear::Vector3D recP(clu->getPosition()[0], clu->getPosition()[1], clu->getPosition()[2]);
-
-    double recTheta = recP.theta();
-
-    double maxProd = 0.0;
-    MCParticle* closestMCP = 0;
-
-    for (int j = 0; j < nMCP; j++) {
-
-      MCParticle* mcp = dynamic_cast<MCParticle*>(mcpCol->getElementAt(j));
-
-      if (fabs(mcp->getCharge()) > 0.01) {
-        continue;
-      }
-
-      gear::Vector3D mcpP(mcp->getMomentum()[0], mcp->getMomentum()[1], mcp->getMomentum()[2]);
-
-      if (fabs(recTheta - mcpP.theta()) > 0.3) { // fixme : proc param...
-        continue;
-      }
-
-      double prod = mcpP.unit().dot(recP.unit());
-
-      if (prod > maxProd) {
-        maxProd = prod;
-        closestMCP = mcp;
-      }
-    }
-    if (maxProd > 0.) {
-
-      streamlog_out(DEBUG5) << "  neutral cluster particle recovered" << clu->getEnergy() << " maxProd: " << maxProd
-                            << " px: " << closestMCP->getMomentum()[0] << " py: " << closestMCP->getMomentum()[1]
-                            << " pz: " << closestMCP->getMomentum()[2] << std::endl;
-
-      clusterTruthRelNav.addRelation(clu, closestMCP, 1.0);
-      truthClusterRelNav.addRelation(closestMCP, clu, 1.0);
-      // Could try to also add relation calohit <-> MCPart from this
-      // fixup. However, this makes more confusion that clarification,
-      // so, for now at least, leave it out
-      // const CalorimeterHitVec& cluHits = clu->getCalorimeterHits() ;
-      //
-      // for( CalorimeterHitVec::const_iterator hitIt = cluHits.begin() ;
-      //        hitIt != cluHits.end() ; ++hitIt ) {
-      //
-      //  CalorimeterHit* hit = * hitIt ;  // ... a calo seen hit ...
-      //  streamlog_out( DEBUG5 )
-      //  <<"recuperated   hit = "<< hit << " e " << hit->getEnergy()<< std::endl;
-      // chitTruthRelNav.addRelation(  hit , closestMCP , hit->getEnergy() ) ;
-      // }
-    }
-  }
-
   //  seen-true relation complete. add the collection
 
   streamlog_out(DEBUG6) << " *** Cluster linking complete, create collection " << std::endl;

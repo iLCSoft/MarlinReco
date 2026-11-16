@@ -34,7 +34,7 @@ EXPECTED_HIT_AND_CLUSTER_WEIGHTS = {
     27: ([{"π⁺": 1.0}], [{"π⁺": 1.0}]),
 }
 
-KNOWN_FAILING_CASES = [23]
+KNOWN_FAILING_CASES = []
 
 
 def get_object_key(podio_object):

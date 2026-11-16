@@ -991,8 +991,7 @@ void RecoMCTruthLinker::clusterLinker(LCEvent* evt, LCCollection* mcpCol, LCColl
           simHitMapEnergy[mcp] += e;
           //          chitTruthRelNav.addRelation(  caloHit , mcp , e ) ;
           for (size_t jk = 0; jk < caloHits.size(); jk++) {
-            chitTruthRelNav.addRelation(caloHits[jk], mcp,
-                                        e * ((CalorimeterHit*)caloHits[jk])->getEnergy() / allRecoEn);
+            chitTruthRelNav.addRelation(caloHits[jk], mcp, e / allRecoEn);
           }
 
         } // mc-contributon-to-simHit loop

@@ -1,3 +1,10 @@
+# v01-38-03
+
+* 2026-11-08 Ulrich Einhaus ([PR#162](https://github.com/iLCSoft/MarlinReco/pull/162))
+  Update to the KinkFinder to be able to run with FCC-based inner tracking system.
+  The tracking DetElement names were hard-coded, leading to incompatibility with the names of the new FCC-based inner tracker.
+  Now, these names are processor parameters. The defaults are the old names, providing backwards compatibility.
+
 # v01-38-02
 
 * 2026-10-28 nVentis ([PR#143](https://github.com/ilcsoft/MarlinReco/pull/143))
